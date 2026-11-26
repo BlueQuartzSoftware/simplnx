@@ -325,7 +325,7 @@ public:
   /**
    * @brief Destroys the calculator algorithm.
    */
-  ~ArrayCalculator() noexcept;
+  ~ArrayCalculator() noexcept = default;
 
   ArrayCalculator(const ArrayCalculator&) = delete;
   ArrayCalculator(ArrayCalculator&&) noexcept = delete;

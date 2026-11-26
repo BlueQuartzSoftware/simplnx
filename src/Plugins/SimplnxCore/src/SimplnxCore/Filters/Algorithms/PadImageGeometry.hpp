@@ -41,7 +41,7 @@ class SIMPLNXCORE_EXPORT PadImageGeometry
 {
 public:
   PadImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, PadImageGeometryInputValues* inputValues);
-  ~PadImageGeometry() noexcept;
+  ~PadImageGeometry() noexcept = default;
 
   PadImageGeometry(const PadImageGeometry&) = delete;
   PadImageGeometry(PadImageGeometry&&) noexcept = delete;

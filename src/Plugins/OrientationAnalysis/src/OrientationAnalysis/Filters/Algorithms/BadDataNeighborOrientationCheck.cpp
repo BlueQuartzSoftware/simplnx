@@ -17,7 +17,7 @@ BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& 
 {
 }
 
-BadDataNeighborOrientationCheck::~BadDataNeighborOrientationCheck() noexcept = default;
+
 
 const std::atomic_bool& BadDataNeighborOrientationCheck::getCancel()
 {

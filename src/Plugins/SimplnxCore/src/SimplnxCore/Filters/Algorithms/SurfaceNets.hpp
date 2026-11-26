@@ -72,7 +72,7 @@ public:
   /**
    * @brief Destroys the Surface Nets dispatcher.
    */
-  ~SurfaceNets() noexcept;
+  ~SurfaceNets() noexcept = default;
 
   SurfaceNets(const SurfaceNets&) = delete;
   SurfaceNets(SurfaceNets&&) noexcept = delete;

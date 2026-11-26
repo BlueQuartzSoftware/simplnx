@@ -21,7 +21,7 @@ public:
   WriteImageScanline(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const WriteImageInputValues& inputValues);
 
   /** @brief Destroys the bounded image writer. */
-  ~WriteImageScanline() noexcept;
+  ~WriteImageScanline() noexcept = default;
 
   WriteImageScanline(const WriteImageScanline&) = delete;
   WriteImageScanline(WriteImageScanline&&) noexcept = delete;

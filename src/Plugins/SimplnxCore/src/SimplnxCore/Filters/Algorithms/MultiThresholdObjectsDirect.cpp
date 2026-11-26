@@ -214,7 +214,7 @@ MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStru
 {
 }
 
-MultiThresholdObjectsDirect::~MultiThresholdObjectsDirect() noexcept = default;
+
 
 Result<> MultiThresholdObjectsDirect::operator()()
 {

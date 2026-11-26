@@ -197,7 +197,7 @@ ChangeAngleRepresentation::ChangeAngleRepresentation(DataStructure& dataStructur
 {
 }
 
-ChangeAngleRepresentation::~ChangeAngleRepresentation() noexcept = default;
+
 
 Result<> ChangeAngleRepresentation::operator()()
 {

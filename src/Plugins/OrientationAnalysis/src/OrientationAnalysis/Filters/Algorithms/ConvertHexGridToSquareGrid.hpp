@@ -32,7 +32,7 @@ class ORIENTATIONANALYSIS_EXPORT ConvertHexGridToSquareGrid
 {
 public:
   ConvertHexGridToSquareGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ConvertHexGridToSquareGridInputValues* inputValues);
-  ~ConvertHexGridToSquareGrid() noexcept;
+  ~ConvertHexGridToSquareGrid() noexcept = default;
 
   ConvertHexGridToSquareGrid(const ConvertHexGridToSquareGrid&) = delete;
   ConvertHexGridToSquareGrid(ConvertHexGridToSquareGrid&&) noexcept = delete;

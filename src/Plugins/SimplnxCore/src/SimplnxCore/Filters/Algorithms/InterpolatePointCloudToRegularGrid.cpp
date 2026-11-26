@@ -390,7 +390,7 @@ InterpolatePointCloudToRegularGrid::InterpolatePointCloudToRegularGrid(DataStruc
 {
 }
 
-InterpolatePointCloudToRegularGrid::~InterpolatePointCloudToRegularGrid() noexcept = default;
+
 
 const std::atomic_bool& InterpolatePointCloudToRegularGrid::getCancel()
 {

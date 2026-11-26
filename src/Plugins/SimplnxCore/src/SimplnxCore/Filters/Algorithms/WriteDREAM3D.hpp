@@ -37,7 +37,7 @@ class SIMPLNXCORE_EXPORT WriteDREAM3D
 {
 public:
   WriteDREAM3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteDREAM3DInputValues* inputValues);
-  ~WriteDREAM3D() noexcept;
+  ~WriteDREAM3D() noexcept = default;
 
   WriteDREAM3D(const WriteDREAM3D&) = delete;
   WriteDREAM3D(WriteDREAM3D&&) noexcept = delete;

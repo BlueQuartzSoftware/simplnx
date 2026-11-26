@@ -255,7 +255,7 @@ ComputeGBCDPoleFigureDirect::ComputeGBCDPoleFigureDirect(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-ComputeGBCDPoleFigureDirect::~ComputeGBCDPoleFigureDirect() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBCDPoleFigureDirect::getCancel()

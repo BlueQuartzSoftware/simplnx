@@ -38,7 +38,7 @@ WriteDREAM3D::WriteDREAM3D(DataStructure& dataStructure, const IFilter::MessageH
 }
 
 // -----------------------------------------------------------------------------
-WriteDREAM3D::~WriteDREAM3D() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> WriteDREAM3D::operator()()

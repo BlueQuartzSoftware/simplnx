@@ -293,7 +293,7 @@ ConvertQuaternion::ConvertQuaternion(DataStructure& dataStructure, const IFilter
 {
 }
 
-ConvertQuaternion::~ConvertQuaternion() noexcept = default;
+
 
 const std::atomic_bool& ConvertQuaternion::getCancel()
 {

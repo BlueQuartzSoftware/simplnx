@@ -299,7 +299,7 @@ ExtractTripleLines::ExtractTripleLines(DataStructure& dataStructure, const IFilt
 {
 }
 
-ExtractTripleLines::~ExtractTripleLines() noexcept = default;
+
 
 Result<> ExtractTripleLines::operator()()
 {

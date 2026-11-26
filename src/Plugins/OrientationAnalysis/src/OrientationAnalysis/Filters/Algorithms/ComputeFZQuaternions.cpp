@@ -534,7 +534,7 @@ ComputeFZQuaternions::ComputeFZQuaternions(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFZQuaternions::~ComputeFZQuaternions() noexcept = default;
+
 
 Result<> ComputeFZQuaternions::operator()()
 {

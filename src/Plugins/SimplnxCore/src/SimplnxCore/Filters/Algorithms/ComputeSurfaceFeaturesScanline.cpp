@@ -166,7 +166,7 @@ ComputeSurfaceFeaturesScanline::ComputeSurfaceFeaturesScanline(DataStructure& da
 {
 }
 
-ComputeSurfaceFeaturesScanline::~ComputeSurfaceFeaturesScanline() noexcept = default;
+
 
 Result<> ComputeSurfaceFeaturesScanline::operator()()
 {

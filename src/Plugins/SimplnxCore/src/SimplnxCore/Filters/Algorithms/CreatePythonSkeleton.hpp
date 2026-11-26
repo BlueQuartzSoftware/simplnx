@@ -29,7 +29,7 @@ class SIMPLNXCORE_EXPORT CreatePythonSkeleton
 {
 public:
   CreatePythonSkeleton(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreatePythonSkeletonInputValues* inputValues);
-  ~CreatePythonSkeleton() noexcept;
+  ~CreatePythonSkeleton() noexcept = default;
 
   CreatePythonSkeleton(const CreatePythonSkeleton&) = delete;
   CreatePythonSkeleton(CreatePythonSkeleton&&) noexcept = delete;

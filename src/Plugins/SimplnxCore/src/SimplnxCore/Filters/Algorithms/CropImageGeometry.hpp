@@ -67,7 +67,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   CropImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CropImageGeometryInputValues* inputValues);
-  ~CropImageGeometry() noexcept;
+  ~CropImageGeometry() noexcept = default;
 
   CropImageGeometry(const CropImageGeometry&) = delete;
   CropImageGeometry(CropImageGeometry&&) noexcept = delete;

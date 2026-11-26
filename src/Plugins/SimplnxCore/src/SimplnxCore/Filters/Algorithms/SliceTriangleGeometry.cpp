@@ -18,7 +18,7 @@ SliceTriangleGeometry::SliceTriangleGeometry(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-SliceTriangleGeometry::~SliceTriangleGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& SliceTriangleGeometry::getCancel()

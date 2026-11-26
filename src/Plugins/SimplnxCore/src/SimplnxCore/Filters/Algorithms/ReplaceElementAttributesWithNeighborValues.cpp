@@ -372,7 +372,7 @@ ReplaceElementAttributesWithNeighborValues::ReplaceElementAttributesWithNeighbor
 {
 }
 
-ReplaceElementAttributesWithNeighborValues::~ReplaceElementAttributesWithNeighborValues() noexcept = default;
+
 
 const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel() const
 {

@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the fundamental-zone quaternion executor.
    */
-  ~ComputeFZQuaternions() noexcept;
+  ~ComputeFZQuaternions() noexcept = default;
 
   ComputeFZQuaternions(const ComputeFZQuaternions&) = delete;
   ComputeFZQuaternions(ComputeFZQuaternions&&) noexcept = delete;

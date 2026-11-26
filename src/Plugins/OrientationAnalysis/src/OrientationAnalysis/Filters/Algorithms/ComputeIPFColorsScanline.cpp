@@ -36,7 +36,7 @@ ComputeIPFColorsScanline::ComputeIPFColorsScanline(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-ComputeIPFColorsScanline::~ComputeIPFColorsScanline() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeIPFColorsScanline::operator()()

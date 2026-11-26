@@ -52,7 +52,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   AppendImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AppendImageGeometryInputValues* inputValues);
-  ~AppendImageGeometry() noexcept;
+  ~AppendImageGeometry() noexcept = default;
 
   AppendImageGeometry(const AppendImageGeometry&) = delete;
   AppendImageGeometry(AppendImageGeometry&&) noexcept = delete;

@@ -59,7 +59,7 @@ public:
   /**
    * @brief Destroys the IPF color dispatcher.
    */
-  ~ComputeIPFColors() noexcept;
+  ~ComputeIPFColors() noexcept = default;
 
   ComputeIPFColors(const ComputeIPFColors&) = delete;
   ComputeIPFColors(ComputeIPFColors&&) = delete;

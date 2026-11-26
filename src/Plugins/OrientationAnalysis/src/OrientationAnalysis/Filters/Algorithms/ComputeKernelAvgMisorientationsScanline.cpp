@@ -929,7 +929,7 @@ ComputeKernelAvgMisorientationsScanline::ComputeKernelAvgMisorientationsScanline
 {
 }
 
-ComputeKernelAvgMisorientationsScanline::~ComputeKernelAvgMisorientationsScanline() noexcept = default;
+
 
 Result<> ComputeKernelAvgMisorientationsScanline::operator()()
 {

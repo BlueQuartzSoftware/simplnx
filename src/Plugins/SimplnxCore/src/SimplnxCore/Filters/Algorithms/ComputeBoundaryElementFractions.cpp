@@ -25,7 +25,7 @@ ComputeBoundaryElementFractions::ComputeBoundaryElementFractions(DataStructure& 
 {
 }
 
-ComputeBoundaryElementFractions::~ComputeBoundaryElementFractions() noexcept = default;
+
 
 Result<> ComputeBoundaryElementFractions::operator()()
 {

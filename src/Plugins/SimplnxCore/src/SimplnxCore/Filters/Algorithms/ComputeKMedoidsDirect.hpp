@@ -29,7 +29,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const KMedoidsInputValues* inputValues);
-  ~ComputeKMedoidsDirect() noexcept;
+  ~ComputeKMedoidsDirect() noexcept = default;
 
   ComputeKMedoidsDirect(const ComputeKMedoidsDirect&) = delete;
   ComputeKMedoidsDirect(ComputeKMedoidsDirect&&) noexcept = delete;

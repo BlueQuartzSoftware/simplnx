@@ -27,7 +27,7 @@ class SIMPLNXCORE_EXPORT ExecuteProcess
 {
 public:
   ExecuteProcess(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExecuteProcessInputValues* inputValues);
-  ~ExecuteProcess() noexcept;
+  ~ExecuteProcess() noexcept = default;
 
   ExecuteProcess(const ExecuteProcess&) = delete;
   ExecuteProcess(ExecuteProcess&&) noexcept = delete;

@@ -107,7 +107,7 @@ CopyFeatureArrayToElementArrayScanline::CopyFeatureArrayToElementArrayScanline(D
 {
 }
 
-CopyFeatureArrayToElementArrayScanline::~CopyFeatureArrayToElementArrayScanline() noexcept = default;
+
 
 Result<> CopyFeatureArrayToElementArrayScanline::operator()()
 {

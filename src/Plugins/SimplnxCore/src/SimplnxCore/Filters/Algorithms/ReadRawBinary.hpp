@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadRawBinary() noexcept;
+  ~ReadRawBinary() noexcept = default;
 
   ReadRawBinary(const ReadRawBinary&) = delete;
   ReadRawBinary(ReadRawBinary&&) noexcept = delete;

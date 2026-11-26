@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the stateless CSV reader.
    */
-  ~ReadCSVFile() noexcept;
+  ~ReadCSVFile() noexcept = default;
 
   ReadCSVFile(const ReadCSVFile&) = delete;
   ReadCSVFile(ReadCSVFile&&) noexcept = delete;

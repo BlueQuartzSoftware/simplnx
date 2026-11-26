@@ -35,7 +35,7 @@ class SIMPLNXCORE_EXPORT CreateAMScanPaths
 {
 public:
   CreateAMScanPaths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateAMScanPathsInputValues* inputValues);
-  ~CreateAMScanPaths() noexcept;
+  ~CreateAMScanPaths() noexcept = default;
 
   CreateAMScanPaths(const CreateAMScanPaths&) = delete;
   CreateAMScanPaths(CreateAMScanPaths&&) noexcept = delete;

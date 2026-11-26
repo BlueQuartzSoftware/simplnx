@@ -680,7 +680,7 @@ ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ApplyTransformationToGeometry::getCancel()

@@ -289,7 +289,7 @@ RemoveFlaggedFeaturesDirect::RemoveFlaggedFeaturesDirect(DataStructure& dataStru
 {
 }
 
-RemoveFlaggedFeaturesDirect::~RemoveFlaggedFeaturesDirect() noexcept = default;
+
 
 Result<> RemoveFlaggedFeaturesDirect::operator()()
 {

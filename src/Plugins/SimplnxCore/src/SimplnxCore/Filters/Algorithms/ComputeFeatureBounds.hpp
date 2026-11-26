@@ -65,7 +65,7 @@ public:
   /**
    * @brief Destroys the feature-bound dispatcher.
    */
-  ~ComputeFeatureBounds() noexcept;
+  ~ComputeFeatureBounds() noexcept = default;
 
   ComputeFeatureBounds(const ComputeFeatureBounds&) = delete;
   ComputeFeatureBounds(ComputeFeatureBounds&&) noexcept = delete;

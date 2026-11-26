@@ -393,7 +393,7 @@ WriteAbaqusCrystalPlasticity::WriteAbaqusCrystalPlasticity(DataStructure& dataSt
 {
 }
 
-WriteAbaqusCrystalPlasticity::~WriteAbaqusCrystalPlasticity() noexcept = default;
+
 
 Result<> WriteAbaqusCrystalPlasticity::operator()()
 {

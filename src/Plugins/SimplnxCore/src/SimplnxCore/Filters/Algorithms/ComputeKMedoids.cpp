@@ -18,7 +18,7 @@ ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-ComputeKMedoids::~ComputeKMedoids() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMedoids::getCancel()

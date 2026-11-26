@@ -48,7 +48,7 @@ public:
    * @pre All arguments outlive this writer.
    */
   WriteGBCDGMTFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteGBCDGMTFileInputValues* inputValues);
-  ~WriteGBCDGMTFile() noexcept;
+  ~WriteGBCDGMTFile() noexcept = default;
 
   WriteGBCDGMTFile(const WriteGBCDGMTFile&) = delete;
   WriteGBCDGMTFile(WriteGBCDGMTFile&&) noexcept = delete;

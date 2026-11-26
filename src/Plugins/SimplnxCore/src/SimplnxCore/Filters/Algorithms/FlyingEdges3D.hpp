@@ -43,7 +43,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   FlyingEdges3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FlyingEdges3DInputValues* inputValues);
-  ~FlyingEdges3D() noexcept;
+  ~FlyingEdges3D() noexcept = default;
 
   FlyingEdges3D(const FlyingEdges3D&) = delete;
   FlyingEdges3D(FlyingEdges3D&&) noexcept = delete;

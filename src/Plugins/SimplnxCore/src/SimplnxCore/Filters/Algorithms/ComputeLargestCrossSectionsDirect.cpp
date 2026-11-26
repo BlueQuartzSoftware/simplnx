@@ -179,7 +179,7 @@ ComputeLargestCrossSectionsDirect::ComputeLargestCrossSectionsDirect(DataStructu
 }
 
 // -----------------------------------------------------------------------------
-ComputeLargestCrossSectionsDirect::~ComputeLargestCrossSectionsDirect() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSectionsDirect::operator()()

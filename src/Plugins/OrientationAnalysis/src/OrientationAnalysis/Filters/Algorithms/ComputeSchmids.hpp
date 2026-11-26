@@ -55,7 +55,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeSchmids
 {
 public:
   ComputeSchmids(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ComputeSchmidsInputValues* inputValues);
-  ~ComputeSchmids() noexcept;
+  ~ComputeSchmids() noexcept = default;
 
   ComputeSchmids(const ComputeSchmids&) = delete;
   ComputeSchmids(ComputeSchmids&&) noexcept = delete;

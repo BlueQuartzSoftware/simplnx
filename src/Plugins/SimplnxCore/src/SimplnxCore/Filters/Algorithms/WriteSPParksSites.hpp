@@ -46,7 +46,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteSPParksSites() noexcept;
+  ~WriteSPParksSites() noexcept = default;
 
   WriteSPParksSites(const WriteSPParksSites&) = delete;
   WriteSPParksSites(WriteSPParksSites&&) noexcept = delete;

@@ -19,7 +19,7 @@ ComputeLargestCrossSections::ComputeLargestCrossSections(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-ComputeLargestCrossSections::~ComputeLargestCrossSections() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeLargestCrossSections::getCancel()

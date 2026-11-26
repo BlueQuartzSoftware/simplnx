@@ -45,7 +45,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~NearestPointFuseRegularGrids() noexcept;
+  ~NearestPointFuseRegularGrids() noexcept = default;
 
   NearestPointFuseRegularGrids(const NearestPointFuseRegularGrids&) = delete;
   NearestPointFuseRegularGrids(NearestPointFuseRegularGrids&&) noexcept = delete;

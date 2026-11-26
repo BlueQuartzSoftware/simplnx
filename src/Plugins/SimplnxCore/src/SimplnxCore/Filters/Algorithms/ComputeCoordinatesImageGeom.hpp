@@ -52,7 +52,7 @@ public:
   /**
    * @brief Destroys the ImageGeom coordinate algorithm.
    */
-  ~ComputeCoordinatesImageGeom() noexcept;
+  ~ComputeCoordinatesImageGeom() noexcept = default;
 
   ComputeCoordinatesImageGeom(const ComputeCoordinatesImageGeom&) = delete;
   ComputeCoordinatesImageGeom(ComputeCoordinatesImageGeom&&) noexcept = delete;

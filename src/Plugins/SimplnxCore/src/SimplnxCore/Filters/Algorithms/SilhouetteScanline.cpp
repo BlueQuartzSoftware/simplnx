@@ -315,7 +315,7 @@ SilhouetteScanline::SilhouetteScanline(DataStructure& dataStructure, const IFilt
 {
 }
 
-SilhouetteScanline::~SilhouetteScanline() noexcept = default;
+
 
 Result<> SilhouetteScanline::operator()()
 {

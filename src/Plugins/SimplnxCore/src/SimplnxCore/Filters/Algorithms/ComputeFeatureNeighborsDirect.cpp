@@ -332,7 +332,7 @@ ComputeFeatureNeighborsDirect::ComputeFeatureNeighborsDirect(DataStructure& data
 {
 }
 
-ComputeFeatureNeighborsDirect::~ComputeFeatureNeighborsDirect() noexcept = default;
+
 
 Result<> ComputeFeatureNeighborsDirect::operator()()
 {

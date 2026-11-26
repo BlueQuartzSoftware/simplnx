@@ -67,7 +67,7 @@ public:
   /**
    * @brief Destroys the direct meshing algorithm.
    */
-  ~QuickSurfaceMeshDirect() noexcept;
+  ~QuickSurfaceMeshDirect() noexcept = default;
 
   QuickSurfaceMeshDirect(const QuickSurfaceMeshDirect&) = delete;
   QuickSurfaceMeshDirect(QuickSurfaceMeshDirect&&) noexcept = delete;

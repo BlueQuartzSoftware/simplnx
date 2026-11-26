@@ -807,7 +807,7 @@ HierarchicalSmooth::HierarchicalSmooth(DataStructure& dataStructure, const IFilt
 {
 }
 
-HierarchicalSmooth::~HierarchicalSmooth() noexcept = default;
+
 
 Result<> HierarchicalSmooth::operator()()
 {

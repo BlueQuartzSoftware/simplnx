@@ -43,7 +43,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ChangeAngleRepresentation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ChangeAngleRepresentationInputValues* inputValues);
-  ~ChangeAngleRepresentation() noexcept;
+  ~ChangeAngleRepresentation() noexcept = default;
 
   ChangeAngleRepresentation(const ChangeAngleRepresentation&) = delete;
   ChangeAngleRepresentation(ChangeAngleRepresentation&&) noexcept = delete;

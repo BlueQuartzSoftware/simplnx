@@ -33,7 +33,7 @@ public:
   /**
    * @brief Destroys the non-owning evaluator.
    */
-  ~MultiThresholdObjectsScanline() noexcept;
+  ~MultiThresholdObjectsScanline() noexcept = default;
 
   MultiThresholdObjectsScanline(const MultiThresholdObjectsScanline&) = delete;
   MultiThresholdObjectsScanline(MultiThresholdObjectsScanline&&) noexcept = delete;

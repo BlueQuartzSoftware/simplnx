@@ -41,7 +41,7 @@ NormalizeImage::NormalizeImage(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-NormalizeImage::~NormalizeImage() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> NormalizeImage::operator()()

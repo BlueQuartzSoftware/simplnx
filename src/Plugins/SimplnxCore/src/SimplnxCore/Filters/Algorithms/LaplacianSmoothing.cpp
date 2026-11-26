@@ -575,7 +575,7 @@ LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSm
 {
 }
 
-LaplacianSmoothing::~LaplacianSmoothing() noexcept = default;
+
 
 Result<> LaplacianSmoothing::operator()()
 {

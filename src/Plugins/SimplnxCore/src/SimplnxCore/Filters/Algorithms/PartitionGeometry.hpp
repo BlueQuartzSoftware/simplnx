@@ -66,7 +66,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~PartitionGeometry() noexcept;
+  ~PartitionGeometry() noexcept = default;
 
   PartitionGeometry(const PartitionGeometry&) = delete;
   PartitionGeometry(PartitionGeometry&&) noexcept = delete;

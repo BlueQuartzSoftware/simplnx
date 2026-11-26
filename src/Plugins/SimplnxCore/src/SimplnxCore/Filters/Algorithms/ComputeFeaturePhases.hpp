@@ -53,7 +53,7 @@ public:
   /**
    * @brief Destroys the feature-phase algorithm.
    */
-  ~ComputeFeaturePhases() noexcept;
+  ~ComputeFeaturePhases() noexcept = default;
 
   ComputeFeaturePhases(const ComputeFeaturePhases&) = delete;
   ComputeFeaturePhases(ComputeFeaturePhases&&) noexcept = delete;

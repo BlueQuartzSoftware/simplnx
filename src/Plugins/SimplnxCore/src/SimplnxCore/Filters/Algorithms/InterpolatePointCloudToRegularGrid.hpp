@@ -67,7 +67,7 @@ public:
   /**
    * @brief Destroys the non-owning interpolation algorithm.
    */
-  ~InterpolatePointCloudToRegularGrid() noexcept;
+  ~InterpolatePointCloudToRegularGrid() noexcept = default;
 
   InterpolatePointCloudToRegularGrid(const InterpolatePointCloudToRegularGrid&) = delete;
   InterpolatePointCloudToRegularGrid(InterpolatePointCloudToRegularGrid&&) noexcept = delete;

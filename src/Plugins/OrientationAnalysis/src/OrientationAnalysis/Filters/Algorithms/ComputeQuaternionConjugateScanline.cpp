@@ -29,7 +29,7 @@ ComputeQuaternionConjugateScanline::ComputeQuaternionConjugateScanline(DataStruc
 {
 }
 
-ComputeQuaternionConjugateScanline::~ComputeQuaternionConjugateScanline() noexcept = default;
+
 
 Result<> ComputeQuaternionConjugateScanline::operator()()
 {

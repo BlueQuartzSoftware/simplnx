@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~CopyFeatureArrayToElementArray() noexcept;
+  ~CopyFeatureArrayToElementArray() noexcept = default;
 
   CopyFeatureArrayToElementArray(const CopyFeatureArrayToElementArray&) = delete;
   CopyFeatureArrayToElementArray(CopyFeatureArrayToElementArray&&) noexcept = delete;

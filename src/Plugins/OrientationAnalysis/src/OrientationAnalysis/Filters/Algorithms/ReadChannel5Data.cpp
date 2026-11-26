@@ -66,7 +66,7 @@ ReadChannel5Data::ReadChannel5Data(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-ReadChannel5Data::~ReadChannel5Data() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ReadChannel5Data::operator()()

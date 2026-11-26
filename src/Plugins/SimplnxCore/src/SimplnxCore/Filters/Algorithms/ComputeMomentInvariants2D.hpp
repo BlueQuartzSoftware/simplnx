@@ -59,7 +59,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeMomentInvariants2D() noexcept;
+  ~ComputeMomentInvariants2D() noexcept = default;
 
   ComputeMomentInvariants2D(const ComputeMomentInvariants2D&) = delete;
   ComputeMomentInvariants2D(ComputeMomentInvariants2D&&) noexcept = delete;

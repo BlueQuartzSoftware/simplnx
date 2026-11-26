@@ -287,7 +287,7 @@ WriteOnScaleTableFile::WriteOnScaleTableFile(DataStructure& dataStructure, const
 {
 }
 
-WriteOnScaleTableFile::~WriteOnScaleTableFile() noexcept = default;
+
 
 Result<> WriteOnScaleTableFile::operator()()
 {

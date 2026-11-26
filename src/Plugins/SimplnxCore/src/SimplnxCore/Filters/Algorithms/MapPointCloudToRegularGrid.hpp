@@ -28,7 +28,7 @@ class SIMPLNXCORE_EXPORT MapPointCloudToRegularGrid
 {
 public:
   MapPointCloudToRegularGrid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MapPointCloudToRegularGridInputValues* inputValues);
-  ~MapPointCloudToRegularGrid() noexcept;
+  ~MapPointCloudToRegularGrid() noexcept = default;
 
   MapPointCloudToRegularGrid(const MapPointCloudToRegularGrid&) = delete;
   MapPointCloudToRegularGrid(MapPointCloudToRegularGrid&&) noexcept = delete;

@@ -14,7 +14,7 @@ WriteGBCDTriangleData::WriteGBCDTriangleData(DataStructure& dataStructure, const
 {
 }
 
-WriteGBCDTriangleData::~WriteGBCDTriangleData() noexcept = default;
+
 
 const std::atomic_bool& WriteGBCDTriangleData::getCancel()
 {

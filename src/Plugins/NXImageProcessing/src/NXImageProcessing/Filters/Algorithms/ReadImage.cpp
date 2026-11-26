@@ -444,7 +444,7 @@ ReadImage::ReadImage(DataStructure& dataStructure, const IFilter::MessageHandler
 {
 }
 
-ReadImage::~ReadImage() noexcept = default;
+
 
 Result<> ReadImage::operator()()
 {

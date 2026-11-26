@@ -27,7 +27,7 @@ class SIMPLNXCORE_EXPORT PointSampleEdgeGeometry
 {
 public:
   PointSampleEdgeGeometry(DataStructure& dataStructure, PointSampleEdgeGeometryInputValues* inputValues, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel);
-  ~PointSampleEdgeGeometry() noexcept;
+  ~PointSampleEdgeGeometry() noexcept = default;
 
   PointSampleEdgeGeometry(const PointSampleEdgeGeometry&) = delete;
   PointSampleEdgeGeometry(PointSampleEdgeGeometry&&) noexcept = delete;

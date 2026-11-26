@@ -77,7 +77,7 @@ class SIMPLNXCORE_EXPORT CreateGeometry
 {
 public:
   CreateGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateGeometryInputValues* inputValues);
-  ~CreateGeometry() noexcept;
+  ~CreateGeometry() noexcept = default;
 
   CreateGeometry(const CreateGeometry&) = delete;
   CreateGeometry(CreateGeometry&&) noexcept = delete;

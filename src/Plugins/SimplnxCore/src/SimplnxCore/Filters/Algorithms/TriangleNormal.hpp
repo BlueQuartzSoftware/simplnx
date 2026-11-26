@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT TriangleNormal
 {
 public:
   TriangleNormal(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, TriangleNormalInputValues* inputValues);
-  ~TriangleNormal() noexcept;
+  ~TriangleNormal() noexcept = default;
 
   TriangleNormal(const TriangleNormal&) = delete;
   TriangleNormal(TriangleNormal&&) noexcept = delete;

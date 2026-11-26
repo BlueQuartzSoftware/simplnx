@@ -32,7 +32,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeBoundaryCellsScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeBoundaryCellsInputValues* inputValues);
-  ~ComputeBoundaryCellsScanline() noexcept;
+  ~ComputeBoundaryCellsScanline() noexcept = default;
 
   ComputeBoundaryCellsScanline(const ComputeBoundaryCellsScanline&) = delete;
   ComputeBoundaryCellsScanline(ComputeBoundaryCellsScanline&&) noexcept = delete;

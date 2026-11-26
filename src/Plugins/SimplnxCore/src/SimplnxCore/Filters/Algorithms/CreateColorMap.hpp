@@ -22,7 +22,7 @@ class SIMPLNXCORE_EXPORT CreateColorMap
 {
 public:
   CreateColorMap(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, CreateColorMapInputValues* inputValues);
-  ~CreateColorMap() noexcept;
+  ~CreateColorMap() noexcept = default;
 
   CreateColorMap(const CreateColorMap&) = delete;
   CreateColorMap(CreateColorMap&&) noexcept = delete;

@@ -90,7 +90,7 @@ public:
    * @pre All arguments outlive this generator.
    */
   WritePoleFigure(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WritePoleFigureInputValues* inputValues);
-  ~WritePoleFigure() noexcept;
+  ~WritePoleFigure() noexcept = default;
 
   WritePoleFigure(const WritePoleFigure&) = delete;
   WritePoleFigure(WritePoleFigure&&) noexcept = delete;

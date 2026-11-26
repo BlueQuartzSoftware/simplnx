@@ -56,7 +56,7 @@ public:
   /**
    * @brief Destroys the Bad Data Neighbor Orientation Check dispatcher.
    */
-  ~BadDataNeighborOrientationCheck() noexcept;
+  ~BadDataNeighborOrientationCheck() noexcept = default;
 
   BadDataNeighborOrientationCheck(const BadDataNeighborOrientationCheck&) = delete;
   BadDataNeighborOrientationCheck(BadDataNeighborOrientationCheck&&) noexcept = delete;

@@ -55,7 +55,7 @@ public:
   /**
    * @brief Destroys the .ctf reader.
    */
-  ~ReadCtfData() noexcept;
+  ~ReadCtfData() noexcept = default;
 
   ReadCtfData(const ReadCtfData&) = delete;
   ReadCtfData(ReadCtfData&&) noexcept = delete;

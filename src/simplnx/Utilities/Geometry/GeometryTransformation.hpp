@@ -104,7 +104,7 @@ public:
   /**
    * @brief Destroys the geometry transformation algorithm.
    */
-  ~ApplyTransformationToGeometry() noexcept;
+  ~ApplyTransformationToGeometry() noexcept = default;
 
   ApplyTransformationToGeometry(const ApplyTransformationToGeometry&) = delete;
   ApplyTransformationToGeometry(ApplyTransformationToGeometry&&) noexcept = delete;

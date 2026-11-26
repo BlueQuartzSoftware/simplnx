@@ -50,7 +50,7 @@ public:
   /**
    * @brief Destroys the non-owning grayscale dispatcher.
    */
-  ~ConvertColorToGrayScale() noexcept;
+  ~ConvertColorToGrayScale() noexcept = default;
 
   ConvertColorToGrayScale(const ConvertColorToGrayScale&) = delete;
   ConvertColorToGrayScale(ConvertColorToGrayScale&&) noexcept = delete;

@@ -30,7 +30,7 @@ ApproximatePointCloudHull::ApproximatePointCloudHull(DataStructure& dataStructur
 }
 
 // -----------------------------------------------------------------------------
-ApproximatePointCloudHull::~ApproximatePointCloudHull() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ApproximatePointCloudHull::operator()()

@@ -293,7 +293,7 @@ ComputeFeatureBoundsScanline::ComputeFeatureBoundsScanline(DataStructure& dataSt
 {
 }
 
-ComputeFeatureBoundsScanline::~ComputeFeatureBoundsScanline() noexcept = default;
+
 
 Result<> ComputeFeatureBoundsScanline::operator()()
 {

@@ -313,7 +313,7 @@ CreateColorMapDirect::CreateColorMapDirect(DataStructure& dataStructure, const I
 {
 }
 
-CreateColorMapDirect::~CreateColorMapDirect() noexcept = default;
+
 
 Result<> CreateColorMapDirect::operator()()
 {

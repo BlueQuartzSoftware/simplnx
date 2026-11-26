@@ -406,7 +406,7 @@ AlignGeometries::AlignGeometries(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-AlignGeometries::~AlignGeometries() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> AlignGeometries::operator()()

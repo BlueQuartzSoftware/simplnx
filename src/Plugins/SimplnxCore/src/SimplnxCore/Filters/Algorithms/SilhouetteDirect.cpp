@@ -158,7 +158,7 @@ SilhouetteDirect::SilhouetteDirect(DataStructure& dataStructure, const IFilter::
 {
 }
 
-SilhouetteDirect::~SilhouetteDirect() noexcept = default;
+
 
 Result<> SilhouetteDirect::operator()()
 {

@@ -355,7 +355,7 @@ ReadNIfTIFile::ReadNIfTIFile(DataStructure& dataStructure, const IFilter::Messag
 }
 
 // -----------------------------------------------------------------------------
-ReadNIfTIFile::~ReadNIfTIFile() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ReadNIfTIFile::operator()()

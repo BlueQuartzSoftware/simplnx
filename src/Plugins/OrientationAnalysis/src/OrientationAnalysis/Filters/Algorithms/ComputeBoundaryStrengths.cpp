@@ -21,7 +21,7 @@ ComputeBoundaryStrengths::ComputeBoundaryStrengths(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-ComputeBoundaryStrengths::~ComputeBoundaryStrengths() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeBoundaryStrengths::getCancel()

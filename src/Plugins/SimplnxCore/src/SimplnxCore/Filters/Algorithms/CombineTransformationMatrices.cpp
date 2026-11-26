@@ -71,7 +71,7 @@ CombineTransformationMatrices::CombineTransformationMatrices(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-CombineTransformationMatrices::~CombineTransformationMatrices() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineTransformationMatrices::getCancel()

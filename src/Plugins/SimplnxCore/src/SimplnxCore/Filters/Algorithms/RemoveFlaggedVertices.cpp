@@ -70,7 +70,7 @@ RemoveFlaggedVertices::RemoveFlaggedVertices(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-RemoveFlaggedVertices::~RemoveFlaggedVertices() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedVertices::operator()()

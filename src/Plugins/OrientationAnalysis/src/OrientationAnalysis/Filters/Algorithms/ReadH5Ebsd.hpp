@@ -72,7 +72,7 @@ public:
    * @pre All arguments outlive this importer.
    */
   ReadH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5EbsdInputValues* inputValues);
-  ~ReadH5Ebsd() noexcept;
+  ~ReadH5Ebsd() noexcept = default;
 
   ReadH5Ebsd(const ReadH5Ebsd&) = delete;
   ReadH5Ebsd(ReadH5Ebsd&&) = delete;

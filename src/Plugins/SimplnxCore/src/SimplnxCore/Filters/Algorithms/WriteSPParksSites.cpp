@@ -106,7 +106,7 @@ WriteSPParksSites::WriteSPParksSites(DataStructure& dataStructure, const IFilter
 {
 }
 
-WriteSPParksSites::~WriteSPParksSites() noexcept = default;
+
 
 const std::atomic_bool& WriteSPParksSites::getCancel()
 {

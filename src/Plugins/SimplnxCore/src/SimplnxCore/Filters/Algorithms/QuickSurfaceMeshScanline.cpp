@@ -386,7 +386,7 @@ QuickSurfaceMeshScanline::QuickSurfaceMeshScanline(DataStructure& dataStructure,
   generator.seed(k_Seed);
 }
 
-QuickSurfaceMeshScanline::~QuickSurfaceMeshScanline() noexcept = default;
+
 
 Result<> QuickSurfaceMeshScanline::operator()()
 {

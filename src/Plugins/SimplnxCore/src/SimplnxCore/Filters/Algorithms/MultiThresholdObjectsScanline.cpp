@@ -302,7 +302,7 @@ MultiThresholdObjectsScanline::MultiThresholdObjectsScanline(DataStructure& data
 {
 }
 
-MultiThresholdObjectsScanline::~MultiThresholdObjectsScanline() noexcept = default;
+
 
 Result<> MultiThresholdObjectsScanline::operator()()
 {

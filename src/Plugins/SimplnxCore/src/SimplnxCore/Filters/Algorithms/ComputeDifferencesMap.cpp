@@ -99,7 +99,7 @@ ComputeDifferencesMap::ComputeDifferencesMap(DataStructure& dataStructure, const
 {
 }
 
-ComputeDifferencesMap::~ComputeDifferencesMap() noexcept = default;
+
 
 Result<> ComputeDifferencesMap::operator()()
 {

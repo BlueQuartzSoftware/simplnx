@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteVtkStructuredPoints() noexcept;
+  ~WriteVtkStructuredPoints() noexcept = default;
 
   WriteVtkStructuredPoints(const WriteVtkStructuredPoints&) = delete;
   WriteVtkStructuredPoints(WriteVtkStructuredPoints&&) noexcept = delete;

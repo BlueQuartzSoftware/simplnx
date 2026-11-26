@@ -950,7 +950,7 @@ ComputeEuclideanDistMapScanline::ComputeEuclideanDistMapScanline(DataStructure& 
 {
 }
 
-ComputeEuclideanDistMapScanline::~ComputeEuclideanDistMapScanline() noexcept = default;
+
 
 Result<> ComputeEuclideanDistMapScanline::operator()()
 {

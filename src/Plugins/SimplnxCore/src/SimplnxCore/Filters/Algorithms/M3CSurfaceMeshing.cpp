@@ -3172,7 +3172,7 @@ M3CSurfaceMeshing::M3CSurfaceMeshing(DataStructure& dataStructure, M3CSurfaceMes
 {
 }
 
-M3CSurfaceMeshing::~M3CSurfaceMeshing() noexcept = default;
+
 
 Result<> M3CSurfaceMeshing::operator()()
 {

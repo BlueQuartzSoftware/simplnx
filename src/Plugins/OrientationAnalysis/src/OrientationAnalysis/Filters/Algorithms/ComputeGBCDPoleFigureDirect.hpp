@@ -67,7 +67,7 @@ public:
   /**
    * @brief Destroys the direct GBCD pole-figure executor.
    */
-  ~ComputeGBCDPoleFigureDirect() noexcept;
+  ~ComputeGBCDPoleFigureDirect() noexcept = default;
 
   ComputeGBCDPoleFigureDirect(const ComputeGBCDPoleFigureDirect&) = delete;
   ComputeGBCDPoleFigureDirect(ComputeGBCDPoleFigureDirect&&) noexcept = delete;

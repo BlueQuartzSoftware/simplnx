@@ -328,7 +328,7 @@ ReadH5Ebsd::ReadH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-ReadH5Ebsd::~ReadH5Ebsd() noexcept = default;
+
 
 Result<> ReadH5Ebsd::operator()()
 {

@@ -279,7 +279,7 @@ ReadOnScaleTableFile::ReadOnScaleTableFile(DataStructure& dataStructure, const I
 {
 }
 
-ReadOnScaleTableFile::~ReadOnScaleTableFile() noexcept = default;
+
 
 Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::filesystem::path& inputFile)
 {

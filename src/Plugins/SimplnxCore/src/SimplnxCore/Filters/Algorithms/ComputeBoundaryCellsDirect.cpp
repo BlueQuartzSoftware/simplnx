@@ -17,7 +17,7 @@ ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStruct
 {
 }
 
-ComputeBoundaryCellsDirect::~ComputeBoundaryCellsDirect() noexcept = default;
+
 
 Result<> ComputeBoundaryCellsDirect::operator()()
 {

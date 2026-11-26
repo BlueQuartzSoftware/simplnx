@@ -31,7 +31,7 @@ public:
   /**
    * @brief Destroys the non-owning bulk-I/O algorithm.
    */
-  ~CreateColorMapScanline() noexcept;
+  ~CreateColorMapScanline() noexcept = default;
 
   CreateColorMapScanline(const CreateColorMapScanline&) = delete;
   CreateColorMapScanline(CreateColorMapScanline&&) noexcept = delete;

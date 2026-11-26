@@ -231,7 +231,7 @@ public:
   /**
    * @brief Destroys the complete-array generator.
    */
-  ~InitializeData() noexcept;
+  ~InitializeData() noexcept = default;
 
   InitializeData(const InitializeData&) = delete;
   InitializeData(InitializeData&&) noexcept = delete;

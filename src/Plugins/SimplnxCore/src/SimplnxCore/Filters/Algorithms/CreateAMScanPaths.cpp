@@ -336,7 +336,7 @@ CreateAMScanPaths::CreateAMScanPaths(DataStructure& dataStructure, const IFilter
 {
 }
 
-CreateAMScanPaths::~CreateAMScanPaths() noexcept = default;
+
 
 const std::atomic_bool& CreateAMScanPaths::getCancel()
 {

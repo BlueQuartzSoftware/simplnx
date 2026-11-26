@@ -301,7 +301,7 @@ ExtractComponentAsArray::ExtractComponentAsArray(DataStructure& dataStructure, c
 }
 
 // -----------------------------------------------------------------------------
-ExtractComponentAsArray::~ExtractComponentAsArray() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractComponentAsArray::getCancel()

@@ -1280,7 +1280,7 @@ DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-DBSCANDirect::~DBSCANDirect() noexcept = default;
+
 
 Result<> DBSCANDirect::operator()()
 {

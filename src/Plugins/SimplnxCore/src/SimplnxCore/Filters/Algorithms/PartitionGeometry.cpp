@@ -18,7 +18,7 @@ PartitionGeometry::PartitionGeometry(DataStructure& dataStructure, const IFilter
 {
 }
 
-PartitionGeometry::~PartitionGeometry() noexcept = default;
+
 
 Result<> PartitionGeometry::operator()()
 {

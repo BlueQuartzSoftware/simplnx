@@ -25,7 +25,7 @@ class SIMPLNXCORE_EXPORT WriteLAMMPSFile
 {
 public:
   WriteLAMMPSFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteLAMMPSFileInputValues* inputValues);
-  ~WriteLAMMPSFile() noexcept;
+  ~WriteLAMMPSFile() noexcept = default;
 
   WriteLAMMPSFile(const WriteLAMMPSFile&) = delete;
   WriteLAMMPSFile(WriteLAMMPSFile&&) noexcept = delete;

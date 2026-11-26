@@ -43,7 +43,7 @@ public:
   /**
    * @brief Destroys the direct IPF color executor.
    */
-  ~ComputeIPFColorsDirect() noexcept;
+  ~ComputeIPFColorsDirect() noexcept = default;
 
   ComputeIPFColorsDirect(const ComputeIPFColorsDirect&) = delete;
   ComputeIPFColorsDirect(ComputeIPFColorsDirect&&) = delete;

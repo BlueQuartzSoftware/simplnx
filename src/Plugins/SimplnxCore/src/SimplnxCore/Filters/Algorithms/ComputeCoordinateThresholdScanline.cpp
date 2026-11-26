@@ -96,7 +96,7 @@ ComputeCoordinateThresholdScanline::ComputeCoordinateThresholdScanline(DataStruc
 {
 }
 
-ComputeCoordinateThresholdScanline::~ComputeCoordinateThresholdScanline() noexcept = default;
+
 
 Result<> ComputeCoordinateThresholdScanline::operator()()
 {

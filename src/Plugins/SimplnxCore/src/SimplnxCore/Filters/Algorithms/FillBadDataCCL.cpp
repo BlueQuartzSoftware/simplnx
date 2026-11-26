@@ -246,7 +246,7 @@ FillBadDataCCL::FillBadDataCCL(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-FillBadDataCCL::~FillBadDataCCL() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& FillBadDataCCL::getCancel() const

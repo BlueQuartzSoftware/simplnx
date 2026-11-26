@@ -458,7 +458,7 @@ ComputeKMeansScanline::ComputeKMeansScanline(DataStructure& dataStructure, const
 {
 }
 
-ComputeKMeansScanline::~ComputeKMeansScanline() noexcept = default;
+
 
 void ComputeKMeansScanline::updateProgress(const std::string& message)
 {

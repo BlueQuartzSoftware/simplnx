@@ -509,7 +509,7 @@ RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataSt
 {
 }
 
-RegularGridSampleSurfaceMesh::~RegularGridSampleSurfaceMesh() noexcept = default;
+
 
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {

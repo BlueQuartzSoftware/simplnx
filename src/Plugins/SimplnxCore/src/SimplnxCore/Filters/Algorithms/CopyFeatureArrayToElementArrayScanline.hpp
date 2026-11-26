@@ -36,7 +36,7 @@ public:
   /**
    * @brief Destroys the non-owning bulk-I/O algorithm.
    */
-  ~CopyFeatureArrayToElementArrayScanline() noexcept;
+  ~CopyFeatureArrayToElementArrayScanline() noexcept = default;
 
   CopyFeatureArrayToElementArrayScanline(const CopyFeatureArrayToElementArrayScanline&) = delete;
   CopyFeatureArrayToElementArrayScanline(CopyFeatureArrayToElementArrayScanline&&) noexcept = delete;

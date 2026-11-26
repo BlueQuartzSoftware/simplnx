@@ -31,7 +31,7 @@ ComputeFeatureReferenceMisorientations::ComputeFeatureReferenceMisorientations(D
 {
 }
 
-ComputeFeatureReferenceMisorientations::~ComputeFeatureReferenceMisorientations() noexcept = default;
+
 
 const std::atomic_bool& ComputeFeatureReferenceMisorientations::getCancel()
 {

@@ -46,7 +46,7 @@ ReadTextDataArray::ReadTextDataArray(DataStructure& dataStructure, const IFilter
 {
 }
 
-ReadTextDataArray::~ReadTextDataArray() noexcept = default;
+
 
 Result<> ReadTextDataArray::operator()()
 {

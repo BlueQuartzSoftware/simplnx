@@ -55,7 +55,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues);
-  ~DBSCAN() noexcept;
+  ~DBSCAN() noexcept = default;
 
   DBSCAN(const DBSCAN&) = delete;
   DBSCAN(DBSCAN&&) noexcept = delete;

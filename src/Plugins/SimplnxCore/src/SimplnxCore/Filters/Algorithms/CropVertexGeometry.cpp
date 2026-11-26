@@ -41,7 +41,7 @@ CropVertexGeometry::CropVertexGeometry(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-CropVertexGeometry::~CropVertexGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> CropVertexGeometry::operator()()

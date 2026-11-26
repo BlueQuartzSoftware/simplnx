@@ -57,7 +57,7 @@ public:
   /**
    * @brief Destroys the feature-reference misorientation executor.
    */
-  ~ComputeFeatureReferenceMisorientations() noexcept;
+  ~ComputeFeatureReferenceMisorientations() noexcept = default;
 
   ComputeFeatureReferenceMisorientations(const ComputeFeatureReferenceMisorientations&) = delete;
   ComputeFeatureReferenceMisorientations(ComputeFeatureReferenceMisorientations&&) noexcept = delete;

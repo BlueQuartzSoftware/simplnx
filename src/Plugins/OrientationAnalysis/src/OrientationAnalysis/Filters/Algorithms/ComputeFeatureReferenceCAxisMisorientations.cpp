@@ -32,7 +32,7 @@ ComputeFeatureReferenceCAxisMisorientations::ComputeFeatureReferenceCAxisMisorie
 {
 }
 
-ComputeFeatureReferenceCAxisMisorientations::~ComputeFeatureReferenceCAxisMisorientations() noexcept = default;
+
 
 Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 {

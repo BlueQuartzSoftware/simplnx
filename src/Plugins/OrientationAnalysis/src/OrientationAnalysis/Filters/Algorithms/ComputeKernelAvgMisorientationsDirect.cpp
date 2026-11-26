@@ -213,7 +213,7 @@ ComputeKernelAvgMisorientationsDirect::ComputeKernelAvgMisorientationsDirect(Dat
 {
 }
 
-ComputeKernelAvgMisorientationsDirect::~ComputeKernelAvgMisorientationsDirect() noexcept = default;
+
 
 Result<> ComputeKernelAvgMisorientationsDirect::operator()()
 {

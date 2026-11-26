@@ -46,7 +46,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteLosAlamosFFT() noexcept;
+  ~WriteLosAlamosFFT() noexcept = default;
 
   WriteLosAlamosFFT(const WriteLosAlamosFFT&) = delete;
   WriteLosAlamosFFT(WriteLosAlamosFFT&&) noexcept = delete;

@@ -20,7 +20,7 @@ ComputeFeatureNeighborMisorientations::ComputeFeatureNeighborMisorientations(Dat
 }
 
 // -----------------------------------------------------------------------------
-ComputeFeatureNeighborMisorientations::~ComputeFeatureNeighborMisorientations() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborMisorientations::operator()()

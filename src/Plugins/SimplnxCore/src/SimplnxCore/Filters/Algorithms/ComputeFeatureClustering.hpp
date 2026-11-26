@@ -73,7 +73,7 @@ public:
   /**
    * @brief Destroys the feature-clustering algorithm.
    */
-  ~ComputeFeatureClustering() noexcept;
+  ~ComputeFeatureClustering() noexcept = default;
 
   ComputeFeatureClustering(const ComputeFeatureClustering&) = delete;
   ComputeFeatureClustering(ComputeFeatureClustering&&) noexcept = delete;

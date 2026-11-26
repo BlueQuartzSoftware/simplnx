@@ -33,7 +33,7 @@ class SIMPLNXCORE_EXPORT LaplacianSmoothing
 {
 public:
   LaplacianSmoothing(DataStructure& dataStructure, LaplacianSmoothingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~LaplacianSmoothing() noexcept;
+  ~LaplacianSmoothing() noexcept = default;
 
   LaplacianSmoothing(const LaplacianSmoothing&) = delete;
   LaplacianSmoothing(LaplacianSmoothing&&) noexcept = delete;

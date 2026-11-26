@@ -49,7 +49,7 @@ public:
   /**
    * @brief Destroys the feature-rectangle algorithm.
    */
-  ~ComputeFeatureRect() noexcept;
+  ~ComputeFeatureRect() noexcept = default;
 
   ComputeFeatureRect(const ComputeFeatureRect&) = delete;
   ComputeFeatureRect(ComputeFeatureRect&&) noexcept = delete;

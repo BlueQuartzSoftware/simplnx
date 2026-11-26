@@ -54,7 +54,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ExtractVertexGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExtractVertexGeometryInputValues* inputValues);
-  ~ExtractVertexGeometry() noexcept;
+  ~ExtractVertexGeometry() noexcept = default;
 
   ExtractVertexGeometry(const ExtractVertexGeometry&) = delete;
   ExtractVertexGeometry(ExtractVertexGeometry&&) noexcept = delete;

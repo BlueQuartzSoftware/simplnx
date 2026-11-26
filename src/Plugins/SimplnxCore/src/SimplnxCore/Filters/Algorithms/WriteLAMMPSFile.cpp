@@ -26,7 +26,7 @@ WriteLAMMPSFile::WriteLAMMPSFile(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-WriteLAMMPSFile::~WriteLAMMPSFile() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& WriteLAMMPSFile::getCancel()

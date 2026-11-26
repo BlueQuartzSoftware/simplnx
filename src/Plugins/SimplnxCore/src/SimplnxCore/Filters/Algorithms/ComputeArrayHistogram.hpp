@@ -54,7 +54,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ComputeArrayHistogramInputValues* inputValues);
-  ~ComputeArrayHistogram() noexcept;
+  ~ComputeArrayHistogram() noexcept = default;
 
   ComputeArrayHistogram(const ComputeArrayHistogram&) = delete;
   ComputeArrayHistogram(ComputeArrayHistogram&&) noexcept = delete;

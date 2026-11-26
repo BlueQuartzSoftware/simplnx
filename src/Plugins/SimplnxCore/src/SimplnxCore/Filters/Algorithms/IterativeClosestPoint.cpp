@@ -67,7 +67,7 @@ IterativeClosestPoint::IterativeClosestPoint(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-IterativeClosestPoint::~IterativeClosestPoint() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& IterativeClosestPoint::getCancel()

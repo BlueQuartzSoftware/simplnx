@@ -299,7 +299,7 @@ ConvertData::ConvertData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ConvertData::~ConvertData() noexcept = default;
+
 
 const std::atomic_bool& ConvertData::getCancel()
 {

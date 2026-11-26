@@ -31,7 +31,7 @@ class SIMPLNXCORE_EXPORT WriteFeatureDataCSV
 {
 public:
   WriteFeatureDataCSV(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteFeatureDataCSVInputValues* inputValues);
-  ~WriteFeatureDataCSV() noexcept;
+  ~WriteFeatureDataCSV() noexcept = default;
 
   WriteFeatureDataCSV(const WriteFeatureDataCSV&) = delete;
   WriteFeatureDataCSV(WriteFeatureDataCSV&&) noexcept = delete;

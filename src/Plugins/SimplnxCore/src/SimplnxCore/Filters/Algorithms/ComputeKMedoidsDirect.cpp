@@ -250,7 +250,7 @@ ComputeKMedoidsDirect::ComputeKMedoidsDirect(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ComputeKMedoidsDirect::~ComputeKMedoidsDirect() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 void ComputeKMedoidsDirect::updateProgress(const std::string& message)

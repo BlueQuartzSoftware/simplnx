@@ -39,7 +39,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeGBPDMetricBased
 {
 public:
   ComputeGBPDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBPDMetricBasedInputValues* inputValues);
-  ~ComputeGBPDMetricBased() noexcept;
+  ~ComputeGBPDMetricBased() noexcept = default;
 
   ComputeGBPDMetricBased(const ComputeGBPDMetricBased&) = delete;
   ComputeGBPDMetricBased(ComputeGBPDMetricBased&&) noexcept = delete;

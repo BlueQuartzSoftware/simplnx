@@ -34,7 +34,7 @@ class SIMPLNXCORE_EXPORT ExtractPipelineToFile
 {
 public:
   ExtractPipelineToFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExtractPipelineToFileInputValues* inputValues);
-  ~ExtractPipelineToFile() noexcept;
+  ~ExtractPipelineToFile() noexcept = default;
 
   ExtractPipelineToFile(const ExtractPipelineToFile&) = delete;
   ExtractPipelineToFile(ExtractPipelineToFile&&) noexcept = delete;

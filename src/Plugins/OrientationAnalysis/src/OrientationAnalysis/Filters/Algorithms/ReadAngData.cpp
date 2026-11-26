@@ -23,7 +23,7 @@ ReadAngData::ReadAngData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ReadAngData::~ReadAngData() noexcept = default;
+
 
 Result<> ReadAngData::operator()()
 {

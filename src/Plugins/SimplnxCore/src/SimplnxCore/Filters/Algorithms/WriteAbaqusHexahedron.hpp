@@ -64,7 +64,7 @@ public:
   /**
    * @brief Destroys the Abaqus hexahedron writer.
    */
-  ~WriteAbaqusHexahedron() noexcept;
+  ~WriteAbaqusHexahedron() noexcept = default;
 
   WriteAbaqusHexahedron(const WriteAbaqusHexahedron&) = delete;
   WriteAbaqusHexahedron(WriteAbaqusHexahedron&&) noexcept = delete;

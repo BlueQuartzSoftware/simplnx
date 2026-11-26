@@ -169,7 +169,7 @@ ComputeIPFColorsDirect::ComputeIPFColorsDirect(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ComputeIPFColorsDirect::~ComputeIPFColorsDirect() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeIPFColorsDirect::operator()()

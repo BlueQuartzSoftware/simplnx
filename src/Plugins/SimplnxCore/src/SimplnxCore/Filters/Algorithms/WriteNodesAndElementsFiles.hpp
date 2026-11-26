@@ -35,7 +35,7 @@ class SIMPLNXCORE_EXPORT WriteNodesAndElementsFiles
 {
 public:
   WriteNodesAndElementsFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteNodesAndElementsFilesInputValues* inputValues);
-  ~WriteNodesAndElementsFiles() noexcept;
+  ~WriteNodesAndElementsFiles() noexcept = default;
 
   WriteNodesAndElementsFiles(const WriteNodesAndElementsFiles&) = delete;
   WriteNodesAndElementsFiles(WriteNodesAndElementsFiles&&) noexcept = delete;

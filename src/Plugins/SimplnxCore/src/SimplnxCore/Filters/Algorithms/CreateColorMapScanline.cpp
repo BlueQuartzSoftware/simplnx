@@ -199,7 +199,7 @@ CreateColorMapScanline::CreateColorMapScanline(DataStructure& dataStructure, con
 {
 }
 
-CreateColorMapScanline::~CreateColorMapScanline() noexcept = default;
+
 
 Result<> CreateColorMapScanline::operator()()
 {

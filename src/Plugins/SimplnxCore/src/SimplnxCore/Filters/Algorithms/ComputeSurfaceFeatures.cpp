@@ -17,7 +17,7 @@ ComputeSurfaceFeatures::ComputeSurfaceFeatures(DataStructure& dataStructure, con
 {
 }
 
-ComputeSurfaceFeatures::~ComputeSurfaceFeatures() noexcept = default;
+
 
 Result<> ComputeSurfaceFeatures::operator()()
 {

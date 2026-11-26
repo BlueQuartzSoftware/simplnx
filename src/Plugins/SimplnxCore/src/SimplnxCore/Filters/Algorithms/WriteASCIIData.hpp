@@ -50,7 +50,7 @@ class SIMPLNXCORE_EXPORT WriteASCIIData
 {
 public:
   WriteASCIIData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteASCIIDataInputValues* inputValues);
-  ~WriteASCIIData() noexcept;
+  ~WriteASCIIData() noexcept = default;
 
   WriteASCIIData(const WriteASCIIData&) = delete;
   WriteASCIIData(WriteASCIIData&&) noexcept = delete;

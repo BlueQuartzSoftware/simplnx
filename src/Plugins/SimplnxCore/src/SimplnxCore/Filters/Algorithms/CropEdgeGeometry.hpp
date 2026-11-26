@@ -41,7 +41,7 @@ class SIMPLNXCORE_EXPORT CropEdgeGeometry
 {
 public:
   CropEdgeGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, CropEdgeGeometryInputValues* inputValues);
-  ~CropEdgeGeometry() noexcept;
+  ~CropEdgeGeometry() noexcept = default;
 
   CropEdgeGeometry(const CropEdgeGeometry&) = delete;
   CropEdgeGeometry(CropEdgeGeometry&&) noexcept = delete;

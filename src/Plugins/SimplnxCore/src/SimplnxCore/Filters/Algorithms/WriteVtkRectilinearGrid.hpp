@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteVtkRectilinearGrid() noexcept;
+  ~WriteVtkRectilinearGrid() noexcept = default;
 
   WriteVtkRectilinearGrid(const WriteVtkRectilinearGrid&) = delete;
   WriteVtkRectilinearGrid(WriteVtkRectilinearGrid&&) noexcept = delete;

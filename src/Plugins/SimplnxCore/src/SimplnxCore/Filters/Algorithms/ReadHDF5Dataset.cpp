@@ -21,7 +21,7 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-ReadHDF5Dataset::~ReadHDF5Dataset() noexcept = default;
+
 
 Result<> ReadHDF5Dataset::operator()()
 {

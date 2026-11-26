@@ -32,7 +32,7 @@ ComputeFeaturePhases::ComputeFeaturePhases(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFeaturePhases::~ComputeFeaturePhases() noexcept = default;
+
 
 Result<> ComputeFeaturePhases::operator()()
 {

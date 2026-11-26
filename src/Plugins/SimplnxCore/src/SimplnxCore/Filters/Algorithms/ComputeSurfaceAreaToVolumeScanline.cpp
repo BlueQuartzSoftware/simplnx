@@ -28,7 +28,7 @@ ComputeSurfaceAreaToVolumeScanline::ComputeSurfaceAreaToVolumeScanline(DataStruc
 {
 }
 
-ComputeSurfaceAreaToVolumeScanline::~ComputeSurfaceAreaToVolumeScanline() noexcept = default;
+
 
 Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 {

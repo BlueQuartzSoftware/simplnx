@@ -34,7 +34,7 @@ class SIMPLNXCORE_EXPORT RemoveFlaggedVertices
 {
 public:
   RemoveFlaggedVertices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveFlaggedVerticesInputValues* inputValues);
-  ~RemoveFlaggedVertices() noexcept;
+  ~RemoveFlaggedVertices() noexcept = default;
 
   RemoveFlaggedVertices(const RemoveFlaggedVertices&) = delete;
   RemoveFlaggedVertices(RemoveFlaggedVertices&&) noexcept = delete;

@@ -32,7 +32,7 @@ public:
   /**
    * @brief Destroys the non-owning partitioner.
    */
-  ~PartitionGeometryDirect() noexcept;
+  ~PartitionGeometryDirect() noexcept = default;
 
   PartitionGeometryDirect(const PartitionGeometryDirect&) = delete;
   PartitionGeometryDirect(PartitionGeometryDirect&&) noexcept = delete;

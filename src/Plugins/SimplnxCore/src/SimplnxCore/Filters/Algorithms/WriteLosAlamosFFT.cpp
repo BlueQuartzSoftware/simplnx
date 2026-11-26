@@ -339,7 +339,7 @@ WriteLosAlamosFFT::WriteLosAlamosFFT(DataStructure& dataStructure, const IFilter
 {
 }
 
-WriteLosAlamosFFT::~WriteLosAlamosFFT() noexcept = default;
+
 
 const std::atomic_bool& WriteLosAlamosFFT::getCancel()
 {

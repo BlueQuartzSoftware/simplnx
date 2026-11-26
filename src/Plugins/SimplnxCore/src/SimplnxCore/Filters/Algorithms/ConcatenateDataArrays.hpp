@@ -92,7 +92,7 @@ class SIMPLNXCORE_EXPORT ConcatenateDataArrays
 {
 public:
   ConcatenateDataArrays(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ConcatenateDataArraysInputValues* inputValues);
-  ~ConcatenateDataArrays() noexcept;
+  ~ConcatenateDataArrays() noexcept = default;
 
   ConcatenateDataArrays(const ConcatenateDataArrays&) = delete;
   ConcatenateDataArrays(ConcatenateDataArrays&&) noexcept = delete;

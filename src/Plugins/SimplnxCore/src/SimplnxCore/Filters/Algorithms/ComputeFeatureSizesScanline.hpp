@@ -43,7 +43,7 @@ public:
   /**
    * @brief Destroys the scanline feature-size algorithm.
    */
-  ~ComputeFeatureSizesScanline() noexcept;
+  ~ComputeFeatureSizesScanline() noexcept = default;
 
   ComputeFeatureSizesScanline(const ComputeFeatureSizesScanline&) = delete;
   ComputeFeatureSizesScanline(ComputeFeatureSizesScanline&&) noexcept = delete;

@@ -50,7 +50,7 @@ public:
   /**
    * @brief Destroys the difference-map algorithm.
    */
-  ~ComputeDifferencesMap() noexcept;
+  ~ComputeDifferencesMap() noexcept = default;
 
   ComputeDifferencesMap(const ComputeDifferencesMap&) = delete;
   ComputeDifferencesMap(ComputeDifferencesMap&&) noexcept = delete;

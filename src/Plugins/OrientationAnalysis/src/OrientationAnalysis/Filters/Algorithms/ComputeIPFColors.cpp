@@ -16,7 +16,7 @@ ComputeIPFColors::ComputeIPFColors(DataStructure& dataStructure, const IFilter::
 {
 }
 
-ComputeIPFColors::~ComputeIPFColors() noexcept = default;
+
 
 Result<> ComputeIPFColors::operator()()
 {

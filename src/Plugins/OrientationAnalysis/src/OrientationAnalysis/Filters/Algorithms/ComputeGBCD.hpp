@@ -77,7 +77,7 @@ public:
   /**
    * @brief Destroys the GBCD executor.
    */
-  ~ComputeGBCD() noexcept;
+  ~ComputeGBCD() noexcept = default;
 
   ComputeGBCD(const ComputeGBCD&) = delete;
   ComputeGBCD(ComputeGBCD&&) noexcept = delete;

@@ -55,7 +55,7 @@ ReadStringDataArray::ReadStringDataArray(DataStructure& dataStructure, const IFi
 {
 }
 
-ReadStringDataArray::~ReadStringDataArray() noexcept = default;
+
 
 Result<> ReadStringDataArray::operator()()
 {

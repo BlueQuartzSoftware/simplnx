@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the quaternion conversion executor.
    */
-  ~ConvertQuaternion() noexcept;
+  ~ConvertQuaternion() noexcept = default;
 
   ConvertQuaternion(const ConvertQuaternion&) = delete;
   ConvertQuaternion(ConvertQuaternion&&) noexcept = delete;

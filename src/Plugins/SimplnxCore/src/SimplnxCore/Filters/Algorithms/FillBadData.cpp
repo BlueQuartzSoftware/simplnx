@@ -21,7 +21,7 @@ FillBadData::FillBadData(DataStructure& dataStructure, const IFilter::MessageHan
 }
 
 // -----------------------------------------------------------------------------
-FillBadData::~FillBadData() noexcept = default;
+
 
 Result<> FillBadData::operator()()
 {

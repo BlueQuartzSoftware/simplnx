@@ -112,7 +112,7 @@ class NXIMAGEPROCESSING_EXPORT ReadZeissTxmFile
 
 public:
   ReadZeissTxmFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadZeissTxmFileInputValues* inputValues);
-  ~ReadZeissTxmFile() noexcept;
+  ~ReadZeissTxmFile() noexcept = default;
 
   ReadZeissTxmFile(const ReadZeissTxmFile&) = delete;
   ReadZeissTxmFile(ReadZeissTxmFile&&) noexcept = delete;

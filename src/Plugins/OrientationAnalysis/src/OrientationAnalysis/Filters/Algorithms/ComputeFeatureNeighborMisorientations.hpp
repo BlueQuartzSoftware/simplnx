@@ -29,7 +29,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientations
 public:
   ComputeFeatureNeighborMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                         ComputeFeatureNeighborMisorientationsInputValues* inputValues);
-  ~ComputeFeatureNeighborMisorientations() noexcept;
+  ~ComputeFeatureNeighborMisorientations() noexcept = default;
 
   ComputeFeatureNeighborMisorientations(const ComputeFeatureNeighborMisorientations&) = delete;
   ComputeFeatureNeighborMisorientations(ComputeFeatureNeighborMisorientations&&) noexcept = delete;

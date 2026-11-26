@@ -553,7 +553,7 @@ WriteImageScanline::WriteImageScanline(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-WriteImageScanline::~WriteImageScanline() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> WriteImageScanline::operator()()

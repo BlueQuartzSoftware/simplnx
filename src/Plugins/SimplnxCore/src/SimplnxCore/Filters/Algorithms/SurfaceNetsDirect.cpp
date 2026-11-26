@@ -129,7 +129,7 @@ SurfaceNetsDirect::SurfaceNetsDirect(DataStructure& dataStructure, const IFilter
 {
 }
 
-SurfaceNetsDirect::~SurfaceNetsDirect() noexcept = default;
+
 
 Result<> SurfaceNetsDirect::operator()()
 {

@@ -69,7 +69,7 @@ public:
   /**
    * @brief Destroys the ImageGeom subvolume generator.
    */
-  ~InitializeImageGeomCellData() noexcept;
+  ~InitializeImageGeomCellData() noexcept = default;
 
   InitializeImageGeomCellData(const InitializeImageGeomCellData&) = delete;
   InitializeImageGeomCellData(InitializeImageGeomCellData&&) noexcept = delete;

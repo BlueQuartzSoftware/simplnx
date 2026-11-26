@@ -184,7 +184,7 @@ ComputeCoordinateThresholdDirect::ComputeCoordinateThresholdDirect(DataStructure
 {
 }
 
-ComputeCoordinateThresholdDirect::~ComputeCoordinateThresholdDirect() noexcept = default;
+
 
 Result<> ComputeCoordinateThresholdDirect::operator()()
 {

@@ -233,7 +233,7 @@ ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataSt
 {
 }
 
-ComputeSurfaceFeaturesDirect::~ComputeSurfaceFeaturesDirect() noexcept = default;
+
 
 Result<> ComputeSurfaceFeaturesDirect::operator()()
 {

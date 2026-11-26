@@ -18,7 +18,7 @@ IdentifySample::IdentifySample(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-IdentifySample::~IdentifySample() noexcept = default;
+
 
 Result<> IdentifySample::operator()()
 {

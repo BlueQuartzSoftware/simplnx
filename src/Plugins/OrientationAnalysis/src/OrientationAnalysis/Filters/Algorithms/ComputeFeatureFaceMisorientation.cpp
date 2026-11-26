@@ -349,7 +349,7 @@ ComputeFeatureFaceMisorientation::ComputeFeatureFaceMisorientation(DataStructure
 }
 
 // -----------------------------------------------------------------------------
-ComputeFeatureFaceMisorientation::~ComputeFeatureFaceMisorientation() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureFaceMisorientation::operator()()

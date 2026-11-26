@@ -340,7 +340,7 @@ SplitDataArrayByComponent::SplitDataArrayByComponent(DataStructure& dataStructur
 {
 }
 
-SplitDataArrayByComponent::~SplitDataArrayByComponent() noexcept = default;
+
 
 const std::atomic_bool& SplitDataArrayByComponent::getCancel()
 {

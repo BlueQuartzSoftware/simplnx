@@ -64,7 +64,7 @@ public:
   /**
    * @brief Destroys the distance-map algorithm.
    */
-  ~ComputeEuclideanDistMap() noexcept;
+  ~ComputeEuclideanDistMap() noexcept = default;
 
   ComputeEuclideanDistMap(const ComputeEuclideanDistMap&) = delete;
   ComputeEuclideanDistMap(ComputeEuclideanDistMap&&) noexcept = delete;

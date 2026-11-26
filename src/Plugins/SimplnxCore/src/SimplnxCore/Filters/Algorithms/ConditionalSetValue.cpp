@@ -457,7 +457,7 @@ ConditionalSetValue::ConditionalSetValue(DataStructure& dataStructure, const IFi
 {
 }
 
-ConditionalSetValue::~ConditionalSetValue() noexcept = default;
+
 
 Result<> ConditionalSetValue::operator()()
 {

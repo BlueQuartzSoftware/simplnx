@@ -170,7 +170,7 @@ ComputeVectorColors::ComputeVectorColors(DataStructure& dataStructure, const IFi
 {
 }
 
-ComputeVectorColors::~ComputeVectorColors() noexcept = default;
+
 
 const std::atomic_bool& ComputeVectorColors::getCancel()
 {

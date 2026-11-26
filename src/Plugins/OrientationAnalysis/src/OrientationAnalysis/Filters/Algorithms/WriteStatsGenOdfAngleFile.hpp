@@ -54,7 +54,7 @@ public:
    * @pre All arguments outlive this writer.
    */
   WriteStatsGenOdfAngleFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteStatsGenOdfAngleFileInputValues* inputValues);
-  ~WriteStatsGenOdfAngleFile() noexcept;
+  ~WriteStatsGenOdfAngleFile() noexcept = default;
 
   WriteStatsGenOdfAngleFile(const WriteStatsGenOdfAngleFile&) = delete;
   WriteStatsGenOdfAngleFile(WriteStatsGenOdfAngleFile&&) noexcept = delete;

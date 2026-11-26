@@ -61,7 +61,7 @@ public:
   /**
    * @brief Destroys the minimum-size removal algorithm.
    */
-  ~RequireMinimumSizeFeatures() noexcept;
+  ~RequireMinimumSizeFeatures() noexcept = default;
 
   RequireMinimumSizeFeatures(const RequireMinimumSizeFeatures&) = delete;
   RequireMinimumSizeFeatures(RequireMinimumSizeFeatures&&) noexcept = delete;

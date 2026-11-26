@@ -66,7 +66,7 @@ public:
   /**
    * @brief Destroys the feature-size dispatcher.
    */
-  ~ComputeFeatureSizes() noexcept;
+  ~ComputeFeatureSizes() noexcept = default;
 
   ComputeFeatureSizes(const ComputeFeatureSizes&) = delete;
   ComputeFeatureSizes(ComputeFeatureSizes&&) noexcept = delete;

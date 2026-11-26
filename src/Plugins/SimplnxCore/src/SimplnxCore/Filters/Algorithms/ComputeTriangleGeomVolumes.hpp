@@ -24,7 +24,7 @@ class SIMPLNXCORE_EXPORT ComputeTriangleGeomVolumes
 {
 public:
   ComputeTriangleGeomVolumes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeTriangleGeomVolumesInputValues* inputValues);
-  ~ComputeTriangleGeomVolumes() noexcept;
+  ~ComputeTriangleGeomVolumes() noexcept = default;
 
   ComputeTriangleGeomVolumes(const ComputeTriangleGeomVolumes&) = delete;
   ComputeTriangleGeomVolumes(ComputeTriangleGeomVolumes&&) noexcept = delete;

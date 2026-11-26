@@ -182,7 +182,7 @@ CombineAttributeArrays::CombineAttributeArrays(DataStructure& dataStructure, con
 {
 }
 
-CombineAttributeArrays::~CombineAttributeArrays() noexcept = default;
+
 
 const std::atomic_bool& CombineAttributeArrays::getCancel()
 {

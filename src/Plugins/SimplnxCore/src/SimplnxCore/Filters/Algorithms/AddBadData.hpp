@@ -51,7 +51,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   AddBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AddBadDataInputValues* inputValues);
-  ~AddBadData() noexcept;
+  ~AddBadData() noexcept = default;
 
   AddBadData(const AddBadData&) = delete;
   AddBadData(AddBadData&&) noexcept = delete;

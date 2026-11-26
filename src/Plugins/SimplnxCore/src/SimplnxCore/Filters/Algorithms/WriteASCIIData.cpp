@@ -34,7 +34,7 @@ WriteASCIIData::WriteASCIIData(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-WriteASCIIData::~WriteASCIIData() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> WriteASCIIData::operator()()

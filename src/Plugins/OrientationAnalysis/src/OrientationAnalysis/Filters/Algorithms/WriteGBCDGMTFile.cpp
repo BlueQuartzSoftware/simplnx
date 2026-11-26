@@ -68,7 +68,7 @@ WriteGBCDGMTFile::WriteGBCDGMTFile(DataStructure& dataStructure, const IFilter::
 {
 }
 
-WriteGBCDGMTFile::~WriteGBCDGMTFile() noexcept = default;
+
 
 const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 {

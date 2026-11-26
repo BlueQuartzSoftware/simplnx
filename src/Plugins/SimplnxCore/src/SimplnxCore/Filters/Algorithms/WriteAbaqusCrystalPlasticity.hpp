@@ -67,7 +67,7 @@ public:
    */
   WriteAbaqusCrystalPlasticity(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, WriteAbaqusCrystalPlasticityInputValues* inputValues);
 
-  ~WriteAbaqusCrystalPlasticity() noexcept;
+  ~WriteAbaqusCrystalPlasticity() noexcept = default;
 
   WriteAbaqusCrystalPlasticity(const WriteAbaqusCrystalPlasticity&) = delete;
   WriteAbaqusCrystalPlasticity(WriteAbaqusCrystalPlasticity&&) noexcept = delete;

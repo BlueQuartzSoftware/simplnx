@@ -125,7 +125,7 @@ ComputeFeatureClustering::ComputeFeatureClustering(DataStructure& dataStructure,
 {
 }
 
-ComputeFeatureClustering::~ComputeFeatureClustering() noexcept = default;
+
 
 const std::atomic_bool& ComputeFeatureClustering::getCancel()
 {

@@ -65,7 +65,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~RemoveFlaggedFeatures() noexcept;
+  ~RemoveFlaggedFeatures() noexcept = default;
 
   RemoveFlaggedFeatures(const RemoveFlaggedFeatures&) = delete;
   RemoveFlaggedFeatures(RemoveFlaggedFeatures&&) noexcept = delete;

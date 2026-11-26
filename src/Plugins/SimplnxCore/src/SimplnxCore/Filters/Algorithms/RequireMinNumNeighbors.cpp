@@ -28,7 +28,7 @@ RequireMinNumNeighbors::RequireMinNumNeighbors(DataStructure& dataStructure, con
 {
 }
 
-RequireMinNumNeighbors::~RequireMinNumNeighbors() noexcept = default;
+
 
 Result<> RequireMinNumNeighbors::operator()()
 {

@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeSurfaceAreaToVolume() noexcept;
+  ~ComputeSurfaceAreaToVolume() noexcept = default;
 
   ComputeSurfaceAreaToVolume(const ComputeSurfaceAreaToVolume&) = delete;
   ComputeSurfaceAreaToVolume(ComputeSurfaceAreaToVolume&&) noexcept = delete;

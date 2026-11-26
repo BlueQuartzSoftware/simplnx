@@ -37,7 +37,7 @@ public:
   /**
    * @brief Destroys the direct quaternion-conjugation executor.
    */
-  ~ComputeQuaternionConjugateDirect() noexcept;
+  ~ComputeQuaternionConjugateDirect() noexcept = default;
 
   ComputeQuaternionConjugateDirect(const ComputeQuaternionConjugateDirect&) = delete;
   ComputeQuaternionConjugateDirect(ComputeQuaternionConjugateDirect&&) noexcept = delete;

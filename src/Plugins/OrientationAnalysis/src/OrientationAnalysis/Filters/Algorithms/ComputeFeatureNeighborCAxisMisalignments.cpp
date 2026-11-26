@@ -22,7 +22,7 @@ ComputeFeatureNeighborCAxisMisalignments::ComputeFeatureNeighborCAxisMisalignmen
 {
 }
 
-ComputeFeatureNeighborCAxisMisalignments::~ComputeFeatureNeighborCAxisMisalignments() noexcept = default;
+
 
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {

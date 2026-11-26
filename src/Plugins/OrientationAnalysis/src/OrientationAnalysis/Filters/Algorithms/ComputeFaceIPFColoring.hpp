@@ -49,7 +49,7 @@ public:
   /**
    * @brief Destroys the face IPF coloring executor.
    */
-  ~ComputeFaceIPFColoring() noexcept;
+  ~ComputeFaceIPFColoring() noexcept = default;
 
   ComputeFaceIPFColoring(const ComputeFaceIPFColoring&) = delete;
   ComputeFaceIPFColoring(ComputeFaceIPFColoring&&) noexcept = delete;

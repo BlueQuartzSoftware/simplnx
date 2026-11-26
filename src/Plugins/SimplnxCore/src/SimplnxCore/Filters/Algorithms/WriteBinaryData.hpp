@@ -47,7 +47,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteBinaryData() noexcept;
+  ~WriteBinaryData() noexcept = default;
 
   WriteBinaryData(const WriteBinaryData&) = delete;
   WriteBinaryData(WriteBinaryData&&) noexcept = delete;

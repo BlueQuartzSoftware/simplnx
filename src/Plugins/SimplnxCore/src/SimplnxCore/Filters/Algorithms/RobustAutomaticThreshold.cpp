@@ -110,7 +110,7 @@ RobustAutomaticThreshold::RobustAutomaticThreshold(DataStructure& dataStructure,
 {
 }
 
-RobustAutomaticThreshold::~RobustAutomaticThreshold() noexcept = default;
+
 
 Result<> RobustAutomaticThreshold::operator()()
 {

@@ -334,7 +334,7 @@ PartitionGeometryDirect::PartitionGeometryDirect(DataStructure& dataStructure, c
 {
 }
 
-PartitionGeometryDirect::~PartitionGeometryDirect() noexcept = default;
+
 
 const std::atomic_bool& PartitionGeometryDirect::getCancel()
 {

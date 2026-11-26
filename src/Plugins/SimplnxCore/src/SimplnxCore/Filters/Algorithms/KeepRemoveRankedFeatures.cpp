@@ -210,7 +210,7 @@ KeepRemoveRankedFeatures::KeepRemoveRankedFeatures(DataStructure& dataStructure,
 }
 
 // -----------------------------------------------------------------------------
-KeepRemoveRankedFeatures::~KeepRemoveRankedFeatures() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& KeepRemoveRankedFeatures::getCancel()

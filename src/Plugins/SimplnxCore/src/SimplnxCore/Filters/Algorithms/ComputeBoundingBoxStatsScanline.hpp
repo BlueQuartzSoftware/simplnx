@@ -31,7 +31,7 @@ public:
    */
   ComputeBoundingBoxStatsScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                   const ComputeBoundingBoxStatsInputValues* inputValues);
-  ~ComputeBoundingBoxStatsScanline() noexcept;
+  ~ComputeBoundingBoxStatsScanline() noexcept = default;
 
   ComputeBoundingBoxStatsScanline(const ComputeBoundingBoxStatsScanline&) = delete;
   ComputeBoundingBoxStatsScanline(ComputeBoundingBoxStatsScanline&&) noexcept = delete;

@@ -47,7 +47,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
-  ~ComputeKMedoids() noexcept;
+  ~ComputeKMedoids() noexcept = default;
 
   ComputeKMedoids(const ComputeKMedoids&) = delete;
   ComputeKMedoids(ComputeKMedoids&&) noexcept = delete;

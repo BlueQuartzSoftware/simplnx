@@ -80,7 +80,7 @@ class SIMPLNXCORE_EXPORT PointSampleTriangleGeometry
 
 public:
   PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~PointSampleTriangleGeometry() noexcept;
+  ~PointSampleTriangleGeometry() noexcept = default;
 
   PointSampleTriangleGeometry(const PointSampleTriangleGeometry&) = delete;
   PointSampleTriangleGeometry(PointSampleTriangleGeometry&&) noexcept = delete;

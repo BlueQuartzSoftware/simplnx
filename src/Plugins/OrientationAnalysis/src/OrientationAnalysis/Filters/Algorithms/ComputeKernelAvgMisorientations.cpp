@@ -77,7 +77,7 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 {
 }
 
-ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = default;
+
 
 Result<> ComputeKernelAvgMisorientations::operator()()
 {

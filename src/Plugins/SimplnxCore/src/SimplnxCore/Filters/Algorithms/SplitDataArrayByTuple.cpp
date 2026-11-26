@@ -780,7 +780,7 @@ SplitDataArrayByTuple::SplitDataArrayByTuple(DataStructure& dataStructure, const
 {
 }
 
-SplitDataArrayByTuple::~SplitDataArrayByTuple() noexcept = default;
+
 
 const std::atomic_bool& SplitDataArrayByTuple::getCancel()
 {

@@ -63,7 +63,7 @@ IParallelAlgorithm::IParallelAlgorithm()
 }
 
 // -----------------------------------------------------------------------------
-IParallelAlgorithm::~IParallelAlgorithm() = default;
+
 
 // -----------------------------------------------------------------------------
 bool IParallelAlgorithm::getParallelizationEnabled() const

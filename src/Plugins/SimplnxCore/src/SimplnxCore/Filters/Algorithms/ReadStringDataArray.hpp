@@ -32,7 +32,7 @@ class SIMPLNXCORE_EXPORT ReadStringDataArray
 {
 public:
   ReadStringDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadStringDataArrayInputValues* inputValues);
-  ~ReadStringDataArray() noexcept;
+  ~ReadStringDataArray() noexcept = default;
 
   ReadStringDataArray(const ReadStringDataArray&) = delete;
   ReadStringDataArray(ReadStringDataArray&&) noexcept = delete;

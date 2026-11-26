@@ -32,7 +32,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeBoundaryStrengths
 {
 public:
   ComputeBoundaryStrengths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryStrengthsInputValues* inputValues);
-  ~ComputeBoundaryStrengths() noexcept;
+  ~ComputeBoundaryStrengths() noexcept = default;
 
   ComputeBoundaryStrengths(const ComputeBoundaryStrengths&) = delete;
   ComputeBoundaryStrengths(ComputeBoundaryStrengths&&) noexcept = delete;

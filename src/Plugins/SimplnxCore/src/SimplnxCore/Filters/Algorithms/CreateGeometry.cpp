@@ -72,7 +72,7 @@ CreateGeometry::CreateGeometry(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-CreateGeometry::~CreateGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> CreateGeometry::operator()()

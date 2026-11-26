@@ -336,7 +336,7 @@ ComputeGBCDMetricBased::ComputeGBCDMetricBased(DataStructure& dataStructure, con
 {
 }
 
-ComputeGBCDMetricBased::~ComputeGBCDMetricBased() noexcept = default;
+
 
 const std::atomic_bool& ComputeGBCDMetricBased::getCancel()
 {

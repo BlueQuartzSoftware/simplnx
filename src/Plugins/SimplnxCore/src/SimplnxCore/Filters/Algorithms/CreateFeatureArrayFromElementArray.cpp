@@ -161,7 +161,7 @@ CreateFeatureArrayFromElementArray::CreateFeatureArrayFromElementArray(DataStruc
 }
 
 // -----------------------------------------------------------------------------
-CreateFeatureArrayFromElementArray::~CreateFeatureArrayFromElementArray() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> CreateFeatureArrayFromElementArray::operator()()

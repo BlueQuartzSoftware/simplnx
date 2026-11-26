@@ -754,7 +754,7 @@ ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const
 {
 }
 
-ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
+
 
 Result<> ComputeArrayHistogram::operator()()
 {

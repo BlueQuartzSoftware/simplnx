@@ -65,7 +65,7 @@ public:
   /**
    * @brief Destroys the misorientation executor.
    */
-  ~ComputeMisorientations() noexcept;
+  ~ComputeMisorientations() noexcept = default;
 
   ComputeMisorientations(const ComputeMisorientations&) = delete;
   ComputeMisorientations(ComputeMisorientations&&) noexcept = delete;

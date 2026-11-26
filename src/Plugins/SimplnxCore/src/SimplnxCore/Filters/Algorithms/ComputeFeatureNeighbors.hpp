@@ -69,7 +69,7 @@ public:
   /**
    * @brief Destroys the feature-neighbor dispatcher.
    */
-  ~ComputeFeatureNeighbors() noexcept;
+  ~ComputeFeatureNeighbors() noexcept = default;
 
   ComputeFeatureNeighbors(const ComputeFeatureNeighbors&) = delete;
   ComputeFeatureNeighbors(ComputeFeatureNeighbors&&) noexcept = delete;

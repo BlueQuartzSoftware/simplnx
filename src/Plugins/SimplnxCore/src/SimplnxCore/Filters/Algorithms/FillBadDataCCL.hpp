@@ -53,7 +53,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
-  ~FillBadDataCCL() noexcept;
+  ~FillBadDataCCL() noexcept = default;
 
   FillBadDataCCL(const FillBadDataCCL&) = delete;
   FillBadDataCCL(FillBadDataCCL&&) noexcept = delete;

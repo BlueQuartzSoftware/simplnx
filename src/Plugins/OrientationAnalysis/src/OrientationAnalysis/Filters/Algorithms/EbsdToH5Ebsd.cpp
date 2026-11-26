@@ -27,7 +27,7 @@ EbsdToH5Ebsd::EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageH
 }
 
 // -----------------------------------------------------------------------------
-EbsdToH5Ebsd::~EbsdToH5Ebsd() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& EbsdToH5Ebsd::getCancel()

@@ -218,7 +218,7 @@ InitializeImageGeomCellData::InitializeImageGeomCellData(DataStructure& dataStru
 {
 }
 
-InitializeImageGeomCellData::~InitializeImageGeomCellData() noexcept = default;
+
 
 Result<> InitializeImageGeomCellData::operator()()
 {

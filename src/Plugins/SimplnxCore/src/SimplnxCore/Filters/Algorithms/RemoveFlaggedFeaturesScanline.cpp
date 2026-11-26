@@ -550,7 +550,7 @@ RemoveFlaggedFeaturesScanline::RemoveFlaggedFeaturesScanline(DataStructure& data
 {
 }
 
-RemoveFlaggedFeaturesScanline::~RemoveFlaggedFeaturesScanline() noexcept = default;
+
 
 Result<> RemoveFlaggedFeaturesScanline::operator()()
 {

@@ -50,7 +50,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ConditionalSetValue() noexcept;
+  ~ConditionalSetValue() noexcept = default;
 
   ConditionalSetValue(const ConditionalSetValue&) = delete;
   ConditionalSetValue(ConditionalSetValue&&) noexcept = delete;

@@ -17,7 +17,7 @@ ComputeFeatureNeighbors::ComputeFeatureNeighbors(DataStructure& dataStructure, c
 {
 }
 
-ComputeFeatureNeighbors::~ComputeFeatureNeighbors() noexcept = default;
+
 
 Result<> ComputeFeatureNeighbors::operator()()
 {

@@ -293,7 +293,7 @@ CropImageGeometry::CropImageGeometry(DataStructure& dataStructure, const IFilter
 }
 
 // -----------------------------------------------------------------------------
-CropImageGeometry::~CropImageGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> CropImageGeometry::operator()()

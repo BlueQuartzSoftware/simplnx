@@ -61,7 +61,7 @@ public:
    */
   ReadOnScaleTableFile(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ReadOnScaleTableFileInputValues* inputValues);
 
-  ~ReadOnScaleTableFile() noexcept;
+  ~ReadOnScaleTableFile() noexcept = default;
 
   ReadOnScaleTableFile(const ReadOnScaleTableFile&) = delete;
   ReadOnScaleTableFile(ReadOnScaleTableFile&&) noexcept = delete;

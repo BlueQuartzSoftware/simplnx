@@ -72,7 +72,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadTextDataArray() noexcept;
+  ~ReadTextDataArray() noexcept = default;
 
   ReadTextDataArray(const ReadTextDataArray&) = delete;
   ReadTextDataArray(ReadTextDataArray&&) noexcept = delete;

@@ -42,7 +42,7 @@ class SIMPLNXCORE_EXPORT CombineStlFiles
 {
 public:
   CombineStlFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineStlFilesInputValues* inputValues);
-  ~CombineStlFiles() noexcept;
+  ~CombineStlFiles() noexcept = default;
 
   CombineStlFiles(const CombineStlFiles&) = delete;
   CombineStlFiles(CombineStlFiles&&) noexcept = delete;

@@ -2162,7 +2162,7 @@ ArrayCalculator::ArrayCalculator(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-ArrayCalculator::~ArrayCalculator() noexcept = default;
+
 
 const std::atomic_bool& ArrayCalculator::getCancel()
 {

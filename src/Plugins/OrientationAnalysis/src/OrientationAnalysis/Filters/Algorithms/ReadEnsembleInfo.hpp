@@ -28,7 +28,7 @@ class ORIENTATIONANALYSIS_EXPORT ReadEnsembleInfo
 {
 public:
   ReadEnsembleInfo(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadEnsembleInfoInputValues* inputValues);
-  ~ReadEnsembleInfo() noexcept;
+  ~ReadEnsembleInfo() noexcept = default;
 
   ReadEnsembleInfo(const ReadEnsembleInfo&) = delete;
   ReadEnsembleInfo(ReadEnsembleInfo&&) noexcept = delete;

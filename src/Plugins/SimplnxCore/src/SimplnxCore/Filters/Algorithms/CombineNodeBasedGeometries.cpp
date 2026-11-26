@@ -389,7 +389,7 @@ CombineNodeBasedGeometries::CombineNodeBasedGeometries(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-CombineNodeBasedGeometries::~CombineNodeBasedGeometries() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineNodeBasedGeometries::getCancel()

@@ -29,7 +29,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues);
-  ~DBSCANDirect() noexcept;
+  ~DBSCANDirect() noexcept = default;
 
   DBSCANDirect(const DBSCANDirect&) = delete;
   DBSCANDirect(DBSCANDirect&&) noexcept = delete;

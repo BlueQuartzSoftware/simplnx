@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the component-split algorithm.
    */
-  ~SplitDataArrayByComponent() noexcept;
+  ~SplitDataArrayByComponent() noexcept = default;
 
   SplitDataArrayByComponent(const SplitDataArrayByComponent&) = delete;
   SplitDataArrayByComponent(SplitDataArrayByComponent&&) noexcept = delete;

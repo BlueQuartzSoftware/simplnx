@@ -226,7 +226,7 @@ ComputeMisorientations::ComputeMisorientations(DataStructure& dataStructure, con
 {
 }
 
-ComputeMisorientations::~ComputeMisorientations() noexcept = default;
+
 
 Result<> ComputeMisorientations::operator()()
 {

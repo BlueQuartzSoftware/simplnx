@@ -236,7 +236,7 @@ ReadZeissTxmFile::ReadZeissTxmFile(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-ReadZeissTxmFile::~ReadZeissTxmFile() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadZeissTxmFile::getCancel() const

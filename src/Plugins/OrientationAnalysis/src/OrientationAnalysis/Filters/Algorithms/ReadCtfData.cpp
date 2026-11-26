@@ -30,7 +30,7 @@ ReadCtfData::ReadCtfData(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ReadCtfData::~ReadCtfData() noexcept = default;
+
 
 Result<> ReadCtfData::operator()()
 {

@@ -174,7 +174,7 @@ ExtractVertexGeometry::ExtractVertexGeometry(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ExtractVertexGeometry::~ExtractVertexGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractVertexGeometry::getCancel()

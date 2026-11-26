@@ -66,7 +66,7 @@ public:
   /**
    * @brief Destroys the sample-reference rotation algorithm.
    */
-  ~RotateSampleRefFrame() noexcept;
+  ~RotateSampleRefFrame() noexcept = default;
 
   RotateSampleRefFrame(const RotateSampleRefFrame&) = delete;
   RotateSampleRefFrame(RotateSampleRefFrame&&) noexcept = delete;

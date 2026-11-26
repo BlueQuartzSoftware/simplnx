@@ -28,7 +28,7 @@ class SIMPLNXCORE_EXPORT ComputeBiasedFeatures
 {
 public:
   ComputeBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBiasedFeaturesInputValues* inputValues);
-  ~ComputeBiasedFeatures() noexcept;
+  ~ComputeBiasedFeatures() noexcept = default;
 
   ComputeBiasedFeatures(const ComputeBiasedFeatures&) = delete;
   ComputeBiasedFeatures(ComputeBiasedFeatures&&) noexcept = delete;

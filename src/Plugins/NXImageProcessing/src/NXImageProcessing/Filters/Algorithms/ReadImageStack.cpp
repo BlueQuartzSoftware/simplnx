@@ -467,7 +467,7 @@ ReadImageStack::ReadImageStack(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-ReadImageStack::~ReadImageStack() noexcept = default;
+
 
 Result<> ReadImageStack::operator()()
 {

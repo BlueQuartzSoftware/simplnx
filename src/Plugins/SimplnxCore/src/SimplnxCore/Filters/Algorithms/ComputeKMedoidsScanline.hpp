@@ -29,7 +29,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMedoidsScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const KMedoidsInputValues* inputValues);
-  ~ComputeKMedoidsScanline() noexcept;
+  ~ComputeKMedoidsScanline() noexcept = default;
 
   ComputeKMedoidsScanline(const ComputeKMedoidsScanline&) = delete;
   ComputeKMedoidsScanline(ComputeKMedoidsScanline&&) noexcept = delete;

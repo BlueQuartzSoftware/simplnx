@@ -53,7 +53,7 @@ public:
   WriteImage(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const WriteImageInputValues& inputValues);
 
   /** @brief Destroys the image writer. */
-  ~WriteImage() noexcept;
+  ~WriteImage() noexcept = default;
 
   WriteImage(const WriteImage&) = delete;
   WriteImage(WriteImage&&) noexcept = delete;

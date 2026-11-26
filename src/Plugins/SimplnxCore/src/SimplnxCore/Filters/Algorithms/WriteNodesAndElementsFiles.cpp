@@ -90,7 +90,7 @@ WriteNodesAndElementsFiles::WriteNodesAndElementsFiles(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-WriteNodesAndElementsFiles::~WriteNodesAndElementsFiles() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& WriteNodesAndElementsFiles::getCancel()

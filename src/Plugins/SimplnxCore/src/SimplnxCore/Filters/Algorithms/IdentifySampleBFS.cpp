@@ -273,7 +273,7 @@ IdentifySampleBFS::IdentifySampleBFS(DataStructure& dataStructure, const IFilter
 }
 
 // -----------------------------------------------------------------------------
-IdentifySampleBFS::~IdentifySampleBFS() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> IdentifySampleBFS::operator()()

@@ -23,7 +23,7 @@ ExtractPipelineToFile::ExtractPipelineToFile(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ExtractPipelineToFile::~ExtractPipelineToFile() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ExtractPipelineToFile::operator()()

@@ -96,7 +96,7 @@ PadImageGeometry::PadImageGeometry(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-PadImageGeometry::~PadImageGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& PadImageGeometry::getCancel()

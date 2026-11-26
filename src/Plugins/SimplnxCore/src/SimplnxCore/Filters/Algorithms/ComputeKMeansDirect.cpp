@@ -290,7 +290,7 @@ ComputeKMeansDirect::ComputeKMeansDirect(DataStructure& dataStructure, const IFi
 }
 
 // -----------------------------------------------------------------------------
-ComputeKMeansDirect::~ComputeKMeansDirect() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 void ComputeKMeansDirect::updateProgress(const std::string& message)

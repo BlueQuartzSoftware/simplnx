@@ -42,7 +42,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeLargestCrossSections() noexcept;
+  ~ComputeLargestCrossSections() noexcept = default;
 
   ComputeLargestCrossSections(const ComputeLargestCrossSections&) = delete;
   ComputeLargestCrossSections(ComputeLargestCrossSections&&) noexcept = delete;

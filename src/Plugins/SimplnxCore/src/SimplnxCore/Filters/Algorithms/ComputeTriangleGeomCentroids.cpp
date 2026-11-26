@@ -19,7 +19,7 @@ ComputeTriangleGeomCentroids::ComputeTriangleGeomCentroids(DataStructure& dataSt
 }
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomCentroids::~ComputeTriangleGeomCentroids() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeTriangleGeomCentroids::getCancel()

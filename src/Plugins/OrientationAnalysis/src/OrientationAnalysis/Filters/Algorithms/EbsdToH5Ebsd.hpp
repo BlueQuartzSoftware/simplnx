@@ -58,7 +58,7 @@ class ORIENTATIONANALYSIS_EXPORT EbsdToH5Ebsd
 {
 public:
   EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EbsdToH5EbsdInputValues* inputValues);
-  ~EbsdToH5Ebsd() noexcept;
+  ~EbsdToH5Ebsd() noexcept = default;
 
   EbsdToH5Ebsd(const EbsdToH5Ebsd&) = delete;
   EbsdToH5Ebsd(EbsdToH5Ebsd&&) noexcept = delete;

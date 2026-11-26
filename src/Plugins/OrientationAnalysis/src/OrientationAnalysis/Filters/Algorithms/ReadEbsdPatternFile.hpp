@@ -23,7 +23,7 @@ class ORIENTATIONANALYSIS_EXPORT ReadEbsdPatternFile
 {
 public:
   ReadEbsdPatternFile(DataStructure& dataStructure, const ReadEbsdPatternFileInputValues& inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
-  ~ReadEbsdPatternFile() noexcept;
+  ~ReadEbsdPatternFile() noexcept = default;
 
   ReadEbsdPatternFile(const ReadEbsdPatternFile&) = delete;
   ReadEbsdPatternFile(ReadEbsdPatternFile&&) noexcept = delete;

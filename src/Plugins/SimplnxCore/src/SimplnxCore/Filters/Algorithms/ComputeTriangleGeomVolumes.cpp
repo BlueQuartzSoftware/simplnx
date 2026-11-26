@@ -19,7 +19,7 @@ ComputeTriangleGeomVolumes::ComputeTriangleGeomVolumes(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-ComputeTriangleGeomVolumes::~ComputeTriangleGeomVolumes() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeTriangleGeomVolumes::getCancel()

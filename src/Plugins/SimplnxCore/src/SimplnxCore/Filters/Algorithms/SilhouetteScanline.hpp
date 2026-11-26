@@ -41,7 +41,7 @@ public:
   /**
    * @brief Destroys the bulk-I/O silhouette implementation.
    */
-  ~SilhouetteScanline() noexcept;
+  ~SilhouetteScanline() noexcept = default;
 
   SilhouetteScanline(const SilhouetteScanline&) = delete;
   SilhouetteScanline(SilhouetteScanline&&) noexcept = delete;

@@ -25,7 +25,7 @@ class NXIMAGEPROCESSING_EXPORT ReadVolumeGraphicsFile
 {
 public:
   ReadVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadVolumeGraphicsFileInputValues* inputValues);
-  ~ReadVolumeGraphicsFile() noexcept;
+  ~ReadVolumeGraphicsFile() noexcept = default;
 
   ReadVolumeGraphicsFile(const ReadVolumeGraphicsFile&) = delete;
   ReadVolumeGraphicsFile(ReadVolumeGraphicsFile&&) noexcept = delete;

@@ -25,7 +25,7 @@ ExecuteProcess::ExecuteProcess(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-ExecuteProcess::~ExecuteProcess() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExecuteProcess::getCancel()

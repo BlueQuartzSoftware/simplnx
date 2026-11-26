@@ -343,7 +343,7 @@ ComputeFeatureBoundsDirect::ComputeFeatureBoundsDirect(DataStructure& dataStruct
 {
 }
 
-ComputeFeatureBoundsDirect::~ComputeFeatureBoundsDirect() noexcept = default;
+
 
 Result<> ComputeFeatureBoundsDirect::operator()()
 {

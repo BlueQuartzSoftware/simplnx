@@ -3605,7 +3605,7 @@ DBSCANScanline::DBSCANScanline(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-DBSCANScanline::~DBSCANScanline() noexcept = default;
+
 
 Result<> DBSCANScanline::operator()()
 {

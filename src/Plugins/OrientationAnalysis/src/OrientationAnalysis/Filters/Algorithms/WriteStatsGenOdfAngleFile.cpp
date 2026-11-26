@@ -517,7 +517,7 @@ WriteStatsGenOdfAngleFile::WriteStatsGenOdfAngleFile(DataStructure& dataStructur
 {
 }
 
-WriteStatsGenOdfAngleFile::~WriteStatsGenOdfAngleFile() noexcept = default;
+
 
 const std::atomic_bool& WriteStatsGenOdfAngleFile::getCancel()
 {

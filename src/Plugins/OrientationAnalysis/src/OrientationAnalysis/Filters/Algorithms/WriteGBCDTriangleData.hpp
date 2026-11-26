@@ -49,7 +49,7 @@ public:
    * @pre All arguments outlive this writer.
    */
   WriteGBCDTriangleData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteGBCDTriangleDataInputValues* inputValues);
-  ~WriteGBCDTriangleData() noexcept;
+  ~WriteGBCDTriangleData() noexcept = default;
 
   WriteGBCDTriangleData(const WriteGBCDTriangleData&) = delete;
   WriteGBCDTriangleData(WriteGBCDTriangleData&&) noexcept = delete;

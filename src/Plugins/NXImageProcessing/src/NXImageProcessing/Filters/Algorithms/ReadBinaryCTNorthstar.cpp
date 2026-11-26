@@ -201,7 +201,7 @@ ReadBinaryCTNorthstar::ReadBinaryCTNorthstar(DataStructure& dataStructure, const
 {
 }
 
-ReadBinaryCTNorthstar::~ReadBinaryCTNorthstar() noexcept = default;
+
 
 const std::atomic_bool& ReadBinaryCTNorthstar::getCancel()
 {

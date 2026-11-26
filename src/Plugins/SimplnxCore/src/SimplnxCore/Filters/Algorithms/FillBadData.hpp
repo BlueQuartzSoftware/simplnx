@@ -51,7 +51,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
-  ~FillBadData() noexcept;
+  ~FillBadData() noexcept = default;
 
   FillBadData(const FillBadData&) = delete;
   FillBadData(FillBadData&&) noexcept = delete;

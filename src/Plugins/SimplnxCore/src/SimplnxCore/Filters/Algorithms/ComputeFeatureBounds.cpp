@@ -16,7 +16,7 @@ ComputeFeatureBounds::ComputeFeatureBounds(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFeatureBounds::~ComputeFeatureBounds() noexcept = default;
+
 
 Result<> ComputeFeatureBounds::operator()()
 {

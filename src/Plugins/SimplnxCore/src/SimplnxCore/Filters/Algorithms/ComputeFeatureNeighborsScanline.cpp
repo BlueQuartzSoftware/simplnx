@@ -20,7 +20,7 @@ ComputeFeatureNeighborsScanline::ComputeFeatureNeighborsScanline(DataStructure& 
 {
 }
 
-ComputeFeatureNeighborsScanline::~ComputeFeatureNeighborsScanline() noexcept = default;
+
 
 Result<> ComputeFeatureNeighborsScanline::operator()()
 {

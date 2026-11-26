@@ -70,7 +70,7 @@ FillBadDataBFS::FillBadDataBFS(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-FillBadDataBFS::~FillBadDataBFS() noexcept = default;
+
 
 Result<> FillBadDataBFS::operator()()
 {

@@ -115,7 +115,7 @@ ReadRawBinary::ReadRawBinary(DataStructure& dataStructure, const ReadRawBinaryIn
 {
 }
 
-ReadRawBinary::~ReadRawBinary() noexcept = default;
+
 
 Result<> ReadRawBinary::operator()()
 {

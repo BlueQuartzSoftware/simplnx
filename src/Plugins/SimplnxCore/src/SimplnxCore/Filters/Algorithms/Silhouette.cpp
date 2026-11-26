@@ -16,7 +16,7 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-Silhouette::~Silhouette() noexcept = default;
+
 
 const std::atomic_bool& Silhouette::getCancel()
 {

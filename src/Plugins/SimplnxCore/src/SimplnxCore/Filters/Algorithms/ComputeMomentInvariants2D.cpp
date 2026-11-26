@@ -737,7 +737,7 @@ ComputeMomentInvariants2D::ComputeMomentInvariants2D(DataStructure& dataStructur
 {
 }
 
-ComputeMomentInvariants2D::~ComputeMomentInvariants2D() noexcept = default;
+
 
 const std::atomic_bool& ComputeMomentInvariants2D::getCancel()
 {

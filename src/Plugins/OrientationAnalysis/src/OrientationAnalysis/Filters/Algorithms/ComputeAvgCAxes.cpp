@@ -29,7 +29,7 @@ ComputeAvgCAxes::ComputeAvgCAxes(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-ComputeAvgCAxes::~ComputeAvgCAxes() noexcept = default;
+
 
 Result<> ComputeAvgCAxes::operator()()
 {

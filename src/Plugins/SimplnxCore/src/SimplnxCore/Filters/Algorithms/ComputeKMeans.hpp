@@ -51,7 +51,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMeans(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeKMeansInputValues* inputValues);
-  ~ComputeKMeans() noexcept;
+  ~ComputeKMeans() noexcept = default;
 
   ComputeKMeans(const ComputeKMeans&) = delete;
   ComputeKMeans(ComputeKMeans&&) noexcept = delete;

@@ -18,7 +18,7 @@ ComputeBoundaryCellsScanline::ComputeBoundaryCellsScanline(DataStructure& dataSt
 {
 }
 
-ComputeBoundaryCellsScanline::~ComputeBoundaryCellsScanline() noexcept = default;
+
 
 Result<> ComputeBoundaryCellsScanline::operator()()
 {

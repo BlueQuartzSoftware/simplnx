@@ -16,7 +16,7 @@ ComputeBoundaryCells::ComputeBoundaryCells(DataStructure& dataStructure, const I
 {
 }
 
-ComputeBoundaryCells::~ComputeBoundaryCells() noexcept = default;
+
 
 const std::atomic_bool& ComputeBoundaryCells::getCancel()
 {

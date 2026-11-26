@@ -57,7 +57,7 @@ ReverseTriangleWinding::ReverseTriangleWinding(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ReverseTriangleWinding::~ReverseTriangleWinding() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ReverseTriangleWinding::operator()()

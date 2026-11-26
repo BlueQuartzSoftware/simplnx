@@ -45,7 +45,7 @@ public:
    */
   CreateFeatureArrayFromElementArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                      CreateFeatureArrayFromElementArrayInputValues* inputValues);
-  ~CreateFeatureArrayFromElementArray() noexcept;
+  ~CreateFeatureArrayFromElementArray() noexcept = default;
 
   CreateFeatureArrayFromElementArray(const CreateFeatureArrayFromElementArray&) = delete;
   CreateFeatureArrayFromElementArray(CreateFeatureArrayFromElementArray&&) noexcept = delete;

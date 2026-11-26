@@ -1319,7 +1319,7 @@ ComputeBoundingBoxStatsDirect::ComputeBoundingBoxStatsDirect(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ComputeBoundingBoxStatsDirect::~ComputeBoundingBoxStatsDirect() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStatsDirect::operator()()

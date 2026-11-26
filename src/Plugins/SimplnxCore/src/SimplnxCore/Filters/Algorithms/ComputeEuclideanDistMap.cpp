@@ -397,7 +397,7 @@ ComputeEuclideanDistMap::ComputeEuclideanDistMap(DataStructure& dataStructure, c
 {
 }
 
-ComputeEuclideanDistMap::~ComputeEuclideanDistMap() noexcept = default;
+
 
 /**
  * @brief Computes direct distance maps with full-volume resident buffers.

@@ -24,7 +24,7 @@ class SIMPLNXCORE_EXPORT TriangleCentroid
 {
 public:
   TriangleCentroid(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, TriangleCentroidInputValues* inputValues);
-  ~TriangleCentroid() noexcept;
+  ~TriangleCentroid() noexcept = default;
 
   TriangleCentroid(const TriangleCentroid&) = delete;
   TriangleCentroid(TriangleCentroid&&) noexcept = delete;

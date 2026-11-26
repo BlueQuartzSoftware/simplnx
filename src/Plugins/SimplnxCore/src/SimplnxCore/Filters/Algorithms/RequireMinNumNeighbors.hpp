@@ -62,7 +62,7 @@ public:
   /**
    * @brief Destroys the neighbor-count removal algorithm.
    */
-  ~RequireMinNumNeighbors() noexcept;
+  ~RequireMinNumNeighbors() noexcept = default;
 
   RequireMinNumNeighbors(const RequireMinNumNeighbors&) = delete;
   RequireMinNumNeighbors(RequireMinNumNeighbors&&) noexcept = delete;

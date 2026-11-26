@@ -1599,7 +1599,7 @@ IdentifySampleCCL::IdentifySampleCCL(DataStructure& dataStructure, const IFilter
 {
 }
 
-IdentifySampleCCL::~IdentifySampleCCL() noexcept = default;
+
 
 Result<> IdentifySampleCCL::operator()()
 {

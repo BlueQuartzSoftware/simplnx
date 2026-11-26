@@ -38,7 +38,7 @@ public:
   /**
    * @brief Destroys the scanline quaternion-conjugation executor.
    */
-  ~ComputeQuaternionConjugateScanline() noexcept;
+  ~ComputeQuaternionConjugateScanline() noexcept = default;
 
   ComputeQuaternionConjugateScanline(const ComputeQuaternionConjugateScanline&) = delete;
   ComputeQuaternionConjugateScanline(ComputeQuaternionConjugateScanline&&) noexcept = delete;

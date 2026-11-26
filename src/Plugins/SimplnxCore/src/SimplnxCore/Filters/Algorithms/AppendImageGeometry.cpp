@@ -16,7 +16,7 @@ AppendImageGeometry::AppendImageGeometry(DataStructure& dataStructure, const IFi
 {
 }
 
-AppendImageGeometry::~AppendImageGeometry() noexcept = default;
+
 
 const std::atomic_bool& AppendImageGeometry::getCancel()
 {

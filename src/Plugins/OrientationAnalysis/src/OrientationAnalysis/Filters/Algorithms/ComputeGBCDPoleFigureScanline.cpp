@@ -224,7 +224,7 @@ ComputeGBCDPoleFigureScanline::ComputeGBCDPoleFigureScanline(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ComputeGBCDPoleFigureScanline::~ComputeGBCDPoleFigureScanline() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBCDPoleFigureScanline::getCancel()

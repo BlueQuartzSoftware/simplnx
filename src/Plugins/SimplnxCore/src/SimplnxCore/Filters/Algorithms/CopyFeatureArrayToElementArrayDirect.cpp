@@ -108,7 +108,7 @@ CopyFeatureArrayToElementArrayDirect::CopyFeatureArrayToElementArrayDirect(DataS
 {
 }
 
-CopyFeatureArrayToElementArrayDirect::~CopyFeatureArrayToElementArrayDirect() noexcept = default;
+
 
 Result<> CopyFeatureArrayToElementArrayDirect::operator()()
 {

@@ -190,7 +190,7 @@ QuickSurfaceMeshDirect::QuickSurfaceMeshDirect(DataStructure& dataStructure, con
   generator.seed(k_Seed);
 }
 
-QuickSurfaceMeshDirect::~QuickSurfaceMeshDirect() noexcept = default;
+
 
 Result<> QuickSurfaceMeshDirect::operator()()
 {

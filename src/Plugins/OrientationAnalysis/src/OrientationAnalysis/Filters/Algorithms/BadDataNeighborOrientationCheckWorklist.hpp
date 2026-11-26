@@ -45,7 +45,7 @@ public:
   /**
    * @brief Destroys the worklist bad-data executor.
    */
-  ~BadDataNeighborOrientationCheckWorklist() noexcept;
+  ~BadDataNeighborOrientationCheckWorklist() noexcept = default;
 
   BadDataNeighborOrientationCheckWorklist(const BadDataNeighborOrientationCheckWorklist&) = delete;
   BadDataNeighborOrientationCheckWorklist(BadDataNeighborOrientationCheckWorklist&&) noexcept = delete;

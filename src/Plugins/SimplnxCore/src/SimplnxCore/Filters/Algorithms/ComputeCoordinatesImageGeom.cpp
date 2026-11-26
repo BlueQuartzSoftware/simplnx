@@ -343,7 +343,7 @@ ComputeCoordinatesImageGeom::ComputeCoordinatesImageGeom(DataStructure& dataStru
 {
 }
 
-ComputeCoordinatesImageGeom::~ComputeCoordinatesImageGeom() noexcept = default;
+
 
 Result<> ComputeCoordinatesImageGeom::operator()()
 {

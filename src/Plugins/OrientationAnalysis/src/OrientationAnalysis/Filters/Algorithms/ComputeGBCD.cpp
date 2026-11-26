@@ -338,7 +338,7 @@ ComputeGBCD::ComputeGBCD(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ComputeGBCD::~ComputeGBCD() noexcept = default;
+
 
 const std::atomic_bool& ComputeGBCD::getCancel()
 {

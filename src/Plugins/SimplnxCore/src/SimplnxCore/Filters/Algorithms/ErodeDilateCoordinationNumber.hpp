@@ -53,7 +53,7 @@ public:
    */
   ErodeDilateCoordinationNumber(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateCoordinationNumberInputValues* inputValues);
 
-  ~ErodeDilateCoordinationNumber() noexcept;
+  ~ErodeDilateCoordinationNumber() noexcept = default;
 
   ErodeDilateCoordinationNumber(const ErodeDilateCoordinationNumber&) = delete;
   ErodeDilateCoordinationNumber(ErodeDilateCoordinationNumber&&) noexcept = delete;

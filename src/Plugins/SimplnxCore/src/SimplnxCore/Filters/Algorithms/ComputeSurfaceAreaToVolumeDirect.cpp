@@ -26,7 +26,7 @@ ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure
 {
 }
 
-ComputeSurfaceAreaToVolumeDirect::~ComputeSurfaceAreaToVolumeDirect() noexcept = default;
+
 
 Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {

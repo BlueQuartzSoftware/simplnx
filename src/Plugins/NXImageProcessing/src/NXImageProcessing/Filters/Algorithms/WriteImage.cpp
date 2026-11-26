@@ -16,7 +16,7 @@ WriteImage::WriteImage(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-WriteImage::~WriteImage() noexcept = default;
+
 
 Result<> WriteImage::operator()()
 {

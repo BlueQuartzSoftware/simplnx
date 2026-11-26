@@ -228,7 +228,7 @@ ReadNrrdFile::ReadNrrdFile(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-ReadNrrdFile::~ReadNrrdFile() noexcept = default;
+
 
 Result<> ReadNrrdFile::operator()()
 {

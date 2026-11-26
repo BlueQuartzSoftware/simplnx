@@ -37,7 +37,7 @@ class SIMPLNXCORE_EXPORT AlignGeometries
 {
 public:
   AlignGeometries(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignGeometriesInputValues* inputValues);
-  ~AlignGeometries() noexcept;
+  ~AlignGeometries() noexcept = default;
 
   AlignGeometries(const AlignGeometries&) = delete;
   AlignGeometries(AlignGeometries&&) noexcept = delete;

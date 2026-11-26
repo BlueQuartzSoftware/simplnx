@@ -29,7 +29,7 @@ RequireMinimumSizeFeatures::RequireMinimumSizeFeatures(DataStructure& dataStruct
 {
 }
 
-RequireMinimumSizeFeatures::~RequireMinimumSizeFeatures() noexcept = default;
+
 
 Result<> RequireMinimumSizeFeatures::operator()()
 {

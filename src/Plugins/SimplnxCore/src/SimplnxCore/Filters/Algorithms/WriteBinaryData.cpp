@@ -17,7 +17,7 @@ WriteBinaryData::WriteBinaryData(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-WriteBinaryData::~WriteBinaryData() noexcept = default;
+
 
 Result<> WriteBinaryData::operator()()
 {

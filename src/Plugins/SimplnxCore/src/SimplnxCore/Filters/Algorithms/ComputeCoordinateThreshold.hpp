@@ -59,7 +59,7 @@ public:
   /**
    * @brief Destroys the coordinate-threshold algorithm.
    */
-  ~ComputeCoordinateThreshold() noexcept;
+  ~ComputeCoordinateThreshold() noexcept = default;
 
   ComputeCoordinateThreshold(const ComputeCoordinateThreshold&) = delete;
   ComputeCoordinateThreshold(ComputeCoordinateThreshold&&) noexcept = delete;

@@ -53,7 +53,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadBinaryCTNorthstar() noexcept;
+  ~ReadBinaryCTNorthstar() noexcept = default;
 
   ReadBinaryCTNorthstar(const ReadBinaryCTNorthstar&) = delete;
   ReadBinaryCTNorthstar(ReadBinaryCTNorthstar&&) noexcept = delete;

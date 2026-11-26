@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeSurfaceFeatures() noexcept;
+  ~ComputeSurfaceFeatures() noexcept = default;
 
   ComputeSurfaceFeatures(const ComputeSurfaceFeatures&) = delete;
   ComputeSurfaceFeatures(ComputeSurfaceFeatures&&) noexcept = delete;

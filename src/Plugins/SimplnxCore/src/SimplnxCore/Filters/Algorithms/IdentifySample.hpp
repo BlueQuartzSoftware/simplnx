@@ -51,7 +51,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   IdentifySample(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, IdentifySampleInputValues* inputValues);
-  ~IdentifySample() noexcept;
+  ~IdentifySample() noexcept = default;
 
   IdentifySample(const IdentifySample&) = delete;
   IdentifySample(IdentifySample&&) noexcept = delete;

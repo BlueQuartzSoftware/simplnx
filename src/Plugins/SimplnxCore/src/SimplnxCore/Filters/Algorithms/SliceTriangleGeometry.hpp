@@ -44,7 +44,7 @@ class SIMPLNXCORE_EXPORT SliceTriangleGeometry
 {
 public:
   SliceTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SliceTriangleGeometryInputValues* inputValues);
-  ~SliceTriangleGeometry() noexcept;
+  ~SliceTriangleGeometry() noexcept = default;
 
   SliceTriangleGeometry(const SliceTriangleGeometry&) = delete;
   SliceTriangleGeometry(SliceTriangleGeometry&&) noexcept = delete;

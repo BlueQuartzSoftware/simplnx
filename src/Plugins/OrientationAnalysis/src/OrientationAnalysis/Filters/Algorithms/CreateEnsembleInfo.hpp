@@ -26,7 +26,7 @@ class ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfo
 {
 public:
   CreateEnsembleInfo(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CreateEnsembleInfoInputValues* inputValues);
-  ~CreateEnsembleInfo() noexcept;
+  ~CreateEnsembleInfo() noexcept = default;
 
   CreateEnsembleInfo(const CreateEnsembleInfo&) = delete;
   CreateEnsembleInfo(CreateEnsembleInfo&&) noexcept = delete;

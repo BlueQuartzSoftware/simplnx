@@ -312,7 +312,7 @@ WriteAbaqusHexahedron::WriteAbaqusHexahedron(DataStructure& dataStructure, const
 {
 }
 
-WriteAbaqusHexahedron::~WriteAbaqusHexahedron() noexcept = default;
+
 
 const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 {

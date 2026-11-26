@@ -25,7 +25,7 @@ ReadStlFile::ReadStlFile(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ReadStlFile::~ReadStlFile() noexcept = default;
+
 
 Result<> ReadStlFile::operator()()
 {

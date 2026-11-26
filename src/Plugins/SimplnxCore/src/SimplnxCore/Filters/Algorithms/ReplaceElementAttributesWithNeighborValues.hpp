@@ -78,7 +78,7 @@ public:
   /**
    * @brief Destroys the neighbor-replacement algorithm.
    */
-  ~ReplaceElementAttributesWithNeighborValues() noexcept;
+  ~ReplaceElementAttributesWithNeighborValues() noexcept = default;
 
   ReplaceElementAttributesWithNeighborValues(const ReplaceElementAttributesWithNeighborValues&) = delete;
   ReplaceElementAttributesWithNeighborValues(ReplaceElementAttributesWithNeighborValues&&) noexcept = delete;

@@ -404,7 +404,7 @@ ComputeFeatureSizesScanline::ComputeFeatureSizesScanline(DataStructure& dataStru
 {
 }
 
-ComputeFeatureSizesScanline::~ComputeFeatureSizesScanline() noexcept = default;
+
 
 Result<> ComputeFeatureSizesScanline::operator()()
 {

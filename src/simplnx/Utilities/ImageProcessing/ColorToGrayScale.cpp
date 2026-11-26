@@ -594,7 +594,7 @@ ConvertColorToGrayScale::ConvertColorToGrayScale(DataStructure& dataStructure, c
 {
 }
 
-ConvertColorToGrayScale::~ConvertColorToGrayScale() noexcept = default;
+
 
 const std::atomic_bool& ConvertColorToGrayScale::getCancel()
 {

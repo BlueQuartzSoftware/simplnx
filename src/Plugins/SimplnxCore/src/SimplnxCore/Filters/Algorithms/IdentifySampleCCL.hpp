@@ -133,7 +133,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   IdentifySampleCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const IdentifySampleInputValues* inputValues);
-  ~IdentifySampleCCL() noexcept;
+  ~IdentifySampleCCL() noexcept = default;
 
   IdentifySampleCCL(const IdentifySampleCCL&) = delete;
   IdentifySampleCCL(IdentifySampleCCL&&) noexcept = delete;

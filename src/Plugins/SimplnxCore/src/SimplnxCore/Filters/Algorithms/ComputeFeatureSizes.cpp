@@ -16,7 +16,7 @@ ComputeFeatureSizes::ComputeFeatureSizes(DataStructure& dataStructure, const IFi
 {
 }
 
-ComputeFeatureSizes::~ComputeFeatureSizes() noexcept = default;
+
 
 Result<> ComputeFeatureSizes::operator()()
 {

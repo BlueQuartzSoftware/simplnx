@@ -620,7 +620,7 @@ InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-InitializeData::~InitializeData() noexcept = default;
+
 
 const std::atomic_bool& InitializeData::getCancel()
 {

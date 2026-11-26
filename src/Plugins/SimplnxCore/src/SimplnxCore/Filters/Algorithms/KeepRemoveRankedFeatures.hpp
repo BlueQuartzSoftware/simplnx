@@ -59,7 +59,7 @@ class SIMPLNXCORE_EXPORT KeepRemoveRankedFeatures
 {
 public:
   KeepRemoveRankedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KeepRemoveRankedFeaturesInputValues* inputValues);
-  ~KeepRemoveRankedFeatures() noexcept;
+  ~KeepRemoveRankedFeatures() noexcept = default;
 
   KeepRemoveRankedFeatures(const KeepRemoveRankedFeatures&) = delete;
   KeepRemoveRankedFeatures(KeepRemoveRankedFeatures&&) noexcept = delete;

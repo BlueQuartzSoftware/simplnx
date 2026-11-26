@@ -30,7 +30,7 @@ class SIMPLNXCORE_EXPORT HierarchicalSmooth
 {
 public:
   HierarchicalSmooth(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, HierarchicalSmoothInputValues* inputValues);
-  ~HierarchicalSmooth() noexcept;
+  ~HierarchicalSmooth() noexcept = default;
 
   HierarchicalSmooth(const HierarchicalSmooth&) = delete;
   HierarchicalSmooth(HierarchicalSmooth&&) noexcept = delete;

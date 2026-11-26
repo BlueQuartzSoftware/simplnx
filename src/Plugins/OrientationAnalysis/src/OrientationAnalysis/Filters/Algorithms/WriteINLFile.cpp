@@ -72,7 +72,7 @@ WriteINLFile::WriteINLFile(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-WriteINLFile::~WriteINLFile() noexcept = default;
+
 
 const std::atomic_bool& WriteINLFile::getCancel()
 {

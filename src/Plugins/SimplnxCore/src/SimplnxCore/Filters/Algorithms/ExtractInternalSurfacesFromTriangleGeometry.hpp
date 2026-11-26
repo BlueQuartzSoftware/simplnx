@@ -59,7 +59,7 @@ public:
    */
   ExtractInternalSurfacesFromTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                               ExtractInternalSurfacesFromTriangleGeometryInputValues* inputValues);
-  ~ExtractInternalSurfacesFromTriangleGeometry() noexcept;
+  ~ExtractInternalSurfacesFromTriangleGeometry() noexcept = default;
 
   ExtractInternalSurfacesFromTriangleGeometry(const ExtractInternalSurfacesFromTriangleGeometry&) = delete;
   ExtractInternalSurfacesFromTriangleGeometry(ExtractInternalSurfacesFromTriangleGeometry&&) noexcept = delete;

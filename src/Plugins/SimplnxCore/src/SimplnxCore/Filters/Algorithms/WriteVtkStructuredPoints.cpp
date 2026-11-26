@@ -490,7 +490,7 @@ WriteVtkStructuredPoints::WriteVtkStructuredPoints(DataStructure& dataStructure,
 {
 }
 
-WriteVtkStructuredPoints::~WriteVtkStructuredPoints() noexcept = default;
+
 
 const std::atomic_bool& WriteVtkStructuredPoints::getCancel()
 {

@@ -34,7 +34,7 @@ public:
   /**
    * @brief Destroys the non-owning in-memory algorithm.
    */
-  ~ComputeSurfaceFeaturesDirect() noexcept;
+  ~ComputeSurfaceFeaturesDirect() noexcept = default;
 
   ComputeSurfaceFeaturesDirect(const ComputeSurfaceFeaturesDirect&) = delete;
   ComputeSurfaceFeaturesDirect(ComputeSurfaceFeaturesDirect&&) noexcept = delete;

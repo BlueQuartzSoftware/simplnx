@@ -44,7 +44,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   IdentifySampleBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const IdentifySampleInputValues* inputValues);
-  ~IdentifySampleBFS() noexcept;
+  ~IdentifySampleBFS() noexcept = default;
 
   IdentifySampleBFS(const IdentifySampleBFS&) = delete;
   IdentifySampleBFS(IdentifySampleBFS&&) noexcept = delete;

@@ -254,7 +254,7 @@ CropEdgeGeometry::CropEdgeGeometry(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-CropEdgeGeometry::~CropEdgeGeometry() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CropEdgeGeometry::getCancel()

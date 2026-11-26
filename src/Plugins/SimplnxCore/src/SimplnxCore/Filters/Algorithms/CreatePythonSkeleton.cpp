@@ -16,7 +16,7 @@ CreatePythonSkeleton::CreatePythonSkeleton(DataStructure& dataStructure, const I
 }
 
 // -----------------------------------------------------------------------------
-CreatePythonSkeleton::~CreatePythonSkeleton() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CreatePythonSkeleton::getCancel()

@@ -42,7 +42,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBased
 {
 public:
   ComputeGBCDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBCDMetricBasedInputValues* inputValues);
-  ~ComputeGBCDMetricBased() noexcept;
+  ~ComputeGBCDMetricBased() noexcept = default;
 
   ComputeGBCDMetricBased(const ComputeGBCDMetricBased&) = delete;
   ComputeGBCDMetricBased(ComputeGBCDMetricBased&&) noexcept = delete;

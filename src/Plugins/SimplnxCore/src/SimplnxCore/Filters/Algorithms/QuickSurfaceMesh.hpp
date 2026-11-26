@@ -88,7 +88,7 @@ public:
   /**
    * @brief Destroys the dispatcher.
    */
-  ~QuickSurfaceMesh() noexcept;
+  ~QuickSurfaceMesh() noexcept = default;
 
   QuickSurfaceMesh(const QuickSurfaceMesh&) = delete;
   QuickSurfaceMesh(QuickSurfaceMesh&&) noexcept = delete;

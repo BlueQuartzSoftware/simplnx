@@ -26,7 +26,7 @@ ComputeLargestCrossSectionsScanline::ComputeLargestCrossSectionsScanline(DataStr
 }
 
 // -----------------------------------------------------------------------------
-ComputeLargestCrossSectionsScanline::~ComputeLargestCrossSectionsScanline() noexcept = default;
+
 
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSectionsScanline::operator()()
