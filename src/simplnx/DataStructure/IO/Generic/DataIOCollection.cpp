@@ -10,7 +10,6 @@
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
-#include <algorithm>
 
 namespace nx::core
 {

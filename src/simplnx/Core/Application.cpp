@@ -22,14 +22,10 @@
 #include <mach-o/dyld.h>
 #endif
 
-#include <fmt/core.h>
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
-#include "simplnx/Filter/FilterList.hpp"
-#include "simplnx/Plugin/AbstractPlugin.hpp"
-#include "simplnx/Plugin/PluginLoader.hpp"
 
 using namespace nx::core;
 

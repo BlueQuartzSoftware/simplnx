@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstring>

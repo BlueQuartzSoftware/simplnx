@@ -52,7 +52,6 @@ Supporting Paper: https://www.researchgate.net/publication/308703724_Flying_edge
 #include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <array>
 #include <vector>
 

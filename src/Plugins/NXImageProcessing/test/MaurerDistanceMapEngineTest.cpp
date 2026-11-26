@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <catch2/catch.hpp>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <bit>

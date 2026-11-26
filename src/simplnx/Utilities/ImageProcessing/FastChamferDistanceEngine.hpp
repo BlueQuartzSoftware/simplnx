@@ -17,7 +17,6 @@
 #include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstddef>

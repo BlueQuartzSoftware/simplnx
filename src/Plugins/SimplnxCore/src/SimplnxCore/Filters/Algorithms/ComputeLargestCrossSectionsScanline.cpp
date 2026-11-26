@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <memory>
 #include <vector>
 

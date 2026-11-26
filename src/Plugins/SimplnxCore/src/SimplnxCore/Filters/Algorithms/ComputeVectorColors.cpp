@@ -10,7 +10,6 @@
 #include <Eigen/Dense>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 

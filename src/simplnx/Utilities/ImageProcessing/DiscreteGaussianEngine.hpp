@@ -14,7 +14,6 @@
 #include <nonstd/span.hpp>
 
 #include <atomic>
-#include <cmath>
 #include <limits>
 #include <memory>
 #include <optional>

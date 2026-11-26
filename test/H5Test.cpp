@@ -33,7 +33,6 @@
 
 #include "simplnx/UnitTest/DataObjectComparison.hpp"
 #include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "GeometryTestUtilities.hpp"
 
