@@ -137,7 +137,7 @@ std::map<std::string, DataType> GrainMapperReader::getNameToDataTypeMap() const
   return m_NameToDataTypeMap;
 }
 
-std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap() const
+std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap() 
 {
   return GrainMapper3DUtilities::k_NameToCompDimMap;
 }

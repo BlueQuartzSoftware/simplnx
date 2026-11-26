@@ -55,7 +55,7 @@ public:
    *
    * The result queries Application each call so plugin registrations are visible.
    */
-  AvailableValuesType availableValues() const;
+  static AvailableValuesType availableValues() ;
 
   /**
    * @brief Returns registered format identifiers with display names.
@@ -63,7 +63,7 @@ public:
    * Application provides Automatic, In Memory, and registered plugin formats.
    * @return Format identifier and display-name pairs.
    */
-  std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames() const;
+  static std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames() ;
 
   /**
    * @brief Validates a selected data-store format.

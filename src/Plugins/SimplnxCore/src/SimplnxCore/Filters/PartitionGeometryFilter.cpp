@@ -614,7 +614,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
 // -----------------------------------------------------------------------------
 Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
-                                                                                       const DataPath& attrMatrixPath) const
+                                                                                       const DataPath& attrMatrixPath) 
 {
   const auto& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(attrMatrixPath);

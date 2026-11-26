@@ -78,7 +78,7 @@ std::string ObjectIO::getObjectPath() const
   return path;
 }
 
-std::string ObjectIO::getParentName() const
+std::string ObjectIO::getParentName() 
 {
   return "";
 }
@@ -346,7 +346,7 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
   return H5Aexists(selfId, attributeName.c_str()) > 0;
 }
 
-usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
+usize ObjectIO::getNumElementsInAttribute(hid_t attribId) 
 {
   // getTypeFromId() self-locks, so retain the local HDF5 handles across the
   // lock boundary and call it without holding the non-recursive ApiLock.

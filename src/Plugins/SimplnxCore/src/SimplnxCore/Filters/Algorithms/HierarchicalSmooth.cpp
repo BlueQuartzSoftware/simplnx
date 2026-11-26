@@ -373,7 +373,7 @@ private:
     return std::make_tuple(edgeList, fastChainLinkSort(freeBoundary));
   }
 
-  EdgeList fastChainLinkSort(const EdgeList& inList)
+  static EdgeList fastChainLinkSort(const EdgeList& inList)
   {
     // Use std::map for deterministic iteration order across platforms
     std::map<int, std::vector<int>> windingDict;

@@ -38,7 +38,7 @@ Result<> HexahedralGeomIO::finishImportingData(DataStructure& dataStructure, con
   return INodeGeom3dIO::FinishImportingNodeGeom3dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> HexahedralGeomIO::writeData(DataStructureWriter& structureReader, const HexahedralGeom& geom, group_writer_type& parentGroup, bool importable) const
+Result<> HexahedralGeomIO::writeData(DataStructureWriter& structureReader, const HexahedralGeom& geom, group_writer_type& parentGroup, bool importable) 
 {
   auto groupWriter = parentGroup.createGroup(geom.getName());
   return INodeGeom3dIO::WriteNodeGeom3dData(structureReader, geom, parentGroup, importable);

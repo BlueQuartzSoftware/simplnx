@@ -50,7 +50,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& dataGroup, group_writer_type& parentGroup, bool importable) const;
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& dataGroup, group_writer_type& parentGroup, bool importable) ;
 
   /**
    * @param Attempts to write the AttributeMatrix to HDF5.

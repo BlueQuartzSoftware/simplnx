@@ -94,7 +94,7 @@ public:
   {
   }
 
-  Result<> prepareChunk(usize, usize) const
+  static Result<> prepareChunk(usize, usize) 
   {
     return {};
   }

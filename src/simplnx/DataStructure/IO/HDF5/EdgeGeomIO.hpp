@@ -54,7 +54,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroup, bool importable) const;
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroup, bool importable) ;
 
   /**
    * @brief Attempts to write the DataObject to HDF5.

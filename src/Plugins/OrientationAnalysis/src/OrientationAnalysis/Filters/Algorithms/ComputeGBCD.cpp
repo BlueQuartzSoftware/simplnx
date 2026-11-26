@@ -184,7 +184,7 @@ public:
     generate(range.min(), range.max());
   }
 
-  int32 GBCDIndex(const std::vector<float32>& gbcdDelta, const std::vector<int32>& gbcdSz, const std::vector<float32>& gbcdLimits, const float32* eulerN, const float32* sqCoord) const
+  static int32 GBCDIndex(const std::vector<float32>& gbcdDelta, const std::vector<int32>& gbcdSz, const std::vector<float32>& gbcdLimits, const float32* eulerN, const float32* sqCoord) 
   {
     constexpr usize k_GBCDParamCount = 5;
     int32 gbcdIndex = 0;

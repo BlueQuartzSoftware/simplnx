@@ -68,7 +68,7 @@ Result<> BoolParameter::validate(const std::any& value) const
   return {};
 }
 
-bool BoolParameter::checkActive(const std::any& parameterValue, const std::any& associatedValue) const
+bool BoolParameter::checkActive(const std::any& parameterValue, const std::any& associatedValue) 
 {
   auto value = std::any_cast<ValueType>(parameterValue);
   auto storedValue = std::any_cast<ValueType>(associatedValue);

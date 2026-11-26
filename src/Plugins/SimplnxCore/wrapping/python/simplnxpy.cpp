@@ -115,7 +115,7 @@ struct fmt::formatter<nx::core::Error>
    * @param ctx Format-string parse context.
    * @return Iterator at the start of the unconsumed specification.
    */
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
@@ -126,7 +126,7 @@ struct fmt::formatter<nx::core::Error>
    * @param ctx Destination format context.
    * @return Iterator after the formatted text.
    */
-  format_context::iterator format(const nx::core::Error& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::Error& value, format_context& ctx) 
   {
     return fmt::format_to(ctx.out(), "Error(code={}, message='{}')", value.code, value.message);
   }
@@ -191,7 +191,7 @@ struct fmt::formatter<nx::core::Warning>
    * @param ctx Format-string parse context.
    * @return Iterator at the start of the unconsumed specification.
    */
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
@@ -202,7 +202,7 @@ struct fmt::formatter<nx::core::Warning>
    * @param ctx Destination format context.
    * @return Iterator after the formatted text.
    */
-  format_context::iterator format(const nx::core::Warning& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::Warning& value, format_context& ctx) 
   {
     return fmt::format_to(ctx.out(), "Warning(code={}, message='{}')", value.code, value.message);
   }

@@ -38,7 +38,7 @@ Result<> QuadGeomIO::finishImportingData(DataStructure& dataStructure, const Dat
   return INodeGeom2dIO::FinishImportingNodeGeom2dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> QuadGeomIO::writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geom, group_writer_type& parentGroup, bool importable) const
+Result<> QuadGeomIO::writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geom, group_writer_type& parentGroup, bool importable) 
 {
   return INodeGeom2dIO::WriteNodeGeom2dData(dataStructureWriter, geom, parentGroup, importable);
 }

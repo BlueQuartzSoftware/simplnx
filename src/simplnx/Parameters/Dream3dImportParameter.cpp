@@ -182,7 +182,7 @@ Result<> Dream3dImportParameter::validate(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
+Result<> Dream3dImportParameter::validatePath(const ValueType& importData) 
 {
   try
   {

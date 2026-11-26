@@ -25,12 +25,12 @@ template <>
  */
 struct fmt::formatter<nx::core::DataType>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::DataType& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx) 
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }

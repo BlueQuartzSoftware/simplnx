@@ -149,7 +149,7 @@ public:
    * @param importData
    * @return Result<>
    */
-  Result<> validatePath(const ValueType& importData) const;
+  static Result<> validatePath(const ValueType& importData) ;
 
 protected:
   /**

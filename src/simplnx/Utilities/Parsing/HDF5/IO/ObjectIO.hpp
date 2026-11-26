@@ -149,7 +149,7 @@ public:
    * @brief Returns the parent object name.
    * @return Name, or empty string for an invalid object.
    */
-  std::string getParentName() const;
+  static std::string getParentName() ;
 
   /**
    * @brief Returns object attribute count.
@@ -628,7 +628,7 @@ protected:
    * @param attribId Specifies the attribute ID.
    * @return Element count, or 0 after a query failure.
    */
-  usize getNumElementsInAttribute(hid_t attribId) const;
+  static usize getNumElementsInAttribute(hid_t attribId) ;
 
 private:
   std::filesystem::path m_FilePath;

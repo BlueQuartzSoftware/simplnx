@@ -61,7 +61,7 @@ std::vector<std::string> AbstractMontage::getGeometryNames() const
   return names;
 }
 
-std::vector<LinkedPath> AbstractMontage::getLinkedPaths() const
+std::vector<LinkedPath> AbstractMontage::getLinkedPaths() 
 {
   std::vector<LinkedPath> linkedPaths;
   return linkedPaths;

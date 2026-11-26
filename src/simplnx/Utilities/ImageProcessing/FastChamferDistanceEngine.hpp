@@ -410,7 +410,7 @@ private:
     }
   }
 
-  Result<std::unique_ptr<ITemporaryRecordStore>> CreateScratchStore(const TemporaryRecordStoreConfig& config, std::string_view context)
+  static Result<std::unique_ptr<ITemporaryRecordStore>> CreateScratchStore(const TemporaryRecordStoreConfig& config, std::string_view context)
   {
     try
     {

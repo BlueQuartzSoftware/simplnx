@@ -419,7 +419,7 @@ struct NormalFixture
   NormalFixture& operator=(const NormalFixture&) = default;
   NormalFixture& operator=(NormalFixture&&) = default;
 
-  Arguments arguments() const
+  static Arguments arguments() 
   {
     Arguments args;
     args.insertOrAssign(TriangleNormalFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(k_NormalGeometryPath));

@@ -1656,7 +1656,7 @@ hid_t DatasetIO::CreateH5DatasetChunkProperties(const DimsType& chunkDims)
   return cparms;
 }
 
-nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const
+nx::core::Result<> DatasetIO::closeChunkedDataset(const ChunkedDataInfo& datasetInfo) 
 {
   // herr_t error = H5Pclose(datasetInfo.transferProp);
   // if(error < 0)

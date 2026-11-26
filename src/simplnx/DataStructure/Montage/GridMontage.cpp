@@ -220,7 +220,7 @@ GridMontage::DimensionsType GridMontage::getDimensions() const
   return {m_ColumnCount, m_RowCount, m_DepthCount};
 }
 
-GridMontage::BoundsType GridMontage::getBounds() const
+GridMontage::BoundsType GridMontage::getBounds() 
 {
   throw std::runtime_error("Get Bounds not implemented");
 }

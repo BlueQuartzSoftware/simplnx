@@ -64,7 +64,7 @@ typename DataStoreFormatParameter::ValueType DataStoreFormatParameter::defaultSt
   return m_DefaultValue;
 }
 
-typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues() const
+typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues() 
 {
   const auto displayNames = Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
   AvailableValuesType result;
@@ -76,7 +76,7 @@ typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter:
   return result;
 }
 
-std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames() const
+std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames() 
 {
   return Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
 }

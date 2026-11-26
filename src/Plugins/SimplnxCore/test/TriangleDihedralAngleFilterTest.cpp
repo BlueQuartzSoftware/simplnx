@@ -460,7 +460,7 @@ struct DihedralFixture
   DihedralFixture& operator=(const DihedralFixture&) = default;
   DihedralFixture& operator=(DihedralFixture&&) = default;
 
-  Arguments arguments() const
+  static Arguments arguments() 
   {
     Arguments args;
     args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(k_DihedralGeometryPath));

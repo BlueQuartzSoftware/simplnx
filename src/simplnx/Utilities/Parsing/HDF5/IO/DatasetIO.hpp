@@ -281,7 +281,7 @@ public:
    * @param datasetInfo Provides handles to close.
    * @return First HDF5 close error, or success.
    */
-  nx::core::Result<> closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const;
+  static nx::core::Result<> closeChunkedDataset(const ChunkedDataInfo& datasetInfo) ;
 
   /**
    * @brief Reads one chunk selection through open chunk handles.
