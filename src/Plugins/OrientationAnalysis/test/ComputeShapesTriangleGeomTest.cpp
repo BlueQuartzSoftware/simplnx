@@ -78,8 +78,9 @@ void AppendBox(ShapeMesh& mesh, const Point& minimum, const Point& maximum)
   const std::array<Face, 12> faces = {{{0, 2, 1}, {0, 3, 2}, {4, 5, 6}, {4, 6, 7}, {0, 1, 5}, {0, 5, 4}, {1, 2, 6}, {1, 6, 5}, {2, 3, 7}, {2, 7, 6}, {3, 0, 4}, {3, 4, 7}}};
   for(auto face : faces)
   {
-    for(auto& index : face)
+    for(auto& index : face) {
       index += offset;
+}
     mesh.faces.push_back(face);
   }
 }
@@ -98,8 +99,9 @@ DataStructure MeshData(const ShapeMesh& mesh, const Point& centroid, const Frame
   for(usize i = 0; i < mesh.vertices.size(); i++)
   {
     const Point point = centroid + rotation * (mesh.vertices[i] - centroid);
-    for(usize axis = 0; axis < 3; axis++)
+    for(usize axis = 0; axis < 3; axis++) {
       (*vertices)[3 * i + axis] = static_cast<float32>(point[axis]);
+}
   }
   for(usize i = 0; i < mesh.faces.size(); i++)
     for(usize axis = 0; axis < 3; axis++)
@@ -114,8 +116,9 @@ DataStructure MeshData(const ShapeMesh& mesh, const Point& centroid, const Frame
   REQUIRE(labels != nullptr);
   REQUIRE(centers != nullptr);
   centers->fill(0.0F);
-  for(usize axis = 0; axis < 3; axis++)
+  for(usize axis = 0; axis < 3; axis++) {
     (*centers)[3 + axis] = static_cast<float32>(centroid[axis]);
+}
   for(usize i = 0; i < mesh.faces.size(); i++)
   {
     (*labels)[2 * i] = -1;
@@ -303,8 +306,9 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     ExecuteShapes(data);
     const auto& output = Output(data, "AxisLengths");
     const auto& ratios = Output(data, "AspectRatios");
-    for(usize i = 3; i < 6; i++)
+    for(usize i = 3; i < 6; i++) {
       CHECK(output[i] == -1.0F);
+}
     CHECK(ratios[2] == -1.0F);
     CHECK(ratios[3] == -1.0F);
   }
@@ -321,8 +325,9 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     ExecuteShapes(data);
     const auto& output = Output(data, "AxisLengths");
     const auto& ratios = Output(data, "AspectRatios");
-    for(usize i = 3; i < 6; i++)
+    for(usize i = 3; i < 6; i++) {
       CHECK(output[i] == -1.0F);
+}
     CHECK(ratios[2] == -1.0F);
     CHECK(ratios[3] == -1.0F);
   }

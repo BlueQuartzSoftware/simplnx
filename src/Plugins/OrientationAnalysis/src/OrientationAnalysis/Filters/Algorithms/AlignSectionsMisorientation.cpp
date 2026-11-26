@@ -438,24 +438,28 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
   {
     int64 firstRefOffset = (dims[2] - 1) * sliceVoxels;
     auto phaseReadResult = cellPhasesStore.copyIntoBuffer(firstRefOffset, nonstd::span<int32>(refPhasesBuf.data(), sliceVoxels));
-    if(phaseReadResult.invalid())
+    if(phaseReadResult.invalid()) {
       return phaseReadResult;
+}
     auto quatReadResult = quatsStore.copyIntoBuffer(firstRefOffset * 4, nonstd::span<float32>(refQuatsBuf.data(), sliceVoxels * 4));
-    if(quatReadResult.invalid())
+    if(quatReadResult.invalid()) {
       return quatReadResult;
+}
     if(m_InputValues->UseMask)
     {
       if(maskUInt8StorePtr != nullptr)
       {
         auto maskReadResult = maskUInt8StorePtr->copyIntoBuffer(firstRefOffset, nonstd::span<uint8>(refMaskBuf.data(), sliceVoxels));
-        if(maskReadResult.invalid())
+        if(maskReadResult.invalid()) {
           return maskReadResult;
+}
       }
       else if(maskBoolStorePtr != nullptr)
       {
         auto maskReadResult = maskBoolStorePtr->copyIntoBuffer(firstRefOffset, nonstd::span<bool>(boolMaskBuffer.get(), sliceVoxels));
-        if(maskReadResult.invalid())
+        if(maskReadResult.invalid()) {
           return maskReadResult;
+}
         for(int64 idx = 0; idx < sliceVoxels; idx++)
         {
           refMaskBuf[idx] = boolMaskBuffer[idx] ? 1 : 0;
@@ -476,24 +480,28 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     // The reference buffer holds the prior slice after the first iteration.
     int64 curOffset = slice * sliceVoxels;
     auto phaseReadResult = cellPhasesStore.copyIntoBuffer(curOffset, nonstd::span<int32>(curPhasesBuf.data(), sliceVoxels));
-    if(phaseReadResult.invalid())
+    if(phaseReadResult.invalid()) {
       return phaseReadResult;
+}
     auto quatReadResult = quatsStore.copyIntoBuffer(curOffset * 4, nonstd::span<float32>(curQuatsBuf.data(), sliceVoxels * 4));
-    if(quatReadResult.invalid())
+    if(quatReadResult.invalid()) {
       return quatReadResult;
+}
     if(m_InputValues->UseMask)
     {
       if(maskUInt8StorePtr != nullptr)
       {
         auto maskReadResult = maskUInt8StorePtr->copyIntoBuffer(curOffset, nonstd::span<uint8>(curMaskBuf.data(), sliceVoxels));
-        if(maskReadResult.invalid())
+        if(maskReadResult.invalid()) {
           return maskReadResult;
+}
       }
       else if(maskBoolStorePtr != nullptr)
       {
         auto maskReadResult = maskBoolStorePtr->copyIntoBuffer(curOffset, nonstd::span<bool>(boolMaskBuffer.get(), sliceVoxels));
-        if(maskReadResult.invalid())
+        if(maskReadResult.invalid()) {
           return maskReadResult;
+}
         for(int64 idx = 0; idx < sliceVoxels; idx++)
         {
           curMaskBuf[idx] = boolMaskBuffer[idx] ? 1 : 0;

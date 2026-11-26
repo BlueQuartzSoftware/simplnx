@@ -61,8 +61,9 @@ OffsetSet RefCross(int32 rx, int32 ry, int32 rz)
       for(int32 dx = -rx; dx <= rx; ++dx)
       {
         const int32 nonzero = (dx != 0 ? 1 : 0) + (dy != 0 ? 1 : 0) + (dz != 0 ? 1 : 0);
-        if(nonzero <= 1)
+        if(nonzero <= 1) {
           s.emplace(dx, dy, dz);
+}
       }
   return s;
 }
@@ -111,8 +112,9 @@ OffsetSet RefAnnulus(int32 rx, int32 ry, int32 rz)
       {
         const bool outer = EllipsoidValue(dx, dy, dz, outerHx, outerHy, outerHz) <= 1.0;
         const bool inner = EllipsoidValue(dx, dy, dz, innerHx, innerHy, innerHz) <= 1.0;
-        if(outer && !inner)
+        if(outer && !inner) {
           s.emplace(dx, dy, dz);
+}
       }
   return s;
 }

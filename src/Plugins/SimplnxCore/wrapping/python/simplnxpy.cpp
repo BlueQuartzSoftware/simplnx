@@ -293,8 +293,9 @@ static void BindVec2(py::module_& m, const char* name)
       .def(py::init<>())
       .def(py::init<T, T>())
       .def(py::init([](const py::sequence& s) {
-        if(py::len(s) != 2)
+        if(py::len(s) != 2) {
           throw py::type_error("Expected length-2 sequence");
+}
         return Vec{s[0].cast<T>(), s[1].cast<T>()};
       }))
       .def_property(
@@ -303,14 +304,16 @@ static void BindVec2(py::module_& m, const char* name)
           "max", [](const Vec& v) { return v[1]; }, [](Vec& v, T x) { v[1] = x; })
       .def("__getitem__",
            [](const Vec& v, size_t i) {
-             if(i >= 2)
+             if(i >= 2) {
                throw py::index_error();
+}
              return v[i];
            })
       .def("__setitem__",
            [](Vec& v, size_t i, T x) {
-             if(i >= 2)
+             if(i >= 2) {
                throw py::index_error();
+}
              v[i] = x;
            })
       .def(

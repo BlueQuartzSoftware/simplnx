@@ -50,12 +50,15 @@ public:
   {
     ++readCalls;
     readOffsets.push_back(offset);
-    if(cancel || failRead)
+    if(cancel || failRead) {
       return MakeErrorResult<uint64>(-9000, "spy read failure");
-    if(shortRead)
+}
+    if(shortRead) {
       return {count == 0 ? 0 : count - 1};
-    if(offset > m_Count || count > m_Count - offset || bytes.size() < count * m_Width)
+}
+    if(offset > m_Count || count > m_Count - offset || bytes.size() < count * m_Width) {
       return MakeErrorResult<uint64>(-9001, "spy invalid read");
+}
     std::memcpy(bytes.data(), m_Bytes.data() + offset * m_Width, static_cast<usize>(count * m_Width));
     return {count};
   }
@@ -63,10 +66,12 @@ public:
   {
     ++writeCalls;
     writeOffsets.push_back(offset);
-    if(cancel || failWrite)
+    if(cancel || failWrite) {
       return MakeErrorResult(-9002, "spy write failure");
-    if(offset > m_Count || count > m_Count - offset || bytes.size() != count * m_Width)
+}
+    if(offset > m_Count || count > m_Count - offset || bytes.size() != count * m_Width) {
       return MakeErrorResult(-9003, "spy invalid write");
+}
     std::memcpy(m_Bytes.data() + offset * m_Width, bytes.data(), static_cast<usize>(count * m_Width));
     return {};
   }

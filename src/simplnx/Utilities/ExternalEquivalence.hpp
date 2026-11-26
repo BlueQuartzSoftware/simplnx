@@ -93,11 +93,13 @@ public:
   Result<uint64> find(uint64 label, const std::atomic_bool& cancel)
   {
     auto root = findRoot(label, cancel);
-    if(root.invalid())
+    if(root.invalid()) {
       return root;
+}
     auto rootNode = node(root.value(), cancel);
-    if(rootNode.invalid())
+    if(rootNode.invalid()) {
       return ConvertInvalidResult<uint64>(std::move(rootNode));
+}
     return {rootNode.value().representative};
   }
   /**
@@ -111,27 +113,33 @@ public:
   {
     auto l = findRoot(left, cancel);
     auto r = findRoot(right, cancel);
-    if(l.invalid())
+    if(l.invalid()) {
       return ConvertResult(std::move(l));
-    if(r.invalid())
+}
+    if(r.invalid()) {
       return ConvertResult(std::move(r));
-    if(l.value() == r.value())
+}
+    if(l.value() == r.value()) {
       return {};
+}
     uint64 parent = l.value();
     uint64 child = r.value();
     auto p = node(parent, cancel);
     auto c = node(child, cancel);
-    if(p.invalid())
+    if(p.invalid()) {
       return ConvertResult(std::move(p));
-    if(c.invalid())
+}
+    if(c.invalid()) {
       return ConvertResult(std::move(c));
+}
     if(p.value().rank < c.value().rank)
     {
       std::swap(parent, child);
       std::swap(p.value(), c.value());
     }
-    if(p.value().size > std::numeric_limits<uint64>::max() - c.value().size)
+    if(p.value().size > std::numeric_limits<uint64>::max() - c.value().size) {
       return MakeErrorResult(-6052, "External equivalence component size overflow");
+}
     p.value().size += c.value().size;
     p.value().representative = std::min(p.value().representative, c.value().representative);
     c.value().parent = parent;
@@ -140,8 +148,9 @@ public:
       p.value().rank++;
     }
     auto a = m_Cache.write(parent, p.value(), cancel);
-    if(a.invalid())
+    if(a.invalid()) {
       return a;
+}
     return m_Cache.write(child, c.value(), cancel);
   }
   /**
@@ -153,11 +162,13 @@ public:
   Result<uint64> componentSize(uint64 label, const std::atomic_bool& cancel)
   {
     auto root = findRoot(label, cancel);
-    if(root.invalid())
+    if(root.invalid()) {
       return root;
+}
     auto n = node(root.value(), cancel);
-    if(n.invalid())
+    if(n.invalid()) {
       return ConvertInvalidResult<uint64>(std::move(n));
+}
     return {n.value().size};
   }
   /**
@@ -170,13 +181,16 @@ public:
   Result<> addSize(uint64 label, uint64 increment, const std::atomic_bool& cancel)
   {
     auto root = findRoot(label, cancel);
-    if(root.invalid())
+    if(root.invalid()) {
       return ConvertResult(std::move(root));
+}
     auto n = node(root.value(), cancel);
-    if(n.invalid())
+    if(n.invalid()) {
       return ConvertResult(std::move(n));
-    if(n.value().size > std::numeric_limits<uint64>::max() - increment)
+}
+    if(n.value().size > std::numeric_limits<uint64>::max() - increment) {
       return MakeErrorResult(-6052, "External equivalence component size overflow");
+}
     n.value().size += increment;
     return m_Cache.write(root.value(), n.value(), cancel);
   }
@@ -200,21 +214,24 @@ private:
   Result<uint64> findRoot(uint64 label, const std::atomic_bool& cancel)
   {
     auto n = node(label, cancel);
-    if(n.invalid())
+    if(n.invalid()) {
       return ConvertInvalidResult<uint64>(std::move(n));
+}
     uint64 current = label;
     while(n.value().parent != current)
     {
       const uint64 parent = n.value().parent;
       auto parentNode = node(parent, cancel);
-      if(parentNode.invalid())
+      if(parentNode.invalid()) {
         return ConvertInvalidResult<uint64>(std::move(parentNode));
+}
       if(parentNode.value().parent != parent)
       {
         n.value().parent = parentNode.value().parent;
         auto writeResult = m_Cache.write(current, n.value(), cancel);
-        if(writeResult.invalid())
+        if(writeResult.invalid()) {
           return ConvertResultTo<uint64>(std::move(writeResult), uint64{});
+}
       }
       current = parent;
       n = std::move(parentNode);
@@ -231,11 +248,13 @@ private:
    */
   Result<Node> node(uint64 label, const std::atomic_bool& cancel)
   {
-    if(label >= m_Store->recordCount())
+    if(label >= m_Store->recordCount()) {
       return MakeErrorResult<Node>(-6050, "External equivalence label exceeds declared store capacity");
+}
     auto n = m_Cache.read(label, cancel);
-    if(n.invalid())
+    if(n.invalid()) {
       return n;
+}
     if(n.value().initialized != k_InitializedMarker)
     {
       if(n.value().size == 0)
@@ -249,8 +268,9 @@ private:
         n.value().initialized = k_InitializedMarker;
       }
       auto r = m_Cache.write(label, n.value(), cancel);
-      if(r.invalid())
+      if(r.invalid()) {
         return ConvertInvalidResult<Node>(std::move(r));
+}
     }
     return n;
   }

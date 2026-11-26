@@ -31,8 +31,9 @@ MMSurfaceNet::~MMSurfaceNet() = default;
 // Surface smoothing (relaxation)
 void MMSurfaceNet::relax(const RelaxAttrs& relaxAttrs) const
 {
-  if(!m_cellMap)
+  if(!m_cellMap) {
     return;
+}
   m_cellMap->relax(relaxAttrs);
 }
 

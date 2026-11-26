@@ -179,16 +179,17 @@ SystemMemoryInfo GetSystemMemoryInfo()
       std::string unit;
       iss >> key >> value >> unit;
 
-      if(key == "MemTotal:")
+      if(key == "MemTotal:") {
         memTotal = value;
-      else if(key == "MemFree:")
+      } else if(key == "MemFree:") {
         memFree = value;
-      else if(key == "Buffers:")
+      } else if(key == "Buffers:") {
         buffers = value;
-      else if(key == "Cached:")
+      } else if(key == "Cached:") {
         cached = value;
-      else if(key == "SReclaimable:")
+      } else if(key == "SReclaimable:") {
         sReclaimable = value;
+}
     }
 
     // Match the 'used' calculation from the 'free' command:

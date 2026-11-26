@@ -902,8 +902,9 @@ public:
         usize xl = 0, xr = 0;
         calcTrimValues(xl, xr, j, k);
 
-        if(xl == xr)
+        if(xl == xr) {
           continue;
+}
 
         usize triIdx = m_TriCounter[k * (m_NY - 1) + j];
         GridEdge const& ge0 = m_GridEdges[k * m_NY + j];
@@ -1176,22 +1177,30 @@ private:
     const usize lowerRow = j * m_NX;
     const usize upperRow = (j + 1) * m_NX;
     uint8 caseId = 0;
-    if(lowerSlice[lowerRow + i] >= m_IsoVal)
+    if(lowerSlice[lowerRow + i] >= m_IsoVal) {
       caseId |= 1;
-    if(lowerSlice[lowerRow + i + 1] >= m_IsoVal)
+}
+    if(lowerSlice[lowerRow + i + 1] >= m_IsoVal) {
       caseId |= 2;
-    if(lowerSlice[upperRow + i + 1] >= m_IsoVal)
+}
+    if(lowerSlice[upperRow + i + 1] >= m_IsoVal) {
       caseId |= 4;
-    if(lowerSlice[upperRow + i] >= m_IsoVal)
+}
+    if(lowerSlice[upperRow + i] >= m_IsoVal) {
       caseId |= 8;
-    if(upperSlice[lowerRow + i] >= m_IsoVal)
+}
+    if(upperSlice[lowerRow + i] >= m_IsoVal) {
       caseId |= 16;
-    if(upperSlice[lowerRow + i + 1] >= m_IsoVal)
+}
+    if(upperSlice[lowerRow + i + 1] >= m_IsoVal) {
       caseId |= 32;
-    if(upperSlice[upperRow + i + 1] >= m_IsoVal)
+}
+    if(upperSlice[upperRow + i + 1] >= m_IsoVal) {
       caseId |= 64;
-    if(upperSlice[upperRow + i] >= m_IsoVal)
+}
+    if(upperSlice[upperRow + i] >= m_IsoVal) {
       caseId |= 128;
+}
     return caseId;
   }
 

@@ -442,30 +442,35 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     return MakeErrorResult(-62071, "Feature tuple transfer failed to allocate bounded pages.");
   }
   const auto loadId = [&](usize cell) -> Result<K> {
-    if(cell >= featureIds.getNumberOfTuples())
+    if(cell >= featureIds.getNumberOfTuples()) {
       return MakeErrorResult<K>(-62072, "Feature tuple transfer cell index is outside FeatureIds.");
+}
     const usize start = (cell / kTransferPageValues) * kTransferPageValues;
     usize p = 0;
-    while(p < kTransferPageCount && idStarts[p] != start)
+    while(p < kTransferPageCount && idStarts[p] != start) {
       p++;
+}
     if(p == kTransferPageCount)
     {
       p = static_cast<usize>(std::min_element(idUse.begin(), idUse.end()) - idUse.begin());
       auto r = featureIds.copyIntoBuffer(start, nonstd::span<K>(idPages[p].get(), std::min(kTransferPageValues, featureIds.getNumberOfTuples() - start)));
-      if(r.invalid())
+      if(r.invalid()) {
         return ConvertInvalidResult<K>(std::move(r));
+}
       idStarts[p] = start;
     }
     idUse[p] = ++idUseCounter;
     return {idPages[p][cell - start]};
   };
   const auto loadValue = [&](usize feature, usize component) -> Result<const T*> {
-    if(feature >= featureData.getNumberOfTuples())
+    if(feature >= featureData.getNumberOfTuples()) {
       return MakeErrorResult<const T*>(-62073, "Feature tuple transfer feature id is outside its feature array.");
+}
     const usize start = (feature / tuplesPerFeaturePage) * tuplesPerFeaturePage;
     usize p = 0;
-    while(p < kTransferPageCount && valueStarts[p] != start)
+    while(p < kTransferPageCount && valueStarts[p] != start) {
       p++;
+}
     if(p == kTransferPageCount)
     {
       p = static_cast<usize>(std::min_element(valueUse.begin(), valueUse.end()) - valueUse.begin());
@@ -475,8 +480,9 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
         return MakeErrorResult<const T*>(-62077, "Feature tuple transfer page offset overflows usize.");
       }
       auto r = featureData.copyIntoBuffer(start * numComps, nonstd::span<T>(valuePages[p].get(), count * numComps));
-      if(r.invalid())
+      if(r.invalid()) {
         return ConvertInvalidResult<const T*>(std::move(r));
+}
       valueStarts[p] = start;
     }
     valueUse[p] = ++valueUseCounter;
@@ -487,8 +493,9 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     const usize count = std::min(facesPerRun, records.size() - begin);
     const usize first = records[begin].faceIndex;
     if(count > std::numeric_limits<usize>::max() / valuesPerFace || first > std::numeric_limits<usize>::max() / valuesPerFace || first > destination.getNumberOfTuples() ||
-       count > destination.getNumberOfTuples() - first)
+       count > destination.getNumberOfTuples() - first) {
       return MakeErrorResult(-62074, "Feature tuple transfer destination range is invalid.");
+}
     std::unique_ptr<T[]> out;
     try
     {
@@ -504,15 +511,17 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     for(usize n = 0; n < count; n++)
     {
       const auto& rec = records[begin + n];
-      if(rec.faceIndex != first + n)
+      if(rec.faceIndex != first + n) {
         return MakeErrorResult(-62075, "Feature tuple transfer records must be contiguous.");
+}
       const auto cells = sourceIndices(rec);
-      for(usize side = 0; side < 2; side++)
+      for(usize side = 0; side < 2; side++) {
         if(cells[side] != kInvalid)
         {
           auto fid = loadId(cells[side]);
-          if(fid.invalid())
+          if(fid.invalid()) {
             return ConvertResult(std::move(fid));
+}
           if constexpr(std::is_signed_v<K>)
             if(fid.value() < 0)
               return MakeErrorResult(-62076, "Feature tuple transfer encountered a negative feature id.");
@@ -520,15 +529,18 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
           for(usize c = 0; c < numComps; c++)
           {
             auto value = loadValue(feature, c);
-            if(value.invalid())
+            if(value.invalid()) {
               return ConvertResult(std::move(value));
+}
             out[(n * 2 + side) * numComps + c] = *value.value();
           }
         }
+}
     }
     auto r = destination.copyFromBuffer(first * valuesPerFace, nonstd::span<const T>(out.get(), count * valuesPerFace));
-    if(r.invalid())
+    if(r.invalid()) {
       return r;
+}
   }
   return {};
 }

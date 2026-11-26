@@ -278,8 +278,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: nZ==2 Z ramp with edge-cl
   const std::vector<float32> out = RunGradMag<float32>(field, dx, dy, dz, false, {1.0f, 1.0f, 1.0f});
   // Only 2 Z-planes: every voxel's z-neighbors clamp to {0,1}: gz=0.5*(f_z0-f_z1)=0.5*(0-3)=-1.5 -> 1.5.
   // gx=gy=0 (constant in X/Y) -> magnitude 1.5 everywhere (validates nZ==2 window init + z edge-clamp + effDim==3).
-  for(float32 v : out)
+  for(float32 v : out) {
     REQUIRE(v == Approx(1.5f).margin(1e-4));
+}
 }
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: validates stores and cancellation", "[NXImageProcessing][GradientMagnitudeEngine]")
