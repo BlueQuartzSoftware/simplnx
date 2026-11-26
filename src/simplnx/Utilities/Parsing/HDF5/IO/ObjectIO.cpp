@@ -215,7 +215,7 @@ void ObjectIO::deleteAttribute(const std::string& name) const
   // getId() self-locks; resolve it before the leaf-locked existence-check + delete.
   const hid_t selfId = getId();
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-  if(H5Aexists(selfId, name.c_str()))
+  if(H5Aexists(selfId, name.c_str()) != 0)
   {
     H5Adelete(selfId, name.c_str());
   }

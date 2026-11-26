@@ -773,17 +773,17 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
   {
     const char c = equation[i];
 
-    if(std::isspace(static_cast<unsigned char>(c)))
+    if(std::isspace(static_cast<unsigned char>(c)) != 0)
     {
       ++i;
       continue;
     }
 
-    if(std::isdigit(static_cast<unsigned char>(c)) || (c == '.' && i + 1 < len && std::isdigit(static_cast<unsigned char>(equation[i + 1]))))
+    if((std::isdigit(static_cast<unsigned char>(c)) != 0) || (c == '.' && i + 1 < len && (std::isdigit(static_cast<unsigned char>(equation[i + 1])) != 0)))
     {
       size_t start = i;
       bool hasDot = false;
-      while(i < len && (std::isdigit(static_cast<unsigned char>(equation[i])) || equation[i] == '.'))
+      while(i < len && ((std::isdigit(static_cast<unsigned char>(equation[i])) != 0) || equation[i] == '.'))
       {
         if(equation[i] == '.')
         {
@@ -799,10 +799,10 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
       continue;
     }
 
-    if(std::isalpha(static_cast<unsigned char>(c)) || c == '_')
+    if((std::isalpha(static_cast<unsigned char>(c)) != 0) || c == '_')
     {
       size_t start = i;
-      while(i < len && (std::isalnum(static_cast<unsigned char>(equation[i])) || equation[i] == '_'))
+      while(i < len && ((std::isalnum(static_cast<unsigned char>(equation[i])) != 0) || equation[i] == '_'))
       {
         ++i;
       }

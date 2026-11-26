@@ -397,9 +397,9 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
   PointInfo p2{plane.signedDistance(v2)};
 
   // Count the number of vertices on each side of the plane
-  int positiveCount = p0.positive() + p1.positive() + p2.positive();
-  int negativeCount = p0.negative() + p1.negative() + p2.negative();
-  int zeroCount = p0.onPlane() + p1.onPlane() + p2.onPlane();
+  int positiveCount = static_cast<int>(p0.positive()) + static_cast<int>(p1.positive()) + static_cast<int>(p2.positive());
+  int negativeCount = static_cast<int>(p0.negative()) + static_cast<int>(p1.negative()) + static_cast<int>(p2.negative());
+  int zeroCount = static_cast<int>(p0.onPlane()) + static_cast<int>(p1.onPlane()) + static_cast<int>(p2.onPlane());
 
   // No intersection if all vertices are on one side of the plane
   // Handle case where the triangle lies entirely on the plane

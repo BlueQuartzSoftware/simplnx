@@ -115,7 +115,7 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
         -8941, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
   }
 
-  if(!pUseFileValue)
+  if(pUseFileValue == 0u)
   {
     const auto* shiftsArray = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
     if(shiftsArray == nullptr)

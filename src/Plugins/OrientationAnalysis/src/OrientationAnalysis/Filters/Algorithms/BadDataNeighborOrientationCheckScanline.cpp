@@ -75,27 +75,27 @@ inline int32 countMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 di
                                     const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps)
 {
   int32 count = 0;
-  if(xIdx > 0 && curMask[sliceIndex - 1] && isMisorientationMatch(sliceIndex - 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(xIdx > 0 && (curMask[sliceIndex - 1] != 0u) && isMisorientationMatch(sliceIndex - 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(xIdx < dimX - 1 && curMask[sliceIndex + 1] && isMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(xIdx < dimX - 1 && (curMask[sliceIndex + 1] != 0u) && isMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(yIdx > 0 && curMask[sliceIndex - dimX] && isMisorientationMatch(sliceIndex - dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(yIdx > 0 && (curMask[sliceIndex - dimX] != 0u) && isMisorientationMatch(sliceIndex - dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(yIdx < dimY - 1 && curMask[sliceIndex + dimX] && isMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(yIdx < dimY - 1 && (curMask[sliceIndex + dimX] != 0u) && isMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(zIdx > 0 && prevMask[sliceIndex] && isMisorientationMatch(sliceIndex, prevQuats, prevPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(zIdx > 0 && (prevMask[sliceIndex] != 0u) && isMisorientationMatch(sliceIndex, prevQuats, prevPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(zIdx < dimZ - 1 && nextMask[sliceIndex] && isMisorientationMatch(sliceIndex, nextQuats, nextPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(zIdx < dimZ - 1 && (nextMask[sliceIndex] != 0u) && isMisorientationMatch(sliceIndex, nextQuats, nextPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
@@ -288,7 +288,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
           {
             const int64 sliceIndex = jStride + xIdx;
 
-            if(curMask[sliceIndex])
+            if(curMask[sliceIndex] != 0u)
             {
               continue; // already good
             }

@@ -99,7 +99,7 @@ const AbstractMontage::CollectionType& AbstractMontage::getCollection() const
 
 bool AbstractMontage::canInsert(const DataObject* obj) const
 {
-  if(!dynamic_cast<const IGeometry*>(obj))
+  if(dynamic_cast<const IGeometry*>(obj) == nullptr)
   {
     return false;
   }

@@ -953,7 +953,7 @@ public:
           // Interpolate cut edges and record their global vertex indexes.
           std::array<usize, 12> globalIdxs = {};
 
-          if(isCut[0])
+          if(isCut[0] != 0u)
           {
             usize idx = ge0.xstart + x0counter;
             InterpolateIntoArrays(pointCube, gradCube, isoValCube, 0, idx * 3);
@@ -961,7 +961,7 @@ public:
             ++x0counter;
           }
 
-          if(isCut[3])
+          if(isCut[3] != 0u)
           {
             usize idx = ge0.ystart + y0counter;
             InterpolateIntoArrays(pointCube, gradCube, isoValCube, 3, idx * 3);
@@ -969,7 +969,7 @@ public:
             ++y0counter;
           }
 
-          if(isCut[8])
+          if(isCut[8] != 0u)
           {
             usize idx = ge0.zstart + z0counter;
             InterpolateIntoArrays(pointCube, gradCube, isoValCube, 8, idx * 3);
@@ -979,7 +979,7 @@ public:
 
           // Edges 1, 5, 9, and 11 reuse counters under their owner-edge numbers.
           // Boundary versions have no later owner and need no counter increment.
-          if(isCut[1])
+          if(isCut[1] != 0u)
           {
             usize idx = ge0.ystart + y0counter;
             if(isXEnd)
@@ -990,7 +990,7 @@ public:
             globalIdxs[1] = idx;
           }
 
-          if(isCut[9])
+          if(isCut[9] != 0u)
           {
             usize idx = ge0.zstart + z0counter;
             if(isXEnd)
@@ -1001,7 +1001,7 @@ public:
             globalIdxs[9] = idx;
           }
 
-          if(isCut[2])
+          if(isCut[2] != 0u)
           {
             usize idx = ge1.xstart + x1counter;
             if(isYEnd)
@@ -1012,7 +1012,7 @@ public:
             ++x1counter;
           }
 
-          if(isCut[10])
+          if(isCut[10] != 0u)
           {
             usize idx = ge1.zstart + z1counter;
             if(isYEnd)
@@ -1023,7 +1023,7 @@ public:
             ++z1counter;
           }
 
-          if(isCut[4])
+          if(isCut[4] != 0u)
           {
             usize idx = ge2.xstart + x2counter;
             if(isZEnd)
@@ -1034,7 +1034,7 @@ public:
             ++x2counter;
           }
 
-          if(isCut[7])
+          if(isCut[7] != 0u)
           {
             usize idx = ge2.ystart + y2counter;
             if(isZEnd)
@@ -1045,7 +1045,7 @@ public:
             ++y2counter;
           }
 
-          if(isCut[11])
+          if(isCut[11] != 0u)
           {
             usize idx = ge1.zstart + z1counter;
             if(isXEnd and isYEnd)
@@ -1056,7 +1056,7 @@ public:
             globalIdxs[11] = idx;
           }
 
-          if(isCut[5])
+          if(isCut[5] != 0u)
           {
             usize idx = ge2.ystart + y2counter;
             if(isXEnd and isZEnd)
@@ -1067,7 +1067,7 @@ public:
             globalIdxs[5] = idx;
           }
 
-          if(isCut[6])
+          if(isCut[6] != 0u)
           {
             usize idx = ge3.xstart + x3counter;
             if(isYEnd and isZEnd)

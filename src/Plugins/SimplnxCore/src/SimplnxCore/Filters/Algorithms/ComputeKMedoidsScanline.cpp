@@ -446,7 +446,7 @@ private:
       }
       for(usize cluster = 0; cluster < m_Clusters; cluster++)
       {
-        if(!found[cluster] && medoidIndices[cluster] >= offset && medoidIndices[cluster] < offset + count)
+        if((found[cluster] == 0u) && medoidIndices[cluster] >= offset && medoidIndices[cluster] < offset + count)
         {
           std::copy_n(input.data() + (medoidIndices[cluster] - offset) * dims, dims, medoids.data() + (cluster + 1) * dims);
           found[cluster] = 1;

@@ -1092,7 +1092,7 @@ FaceEdgeLoops burnFaceEdgeLoops(const SiteId* afe, const Segment* e1, int nfedge
           tail = tail + 1;
           coin = 1;
         }
-      } while(coin);
+      } while(coin != 0);
     }
   }
 
@@ -1204,7 +1204,7 @@ FaceEdgeLoops burnAndOrientFaceEdgeLoops(const SiteId* afe, Segment* e1, int nfe
           tail = tail + 1;
           coin = 1;
         }
-      } while(coin);
+      } while(coin != 0);
     }
   }
 

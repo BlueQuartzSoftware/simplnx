@@ -51,22 +51,22 @@ WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const 
   WarningCollection results;
   for(const auto& dataPath : paths)
   {
-    if(dataStructure.getDataAs<UInt8Array>(dataPath))
+    if(dataStructure.getDataAs<UInt8Array>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint8_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90004, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt16Array>(dataPath))
+    if(dataStructure.getDataAs<UInt16Array>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint16_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90005, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt32Array>(dataPath))
+    if(dataStructure.getDataAs<UInt32Array>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint32_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90006, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt64Array>(dataPath))
+    if(dataStructure.getDataAs<UInt64Array>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint64_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90007, .message = ss});

@@ -483,7 +483,7 @@ Result<> ComputeTwinBoundaries::operator()()
 
   for(usize i = 0; i < numFaces; i++)
   {
-    if(twinBoundariesOut[i])
+    if(twinBoundariesOut[i] != 0u)
     {
       twinBoundaries->setValue(i, true);
     }

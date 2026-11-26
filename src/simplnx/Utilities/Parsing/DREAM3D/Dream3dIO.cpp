@@ -2211,7 +2211,7 @@ static Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::
   }
 
   // No geometry found. Create a DataGroup instead
-  if(!container)
+  if(container == nullptr)
   {
     container = DataGroup::Create(dataStructure, dcName);
   }
@@ -2830,7 +2830,7 @@ Result<DREAM3D::FileData> DREAM3D::ReadFile(const std::filesystem::path& path)
   auto reader = nx::core::HDF5::FileIO::ReadFile(path);
   nx::core::HDF5::ErrorType error = 0;
 
-  Result<FileData> fileData = ReadFile(reader, error);
+  Result<FileData> fileData = ReadFile(reader, error != 0);
   if(error < 0)
   {
     return MakeErrorResult<FileData>(-1, fmt::format("DREAM3D::ReadFile: Unable to read '{}'", path.string()));

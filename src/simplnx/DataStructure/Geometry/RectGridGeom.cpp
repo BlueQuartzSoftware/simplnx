@@ -171,7 +171,7 @@ Result<> RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array
     return result;
   }
 
-  if(!xBounds)
+  if(xBounds == nullptr)
   {
     m_xBoundsId.reset();
   }
@@ -180,7 +180,7 @@ Result<> RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array
     m_xBoundsId = xBounds->getId();
   }
 
-  if(!yBounds)
+  if(yBounds == nullptr)
   {
     m_yBoundsId.reset();
   }
@@ -189,7 +189,7 @@ Result<> RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array
     m_yBoundsId = yBounds->getId();
   }
 
-  if(!zBounds)
+  if(zBounds == nullptr)
   {
     m_zBoundsId.reset();
   }

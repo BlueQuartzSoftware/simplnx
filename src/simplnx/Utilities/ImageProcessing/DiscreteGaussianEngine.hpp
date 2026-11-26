@@ -218,7 +218,7 @@ inline double ModifiedBesselI(int n, double y)
     }
   }
   accumulator *= ModifiedBesselI0(y) / qi;
-  return (y < 0.0 && (n & 1)) ? -accumulator : accumulator;
+  return (y < 0.0 && ((n & 1) != 0)) ? -accumulator : accumulator;
 }
 
 // Verbatim port of GaussianOperator::GenerateCoefficients. `variance` is already spacing-adjusted by the caller.

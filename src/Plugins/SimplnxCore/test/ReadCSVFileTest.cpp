@@ -320,7 +320,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 1): Valid filter execution")
   v = {std::to_string(std::numeric_limits<float64>::min()), std::to_string(std::numeric_limits<float64>::max())};
   TestCase_TestPrimitives<float64>(scope, v);
 
-  v = {std::to_string(std::numeric_limits<bool>::min()), std::to_string(std::numeric_limits<bool>::max())};
+  v = {std::to_string(static_cast<int>(std::numeric_limits<bool>::min())), std::to_string(static_cast<int>(std::numeric_limits<bool>::max()))};
   TestCase_TestPrimitives<bool>(scope, v);
 }
 

@@ -45,8 +45,8 @@ constexpr float64 k_MaskTypeComparisonValue = k_MaskTypeFirstTrueTuple * k_Float
 static_assert(k_MaskTypeFirstTrueTuple > 0 && k_MaskTypeFirstTrueTuple < static_cast<usize>(k_TupleCount),
               "The comparison value must split the fixture so both the false and true branches are exercised");
 
-constexpr std::array<bool, k_TupleCount> k_ExemplarInt4{0, 0, 0, 0, 0, 1, 1, 1};
-constexpr std::array<bool, k_TupleCount> k_ExemplarFloat02{0, 1, 0, 0, 0, 0, 0, 0};
+constexpr std::array<bool, k_TupleCount> k_ExemplarInt4{false, false, false, false, false, true, true, true};
+constexpr std::array<bool, k_TupleCount> k_ExemplarFloat02{false, true, false, false, false, false, false, false};
 
 constexpr int32 InputIntValue(int32 index)
 {

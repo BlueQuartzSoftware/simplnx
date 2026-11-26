@@ -88,7 +88,7 @@ int64 LinesInFile(const std::string& filepath)
 
     for(char* p = buf; p < end; p++)
     {
-      buflines += *p == '\n';
+      buflines += static_cast<usize>(*p == '\n');
     }
     lines += buflines;
   }
