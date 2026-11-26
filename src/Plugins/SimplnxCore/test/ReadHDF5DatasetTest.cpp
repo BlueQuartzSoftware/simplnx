@@ -327,8 +327,7 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
   }
   else
   {
-    ReadHDF5DatasetParameter::DatasetImportInfo info = dsetInfoList.front();
-  }
+     }
 
   auto result = filter.execute(dataStructure, args);
   REQUIRE(result.result.valid() == resultsValid);

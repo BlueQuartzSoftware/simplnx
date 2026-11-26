@@ -348,7 +348,7 @@ Result<> ComputeGBCDPoleFigureDirect::operator()()
   gbcdDeltas[3] = (gbcdLimits[8] - gbcdLimits[3]) / static_cast<float32>(gbcdSizes[3]);
   gbcdDeltas[4] = (gbcdLimits[9] - gbcdLimits[4]) / static_cast<float32>(gbcdSizes[4]);
 
-  ebsdlib::LaueOps::Pointer orientOps = orientationOps[currentLaueIndex];
+  const ebsdlib::LaueOps::Pointer& orientOps = orientationOps[currentLaueIndex];
 
   int32 xPoints = m_InputValues->OutputImageDimension;
   int32 yPoints = m_InputValues->OutputImageDimension;

@@ -193,8 +193,8 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
 
     for(size_t edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
     {
-      Eigen::Vector3f p1 = rotatedVertices[edges[edgeIdx * 2]];
-      Eigen::Vector3f p2 = rotatedVertices[edges[edgeIdx * 2 + 1]];
+      const Eigen::Vector3f& p1 = rotatedVertices[edges[edgeIdx * 2]];
+      const Eigen::Vector3f& p2 = rotatedVertices[edges[edgeIdx * 2 + 1]];
       Eigen::Vector3f inter;
       if(lineSegmentHorizontalIntersect(p1, p2, lineY, inter))
       {
@@ -206,8 +206,8 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
 
     for(size_t i = 0; i + 1 < intersections.size(); i++)
     {
-      Eigen::Vector3f startPt = intersections[i];
-      Eigen::Vector3f endPt = intersections[i + 1];
+      const Eigen::Vector3f& startPt = intersections[i];
+      const Eigen::Vector3f& endPt = intersections[i + 1];
 
       if(startPt == endPt)
       {

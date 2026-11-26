@@ -1438,7 +1438,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcImageGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcImageGeoPath).value();
     auto destImageGeoResults = GetAllChildDataPathsRecursive(dataStruct, destImageGeoPath);
     REQUIRE(destImageGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destImageGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destImageGeoResults.value();
     REQUIRE(allSrcImageGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const auto srcImageGeo = dataStruct.getDataAs<ImageGeom>(srcImageGeoPath);
@@ -1491,7 +1491,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcRectGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcRectGeoPath).value();
     auto destRectGeoResults = GetAllChildDataPathsRecursive(dataStruct, destRectGeoPath);
     REQUIRE(destRectGeoResults.has_value());
-    auto allDestRectGeoDataPaths = destRectGeoResults.value();
+    const auto& allDestRectGeoDataPaths = destRectGeoResults.value();
     REQUIRE(allSrcRectGeoDataPaths.size() == allDestRectGeoDataPaths.size() - 3);
 
     const auto srcRectGeo = dataStruct.getDataAs<RectGridGeom>(srcRectGeoPath);
@@ -1530,7 +1530,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
     REQUIRE(destGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const DataPath srcAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
@@ -1566,7 +1566,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
     REQUIRE(destGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
@@ -1633,7 +1633,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
     REQUIRE(destGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
@@ -1698,7 +1698,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
     REQUIRE(destGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
@@ -1763,7 +1763,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
     REQUIRE(destGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
@@ -1838,7 +1838,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
     REQUIRE(destGeoResults.has_value());
-    auto allDestImageGeoDataPaths = destGeoResults.value();
+    const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
     const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);

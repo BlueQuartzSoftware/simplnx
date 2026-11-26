@@ -118,7 +118,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: FromSIMPLJson", "[NXIma
   };
   const Result<Arguments> result = BinaryThinningImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<DataPath>(BTFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
   REQUIRE(args.value<DataPath>(BTFilter::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
   REQUIRE(args.value<std::string>(BTFilter::k_OutputImageArrayName_Key) == "ThinnedOut");

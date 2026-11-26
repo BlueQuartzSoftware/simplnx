@@ -206,7 +206,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: Fro
   };
   const Result<Arguments> result = GradientMagnitudeRecursiveGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<float64>(GradMagFilter::k_Sigma_Key) == 2.5);
   REQUIRE(args.value<bool>(GradMagFilter::k_NormalizeAcrossScale_Key) == true);
   REQUIRE(args.value<DataPath>(GradMagFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));

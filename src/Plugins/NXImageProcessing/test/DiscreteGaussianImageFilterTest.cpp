@@ -122,7 +122,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: FromSIMPLJson", "[NXI
   };
   const Result<Arguments> result = DiscreteGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DGFilter::k_Variance_Key) == std::vector<float64>{2.0, 3.0, 4.0});
   REQUIRE(args.value<uint32>(DGFilter::k_MaximumKernelWidth_Key) == 40u);
   REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DGFilter::k_MaximumError_Key) == std::vector<float64>{0.02, 0.03, 0.04});

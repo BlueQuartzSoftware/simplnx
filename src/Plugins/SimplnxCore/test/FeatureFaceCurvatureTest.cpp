@@ -137,7 +137,7 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
   {
     INFO("Principal Direction 1");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalDirection1_D3D");
-    DataPath path2 = k_PrincipalDirection1_Path;
+    const DataPath& path2 = k_PrincipalDirection1_Path;
     const auto* dataArray1 = dataStructure.getDataAs<Float64Array>(path1);
     const auto* dataArray2 = dataStructure.getDataAs<Float64Array>(path2);
     CompareDataArrays<FloatComparison::Absolute>(dataStructure, path1, path2);
@@ -146,7 +146,7 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
   {
     INFO("Principal Direction 2");
     DataPath path1 = faceAttribMatrixPath.createChildPath("PrincipalDirection2_D3D");
-    DataPath path2 = k_PrincipalDirection2_Path;
+    const DataPath& path2 = k_PrincipalDirection2_Path;
     const auto* dataArray1 = dataStructure.getDataAs<Float64Array>(path1);
     const auto* dataArray2 = dataStructure.getDataAs<Float64Array>(path2);
     CompareDataArrays<FloatComparison::Absolute>(dataStructure, path1, path2);

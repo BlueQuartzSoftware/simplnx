@@ -918,7 +918,7 @@ TEST_CASE("ParallelChunkCodec preserves rewritten skipped-deflate metadata for l
   constexpr usize k_ChunkBytes = 256 * 1024;
   const std::vector<uint64> tupleShape = {1, k_ChunkBytes};
   const std::vector<uint64> componentShape = {1};
-  const std::vector<uint64> chunkShape = tupleShape;
+  const std::vector<uint64>& chunkShape = tupleShape;
 
   std::vector<std::byte> source(k_ChunkBytes);
   std::mt19937_64 rng(0xA11CE5C0FFEEULL);

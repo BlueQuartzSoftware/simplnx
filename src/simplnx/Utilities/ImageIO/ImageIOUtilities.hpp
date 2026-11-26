@@ -57,7 +57,7 @@ inline bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imag
   SizeVec3 geomDims = imageGeom.getDimensions();
 
   // Stored slowest to fastest i.e. Z Y X
-  auto imageArrayDims = dataStore.getTupleShape();
+  const auto& imageArrayDims = dataStore.getTupleShape();
 
   SizeVec3 orderedArrayDims;
 

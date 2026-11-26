@@ -182,8 +182,8 @@ BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, con
 
   BoundingBoxFaces edgeFaces;
 
-  const auto maxPoint = boundingBox.getMaxPoint();
-  const auto minPoint = boundingBox.getMinPoint();
+  const auto& maxPoint = boundingBox.getMaxPoint();
+  const auto& minPoint = boundingBox.getMinPoint();
 
   constexpr float32 k_Epsilon = std::numeric_limits<float32>::epsilon();
 
@@ -318,8 +318,8 @@ bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const Bo
                                      Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId)
 {
   bool isPeriodic = false;
-  const auto minPoint = boundingBox.getMinPoint();
-  const auto maxPoint = boundingBox.getMaxPoint();
+  const auto& minPoint = boundingBox.getMinPoint();
+  const auto& maxPoint = boundingBox.getMaxPoint();
 
   // left/right => X (axis 0), top/bottom => Y (axis 1), front/back => Z (axis 2)
   const std::array<std::pair<BoundingBox3Df::faces_enum, BoundingBox3Df::faces_enum>, 3> axisFaces = {std::make_pair(BoundingBox3Df::faces_enum::left, BoundingBox3Df::faces_enum::right),

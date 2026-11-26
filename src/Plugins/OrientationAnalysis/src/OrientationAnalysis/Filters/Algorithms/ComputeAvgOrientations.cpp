@@ -101,7 +101,7 @@ public:
       {
         continue;
       }
-      ebsdlib::LaueOps::Pointer op = ops[laueClass];
+      const ebsdlib::LaueOps::Pointer& op = ops[laueClass];
 
       fzQuats.clear();
       fzQuats.reserve(m_FeatureNumVoxels[featureId]);

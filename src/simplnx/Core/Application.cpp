@@ -300,7 +300,7 @@ Result<> Application::loadPlugins(const std::filesystem::path& pluginDir, bool v
   {
     for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
     {
-      std::filesystem::path path = entry.path();
+      const std::filesystem::path& path = entry.path();
 #ifdef NDEBUG // Release mode
       if(!StringUtilities::ends_with(path.string(), "_d.simplnx") && StringUtilities::ends_with(path.string(), ".simplnx"))
 #else

@@ -232,13 +232,13 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
     exemplarEntryCount++;
 
     bool found = false;
-    const fs::path targetPath = exemplarDirectoryEntry.path();
+    const fs::path& targetPath = exemplarDirectoryEntry.path();
     auto exemplarFileContents = readIn(targetPath);
     std::string exemplarMD5Hash = nx::core::UnitTest::ComputeMD5Hash(exemplarFileContents);
 
     for(const auto& computedDirectoryEntry : fs::directory_iterator(computedDirPath))
     {
-      fs::path currentPath = computedDirectoryEntry.path();
+      const fs::path& currentPath = computedDirectoryEntry.path();
       if(currentPath.filename() == targetPath.filename())
       {
         found = true;

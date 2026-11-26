@@ -397,7 +397,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
 
   const usize last = path.getLength() - 1;
 
-  std::string name = path[last];
+  const std::string& name = path[last];
   // The resolver selects the backing storage.
   auto listStore = DataStoreUtilities::CreateListStore<T>(dataStructure, path, tupleShape, mode, dataFormat);
   NeighborList<T>* neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);

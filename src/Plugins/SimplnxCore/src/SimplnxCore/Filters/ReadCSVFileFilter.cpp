@@ -518,7 +518,7 @@ IFilter::PreflightResult ReadCSVFileFilter::preflightImpl(const DataStructure& d
     }
 
     CSVType csvType = readCSVData.dataTypes[i];
-    std::string name = headers[i];
+    const std::string& name = headers[i];
 
     DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);

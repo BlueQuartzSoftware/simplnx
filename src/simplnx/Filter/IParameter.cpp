@@ -34,7 +34,7 @@ Result<std::any> IParameter::fromJson(const nlohmann::json& json) const
   VersionType version = 1;
   if(json.contains(k_VersionKey))
   {
-    nlohmann::json versionJson = json[k_VersionKey];
+    const nlohmann::json& versionJson = json[k_VersionKey];
     if(!versionJson.is_number_unsigned())
     {
       return MakeErrorResult<std::any>(-2, fmt::format("{}: Parameter key '{}' is not an unsigned integer", name(), k_VersionKey));

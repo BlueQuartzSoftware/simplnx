@@ -11,7 +11,7 @@ TEST_CASE("ChunkShapePolicy: caller storage matches independent shapes", "[Chunk
 {
   const auto regime = GENERATE(ChunkShapeRegime::BundleOuterSlabs, ChunkShapeRegime::PinSlowestDim);
   const ShapeType dims{64, 2048, 512};
-  const ShapeType originalDims = dims;
+  const ShapeType& originalDims = dims;
   std::array<usize, 4> output{73, 73, 73, 73};
   std::array<usize, 4> scratch{91, 91, 91, 91};
   const ChunkShapeOptions options{.targetBytes=k_TargetChunkBytes, .regime=regime};

@@ -280,7 +280,7 @@ void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructur
   REQUIRE(testArray != nullptr);
   auto& testData = testArray->getDataStoreRef();
 
-  std::vector<uint8> colorArray{algorithmMap[algoMapIndex]};
+  const std::vector<uint8>& colorArray{algorithmMap[algoMapIndex]};
 
   for(size_t index = 0; index < colorArray.size(); ++index)
   {

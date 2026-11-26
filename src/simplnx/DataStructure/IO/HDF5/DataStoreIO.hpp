@@ -43,8 +43,8 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
   }
   auto warnings = std::move(writeResult.warnings());
 
-  const auto tupleShape = dataStore.getTupleShape();
-  const auto componentShape = dataStore.getComponentShape();
+  const auto& tupleShape = dataStore.getTupleShape();
+  const auto& componentShape = dataStore.getComponentShape();
   auto shapeResult = datasetWriter.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape);
   if(shapeResult.invalid())
   {

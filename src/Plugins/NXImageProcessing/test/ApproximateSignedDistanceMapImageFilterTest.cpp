@@ -140,7 +140,7 @@ TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: FromSIMPL
   };
   const Result<Arguments> result = ApproximateSignedDistanceMapImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<float64>(AsdFilter::k_InsideValue_Key) == 3.0);
   REQUIRE(args.value<float64>(AsdFilter::k_OutsideValue_Key) == 7.0);
   REQUIRE(args.value<DataPath>(AsdFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));

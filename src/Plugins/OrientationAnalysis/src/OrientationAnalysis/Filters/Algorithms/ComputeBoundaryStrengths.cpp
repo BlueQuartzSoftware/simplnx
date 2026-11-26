@@ -102,7 +102,7 @@ Result<> ComputeBoundaryStrengths::operator()()
                                              "[0, {}).",
                                              m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, feature1PhaseIdx, faceIdx, orientationOps.size(), orientationOps.size()));
         }
-        ebsdlib::LaueOps::Pointer laueClass = orientationOps[currentLaueIndex];
+        const ebsdlib::LaueOps::Pointer& laueClass = orientationOps[currentLaueIndex];
         mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD.data()));
         mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD.data()));
         F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD.data(), true));

@@ -494,7 +494,7 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: FromSIMPLJson", "[NXI
   };
   const Result<Arguments> result = RelabelComponentImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<uint64>(RCFilter::k_MinimumObjectSize_Key) == 5u);
   REQUIRE(args.value<bool>(RCFilter::k_SortByObjectSize_Key) == false);
   REQUIRE(args.value<DataPath>(RCFilter::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));

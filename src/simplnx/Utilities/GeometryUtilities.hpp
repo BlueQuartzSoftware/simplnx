@@ -201,8 +201,8 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   auto boundingBox = geom.getBoundingBox();
-  auto minPoint = boundingBox.getMinPoint();
-  auto maxPoint = boundingBox.getMaxPoint();
+  const auto& minPoint = boundingBox.getMinPoint();
+  const auto& maxPoint = boundingBox.getMaxPoint();
   float32 stepX = (maxPoint.getX() - minPoint.getX()) / numXBins;
   float32 stepY = (maxPoint.getY() - minPoint.getY()) / numYBins;
   float32 stepZ = (maxPoint.getZ() - minPoint.getZ()) / numZBins;

@@ -403,7 +403,7 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: FromSIMPLJson"
   };
   const Result<Arguments> result = SignedMaurerDistanceMapImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<bool>(MaurerFilter::k_InsideIsPositive_Key) == true);
   REQUIRE(args.value<bool>(MaurerFilter::k_SquaredDistance_Key) == false);
   REQUIRE(args.value<bool>(MaurerFilter::k_UseImageSpacing_Key) == true);
@@ -529,7 +529,7 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free se
   CAPTURE(scenario, shapeIndex, foreground, insideIsPositive, squared, budget);
   const MaurerSentinelBudgetScope budgetScope(budget);
   const std::array<SizeVec3, 4> shapes = {SizeVec3{1, 1, 1}, SizeVec3{2, 3, 4}, SizeVec3{2, 3, 1}, SizeVec3{5, 6, 7}};
-  const SizeVec3 dims = shapes[shapeIndex];
+  const SizeVec3& dims = shapes[shapeIndex];
   const usize count = dims[0] * dims[1] * dims[2];
   DataStructure dataStructure;
   const std::vector<uint8> input(count, foreground ? uint8{1} : uint8{0});

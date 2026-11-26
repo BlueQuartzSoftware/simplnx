@@ -154,8 +154,8 @@ Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(con
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
 {
-  auto min = boundingBox.getMinPoint();
-  auto max = boundingBox.getMaxPoint();
+  const auto& min = boundingBox.getMinPoint();
+  const auto& max = boundingBox.getMaxPoint();
   // Calculate the length per partition for each dimension, and set it into the partitioning scheme image geometry
   float32 lengthX = ((max[0] - min[0]) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
   float32 lengthY = ((max[1] - min[1]) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));

@@ -213,7 +213,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
 
     for(usize i = 1; i < path.getLength(); i++)
     {
-      std::string name = path[i];
+      const std::string& name = path[i];
       data = (*parent)[name];
       pathIds.push_back(data->getId());
 

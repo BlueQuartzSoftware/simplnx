@@ -1072,7 +1072,7 @@ Result<> finishImportingLegacyDataArray(DataStructure& dataStructure, const HDF5
   auto dataTypeResult = dataSetIO.getDataType();
   if(dataTypeResult.invalid())
   {
-    auto errors = dataTypeResult.errors();
+    const auto& errors = dataTypeResult.errors();
     return MakeErrorResult(errors[0].code, errors[0].message);
   }
   auto dataType = std::move(dataTypeResult.value());
@@ -2349,7 +2349,7 @@ Result<> finishImportingLegacyVertexGeom(DataStructure& /*dataStructure*/, IGeom
 
 Result<> finishImportingLegacyDataContainer(DataStructure& dataStructure, const HDF5::GroupIO& parentReader, const DataPath& dataPath)
 {
-  std::string dcName = dataPath[0];
+  const std::string& dcName = dataPath[0];
   auto dcGroup = parentReader.openGroup(dcName);
 
   // Check for geometry

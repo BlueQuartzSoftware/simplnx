@@ -514,8 +514,8 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
   for(const auto& id : faceIds)
   {
     auto bounds = FindBoundingBoxOfFace(cache, triangleGeom, id, verts);
-    Point3Df min = bounds.getMinPoint();
-    Point3Df max = bounds.getMaxPoint();
+    const Point3Df& min = bounds.getMinPoint();
+    const Point3Df& max = bounds.getMaxPoint();
 
     if(min[0] < ll[0])
     {

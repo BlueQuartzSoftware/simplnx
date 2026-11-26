@@ -143,7 +143,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
     const BoundingBox3Df bounds(
         std::array<float32, 6>{originVec[0], originVec[1], originVec[2], originVec[0] + dims[0] * spacingVec[0], originVec[1] + dims[1] * spacingVec[1], originVec[2] + dims[2] * spacingVec[2]});
     const auto center = bounds.center();
-    const auto min = bounds.getMinPoint();
+    const auto& min = bounds.getMinPoint();
     for(usize axis = 0; axis < 3; ++axis)
     {
       const float32 result = originVec[axis] - (center[axis] - min[axis]);

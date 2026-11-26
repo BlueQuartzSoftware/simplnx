@@ -852,7 +852,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
     }
 
     std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
-    const IntVec3 numOfPartitionsPerAxis = partitionDimensions[index];
+    const IntVec3& numOfPartitionsPerAxis = partitionDimensions[index];
     const DataPath inputGeometryPath = {{"DataContainer"}};
     DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
 
@@ -962,7 +962,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
     }
 
     std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
-    const IntVec3 numOfPartitionsPerAxis = partitionDimensions[index];
+    const IntVec3& numOfPartitionsPerAxis = partitionDimensions[index];
     const DataPath inputGeometryPath = {{"DataContainer"}};
     DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
 
@@ -1064,7 +1064,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
     }
 
     std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
-    const IntVec3 numOfPartitionsPerAxis = partitionDimensions[index];
+    const IntVec3& numOfPartitionsPerAxis = partitionDimensions[index];
     const DataPath inputGeometryPath = {{"DataContainer"}};
     DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
 

@@ -53,7 +53,7 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
 Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& attributeMatrix, group_writer_type& parentGroup, bool importable) const
 {
   auto groupWriter = parentGroup.createGroup(attributeMatrix.getName());
-  auto tupleShape = attributeMatrix.getShape();
+  const auto& tupleShape = attributeMatrix.getShape();
   groupWriter.writeVectorAttribute(IOConstants::k_TupleDims, tupleShape);
 
   return WriteBaseGroupData(dataStructureWriter, attributeMatrix, parentGroup, importable);

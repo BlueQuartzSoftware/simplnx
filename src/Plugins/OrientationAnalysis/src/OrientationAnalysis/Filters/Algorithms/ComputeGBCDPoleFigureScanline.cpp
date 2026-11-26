@@ -312,7 +312,7 @@ Result<> ComputeGBCDPoleFigureScanline::operator()()
     return result;
   }
 
-  ebsdlib::LaueOps::Pointer orientOps = orientationOps[currentLaueIndex];
+  const ebsdlib::LaueOps::Pointer& orientOps = orientationOps[currentLaueIndex];
 
   int32 xPoints = m_InputValues->OutputImageDimension;
   int32 yPoints = m_InputValues->OutputImageDimension;

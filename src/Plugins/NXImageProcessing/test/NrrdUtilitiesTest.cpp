@@ -127,7 +127,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageP
 
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.dataType == DataType::int16);
   REQUIRE(md.componentCount == 1);
   REQUIRE(md.spatialDim == 3);
@@ -153,7 +153,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImagePr
                std::vector<uint8_t>(5 * 4, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.spatialDim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{5, 4, 1});
   REQUIRE(md.componentCount == 1);
@@ -169,7 +169,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "
                std::vector<uint8_t>(3 * 8 * 6, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.componentCount == 3);
   REQUIRE(md.spatialDim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{8, 6, 1}); // X=8, Y=6, Z=1
@@ -186,7 +186,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation",
                std::vector<uint8_t>(4 * 4 * 4 * 2, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
+  const auto& md = result.value();
   REQUIRE(md.affineHasRotation);          // permutation is not axis-aligned
   REQUIRE(md.spacing[0] == Approx(2.0f)); // ||(0,-2,0)||
   REQUIRE(md.spacing[2] == Approx(2.5f)); // ||(2.5,0,0)||

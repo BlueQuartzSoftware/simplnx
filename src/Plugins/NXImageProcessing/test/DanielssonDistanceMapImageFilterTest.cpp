@@ -228,7 +228,7 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: FromSIMPLJson", 
   };
   const Result<Arguments> result = DanielssonDistanceMapImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Arguments args = result.value();
+  const Arguments& args = result.value();
   REQUIRE(args.value<bool>(DanielssonFilter::k_InputIsBinary_Key) == true);
   REQUIRE(args.value<bool>(DanielssonFilter::k_SquaredDistance_Key) == true);
   REQUIRE(args.value<bool>(DanielssonFilter::k_UseImageSpacing_Key) == true);

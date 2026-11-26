@@ -105,10 +105,10 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
     return MakeErrorResult<ReadCSVData>(-100, fmt::format("ReadCSVData: Cannot find the Data Headers key \"{}\" in the ReadCSVData json object.", k_CustomHeadersKey));
   }
 
-  nlohmann::json dHeaders = json[k_CustomHeadersKey];
+  const nlohmann::json& dHeaders = json[k_CustomHeadersKey];
   for(usize i = 0; i < dHeaders.size(); i++)
   {
-    auto header = dHeaders[i];
+    const auto& header = dHeaders[i];
     if(!header.is_string())
     {
       return MakeErrorResult<ReadCSVData>(-101, fmt::format("ReadCSVData: Custom header at index {} is of type {} and is not a string.", std::to_string(i), header.type_name()));
@@ -122,10 +122,10 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
     return MakeErrorResult<ReadCSVData>(-102, fmt::format("ReadCSVData: Cannot find the Data Types key \"{}\" in the ReadCSVData json object.", k_DataTypesKey));
   }
 
-  nlohmann::json dTypes = json[k_DataTypesKey];
+  const nlohmann::json& dTypes = json[k_DataTypesKey];
   for(usize i = 0; i < dTypes.size(); i++)
   {
-    auto dType = dTypes[i];
+    const auto& dType = dTypes[i];
     if(!dType.is_number_integer())
     {
       return MakeErrorResult<ReadCSVData>(-103, fmt::format("ReadCSVData: Data type at index {} is of type {} and is not an integer.", std::to_string(i), dType.type_name()));
@@ -139,11 +139,11 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
     return MakeErrorResult<ReadCSVData>(-104, fmt::format("ReadCSVData: Cannot find the Tuple Dimensions key \"{}\" in the ReadCSVData json object.", k_TupleDimensionsKey));
   }
 
-  nlohmann::json tDims = json[k_TupleDimensionsKey];
+  const nlohmann::json& tDims = json[k_TupleDimensionsKey];
   data.tupleDims.clear();
   for(usize i = 0; i < tDims.size(); i++)
   {
-    auto tDim = tDims[i];
+    const auto& tDim = tDims[i];
     data.tupleDims.push_back(tDim);
   }
 
@@ -152,10 +152,10 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
     return MakeErrorResult<ReadCSVData>(-105, fmt::format("ReadCSVData: Cannot find the Skipped Arrays key \"{}\" in the ReadCSVData json object.", k_DataTypesKey));
   }
 
-  nlohmann::json dSkippedArrays = json[k_SkippedArrayMaskKey];
+  const nlohmann::json& dSkippedArrays = json[k_SkippedArrayMaskKey];
   for(usize i = 0; i < dSkippedArrays.size(); i++)
   {
-    auto skippedArrayVal = dSkippedArrays[i];
+    const auto& skippedArrayVal = dSkippedArrays[i];
     if(!skippedArrayVal.is_boolean())
     {
       return MakeErrorResult<ReadCSVData>(-106, fmt::format("ReadCSVData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
@@ -209,10 +209,10 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
     return MakeErrorResult<ReadCSVData>(-117, fmt::format("ReadCSVData: Cannot find the 'Delimiters' key \"{}\" in the ReadCSVData json object.", k_Delimiters));
   }
 
-  nlohmann::json dDelimiters = json[k_Delimiters];
+  const nlohmann::json& dDelimiters = json[k_Delimiters];
   for(usize i = 0; i < dDelimiters.size(); i++)
   {
-    auto dDelimiter = dDelimiters[i];
+    const auto& dDelimiter = dDelimiters[i];
     if(!dDelimiter.is_string() || dDelimiter.get<std::string>().size() != 1)
     {
       return MakeErrorResult<ReadCSVData>(-118, fmt::format("ReadCSVData: Delimiter at index {} is of type {} and is not a string.", std::to_string(i), dDelimiter.type_name()));
