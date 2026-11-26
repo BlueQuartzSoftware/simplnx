@@ -908,158 +908,53 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   REQUIRE(comparison.matches);
 }
 
+/** @brief Ordered comparisons retain each slot's association with its input neighbor. */
+enum class NeighborListOrder
+{
+  Unordered,
+  Ordered
+};
+
+enum class NeighborListNaNs
+{
+  Reject,
+  Match,
+  Ignore
+};
+
 /**
- * @brief Compares two floating-point NeighborList arrays without depending on list order.
- * @tparam T Specifies the floating-point element type.
- * @param dataStructure Contains both lists.
- * @param exemplaryDataPath Exemplar NeighborList path.
- * @param computedPath Computed NeighborList path.
- * @param epsilon Exclusive absolute-difference limit.
- * @param checkNans True to compare NaN positions; false to omit values where either list has NaN.
+ * @brief Compares row lengths and values. Unordered comparisons sort local row copies, with NaNs last.
+ * @param epsilon Exclusive absolute tolerance for unequal floating-point values. Integers compare exactly.
+ * @param nans Match requires NaNs in corresponding slots. Ignore skips slots containing either NaN.
  */
+Result<> EvaluateNeighborLists(const INeighborList* exemplar, const INeighborList* computed, DataType expectedType, NeighborListOrder order = NeighborListOrder::Unordered, float64 epsilon = EPSILON,
+                               NeighborListNaNs nans = NeighborListNaNs::Reject);
+
+/** @brief Checks two floating-point neighbor lists after sorting each row, using the specified NaN policy. */
 template <typename T>
 void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
-
-  const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
-  const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
-  REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
-
-  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
-  {
-    auto exemplary = exemplaryList.getList(i);
-    auto computed = computedNeighborList.getList(i);
-    if(exemplary.size() != 0 && computed.size() != 0)
-    {
-      REQUIRE(exemplary.size() == computed.size());
-      std::sort(exemplary.begin(), exemplary.end());
-      std::sort(computed.begin(), computed.end());
-      for(usize j = 0; j < exemplary.size(); ++j)
-      {
-        auto exemplaryVal = exemplary.at(j);
-        auto computedVal = computed.at(j);
-        if(!checkNans && (std::isnan(computedVal) || std::isnan(exemplaryVal)))
-        {
-          continue;
-        }
-        if(std::isnan(exemplaryVal) && std::isnan(computedVal))
-        {
-          // Two NaN values represent the same missing result for this test helper.
-          continue;
-        }
-        if(exemplaryVal != computedVal)
-        {
-          float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
-          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
-                           computedPath.toString(), computed.size()));
-          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
-
-          REQUIRE(diff < epsilon);
-          break;
-        }
-      }
-    }
-  }
+  static_assert(std::is_floating_point_v<T>);
+  CAPTURE(exemplaryDataPath.toString(), computedPath.toString());
+  const auto result = EvaluateNeighborLists(dataStructure.getDataAs<INeighborList>(exemplaryDataPath), dataStructure.getDataAs<INeighborList>(computedPath), GetDataType<T>(),
+                                            NeighborListOrder::Unordered, epsilon, checkNans ? NeighborListNaNs::Match : NeighborListNaNs::Ignore);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
-/**
- * @brief Compares two NeighborList objects without depending on list order.
- * @tparam T Specifies the list element type.
- * @param exemplaryData Non-null exemplar list.
- * @param computedData Non-null computed list.
- * @note The helper reports Boolean lists as unsupported without failing the test.
- */
+/** @brief Checks neighbor lists of type T. The default compares each row as an unordered multiset. */
 template <typename T>
-void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborList* computedData)
+void CompareNeighborLists(const INeighborList* exemplar, const INeighborList* computed, NeighborListOrder order = NeighborListOrder::Unordered)
 {
-  if constexpr(std::is_same_v<T, bool>)
-  {
-    INFO("Invalid data type (bool) for NeighborList array. Cannot compare values.")
-  }
-  else
-  {
-    const auto* generatedListArray = dynamic_cast<const NeighborList<T>*>(computedData);
-    const auto* exemplarListArray = dynamic_cast<const NeighborList<T>*>(exemplaryData);
-    const auto& computedList = *generatedListArray;
-    const auto& exemplaryList = *exemplarListArray;
-
-    REQUIRE(computedList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
-
-    for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
-    {
-      auto exemplary = exemplaryList.getList(i);
-      auto computed = computedList.getList(i);
-      if(exemplary.size() != 0 && computed.size() != 0)
-      {
-        REQUIRE(exemplary.size() == computed.size());
-        std::sort(exemplary.begin(), exemplary.end());
-        std::sort(computed.begin(), computed.end());
-        for(usize j = 0; j < exemplary.size(); ++j)
-        {
-          auto exemplaryVal = exemplary.at(j);
-          auto computedVal = computed.at(j);
-          if(exemplaryVal != computedVal)
-          {
-            float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
-            INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryList.getDataPaths()[0].toString(),
-                             exemplary.size(), computedList.getDataPaths()[0].toString(), computed.size()));
-            INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
-
-            REQUIRE(diff < EPSILON);
-            break;
-          }
-        }
-      }
-    }
-  }
+  const auto result = EvaluateNeighborLists(exemplar, computed, GetDataType<T>(), order);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
-/**
- * @brief Compares two NeighborList objects that are stored in one DataStructure.
- * @tparam T Specifies the list element type.
- * @param dataStructure Contains both lists.
- * @param exemplaryDataPath Exemplar NeighborList path.
- * @param computedPath Computed NeighborList path.
- */
+/** @brief Checks two neighbor lists at the given paths and reports both paths on failure. */
 template <typename T>
-void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, NeighborListOrder order = NeighborListOrder::Unordered)
 {
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
-
-  const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
-  const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
-  REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
-
-  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
-  {
-    auto exemplary = exemplaryList.getList(i);
-    auto computed = computedNeighborList.getList(i);
-    if(exemplary.size() != 0 && computed.size() != 0)
-    {
-      INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
-                       computedPath.toString(), computed.size()));
-      REQUIRE(exemplary.size() == computed.size());
-      std::sort(exemplary.begin(), exemplary.end());
-      std::sort(computed.begin(), computed.end());
-      for(usize j = 0; j < exemplary.size(); ++j)
-      {
-        auto exemplaryVal = exemplary.at(j);
-        auto computedVal = computed.at(j);
-        if(exemplaryVal != computedVal)
-        {
-          float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
-          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
-
-          REQUIRE(diff < EPSILON);
-          break;
-        }
-      }
-    }
-  }
+  CAPTURE(exemplaryDataPath.toString(), computedPath.toString());
+  CompareNeighborLists<T>(dataStructure.getDataAs<INeighborList>(exemplaryDataPath), dataStructure.getDataAs<INeighborList>(computedPath), order);
 }
 
 /**
@@ -1143,63 +1038,18 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
 }
 
 /**
- * @brief Compares two IArray objects after validating their runtime array and value types.
- * @tparam T Specifies the dispatched numeric element type.
- * @param generatedArray Non-null computed array.
- * @param exemplarArray Non-null exemplar array.
- * @note A type mismatch writes a diagnostic and returns without failing the test.
+ * @brief Checks the array categories and element types before comparing values.
+ * @param generatedArray Computed array.
+ * @param exemplarArray Reference array.
+ * @param expectedType Optional numeric element type required by an explicitly typed caller.
  */
+void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray, std::optional<DataType> expectedType = {});
+
+/** @brief Requires the supplied numeric element type when comparing DataArrays and NeighborLists. */
 template <typename T>
 void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
 {
-  const IArray::ArrayType arrayType = generatedArray->getArrayType();
-  const IArray::ArrayType exemplarArrayType = exemplarArray->getArrayType();
-  if(arrayType != exemplarArrayType)
-  {
-    std::cout << fmt::format("Generated array {} and exemplar array {} do not have the same array type: {} vs {}. Data Will not be compared.", generatedArray->getName(), exemplarArray->getName(),
-                             fmt::underlying(arrayType), fmt::underlying(exemplarArrayType))
-              << std::endl;
-    return;
-  }
-
-  DataType type;
-  if(arrayType == IArray::ArrayType::DataArray)
-  {
-    const auto* generatedDataArray = dynamic_cast<const IDataArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const IDataArray*>(exemplarArray);
-    type = generatedDataArray->getDataType();
-    DataType exemplarType = exemplarDataArray->getDataType();
-
-    if(type != exemplarType)
-    {
-      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
-                               fmt::underlying(type), fmt::underlying(exemplarType))
-                << std::endl;
-      return;
-    }
-    CompareDataArrays<T>(*exemplarDataArray, *generatedDataArray);
-  }
-  if(arrayType == IArray::ArrayType::NeighborListArray)
-  {
-    const auto* generatedDataArray = dynamic_cast<const INeighborList*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const INeighborList*>(exemplarArray);
-    type = generatedDataArray->getDataType();
-    DataType exemplarType = exemplarDataArray->getDataType();
-    if(type != exemplarType)
-    {
-      std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
-                               fmt::underlying(type), fmt::underlying(exemplarType))
-                << std::endl;
-      return;
-    }
-    CompareNeighborLists<T>(exemplarDataArray, generatedDataArray);
-  }
-  if(arrayType == IArray::ArrayType::StringArray)
-  {
-    const auto* generatedDataArray = dynamic_cast<const StringArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const StringArray*>(exemplarArray);
-    CompareStringArrays(*exemplarDataArray, *generatedDataArray);
-  }
+  CompareArrays(generatedArray, exemplarArray, GetDataType<T>());
 }
 
 /**

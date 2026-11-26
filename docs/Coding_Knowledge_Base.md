@@ -1360,6 +1360,18 @@ own indexing.
 **Pattern to use:** the analytical box geometries and scale-invariance cases in
 `src/Plugins/SimplnxCore/test/ComputeSurfaceAreaToVolumeTest.cpp`.
 
+### Compare associated neighbor values in their stored slots
+
+**Rule:** when a neighbor ID identifies the meaning of another list's value at the same index, verify the ID and value together. Check the length of every row, including empty rows.
+
+**Example of the broken rule:** the analytical Compute Feature Neighbors test passed when the shared areas for neighbors 1 and 3 were exchanged. Compute Slip Transmission Metrics also passed when F1 values for two input neighbors were exchanged (#2026).
+
+**Why:** sorting two lists independently discards the association even when both sets of values match their exemplars.
+
+**What to look for:** unordered comparison of parallel arrays, a list-length check skipped when one side is empty, or a comparison that stops at the first difference within tolerance.
+
+**Pattern to use:** check each list in its specified order, as in `ComputeFeatureNeighborsTest.cpp`. When the contract allows arbitrary neighbor order, compare complete (ID, value) pairs keyed by ID.
+
 ### Test every axis and plane
 
 **Rule:** code with one block per axis or plane gets a correctness case for each axis or plane, with unequal dimensions

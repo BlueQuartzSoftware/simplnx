@@ -78,6 +78,7 @@ set(SIMPLNX_TEST_SRCS
   MemorySafetyTest.cpp
   MessageHandlerTest.cpp
   MontageTest.cpp
+  NeighborListComparisonTest.cpp
   NeighborUtilitiesTest.cpp
   ParallelChunkCodecTest.cpp
   NxInfoTest.cpp

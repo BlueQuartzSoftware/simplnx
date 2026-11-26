@@ -2888,3 +2888,61 @@ TEST_CASE("DataArrayUtilities CopyData string overlap", "[DataArrayUtilities][L0
     CHECK((*values)[i] == expected[i]);
   }
 }
+
+TEST_CASE("simplnx::Array exemplar comparison accepts matching arrays and optional omissions", "[simplnx][ArrayExemplarComparison]")
+{
+  DataStructure data;
+  const DataPath referencePath({"Reference"});
+  const DataPath computedPath({"Computed"});
+  for(const auto& path : {referencePath, computedPath})
+  {
+    const auto* matrix = AttributeMatrix::Create(data, path.getTargetName(), {1});
+    REQUIRE(matrix != nullptr);
+    const auto parent = matrix->getId();
+    REQUIRE(Int32Array::Create(data, "Count", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 7), parent) != nullptr);
+    REQUIRE(StringArray::CreateWithValues(data, "Label", {1}, {"seven"}, parent) != nullptr);
+    auto* list = Int32NeighborList::Create(data, "Neighbors", {1}, parent);
+    REQUIRE(list != nullptr);
+    list->setList(0, std::vector<int32>{2, 5});
+  }
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(data, referencePath, data, computedPath, true);
+
+  REQUIRE(StringArray::CreateWithValues(data, "Reference only", {1}, {"a"}, data.getId(referencePath)) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(data, "Computed only", {1}, {"b"}, data.getId(computedPath)) != nullptr);
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(data, referencePath, data, computedPath);
+  UnitTest::CompareExemplarToGeneratedData(data, data, computedPath, referencePath.getTargetName());
+}
+
+TEST_CASE("simplnx::Array exemplar comparison detects mismatched array categories", "[simplnx][ArrayExemplarComparison][!shouldfail]")
+{
+  DataStructure data;
+  const auto* reference = AttributeMatrix::Create(data, "Reference", {1});
+  const auto* computed = AttributeMatrix::Create(data, "Computed", {1});
+  REQUIRE(reference != nullptr);
+  REQUIRE(computed != nullptr);
+  REQUIRE(Int32Array::Create(data, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 7), reference->getId()) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(data, "Values", {1}, {"7"}, computed->getId()) != nullptr);
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(data, DataPath({"Reference"}), data, DataPath({"Computed"}), true);
+}
+
+TEST_CASE("simplnx::Array exemplar comparison detects mismatched numeric types", "[simplnx][ArrayExemplarComparison][!shouldfail]")
+{
+  DataStructure data;
+  const auto* reference = AttributeMatrix::Create(data, "Reference", {1});
+  const auto* computed = AttributeMatrix::Create(data, "Computed", {1});
+  REQUIRE(reference != nullptr);
+  REQUIRE(computed != nullptr);
+  REQUIRE(Int32Array::Create(data, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 7), reference->getId()) != nullptr);
+  REQUIRE(UInt32Array::Create(data, "Values", std::make_shared<DataStore<uint32>>(ShapeType{1}, ShapeType{1}, 7), computed->getId()) != nullptr);
+  UnitTest::CompareExemplarToGeneratedData(data, data, DataPath({"Computed"}), "Reference");
+}
+
+TEST_CASE("simplnx::Array exemplar comparison detects mismatched neighbor list types", "[simplnx][ArrayExemplarComparison][!shouldfail]")
+{
+  DataStructure data;
+  const auto* reference = Int32NeighborList::Create(data, "Reference", {1});
+  const auto* computed = Float32NeighborList::Create(data, "Computed", {1});
+  REQUIRE(reference != nullptr);
+  REQUIRE(computed != nullptr);
+  UnitTest::CompareArrays<int32>(computed, reference);
+}

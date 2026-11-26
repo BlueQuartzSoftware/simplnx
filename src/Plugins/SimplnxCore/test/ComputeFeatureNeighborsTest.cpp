@@ -11,8 +11,10 @@
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <algorithm>
 #include <catch2/catch.hpp>
 #include <filesystem>
+#include <functional>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -593,6 +595,33 @@ DataStructure Create3DDataStructure()
 }
 
 /**
+ * @brief Checks the ascending neighbor IDs and the shared area at each corresponding index.
+ * An empty expectedAreasPath checks only the area list lengths for the legacy fixture.
+ */
+void CheckNeighborIdsAndAreas(const DataStructure& dataStructure, const DataPath& expectedIdsPath, const DataPath& actualIdsPath, const DataPath& actualAreasPath,
+                              const DataPath& expectedAreasPath = {})
+{
+  UnitTest::CompareNeighborLists<int32>(dataStructure, expectedIdsPath, actualIdsPath, UnitTest::NeighborListOrder::Ordered);
+  if(!expectedAreasPath.empty())
+  {
+    UnitTest::CompareNeighborLists<float32>(dataStructure, expectedAreasPath, actualAreasPath, UnitTest::NeighborListOrder::Ordered);
+  }
+
+  const auto* actualIds = dataStructure.getDataAs<Int32NeighborList>(actualIdsPath);
+  const auto* actualAreas = dataStructure.getDataAs<Float32NeighborList>(actualAreasPath);
+  REQUIRE(actualIds != nullptr);
+  REQUIRE(actualAreas != nullptr);
+  REQUIRE(actualAreas->getNumberOfTuples() == actualIds->getNumberOfTuples());
+  for(usize featureId = 0; featureId < actualIds->getNumberOfTuples(); ++featureId)
+  {
+    CAPTURE(featureId);
+    const auto neighbors = actualIds->at(featureId);
+    REQUIRE(actualAreas->getIListStoreRef().getListSize(featureId) == neighbors.size());
+    CHECK(std::adjacent_find(neighbors.begin(), neighbors.end(), std::greater_equal<int32>{}) == neighbors.end());
+  }
+}
+
+/**
  * @brief Executes ComputeFeatureNeighbors and compares each requested output.
  * @param dataStructure Contains a generated fixture and its exemplar arrays.
  * @param testBoundaryCells True to create and compare BoundaryCells.
@@ -636,9 +665,7 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
 
   UnitTest::CompareArrays<int32>(dataStructure, k_ExemplarNumNeighborsPath, k_NumNeighborsPath);
 
-  UnitTest::CompareNeighborLists<int32>(dataStructure, k_ExemplarNeighborsListPath, k_NeighborsListPath);
-
-  UnitTest::CompareNeighborLists<float32>(dataStructure, k_ExemplarSSAListPath, k_SSAListPath);
+  CheckNeighborIdsAndAreas(dataStructure, k_ExemplarNeighborsListPath, k_NeighborsListPath, k_SSAListPath, k_ExemplarSSAListPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -1208,10 +1235,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100", "[Si
     UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(numNeighborName));
 
     exemplaryDataPath = featureGroup.createChildPath("NeighborList");
-    UnitTest::CompareNeighborLists<int32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(neighborListName));
-
-    // This shared input has a stale shared-area exemplar, so this case omits that array.
-    // Generated fixtures in this file validate the shared-area calculation independently.
+    // The legacy shared-area values are stale. The generated fixtures supply analytical areas for each neighbor.
+    CheckNeighborIdsAndAreas(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(neighborListName),
+                             cellFeatureAttributeMatrixPath.createChildPath(sharedSurfaceAreaListName));
   }
 
 // The optional output supports manual inspection of the generated neighbor arrays.

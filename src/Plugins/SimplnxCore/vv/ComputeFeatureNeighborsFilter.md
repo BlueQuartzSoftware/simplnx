@@ -55,6 +55,8 @@
 
 *Encoded:* `test/ComputeFeatureNeighborsTest.cpp` — 37 TEST_CASEs. The `ExecuteFilter()` helper executes the filter and compares all requested outputs against the hand-derived inline exemplar arrays via `UnitTest::CompareArrays` and `UnitTest::CompareNeighborLists`. All 37 pass at the verified commit.
 
+*Subsequent test correction (#2026):* The earlier comparison sorted neighbor IDs and areas independently. Exchanging feature 2's first two expected shared areas in the 2-D fixture therefore passed. The analytical cases now check each area's position in the ascending neighbor-ID list. The SmallIn100 comparison retains its D1 exception for legacy area values and checks that each neighbor has an area entry.
+
 *Second-engineer review:* **Signed off by Nathan Young, 2026-06-23.** Review focus: the 3D 5×5×5 fixture (125-voxel, 6-feature, 7-neighbor-pair) and the non-square 2D stride regression fixtures as the highest-complexity cases.
 
 ## Bugs found and fixed
