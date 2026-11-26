@@ -216,12 +216,12 @@ void VerifyAgainstSnapshot(const DataStructure& dataStructure, const CellSnapsho
     auto it = expectedSource.find(i);
     const bool ignoreSourceLookup = it == expectedSource.end();
     const usize src = ignoreSourceLookup ? i : it->second;
-    const usize ciSrc = ignoredArrayNames.count("Confidence Index") > 0 ? i : src;
-    const usize phasesSrc = ignoredArrayNames.count("Phases") > 0 ? i : src;
-    const usize quatsSrc = ignoredArrayNames.count("Quats") > 0 ? i : src;
-    const usize sourceIndexSrc = ignoredArrayNames.count("SourceIndex") > 0 ? i : src;
-    const usize payloadSrc = ignoredArrayNames.count("Payload2") > 0 ? i : src;
-    const usize maskSrc = ignoredArrayNames.count("Mask") > 0 ? i : src;
+    const usize ciSrc = ignoredArrayNames.contains("Confidence Index") ? i : src;
+    const usize phasesSrc = ignoredArrayNames.contains("Phases") ? i : src;
+    const usize quatsSrc = ignoredArrayNames.contains("Quats") ? i : src;
+    const usize sourceIndexSrc = ignoredArrayNames.contains("SourceIndex") ? i : src;
+    const usize payloadSrc = ignoredArrayNames.contains("Payload2") ? i : src;
+    const usize maskSrc = ignoredArrayNames.contains("Mask") ? i : src;
     CAPTURE(i, src);
     REQUIRE(after.ci[i] == before.ci[ciSrc]);
     REQUIRE(after.phases[i] == before.phases[phasesSrc]);
@@ -593,7 +593,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: SIMPL Back
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -694,7 +694,7 @@ const DataPath k_QuatsPath = k_CellDataPath.createChildPath("Quats");
 const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
 const DataPath k_CrystalStructuresPath = k_GeomPath.createChildPath("Ensemble Data").createChildPath("CrystalStructures");
 
-void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
+static void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
 {
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
   const usize sliceSize = dimX * dimY;

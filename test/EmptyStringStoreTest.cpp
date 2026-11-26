@@ -20,7 +20,7 @@ TEST_CASE("EmptyStringStore: basic metadata")
 TEST_CASE("EmptyStringStore: zero tuples")
 {
   EmptyStringStore store({0});
-  REQUIRE(store.size() == 0);
+  REQUIRE(store.empty());
   REQUIRE(store.empty() == true);
   REQUIRE(store.isPlaceholder() == true);
 }

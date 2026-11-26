@@ -34,7 +34,7 @@ LinkedPath::~LinkedPath() = default;
 
 bool LinkedPath::isValid() const
 {
-  if(!m_DataStructure)
+  if(m_DataStructure == nullptr)
   {
     return false;
   }

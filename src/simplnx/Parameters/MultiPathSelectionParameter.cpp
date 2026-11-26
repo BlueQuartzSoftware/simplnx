@@ -135,6 +135,7 @@ Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructu
 {
   const auto& paths = GetAnyRef<ValueType>(value);
   std::vector<DataObject*> objects;
+  objects.reserve(paths.size());
   for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));
@@ -172,7 +173,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
       return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
     }
 
-    if(attributeMatrixNameResult.value().empty() == false)
+    if(!attributeMatrixNameResult.value().empty())
     {
       dataPath = dataPath.createChildPath(attributeMatrixNameResult.value());
 
@@ -185,7 +186,7 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
           return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
         }
 
-        if(dataArrayNameResult.value().empty() == false)
+        if(!dataArrayNameResult.value().empty())
         {
           dataPath = dataPath.createChildPath(dataArrayNameResult.value());
         }

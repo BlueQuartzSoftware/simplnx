@@ -28,7 +28,7 @@ ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure
 
 Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {
-  auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
   const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
   auto& surfaceAreaVolumeRatio = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SurfaceAreaVolumeRatioArrayName)->getDataStoreRef();

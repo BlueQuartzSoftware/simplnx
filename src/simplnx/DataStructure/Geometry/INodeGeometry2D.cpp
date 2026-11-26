@@ -126,7 +126,7 @@ void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexId
 
 void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const
 {
-  auto& cells = getFacesRef();
+  const auto& cells = getFacesRef();
   const usize offset = faceId * getNumberOfVerticesPerFace();
   if(offset + getNumberOfVerticesPerFace() > cells.getSize())
   {

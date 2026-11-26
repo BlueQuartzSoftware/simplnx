@@ -13,10 +13,10 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
+#include <algorithm>
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -1626,18 +1626,12 @@ private:
     if(doPos)
     {
       const float32 cand = c + w;
-      if(cand < neighbor)
-      {
-        neighbor = cand;
-      }
+      neighbor = std::min(cand, neighbor);
     }
     if(doNeg)
     {
       const float32 cand = c - w;
-      if(cand > neighbor)
-      {
-        neighbor = cand;
-      }
+      neighbor = std::max(cand, neighbor);
     }
   }
 

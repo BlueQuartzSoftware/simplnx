@@ -1,5 +1,6 @@
 #include "DataIOCollection.hpp"
 
+#include <algorithm>
 #include <cassert>
 
 #include "simplnx/Core/Preferences.hpp"
@@ -9,7 +10,6 @@
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
-#include <algorithm>
 
 namespace nx::core
 {
@@ -323,10 +323,7 @@ std::string DataIOCollection::generateManagerListString() const
       capList = "(no factories registered)";
     }
 
-    if(displayName.size() > maxNameWidth)
-    {
-      maxNameWidth = displayName.size();
-    }
+    maxNameWidth = std::max(displayName.size(), maxNameWidth);
     rows.push_back({std::move(displayName), std::move(capList)});
   }
 

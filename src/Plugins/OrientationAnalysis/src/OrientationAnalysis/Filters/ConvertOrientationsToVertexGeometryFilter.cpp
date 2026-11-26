@@ -118,7 +118,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto& inputOrientationsArray = dataStructure.getDataRefAs<Float32Array>(inputOrientationsArrayPath);
+  const auto& inputOrientationsArray = dataStructure.getDataRefAs<Float32Array>(inputOrientationsArrayPath);
 
   std::vector<usize> inputCompShape = inputOrientationsArray.getComponentShape();
 
@@ -152,7 +152,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
   DataPath vertexAttrMatrixPath = outputVertexGeometryPath.createChildPath(outputVertexAttrMatrixName);
   for(const auto& sourceDataPath : sourceDataPaths)
   {
-    auto& sourceDataArray = dataStructure.getDataRefAs<IDataArray>(sourceDataPath);
+    const auto& sourceDataArray = dataStructure.getDataRefAs<IDataArray>(sourceDataPath);
     DataType type = sourceDataArray.getDataType();
     DataPath destinationDataPath = vertexAttrMatrixPath.createChildPath(sourceDataArray.getName());
     auto numTuples = sourceDataArray.getNumberOfTuples();

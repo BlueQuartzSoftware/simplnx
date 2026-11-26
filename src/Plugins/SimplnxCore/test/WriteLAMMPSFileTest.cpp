@@ -56,7 +56,7 @@ void CompareResults() // compare hash of both file strings
   {
     if(exemplar[i] != data[i])
     {
-      std::cout << "Output difference at byte offset " << i << std::endl;
+      std::cout << "Output difference at byte offset " << i << '\n';
       REQUIRE(exemplar[i] == data[i]);
       break;
     }
@@ -174,7 +174,7 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

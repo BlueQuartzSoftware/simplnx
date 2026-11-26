@@ -67,11 +67,11 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   neighborList->setList(1, std::make_shared<std::vector<float32>>(list2));
   neighborList->setList(2, std::make_shared<std::vector<float32>>(list3));
 
-  auto dataArray1 = UnitTest::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto* dataArray1 = UnitTest::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray1->fill(1.23);
-  auto dataArray2 = UnitTest::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto* dataArray2 = UnitTest::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray2->fill(-678);
-  auto dataArray3 = UnitTest::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto* dataArray3 = UnitTest::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray3->fill(24343);
 
   auto file = std::filesystem::path(fmt::format("{}/{}.csv", k_TestOutput, "CSV_Test"));
@@ -105,7 +105,7 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: SIMPL Backwards Compatibility
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

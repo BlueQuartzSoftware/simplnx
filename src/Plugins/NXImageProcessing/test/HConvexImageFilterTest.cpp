@@ -118,7 +118,9 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Height 0 yields an all-zero ou
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12, DY = 12, DZ = 3;
+  constexpr usize DX = 12;
+  constexpr usize DY = 12;
+  constexpr usize DZ = 3;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, rt::MakeGradientNoisePattern<int32>(DX, DY, DZ));
 
@@ -145,7 +147,9 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Height beyond dynamic range re
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12, DY = 12, DZ = 3;
+  constexpr usize DX = 12;
+  constexpr usize DY = 12;
+  constexpr usize DZ = 3;
   const std::vector<uint8> pattern = rt::MakeGradientNoisePattern<uint8>(DX, DY, DZ);
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, DX, DY, DZ, pattern);

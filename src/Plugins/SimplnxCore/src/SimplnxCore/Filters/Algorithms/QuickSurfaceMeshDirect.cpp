@@ -331,15 +331,29 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
   // v1-v4 use Z=k-1 and v5-v8 use Z=k. Each plane orders corners as
   // (-X,-Y), (+X,-Y), (-X,+Y), and (+X,+Y) within the current block.
   // This mapping must match the scanline Case 1, Case 2, and Case 3 calls.
-  MeshIndexType v1 = 0, v2 = 0, v3 = 0, v4 = 0;
-  MeshIndexType v5 = 0, v6 = 0, v7 = 0, v8 = 0;
+  MeshIndexType v1 = 0;
+  MeshIndexType v2 = 0;
+  MeshIndexType v3 = 0;
+  MeshIndexType v4 = 0;
+  MeshIndexType v5 = 0;
+  MeshIndexType v6 = 0;
+  MeshIndexType v7 = 0;
+  MeshIndexType v8 = 0;
 
-  int32 f1 = 0, f2 = 0, f3 = 0, f4 = 0;
-  int32 f5 = 0, f6 = 0, f7 = 0, f8 = 0;
+  int32 f1 = 0;
+  int32 f2 = 0;
+  int32 f3 = 0;
+  int32 f4 = 0;
+  int32 f5 = 0;
+  int32 f6 = 0;
+  int32 f7 = 0;
+  int32 f8 = 0;
 
   // Plane and row offsets form Direct-compatible flat voxel indices.
-  MeshIndexType row1 = 0, row2 = 0;
-  MeshIndexType plane1 = 0, plane2 = 0;
+  MeshIndexType row1 = 0;
+  MeshIndexType row2 = 0;
+  MeshIndexType plane1 = 0;
+  MeshIndexType plane2 = 0;
 
   MeshIndexType count = 1;
   MeshIndexType iter = 0;
@@ -543,10 +557,16 @@ void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& no
   }
 
   // Linear indices: point = current voxel, neigh1/2/3 = +X, +Y, +Z neighbors
-  MeshIndexType point = 0, neigh1 = 0, neigh2 = 0, neigh3 = 0;
+  MeshIndexType point = 0;
+  MeshIndexType neigh1 = 0;
+  MeshIndexType neigh2 = 0;
+  MeshIndexType neigh3 = 0;
 
   // Four dual-grid corners define each face. The max sentinel marks an unassigned vertex ID.
-  MeshIndexType nodeId1 = 0, nodeId2 = 0, nodeId3 = 0, nodeId4 = 0;
+  MeshIndexType nodeId1 = 0;
+  MeshIndexType nodeId2 = 0;
+  MeshIndexType nodeId3 = 0;
+  MeshIndexType nodeId4 = 0;
 
   for(MeshIndexType k = 0; k < zP; k++)
   {

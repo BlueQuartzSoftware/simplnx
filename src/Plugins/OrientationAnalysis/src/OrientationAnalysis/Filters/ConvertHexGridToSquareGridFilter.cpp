@@ -144,7 +144,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
   {
     return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
   }
-  else if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
+  if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
   {
     return MakePreflightErrorResult(-44602, fmt::format("The file extension '{}' was not detected correctly for file '{}'", inputPath.extension().string(), inputPath.string()));
   }

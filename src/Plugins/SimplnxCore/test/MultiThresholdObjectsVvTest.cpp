@@ -45,8 +45,8 @@ constexpr float64 k_MaskTypeComparisonValue = k_MaskTypeFirstTrueTuple * k_Float
 static_assert(k_MaskTypeFirstTrueTuple > 0 && k_MaskTypeFirstTrueTuple < static_cast<usize>(k_TupleCount),
               "The comparison value must split the fixture so both the false and true branches are exercised");
 
-constexpr std::array<bool, k_TupleCount> k_ExemplarInt4{0, 0, 0, 0, 0, 1, 1, 1};
-constexpr std::array<bool, k_TupleCount> k_ExemplarFloat02{0, 1, 0, 0, 0, 0, 0, 0};
+constexpr std::array<bool, k_TupleCount> k_ExemplarInt4{false, false, false, false, false, true, true, true};
+constexpr std::array<bool, k_TupleCount> k_ExemplarFloat02{false, true, false, false, false, false, false, false};
 
 constexpr int32 InputIntValue(int32 index)
 {
@@ -263,7 +263,7 @@ void CheckIntTestDataSingleComponent(const DataStructure& dataStructure, ArrayTh
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -310,7 +310,7 @@ void CheckFloatTestDataSingleComponent(const DataStructure& dataStructure, Array
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -354,7 +354,7 @@ void CheckIntTestDataMultiComponent(const DataStructure& dataStructure, ArrayThr
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -387,11 +387,11 @@ float64 GetOutOfBoundsMaximumValue()
 namespace multi_threshold_objects_vv
 {
 
-void CheckExemplar(const DataStructure& dataStructure, const std::array<bool, k_TupleCount>& exemplarMask)
+static void CheckExemplar(const DataStructure& dataStructure, const std::array<bool, k_TupleCount>& exemplarMask)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -542,8 +542,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int 
  * componentIndex Component index of the array to threshold against.
  * unionOperator Union operator to apply on the threshold. Defaults to And
  */
-std::shared_ptr<ArrayThreshold> CreateArrayThreshold(const DataPath& arrayPath, ArrayThreshold::ComparisonType comparisonType, double value, bool isInverted, int componentIndex,
-                                                     ArrayThreshold::UnionOperator unionOperator = ArrayThreshold::UnionOperator::And)
+static std::shared_ptr<ArrayThreshold> CreateArrayThreshold(const DataPath& arrayPath, ArrayThreshold::ComparisonType comparisonType, double value, bool isInverted, int componentIndex,
+                                                            ArrayThreshold::UnionOperator unionOperator = ArrayThreshold::UnionOperator::And)
 {
   auto threshold = std::make_shared<ArrayThreshold>();
   threshold->setArrayPath(arrayPath);
@@ -556,7 +556,7 @@ std::shared_ptr<ArrayThreshold> CreateArrayThreshold(const DataPath& arrayPath, 
   return threshold;
 }
 
-ArrayThresholdSet CreateThresholdSet1()
+static ArrayThresholdSet CreateThresholdSet1()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -572,7 +572,7 @@ ArrayThresholdSet CreateThresholdSet1()
   return thresholdSet;
 }
 
-bool ExpectedThresholdSet1Mask(usize index, bool inverted)
+static bool ExpectedThresholdSet1Mask(usize index, bool inverted)
 {
   bool expectedThreshold1 = ExpectedIntSingleComponentMask(ArrayThreshold::ComparisonType::GreaterThan, index, 2.0, false);
   bool expectedThreshold2 = ExpectedFloatSingleComponentMask(ArrayThreshold::ComparisonType::LessThan, index, 0.025, false);
@@ -586,7 +586,7 @@ bool ExpectedThresholdSet1Mask(usize index, bool inverted)
   return expected;
 }
 
-ArrayThresholdSet CreateThresholdSet2()
+static ArrayThresholdSet CreateThresholdSet2()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -602,7 +602,7 @@ ArrayThresholdSet CreateThresholdSet2()
   return thresholdSet;
 }
 
-bool ExpectedThresholdSet2Mask(usize index, bool inverted)
+static bool ExpectedThresholdSet2Mask(usize index, bool inverted)
 {
   bool expectedThreshold1 = ExpectedIntSingleComponentMask(ArrayThreshold::ComparisonType::Operator_Equal, index, 1.0, false);
   bool expectedThreshold2 = ExpectedFloatSingleComponentMask(ArrayThreshold::ComparisonType::Operator_NotEqual, index, 5.0, false);
@@ -616,7 +616,7 @@ bool ExpectedThresholdSet2Mask(usize index, bool inverted)
   return expected;
 }
 
-ArrayThresholdSet CreateThresholdSet3()
+static ArrayThresholdSet CreateThresholdSet3()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -628,7 +628,7 @@ ArrayThresholdSet CreateThresholdSet3()
   return thresholdSet;
 }
 
-ArrayThresholdSet CreateThresholdSet4()
+static ArrayThresholdSet CreateThresholdSet4()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -641,7 +641,7 @@ ArrayThresholdSet CreateThresholdSet4()
   return thresholdSet;
 }
 
-ArrayThresholdSet CreateThresholdSet5()
+static ArrayThresholdSet CreateThresholdSet5()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -662,7 +662,7 @@ ArrayThresholdSet CreateThresholdSet5()
  * regardless of input. Every other CreateThresholdSet* helper passes either all leaves or all nested sets, so
  * this shape had no in-repo coverage.
  */
-ArrayThresholdSet CreateThresholdSet6()
+static ArrayThresholdSet CreateThresholdSet6()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -681,7 +681,7 @@ ArrayThresholdSet CreateThresholdSet6()
  * This is the shape that triggered MultiThresholdObjectsFilter-D2, where inversion of a nested set reversed
  * the tuple order instead of flipping each tuple's value.
  */
-ArrayThresholdSet CreateThresholdSet7()
+static ArrayThresholdSet CreateThresholdSet7()
 {
   ArrayThresholdSet thresholdSet;
 
@@ -696,12 +696,12 @@ ArrayThresholdSet CreateThresholdSet7()
   return thresholdSet;
 }
 
-void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -709,12 +709,12 @@ void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
   }
 }
 
-void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -722,12 +722,12 @@ void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
   }
 }
 
-void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -744,12 +744,12 @@ void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
   }
 }
 
-void CheckThresholdSet4(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet4(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -766,12 +766,12 @@ void CheckThresholdSet4(DataStructure& dataStructure, bool inverted)
   }
 }
 
-void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -788,12 +788,12 @@ void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
   }
 }
 
-void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -812,12 +812,12 @@ void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
   }
 }
 
-void CheckThresholdSet7(DataStructure& dataStructure, bool inverted)
+static void CheckThresholdSet7(DataStructure& dataStructure, bool inverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+  const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
@@ -1081,7 +1081,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Boolean C
 // DataType checks
 
 template <typename T>
-void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
+static void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
 {
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
@@ -1104,7 +1104,7 @@ void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresho
 }
 
 template <typename T>
-void runMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& args, DataStructure& dataStructure)
+static void runMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& args, DataStructure& dataStructure)
 {
   const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
@@ -1217,7 +1217,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataTyp
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
+static void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
 {
   usize count = mask.size();
   for(usize i = 0; i < count; i++)
@@ -1226,7 +1226,7 @@ void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonV
     REQUIRE(mask[i] == targetValue);
   }
 }
-void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
+static void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
 {
   usize count = mask.size();
   for(usize i = 0; i < count; i++)
@@ -1354,7 +1354,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conver
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   // A legacy "Threshold Objects (Advanced)" pipeline whose thresholds are a leaf sibling to an inverted
   // nested set, with the nested set's children joined by Or:
@@ -1413,7 +1413,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compati
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

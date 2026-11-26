@@ -79,7 +79,9 @@ void AppendBox(ShapeMesh& mesh, const Point& minimum, const Point& maximum)
   for(auto face : faces)
   {
     for(auto& index : face)
+    {
       index += offset;
+    }
     mesh.faces.push_back(face);
   }
 }
@@ -99,7 +101,9 @@ DataStructure MeshData(const ShapeMesh& mesh, const Point& centroid, const Frame
   {
     const Point point = centroid + rotation * (mesh.vertices[i] - centroid);
     for(usize axis = 0; axis < 3; axis++)
+    {
       (*vertices)[3 * i + axis] = static_cast<float32>(point[axis]);
+    }
   }
   for(usize i = 0; i < mesh.faces.size(); i++)
     for(usize axis = 0; axis < 3; axis++)
@@ -115,7 +119,9 @@ DataStructure MeshData(const ShapeMesh& mesh, const Point& centroid, const Frame
   REQUIRE(centers != nullptr);
   centers->fill(0.0F);
   for(usize axis = 0; axis < 3; axis++)
+  {
     (*centers)[3 + axis] = static_cast<float32>(centroid[axis]);
+  }
   for(usize i = 0; i < mesh.faces.size(); i++)
   {
     (*labels)[2 * i] = -1;
@@ -304,7 +310,9 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     const auto& output = Output(data, "AxisLengths");
     const auto& ratios = Output(data, "AspectRatios");
     for(usize i = 3; i < 6; i++)
+    {
       CHECK(output[i] == -1.0F);
+    }
     CHECK(ratios[2] == -1.0F);
     CHECK(ratios[3] == -1.0F);
   }
@@ -322,7 +330,9 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Missing hits and nonc
     const auto& output = Output(data, "AxisLengths");
     const auto& ratios = Output(data, "AspectRatios");
     for(usize i = 3; i < 6; i++)
+    {
       CHECK(output[i] == -1.0F);
+    }
     CHECK(ratios[2] == -1.0F);
     CHECK(ratios[3] == -1.0F);
   }

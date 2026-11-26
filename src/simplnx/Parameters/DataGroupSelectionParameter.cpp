@@ -102,14 +102,14 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(value);
+  const auto* const baseGroupObj = dataStructure.getDataAs<BaseGroup>(value);
   if(baseGroupObj == nullptr)
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, value.toString()));
   }
 
   // Look for the actual group type that the user selected in the allowed set
-  if(m_AllowedTypes.count(baseGroupObj->getGroupType()) > 0)
+  if(m_AllowedTypes.contains(baseGroupObj->getGroupType()))
   {
     return {};
   }
@@ -153,7 +153,7 @@ Result<DataContainerFromMultiSelectionFilterParameterConverter::ValueType> DataC
     return MakeErrorResult<ValueType>(-1, fmt::format("DataContainerFromMultiSelectionFilterParameterConverter json '{}' is not an array", json.dump()));
   }
 
-  for(auto& iter : json)
+  for(const auto& iter : json)
   {
     auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
     if(dataContainerNameResult.invalid())

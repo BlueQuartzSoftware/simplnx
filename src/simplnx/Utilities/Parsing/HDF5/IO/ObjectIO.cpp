@@ -215,7 +215,7 @@ void ObjectIO::deleteAttribute(const std::string& name) const
   // getId() self-locks; resolve it before the leaf-locked existence-check + delete.
   const hid_t selfId = getId();
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-  if(H5Aexists(selfId, name.c_str()))
+  if(H5Aexists(selfId, name.c_str()) != 0)
   {
     H5Adelete(selfId, name.c_str());
   }
@@ -289,7 +289,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   }
   if(attributeOpened && readError < 0)
   {
-    std::cout << "Error Reading Attribute." << std::endl;
+    std::cout << "Error Reading Attribute." << '\n';
     return MakeErrorResult<std::string>(-450, fmt::format("Error reading attribute: '{}'", attributeName));
   }
   returnResult = {data};
@@ -379,7 +379,7 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId)
         herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
         if(error < 0)
         {
-          std::cout << "Error Getting Attribute dims" << std::endl;
+          std::cout << "Error Getting Attribute dims" << '\n';
           H5Sclose(dataspaceId);
           H5Tclose(attrType);
           return 0;

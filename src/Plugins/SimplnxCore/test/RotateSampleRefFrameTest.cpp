@@ -94,6 +94,7 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
   for(Eigen::Index i = 0; i < matrix.rows(); i++)
   {
     std::vector<float64> row;
+    row.reserve(matrix.cols());
     for(Eigen::Index j = 0; j < matrix.cols(); j++)
     {
       row.push_back(matrix(i, j));
@@ -712,7 +713,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibilit
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

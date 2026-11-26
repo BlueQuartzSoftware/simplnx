@@ -67,7 +67,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto computeByIndexValue = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key);
   auto standardizeDataValue = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_StandardizeData_Key);
   auto inputArrayPath = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key);
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
+  const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
   auto destinationAttributeMatrixValue = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
 

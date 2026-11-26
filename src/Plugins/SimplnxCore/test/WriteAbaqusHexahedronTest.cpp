@@ -432,7 +432,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
       bool recognizedLabel = false;
       for(usize labelIndex = 0; labelIndex < labels.size(); labelIndex++)
       {
-        if(message.message.find(labels[labelIndex] + ":") == 0)
+        if(message.message.starts_with(labels[labelIndex] + ":"))
         {
           recognizedLabel = true;
           CHECK(fileNumbers[labelIndex] > completedFiles);
@@ -466,7 +466,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: SIMPL Backwards Compatibili
 {
   UnitTest::LoadPlugins();
   auto app = Application::GetOrCreateInstance();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

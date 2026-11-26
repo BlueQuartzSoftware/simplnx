@@ -109,7 +109,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     {
       for(const auto& error : preflightResult.outputActions.errors())
       {
-        std::cout << error.code << ": " << error.message << std::endl;
+        std::cout << error.code << ": " << error.message << '\n';
       }
     }
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -130,7 +130,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: SIMPL Backwards Compatibility"
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

@@ -34,9 +34,7 @@
 #define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
 #define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
 
-namespace pybind11
-{
-namespace detail
+namespace pybind11::detail
 {
 template <>
 struct type_caster<nx::core::AnyParameter>
@@ -54,7 +52,7 @@ public:
    * instance or return false upon failure. The second argument
    * indicates whether implicit conversions should be applied.
    */
-  bool load(handle src, bool)
+  bool load(handle src, bool /*unused*/)
   {
     if(!isinstance<nx::core::IParameter>(src))
     {
@@ -78,8 +76,7 @@ public:
     return pybind11::cast(src->clone()).release();
   }
 };
-} // namespace detail
-} // namespace pybind11
+} // namespace pybind11::detail
 
 namespace nx::core::NxPybind
 {
@@ -89,7 +86,7 @@ template <class T>
 using CastNameT = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
 
 template <usize N, class... Ts>
-boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>*)
+boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>* /*unused*/)
 {
   return boost::mp11::mp_list<Ts...>{};
 }
@@ -130,7 +127,7 @@ template <usize N, class... Ts>
 constexpr bool CheckIfPythonNameNeedsFixup(const py::detail::descr<N, Ts...>& descr) noexcept
 {
   std::string_view text = descr.text;
-  usize index = text.find("%");
+  usize index = text.find('%');
   return index != std::string_view::npos;
 }
 
@@ -144,7 +141,7 @@ std::string GetFixedPythonTypeCasterName()
   static constexpr usize N = mp_size<Types>::value;
   mp_for_each<mp_iota_c<N>>([&](auto I) {
     using CurrentType = mp_at_c<Types, static_cast<usize>(I)>;
-    usize index = typeName.find("%");
+    usize index = typeName.find('%');
     if(index == std::string::npos)
     {
       return;
@@ -230,7 +227,7 @@ public:
 
   bool contains(const Uuid& uuid) const
   {
-    return m_ParameterConversionMap.count(uuid) > 0;
+    return m_ParameterConversionMap.contains(uuid);
   }
 
   template <class ParameterT>
@@ -239,7 +236,7 @@ public:
     static_assert(std::is_base_of_v<IParameter, ParameterT>);
 
     Uuid uuid = ParameterTraits<ParameterT>::uuid;
-    if(m_ParameterConversionMap.count(uuid) > 0)
+    if(m_ParameterConversionMap.contains(uuid))
     {
       throw std::invalid_argument("Duplicate uuid");
     }
@@ -302,6 +299,7 @@ public:
   std::vector<std::shared_ptr<PythonPlugin>> getPythonPlugins()
   {
     std::vector<std::shared_ptr<PythonPlugin>> plugins;
+    plugins.reserve(m_PythonPlugins.size());
     for(auto&& [id, plugin] : m_PythonPlugins)
     {
       plugins.push_back(plugin);

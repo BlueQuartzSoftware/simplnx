@@ -48,7 +48,7 @@ inline CatchSessionResult RunCatchSession(int argc, char* argv[])
         // Use Catch's listing API inside this exception boundary to distinguish those outcomes.
         if((data.waitForKeypress & Catch::WaitForKeypress::BeforeStart) != 0)
         {
-          Catch::cout() << "...waiting for enter/ return before starting" << std::endl;
+          Catch::cout() << "...waiting for enter/ return before starting" << '\n';
           static_cast<void>(std::getchar());
         }
         auto config = std::make_shared<Catch::Config>(data);
@@ -60,7 +60,7 @@ inline CatchSessionResult RunCatchSession(int argc, char* argv[])
         result.exitCode = static_cast<int>(*Catch::list(config));
         if((data.waitForKeypress & Catch::WaitForKeypress::BeforeExit) != 0)
         {
-          Catch::cout() << "...waiting for enter/ return before exiting, with code: " << result.exitCode << std::endl;
+          Catch::cout() << "...waiting for enter/ return before exiting, with code: " << result.exitCode << '\n';
           static_cast<void>(std::getchar());
         }
         result.successful = true;

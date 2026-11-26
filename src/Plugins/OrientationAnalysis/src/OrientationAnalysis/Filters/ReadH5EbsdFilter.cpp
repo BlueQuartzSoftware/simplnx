@@ -181,22 +181,22 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
   }
 
   std::vector<size_t> cDims = {1ULL};
-  for(int32_t i = 0; i < names.size(); ++i)
+  for(const auto& name : names)
   {
     // First check to see if the name is in our list of names to read.
-    if(m_SelectedArrayNames.find(names[i]) == m_SelectedArrayNames.end())
+    if(m_SelectedArrayNames.find(name) == m_SelectedArrayNames.end())
     {
       continue;
     }
-    if(reader->getPointerType(names[i]) == ebsdlib::NumericTypes::Type::Int32)
+    if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Int32)
     {
-      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
+      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
-    else if(reader->getPointerType(names[i]) == ebsdlib::NumericTypes::Type::Float)
+    else if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Float)
     {
-      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
+      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }

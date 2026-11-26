@@ -92,7 +92,7 @@ FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
     } catch(const std::exception& e)
     {
       std::string msg = fmt::format("Failed to remove file at path '{}'. Error: '{}'", filepath.string(), e.what());
-      std::cout << msg << std::endl;
+      std::cout << msg << '\n';
     }
   }
 

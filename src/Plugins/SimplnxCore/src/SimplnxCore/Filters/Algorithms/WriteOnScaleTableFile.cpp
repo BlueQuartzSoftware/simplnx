@@ -303,7 +303,7 @@ Result<> WriteOnScaleTableFile::operator()()
   FeatureIdStats featureIdStats;
   DataStructure rotatedDataStructure;
   const SizeVec3 inputDimensions = inputGeometry.getDimensions();
-  if(!(inputDimensions[0] >= inputDimensions[1] && inputDimensions[1] >= inputDimensions[2]))
+  if(inputDimensions[0] < inputDimensions[1] || inputDimensions[1] < inputDimensions[2])
   {
     // The sub-filter rotates a private copy so the export does not change the input data structure. Peak memory is three times the feature ID bytes while the sub-filter runs: the input, the scratch
     // copy, and the rotated output. Memory remains at two times the feature ID bytes after the sub-filter removes the scratch copy and until this algorithm returns.

@@ -13,7 +13,7 @@ bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectNam
   error = H5Oget_info_by_name3(nodeId, objectName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
   if(error < 0)
   {
-    std::cout << "Error in method H5Oget_info_by_name()" << std::endl;
+    std::cout << "Error in method H5Oget_info_by_name()" << '\n';
     return false;
   }
   switch(objectInfo.type)
@@ -65,7 +65,7 @@ hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::strin
   const herr_t closeError = H5Dclose(datasetId);
   if(closeError < 0)
   {
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << closeError << std::endl;
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << closeError << '\n';
     return static_cast<hid_t>(closeError);
   }
   return typeId;
@@ -201,7 +201,7 @@ std::string nx::core::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
     return "H5T_NATIVE_DOUBLE";
   }
 
-  std::cout << "Error: StringForHDFType - Match for numeric type not found: " << dataTypeIdentifier << std::endl;
+  std::cout << "Error: StringForHDFType - Match for numeric type not found: " << dataTypeIdentifier << '\n';
   return "Unknown";
 }
 

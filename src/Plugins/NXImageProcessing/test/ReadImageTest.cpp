@@ -1021,7 +1021,8 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round tr
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  const usize X = 4, Y = 3; // 2D image, 3 components
+  const usize X = 4;
+  const usize Y = 3; // 2D image, 3 components
   std::vector<uint8_t> voxels(X * Y * 3);
   for(usize i = 0; i < voxels.size(); i++)
   {
@@ -1079,7 +1080,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits wa
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  const usize X = 6, Y = 5, Z = 4;
+  const usize X = 6;
+  const usize Y = 5;
+  const usize Z = 4;
   std::vector<uint16_t> voxels(X * Y * Z);
   for(usize i = 0; i < voxels.size(); i++)
   {
@@ -1133,7 +1136,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize X = 6, Y = 5, Z = 4;
+  constexpr usize X = 6;
+  constexpr usize Y = 5;
+  constexpr usize Z = 4;
   std::vector<uint16_t> voxels(X * Y * Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
@@ -1196,7 +1201,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadImageFilter]")
 {
   UnitTest::LoadPlugins();
-  constexpr usize X = 6, Y = 5, Z = 4;
+  constexpr usize X = 6;
+  constexpr usize Y = 5;
+  constexpr usize Z = 4;
   std::vector<uint16_t> voxels(X * Y * Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
@@ -1352,17 +1359,19 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate re
 
   // 128^3 int32_t == 8 MiB decompressed. A splitmix64-mixed fill is effectively
   // incompressible, so the gzip stream stays above the 4 MiB compressed buffer.
-  const usize X = 128, Y = 128, Z = 128;
+  const usize X = 128;
+  const usize Y = 128;
+  const usize Z = 128;
   std::vector<int32_t> voxels(X * Y * Z);
   uint64_t state = 0x9E3779B97F4A7C15ULL;
-  for(usize i = 0; i < voxels.size(); i++)
+  for(int& voxel : voxels)
   {
     state += 0x9E3779B97F4A7C15ULL;
     uint64_t z = state;
     z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
     z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
     z = z ^ (z >> 31);
-    voxels[i] = static_cast<int32_t>(static_cast<uint32_t>(z));
+    voxel = static_cast<int32_t>(static_cast<uint32_t>(z));
   }
 
   const std::vector<uint8_t> raw = ToBytes(voxels);

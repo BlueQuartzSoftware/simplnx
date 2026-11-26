@@ -149,7 +149,7 @@ Result<> NearestPointFuseRegularGridsDirect::operator()()
       continue;
     }
     auto& destination = m_DataStructure.getDataRefAs<IArray>(m_InputValues->ReferenceCellAttributeMatrixPath.createChildPath(source->getName()));
-    auto& sourceData = dynamic_cast<const IDataArray&>(*source);
+    const auto& sourceData = dynamic_cast<const IDataArray&>(*source);
     ExecuteParallelFunction<CopyArrayImpl>(sourceData.getDataType(), taskRunner, *source, destination, sampleGeom, referenceGeom, m_InputValues->fillValue, m_ShouldCancel);
   }
   taskRunner.wait();

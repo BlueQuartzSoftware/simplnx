@@ -100,7 +100,7 @@ usize TetrahedralGeom::getNumberOfVerticesPerCell() const
 
 usize TetrahedralGeom::getNumberOfCells() const
 {
-  auto& tets = getPolyhedraRef();
+  const auto& tets = getPolyhedraRef();
   return tets.getNumberOfTuples();
 }
 

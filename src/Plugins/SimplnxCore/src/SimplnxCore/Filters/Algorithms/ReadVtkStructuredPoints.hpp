@@ -232,8 +232,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::string m_Comment = {""};
-  std::string m_DatasetType = {""};
+  std::string m_Comment;
+  std::string m_DatasetType;
 
   bool m_FileIsBinary = {true};
 

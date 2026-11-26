@@ -1137,7 +1137,7 @@ void FindElementCentroids(const DataArray<T>* elemList, const Float32Array* vert
   const usize numVertsPerElem = elemList->getNumberOfComponents();
   usize numDims = 3;
   auto& elementCentroids = *centroids;
-  auto& vertex = *vertices;
+  const auto& vertex = *vertices;
 
   for(usize i = 0; i < numDims; i++)
   {
@@ -1168,7 +1168,7 @@ void FindTetVolumes(const DataArray<T>* tetList, const Float32Array* vertices, F
   auto& tets = *tetList;
   const usize numTets = tetList->getNumberOfTuples();
   const usize numVertsPerTet = tetList->getNumberOfComponents();
-  auto& vertex = *vertices;
+  const auto& vertex = *vertices;
   auto& volumePtr = *volumes;
 
   for(usize i = 0; i < numTets; i++)
@@ -1199,7 +1199,7 @@ void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, F
 {
   const usize numHexas = hexList->getNumberOfTuples();
   const usize numElementsPerHex = hexList->getNumberOfComponents();
-  auto& vertex = *vertices;
+  const auto& vertex = *vertices;
   auto& volumePtr = *volumes;
   auto& hexas = *hexList;
 

@@ -312,7 +312,7 @@ public:
   mutable usize dataCalls = 0;
 
 protected:
-  Result<> generateHeader(FILE*) const override
+  Result<> generateHeader(FILE* /*outputFile*/) const override
   {
     ++headerCalls;
     if(fault == StageFault::HeaderStandard)
@@ -332,7 +332,7 @@ protected:
     return result;
   }
 
-  Result<> writeData(FILE*) const override
+  Result<> writeData(FILE* /*outputFile*/) const override
   {
     ++dataCalls;
     if(fault == StageFault::DataStandard)
@@ -368,7 +368,7 @@ public:
   usize elementCount = std::numeric_limits<usize>::max();
 
 protected:
-  Result<> generateHeader(FILE*) const override
+  Result<> generateHeader(FILE* /*outputFile*/) const override
   {
     return {};
   }

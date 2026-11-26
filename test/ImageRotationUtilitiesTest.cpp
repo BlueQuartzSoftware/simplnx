@@ -251,7 +251,8 @@ TEST_CASE("ImageRotationUtilities: Invalid matrix regression", "[simplnx][ImageR
 TEST_CASE("ImageRotationUtilities: Axis-angle input validation", "[simplnx][ImageRotationUtilities]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8);
-  const float32 nan = std::numeric_limits<float32>::quiet_NaN(), inf = std::numeric_limits<float32>::infinity();
+  const float32 nan = std::numeric_limits<float32>::quiet_NaN();
+  const float32 inf = std::numeric_limits<float32>::infinity();
   const std::vector<VectorFloat32Parameter::ValueType> values = {{0, 0, 1},      {nan, 0, 1, 90}, {0, inf, 1, 90},  {0, 0, -inf, 90}, {0, 0, 0, 90},
                                                                  {0, 0, 1, nan}, {0, 0, 1, inf},  {nan, 0, 1, nan}, {0, 0, 1, 90}};
   auto result = ImageRotationUtilities::ValidateRotationAxisAngle(values[row], "Rotation");
@@ -279,7 +280,9 @@ TEST_CASE("ImageRotationUtilities: Ordinary angle compatibility", "[simplnx][Ima
 {
   const auto matrix = ImageRotationUtilities::GenerateRotationTransformationMatrix({1, 1, 1, 36000});
   const float32 radians = 36000.0f * Constants::k_PiOver180F;
-  const float32 cosine = cos(radians), sine = sin(radians), unit = FloatVec3{1, 1, 1}.normalize()[0];
+  const float32 cosine = cos(radians);
+  const float32 sine = sin(radians);
+  const float32 unit = FloatVec3{1, 1, 1}.normalize()[0];
   ImageRotationUtilities::Matrix4fR previous = ImageRotationUtilities::Matrix4fR::Identity();
   for(usize row = 0; row < 3; ++row)
   {

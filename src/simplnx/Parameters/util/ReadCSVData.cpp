@@ -141,9 +141,8 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
 
   const nlohmann::json& tDims = json[k_TupleDimensionsKey];
   data.tupleDims.clear();
-  for(usize i = 0; i < tDims.size(); i++)
+  for(const auto& tDim : tDims)
   {
-    const auto& tDim = tDims[i];
     data.tupleDims.push_back(tDim);
   }
 
@@ -168,7 +167,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-107, fmt::format("ReadCSVData: Cannot find the 'Input File Path' key \"{}\" in the ReadCSVData json object.", k_InputFilePathKey));
   }
-  else if(!json[k_InputFilePathKey].is_string())
+  if(!json[k_InputFilePathKey].is_string())
   {
     return MakeErrorResult<ReadCSVData>(-108, fmt::format("ReadCSVData: 'Input File Path' value is of type {} and is not a string.", json[k_InputFilePathKey].type_name()));
   }
@@ -178,7 +177,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-109, fmt::format("ReadCSVData: Cannot find the 'Begin Index' key \"{}\" in the ReadCSVData json object.", k_StartImportRowKey));
   }
-  else if(!json[k_StartImportRowKey].is_number_integer())
+  if(!json[k_StartImportRowKey].is_number_integer())
   {
     return MakeErrorResult<ReadCSVData>(-110, fmt::format("ReadCSVData: 'Begin Index' value is of type {} and is not an integer.", json[k_StartImportRowKey].type_name()));
   }
@@ -188,7 +187,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-113, fmt::format("ReadCSVData: Cannot find the 'Header Line' key \"{}\" in the ReadCSVData json object.", k_HeaderLineKey));
   }
-  else if(!json[k_HeaderLineKey].is_number_integer())
+  if(!json[k_HeaderLineKey].is_number_integer())
   {
     return MakeErrorResult<ReadCSVData>(-114, fmt::format("ReadCSVData: 'Header Line' value is of type {} and is not an integer.", json[k_HeaderLineKey].type_name()));
   }
@@ -198,7 +197,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-115, fmt::format("ReadCSVData: Cannot find the 'Header Mode' key \"{}\" in the ReadCSVData json object.", k_HeaderModeKey));
   }
-  else if(!json[k_HeaderModeKey].is_number_integer())
+  if(!json[k_HeaderModeKey].is_number_integer())
   {
     return MakeErrorResult<ReadCSVData>(-116, fmt::format("ReadCSVData: 'Header Mode' value is of type {} and is not an integer.", json[k_HeaderModeKey].type_name()));
   }
@@ -231,7 +230,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-125, fmt::format("ReadCSVData: Cannot find the 'Consecutive Delimiters' key \"{}\" in the ReadCSVData json object.", k_ConsecutiveDelimitersKey));
   }
-  else if(!json[k_ConsecutiveDelimitersKey].is_boolean())
+  if(!json[k_ConsecutiveDelimitersKey].is_boolean())
   {
     return MakeErrorResult<ReadCSVData>(-126, fmt::format("ReadCSVData: 'Consecutive Delimiters' value is of type {} and is not a boolean.", json[k_ConsecutiveDelimitersKey].type_name()));
   }

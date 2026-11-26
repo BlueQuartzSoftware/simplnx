@@ -390,16 +390,16 @@ struct PointInfo
 
 // ----------------------------------------------------------------------------
 // Function to compute the intersection between a triangle and a plane
-Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
+static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
 {
   PointInfo p0{plane.signedDistance(v0)};
   PointInfo p1{plane.signedDistance(v1)};
   PointInfo p2{plane.signedDistance(v2)};
 
   // Count the number of vertices on each side of the plane
-  int positiveCount = p0.positive() + p1.positive() + p2.positive();
-  int negativeCount = p0.negative() + p1.negative() + p2.negative();
-  int zeroCount = p0.onPlane() + p1.onPlane() + p2.onPlane();
+  int positiveCount = static_cast<int>(p0.positive()) + static_cast<int>(p1.positive()) + static_cast<int>(p2.positive());
+  int negativeCount = static_cast<int>(p0.negative()) + static_cast<int>(p1.negative()) + static_cast<int>(p2.negative());
+  int zeroCount = static_cast<int>(p0.onPlane()) + static_cast<int>(p1.onPlane()) + static_cast<int>(p2.onPlane());
 
   // No intersection if all vertices are on one side of the plane
   // Handle case where the triangle lies entirely on the plane
@@ -557,14 +557,8 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
     for(usize j = 0; j < 3; j++)
     {
       const usize vert = tris[3 * i + j];
-      if(minDim > triVerts[3 * vert + 2])
-      {
-        minDim = triVerts[3 * vert + 2];
-      }
-      if(maxDim < triVerts[3 * vert + 2])
-      {
-        maxDim = triVerts[3 * vert + 2];
-      }
+      minDim = std::min<nx::core::types::float32>(minDim, triVerts[3 * vert + 2]);
+      maxDim = std::max<nx::core::types::float32>(maxDim, triVerts[3 * vert + 2]);
     }
   }
 
@@ -592,7 +586,7 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
 using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
 using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
-inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
+inline static std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
 {
   usize v0Idx = triangleList[triangleId * 3];
   usize v1Idx = triangleList[triangleId * 3 + 1];

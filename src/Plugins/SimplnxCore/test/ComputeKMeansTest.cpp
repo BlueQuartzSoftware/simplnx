@@ -642,7 +642,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters fail before output actions"
   const auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
   REQUIRE(preflightResult.outputActions.errors().front().code == -54061);
-  CHECK(preflightResult.outputActions.errors().front().message.find("0") != std::string::npos);
+  CHECK(preflightResult.outputActions.errors().front().message.find('0') != std::string::npos);
   CHECK(preflightResult.outputActions.errors().front().message.find(k_MaskParityInputPath.toString()) != std::string::npos);
   REQUIRE(dataStructure.getData(k_MaskParityIdsPath) == nullptr);
   REQUIRE(dataStructure.getData(k_MaskParityFeatureDataPath) == nullptr);
@@ -693,7 +693,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters leave direct and scanline o
                                           ComputeKMeansDirect(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
         REQUIRE(result.invalid());
         REQUIRE(result.errors().front().code == -54061);
-        CHECK(result.errors().front().message.find("0") != std::string::npos);
+        CHECK(result.errors().front().message.find('0') != std::string::npos);
         CHECK(result.errors().front().message.find(k_MaskParityInputPath.toString()) != std::string::npos);
         CHECK(ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath) == std::vector<int32>{-77, -77, -77});
         CHECK(ReadKMeansValues<float32>(dataStructure, k_MaskParityMeansPath) == std::vector<float32>{91.0F});
@@ -707,7 +707,7 @@ TEST_CASE("SimplnxCore::ComputeKMeansFilter: SIMPL Backwards Compatibility", "[S
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

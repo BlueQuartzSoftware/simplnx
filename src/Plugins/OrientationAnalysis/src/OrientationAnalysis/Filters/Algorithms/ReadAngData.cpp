@@ -10,6 +10,7 @@
 
 #include <EbsdLib/Core/Orientation.hpp>
 
+#include <algorithm>
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
 
@@ -139,10 +140,7 @@ Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
     auto* phasePtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ang::PhaseData));
     for(usize i = 0; i < totalCells; i++)
     {
-      if(phasePtr[i] < 1)
-      {
-        phasePtr[i] = 1;
-      }
+      phasePtr[i] = std::max(phasePtr[i], 1);
     }
     if(Result<> ioResult = targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalCells)); ioResult.invalid())
     {

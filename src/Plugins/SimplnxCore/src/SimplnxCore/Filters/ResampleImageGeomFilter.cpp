@@ -147,7 +147,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 }
 
 //------------------------------------------------------------------------------
-Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*, const MessageHandler& messageHandler,
+Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ResampleImageGeomInputValues inputValues;

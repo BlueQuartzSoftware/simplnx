@@ -127,7 +127,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
+  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
   if(triangleGeom == nullptr)
   {
     return MakePreflightErrorResult(-27870, fmt::format("Triangle Geometry doesn't exist at: {}", pTriangleGeomPathValue.toString()));
@@ -152,11 +152,12 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(pGroupingTypeValue == GroupingType::Features || pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
-    if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+    const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue);
+    if(featureIds == nullptr)
     {
       return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
     }
-    else if(featureIds->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(featureIds->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pFeatureIdsPathValue.toString(),
                                                           featureIds->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
@@ -165,11 +166,12 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
-    if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
+    const auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue);
+    if(featurePhases == nullptr)
     {
       return MakePreflightErrorResult(-27872, fmt::format("Face Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
     }
-    else if(featurePhases->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(featurePhases->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pFeaturePhasesPathValue.toString(),
                                                           featurePhases->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
@@ -178,11 +180,12 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(pGroupingTypeValue == GroupingType::PartNumber)
   {
-    if(auto* partNumbers = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue); partNumbers == nullptr)
+    const auto* partNumbers = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue);
+    if(partNumbers == nullptr)
     {
       return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
     }
-    else if(partNumbers->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(partNumbers->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pPartNumberPathValue.toString(),
                                                           partNumbers->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));

@@ -14,7 +14,7 @@
 #include <vector>
 
 #if defined(__linux__)
-#include <limits.h>
+#include <climits>
 #include <unistd.h>
 #elif defined(_WIN32)
 #include <Windows.h>
@@ -22,14 +22,9 @@
 #include <mach-o/dyld.h>
 #endif
 
-#include <fmt/core.h>
-
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
-#include "simplnx/Filter/FilterList.hpp"
-#include "simplnx/Plugin/AbstractPlugin.hpp"
-#include "simplnx/Plugin/PluginLoader.hpp"
 
 using namespace nx::core;
 
@@ -266,6 +261,7 @@ std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
     }
   }
   std::vector<Uuid> uuidList;
+  uuidList.reserve(indices.size());
   for(const auto& index : indices)
   {
     uuidList.push_back(m_Simpl_Uuids[index]);
@@ -380,7 +376,7 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
     return MakeErrorResult(-30, fmt::format("Failed to add plugin from '{}': {}", path.string(), addResult.errors().empty() ? "unknown error" : addResult.errors()[0].message));
   }
 
-  auto plugin = pluginLoader->getPlugin();
+  auto* plugin = pluginLoader->getPlugin();
   if(plugin == nullptr)
   {
     return MakeErrorResult(-31, fmt::format("Plugin loaded from '{}' but returned null", path.string()));

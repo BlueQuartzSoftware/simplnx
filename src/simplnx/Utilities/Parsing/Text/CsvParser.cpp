@@ -2,9 +2,7 @@
 
 namespace fs = std::filesystem;
 
-namespace nx::core
-{
-namespace CsvParser
+namespace nx::core::CsvParser
 {
 
 int32_t ReadLine(std::istream& in, char* result, size_t length)
@@ -85,5 +83,4 @@ char IndexToDelimiter(uint64_t index)
     throw std::runtime_error(fmt::format("CsvParser::IndexToDelimiter() - Invalid index '{}'", index));
   }
 }
-} // namespace CsvParser
-} // namespace nx::core
+} // namespace nx::core::CsvParser

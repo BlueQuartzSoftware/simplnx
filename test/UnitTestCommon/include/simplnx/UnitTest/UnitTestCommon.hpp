@@ -1144,7 +1144,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   {
     std::cout << fmt::format("Generated array {} and exemplar array {} do not have the same array type: {} vs {}. Data Will not be compared.", generatedArray->getName(), exemplarArray->getName(),
                              fmt::underlying(arrayType), fmt::underlying(exemplarArrayType))
-              << std::endl;
+              << '\n';
     return;
   }
 
@@ -1160,7 +1160,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
     {
       std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
                                fmt::underlying(type), fmt::underlying(exemplarType))
-                << std::endl;
+                << '\n';
       return;
     }
     CompareDataArrays<T>(*exemplarDataArray, *generatedDataArray);
@@ -1175,7 +1175,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
     {
       std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
                                fmt::underlying(type), fmt::underlying(exemplarType))
-                << std::endl;
+                << '\n';
       return;
     }
     CompareNeighborLists<T>(exemplarDataArray, generatedDataArray);

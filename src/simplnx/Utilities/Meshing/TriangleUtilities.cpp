@@ -1796,9 +1796,8 @@ Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& t
                                                                 [&] { return MakeErrorResult(-65817, "Error reading the connectivity of triangle 0 before recalculating triangle normals."); });
   }
   std::array<float32, 9> coordinates{};
-  for(usize corner = 0; corner < face.size(); ++corner)
+  for(IGeometry::MeshIndexType vertexIndex : face)
   {
-    const auto vertexIndex = face[corner];
     if(vertexIndex >= numVertices)
     {
       return MergeResults(std::move(result), MakeErrorResult(-65813, fmt::format("Triangle {} references vertex index {}, but the vertex tuple count is {}. Valid vertex indices are less than {}.", 0,

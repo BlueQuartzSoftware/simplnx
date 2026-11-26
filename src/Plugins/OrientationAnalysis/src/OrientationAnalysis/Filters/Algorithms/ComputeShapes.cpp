@@ -203,7 +203,12 @@ Result<> ComputeShapes::findMoments()
   float u110 = 0.0f;
   float u011 = 0.0f;
   float u101 = 0.0f;
-  float xx = 0.0f, yy = 0.0f, zz = 0.0f, xy = 0.0f, xz = 0.0f, yz = 0.0f;
+  float xx = 0.0f;
+  float yy = 0.0f;
+  float zz = 0.0f;
+  float xy = 0.0f;
+  float xz = 0.0f;
+  float yz = 0.0f;
 
   size_t xPoints = imageGeom.getNumXCells();
   size_t yPoints = imageGeom.getNumYCells();
@@ -219,10 +224,39 @@ Result<> ComputeShapes::findMoments()
 
   size_t numfeatures = centroids.getNumberOfTuples();
 
-  float x = 0.0f, y = 0.0f, z = 0.0f, x1 = 0.0f, x2 = 0.0f, y1 = 0.0f, y2 = 0.0f, z1 = 0.0f, z2 = 0.0f;
-  float xdist1 = 0.0f, xdist2 = 0.0f, xdist3 = 0.0f, xdist4 = 0.0f, xdist5 = 0.0f, xdist6 = 0.0f, xdist7 = 0.0f, xdist8 = 0.0f;
-  float ydist1 = 0.0f, ydist2 = 0.0f, ydist3 = 0.0f, ydist4 = 0.0f, ydist5 = 0.0f, ydist6 = 0.0f, ydist7 = 0.0f, ydist8 = 0.0f;
-  float zdist1 = 0.0f, zdist2 = 0.0f, zdist3 = 0.0f, zdist4 = 0.0f, zdist5 = 0.0f, zdist6 = 0.0f, zdist7 = 0.0f, zdist8 = 0.0f;
+  float x = 0.0f;
+  float y = 0.0f;
+  float z = 0.0f;
+  float x1 = 0.0f;
+  float x2 = 0.0f;
+  float y1 = 0.0f;
+  float y2 = 0.0f;
+  float z1 = 0.0f;
+  float z2 = 0.0f;
+  float xdist1 = 0.0f;
+  float xdist2 = 0.0f;
+  float xdist3 = 0.0f;
+  float xdist4 = 0.0f;
+  float xdist5 = 0.0f;
+  float xdist6 = 0.0f;
+  float xdist7 = 0.0f;
+  float xdist8 = 0.0f;
+  float ydist1 = 0.0f;
+  float ydist2 = 0.0f;
+  float ydist3 = 0.0f;
+  float ydist4 = 0.0f;
+  float ydist5 = 0.0f;
+  float ydist6 = 0.0f;
+  float ydist7 = 0.0f;
+  float ydist8 = 0.0f;
+  float zdist1 = 0.0f;
+  float zdist2 = 0.0f;
+  float zdist3 = 0.0f;
+  float zdist4 = 0.0f;
+  float zdist5 = 0.0f;
+  float zdist6 = 0.0f;
+  float zdist7 = 0.0f;
+  float zdist8 = 0.0f;
   // The local centroid cache avoids random feature lookup in the voxel loop.
   std::vector<float32> localCentroids(numfeatures * 3);
   if(Result<> ioResult = centroids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(localCentroids.data(), localCentroids.size())); ioResult.invalid())
@@ -239,7 +273,8 @@ Result<> ComputeShapes::findMoments()
   std::vector<int32> featureIdsSlice(sliceSize);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
 
-  size_t zStride = 0, yStride = 0;
+  size_t zStride = 0;
+  size_t yStride = 0;
   m_MessageHandler.sendInfoMessage("Computing Volume Moment Slices");
   m_Throttle.reset(zPoints, "Computing Volume Moment Slices");
   for(size_t i = 0; i < zPoints; i++)
@@ -336,11 +371,13 @@ Result<> ComputeShapes::findMoments()
 
   double sphere = (2000.0 * std::numbers::pi * std::numbers::pi) / 9.0;
   // constant for moments because voxels are broken into smaller voxels
-  double konst1 = static_cast<double>((modXRes / 2.0) * (modYRes / 2.0) * (modZRes / 2.0));
+  double konst1 = ((modXRes / 2.0) * (modYRes / 2.0) * (modZRes / 2.0));
   // constant for volumes because voxels are counted as one
   double konst2 = static_cast<double>((spacing[0]) * (spacing[1]) * (spacing[2]));
   double konst3 = static_cast<double>((modXRes) * (modYRes) * (modZRes));
-  double o3 = 0.0, vol5 = 0.0, omega3 = 0.0;
+  double o3 = 0.0;
+  double vol5 = 0.0;
+  double omega3 = 0.0;
   m_MessageHandler.sendInfoMessage("Computing Feature Moments");
   m_Throttle.reset(numfeatures > 0 ? numfeatures - 1 : 0, "Computing Feature Moments");
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
@@ -434,7 +471,9 @@ Result<> ComputeShapes::findMoments2D()
 
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  float xx = 0.0f, yy = 0.0f, xy = 0.0f;
+  float xx = 0.0f;
+  float yy = 0.0f;
+  float xy = 0.0f;
   size_t numfeatures = centroids.getNumberOfTuples();
 
   const auto axes = ActivePlanarAxes(imageGeom);
@@ -607,7 +646,9 @@ void ComputeShapes::findAxes2D()
 
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
 
-  double Ixx = 0.0, Iyy = 0.0, Ixy = 0.0;
+  double Ixx = 0.0;
+  double Iyy = 0.0;
+  double Ixy = 0.0;
 
   size_t numfeatures = centroids.getNumberOfTuples();
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);

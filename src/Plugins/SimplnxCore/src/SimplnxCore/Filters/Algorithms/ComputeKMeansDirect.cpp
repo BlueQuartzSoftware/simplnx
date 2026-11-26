@@ -31,19 +31,19 @@ public:
   {
   }
 
-  bool bothTrue(usize, usize) const override
+  bool bothTrue(usize /*indexA*/, usize /*indexB*/) const override
   {
     return true;
   }
-  bool bothFalse(usize, usize) const override
+  bool bothFalse(usize /*indexA*/, usize /*indexB*/) const override
   {
     return false;
   }
-  bool isTrue(usize) const override
+  bool isTrue(usize /*index*/) const override
   {
     return true;
   }
-  void setValue(usize, bool) override
+  void setValue(usize /*index*/, bool /*val*/) override
   {
   }
   usize getNumberOfTuples() const override

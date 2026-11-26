@@ -211,7 +211,9 @@ requires std::is_base_of<INodeGeometry1D, GeometryType>::value
   std::vector<std::vector<usize>> nodesInBin(numXBins * numYBins * numZBins);
 
   // The spatial bins reduce the number of node comparisons.
-  usize xBin = 0, yBin = 0, zBin = 0;
+  usize xBin = 0;
+  usize yBin = 0;
+  usize zBin = 0;
   for(size_t i = 0; i < nNodes; i++)
   {
     if(stepX != 0.0)
@@ -252,7 +254,7 @@ requires std::is_base_of<INodeGeometry1D, GeometryType>::value
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
-  dataAlg.setRange(0ULL, static_cast<usize>(numXBins * numYBins * numZBins));
+  dataAlg.setRange(0ULL, (numXBins * numYBins * numZBins));
   dataAlg.execute(GeometryUtilities::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
 
   // renumber the unique nodes

@@ -27,7 +27,7 @@ const fs::path k_VgiDestFile = fs::path(nx::core::unit_test::k_BinaryTestOutputD
 const SizeVec3 k_Dimensions = {50, 20, 80};
 
 // -----------------------------------------------------------------------------
-void writeVolTestFile()
+static void writeVolTestFile()
 {
   // Write out the data file
   FILE* outputFile = fopen(k_VolFile.string().c_str(), "wb");
@@ -92,7 +92,7 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Comp
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

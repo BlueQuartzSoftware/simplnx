@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 
 #include "ComputeVectorColors.hpp"
@@ -9,7 +10,6 @@
 #include <Eigen/Dense>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 
@@ -104,7 +104,9 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
         }
 
         // Trend selects the RGB hue. Plunge blends that hue toward white.
-        float32 r = 0, g = 0, b = 0;
+        float32 r = 0;
+        float32 g = 0;
+        float32 b = 0;
         if(trend <= 120.0f)
         {
           r = 255.0f * ((120.0f - trend) / 120.0f);
@@ -131,18 +133,9 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
         r += (deltaR * ((90.0f - plunge) / 90.0f));
         g += (deltaG * ((90.0f - plunge) / 90.0f));
         b += (deltaB * ((90.0f - plunge) / 90.0f));
-        if(r > 255.0f)
-        {
-          r = 255.0f;
-        }
-        if(g > 255.0f)
-        {
-          g = 255.0f;
-        }
-        if(b > 255.0f)
-        {
-          b = 255.0f;
-        }
+        r = std::min(r, 255.0f);
+        g = std::min(g, 255.0f);
+        b = std::min(b, 255.0f);
 
         Rgb argb = RgbColor::dRgb(static_cast<uint8>(r), static_cast<uint8>(g), static_cast<uint8>(b), 255);
         (*colorsBuffer)[index] = RgbColor::dRed(argb);

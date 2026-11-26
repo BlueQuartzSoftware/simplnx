@@ -116,7 +116,7 @@ public:
    */
   Result<> setLogFile(const std::filesystem::path& filepath)
   {
-    if(filepath.empty() || filepath.string().length() == 0)
+    if(filepath.empty() || filepath.string().empty())
     {
       std::string errorMessage = "Log file cannot be created with an empty filepath.";
       return nx::core::MakeErrorResult(k_NullLogFileError, errorMessage);
@@ -124,7 +124,7 @@ public:
 
     const std::ios_base::openmode openmode = std::ios_base::out | std::ios_base::trunc;
     m_LogStream = std::fstream(filepath, openmode);
-    if(m_LogStream.is_open() == false)
+    if(!m_LogStream.is_open())
     {
       std::string errorMessage = fmt::format("Failed to open log file: '{}'", filepath.string());
       return nx::core::MakeErrorResult(k_LogFileError, errorMessage);
@@ -155,10 +155,10 @@ public:
    */
   CliStream& endline()
   {
-    std::cout << std::endl;
+    std::cout << '\n';
     if(m_LogStream.is_open())
     {
-      m_LogStream << std::endl;
+      m_LogStream << '\n';
     }
     return *this;
   }
@@ -275,10 +275,8 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
     {
       return {args};
     }
-    else
-    {
-      index++;
-    }
+
+    index++;
   }
 
   do

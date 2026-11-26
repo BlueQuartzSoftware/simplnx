@@ -53,13 +53,12 @@
  * @namespace nx::core::HDF5
  * @brief Contains HDF5 parsing and I/O utilities.
  */
-namespace nx::core::HDF5
-{
+
 /**
  * @namespace nx::core::HDF5::Support
  * @brief Contains low-level HDF5 support functions.
  */
-namespace Support
+namespace nx::core::HDF5::Support
 {
 /**
  * @brief Tests whether a named child is an HDF5 group.
@@ -307,5 +306,4 @@ std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
  */
 SIMPLNX_EXPORT std::mutex& ApiLock();
 
-} // namespace Support
-} // namespace nx::core::HDF5
+} // namespace nx::core::HDF5::Support

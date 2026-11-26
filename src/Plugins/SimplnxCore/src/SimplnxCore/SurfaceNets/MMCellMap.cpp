@@ -336,11 +336,17 @@ size_t MMCellMap::numEdgeCrossings() const
       for(int i = 0; i < m_arraySize[0]; i++)
       {
         if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBackEdge))
+        {
           numCrossings++;
+        }
         if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBottomEdge))
+        {
           numCrossings++;
+        }
         if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::BackBottomEdge))
+        {
           numCrossings++;
+        }
         cellMapIdx++;
       }
     }
@@ -678,16 +684,16 @@ int8_t MMCellMap::nodeType(const int cellIndex[3]) const
   int32_t distinct[8];
   int numDistinct = 0;
   bool hasPadding = false;
-  for(int idx = 0; idx < 8; idx++)
+  for(int label : labels)
   {
-    if(labels[idx] == MMSurfaceNet::ReservedLabel::Padding)
+    if(label == MMSurfaceNet::ReservedLabel::Padding)
     {
       hasPadding = true;
     }
     bool alreadySeen = false;
     for(int seenIdx = 0; seenIdx < numDistinct; seenIdx++)
     {
-      if(distinct[seenIdx] == labels[idx])
+      if(distinct[seenIdx] == label)
       {
         alreadySeen = true;
         break;
@@ -695,7 +701,7 @@ int8_t MMCellMap::nodeType(const int cellIndex[3]) const
     }
     if(!alreadySeen)
     {
-      distinct[numDistinct] = labels[idx];
+      distinct[numDistinct] = label;
       numDistinct++;
     }
   }

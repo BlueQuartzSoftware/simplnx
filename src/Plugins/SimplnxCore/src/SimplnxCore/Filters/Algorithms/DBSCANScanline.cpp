@@ -3208,25 +3208,25 @@ public:
     }
 
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
-    for(usize i = 0; i < coreGridIds.size(); i++)
+    for(usize& coreGridId : coreGridIds)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
 
-      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
+      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridId, hyperGridBitMap);
 
       std::vector<usize> cluster = {};
-      cluster.push_back(coreGridIds[i]);
+      cluster.push_back(coreGridId);
       for(const usize gridId : neighborGrids)
       {
-        if(clusterForest.infer(coreGridIds[i], gridId))
+        if(clusterForest.infer(coreGridId, gridId))
         {
           continue;
         }
 
-        Result<bool> mergeResult = canMerge(coreGridIds[i], gridId);
+        Result<bool> mergeResult = canMerge(coreGridId, gridId);
         if(mergeResult.invalid())
         {
           return ConvertResult(std::move(mergeResult));
@@ -3235,7 +3235,7 @@ public:
         {
           if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
           {
-            clusterForest.clusterForestNodes[gridId].parent = coreGridIds[i];
+            clusterForest.clusterForestNodes[gridId].parent = coreGridId;
           }
           else
           {
@@ -3586,7 +3586,7 @@ struct DBSCANScanlineFunctor
     {
       return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, shouldCancel);
     }
-    else if(inputArray.getNumberOfComponents() == 3)
+    if(inputArray.getNumberOfComponents() == 3)
     {
       return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, shouldCancel);
     }
@@ -3598,7 +3598,7 @@ struct DBSCANScanlineFunctor
 };
 } // namespace
 
-DBSCANScanline::DBSCANScanline(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues)
+DBSCANScanline::DBSCANScanline(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)

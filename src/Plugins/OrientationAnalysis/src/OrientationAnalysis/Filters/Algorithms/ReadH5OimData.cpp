@@ -54,7 +54,9 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
   for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += kTuplesPerBatch)
   {
     if(m_ShouldCancel)
+    {
       return {};
+    }
     const usize count = std::min(kTuplesPerBatch, tuplesPerScan - tupleOffset);
     for(usize i = 0; i < count; i++)
     {
@@ -65,21 +67,29 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
     }
     Result<> result = phases.getDataStoreRef().copyFromBuffer(sliceTupleStart + tupleOffset, nonstd::span<const int32>(phaseBuffer.get(), count));
     if(result.invalid())
+    {
       return result;
+    }
     result = eulerAngles.getDataStoreRef().copyFromBuffer((sliceTupleStart + tupleOffset) * 3, nonstd::span<const float32>(eulerBuffer.get(), count * 3));
     if(result.invalid())
+    {
       return result;
+    }
   }
   // Scalar channels already have the destination layout, so stream them directly.
   const auto copyScalar = [this, sliceTupleStart, tuplesPerScan, kTuplesPerBatch](auto& array, const float32* values) -> Result<> {
     for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += kTuplesPerBatch)
     {
       if(m_ShouldCancel)
+      {
         return {};
+      }
       const usize count = std::min(kTuplesPerBatch, tuplesPerScan - tupleOffset);
       auto result = array.getDataStoreRef().copyFromBuffer(sliceTupleStart + tupleOffset, nonstd::span<const float32>(values + tupleOffset, count));
       if(result.invalid())
+      {
         return result;
+      }
     }
     return {};
   };
@@ -101,7 +111,9 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
     auto& array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(name));
     auto result = copyScalar(array, values);
     if(result.invalid())
+    {
       return result;
+    }
   }
   if(m_InputValues->ReadPatternData)
   {
@@ -122,12 +134,16 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
       for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += kTuplesPerBatch)
       {
         if(m_ShouldCancel)
+        {
           return {};
+        }
         const usize count = std::min(kTuplesPerBatch, tuplesPerScan - tupleOffset);
         auto patternResult = patternData.getDataStoreRef().copyFromBuffer((sliceTupleStart + tupleOffset) * numComponents,
                                                                           nonstd::span<const uint8>(patternDataPtr + tupleOffset * numComponents, count * numComponents));
         if(patternResult.invalid())
+        {
           return patternResult;
+        }
       }
     }
   }

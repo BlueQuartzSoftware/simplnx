@@ -663,12 +663,12 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
 
   // check that the geometry(s) and the attribute matrix are all there
-  const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
-  const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
-  const auto destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
-  const auto destFeatureData = dataStructure.getDataAs<AttributeMatrix>(destCellFeatureDataPath);
-  const auto destNewGrainData = dataStructure.getDataAs<AttributeMatrix>(destNewGrainDataPath);
-  const auto destPhaseData = dataStructure.getDataAs<AttributeMatrix>(destPhaseDataPath);
+  auto* const srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
+  auto* const destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
+  auto* const destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
+  auto* const destFeatureData = dataStructure.getDataAs<AttributeMatrix>(destCellFeatureDataPath);
+  auto* const destNewGrainData = dataStructure.getDataAs<AttributeMatrix>(destNewGrainDataPath);
+  auto* const destPhaseData = dataStructure.getDataAs<AttributeMatrix>(destPhaseDataPath);
   REQUIRE(srcGeo != nullptr);
   REQUIRE(destGeo != nullptr);
   REQUIRE(destCellData != nullptr);
@@ -683,9 +683,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   const auto destNewGrainDataDims = destNewGrainData->getShape();
   const auto destPhaseDataDims = destPhaseData->getShape();
   // Get the exemplar data
-  const auto exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
-  const auto exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
-  const auto exemplarFeatureData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  auto* const exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
+  auto* const exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
+  auto* const exemplarFeatureData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellFeatureDataPath);
   const auto exemplarSpacing = exemplarGeo->getSpacing();
   const auto exemplarDims = exemplarGeo->getDimensions();
   const auto exemplarCellDataDims = exemplarCellData->getShape();
@@ -799,15 +799,15 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
 
   // check that the geometry(s) and the attribute matrix are all there
-  const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
-  const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
-  const auto destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
-  const auto destFeatureData = dataStructure.getDataAs<AttributeMatrix>(destCellFeatureDataPath);
-  const auto destNewGrainData = dataStructure.getDataAs<AttributeMatrix>(destNewGrainDataPath);
-  const auto destPhaseData = dataStructure.getDataAs<AttributeMatrix>(destPhaseDataPath);
-  const auto exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
-  const auto exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
-  const auto exemplarFeatureData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellFeatureDataPath);
+  auto* const srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
+  auto* const destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
+  auto* const destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
+  auto* const destFeatureData = dataStructure.getDataAs<AttributeMatrix>(destCellFeatureDataPath);
+  auto* const destNewGrainData = dataStructure.getDataAs<AttributeMatrix>(destNewGrainDataPath);
+  auto* const destPhaseData = dataStructure.getDataAs<AttributeMatrix>(destPhaseDataPath);
+  auto* const exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
+  auto* const exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
+  auto* const exemplarFeatureData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellFeatureDataPath);
   REQUIRE(srcGeo != nullptr);
   REQUIRE(destGeo != nullptr);
   REQUIRE(destCellData != nullptr);
@@ -929,11 +929,11 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
   DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
 
   // check that the geometry(s) and the attribute matrices are all there
-  const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
-  const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
-  const auto destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
-  const auto exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
-  const auto exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
+  auto* const srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
+  auto* const destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
+  auto* const destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
+  auto* const exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
+  auto* const exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
   REQUIRE(srcGeo != nullptr);
   REQUIRE(destGeo != nullptr);
   REQUIRE(destCellData != nullptr);
@@ -1024,11 +1024,11 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
 
   // check that the geometry(s) and the attribute matrices are all there
   DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(cellDataPath.getTargetName());
-  const auto srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
-  const auto destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
-  const auto destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
-  const auto exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
-  const auto exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
+  auto* const srcGeo = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
+  auto* const destGeo = dataStructure.getDataAs<ImageGeom>(destGeomPath);
+  auto* const destCellData = dataStructure.getDataAs<AttributeMatrix>(destCellDataPath);
+  auto* const exemplarGeo = dataStructure.getDataAs<ImageGeom>(exemplarGeoPath);
+  auto* const exemplarCellData = dataStructure.getDataAs<AttributeMatrix>(exemplarCellDataPath);
   REQUIRE(srcGeo != nullptr);
   REQUIRE(destGeo != nullptr);
   REQUIRE(destCellData != nullptr);
@@ -1070,7 +1070,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL Backwards Compatibility",
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

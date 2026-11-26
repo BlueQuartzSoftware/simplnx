@@ -75,10 +75,8 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mod
                                                 "dimensions or the same total number of tuples.\n{}\n{}",
                                                 prefix, name, parentPath.toString(), amShape, arrayShape));
     }
-    else
-    {
-      return MakeErrorResult(-6004, fmt::format("{}CreateStringArrayAction: Unable to create StringArray at '{}'", prefix, path().toString()));
-    }
+
+    return MakeErrorResult(-6004, fmt::format("{}CreateStringArrayAction: Unable to create StringArray at '{}'", prefix, path().toString()));
   }
   return {};
 }

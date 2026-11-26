@@ -3,9 +3,7 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Euler.hpp>
 
-namespace nx::core
-{
-namespace OrientationUtilities
+namespace nx::core::OrientationUtilities
 {
 
 std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dR frame)
@@ -29,5 +27,4 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
   return allLaueNames[crystalStructureType];
 }
 
-} // namespace OrientationUtilities
-} // namespace nx::core
+} // namespace nx::core::OrientationUtilities

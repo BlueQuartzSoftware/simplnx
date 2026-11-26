@@ -32,7 +32,7 @@ const std::string k_OutputArrayName = "Output";
 constexpr size_t k_Size = 4;
 constexpr float32 k_Increment = 90.0f / k_Size;
 
-std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
+static std::vector<usize> k_TupleShape = {k_Size * k_Size * k_Size};
 
 } // namespace compute_misorientations_test
 

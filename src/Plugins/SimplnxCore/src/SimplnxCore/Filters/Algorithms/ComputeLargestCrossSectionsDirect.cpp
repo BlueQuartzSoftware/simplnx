@@ -60,10 +60,7 @@ void UpdateLargestCrossSections(const float32* featureCounts, usize numFeatures,
   for(usize featureId = 1; featureId < numFeatures; featureId++)
   {
     const float32 area = featureCounts[featureId] * areaScalar;
-    if(area > largestCrossSections[featureId])
-    {
-      largestCrossSections[featureId] = area;
-    }
+    largestCrossSections[featureId] = std::max(area, largestCrossSections[featureId]);
   }
 }
 
@@ -286,10 +283,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
       threadScratch.combine_each([&](const XzCrossSectionScratch& scratch) {
         for(usize featureId = 1; featureId < numFeatures; featureId++)
         {
-          if(scratch.largestCrossSections[featureId] > largestCrossSectionsData[featureId])
-          {
-            largestCrossSectionsData[featureId] = scratch.largestCrossSections[featureId];
-          }
+          largestCrossSectionsData[featureId] = std::max(scratch.largestCrossSections[featureId], largestCrossSectionsData[featureId]);
         }
       });
       return {};

@@ -5,9 +5,9 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstring>
@@ -105,14 +105,8 @@ inline void AccumulateHistogramValue(Histogram& histogram, float64 value, float6
   }
 
   int64 bin = static_cast<int64>((value - histogram.min) * invBinWidth);
-  if(bin < 0)
-  {
-    bin = 0;
-  }
-  if(bin > maxBin)
-  {
-    bin = maxBin;
-  }
+  bin = std::max<nx::core::types::int64>(bin, 0);
+  bin = std::min(bin, maxBin);
   histogram.counts[static_cast<usize>(bin)] += frequency;
 }
 

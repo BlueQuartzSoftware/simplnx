@@ -430,6 +430,7 @@ TEST_CASE("Dream3dPreflightCache: least-recently-used entry is evicted past capa
   cache.resetStats();
 
   std::vector<fs::path> files;
+  files.reserve(DREAM3D::Dream3dPreflightCache::k_Capacity + 1);
   for(usize i = 0; i < DREAM3D::Dream3dPreflightCache::k_Capacity + 1; i++)
   {
     files.push_back(WriteTestFile(fmt::format("preflight_cache_lru_{}.dream3d", i)));
@@ -463,6 +464,7 @@ TEST_CASE("Dream3dPreflightCache: concurrent fetches are safe and consistent", "
   constexpr usize k_FetchesPerThread = 25;
   std::atomic<usize> failures{0};
   std::vector<std::thread> threads;
+  threads.reserve(k_NumThreads);
   for(usize t = 0; t < k_NumThreads; t++)
   {
     threads.emplace_back([&, t]() {

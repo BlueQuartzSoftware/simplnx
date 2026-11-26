@@ -202,10 +202,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   md.componentCount = typeInfo->componentCount;
 
   usize vo = (hdr.vox_offset <= 0.0f) ? k_MinVoxOffset : static_cast<usize>(hdr.vox_offset);
-  if(vo < k_MinVoxOffset)
-  {
-    vo = k_MinVoxOffset;
-  }
+  vo = std::max(vo, k_MinVoxOffset);
   md.voxOffset = vo;
   md.byteSwapRequired = byteSwap;
 

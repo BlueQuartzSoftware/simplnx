@@ -10,6 +10,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <functional>
 #include <random>
@@ -362,7 +363,7 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
     {
       return 'F';
     }
-    else if(zeroCount == 1)
+    if(zeroCount == 1)
     {
       return 'E';
     }
@@ -438,54 +439,18 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
   Point3Df ll = points[0];
   Point3Df ur = points[0];
 
-  if(points[1][0] < ll[0])
-  {
-    ll[0] = points[1][0];
-  }
-  if(points[1][0] > ur[0])
-  {
-    ur[0] = points[1][0];
-  }
-  if(points[1][1] < ll[1])
-  {
-    ll[1] = points[1][1];
-  }
-  if(points[1][1] > ur[1])
-  {
-    ur[1] = points[1][1];
-  }
-  if(points[1][2] < ll[2])
-  {
-    ll[2] = points[1][2];
-  }
-  if(points[1][2] > ur[2])
-  {
-    ur[2] = points[1][2];
-  }
-  if(points[2][0] < ll[0])
-  {
-    ll[0] = points[2][0];
-  }
-  if(points[2][0] > ur[0])
-  {
-    ur[0] = points[2][0];
-  }
-  if(points[2][1] < ll[1])
-  {
-    ll[1] = points[2][1];
-  }
-  if(points[2][1] > ur[1])
-  {
-    ur[1] = points[2][1];
-  }
-  if(points[2][2] < ll[2])
-  {
-    ll[2] = points[2][2];
-  }
-  if(points[2][2] > ur[2])
-  {
-    ur[2] = points[2][2];
-  }
+  ll[0] = std::min(points[1][0], ll[0]);
+  ur[0] = std::max(points[1][0], ur[0]);
+  ll[1] = std::min(points[1][1], ll[1]);
+  ur[1] = std::max(points[1][1], ur[1]);
+  ll[2] = std::min(points[1][2], ll[2]);
+  ur[2] = std::max(points[1][2], ur[2]);
+  ll[0] = std::min(points[2][0], ll[0]);
+  ur[0] = std::max(points[2][0], ur[0]);
+  ll[1] = std::min(points[2][1], ll[1]);
+  ur[1] = std::max(points[2][1], ur[1]);
+  ll[2] = std::min(points[2][2], ll[2]);
+  ur[2] = std::max(points[2][2], ur[2]);
 
   return {ll, ur};
 }
@@ -517,30 +482,12 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
     const Point3Df& min = bounds.getMinPoint();
     const Point3Df& max = bounds.getMaxPoint();
 
-    if(min[0] < ll[0])
-    {
-      ll[0] = min[0];
-    }
-    if(min[1] < ll[1])
-    {
-      ll[1] = min[1];
-    }
-    if(min[2] < ll[2])
-    {
-      ll[2] = min[2];
-    }
-    if(max[0] > ur[0])
-    {
-      ur[0] = max[0];
-    }
-    if(max[1] > ur[1])
-    {
-      ur[1] = max[1];
-    }
-    if(max[2] > ur[2])
-    {
-      ur[2] = max[2];
-    }
+    ll[0] = std::min(min[0], ll[0]);
+    ll[1] = std::min(min[1], ll[1]);
+    ll[2] = std::min(min[2], ll[2]);
+    ur[0] = std::max(max[0], ur[0]);
+    ur[1] = std::max(max[1], ur[1]);
+    ur[2] = std::max(max[2], ur[2]);
   }
 
   return {ll, ur};
@@ -575,7 +522,7 @@ char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
     {
       return 'f';
     }
-    else if(zeroCount == 1)
+    if(zeroCount == 1)
     {
       return 'e';
     }
@@ -621,7 +568,7 @@ char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
     {
       return 'f';
     }
-    else if(zeroCount == 1)
+    if(zeroCount == 1)
     {
       return 'e';
     }
@@ -673,7 +620,7 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
   {
     return '1';
   }
-  else if(numerator == 0.0)
+  if(numerator == 0.0)
   {
     return 'q';
   }
@@ -720,7 +667,7 @@ char RayIntersectsPlane(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
   {
     return '1';
   }
-  else if(numerator == 0.0)
+  if(numerator == 0.0)
   {
     return 'q';
   }
@@ -755,7 +702,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
   {
     return RayCrossesTriangle(ray, p0, p1, p2);
   }
-  else if(code == 'q')
+  if(code == 'q')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
   }
@@ -792,7 +739,7 @@ char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& 
   {
     return RayCrossesTriangle(ray, p0, p1, p2);
   }
-  else if(code == 'q')
+  if(code == 'q')
   {
     return IsPointInTriangle(p0, p1, p2, ray.getOrigin());
   }
@@ -821,7 +768,8 @@ template <typename T, typename FaceIdsT = int32>
 char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
                          const nx::core::BoundingBox3D<T>& bounds, T radius)
 {
-  usize iter = 0, crossings = 0;
+  usize iter = 0;
+  usize crossings = 0;
 
   //* If query point is outside bounding box, finished. */
   if(!IsPointInBox(point, bounds))
@@ -879,7 +827,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
         break;
       }
       /* If ray hits face at interior point, increment crossings. */
-      else if(code == 'f')
+      if(code == 'f')
       {
         crossings++;
       }

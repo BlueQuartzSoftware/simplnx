@@ -25,7 +25,7 @@ uint64 SaturatingAdd(uint64 lhs, uint64 rhs)
 }
 } // namespace
 
-CacheMemoryBudgetManager::WorkingMemoryReservation::WorkingMemoryReservation(WorkingMemoryReservationKey, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept
+CacheMemoryBudgetManager::WorkingMemoryReservation::WorkingMemoryReservation(WorkingMemoryReservationKey /*unused*/, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept
 : m_Manager(manager)
 , m_SizeBytes(sizeBytes)
 {

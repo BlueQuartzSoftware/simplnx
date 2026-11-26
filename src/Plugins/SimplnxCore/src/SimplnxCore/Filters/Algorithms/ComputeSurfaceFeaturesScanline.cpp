@@ -256,7 +256,7 @@ Result<> ComputeSurfaceFeaturesScanline::operator()()
         const int32 gNum = curSlice[inSlice];
 
         // Feature 0 is background. Marked features need no further checks.
-        if(gNum != 0 && !localSurfaceFeatures[gNum])
+        if(gNum != 0 && (localSurfaceFeatures[gNum] == 0u))
         {
           if(geometryDimensionality == 3)
           {

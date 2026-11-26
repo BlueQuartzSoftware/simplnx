@@ -307,7 +307,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 200x200x200 block features
   usize interiorCount = 0;
   for(usize f = 1; f <= static_cast<usize>(k_NumBlockFeatures); f++)
   {
-    if(surfaceFeatures[f])
+    if(surfaceFeatures[f] != 0u)
     {
       surfaceCount++;
     }

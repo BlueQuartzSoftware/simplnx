@@ -25,7 +25,7 @@ namespace
 Result<> WriteHeader(const DataStructure& dataStructure, const WriteSPParksSitesInputValues* inputValues, std::ofstream& outfile)
 {
   SizeVec3 dims = dataStructure.getDataAs<ImageGeom>(inputValues->ImageGeomPath)->getDimensions();
-  auto& featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   const size_t totalPoints = featureIds.getNumberOfTuples();
 
@@ -59,7 +59,7 @@ Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesIn
                    const std::atomic_bool& shouldCancel)
 {
   SizeVec3 dims = dataStructure.getDataAs<ImageGeom>(inputValues->ImageGeomPath)->getDimensions();
-  auto& featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   size_t totalpoints = featureIds.getNumberOfTuples();
 

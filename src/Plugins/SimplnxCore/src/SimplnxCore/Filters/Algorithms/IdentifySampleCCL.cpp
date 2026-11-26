@@ -398,7 +398,9 @@ Result<CCLResult> runForwardCCL(AbstractDataStore<T>& store, int64 dimX, int64 d
           continue;
         }
 
-        int64 nbrA = 0, nbrB = 0, nbrC = 0;
+        int64 nbrA = 0;
+        int64 nbrB = 0;
+        int64 nbrC = 0;
 
         if(x > 0)
         {
@@ -557,7 +559,9 @@ Result<> replayForwardCCL(AbstractDataStore<T>& store, int64 dimX, int64 dimY, i
           continue;
         }
 
-        int64 nbrA = 0, nbrB = 0, nbrC = 0;
+        int64 nbrA = 0;
+        int64 nbrB = 0;
+        int64 nbrC = 0;
 
         if(x > 0)
         {
@@ -1610,10 +1614,8 @@ Result<> IdentifySampleCCL::operator()()
     return ExecuteDataFunction(IdentifySampleSliceCCLFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
                                static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
   }
-  else
-  {
-    return ExecuteDataFunction(IdentifySampleCCLFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
-  }
+
+  return ExecuteDataFunction(IdentifySampleCCLFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
 
   return {};
 }

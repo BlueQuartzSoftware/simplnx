@@ -359,7 +359,7 @@ public:
    * @param delimiter Specifies the copied quote or delimiter text.
    */
   StringTupleWriter(const StringArray& iDataArray, std::string delimiter)
-  : m_DataArray(dynamic_cast<const StringArray&>(iDataArray))
+  : m_DataArray(iDataArray)
   , m_Delimiter(std::move(delimiter))
   {
   }

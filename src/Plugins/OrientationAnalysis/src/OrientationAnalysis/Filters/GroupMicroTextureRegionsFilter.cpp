@@ -136,12 +136,12 @@ IFilter::PreflightResult GroupMicroTextureRegionsFilter::preflightImpl(const Dat
   std::vector<PreflightValue> preflightUpdatedValues;
 
   {
-    auto* featureIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsPath);
+    const auto* featureIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsPath);
     auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, featureIds->getTupleShape(), std::vector<usize>{1}, pFeatureIdsPath.replaceName(pCellParentIdsName));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
-    auto* featurePhases = dataStructure.getDataAs<IDataArray>(pFeaturePhasesPath);
+    const auto* featurePhases = dataStructure.getDataAs<IDataArray>(pFeaturePhasesPath);
     auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, featurePhases->getTupleShape(), std::vector<usize>{1}, pFeaturePhasesPath.replaceName(pFeatureParentIdsName));
     resultOutputActions.value().appendAction(std::move(createAction));
   }

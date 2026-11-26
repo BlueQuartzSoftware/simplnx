@@ -186,7 +186,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
       {
         return ConvertResultTo<FileBlock>(ConvertResult(std::move(result)), {});
       }
-      else if(tokens[0] == k_RegionOfInterestStart)
+      if(tokens[0] == k_RegionOfInterestStart)
       {
         fileBlock.RegionOfInterestStart = result.value();
       }

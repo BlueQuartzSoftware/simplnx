@@ -175,7 +175,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
 
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(0.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{0.0}};
     args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
@@ -187,7 +187,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>(""));
@@ -199,7 +199,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1000"));

@@ -1,5 +1,7 @@
 #include "RescaleIntensityImageFilter.hpp"
 
+#include <algorithm>
+
 #include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
 
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -65,14 +67,8 @@ struct RescaleIntensityOperation
       // Clamp to the requested output range in the double domain, then saturate-cast to U. The output bounds are
       // Float64 and can exceed a narrow output type (e.g. default OutputMaximum 255 with an int8 image), so
       // casting to U before clamping was undefined behavior; SaturateCastFromDouble clamps to U's range too.
-      if(v > outMax)
-      {
-        v = outMax;
-      }
-      if(v < outMin)
-      {
-        v = outMin;
-      }
+      v = std::min(v, outMax);
+      v = std::max(v, outMin);
       return ImageProcessing::detail::SaturateCastFromDouble<U>(v);
     };
   }

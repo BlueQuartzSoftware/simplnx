@@ -412,7 +412,7 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   usize totalElements = vertexGeom.getNumberOfVertices();
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
-  auto numTris = static_cast<usize>(triangleGeom.getNumberOfFaces());
+  auto numTris = triangleGeom.getNumberOfFaces();
   const SharedTriListT& triangles = triangleGeom.getFaces()->getDataStoreRef();
   const SharedVertexListT& vertices = triangleGeom.getVertices()->getDataStoreRef();
 

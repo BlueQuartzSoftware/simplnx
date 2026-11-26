@@ -183,7 +183,9 @@ std::vector<T> RunThinning(const std::vector<T>& mask, usize dx, usize dy, usize
 TEST_CASE("NXImageProcessing::BinaryThinningEngine: output is binary and a skeleton is idempotent", "[NXImageProcessing][BinaryThinningEngine]")
 {
   // A solid 5x5 block thins to a thin skeleton; thinning the result again is a no-op.
-  const usize dx = 7, dy = 7, dz = 1;
+  const usize dx = 7;
+  const usize dy = 7;
+  const usize dz = 1;
   std::vector<int32> mask(dx * dy, 0);
   for(usize y = 1; y <= 5; ++y)
   {
@@ -213,7 +215,9 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: output is binary and a skele
 TEST_CASE("NXImageProcessing::BinaryThinningEngine: uint8 solid block is binary and idempotent", "[NXImageProcessing][BinaryThinningEngine]")
 {
   // Guard the T{} / static_cast<T> conversions on an unsigned type: the solid-block skeleton is binary (0/1) and idempotent.
-  const usize dx = 7, dy = 7, dz = 1;
+  const usize dx = 7;
+  const usize dy = 7;
+  const usize dz = 1;
   std::vector<uint8> mask(dx * dy, 0);
   for(usize y = 1; y <= 5; ++y)
   {
@@ -232,7 +236,9 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: uint8 solid block is binary 
 
 TEST_CASE("NXImageProcessing::BinaryThinningEngine: a horizontal bar 1px tall is preserved (already thin)", "[NXImageProcessing][BinaryThinningEngine]")
 {
-  const usize dx = 7, dy = 3, dz = 1;
+  const usize dx = 7;
+  const usize dy = 3;
+  const usize dz = 1;
   std::vector<int32> mask(dx * dy, 0);
   for(usize x = 1; x <= 5; ++x)
   {
@@ -253,7 +259,9 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: degenerate inputs (empty, si
 TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D thins each z-slice independently", "[NXImageProcessing][BinaryThinningEngine]")
 {
   // Two identical solid blocks on two z-slices -> the two output slices are identical (no z-coupling).
-  const usize dx = 7, dy = 7, dz = 2;
+  const usize dx = 7;
+  const usize dy = 7;
+  const usize dz = 2;
   std::vector<int32> mask(dx * dy * dz, 0);
   for(usize z = 0; z < dz; ++z)
   {

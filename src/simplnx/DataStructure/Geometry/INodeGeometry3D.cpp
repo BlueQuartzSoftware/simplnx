@@ -127,7 +127,7 @@ void INodeGeometry3D::setCellPointIds(usize polyhedraId, nonstd::span<usize> ver
 
 void INodeGeometry3D::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
 {
-  auto& polyhedra = getPolyhedraRef();
+  const auto& polyhedra = getPolyhedraRef();
   usize numVerts = getNumberOfVerticesPerCell();
   const usize offset = polyhedraId * numVerts;
   if(offset + numVerts > polyhedra.getSize())

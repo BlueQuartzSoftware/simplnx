@@ -27,9 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #else
+#include <cstdio>
+#include <cstdlib>
 #include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #endif
 
@@ -115,7 +115,7 @@ std::optional<uint64> savedGBToHundredths(const nlohmann::json& value)
   }
   const double gigabytes = value.get<double>();
   // NaN fails both comparisons. The range check also rejects infinity before the integer conversion.
-  if(!(gigabytes >= 0.0 && gigabytes <= k_MaxOocSizeGB))
+  if(gigabytes < 0.0 || gigabytes > k_MaxOocSizeGB)
   {
     return std::nullopt;
   }
@@ -460,7 +460,7 @@ nlohmann::json Preferences::value(const std::string& name) const
   {
     return m_Values[name];
   }
-  else if(m_DefaultValues.contains(name))
+  if(m_DefaultValues.contains(name))
   {
     return m_DefaultValues[name];
   }
@@ -501,7 +501,7 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
   {
     return m_Values[k_Plugin_Key][pluginName][valueName];
   }
-  else if(pluginContainsDefault(pluginName, valueName))
+  if(pluginContainsDefault(pluginName, valueName))
   {
     return m_DefaultValues[k_Plugin_Key][pluginName][valueName];
   }

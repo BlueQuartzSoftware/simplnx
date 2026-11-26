@@ -129,7 +129,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
 
   OutputActions actions;
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   ShapeType tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
 
   const ShapeType cDims{1};

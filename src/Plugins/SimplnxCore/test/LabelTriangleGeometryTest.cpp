@@ -31,9 +31,9 @@ namespace
 fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/label_triangle_geometry_test.dream3d", nx::core::unit_test::k_TestFilesDir));
 fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/data_to_generate_test/combined_stls.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-static constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
-static constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
-static constexpr StringLiteral k_RegionIdsName = "Region Ids";
+constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
+constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
+constexpr StringLiteral k_RegionIdsName = "Region Ids";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
 const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(k_RegionIdsName);
@@ -87,7 +87,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -194,6 +194,7 @@ SupportSnapshot CaptureSupportSnapshot(const DataStructure& dataStructure, bool 
     for(usize i = 0; i < snapshot.Object->size(); ++i)
     {
       std::vector<SupportIndexType> list;
+      list.reserve(snapshot.Object->getNumberOfElements(i));
       for(usize j = 0; j < snapshot.Object->getNumberOfElements(i); ++j)
       {
         list.push_back(snapshot.Object->getElementListPointer(i)[j]);

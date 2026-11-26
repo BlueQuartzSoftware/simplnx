@@ -26,7 +26,7 @@ DataMap DataMap::deepCopy(const DataPath& parentCopyPath) const
   DataMap dataMap(*this);
 
   const auto keys = getKeys();
-  for(auto& key : keys)
+  for(const auto& key : keys)
   {
     const auto& dataObj = m_Map.at(key);
     const auto copy = dataObj->deepCopy(parentCopyPath.createChildPath(dataObj->getName()));
@@ -92,7 +92,7 @@ std::vector<DataMap::IdType> DataMap::getKeys() const
 {
   std::vector<IdType> keys(m_Map.size());
   usize index = 0;
-  for(auto& pair : m_Map)
+  for(const auto& pair : m_Map)
   {
     keys[index++] = pair.first;
   }
@@ -102,7 +102,7 @@ std::vector<DataMap::IdType> DataMap::getKeys() const
 std::vector<DataMap::IdType> DataMap::getAllKeys() const
 {
   std::vector<IdType> keys;
-  for(auto& pair : m_Map)
+  for(const auto& pair : m_Map)
   {
     keys.push_back(pair.first);
     if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
@@ -117,7 +117,7 @@ std::vector<DataMap::IdType> DataMap::getAllKeys() const
 std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() const
 {
   std::map<IdType, std::weak_ptr<DataObject>> map;
-  for(auto& pair : m_Map)
+  for(const auto& pair : m_Map)
   {
     map[pair.first] = pair.second;
     if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
@@ -141,7 +141,7 @@ std::vector<std::string> DataMap::getNames() const
 
 bool DataMap::contains(const std::string& name) const
 {
-  for(auto& iter : m_Map)
+  for(const auto& iter : m_Map)
   {
     if(iter.second == nullptr)
     {
@@ -201,7 +201,7 @@ DataObject* DataMap::operator[](const std::string& name)
 
 const DataObject* DataMap::operator[](const std::string& name) const
 {
-  for(auto& iter : m_Map)
+  for(const auto& iter : m_Map)
   {
     if(iter.second->getName() == name)
     {

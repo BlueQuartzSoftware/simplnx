@@ -11,6 +11,8 @@
 #include <EbsdLib/IO/TSL/AngFields.h>
 #include <EbsdLib/IO/TSL/H5AngImporter.h>
 
+#include <algorithm>
+
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
@@ -195,8 +197,10 @@ Result<> EbsdToH5Ebsd::operator()()
     std::vector<int32_t> indices;
     // Loop on Each EBSD File
     int64_t z = zStartIndex;
-    int64_t xDim = 0, yDim = 0;
-    float xRes = 0.0f, yRes = 0.0f;
+    int64_t xDim = 0;
+    int64_t yDim = 0;
+    float xRes = 0.0f;
+    float yRes = 0.0f;
     /* There is a frailness about the z index and the file list. The programmer
      * using this code MUST ensure that the list of files that is sent into this
      * class is in the appropriate order to match up with the z index (slice index)
@@ -236,14 +240,8 @@ Result<> EbsdToH5Ebsd::operator()()
 
       fileImporter->getDims(xDim, yDim);
       fileImporter->getSpacing(xRes, yRes);
-      if(xDim > biggestXDim)
-      {
-        biggestXDim = xDim;
-      }
-      if(yDim > biggestYDim)
-      {
-        biggestYDim = yDim;
-      }
+      biggestXDim = std::max(xDim, biggestXDim);
+      biggestYDim = std::max(yDim, biggestYDim);
 
       indices.push_back(static_cast<int32_t>(z));
       ++z;

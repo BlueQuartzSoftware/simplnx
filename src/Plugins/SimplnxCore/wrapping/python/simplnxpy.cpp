@@ -214,7 +214,7 @@ struct fmt::formatter<nx::core::Warning>
  * @param rhs Object passed to `lhs.__eq__`.
  * @return The Python result converted to bool.
  */
-bool PyIsEqual(py::handle lhs, py::handle rhs)
+static bool PyIsEqual(py::handle lhs, py::handle rhs)
 {
   return (lhs.attr("__eq__")(rhs)).cast<bool>();
 }
@@ -226,7 +226,7 @@ bool PyIsEqual(py::handle lhs, py::handle rhs)
  * @param param Parameter to clone.
  */
 template <class ParameterT>
-void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
+static void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
 {
   auto clonedParam = std::unique_ptr<ParameterT>(dynamic_cast<ParameterT*>(param.clone().release()));
   self.insertLinkableParameter(std::move(clonedParam));
@@ -240,7 +240,7 @@ void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
  * @return The new pybind11 class object.
  */
 template <class ParameterT>
-auto BindNumberParameter(py::handle scope, const char* name)
+static auto BindNumberParameter(py::handle scope, const char* name)
 {
   auto numberParameter = py::class_<ParameterT, IParameter>(scope, name);
   numberParameter.def(py::init<const std::string&, const std::string&, const std::string&, typename ParameterT::ValueType>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
@@ -255,7 +255,7 @@ auto BindNumberParameter(py::handle scope, const char* name)
  * @return The new pybind11 class object.
  */
 template <class ParameterT>
-auto BindVectorParameter(py::handle scope, const char* name)
+static auto BindVectorParameter(py::handle scope, const char* name)
 {
   auto vectorParameter = py::class_<ParameterT, IParameter>(scope, name);
   vectorParameter.def(py::init<const std::string&, const std::string&, const std::string&, const typename ParameterT::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
@@ -294,7 +294,9 @@ static void BindVec2(py::module_& m, const char* name)
       .def(py::init<T, T>())
       .def(py::init([](const py::sequence& s) {
         if(py::len(s) != 2)
+        {
           throw py::type_error("Expected length-2 sequence");
+        }
         return Vec{s[0].cast<T>(), s[1].cast<T>()};
       }))
       .def_property(
@@ -304,13 +306,17 @@ static void BindVec2(py::module_& m, const char* name)
       .def("__getitem__",
            [](const Vec& v, size_t i) {
              if(i >= 2)
+             {
                throw py::index_error();
+             }
              return v[i];
            })
       .def("__setitem__",
            [](Vec& v, size_t i, T x) {
              if(i >= 2)
+             {
                throw py::index_error();
+             }
              v[i] = x;
            })
       .def(
@@ -330,7 +336,7 @@ static void BindVec2(py::module_& m, const char* name)
  * The NumPy array keeps the bound DataStore alive while the view exists.
  */
 template <class T>
-auto BindDataStore(py::handle scope, const char* name)
+static auto BindDataStore(py::handle scope, const char* name)
 {
   py::class_<DataStore<T>, AbstractDataStore<T>, std::shared_ptr<DataStore<T>>> dataStore(scope, name);
   dataStore.def(py::init<const ShapeType&, const ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
@@ -365,7 +371,7 @@ auto BindDataStore(py::handle scope, const char* name)
  * @throws std::bad_cast If the DataArray does not use an in-memory DataStore.
  */
 template <class T>
-auto BindDataArray(py::handle scope, const char* name)
+static auto BindDataArray(py::handle scope, const char* name)
 {
   py::class_<DataArray<T>, IDataArray, std::shared_ptr<DataArray<T>>> dataArray(scope, name);
   dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] const py::object& self) { return py::dtype::of<T>(); });
@@ -415,7 +421,7 @@ auto BindDataArray(py::handle scope, const char* name)
  * @return The new pybind11 class object.
  */
 template <class T>
-auto BindNeighborList(py::handle scope, const char* name)
+static auto BindNeighborList(py::handle scope, const char* name)
 {
   using NeighborListType = NeighborList<T>;
 
@@ -457,7 +463,7 @@ auto BindNeighborList(py::handle scope, const char* name)
  * @return The new pybind11 class object.
  */
 template <class GeomT>
-auto BindCreateGeometry2DAction(py::handle scope, const char* name)
+static auto BindCreateGeometry2DAction(py::handle scope, const char* name)
 {
   auto createGeometry2DAction = py::class_<GeomT, IDataCreationAction>(scope, name);
   createGeometry2DAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_faces"_a,
@@ -475,7 +481,7 @@ auto BindCreateGeometry2DAction(py::handle scope, const char* name)
  * @return The new pybind11 class object.
  */
 template <class GeomT>
-auto BindCreateGeometry3DAction(py::handle scope, const char* name)
+static auto BindCreateGeometry3DAction(py::handle scope, const char* name)
 {
   auto createGeometry3DAction = py::class_<GeomT, IDataCreationAction>(scope, name);
   createGeometry3DAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_cells"_a,
@@ -505,7 +511,7 @@ auto BindCreateGeometry3DAction(py::handle scope, const char* name)
  * @param filter Pipeline filter node to inspect.
  * @return The filter errors followed by its warnings.
  */
-std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(const PipelineFilter& filter)
+static std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(const PipelineFilter& filter)
 {
   std::vector<Error> filterErrors = filter.getErrors();
   std::vector<Warning> filterWarnings = filter.getWarnings();
@@ -520,13 +526,12 @@ std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(cons
  * Collection stops after the first node whose fault state contains errors. This
  * order matches pipeline execution and omits nodes that did not run.
  */
-std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipeline& pipeline)
+static std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipeline& pipeline)
 {
   std::vector<Error> errors;
   std::vector<Warning> warnings;
-  for(usize index = 0; index < pipeline.size(); index++)
+  for(auto node : pipeline)
   {
-    const AbstractPipelineNode* node = pipeline.at(index);
     std::vector<Error> nodeErrors;
     std::vector<Warning> nodeWarnings;
     AbstractPipelineNode::NodeType nodeType = node->getType();
@@ -561,7 +566,7 @@ std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipe
  * @param dataStructure DataStructure that the pipeline updates.
  * @return Execution errors and warnings collected from the pipeline nodes.
  */
-Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
+static Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
 {
   bool success = pipeline.execute(dataStructure, false);
   auto&& [errors, warnings] = GetPipelineResult(pipeline);
@@ -580,7 +585,7 @@ Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
  * @return The parsed DataPath.
  * @pre path must contain a valid DataPath because this helper accesses Result::value().
  */
-nx::core::DataPath CreateDataPath(std::string_view path)
+static nx::core::DataPath CreateDataPath(std::string_view path)
 {
   auto result = DataPath::FromString(path);
   return result.value();
@@ -663,7 +668,7 @@ public:
    */
   bool containsPath(const fs::path& path) const
   {
-    return m_PathToModuleMap.count(path) > 0;
+    return m_PathToModuleMap.contains(path);
   }
 
   /**
@@ -673,7 +678,7 @@ public:
    */
   bool containsModule(const std::string& modName) const
   {
-    return m_ModuleToPathMap.count(modName) > 0;
+    return m_ModuleToPathMap.contains(modName);
   }
 
   /**
@@ -961,7 +966,7 @@ PYBIND11_MODULE(simplnx, mod)
   dataPath.def("name", [](const DataPath& self) { return self.getTargetName(); });
   dataPath.def("with_name", [](const DataPath& self, const std::string& name) {
     auto pathVector = self.getPathVector();
-    if(pathVector.size() == 0)
+    if(pathVector.empty())
     {
       return DataPath(std::vector<std::string>{name});
     }
@@ -1155,15 +1160,13 @@ PYBIND11_MODULE(simplnx, mod)
       }
       return outputPaths;
     }
-    else
+
+    auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
+    if(result_)
     {
-      auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
-      if(result_)
-      {
-        return result_.value();
-      }
-      return std::vector<DataPath>{};
+      return result_.value();
     }
+    return std::vector<DataPath>{};
   });
   dataStructure.def("get_children", [](DataStructure& self, const std::string& parentPath) {
     if(parentPath.empty())
@@ -1176,21 +1179,19 @@ PYBIND11_MODULE(simplnx, mod)
       }
       return outputPaths;
     }
-    else
-    {
-      auto pathConversionResult = DataPath::FromString(parentPath);
-      if(!pathConversionResult)
-      {
-        return std::vector<DataPath>{};
-      }
 
-      auto result_ = nx::core::GetAllChildDataPaths(self, pathConversionResult.value());
-      if(result_)
-      {
-        return result_.value();
-      }
+    auto pathConversionResult = DataPath::FromString(parentPath);
+    if(!pathConversionResult)
+    {
       return std::vector<DataPath>{};
     }
+
+    auto result_ = nx::core::GetAllChildDataPaths(self, pathConversionResult.value());
+    if(result_)
+    {
+      return result_.value();
+    }
+    return std::vector<DataPath>{};
   });
 
   auto dataObjectType = py::enum_<DataObject::Type>(dataObject, "DataObjectType");

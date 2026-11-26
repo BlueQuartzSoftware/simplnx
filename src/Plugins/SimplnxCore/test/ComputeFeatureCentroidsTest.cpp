@@ -181,7 +181,7 @@ private:
 
 // Build an ImageGeom + Cell Data AM (with FeatureIds) + empty Feature Data AM sized to numFeatures.
 // featureIds are supplied in row-major (z, y, x) order.
-inline Scaffold Build(usize dimX, usize dimY, usize dimZ, std::array<float32, 3> spacing, std::array<float32, 3> origin, usize numFeatures, const std::vector<int32>& featureIdValues)
+inline static Scaffold Build(usize dimX, usize dimY, usize dimZ, std::array<float32, 3> spacing, std::array<float32, 3> origin, usize numFeatures, const std::vector<int32>& featureIdValues)
 {
   Scaffold s;
   auto* imageGeom = ImageGeom::Create(s.ds, k_GeomName);
@@ -209,7 +209,7 @@ inline Scaffold Build(usize dimX, usize dimY, usize dimZ, std::array<float32, 3>
   return s;
 }
 
-inline Arguments MakeArguments(const Scaffold& s, bool isPeriodic)
+inline static Arguments MakeArguments(const Scaffold& s, bool isPeriodic)
 {
   Arguments args;
   args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(s.geomPath));
@@ -220,8 +220,8 @@ inline Arguments MakeArguments(const Scaffold& s, bool isPeriodic)
   return args;
 }
 
-inline std::shared_ptr<CentroidsObservedReadStore> ObserveIds(Scaffold& s, const std::vector<int32>& values, usize failOnRead = 0, std::atomic_bool* cancelAfterRead = nullptr, usize cancelOnRead = 0,
-                                                              usize warnOnRead = 0)
+inline static std::shared_ptr<CentroidsObservedReadStore> ObserveIds(Scaffold& s, const std::vector<int32>& values, usize failOnRead = 0, std::atomic_bool* cancelAfterRead = nullptr,
+                                                                     usize cancelOnRead = 0, usize warnOnRead = 0)
 {
   auto observed = std::make_shared<CentroidsObservedReadStore>(ShapeType{values.size()}, failOnRead, cancelAfterRead, cancelOnRead, warnOnRead);
   for(usize index = 0; index < values.size(); index++)
@@ -237,7 +237,7 @@ inline std::shared_ptr<CentroidsObservedReadStore> ObserveIds(Scaffold& s, const
 
 constexpr float32 k_UnpublishedSentinel = -123.25F;
 
-inline void PrepareSentinelOutput(Scaffold& s, usize featureCount)
+inline static void PrepareSentinelOutput(Scaffold& s, usize featureCount)
 {
   REQUIRE_NOTHROW(s.ds.getDataRefAs<AttributeMatrix>(s.featureAMPath));
   const auto& featureAM = s.ds.getDataRefAs<AttributeMatrix>(s.featureAMPath);
@@ -249,7 +249,7 @@ inline void PrepareSentinelOutput(Scaffold& s, usize featureCount)
   }
 }
 
-inline Result<> RunDirect(Scaffold& s, const std::atomic_bool& cancel)
+inline static Result<> RunDirect(Scaffold& s, const std::atomic_bool& cancel)
 {
   ComputeFeatureCentroidsInputValues inputs;
   inputs.FeatureIdsArrayPath = s.featureIdsPath;
@@ -261,7 +261,7 @@ inline Result<> RunDirect(Scaffold& s, const std::atomic_bool& cancel)
   return ComputeFeatureCentroids(s.ds, handler, cancel, &inputs)();
 }
 
-inline void RequireUnpublished(const Scaffold& s)
+inline static void RequireUnpublished(const Scaffold& s)
 {
   REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroidsPath));
   const auto& output = s.ds.getDataRefAs<Float32Array>(s.centroidsPath);
@@ -271,7 +271,7 @@ inline void RequireUnpublished(const Scaffold& s)
   }
 }
 
-inline std::vector<int32> PopulationIds(const std::vector<usize>& populations, usize rows)
+inline static std::vector<int32> PopulationIds(const std::vector<usize>& populations, usize rows)
 {
   std::vector<int32> ids(populations.size() * rows, 2);
   for(usize y = 0; y < rows; y++)
@@ -289,8 +289,8 @@ inline std::vector<int32> PopulationIds(const std::vector<usize>& populations, u
 
 // Independent test oracle: sort occupied integer coordinates to find the seam,
 // then average every original voxel coordinate so repeated cells retain weight.
-inline std::vector<float32> SortedCoordinateOracle(const std::array<usize, 3>& dims, const std::vector<int32>& ids, usize features, const std::array<float32, 3>& origin,
-                                                   const std::array<float32, 3>& spacing, bool periodic)
+inline static std::vector<float32> SortedCoordinateOracle(const std::array<usize, 3>& dims, const std::vector<int32>& ids, usize features, const std::array<float32, 3>& origin,
+                                                          const std::array<float32, 3>& spacing, bool periodic)
 {
   std::vector<float32> expected(features * 3, 0.0F);
   for(usize feature = 0; feature < features; feature++)
@@ -356,7 +356,7 @@ inline std::vector<float32> SortedCoordinateOracle(const std::array<usize, 3>& d
 }
 
 // Run the filter and return the flat [numFeatures * 3] Centroids values.
-inline std::vector<float32> Run(Scaffold& s, bool isPeriodic)
+inline static std::vector<float32> Run(Scaffold& s, bool isPeriodic)
 {
   ComputeFeatureCentroidsFilter filter;
   Arguments args = MakeArguments(s, isPeriodic);
@@ -377,7 +377,7 @@ inline std::vector<float32> Run(Scaffold& s, bool isPeriodic)
   return out;
 }
 
-inline void RequireCentroid(const std::vector<float32>& c, usize featureId, float32 x, float32 y, float32 z, float32 margin = 1.0e-4f)
+inline static void RequireCentroid(const std::vector<float32>& c, usize featureId, float32 x, float32 y, float32 z, float32 margin = 1.0e-4f)
 {
   REQUIRE(c[featureId * 3 + 0] == Approx(x).margin(margin));
   REQUIRE(c[featureId * 3 + 1] == Approx(y).margin(margin));
@@ -1064,7 +1064,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

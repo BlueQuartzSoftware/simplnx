@@ -775,13 +775,19 @@ Result<> SurfaceNetsScanline::operator()()
         }
         auto result = countEdge(i, j, k, record, MMCellFlag::Edge::BackBottomEdge, {{{i, j, k}, {i, j - 1, k}, {i, j - 1, k - 1}, {i, j, k - 1}}}, {{1, 0, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = countEdge(i, j, k, record, MMCellFlag::Edge::LeftBottomEdge, {{{i, j, k}, {i, j, k - 1}, {i - 1, j, k - 1}, {i - 1, j, k}}}, {{0, 1, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = countEdge(i, j, k, record, MMCellFlag::Edge::LeftBackEdge, {{{i, j, k}, {i - 1, j, k}, {i - 1, j - 1, k}, {i, j - 1, k}}}, {{0, 0, 1}});
         if(result.invalid())
+        {
           return result;
+        }
       }
     }
   }
@@ -841,7 +847,9 @@ Result<> SurfaceNetsScanline::operator()()
 
   auto recordFlushResult = m_SurfaceCellCache->flush(m_ShouldCancel);
   if(recordFlushResult.invalid())
+  {
     return recordFlushResult;
+  }
 
   // Stream vertices and node types in 4,096-vertex batches by vertex ID.
   auto voxelSize = imageGeom.getSpacing();
@@ -864,15 +872,23 @@ Result<> SurfaceNetsScanline::operator()()
   usize vertexStart = 0;
   const auto flushVertices = [&]() -> Result<> {
     if(vertexBuffer.empty())
+    {
       return {};
+    }
     if(vertexStart > numVertices || vertexStart > std::numeric_limits<usize>::max() / 3 || vertexBuffer.size() > (numVertices - vertexStart) * 3)
+    {
       return MakeErrorResult(-56336, "SurfaceNets vertex output range exceeds the supported value range.");
+    }
     auto vertexResult = verticesStore.copyFromBuffer(vertexStart * 3, nonstd::span<const float32>(vertexBuffer.data(), vertexBuffer.size()));
     if(vertexResult.invalid())
+    {
       return vertexResult;
+    }
     auto nodeResult = nodeTypes.copyFromBuffer(vertexStart, nonstd::span<const int8>(nodeBuffer.data(), nodeBuffer.size()));
     if(nodeResult.invalid())
+    {
       return nodeResult;
+    }
     vertexStart += nodeBuffer.size();
     vertexBuffer.clear();
     nodeBuffer.clear();
@@ -881,16 +897,23 @@ Result<> SurfaceNetsScanline::operator()()
   for(int32 k = 0; k < paddedZ - 1; k++)
   {
     if(m_ShouldCancel)
+    {
       return {};
+    }
     for(int32 j = 0; j < paddedY - 1; j++)
+    {
       for(int32 i = 0; i < paddedX - 1; i++)
       {
         auto recordResult = recordAt(i, j, k);
         if(recordResult.invalid())
+        {
           return ConvertResult(std::move(recordResult));
+        }
         const auto& record = recordResult.value();
         if(record.VertexId == std::numeric_limits<uint64>::max())
+        {
           continue;
+        }
         vertexBuffer.push_back(voxelSize[0] * (static_cast<float32>(i) + record.LocalPosition[0]) + origin[0] - halfVoxelOffset[0]);
         vertexBuffer.push_back(voxelSize[1] * (static_cast<float32>(j) + record.LocalPosition[1]) + origin[1] - halfVoxelOffset[1]);
         vertexBuffer.push_back(voxelSize[2] * (static_cast<float32>(k) + record.LocalPosition[2]) + origin[2] - halfVoxelOffset[2]);
@@ -899,15 +922,22 @@ Result<> SurfaceNetsScanline::operator()()
         {
           auto result = flushVertices();
           if(result.invalid())
+          {
             return result;
+          }
         }
       }
+    }
   }
   auto vertexFlushResult = flushVertices();
   if(vertexFlushResult.invalid())
+  {
     return vertexFlushResult;
+  }
   if(vertexStart != numVertices)
+  {
     return MakeErrorResult(-62057, "SurfaceNets streamed an unexpected number of vertices.");
+  }
 
   if(triangleCount > std::numeric_limits<usize>::max() / 3)
   {
@@ -944,11 +974,15 @@ Result<> SurfaceNetsScanline::operator()()
 
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
   for(usize i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
+  {
     ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+  }
   const auto numSelectedCellArrayPaths = m_InputValues->SelectedCellDataArrayPaths.size();
   for(usize i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
+  {
     ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i + numSelectedCellArrayPaths],
                                       m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
+  }
 
   using MeshIndexType = IGeometry::MeshIndexType;
   auto& facesStore = triangleGeom.getFacesRef().getDataStoreRef();
@@ -970,16 +1004,24 @@ Result<> SurfaceNetsScanline::operator()()
   usize faceStart = 0;
   const auto flushFaces = [&]() -> Result<> {
     if(faceBuffer.empty())
+    {
       return {};
+    }
     if(faceStart > triangleCount || faceStart > std::numeric_limits<usize>::max() / 3 || faceBuffer.size() > (triangleCount - faceStart) * 3 ||
        faceLabelBuffer.size() > (triangleCount - faceStart) * 2)
+    {
       return MakeErrorResult(-56337, "SurfaceNets face output range exceeds the supported value range.");
+    }
     auto faceResult = facesStore.copyFromBuffer(faceStart * 3, nonstd::span<const MeshIndexType>(faceBuffer.data(), faceBuffer.size()));
     if(faceResult.invalid())
+    {
       return faceResult;
+    }
     auto labelResult = faceLabels.copyFromBuffer(faceStart * 2, nonstd::span<const int32>(faceLabelBuffer.data(), faceLabelBuffer.size()));
     if(labelResult.invalid())
+    {
       return labelResult;
+    }
     for(const auto& transfer : tupleTransferFunctions)
     {
       auto transferResult = transfer->surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(transferBuffer.data(), transferBuffer.size()));
@@ -997,23 +1039,33 @@ Result<> SurfaceNetsScanline::operator()()
   const auto emitEdge = [&](int32 i, int32 j, int32 k, const SurfaceCellRecord& record, MMCellFlag::Edge edge, const std::array<std::array<int32, 3>, 4>& quadCells,
                             const std::array<int32, 3>& otherLabelOffset) -> Result<> {
     if(!record.Flag.isEdgeCrossing(edge))
+    {
       return {};
+    }
     auto label0 = labelAt(i, j, k);
     auto label1 = labelAt(i + otherLabelOffset[0], j + otherLabelOffset[1], k + otherLabelOffset[2]);
     if(label0.invalid() || label1.invalid())
+    {
       return label0.invalid() ? ConvertResult(std::move(label0)) : ConvertResult(std::move(label1));
+    }
     const std::array<LabelType, 2> quadLabels = {label0.value(), label1.value()};
     if(SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+    {
       return {};
+    }
     std::array<VertexData, 4> vData{};
     // Both implementations supply zero positions and therefore use the default diagonal.
     for(usize n = 0; n < quadCells.size(); n++)
     {
       auto quadRecord = recordAt(quadCells[n][0], quadCells[n][1], quadCells[n][2]);
       if(quadRecord.invalid())
+      {
         return ConvertResult(std::move(quadRecord));
+      }
       if(quadRecord.value().VertexId == std::numeric_limits<uint64>::max())
+      {
         return MakeErrorResult(-62056, "SurfaceNets edge quad is missing one of its required vertices.");
+      }
       vData[n] = {.VertexId = static_cast<usize>(quadRecord.value().VertexId), .Position = {0.0f, 0.0f, 0.0f}};
     }
     const bool frontFacing = label0.value() < label1.value();
@@ -1035,7 +1087,9 @@ Result<> SurfaceNetsScanline::operator()()
     {
       auto flushResult = flushFaces();
       if(flushResult.invalid())
+      {
         return flushResult;
+      }
     }
     return {};
   };
@@ -1044,28 +1098,44 @@ Result<> SurfaceNetsScanline::operator()()
       for(int32 i = 0; i < paddedX - 1; i++)
       {
         if(m_ShouldCancel)
+        {
           return {};
+        }
         auto recordResult = recordAt(i, j, k);
         if(recordResult.invalid())
+        {
           return ConvertResult(std::move(recordResult));
+        }
         const auto& record = recordResult.value();
         if(record.VertexId == std::numeric_limits<uint64>::max())
+        {
           continue;
+        }
         auto result = emitEdge(i, j, k, record, MMCellFlag::Edge::BackBottomEdge, {{{i, j, k}, {i, j - 1, k}, {i, j - 1, k - 1}, {i, j, k - 1}}}, {{1, 0, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = emitEdge(i, j, k, record, MMCellFlag::Edge::LeftBottomEdge, {{{i, j, k}, {i, j, k - 1}, {i - 1, j, k - 1}, {i - 1, j, k}}}, {{0, 1, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = emitEdge(i, j, k, record, MMCellFlag::Edge::LeftBackEdge, {{{i, j, k}, {i - 1, j, k}, {i - 1, j - 1, k}, {i, j - 1, k}}}, {{0, 0, 1}});
         if(result.invalid())
+        {
           return result;
+        }
       }
   auto faceFlushResult = flushFaces();
   if(faceFlushResult.invalid())
+  {
     return faceFlushResult;
+  }
   if(faceStart != triangleCount)
+  {
     return MakeErrorResult(-62058, "SurfaceNets streamed an unexpected number of faces.");
+  }
 
   // Prefer bounded external winding repair when the provider supports it.
   Result<> windingResult = {};

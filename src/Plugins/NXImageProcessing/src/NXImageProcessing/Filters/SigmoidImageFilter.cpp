@@ -28,7 +28,10 @@ struct SigmoidOperation
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 a = alpha, b = beta, oMax = outputMaximum, oMin = outputMinimum;
+    const float64 a = alpha;
+    const float64 b = beta;
+    const float64 oMax = outputMaximum;
+    const float64 oMin = outputMinimum;
     return [a, b, oMax, oMin](T value) -> U {
       // Output bounds are Float64 and can exceed a narrow output type; saturate-cast to U to avoid UB.
       const double d = static_cast<double>(value);

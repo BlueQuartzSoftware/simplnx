@@ -175,7 +175,7 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
                                       pCellFeatureIdsArrayPathValue.toString(), featureIdsArray.getNumberOfTuples(), selectedArrayPath.toString(), dataArray->getNumberOfTuples())),
               .outputValues = {}};
     }
-    if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
+    if((maskArray != nullptr) && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
       return {.outputActions =
                   MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",

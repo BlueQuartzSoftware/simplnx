@@ -187,7 +187,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
   if(geometryOptionIndex == GeometryOption::Create)
   {
-    if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
+    if(!std::isfinite(pSpacingValue[0]) || pSpacingValue[0] <= 0.0F || !std::isfinite(pSpacingValue[1]) || pSpacingValue[1] <= 0.0F || !std::isfinite(pSpacingValue[2]) || pSpacingValue[2] <= 0.0F)
     {
       return {.outputActions = MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
                                                                                   "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
@@ -217,7 +217,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   if(!pUseCustomOutputType)
   {
     // Create Feature Ids array with the same type as the input Face Labels array, but always single component
-    auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
+    const auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
     outputType = faceLabelsArray.getDataType();
   }
   DataPath featIdsPath = cellAttributeMatrixPath.createChildPath(pFeatureIdsArrayNameValue);

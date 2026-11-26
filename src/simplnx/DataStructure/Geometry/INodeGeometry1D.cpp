@@ -131,7 +131,7 @@ void INodeGeometry1D::setEdgePointIds(usize edgeId, nonstd::span<usize> vertexId
 
 void INodeGeometry1D::getEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds) const
 {
-  auto& cells = getEdgesRef();
+  const auto& cells = getEdgesRef();
   const usize offset = edgeId * k_NumEdgeVerts;
   if(offset + k_NumEdgeVerts > cells.getSize())
   {

@@ -152,7 +152,7 @@ private:
 };
 } // namespace
 
-SilhouetteDirect::SilhouetteDirect(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool&, const SilhouetteInputValues* inputValues)
+SilhouetteDirect::SilhouetteDirect(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& /*unused*/, const SilhouetteInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 {

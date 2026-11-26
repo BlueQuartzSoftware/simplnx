@@ -69,23 +69,21 @@ constexpr int32 k_AttributeRemovalError = -18802;
  * @return Open group identifier, or a negative HDF5 identifier on failure.
  * @pre The caller does not hold Support::ApiLock().
  */
-IdType getGroupId(IdType parentId, const std::string& groupName)
+static IdType getGroupId(IdType parentId, const std::string& groupName)
 {
   // Keep the probe and its dependent open or create operation atomic to HDF5 callers.
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 
   HDF_ERROR_HANDLER_OFF
-  auto status = H5Gget_objinfo(parentId, groupName.c_str(), 0, nullptr);
+  auto status = H5Gget_objinfo(parentId, groupName.c_str(), false, nullptr);
   HDF_ERROR_HANDLER_ON
 
   if(status == 0)
   {
     return H5Gopen(parentId, groupName.c_str(), H5P_DEFAULT);
   }
-  else
-  {
-    return H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  }
+
+  return H5Gcreate(parentId, groupName.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 }
 
 GroupIO::GroupIO() = default;
@@ -144,7 +142,7 @@ GroupIO GroupIO::openGroup(const std::string& name) const
   if(!isGroup(name))
   {
     std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return {};
   }
   const hid_t selfId = getId();
@@ -158,7 +156,7 @@ GroupIO GroupIO::openGroup(const std::string& name) const
   if(!group.isValid())
   {
     std::string ss = fmt::format("Failed to open Group '{}'.", name);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return {};
   }
   return group;
@@ -170,7 +168,7 @@ DatasetIO GroupIO::openDataset(const std::string& name) const
   if(!isDataset(name))
   {
     std::string ss = fmt::format("Could not open Dataset '{}'. Child object does not exist or object is not a Dataset", name);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return {};
   }
   return DatasetIO(getId(), name);
@@ -283,7 +281,7 @@ GroupIO GroupIO::createGroup(const std::string& childName)
   if(!isValid())
   {
     std::string ss = fmt::format("Cannot create Group '{}' as the current group is not valid", childName);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return {};
   }
   // Type checks and lazy opens acquire the lock. Complete them before the leaf calls.
@@ -310,7 +308,7 @@ GroupIO GroupIO::createGroup(const std::string& childName)
   }
 
   std::string ss = fmt::format("Failed to create HDF5 group '{}' at path: ", childName, getObjectPath());
-  std::cout << ss << std::endl;
+  std::cout << ss << '\n';
   return {};
 }
 
@@ -319,7 +317,7 @@ DatasetIO GroupIO::openDataset(const std::string& childName)
   if(!isValid())
   {
     std::string ss = fmt::format("Cannot open Dataset '{}'. Current object is not valid.", childName);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return {};
   }
 
@@ -329,7 +327,7 @@ DatasetIO GroupIO::openDataset(const std::string& childName)
   }
 
   std::string ss = fmt::format("Failed to open Dataset '{}' at path: ", childName, getObjectPath());
-  std::cout << ss << std::endl;
+  std::cout << ss << '\n';
   return {};
 }
 
@@ -353,7 +351,7 @@ std::shared_ptr<GroupIO> GroupIO::openGroupPtr(const std::string& name) const
   if(!isGroup(name))
   {
     std::string ss = fmt::format("Could not open Group '{}'. Child object does not exist or object is not a Group", name);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return nullptr;
   }
   const hid_t selfId = getId();
@@ -365,7 +363,7 @@ std::shared_ptr<GroupIO> GroupIO::openGroupPtr(const std::string& name) const
   if(groupId <= 0)
   {
     std::string ss = fmt::format("Failed to open Group '{}'.", name);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return nullptr;
   }
   return std::shared_ptr<GroupIO>(new GroupIO(selfId, name, groupId));
@@ -376,7 +374,7 @@ DatasetIO GroupIO::createDataset(const std::string& childName)
   if(!isValid())
   {
     std::string ss = fmt::format("Cannot create Dataset '{}' as the current Group is not valid.", childName);
-    std::cout << ss << std::endl;
+    std::cout << ss << '\n';
     return {};
   }
 

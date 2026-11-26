@@ -112,7 +112,7 @@ bool lineSegmentHorizontalIntersect(const Eigen::Vector3f& p1, const Eigen::Vect
       intersection = p1;
       return true;
     }
-    else if(std::abs(lineYprime - p1.y()) < 1e-9f)
+    if(std::abs(lineYprime - p1.y()) < 1e-9f)
     {
       intersection = p1;
       return true;
@@ -375,14 +375,8 @@ Result<> CreateAMScanPaths::operator()()
   {
     int32 layer = cadSliceIds[i];
     int32 region = cadRegionIds[i];
-    if(numCADLayers < layer)
-    {
-      numCADLayers = layer;
-    }
-    if(numCADRegions < region)
-    {
-      numCADRegions = region;
-    }
+    numCADLayers = std::max(numCADLayers, layer);
+    numCADRegions = std::max(numCADRegions, region);
   }
   numCADLayers += 1;
   numCADRegions += 1;

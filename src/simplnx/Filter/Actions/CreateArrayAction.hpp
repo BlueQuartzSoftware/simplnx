@@ -89,8 +89,8 @@ private:
   DataType m_Type;
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
-  std::string m_DataFormat = "";
-  std::string m_FillValue = "";
+  std::string m_DataFormat;
+  std::string m_FillValue;
   std::optional<ShapeType> m_ChunkShapeHint;
   DataStoreInitializationMode m_InitializationMode = DataStoreInitializationMode::Default;
 };

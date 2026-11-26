@@ -420,18 +420,18 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   usize numFeatures = 0;
 
   // The source can be an AttributeMatrix or one feature-level array.
-  auto* targetAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(sourceDataPath);
+  const auto* targetAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(sourceDataPath);
   if(nullptr != targetAttributeMatrixPtr)
   {
     numFeatures = targetAttributeMatrixPtr->getNumberOfTuples();
   }
-  auto* targetFeatureArrayPtr = dataStructure.getDataAs<IArray>(sourceDataPath);
+  const auto* targetFeatureArrayPtr = dataStructure.getDataAs<IArray>(sourceDataPath);
   if(nullptr != targetFeatureArrayPtr)
   {
     numFeatures = targetFeatureArrayPtr->getNumberOfTuples();
   }
 
-  auto& featureIdsStore = featureIds.getDataStoreRef();
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
   if(featureIdsStore.getNumberOfTuples() == 0)
   {
     return {};
@@ -523,7 +523,7 @@ Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructur
   switch(array->getArrayType())
   {
   case IArray::ArrayType::StringArray: {
-    auto newStringArray = StringArray::Create(destDataStructure, newArrayName, parentId);
+    auto* newStringArray = StringArray::Create(destDataStructure, newArrayName, parentId);
     auto resizeResult = newStringArray->resizeTuples(tupleShape);
     if(resizeResult.invalid())
     {
@@ -533,7 +533,7 @@ Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructur
     return {newStringArray};
   }
   case IArray::ArrayType::DataArray: {
-    auto iDataArray = dynamic_cast<IDataArray*>(array);
+    auto* iDataArray = dynamic_cast<IDataArray*>(array);
     auto result = ExecuteDataFunction(CreateDefaultValueDataArrayFunctor{}, iDataArray->getDataType(), destDataStructure, newArrayName, tupleShape, array->getComponentShape(), defaultValue, parentId);
     if(result.invalid())
     {
@@ -542,7 +542,7 @@ Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructur
     return result;
   }
   case IArray::ArrayType::NeighborListArray: {
-    auto iNeighborList = dynamic_cast<INeighborList*>(array);
+    auto* iNeighborList = dynamic_cast<INeighborList*>(array);
     auto result = ExecuteNeighborFunction(CreateDefaultValueNeighborListFunctor{}, iNeighborList->getDataType(), destDataStructure, newArrayName, tupleShape, parentId);
     if(result.invalid())
     {

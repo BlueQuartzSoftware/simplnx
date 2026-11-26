@@ -70,7 +70,9 @@ TEST_CASE("NXImageProcessing::GrayscaleFillholeImageFilter: hand-computed interi
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 7, DY = 7, DZ = 1;
+  constexpr usize DX = 7;
+  constexpr usize DY = 7;
+  constexpr usize DZ = 1;
   constexpr int32 field = 100;
   constexpr int32 hole = 0;
   std::vector<int32> pattern(DX * DY * DZ, field);

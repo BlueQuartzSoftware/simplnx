@@ -79,8 +79,8 @@ const std::atomic_bool& IterativeClosestPoint::getCancel()
 // -----------------------------------------------------------------------------
 Result<> IterativeClosestPoint::operator()()
 {
-  auto movingVertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->MovingVertexPath);
-  auto targetVertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->TargetVertexPath);
+  auto* movingVertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->MovingVertexPath);
+  auto* targetVertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->TargetVertexPath);
 
   if(movingVertexGeom == nullptr)
   {

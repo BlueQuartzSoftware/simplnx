@@ -33,7 +33,7 @@ std::map<nx::core::Uuid, std::string> s_ParameterMap;
     }                                                                                                                                                                                                  \
   }
 
-void GenerateParameterList()
+static void GenerateParameterList()
 {
   ::s_ParameterMap.clear();
   ADD_PARAMETER_TRAIT(simplnx.SeparatorParameter, "e6936d18-7476-4855-9e13-e795d717c50f")
@@ -147,21 +147,21 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter
             pType == "simplnx.DataGroupCreationParameter" || pType == "simplnx.DataGroupSelectionParameter" || pType == "simplnx.DataPathSelectionParameter" ||
             pType == "simplnx.GeometrySelectionParameter" || pType == "simplnx.NeighborListSelectionParameter" || pType == "simplnx.DataGroupCreationParameter"))
         {
-          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_path' for a Parameter of Type " << pType << std::endl;
+          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_path' for a Parameter of Type " << pType << '\n';
         }
 
         if(pType == "simplnx.MultiArraySelectionParameter" && !nx::core::StringUtilities::ends_with(parameter.first, "s"))
         {
-          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with 's' for a Parameter of Type " << pType << std::endl;
+          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with 's' for a Parameter of Type " << pType << '\n';
         }
 
         if(pType == "simplnx.DataObjectNameParameter" && !nx::core::StringUtilities::ends_with(parameter.first, "_name"))
         {
-          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_name' for a Parameter of Type " << pType << std::endl;
+          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_name' for a Parameter of Type " << pType << '\n';
         }
         if((pType == "simplnx.ChoicesParameter" || pType == "simplnx.NumericTypeParameter") && !nx::core::StringUtilities::ends_with(parameter.first, "_index"))
         {
-          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_index' for a Parameter of Type " << pType << std::endl;
+          output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_index' for a Parameter of Type " << pType << '\n';
         }
       }
     }

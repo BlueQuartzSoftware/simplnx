@@ -1,5 +1,7 @@
 #include "ApproximatePointCloudHull.hpp"
 
+#include <algorithm>
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -60,30 +62,12 @@ Result<> ApproximatePointCloudHull::operator()()
 
   for(int64 i = 0; i < numVerts; i++)
   {
-    if(vertex[3 * i] > meshMaxExtents[0])
-    {
-      meshMaxExtents[0] = vertex[3 * i];
-    }
-    if(vertex[3 * i + 1] > meshMaxExtents[1])
-    {
-      meshMaxExtents[1] = vertex[3 * i + 1];
-    }
-    if(vertex[3 * i + 2] > meshMaxExtents[2])
-    {
-      meshMaxExtents[2] = vertex[3 * i + 2];
-    }
-    if(vertex[3 * i] < meshMinExtents[0])
-    {
-      meshMinExtents[0] = vertex[3 * i];
-    }
-    if(vertex[3 * i + 1] < meshMinExtents[1])
-    {
-      meshMinExtents[1] = vertex[3 * i + 1];
-    }
-    if(vertex[3 * i + 2] < meshMinExtents[2])
-    {
-      meshMinExtents[2] = vertex[3 * i + 2];
-    }
+    meshMaxExtents[0] = std::max<float>(vertex[3 * i], meshMaxExtents[0]);
+    meshMaxExtents[1] = std::max<float>(vertex[3 * i + 1], meshMaxExtents[1]);
+    meshMaxExtents[2] = std::max<float>(vertex[3 * i + 2], meshMaxExtents[2]);
+    meshMinExtents[0] = std::min<float>(vertex[3 * i], meshMinExtents[0]);
+    meshMinExtents[1] = std::min<float>(vertex[3 * i + 1], meshMinExtents[1]);
+    meshMinExtents[2] = std::min<float>(vertex[3 * i + 2], meshMinExtents[2]);
   }
 
   int64 bboxMin[3] = {0, 0, 0};
@@ -211,7 +195,7 @@ Result<> ApproximatePointCloudHull::operator()()
     }
   }
   auto* hullVerts = hull->getVertices();
-  auto tmpVertData = tmpVerts.data();
+  auto* tmpVertData = tmpVerts.data();
   for(usize i = 0; i < hull->getNumberOfVertices() * 3; i++)
   {
     (*hullVerts)[i] = tmpVertData[i];

@@ -335,7 +335,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter*, const MessageHandler& messageHandler,
+Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RegularizeZSpacingInputValues inputValues;

@@ -68,7 +68,7 @@ private:
   fs::path m_ExemplarsPath = fs::path("");
   fs::path m_TestOutput = fs::path("");
   std::vector<T> m_FillValue = std::vector<T>{};
-  std::string m_SingleFileName = "";
+  std::string m_SingleFileName;
 
   void setMemb()
   {
@@ -200,9 +200,9 @@ private:
     // read the file(s) back in
     if(fileType == k_MultipleFiles)
     {
-      for(int32 i = 0; i < daps1.size(); i++)
+      for(const auto& i : daps1)
       {
-        CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[i]));
+        CompareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
       }
     }
     else if(fileType == k_SingleFile)
@@ -341,7 +341,7 @@ TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

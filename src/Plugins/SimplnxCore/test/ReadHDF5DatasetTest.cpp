@@ -310,9 +310,9 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
   if(dsetInfoList.size() > 1)
   {
     std::string statusMessage = "Starting Multiple Dataset Test: ";
-    std::string dsetPathsStr = "";
-    std::string cDimsVectorStr = "";
-    std::string tDimsStr = "";
+    std::string dsetPathsStr;
+    std::string cDimsVectorStr;
+    std::string tDimsStr;
     for(const auto& info : dsetInfoList)
     {
       dsetPathsStr.append(info.dataSetPath + "\n");
@@ -632,7 +632,7 @@ TEST_CASE("SimplnxCore::ReadHDF5DatasetFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

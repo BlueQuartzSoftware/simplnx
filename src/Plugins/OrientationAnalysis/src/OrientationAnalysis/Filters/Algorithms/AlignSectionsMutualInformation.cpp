@@ -238,8 +238,8 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
   // Local buffers use bulk reads for both in-memory and OOC stores.
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& quatsStore = quats.getDataStoreRef();
-  auto& cellPhasesStore = cellPhases.getDataStoreRef();
+  const auto& quatsStore = quats.getDataStoreRef();
+  const auto& cellPhasesStore = cellPhases.getDataStoreRef();
 
   const AbstractDataStore<uint8>* maskUInt8StorePtr = nullptr;
   const AbstractDataStore<bool>* maskBoolStorePtr = nullptr;
@@ -407,7 +407,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
               }
               for(int32 featureCount2Index = 0; featureCount2Index < featureCount2; featureCount2Index++)
               {
-                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / static_cast<float32>(count);
+                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / count;
               }
               for(int32 featureCount1Index = 0; featureCount1Index < featureCount1; featureCount1Index++)
               {
@@ -549,7 +549,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
               }
               for(int32 featureCount2Index = 0; featureCount2Index < featureCount2; featureCount2Index++)
               {
-                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / static_cast<float32>(count);
+                mutualInfo2[featureCount2Index] = mutualInfo2[featureCount2Index] / count;
               }
               for(int32 featureCount1Index = 0; featureCount1Index < featureCount1; featureCount1Index++)
               {

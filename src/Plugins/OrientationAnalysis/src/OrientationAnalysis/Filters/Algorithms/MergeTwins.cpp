@@ -8,6 +8,7 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
+#include <algorithm>
 #include <random>
 
 using namespace nx::core;
@@ -136,7 +137,9 @@ Result<> MergeTwins::groupFeaturesExecute()
 
   int32_t parentCount = 0;
   int32_t featureSeed = 0;
-  int32_t list1size = 0, list2size = 0, listsize = 0;
+  int32_t list1size = 0;
+  int32_t list2size = 0;
+  int32_t listsize = 0;
   int32 neighborFeatureIdx = 0;
 
   while(featureSeed >= 0)
@@ -299,10 +302,7 @@ Result<> MergeTwins::operator()()
       {
         int32 featureName = featureIdsBuf[i];
         cellParentIdsBuf[i] = featureParentIdsCache[featureName];
-        if(featureParentIdsCache[featureName] > numParents)
-        {
-          numParents = featureParentIdsCache[featureName];
-        }
+        numParents = std::max(featureParentIdsCache[featureName], numParents);
       }
 
       if(Result<> ioResult = cellParentIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(cellParentIdsBuf.data(), count)); ioResult.invalid())

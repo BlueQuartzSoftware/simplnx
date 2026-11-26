@@ -150,7 +150,7 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
       {
         const int32 gNum = featureIds[zStride + yStride + x];
         // Feature 0 is background. A marked feature needs no further checks.
-        if(gNum != 0 && !surfaceFeatures[gNum])
+        if(gNum != 0 && (surfaceFeatures[gNum] == 0u))
         {
           if(IsPointASurfaceFeature(Point3D<usize>{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {

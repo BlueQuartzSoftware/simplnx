@@ -47,7 +47,9 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: hand-computed 1D cr
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 5, DY = 1, DZ = 1;
+  constexpr usize DX = 5;
+  constexpr usize DY = 1;
+  constexpr usize DZ = 1;
   const std::vector<int32> field = {0, 1, 2, 3, 4};
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
   UnitTest::AlgorithmTestScope scope(scenario);

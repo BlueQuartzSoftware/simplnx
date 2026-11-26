@@ -14,15 +14,12 @@
 class H5EbsdVolumeReader;
 using H5EbsdVolumeReaderShrPtr = std::shared_ptr<H5EbsdVolumeReader>;
 
-namespace ebsdlib
-{
-namespace EnsembleData
+namespace ebsdlib::EnsembleData
 {
 inline const std::string CrystalStructures("CrystalStructures");
 inline const std::string LatticeConstants("LatticeConstants");
 inline const std::string MaterialName("MaterialName");
-} // namespace EnsembleData
-} // namespace ebsdlib
+} // namespace ebsdlib::EnsembleData
 
 namespace nx::core
 {

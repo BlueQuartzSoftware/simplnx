@@ -97,7 +97,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   }
   tDims = std::move(dimensions.value());
 
-  auto& inputArray = dataStructure.getDataRefAs<IArray>(inputArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<IArray>(inputArrayPath);
   auto inputArrayTupleShape = inputArray.getTupleShape();
   if(inputArrayTupleShape == tDims)
   {
@@ -112,12 +112,12 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   switch(inputArrayType)
   {
   case IArray::ArrayType::DataArray: {
-    auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+    const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, inputDataArray.getComponentShape(), outputArrayPath));
     break;
   }
   case IArray::ArrayType::NeighborListArray: {
-    auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
+    const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath));
     break;
   }

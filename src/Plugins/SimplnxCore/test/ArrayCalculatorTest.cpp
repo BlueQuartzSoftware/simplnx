@@ -136,8 +136,8 @@ DataStructure CreateComponentShapeDataStructure()
 } // namespace
 
 // -----------------------------------------------------------------------------
-IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& dataStructure,
-                                                             ArrayCalculatorFilter& filter)
+static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units,
+                                                                    DataStructure& dataStructure, ArrayCalculatorFilter& filter)
 {
   Arguments args;
 
@@ -151,10 +151,10 @@ IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& 
 }
 
 // -----------------------------------------------------------------------------
-void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition, const int* expectedNumberOfTuples = nullptr,
-             const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
+static void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition,
+                    const int* expectedNumberOfTuples = nullptr, const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
 {
-  std::cout << "  Testing equation: ==>" << equation << "<==" << std::endl;
+  std::cout << "  Testing equation: ==>" << equation << "<==" << '\n';
 
   ArrayCalculatorFilter filter;
   DataStructure dataStructure = ::createDataStructure();
@@ -178,7 +178,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
     REQUIRE(executeResult.result.errors()[0].code == expectedErrorCondition);
   }
 
-  if(executeResult.result.warnings().size() != 0)
+  if(!executeResult.result.warnings().empty())
   {
     REQUIRE(expectedWarningCondition != CalculatorWarningCode::None);
     REQUIRE(executeResult.result.warnings()[0].code == static_cast<int32>(expectedWarningCondition));
@@ -209,7 +209,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
 }
 
 // -----------------------------------------------------------------------------
-void MultiComponentArrayCalculatorTest()
+static void MultiComponentArrayCalculatorTest()
 {
   ArrayCalculatorFilter filter;
   DataStructure dataStructure = ::createDataStructure();
@@ -279,7 +279,7 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component All Components Number/Sign Array Names")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + \"*\"", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4" + "*")", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
     UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
     UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
@@ -300,7 +300,7 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Single Components Number/Sign Array Names")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\"[0] + \"*\"[1]", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4"[0] + "*"[1])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
     UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
     UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
@@ -319,7 +319,7 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Inconsistent indexing error")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + \"*\"[1]", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4" + "*"[1])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
     UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
     UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
@@ -330,7 +330,7 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Out of bounds error")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\"[0] + \"*\"[3]", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(R"("4"[0] + "*"[3])", k_AttributeArrayPath, CalculatorParameter::Radians, dataStructure, filter);
 
     UInt32Array* nArray = dataStructure.getDataAs<UInt32Array>(k_NumberArrayPath);
     UInt32Array* sArray = dataStructure.getDataAs<UInt32Array>(k_SignArrayPath);
@@ -343,7 +343,7 @@ void MultiComponentArrayCalculatorTest()
 }
 
 // -----------------------------------------------------------------------------
-void SingleComponentArrayCalculatorTest1()
+static void SingleComponentArrayCalculatorTest1()
 {
   SECTION("Empty Tests")
   {
@@ -851,7 +851,7 @@ void SingleComponentArrayCalculatorTest1()
 }
 
 // -----------------------------------------------------------------------------
-void SingleComponentArrayCalculatorTest2()
+static void SingleComponentArrayCalculatorTest2()
 {
   ArrayCalculatorFilter filter;
   DataStructure dataStructure = createDataStructure();
@@ -928,7 +928,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Filter Execution")
 {
   UnitTest::LoadPlugins();
 
-  std::cout << "#### ArrayCalculatorTest Starting ####" << std::endl;
+  std::cout << "#### ArrayCalculatorTest Starting ####" << '\n';
 
   SingleComponentArrayCalculatorTest1();
   SingleComponentArrayCalculatorTest2();
@@ -1331,7 +1331,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
     Arguments args;
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
                         std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
-                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[0]", .m_Units = CalculatorParameter::Radians}));
+                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = R"(("MultiComponent Array1" + "MultiComponent Array2")[0])", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1398,7 +1398,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
     Arguments args;
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
                         std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
-                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[2, 1]", .m_Units = CalculatorParameter::Radians}));
+                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = R"(("MultiComponent Array1" + "MultiComponent Array2")[2, 1])", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1419,7 +1419,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Ex
     Arguments args;
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
                         std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
-                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[100, 0]", .m_Units = CalculatorParameter::Radians}));
+                            .m_SelectedGroup = k_AttributeMatrixPath, .m_Equation = R"(("MultiComponent Array1" + "MultiComponent Array2")[100, 0])", .m_Units = CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);
@@ -1604,7 +1604,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: SIMPL Backwards Compatibility", "
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

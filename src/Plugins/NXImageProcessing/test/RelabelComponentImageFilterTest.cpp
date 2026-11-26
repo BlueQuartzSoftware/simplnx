@@ -264,8 +264,10 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects over
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 20, DY = 10, DZ = 1; // 200 voxels -- room for 130 single-voxel labels + background
-  constexpr usize k_NumLabels = 130;        // > max<int8> (127): the 128th surviving label overflows
+  constexpr usize DX = 20;
+  constexpr usize DY = 10;
+  constexpr usize DZ = 1;            // 200 voxels -- room for 130 single-voxel labels + background
+  constexpr usize k_NumLabels = 130; // > max<int8> (127): the 128th surviving label overflows
   static_assert(k_NumLabels <= DX * DY * DZ, "field must hold every distinct label voxel");
   std::vector<int8> field(DX * DY * DZ, int8{0});
   for(usize i = 0; i < k_NumLabels; ++i)
@@ -304,7 +306,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: pre-cancel p
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12, DY = 12, DZ = 4;
+  constexpr usize DX = 12;
+  constexpr usize DY = 12;
+  constexpr usize DZ = 4;
   constexpr T k_Poison = static_cast<T>(42);
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<T>(ds, DX, DY, DZ, MakeLabeledField<T>(DX, DY, DZ));

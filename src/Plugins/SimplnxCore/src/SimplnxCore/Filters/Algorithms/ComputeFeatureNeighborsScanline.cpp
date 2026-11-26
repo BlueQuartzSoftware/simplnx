@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 using namespace nx::core;
@@ -99,10 +100,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
         int8 numDiffNeighbors = 0;
         const int32 feature = curSlice[localIndex];
 
-        if(feature > observedMaxFeatureId)
-        {
-          observedMaxFeatureId = feature;
-        }
+        observedMaxFeatureId = std::max(feature, observedMaxFeatureId);
 
         if(feature > 0 && static_cast<usize>(feature) < totalFeatures)
         {

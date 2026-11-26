@@ -58,10 +58,10 @@ Parameters ComputeGBCDMetricBasedFilter::parameters() const
   Parameters params;
 
   std::vector<std::string> choices;
-  for(int choiceIdx = 0; choiceIdx < ComputeGBCDMetricBased::k_NumberResolutionChoices; choiceIdx++)
+  for(auto k_ResolutionChoice : ComputeGBCDMetricBased::k_ResolutionChoices)
   {
-    std::string misorResStr = StringUtilities::number(static_cast<int>(ComputeGBCDMetricBased::k_ResolutionChoices[choiceIdx][0])) + " degrees for Misorientations; ";
-    std::string planeResStr = StringUtilities::number(static_cast<int>(ComputeGBCDMetricBased::k_ResolutionChoices[choiceIdx][1])) + " degrees for Plane Inclinations";
+    std::string misorResStr = StringUtilities::number(static_cast<int>(k_ResolutionChoice[0])) + " degrees for Misorientations; ";
+    std::string planeResStr = StringUtilities::number(static_cast<int>(k_ResolutionChoice[1])) + " degrees for Plane Inclinations";
     choices.push_back(misorResStr + planeResStr);
   }
 

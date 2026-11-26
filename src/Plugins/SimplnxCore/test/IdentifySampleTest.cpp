@@ -162,9 +162,13 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
 
     ChoicesParameter::ValueType sliceBySlicePlane = 0;
     if(slice_plane == "xz")
+    {
       sliceBySlicePlane = 1;
+    }
     else if(slice_plane == "yz")
+    {
       sliceBySlicePlane = 2;
+    }
 
     std::string fill_holes = std::get<2>(testParam);
     bool fillHoles = fill_holes == "fill";
@@ -278,7 +282,7 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

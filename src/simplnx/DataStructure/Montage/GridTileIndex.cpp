@@ -54,8 +54,8 @@ SizeVec3 GridTileIndex::getTilePos() const
 
 const IGeometry* GridTileIndex::getGeometry() const
 {
-  auto montage = dynamic_cast<const GridMontage*>(getMontage());
-  if(!montage)
+  const auto* montage = dynamic_cast<const GridMontage*>(getMontage());
+  if(montage == nullptr)
   {
     return nullptr;
   }
@@ -69,7 +69,7 @@ TooltipGenerator GridTileIndex::getToolTipGenerator() const
 
 bool GridTileIndex::isValid() const
 {
-  if(!dynamic_cast<const GridMontage*>(getMontage()))
+  if(dynamic_cast<const GridMontage*>(getMontage()) == nullptr)
   {
     return false;
   }

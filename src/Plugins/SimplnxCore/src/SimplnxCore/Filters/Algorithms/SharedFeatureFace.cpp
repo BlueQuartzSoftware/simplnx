@@ -121,7 +121,7 @@ void RandomizeFaceIds(nx::core::Int32Array& featureIds, uint64 totalFeatures, In
   }
 
   // Now adjust all the GrainId values for each Voxel
-  auto featureIdsStore = featureIds.getDataStore();
+  auto* featureIdsStore = featureIds.getDataStore();
   uint64 totalPoints = featureIds.getNumberOfTuples();
   for(int64 i = 0; i < totalPoints; ++i)
   {

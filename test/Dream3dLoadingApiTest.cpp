@@ -37,7 +37,6 @@
 #include <algorithm>
 #include <atomic>
 
-#include <algorithm>
 #include <filesystem>
 #include <iterator>
 #include <limits>
@@ -231,7 +230,7 @@ public:
     return true;
   }
 
-  Result<> onImportFinalize(DataStructure&, const std::vector<DataPath>&, const HDF5::FileIO&) override
+  Result<> onImportFinalize(DataStructure& /*dataStructure*/, const std::vector<DataPath>& /*paths*/, const HDF5::FileIO& /*fileReader*/) override
   {
     return MakeWarningVoidResult(-89201, "Synthetic import-finalizer warning");
   }
@@ -874,11 +873,11 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructure loads all arrays")
   const auto& largePath = k_LargeArrayPath;
 
   // Both arrays must exist
-  auto* smallArray = ds.getDataAs<Int32Array>(smallPath);
+  const auto* smallArray = ds.getDataAs<Int32Array>(smallPath);
   REQUIRE(smallArray != nullptr);
   REQUIRE(smallArray->getNumberOfTuples() == k_SmallArraySize);
 
-  auto* largeArray = ds.getDataAs<Float32Array>(largePath);
+  const auto* largeArray = ds.getDataAs<Float32Array>(largePath);
   REQUIRE(largeArray != nullptr);
   REQUIRE(largeArray->getNumberOfTuples() == k_LargeArraySize);
 
@@ -911,7 +910,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays loads only requested array
   const DataStructure& ds = result.value();
 
   // SmallArray must exist with correct data
-  auto* smallArray = ds.getDataAs<Int32Array>(smallPath);
+  const auto* smallArray = ds.getDataAs<Int32Array>(smallPath);
   REQUIRE(smallArray != nullptr);
   REQUIRE(smallArray->getNumberOfTuples() == k_SmallArraySize);
 
@@ -922,7 +921,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays loads only requested array
   }
 
   // LargeArray must NOT exist
-  auto* largeArray = ds.getDataAs<Float32Array>(largePath);
+  const auto* largeArray = ds.getDataAs<Float32Array>(largePath);
   CHECK(largeArray == nullptr);
 
   // Ancestor containers must exist
@@ -944,14 +943,14 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArraysMetadata loads only request
   const DataStructure& ds = result.value();
 
   // SmallArray must exist
-  auto* smallArray = ds.getDataAs<IDataArray>(smallPath);
+  const auto* smallArray = ds.getDataAs<IDataArray>(smallPath);
   REQUIRE(smallArray != nullptr);
 
   // SmallArray store must be Empty (no data loaded)
   CHECK(smallArray->getStoreType() == IDataStore::StoreType::Empty);
 
   // LargeArray must NOT exist
-  auto* largeArray = ds.getDataAs<IDataArray>(largePath);
+  const auto* largeArray = ds.getDataAs<IDataArray>(largePath);
   CHECK(largeArray == nullptr);
 
   // Ancestor containers must exist
@@ -973,9 +972,9 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureMetadata loads all metadata")
   const auto& largePath = k_LargeArrayPath;
 
   // Both arrays must exist
-  auto* smallArray = ds.getDataAs<IDataArray>(smallPath);
+  const auto* smallArray = ds.getDataAs<IDataArray>(smallPath);
   REQUIRE(smallArray != nullptr);
-  auto* largeArray = ds.getDataAs<IDataArray>(largePath);
+  const auto* largeArray = ds.getDataAs<IDataArray>(largePath);
   REQUIRE(largeArray != nullptr);
 
   // Both must have Empty stores (no data loaded)
@@ -1377,7 +1376,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays prune verification")
   const DataStructure& ds = result.value();
 
   // ArrayA1 and its ancestors must exist
-  auto* arrayA1 = ds.getDataAs<Int32Array>(k_ArrayA1Path);
+  const auto* arrayA1 = ds.getDataAs<Int32Array>(k_ArrayA1Path);
   REQUIRE(arrayA1 != nullptr);
   REQUIRE(arrayA1->getNumberOfTuples() == k_PruneArraySize);
   CHECK(ds.getDataAs<DataGroup>(k_GroupAPath) != nullptr);
@@ -1486,7 +1485,7 @@ TEST_CASE("Dream3dLoadingApi: selected NeighborList preserves metadata and value
   NeighborList<int32>* loadedNeighborListPtr = nullptr;
   REQUIRE_NOTHROW(loadedNeighborListPtr = &loaded.getDataRefAs<NeighborList<int32>>(k_NonnumericNeighborListPath));
   REQUIRE(loadedNeighborListPtr != nullptr);
-  CHECK(loadedNeighborListPtr->getList(0) == std::vector<int32>{});
+  CHECK(loadedNeighborListPtr->getList(0).empty());
   CHECK(loadedNeighborListPtr->getList(1) == std::vector<int32>{7, 11});
   CHECK(loadedNeighborListPtr->getList(2) == std::vector<int32>{13});
   CHECK(loaded.containsData(k_NonnumericGroupPath));
@@ -1515,7 +1514,7 @@ TEST_CASE("Dream3dLoadingApi: selected NeighborList preserves metadata and value
   NeighborList<int32>* executeNeighborListPtr = nullptr;
   REQUIRE_NOTHROW(executeNeighborListPtr = &executeDestination.getDataRefAs<NeighborList<int32>>(k_NonnumericNeighborListPath));
   REQUIRE(executeNeighborListPtr != nullptr);
-  CHECK(executeNeighborListPtr->getList(0) == std::vector<int32>{});
+  CHECK(executeNeighborListPtr->getList(0).empty());
   CHECK(executeNeighborListPtr->getList(1) == std::vector<int32>{7, 11});
   CHECK(executeNeighborListPtr->getList(2) == std::vector<int32>{13});
   CHECK(executeDestination.containsData(k_NonnumericGroupPath));

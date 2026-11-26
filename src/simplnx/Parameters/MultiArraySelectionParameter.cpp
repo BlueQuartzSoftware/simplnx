@@ -148,7 +148,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{.code = FilterParameter::Constants::k_Validate_Type_Error, .message = fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
       continue;
     }
-    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && m_AllowedTypes.count(dataArray->getArrayType()) == 0)
+    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArray->getArrayType()))
     {
       errors.push_back(Error{
           .code = FilterParameter::Constants::k_Validate_Type_Error,
@@ -194,6 +194,7 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
 {
   const auto& paths = GetAnyRef<ValueType>(value);
   std::vector<DataObject*> objects;
+  objects.reserve(paths.size());
   for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));
@@ -212,7 +213,7 @@ Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArra
 
   std::vector<DataPath> dataPaths;
 
-  for(auto& iter : json)
+  for(const auto& iter : json)
   {
     auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
     if(dataContainerNameResult.invalid())

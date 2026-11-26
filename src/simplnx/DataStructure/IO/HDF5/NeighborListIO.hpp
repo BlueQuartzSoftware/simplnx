@@ -13,9 +13,7 @@
 
 #include <vector>
 
-namespace nx::core
-{
-namespace HDF5
+namespace nx::core::HDF5
 {
 
 /**
@@ -117,7 +115,7 @@ public:
       return listStorePtr;
     } catch(const std::exception& e)
     {
-      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << std::endl;
+      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << '\n';
       return nullptr;
     }
   }
@@ -345,5 +343,4 @@ using UInt64NeighborIO = NeighborListIO<uint64>;
 // using BoolNeighborIO = NeighborListIO<bool>;
 using Float32NeighborIO = NeighborListIO<float32>;
 using Float64NeighborIO = NeighborListIO<float64>;
-} // namespace HDF5
-} // namespace nx::core
+} // namespace nx::core::HDF5

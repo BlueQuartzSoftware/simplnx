@@ -238,7 +238,7 @@ TEST_CASE("Application::loadPlugins", "[Application]")
     {
       auto plugins = app->getPluginList();
       // If plugins loaded successfully, there should be at least one
-      REQUIRE(plugins.size() > 0);
+      REQUIRE(!plugins.empty());
     }
   }
 }
@@ -260,7 +260,7 @@ TEST_CASE("Application::getFilterList", "[Application]")
     {
       auto* filterList = app->getFilterList();
       auto handles = filterList->getFilterHandles();
-      REQUIRE(handles.size() > 0);
+      REQUIRE(!handles.empty());
     }
   }
 }
@@ -274,7 +274,7 @@ TEST_CASE("Application::getPlugin", "[Application]")
   {
     // Create a random UUID that should not exist
     Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
-    auto* plugin = app->getPlugin(randomUuid);
+    const auto* plugin = app->getPlugin(randomUuid);
     REQUIRE(plugin == nullptr);
   }
 
@@ -285,7 +285,7 @@ TEST_CASE("Application::getPlugin", "[Application]")
     {
       auto* firstPlugin = *plugins.begin();
       auto uuid = firstPlugin->getId();
-      auto* foundPlugin = app->getPlugin(uuid);
+      const auto* foundPlugin = app->getPlugin(uuid);
       REQUIRE(foundPlugin != nullptr);
       REQUIRE(foundPlugin == firstPlugin);
     }

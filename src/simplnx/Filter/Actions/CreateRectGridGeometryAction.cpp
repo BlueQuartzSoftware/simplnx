@@ -84,17 +84,17 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   {
     return MakeErrorResult(-5902, fmt::format("{}CreateRectGridGeometryAction: DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
   }
-  const auto xBounds = dataStructure.getDataAs<Float32Array>(m_InputXBounds);
+  auto* const xBounds = dataStructure.getDataAs<Float32Array>(m_InputXBounds);
   if(m_ArrayHandlingType != ArrayHandlingType::Create && xBounds == nullptr)
   {
     return MakeErrorResult(-5905, fmt::format("{}CreateRectGridGeometryAction: Could not find x bounds array at path '{}'", prefix, m_InputXBounds.toString()));
   }
-  const auto yBounds = dataStructure.getDataAs<Float32Array>(m_InputYBounds);
+  auto* const yBounds = dataStructure.getDataAs<Float32Array>(m_InputYBounds);
   if(m_ArrayHandlingType != ArrayHandlingType::Create && yBounds == nullptr)
   {
     return MakeErrorResult(-5906, fmt::format("{}CreateRectGridGeometryAction: Could not find y bounds array at path '{}'", prefix, m_InputYBounds.toString()));
   }
-  const auto zBounds = dataStructure.getDataAs<Float32Array>(m_InputZBounds);
+  auto* const zBounds = dataStructure.getDataAs<Float32Array>(m_InputZBounds);
   if(m_ArrayHandlingType != ArrayHandlingType::Create && zBounds == nullptr)
   {
     return MakeErrorResult(-5907, fmt::format("{}CreateRectGridGeometryAction: Could not find z bounds array at path '{}'", prefix, m_InputZBounds.toString()));

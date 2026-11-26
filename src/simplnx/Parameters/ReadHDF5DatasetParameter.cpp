@@ -53,7 +53,7 @@ Result<ReadHDF5DatasetParameter::DatasetImportInfo> ReadHDF5DatasetParameter::Da
   {
     return MakeErrorResult<DatasetImportInfo>(-500, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_DatasetPath_Key));
   }
-  else if(!json[k_DatasetPath_Key.str()].is_string())
+  if(!json[k_DatasetPath_Key.str()].is_string())
   {
     return MakeErrorResult<DatasetImportInfo>(-501, fmt::format("ImportHDF5DatasetParameter ValueType: 'Dataset Path' value is of type {} and is not a string.", json[k_DatasetPath_Key].type_name()));
   }
@@ -63,7 +63,7 @@ Result<ReadHDF5DatasetParameter::DatasetImportInfo> ReadHDF5DatasetParameter::Da
   {
     return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_ComponentDimensions_Key));
   }
-  else if(!json[k_ComponentDimensions_Key.str()].is_string())
+  if(!json[k_ComponentDimensions_Key.str()].is_string())
   {
     return MakeErrorResult<DatasetImportInfo>(
         -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Component Dimensions' value is of type {} and is not a string.", json[k_ComponentDimensions_Key].type_name()));
@@ -74,7 +74,7 @@ Result<ReadHDF5DatasetParameter::DatasetImportInfo> ReadHDF5DatasetParameter::Da
   {
     return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_TupleDimensions_Key));
   }
-  else if(!json[k_TupleDimensions_Key.str()].is_string())
+  if(!json[k_TupleDimensions_Key.str()].is_string())
   {
     return MakeErrorResult<DatasetImportInfo>(
         -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Tuple Dimensions' value is of type {} and is not a string.", json[k_TupleDimensions_Key].type_name()));

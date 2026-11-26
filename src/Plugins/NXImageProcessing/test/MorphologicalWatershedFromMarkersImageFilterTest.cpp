@@ -292,7 +292,9 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
   const bool fullyConnected = GENERATE(false, true);
   CAPTURE(markWatershedLine, fullyConnected);
 
-  constexpr usize dx = 12, dy = 12, dz = 1;
+  constexpr usize dx = 12;
+  constexpr usize dy = 12;
+  constexpr usize dz = 1;
   const std::vector<int16> gray = rt::MakePlateauPattern<int16>(dx, dy, dz);
   // A solid 3x3 block of label 5 with a single 0 hole punched at its center (2,2), plus a distant second seed. The
   // large remaining 0 field is likewise unmarked -> flooded between the two basins.

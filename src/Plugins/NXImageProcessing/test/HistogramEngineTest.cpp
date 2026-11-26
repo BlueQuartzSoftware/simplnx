@@ -77,7 +77,7 @@ public:
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(m_ErrorCode, "Injected histogram read failure");
   }

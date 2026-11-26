@@ -357,10 +357,7 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
     for(usize i = 0; i < totalPoints; ++i)
     {
       p[i + 1] = grainIds[i];
-      if(p[i + 1] > maxGrainId)
-      {
-        maxGrainId = p[i + 1];
-      }
+      maxGrainId = std::max(p[i + 1], maxGrainId);
     }
   }
   else
@@ -396,10 +393,7 @@ int initialize_micro(bool addSurfaceLayer, const usize dims[3], const usize file
         for(usize x = 0; x < dims[0]; ++x)
         {
           p[++index] = grainIds[gIdx++];
-          if(p[index] > maxGrainId)
-          {
-            maxGrainId = p[index];
-          }
+          maxGrainId = std::max(p[index], maxGrainId);
         }
         p[++index] = k_GhostLabel; // trailing surface voxel for this row
       }
@@ -533,9 +527,9 @@ void initialize_squares(Face* sq, SiteId ns)
 {
   for(SiteId sqId = 0; sqId < 3 * ns; sqId++)
   {
-    for(int j = 0; j < 4; j++)
+    for(unsigned int& j : sq[sqId].edge_id)
     {
-      sq[sqId].edge_id[j] = k_UnusedNodeId;
+      j = k_UnusedNodeId;
     }
     sq[sqId].nEdge = 0;
     sq[sqId].FCnode = -1;
@@ -1092,7 +1086,7 @@ FaceEdgeLoops burnFaceEdgeLoops(const SiteId* afe, const Segment* e1, int nfedge
           tail = tail + 1;
           coin = 1;
         }
-      } while(coin);
+      } while(coin != 0);
     }
   }
 
@@ -1204,7 +1198,7 @@ FaceEdgeLoops burnAndOrientFaceEdgeLoops(const SiteId* afe, Segment* e1, int nfe
           tail = tail + 1;
           coin = 1;
         }
-      } while(coin);
+      } while(coin != 0);
     }
   }
 
@@ -1634,14 +1628,13 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
     int nFE = 0;
     int eff = 0;
     SiteId arrayFC[6];
-    for(int ii = 0; ii < 6; ii++)
+    for(SiteId& ii : arrayFC)
     {
-      arrayFC[ii] = -1;
+      ii = -1;
     }
     int fcid = 0;
-    for(int ii = 0; ii < 6; ii++)
+    for(int tsq : sqID)
     {
-      int tsq = sqID[ii];
       SiteId tFCnode = sq[tsq].FCnode;
       if(tFCnode != -1)
       {
@@ -1669,19 +1662,19 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
       }
       int nds = 0;
       int nburnt = 0;
-      for(int k = 0; k < 8; k++)
+      for(int& k : arraySpin)
       {
-        int cspin = arraySpin[k];
+        int cspin = k;
         if(cspin != -1)
         {
           nds++;
-          arraySpin[k] = -1;
+          k = -1;
           nburnt++;
-          for(int kk = 0; kk < 8; kk++)
+          for(int& kk : arraySpin)
           {
-            if(cspin == arraySpin[kk])
+            if(cspin == kk)
             {
-              arraySpin[kk] = -1;
+              kk = -1;
               nburnt++;
             }
           }
@@ -1697,9 +1690,8 @@ int64 get_number_triangles(const int32* p, Face* sq, const NeighborAccessor& nei
     {
       std::vector<SiteId> arrayFE(nFE);
       int tindex = 0;
-      for(int i1 = 0; i1 < 6; i1++)
+      for(int tsq : sqID)
       {
-        int tsq = sqID[i1];
         int tnfe = sq[tsq].nEdge;
         for(int i2 = 0; i2 < tnfe; i2++)
         {
@@ -1766,7 +1758,9 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
     if(numN == 3)
     {
-      SiteId te0 = loop[0], te1 = loop[1], te2 = loop[2];
+      SiteId te0 = loop[0];
+      SiteId te1 = loop[1];
+      SiteId te2 = loop[2];
       SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
       SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
       SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
@@ -1955,7 +1949,8 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
       if(numN == 2)
       {
-        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1];
+        SiteId te0 = burnt_loop[0];
+        SiteId te1 = burnt_loop[1];
         SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
         SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
         SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[1]);
@@ -2072,7 +2067,9 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
       if(numN == 3)
       {
-        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        SiteId te0 = burnt_loop[0];
+        SiteId te1 = burnt_loop[1];
+        SiteId te2 = burnt_loop[2];
         SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
         SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
         SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
@@ -2327,7 +2324,9 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
       if(numN == 3)
       {
-        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        SiteId te0 = burnt_loop[0];
+        SiteId te1 = burnt_loop[1];
+        SiteId te2 = burnt_loop[2];
         SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
         SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
         SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
@@ -2468,14 +2467,14 @@ bool RemapSharpEdgeTriangle(Triangle& triangle, const SharpEdgeResult& result, c
     return (it != result.SnappedCoords.end()) ? it->second : nodeCoords[id];
   };
   int numTouched = 0;
-  for(int corner = 0; corner < 3; corner++)
+  for(int64& corner : triangle.node_id)
   {
-    const auto it = result.MergedInto.find(triangle.node_id[corner]);
+    const auto it = result.MergedInto.find(corner);
     if(it != result.MergedInto.end())
     {
-      triangle.node_id[corner] = it->second;
+      corner = it->second;
     }
-    if(result.Touched.count(triangle.node_id[corner]) != 0)
+    if(result.Touched.contains(corner))
     {
       numTouched++;
     }
@@ -2695,14 +2694,13 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
     int eff = 0;
     SiteId bodyCtr = 7 * (i - 1) + 6;
     SiteId arrayFC[6];
-    for(int ii = 0; ii < 6; ii++)
+    for(SiteId& ii : arrayFC)
     {
-      arrayFC[ii] = -1;
+      ii = -1;
     }
     int fcid = 0;
-    for(int ii = 0; ii < 6; ii++)
+    for(int tsq : sqID)
     {
-      int tsq = sqID[ii];
       SiteId tFCnode = sq[tsq].FCnode;
       if(tFCnode != -1)
       {
@@ -2720,7 +2718,8 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
 
     if(cubeFlag == 1 && nFE > 2)
     {
-      double coord1[3], coord2[3];
+      double coord1[3];
+      double coord2[3];
       for(int k = 0; k < 3; k++)
       {
         coord1[k] = p[i].coord[k];
@@ -2728,9 +2727,8 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
       }
       std::vector<SiteId> arrayFE(nFE);
       int tindex = 0;
-      for(int i1 = 0; i1 < 6; i1++)
+      for(int tsq : sqID)
       {
-        int tsq = sqID[i1];
         int tnfe = sq[tsq].nEdge;
         for(int i2 = 0; i2 < tnfe; i2++)
         {
@@ -2931,13 +2929,13 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
   // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
   // has been removed.
-  for(usize j = 0; j < triangles.size(); j++)
+  for(auto& triangle : triangles)
   {
-    if(triangles[j].nSpin[0] * triangles[j].nSpin[1] < 0)
+    if(triangle.nSpin[0] * triangle.nSpin[1] < 0)
     {
       for(int i = 0; i < 3; i++)
       {
-        const SiteId tn = triangles[j].node_id[i];
+        const SiteId tn = triangle.node_id[i];
         if(nodeType[tn] < 10)
         {
           nodeType[tn] = static_cast<int8>(nodeType[tn] + 10);
@@ -3641,18 +3639,18 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         cubeSpins[index] = firstSpin.value();
         cubeSpins[index + 4] = lastSpin.value();
       }
-      for(int index = 0; index < 8; index++)
+      for(int& cubeSpin : cubeSpins)
       {
-        const int spin = cubeSpins[index];
+        const int spin = cubeSpin;
         if(spin != -1)
         {
           uniqueSpins++;
-          cubeSpins[index] = -1;
-          for(int other = 0; other < 8; other++)
+          cubeSpin = -1;
+          for(int& other : cubeSpins)
           {
-            if(cubeSpins[other] == spin)
+            if(other == spin)
             {
-              cubeSpins[other] = -1;
+              other = -1;
             }
           }
         }
@@ -4388,9 +4386,9 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
     for(SiteId k = kLo; k < kHi; k++)
     {
       Face& sqk = window[winIndex(k)];
-      for(int j = 0; j < 4; j++)
+      for(unsigned int& j : sqk.edge_id)
       {
-        sqk.edge_id[j] = k_UnusedNodeId;
+        j = k_UnusedNodeId;
       }
       sqk.nEdge = 0;
       sqk.FCnode = -1;
@@ -4566,16 +4564,16 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       sqID[5] = 3 * (i + numSitesPerPlane - 1);
 
       SiteId arrayFC[6];
-      for(int ii = 0; ii < 6; ii++)
+      for(SiteId& ii : arrayFC)
       {
-        arrayFC[ii] = -1;
+        ii = -1;
       }
       int fcid = 0;
       int nFE = 0;
       int eff = 0;
-      for(int ii = 0; ii < 6; ii++)
+      for(SiteId ii : sqID)
       {
-        const Face& sqf = window[winIndex(sqID[ii])];
+        const Face& sqf = window[winIndex(ii)];
         if(sqf.FCnode != -1)
         {
           arrayFC[fcid] = sqf.FCnode;
@@ -4601,18 +4599,18 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
           arraySpin[j + 4] = point[corners2[j]];
         }
         int nds = 0;
-        for(int k = 0; k < 8; k++)
+        for(int& k : arraySpin)
         {
-          int cspin = arraySpin[k];
+          int cspin = k;
           if(cspin != -1)
           {
             nds++;
-            arraySpin[k] = -1;
-            for(int kk = 0; kk < 8; kk++)
+            k = -1;
+            for(int& kk : arraySpin)
             {
-              if(cspin == arraySpin[kk])
+              if(cspin == kk)
               {
-                arraySpin[kk] = -1;
+                kk = -1;
               }
             }
           }
@@ -4628,9 +4626,9 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 
       std::vector<SiteId> arrayFE(nFE);
       int tindex = 0;
-      for(int i1 = 0; i1 < 6; i1++)
+      for(SiteId i1 : sqID)
       {
-        const Face& sqf = window[winIndex(sqID[i1])];
+        const Face& sqf = window[winIndex(i1)];
         int tnfe = sqf.nEdge;
         for(int i2 = 0; i2 < tnfe; i2++)
         {
@@ -4718,16 +4716,16 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       sqID[4] = 3 * (i + xDim - 1) + 1;
       sqID[5] = 3 * (i + numSitesPerPlane - 1);
       SiteId arrayFC[6];
-      for(int ii = 0; ii < 6; ii++)
+      for(SiteId& ii : arrayFC)
       {
-        arrayFC[ii] = -1;
+        ii = -1;
       }
       int fcid = 0;
       int nFE = 0;
       int eff = 0;
-      for(int ii = 0; ii < 6; ii++)
+      for(SiteId ii : sqID)
       {
-        const Face& sqf = window[winIndex(sqID[ii])];
+        const Face& sqf = window[winIndex(ii)];
         if(sqf.FCnode != -1)
         {
           arrayFC[fcid] = sqf.FCnode;
@@ -4749,18 +4747,18 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
           arraySpin[j + 4] = point[corners2[j]];
         }
         int nds = 0;
-        for(int k = 0; k < 8; k++)
+        for(int& k : arraySpin)
         {
-          int cspin = arraySpin[k];
+          int cspin = k;
           if(cspin != -1)
           {
             nds++;
-            arraySpin[k] = -1;
-            for(int kk = 0; kk < 8; kk++)
+            k = -1;
+            for(int& kk : arraySpin)
             {
-              if(cspin == arraySpin[kk])
+              if(cspin == kk)
               {
-                arraySpin[kk] = -1;
+                kk = -1;
               }
             }
           }
@@ -4777,9 +4775,9 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
       std::array<SiteId, 64> localAFE{};
       std::array<Segment, 64> localEdges{};
       int tindex = 0;
-      for(int i1 = 0; i1 < 6; i1++)
+      for(SiteId i1 : sqID)
       {
-        const Face& sqf = window[winIndex(sqID[i1])];
+        const Face& sqf = window[winIndex(i1)];
         int tnfe = sqf.nEdge;
         for(int i2 = 0; i2 < tnfe; i2++)
         {

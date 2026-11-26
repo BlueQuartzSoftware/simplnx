@@ -525,7 +525,7 @@ private:
   {
   };
 
-  EmptyDataStore(ValidatedConstruction, ShapeType tupleShape, ShapeType componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
+  EmptyDataStore(ValidatedConstruction /*unused*/, ShapeType tupleShape, ShapeType componentShape, usize tupleCount, usize componentCount, std::string dataFormat)
   : m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(componentCount)
@@ -556,6 +556,6 @@ private:
   ShapeType m_TupleShape;
   usize m_NumComponents = {0};
   usize m_NumTuples = {0};
-  std::string m_DataFormat = "";
+  std::string m_DataFormat;
 };
 } // namespace nx::core

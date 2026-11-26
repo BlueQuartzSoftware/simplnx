@@ -98,7 +98,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
   const auto masked = runWithMask(true, "Masked PF");
 
   REQUIRE(unmasked.size() == masked.size());
-  REQUIRE(unmasked.size() > 0);
+  REQUIRE(!unmasked.empty());
 
   usize diffBytes = 0;
   for(usize i = 0; i < unmasked.size(); ++i)
@@ -205,7 +205,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
 
   // ---- Assertion 1 -- intensity array honors hexConvention ----
   REQUIRE(xa.intensity.size() == xastar.intensity.size());
-  REQUIRE(xa.intensity.size() > 0);
+  REQUIRE(!xa.intensity.empty());
 
   usize diffPixels = 0;
   for(usize i = 0; i < xa.intensity.size(); ++i)
@@ -224,7 +224,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
   // The composite RGB output uses the same convention.
   // Its basal-plane figures rotate, so require more than one percent differing bytes.
   REQUIRE(xa.compositeRgb.size() == xastar.compositeRgb.size());
-  REQUIRE(xa.compositeRgb.size() > 0);
+  REQUIRE(!xa.compositeRgb.empty());
 
   usize diffBytes = 0;
   for(usize i = 0; i < xa.compositeRgb.size(); ++i)
@@ -296,7 +296,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
 
   auto countDiffBytes = [](const std::vector<uint8>& a, const std::vector<uint8>& b) {
     REQUIRE(a.size() == b.size());
-    REQUIRE(a.size() > 0);
+    REQUIRE(!a.empty());
     usize diffBytes = 0;
     for(usize i = 0; i < a.size(); ++i)
     {
@@ -532,7 +532,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibi
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

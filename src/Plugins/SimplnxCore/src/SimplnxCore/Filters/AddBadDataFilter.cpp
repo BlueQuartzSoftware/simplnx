@@ -169,8 +169,8 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
     return {.outputActions = MakeErrorResult<OutputActions>(-76236, fmt::format("Boundary Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pBoundaryVolFractionValue))};
   }
 
-  auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
-  auto* cellAM = imgGeomPtr->getCellData();
+  const auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
+  const auto* cellAM = imgGeomPtr->getCellData();
   if(cellAM == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};

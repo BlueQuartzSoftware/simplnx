@@ -60,7 +60,7 @@ public:
         m_Valid = false;
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
-      if(reader.getGrid().find(ebsdlib::Ang::SquareGrid) == 0)
+      if(reader.getGrid().starts_with(ebsdlib::Ang::SquareGrid))
       {
         m_Valid = false;
         return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
@@ -148,8 +148,11 @@ public:
       }
 
       // Reusable variables for the loop
-      int32 hexGridIndex = 0, hexGridIndex1 = 0, hexGridIndex2 = 0;
-      float32 xHex1 = NAN, xHex2 = NAN;
+      int32 hexGridIndex = 0;
+      int32 hexGridIndex1 = 0;
+      int32 hexGridIndex2 = 0;
+      float32 xHex1 = NAN;
+      float32 xHex2 = NAN;
 
       // Now loop on every cell in the replacement square grid
       for(int32 j = 0; j < m_SqrNumRows; j++)

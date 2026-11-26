@@ -237,7 +237,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
       for(usize v = 0; v < triangleGeom.getNumberOfVertices(); v++)
       {
         const std::tuple<float32, float32, float32> coord = {vertsRef[v * 3], vertsRef[v * 3 + 1], vertsRef[v * 3 + 2]};
-        result[coord] = referencedIndices.count(v) > 0;
+        result[coord] = referencedIndices.contains(v);
       }
       return result;
     };

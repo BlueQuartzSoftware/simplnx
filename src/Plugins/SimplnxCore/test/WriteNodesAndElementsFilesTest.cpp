@@ -35,7 +35,7 @@ void Cleanup()
 void CreateVertexGeometry(DataStructure& ds)
 {
   VertexGeom* geom = VertexGeom::Create(ds, k_GeometryName);
-  auto vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
+  auto* vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
   geom->setVertexAttributeMatrix(*vertexAttrMatrix);
   Float32Array* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geom->getId());
   std::vector<float32> verticesVec = {1, 1.5, 1.75, 2, 3, 4};
@@ -46,9 +46,9 @@ void CreateVertexGeometry(DataStructure& ds)
 void CreateEdgeGeometry(DataStructure& ds)
 {
   EdgeGeom* geom = EdgeGeom::Create(ds, k_GeometryName);
-  auto edgeAttrMatrix = AttributeMatrix::Create(ds, "Edge Data", {1}, geom->getId());
+  auto* edgeAttrMatrix = AttributeMatrix::Create(ds, "Edge Data", {1}, geom->getId());
   geom->setEdgeAttributeMatrix(*edgeAttrMatrix);
-  auto vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
+  auto* vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
   geom->setVertexAttributeMatrix(*vertexAttrMatrix);
   Float32Array* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geom->getId());
   std::vector<float32> verticesVec = {1.0f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f};

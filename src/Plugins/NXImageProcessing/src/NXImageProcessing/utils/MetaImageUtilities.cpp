@@ -585,7 +585,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
     md.dataFilePath = filePath;
     // md.dataStartOffset was recorded at the ElementDataFile line above.
   }
-  else if(edfTrim.rfind("LIST", 0) == 0 || edfTrim.find('%') != std::string::npos)
+  else if(edfTrim.starts_with("LIST") || edfTrim.find('%') != std::string::npos)
   {
     // MetaIO treats an ElementDataFile whose FIRST FOUR chars are "LIST" as a multi-file
     // list (metaImage.cxx ~1230: `"LIST" == name.substr(0,4)`), and a name containing '%'

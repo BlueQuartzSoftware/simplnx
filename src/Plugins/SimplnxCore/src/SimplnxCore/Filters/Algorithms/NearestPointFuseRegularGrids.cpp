@@ -31,7 +31,7 @@ Result<> NearestPointFuseRegularGrids::operator()()
   Vec3<float32> sampleRes = sampleImageGeom.getSpacing();
 
   // Coordinate mapping divides by sampling spacing. Reject zero spacing before dispatch.
-  bool resHasZero = std::find(sampleRes.begin(), sampleRes.end(), 0.0f) != std::end(sampleRes) ? true : false;
+  bool resHasZero = std::find(sampleRes.begin(), sampleRes.end(), 0.0f) != std::end(sampleRes);
   if(resHasZero)
   {
     return MakeErrorResult(-5555, fmt::format("A component of the resolution for the Image Geometry associated with DataContainer '{}' is 0. This would result in a division by 0 operation",

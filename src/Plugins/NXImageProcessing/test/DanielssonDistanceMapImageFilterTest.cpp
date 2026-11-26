@@ -46,7 +46,9 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 4, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 4;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   for(usize y = 0; y < DY; ++y)
   {
@@ -88,7 +90,9 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
   CAPTURE(scenario);
   UnitTest::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 6, DY = 4, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 4;
+  constexpr usize DZ = 1;
   std::vector<int32> pattern(DX * DY * DZ, 0);
   for(usize y = 0; y < DY; ++y)
   {
@@ -160,7 +164,9 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight reject
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 6, DY = 6, DZ = 1;
+  constexpr usize DX = 6;
+  constexpr usize DY = 6;
+  constexpr usize DZ = 1;
   DataStructure ds;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, std::vector<float32>(DX * DY * DZ, 1.0f));
   const DataPath geomPath = inputPath.getParent().getParent();

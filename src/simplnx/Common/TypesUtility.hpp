@@ -437,7 +437,7 @@ constexpr DataType StringToDataType(std::string_view dataTypeString)
   {
     return DataType::int8;
   }
-  else if(dataTypeString == DataTypeToString(DataType::uint8).view())
+  if(dataTypeString == DataTypeToString(DataType::uint8).view())
   {
     return DataType::uint8;
   }

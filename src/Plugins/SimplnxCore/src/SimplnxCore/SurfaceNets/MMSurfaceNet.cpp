@@ -14,7 +14,7 @@
 #include <set>
 #include <string>
 
-#include <time.h>
+#include <ctime>
 
 MMSurfaceNet::MMSurfaceNet(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], float voxelSize[3])
 {
@@ -32,7 +32,9 @@ MMSurfaceNet::~MMSurfaceNet() = default;
 void MMSurfaceNet::relax(const RelaxAttrs& relaxAttrs) const
 {
   if(!m_cellMap)
+  {
     return;
+  }
   m_cellMap->relax(relaxAttrs);
 }
 

@@ -556,7 +556,7 @@ std::string DatasetIO::readAsString() const
     {
       std::cout << "Error Reading string dataset. There were multiple strings "
                    "and the program asked for a single string."
-                << std::endl;
+                << '\n';
       return "";
     }
     return stringVec.empty() ? std::string{} : stringVec[0];
@@ -573,7 +573,7 @@ std::string DatasetIO::readAsString() const
     H5Tclose(typeID);
     if(error < 0)
     {
-      std::cout << "Error Reading string dataset." << std::endl;
+      std::cout << "Error Reading string dataset." << '\n';
       return "";
     }
     data.append(buffer.data()); // Append the read bytes to the result string
@@ -611,7 +611,7 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
     {
       // H5Sclose(dataspaceID);
       // H5Tclose(typeID);
-      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << std::endl;
+      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << '\n';
       return {};
     }
 
@@ -636,7 +636,7 @@ std::vector<std::string> DatasetIO::readAsVectorOfStrings() const
       H5Sclose(dataspaceID);
       H5Tclose(typeID);
       H5Tclose(memtype);
-      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getNamePath() << ")" << std::endl;
+      std::cout << "H5DatasetReader.cpp::readVectorOfStrings(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getNamePath() << ")" << '\n';
       return {};
     }
     /*
@@ -891,7 +891,8 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
     {
       std::vector<hsize_t> memDims;
       int rank = H5Sget_simple_extent_ndims(fileSpaceId);
-      std::vector<hsize_t> dims(rank), maxDims(rank);
+      std::vector<hsize_t> dims(rank);
+      std::vector<hsize_t> maxDims(rank);
       H5Sget_simple_extent_dims(fileSpaceId, dims.data(), maxDims.data());
       if(start.has_value() && count.has_value())
       {
@@ -1175,7 +1176,7 @@ std::vector<nx::core::usize> DatasetIO::getDimensions() const
         auto error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
         if(error < 0)
         {
-          std::cout << "Error Getting Attribute dims" << std::endl;
+          std::cout << "Error Getting Attribute dims" << '\n';
           H5Sclose(dataspaceId);
           return std::vector<nx::core::usize>(dims.begin(), dims.end());
         }
@@ -1738,7 +1739,7 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
           }
           else
           {
-            std::cout << "Error Writing Chunk: No PList ID found" << std::endl;
+            std::cout << "Error Writing Chunk: No PList ID found" << '\n';
           }
 
           // Select hyperslab
@@ -1982,7 +1983,7 @@ nx::core::Result<> DatasetIO::writeVectorOfStrings(const std::vector<std::string
             error = H5Dwrite(datasetId, datatype, memSpace, dataspaceID, H5P_DEFAULT, &strPtr);
             if(error < 0)
             {
-              std::cout << "Error Writing String Data: " __FILE__ << "(" << __LINE__ << ")" << std::endl;
+              std::cout << "Error Writing String Data: " __FILE__ << "(" << __LINE__ << ")" << '\n';
               returnError = MakeErrorResult(error, "Error Writing String Data");
             }
           }
@@ -2056,11 +2057,7 @@ Result<> DatasetIO::deleteH5Attribute(const std::string& name)
 
 bool DatasetIO::exists() const
 {
-  if(getId() > 0)
-  {
-    return true;
-  }
-  return false;
+  return getId() > 0;
 }
 
 std::string DatasetIO::getFilterName() const

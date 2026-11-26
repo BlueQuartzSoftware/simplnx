@@ -308,7 +308,7 @@ private:
 };
 } // namespace
 
-SilhouetteScanline::SilhouetteScanline(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel, const SilhouetteInputValues* inputValues)
+SilhouetteScanline::SilhouetteScanline(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& shouldCancel, const SilhouetteInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_InputValues(inputValues)

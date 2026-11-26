@@ -435,6 +435,7 @@ SupportSnapshot CaptureSupportSnapshot(const DataStructure& dataStructure, bool 
     for(usize i = 0; i < snapshot.Object->size(); ++i)
     {
       std::vector<SupportIndexType> list;
+      list.reserve(snapshot.Object->getNumberOfElements(i));
       for(usize j = 0; j < snapshot.Object->getNumberOfElements(i); ++j)
       {
         list.push_back(snapshot.Object->getElementListPointer(i)[j]);

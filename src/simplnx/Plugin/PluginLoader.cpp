@@ -131,7 +131,7 @@ void PluginLoader::loadPlugin()
 
 void PluginLoader::unloadPlugin()
 {
-  if(!m_Handle)
+  if(m_Handle == nullptr)
   {
     return;
   }

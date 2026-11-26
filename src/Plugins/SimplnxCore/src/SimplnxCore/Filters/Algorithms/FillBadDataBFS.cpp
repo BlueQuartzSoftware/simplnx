@@ -9,6 +9,8 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+
 using namespace nx::core;
 
 namespace
@@ -118,10 +120,7 @@ Result<> FillBadDataBFS::operator()()
   {
     for(usize i = 0; i < totalPoints; i++)
     {
-      if((*cellPhasesPtr)[i] > maxPhase)
-      {
-        maxPhase = (*cellPhasesPtr)[i];
-      }
+      maxPhase = std::max<nx::core::types::usize>((*cellPhasesPtr)[i], maxPhase);
     }
   }
 

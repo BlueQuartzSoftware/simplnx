@@ -392,7 +392,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded, resident-provis
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: two disjoint blobs get labels 1 and 2 (raster order)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  const usize dx = 6, dy = 1, dz = 1;
+  const usize dx = 6;
+  const usize dy = 1;
+  const usize dz = 1;
   // mask: 1 1 0 0 1 1  -> runs [0..1]=label1, [4..5]=label2
   std::vector<int32> mask = {1, 1, 0, 0, 1, 1};
   const std::vector<uint32> out = RunLabel(mask, dx, dy, dz, false);
@@ -407,7 +409,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: two disjoint blobs get l
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: connectivity distinguishes a diagonal-touching pair", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   // 2x2: fg at (0,0) and (1,1) touch only diagonally.
-  const usize dx = 2, dy = 2, dz = 1;
+  const usize dx = 2;
+  const usize dy = 2;
+  const usize dz = 1;
   std::vector<int32> mask(4, 0);
   mask[FlatIndex(0, 0, 0, dx, dy)] = 1;
   mask[FlatIndex(1, 1, 0, dx, dy)] = 1;
@@ -422,7 +426,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: connectivity distinguish
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: a U-shape is one component (merge across rows)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   // 3x3: a U (bottom row full, two side columns) -> single connected component under face connectivity.
-  const usize dx = 3, dy = 3, dz = 1;
+  const usize dx = 3;
+  const usize dy = 3;
+  const usize dz = 1;
   std::vector<int32> mask = {1, 0, 1, 1, 0, 1, 1, 1, 1};
   const std::vector<uint32> out = RunLabel(mask, dx, dy, dz, false);
   for(usize i = 0; i < mask.size(); ++i)
@@ -433,7 +439,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: a U-shape is one compone
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: deterministic + tall-Z streaming + count matches", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 40;
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 40;
   std::vector<int32> mask(dx * dy * dz);
   for(usize i = 0; i < mask.size(); ++i)
   {
@@ -515,7 +523,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: grouped three-dimensiona
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: a bar spanning z-planes is one component (cross-plane union)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  const usize dx = 3, dy = 3, dz = 3;
+  const usize dx = 3;
+  const usize dy = 3;
+  const usize dz = 3;
   std::vector<int32> mask(dx * dy * dz, 0);
   for(usize z = 0; z < dz; ++z) // a vertical bar at (1,1,z) -> face-connected along z
   {
@@ -530,7 +540,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: a bar spanning z-planes 
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: 3D corner-diagonal pair (full connectivity crosses planes)", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  const usize dx = 2, dy = 2, dz = 2;
+  const usize dx = 2;
+  const usize dy = 2;
+  const usize dz = 2;
   std::vector<int32> mask(8, 0);
   mask[FlatIndex(0, 0, 0, dx, dy)] = 1;
   mask[FlatIndex(1, 1, 1, dx, dy)] = 1;                               // touch only via the 3D corner diagonal
@@ -574,7 +586,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: degenerate masks (all-bg
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: CountConnectedComponents honors minSize", "[NXImageProcessing][ConnectedComponentEngine]")
 {
   // dx=20: one 10-voxel run [0..9], then five isolated single-voxel components at 11,13,15,17,19.
-  const usize dx = 20, dy = 1, dz = 1;
+  const usize dx = 20;
+  const usize dy = 1;
+  const usize dz = 1;
   std::vector<int32> mask(dx, 0);
   for(usize x = 0; x < 10; ++x)
   {

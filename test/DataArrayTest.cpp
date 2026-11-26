@@ -392,7 +392,7 @@ public:
 class RecordingFormatResolver final : public IDataStoreFormatResolver
 {
 public:
-  std::string resolveFormat(const DataStructure&, const DataPath& arrayPath, DataType, uint64) const override
+  std::string resolveFormat(const DataStructure& /*dataStructure*/, const DataPath& arrayPath, DataType /*numericType*/, uint64 /*dataSizeBytes*/) const override
   {
     const std::scoped_lock lock(m_Mutex);
     m_RequestedPaths.push_back(arrayPath);
@@ -1122,7 +1122,7 @@ TEST_CASE("Copy DataStore", "DataArray")
 }
 
 template <typename T>
-void TestDataArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
+static void TestDataArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
   constexpr usize index1 = 5;
   constexpr usize index2 = 6;
@@ -1259,7 +1259,7 @@ void TestDataArrayToFromString<float64>(DataStructure& datastructure, const std:
 }
 
 template <typename T>
-void TestNeighborListArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
+static void TestNeighborListArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {
   constexpr usize index1 = 5;
   constexpr usize index2 = 6;
@@ -2657,7 +2657,7 @@ TEST_CASE("Large metadata array copies resolve exact logical bytes without alloc
 TEMPLATE_TEST_CASE("DataStore common initialization API changes future values only", "[simplnx][DataStore][GrowthInitialization]", int32, bool)
 {
   using T = TestType;
-  static_assert(GetMudflap<bool>() == true);
+  static_assert(GetMudflap<bool>());
   DataStore<T> concrete({2}, {2}, static_cast<T>(7));
   AbstractDataStore<T>& store = concrete;
   CHECK(store.getInitValue() == std::optional<T>{static_cast<T>(7)});

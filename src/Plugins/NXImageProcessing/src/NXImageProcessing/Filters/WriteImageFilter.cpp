@@ -201,6 +201,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     if(supportedTypes.find(arrayDataType) == supportedTypes.end())
     {
       std::vector<std::string> typeNames;
+      typeNames.reserve(supportedTypes.size());
       for(DataType t : supportedTypes)
       {
         typeNames.push_back(DataTypeToString(t).str());
@@ -218,6 +219,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     if(supportedComponentCounts.find(numComponents) == supportedComponentCounts.end())
     {
       std::vector<std::string> countStrings;
+      countStrings.reserve(supportedComponentCounts.size());
       for(usize count : supportedComponentCounts)
       {
         countStrings.push_back(std::to_string(count));

@@ -43,7 +43,6 @@
 #include "OrientationAnalysis/Filters/WriteGBCDTriangleDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeAvgCAxesFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeAvgOrientationsFilter.hpp"
-#include "OrientationAnalysis/Filters/ComputeFeatureReferenceCAxisMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeFeatureReferenceMisorientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeGBCDFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeKernelAvgMisorientationsFilter.hpp"
@@ -71,7 +70,6 @@
 #include "OrientationAnalysis/Filters/ComputeFeatureNeighborCAxisMisalignmentsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeGBCDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeGBPDMetricBasedFilter.hpp"
-#include "OrientationAnalysis/Filters/ComputeSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteINLFileFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@

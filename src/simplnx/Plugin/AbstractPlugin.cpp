@@ -77,7 +77,7 @@ void AbstractPlugin::addFilter(const FilterCreationFunc& filterFunc)
 
   Uuid uuid = filter->uuid();
 
-  if(m_InitializerMap.count(uuid) > 0)
+  if(m_InitializerMap.contains(uuid))
   {
     IFilter::UniquePointer existingFilter = m_InitializerMap[uuid]();
     throw std::runtime_error(

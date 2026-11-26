@@ -487,7 +487,9 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: constant image is preserve
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: deterministic + tall-Z range sanity", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 40;
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 40;
   std::vector<float32> field(dx * dy * dz);
   for(usize i = 0; i < field.size(); ++i)
   {
@@ -507,7 +509,9 @@ TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: deterministic + tall-Z ran
 
 TEST_CASE("NXImageProcessing::FiniteDifferenceEngine: planar level sets do not move (ramp update is zero)", "[NXImageProcessing][FiniteDifferenceEngine]")
 {
-  const usize dx = 10, dy = 10, dz = 10;
+  const usize dx = 10;
+  const usize dy = 10;
+  const usize dz = 10;
   auto at = [&](usize x, usize y, usize z) { return (z * dy + y) * dx + x; };
   SECTION("axis-aligned ramp along X")
   {

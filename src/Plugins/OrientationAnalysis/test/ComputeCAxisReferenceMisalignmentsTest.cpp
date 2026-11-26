@@ -690,8 +690,8 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: tuple mismat
   REQUIRE(messageRef.find(mismatchMask ? "Mask array" : "Phases array") == 0);
   REQUIRE(messageRef.find("Quats") != std::string::npos);
   REQUIRE(messageRef.find("Mismatched") != std::string::npos);
-  REQUIRE(messageRef.find("2") != std::string::npos);
-  REQUIRE(messageRef.find("3") != std::string::npos);
+  REQUIRE(messageRef.find('2') != std::string::npos);
+  REQUIRE(messageRef.find('3') != std::string::npos);
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
 

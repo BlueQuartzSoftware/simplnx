@@ -36,7 +36,7 @@ using namespace nx::core;
  * @brief Verifies common node geometry operations.
  * @param geom Geometry under test.
  */
-void testAbstractGeometry(IGeometry* geom)
+static void testAbstractGeometry(IGeometry* geom)
 {
   SECTION("abstract geometry")
   {
@@ -63,7 +63,7 @@ void testAbstractGeometry(IGeometry* geom)
  * @brief Verifies vertex and edge operations on a two-dimensional geometry.
  * @param geom Geometry under test.
  */
-void testGeom2D(INodeGeometry2D* geom)
+static void testGeom2D(INodeGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
   {
@@ -72,7 +72,7 @@ void testGeom2D(INodeGeometry2D* geom)
 
     // Vertices
     {
-      auto vertices = createVertexList(geom);
+      const auto* vertices = createVertexList(geom);
       REQUIRE(vertices != nullptr);
       geom->setVertices(*vertices);
       REQUIRE(geom->getVertices() == vertices);
@@ -86,7 +86,7 @@ void testGeom2D(INodeGeometry2D* geom)
 
     // edges
     {
-      auto edges = createEdgeList(geom);
+      const auto* edges = createEdgeList(geom);
       geom->setEdgeList(*edges);
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
@@ -113,7 +113,7 @@ void testGeom2D(INodeGeometry2D* geom)
  * @brief Verifies vertex, edge, and face operations on a three-dimensional geometry.
  * @param geom Geometry under test.
  */
-void testGeom3D(INodeGeometry3D* geom)
+static void testGeom3D(INodeGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
   {
@@ -122,7 +122,7 @@ void testGeom3D(INodeGeometry3D* geom)
 
     // vertices
     {
-      auto vertices = createVertexList(geom);
+      const auto* vertices = createVertexList(geom);
       geom->setVertices(*vertices);
       REQUIRE(geom->getVertices() == vertices);
       const usize numVertices = 10;
@@ -134,7 +134,7 @@ void testGeom3D(INodeGeometry3D* geom)
     }
     // edges
     {
-      auto edges = createEdgeList(geom);
+      const auto* edges = createEdgeList(geom);
       geom->setEdgeList(*edges);
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
@@ -164,7 +164,7 @@ void testGeom3D(INodeGeometry3D* geom)
  * @brief Verifies dimensions and cell counts on a grid geometry.
  * @param geom Geometry under test.
  */
-void testGeomGrid(IGridGeometry* geom)
+static void testGeomGrid(IGridGeometry* geom)
 {
   SECTION("abstract geometry grid")
   {
@@ -191,7 +191,7 @@ void testGeomGrid(IGridGeometry* geom)
  * @param expectedMax Expected maximum point.
  */
 template <typename T>
-void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
+static void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
 {
   REQUIRE(bbox.isValid());
   REQUIRE(bbox.getMinPoint()[0] == Approx(expectedMin[0]));
@@ -207,7 +207,7 @@ void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMi
  * @tparam GeomType Specifies the geometry type.
  */
 template <class GeomType>
-void testNodeGeometryBoundingBox()
+static void testNodeGeometryBoundingBox()
 {
   DataStructure dataStructure;
   auto* geom = createGeom<GeomType>(dataStructure);
@@ -247,7 +247,7 @@ void testNodeGeometryBoundingBox()
 TEST_CASE("EdgeGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<EdgeGeom>(dataStructure);
+  auto* geom = createGeom<EdgeGeom>(dataStructure);
 
   testAbstractGeometry(geom);
 
@@ -262,7 +262,7 @@ TEST_CASE("EdgeGeomTest")
 TEST_CASE("HexahedralGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<HexahedralGeom>(dataStructure);
+  auto* geom = createGeom<HexahedralGeom>(dataStructure);
 
   testGeom3D(geom);
 
@@ -277,7 +277,7 @@ TEST_CASE("HexahedralGeomTest")
 TEST_CASE("ImageGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<ImageGeom>(dataStructure);
+  auto* geom = createGeom<ImageGeom>(dataStructure);
 
   testGeomGrid(geom);
 
@@ -430,7 +430,7 @@ TEST_CASE("ImageGeom::findElementSizes 1D image computes length correctly")
 TEST_CASE("QuadGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<QuadGeom>(dataStructure);
+  auto* geom = createGeom<QuadGeom>(dataStructure);
 
   testGeom2D(geom);
 
@@ -516,7 +516,7 @@ TEST_CASE("CreateRectGridGeometryAction rejects a count below two", "[simplnx][C
 TEST_CASE("RectGridGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<RectGridGeom>(dataStructure);
+  auto* geom = createGeom<RectGridGeom>(dataStructure);
 
   testGeomGrid(geom);
 
@@ -531,7 +531,7 @@ TEST_CASE("RectGridGeomTest")
 TEST_CASE("TetrahedralGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<TetrahedralGeom>(dataStructure);
+  auto* geom = createGeom<TetrahedralGeom>(dataStructure);
 
   testGeom3D(geom);
 
@@ -546,7 +546,7 @@ TEST_CASE("TetrahedralGeomTest")
 TEST_CASE("TriangleGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<TriangleGeom>(dataStructure);
+  auto* geom = createGeom<TriangleGeom>(dataStructure);
 
   testGeom2D(geom);
 
@@ -561,7 +561,7 @@ TEST_CASE("TriangleGeomTest")
 TEST_CASE("VertexGeomTest")
 {
   DataStructure dataStructure;
-  auto geom = createGeom<VertexGeom>(dataStructure);
+  auto* geom = createGeom<VertexGeom>(dataStructure);
 
   testAbstractGeometry(geom);
 

@@ -12,6 +12,7 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <memory>
@@ -170,14 +171,8 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
     for(usize i = 0; i < chunkCount * 3; i++)
     {
       const uint64 v = triBuf[i];
-      if(v < minVertIdx)
-      {
-        minVertIdx = v;
-      }
-      if(v > maxVertIdx)
-      {
-        maxVertIdx = v;
-      }
+      minVertIdx = std::min(v, minVertIdx);
+      maxVertIdx = std::max(v, maxVertIdx);
     }
 
     // Bounded index spans preserve a bulk coordinate read. Sparse spans use the serial fallback.

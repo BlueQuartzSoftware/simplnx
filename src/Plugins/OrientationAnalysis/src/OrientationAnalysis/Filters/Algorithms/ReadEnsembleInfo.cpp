@@ -112,12 +112,12 @@ Result<> ReadEnsembleInfo::readFile()
     auto phaseTypeString = inputIni[group][k_PhaseType].as<std::string>();
 
     uint32 crystalStruct = ebsdlib::CrystalStructure::UnknownCrystalStructure;
-    if(k_EnsembleCrystalInfoLookup.count(crystalString) > 0)
+    if(k_EnsembleCrystalInfoLookup.contains(crystalString))
     {
       crystalStruct = k_EnsembleCrystalInfoLookup[crystalString];
     }
     auto pType = static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown);
-    if(k_EnsemblePhaseTypeInfoLookup.count(phaseTypeString) > 0)
+    if(k_EnsemblePhaseTypeInfoLookup.contains(phaseTypeString))
     {
       pType = k_EnsemblePhaseTypeInfoLookup[phaseTypeString];
     }

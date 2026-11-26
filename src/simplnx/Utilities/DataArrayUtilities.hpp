@@ -22,6 +22,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <atomic>
 #include <cstdio>
 #include <filesystem>
@@ -515,10 +516,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
 
     usize elementsLeft = numElements - elementCounter;
 
-    if(elementsLeft < chunkSize)
-    {
-      chunkSize = elementsLeft;
-    }
+    chunkSize = std::min(elementsLeft, chunkSize);
   }
 
   std::fclose(inputFilePtr);
@@ -828,10 +826,8 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
     {
       break;
     }
-    else
-    {
-      idx[d] = 0;
-    }
+
+    idx[d] = 0;
   }
 }
 } // namespace Indexing

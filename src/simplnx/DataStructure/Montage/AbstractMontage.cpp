@@ -36,7 +36,7 @@ DataObject::Type AbstractMontage::getDataObjectType() const
 AbstractMontage::CollectionType AbstractMontage::getGeometries() const
 {
   CollectionType geometries;
-  for(auto geometry : m_Collection)
+  for(auto* geometry : m_Collection)
   {
     if(geometry != nullptr)
     {
@@ -54,7 +54,7 @@ usize AbstractMontage::getTileCount() const
 std::vector<std::string> AbstractMontage::getGeometryNames() const
 {
   std::vector<std::string> names;
-  for(auto geometry : getGeometries())
+  for(auto* geometry : getGeometries())
   {
     names.push_back(geometry->getName());
   }
@@ -99,7 +99,7 @@ const AbstractMontage::CollectionType& AbstractMontage::getCollection() const
 
 bool AbstractMontage::canInsert(const DataObject* obj) const
 {
-  if(!dynamic_cast<const IGeometry*>(obj))
+  if(dynamic_cast<const IGeometry*>(obj) == nullptr)
   {
     return false;
   }

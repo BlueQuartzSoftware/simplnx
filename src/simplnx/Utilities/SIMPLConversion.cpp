@@ -136,7 +136,7 @@ Result<std::vector<std::string>> ConvertDataTypeStrings(const std::vector<std::s
 {
   std::vector<std::string> dataTypeStrings;
   dataTypeStrings.reserve(simplDataTypeStrings.size());
-  for(auto& simplDataTypeStr : simplDataTypeStrings)
+  for(const auto& simplDataTypeStr : simplDataTypeStrings)
   {
     auto result = ConvertDataTypeString(simplDataTypeStr);
     if(result.invalid())

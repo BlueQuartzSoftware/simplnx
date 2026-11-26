@@ -43,7 +43,7 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
   Arguments args;
 
   DataPath movingVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
-  auto movingVertexGeom = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
+  auto* movingVertexGeom = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
 
   uint64 numIterations = 1;
   bool applyTransformation = true;
@@ -55,8 +55,8 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
 
   DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, targetVertexGeom->getName()});
 
-  auto vertices1 = movingVertexGeom->getVertices();
-  auto vertices2 = targetVertexGeom->getVertices();
+  auto* vertices1 = movingVertexGeom->getVertices();
+  auto* vertices2 = targetVertexGeom->getVertices();
   usize numVertices = vertices1->getSize();
   for(usize i = 0; i < numVertices; i++)
   {
@@ -85,7 +85,7 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

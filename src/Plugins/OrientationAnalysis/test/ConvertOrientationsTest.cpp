@@ -93,7 +93,7 @@ const std::vector<std::vector<std::vector<float>>> k_Ref = {
 
 // This section of code exists solely to generate a source code in case another
 // orientation representation is created. Leave this code here.
-void _make_code()
+static void _make_code()
 {
   std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
   std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
@@ -449,7 +449,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsFilter: SIMPL Backwards Compa
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

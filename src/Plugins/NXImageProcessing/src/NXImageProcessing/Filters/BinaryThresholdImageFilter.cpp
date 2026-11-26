@@ -28,8 +28,10 @@ struct BinaryThresholdOperation
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 lo = lowerThreshold, hi = upperThreshold;
-    const uint8 inV = insideValue, outV = outsideValue;
+    const float64 lo = lowerThreshold;
+    const float64 hi = upperThreshold;
+    const uint8 inV = insideValue;
+    const uint8 outV = outsideValue;
     return [lo, hi, inV, outV](T value) -> U {
       const double d = static_cast<double>(value);
       return static_cast<U>((d >= lo && d <= hi) ? inV : outV);

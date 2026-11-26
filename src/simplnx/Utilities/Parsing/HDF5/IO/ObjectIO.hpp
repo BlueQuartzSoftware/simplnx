@@ -218,7 +218,7 @@ public:
     if(vector.size() != 1)
     {
       std::string ss = fmt::format("Attribute values of unexpected size. One value expected. {} values read", std::to_string(vector.size()));
-      std::cout << ss << std::endl;
+      std::cout << ss << '\n';
       return MakeErrorResult<T>(-972, ss);
     }
 

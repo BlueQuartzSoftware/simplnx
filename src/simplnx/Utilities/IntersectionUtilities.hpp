@@ -10,9 +10,7 @@
 
 #include <array>
 
-namespace nx::core
-{
-namespace IntersectionUtilities
+namespace nx::core::IntersectionUtilities
 {
 inline constexpr float k_Epsilon = 1e-8;
 inline constexpr uint32_t width = 310;
@@ -81,7 +79,7 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   // check if ray and plane are parallel ?
   float NdotRayDirection = N.dot(rayDirection);
 
-  if(fabs(NdotRayDirection) < k_Epsilon) // almost 0
+  if(std::fabs(NdotRayDirection) < k_Epsilon) // almost 0
   {
     return false;
   } // they are parallel so they don't intersect !
@@ -154,8 +152,13 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
  */
 inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec3f& vert0, const Vec3f& vert1, const Vec3f& vert2, Vec3f& bcoord)
 {
-  Vec3f edge1, edge2, tvec, pvec, qvec;
-  double det = NAN, inv_det = NAN;
+  Vec3f edge1;
+  Vec3f edge2;
+  Vec3f tvec;
+  Vec3f pvec;
+  Vec3f qvec;
+  double det = NAN;
+  double inv_det = NAN;
 
   /* find vectors for two edges sharing vert0 */
   edge1 = vert1 - vert0;
@@ -524,6 +527,4 @@ bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T ra
   return true;
 }
 
-} // namespace IntersectionUtilities
-
-} // namespace nx::core
+} // namespace nx::core::IntersectionUtilities

@@ -180,15 +180,25 @@ SystemMemoryInfo GetSystemMemoryInfo()
       iss >> key >> value >> unit;
 
       if(key == "MemTotal:")
+      {
         memTotal = value;
+      }
       else if(key == "MemFree:")
+      {
         memFree = value;
+      }
       else if(key == "Buffers:")
+      {
         buffers = value;
+      }
       else if(key == "Cached:")
+      {
         cached = value;
+      }
       else if(key == "SReclaimable:")
+      {
         sReclaimable = value;
+      }
     }
 
     // Match the 'used' calculation from the 'free' command:

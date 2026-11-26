@@ -85,7 +85,7 @@ public:
   {
   public:
     WorkingMemoryReservation() = default;
-    WorkingMemoryReservation(WorkingMemoryReservationKey, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept;
+    WorkingMemoryReservation(WorkingMemoryReservationKey /*unused*/, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept;
     ~WorkingMemoryReservation() noexcept;
 
     WorkingMemoryReservation(const WorkingMemoryReservation&) = delete;

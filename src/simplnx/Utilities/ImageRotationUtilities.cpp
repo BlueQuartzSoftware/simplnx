@@ -1,6 +1,7 @@
 #include "ImageRotationUtilities.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace nx::core::ImageRotationUtilities
 {
@@ -180,7 +181,7 @@ std::string GenerateTransformationMatrixDescription(const Matrix4fR& transform)
   out << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(0, 0), transform(0, 1), transform(0, 2), transform(0, 3)) << "\n"
       << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(1, 0), transform(1, 1), transform(1, 2), transform(1, 3)) << "\n"
       << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(2, 0), transform(2, 1), transform(2, 2), transform(2, 3)) << "\n"
-      << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(3, 0), transform(3, 1), transform(3, 2), transform(3, 3)) << std::endl;
+      << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(3, 0), transform(3, 1), transform(3, 2), transform(3, 3)) << '\n';
 
   return out.str();
 }
@@ -276,9 +277,9 @@ Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::Val
   const float64 norm = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
   const FloatVec3 normalizedAxis = {static_cast<float32>(axis[0] / norm), static_cast<float32>(axis[1] / norm), static_cast<float32>(axis[2] / norm)};
 
-  const float cosTheta = cos(rotAngle);
+  const float cosTheta = std::cos(rotAngle);
   const float oneMinusCosTheta = 1 - cosTheta;
-  const float sinTheta = sin(rotAngle);
+  const float sinTheta = std::sin(rotAngle);
 
   // First Row:
   transformationMatrix(0) = normalizedAxis[0] * normalizedAxis[0] * (oneMinusCosTheta) + cosTheta;
@@ -329,7 +330,7 @@ Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueT
 }
 
 template <class T>
-constexpr T square(T value) noexcept
+constexpr static T square(T value) noexcept
 {
   return value * value;
 }

@@ -18,7 +18,7 @@ namespace
 {
 Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& dataStructure)
 {
-  auto* maybeTriGeomPtr = dataStructure.getDataAs<TriangleGeom>(path);
+  const auto* maybeTriGeomPtr = dataStructure.getDataAs<TriangleGeom>(path);
   if(maybeTriGeomPtr != nullptr)
   {
     return {path};

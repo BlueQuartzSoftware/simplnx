@@ -547,12 +547,8 @@ inline bool Danielsson2DPeak(usize columns, usize rows, usize inputBytes, usize&
   usize core = 0;
   usize neighborRow = 0;
   usize total = 0;
-  if(!DanielssonCheckedMultiply(columns, rows, cells) || !DanielssonCheckedMultiply(cells, 3 * sizeof(int32) + inputBytes + sizeof(float32), core) ||
-     !DanielssonCheckedMultiply(columns, 3 * sizeof(int32), neighborRow) || !DanielssonCheckedAdd(core, neighborRow, total) || !DanielssonCheckedAdd(total, k_Danielsson2DFixedStateBytes, peak))
-  {
-    return false;
-  }
-  return true;
+  return !(!DanielssonCheckedMultiply(columns, rows, cells) || !DanielssonCheckedMultiply(cells, 3 * sizeof(int32) + inputBytes + sizeof(float32), core) ||
+           !DanielssonCheckedMultiply(columns, 3 * sizeof(int32), neighborRow) || !DanielssonCheckedAdd(core, neighborRow, total) || !DanielssonCheckedAdd(total, k_Danielsson2DFixedStateBytes, peak));
 }
 
 inline Danielsson2DBufferPlan BuildDanielsson2DBufferPlan(usize nx, usize ny, usize inputBytes, usize residentLimit = k_Danielsson2DResidentLimit)
@@ -677,7 +673,9 @@ inline void DanielssonUpdateCore(int32* hereV, const int32* thereV, int32 offX, 
   float64 norm2 = 0.0;
   if(useSpacing)
   {
-    const float64 t0 = static_cast<float64>(tx) * sp[0], t1 = static_cast<float64>(ty) * sp[1], t2 = static_cast<float64>(tz) * sp[2];
+    const float64 t0 = static_cast<float64>(tx) * sp[0];
+    const float64 t1 = static_cast<float64>(ty) * sp[1];
+    const float64 t2 = static_cast<float64>(tz) * sp[2];
     norm2 = t0 * t0 + t1 * t1 + t2 * t2;
   }
   else
@@ -715,7 +713,9 @@ inline void DanielssonUpdateCoreTracked(int32* hereV, float64& hereNorm, const i
   float64 norm2 = 0.0;
   if(useSpacing)
   {
-    const float64 t0 = static_cast<float64>(tx) * sp[0], t1 = static_cast<float64>(ty) * sp[1], t2 = static_cast<float64>(tz) * sp[2];
+    const float64 t0 = static_cast<float64>(tx) * sp[0];
+    const float64 t1 = static_cast<float64>(ty) * sp[1];
+    const float64 t2 = static_cast<float64>(tz) * sp[2];
     norm2 = t0 * t0 + t1 * t1 + t2 * t2;
   }
   else

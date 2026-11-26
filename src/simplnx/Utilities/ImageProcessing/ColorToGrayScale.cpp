@@ -335,7 +335,7 @@ class ConvertColorToGrayScaleDirect
 {
 public:
   ConvertColorToGrayScaleDirect(const UInt8AbstractDataStore& inputColorData, UInt8AbstractDataStore& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3 colorWeights,
-                                int32 colorChannel, const std::atomic_bool&)
+                                int32 colorChannel, const std::atomic_bool& /*unused*/)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
   , m_ConversionType(conversionType)

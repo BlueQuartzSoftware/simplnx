@@ -75,7 +75,7 @@ std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeigh
   }
 
   // Keep the requested seed and require a neighbor to construct the local frame.
-  if(triPatch.size() < 2 || triPatch.count(triId) == 0)
+  if(triPatch.size() < 2 || !triPatch.contains(triId))
   {
     return nullptr;
   }
@@ -135,7 +135,7 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
 CalculateTriangleGroupCurvatures::~CalculateTriangleGroupCurvatures() = default;
 
 // -----------------------------------------------------------------------------
-void subtractVector3d(Float64AbstractDataStore& data, double* v)
+static void subtractVector3d(Float64AbstractDataStore& data, double* v)
 {
   size_t count = data.getNumberOfTuples();
   for(size_t i = 0; i < count; ++i)
@@ -307,14 +307,16 @@ void CalculateTriangleGroupCurvatures::operator()() const
       static const uint32_t NO_NORMALS = 3;
       static const uint32_t USE_NORMALS = 7;
       uint32_t cols = NO_NORMALS;
-      if(m_UseNormalsForCurveFitting == true)
+      if(m_UseNormalsForCurveFitting)
       {
         cols = USE_NORMALS;
       }
       size_t rows = patchCentroids->getNumberOfTuples();
       Eigen::MatrixXd A(rows, cols);
       Eigen::VectorXd b(rows);
-      double x = 0.0, y = 0.0, z = 0.0;
+      double x = 0.0;
+      double y = 0.0;
+      double z = 0.0;
       for(size_t m = 0; m < rows; ++m)
       {
         x = patchCentroids->getComponentValue(m, 0);

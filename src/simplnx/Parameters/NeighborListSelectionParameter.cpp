@@ -138,7 +138,7 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
   if(!m_AllowedTypes.empty())
   {
     DataType dataType = neighborList->getDataType();
-    if(m_AllowedTypes.count(dataType) == 0)
+    if(!m_AllowedTypes.contains(dataType))
     {
       return nx::core::MakeErrorResult(k_Validate_AllowedType_Error,
                                        fmt::format("{}DataNeighborList at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));

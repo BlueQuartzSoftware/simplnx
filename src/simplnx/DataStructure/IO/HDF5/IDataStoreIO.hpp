@@ -5,11 +5,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
-namespace nx::core
-{
-namespace HDF5
-{
-namespace IDataStoreIO
+namespace nx::core::HDF5::IDataStoreIO
 {
 /**
  * @brief Reads the DataStore tuple shape from HDF5.
@@ -24,6 +20,4 @@ Result<ShapeType> SIMPLNX_EXPORT ReadTupleShape(const nx::core::HDF5::DatasetIO&
  * @return Exact stored shape or an attribute-read error.
  */
 Result<ShapeType> SIMPLNX_EXPORT ReadComponentShape(const nx::core::HDF5::DatasetIO& datasetReader);
-} // namespace IDataStoreIO
-} // namespace HDF5
-} // namespace nx::core
+} // namespace nx::core::HDF5::IDataStoreIO

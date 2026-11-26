@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 
-#include "simplnx/Common/StringLiteral.hpp"
-
 namespace nx::core
 {
 class SIMPLNX_EXPORT IGridGeometry : public IGeometry

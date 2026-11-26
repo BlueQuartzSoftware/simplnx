@@ -28,18 +28,18 @@ constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
 constexpr StringLiteral k_CentroidsName = "Centroids";
 
-static const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto dataStructure = geom.getDataStructure();
+  auto* dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
   auto* dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<IGeometry::SharedVertexList*>(dataArr);
 }
 
-static const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto dataStructure = geom.getDataStructure();
+  auto* dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
   auto* dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
@@ -58,8 +58,8 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
   acuteTriangle.setFaceAttributeMatrix(*faceData);
   AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
   acuteTriangle.setVertexAttributeMatrix(*vertData);
-  auto vertexList = CreateVertexList(acuteTriangle, vertData->getId());
-  auto facesList = CreateFaceList(acuteTriangle, faceData->getId());
+  const auto* vertexList = CreateVertexList(acuteTriangle, vertData->getId());
+  const auto* facesList = CreateFaceList(acuteTriangle, faceData->getId());
   auto underlyingStoreV = vertexList->getDataStorePtr().lock();
   auto underlyingStoreF = facesList->getDataStorePtr().lock();
 
@@ -119,7 +119,7 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter: SIMPL Backwards Compatibility", 
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

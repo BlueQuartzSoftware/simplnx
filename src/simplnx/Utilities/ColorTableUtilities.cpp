@@ -120,11 +120,7 @@ std::string ColorTableUtilities::ColorPreset::toJsonString(int indent) const
 
 bool ColorTableUtilities::IsValidPreset(const ColorPreset& preset)
 {
-  if(!preset.RGBPoints.empty() && ((preset.ColorSpace == "RGB" || preset.ColorSpace == "Diverging" || preset.ColorSpace == "Lab" || preset.ColorSpace == "CIELAB")))
-  {
-    return true;
-  }
-  return false;
+  return !preset.RGBPoints.empty() && ((preset.ColorSpace == "RGB" || preset.ColorSpace == "Diverging" || preset.ColorSpace == "Lab" || preset.ColorSpace == "CIELAB"));
 }
 
 bool ColorTableUtilities::IsValidIndexedPreset(const ColorPreset& preset)
@@ -135,15 +131,11 @@ bool ColorTableUtilities::IsValidIndexedPreset(const ColorPreset& preset)
 bool ColorTableUtilities::IsValidPreset(const nlohmann::json& preset)
 {
   const bool hasRgbPoints = preset.contains("RGBPoints");
-  const bool rgbPointsIsArray = (hasRgbPoints && preset["RGBPoints"].is_array() ? true : false);
+  const bool rgbPointsIsArray = (hasRgbPoints && preset["RGBPoints"].is_array());
   const bool hasColorSpace = preset.contains("ColorSpace");
   const std::string colorSpaceValue = (hasColorSpace ? preset["ColorSpace"].get<std::string>() : "");
 
-  if(rgbPointsIsArray && (hasColorSpace && (colorSpaceValue == "RGB" || colorSpaceValue == "Diverging" || colorSpaceValue == "Lab" || colorSpaceValue == "CIELAB")))
-  {
-    return true;
-  }
-  return false;
+  return rgbPointsIsArray && (hasColorSpace && (colorSpaceValue == "RGB" || colorSpaceValue == "Diverging" || colorSpaceValue == "Lab" || colorSpaceValue == "CIELAB"));
 }
 
 bool ColorTableUtilities::IsValidIndexedPreset(const nlohmann::json& preset)
@@ -314,10 +306,7 @@ std::array<uint8, 3> ColorTableUtilities::ComputeRgbFromControlPoints(float32 nV
     currFraction = (nValue - binPoints[leftBinIndex]) / (1 - binPoints[leftBinIndex]);
   }
 
-  if(leftBinIndex > static_cast<int>(numControlColors) - 1)
-  {
-    leftBinIndex = static_cast<int>(numControlColors) - 1;
-  }
+  leftBinIndex = std::min(leftBinIndex, static_cast<int>(numControlColors) - 1);
 
   const uint8 redVal =
       static_cast<uint8>((controlPoints[leftBinIndex * k_ControlPointCompSize + 1] * (1.0 - currFraction) + controlPoints[rightBinIndex * k_ControlPointCompSize + 1] * currFraction) * 255);

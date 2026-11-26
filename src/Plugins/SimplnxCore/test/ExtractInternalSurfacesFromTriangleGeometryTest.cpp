@@ -66,6 +66,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
   UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, k_VertexArrays.size() + k_TriangleArrays.size());
   std::vector<DataPath> expectedArrayPaths;
+  expectedArrayPaths.reserve(k_VertexArrays.size());
   for(const auto& path : k_VertexArrays)
   {
     expectedArrayPaths.push_back(k_ComputedTrianglePath.createChildPath("Vertex Data").createChildPath(path.getTargetName()));
@@ -163,7 +164,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: SIMPL
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

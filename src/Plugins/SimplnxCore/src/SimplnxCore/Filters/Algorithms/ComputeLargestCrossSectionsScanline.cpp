@@ -7,9 +7,9 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -32,7 +32,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIds.getDataStoreRef();
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
   auto& largestCrossSectStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath).getDataStoreRef();
   const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
 
@@ -122,10 +122,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
     for(usize featureId = 1; featureId < numFeatures; featureId++)
     {
       const float32 area = featureCounts[featureId] * areaScalar;
-      if(area > largestCrossSections[featureId])
-      {
-        largestCrossSections[featureId] = area;
-      }
+      largestCrossSections[featureId] = std::max(area, largestCrossSections[featureId]);
     }
   }
   return largestCrossSectStore.copyFromBuffer(0, nonstd::span<const float32>(largestCrossSections.data(), numFeatures));

@@ -242,7 +242,7 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
   usize cancellationWitnesses = 0;
   const IFilter::MessageHandler handler{IFilter::MessageHandler::Callback{[&](const IFilter::Message& message) {
     // reset() opens the first progress gate; this synchronous callback stops traversal before feature 2.
-    if(windingCase.cancelAfterFeature && message.type == IFilter::Message::Type::Progress && message.progress == 50 && message.message.rfind("Repairing Feature Windings", 0) == 0)
+    if(windingCase.cancelAfterFeature && message.type == IFilter::Message::Type::Progress && message.progress == 50 && message.message.starts_with("Repairing Feature Windings"))
     {
       ++cancellationWitnesses;
       shouldCancel.store(true);

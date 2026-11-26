@@ -63,7 +63,7 @@ public:
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(m_ErrorCode, "Injected multi-threshold bulk-read failure");
   }
@@ -94,7 +94,7 @@ public:
   {
   }
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected multi-threshold bulk-write failure");
   }
@@ -793,7 +793,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
  * @param thresholdArrayPath Threshold mask path.
  */
 template <typename T>
-void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
+static void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
 {
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
@@ -1114,7 +1114,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibili
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

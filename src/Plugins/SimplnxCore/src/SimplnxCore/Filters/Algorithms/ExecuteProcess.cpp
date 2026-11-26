@@ -82,7 +82,7 @@ Result<> ExecuteProcess::operator()()
     outFile.close();
     return MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", arguments[0]));
   }
-  else if(ec)
+  if(ec)
   {
     outFile.close();
     return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
@@ -160,7 +160,7 @@ std::vector<std::string> ExecuteProcess::splitArgumentsString(const std::string&
     {
       i++;
       int start = i;
-      int index = arguments.find_first_of("\"", start);
+      int index = arguments.find_first_of('\"', start);
       if(index == -1)
       {
         index = arguments.size();
@@ -172,7 +172,7 @@ std::vector<std::string> ExecuteProcess::splitArgumentsString(const std::string&
     else
     {
       int start = i;
-      int index = arguments.find_first_of(" ", start + 1);
+      int index = arguments.find_first_of(' ', start + 1);
       if(index == -1)
       {
         index = arguments.size();

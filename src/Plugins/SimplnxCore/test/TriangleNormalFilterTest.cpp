@@ -121,7 +121,8 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
     DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
     auto& officialNormals = dataStructure.getDataRefAs<Float64Array>(normalsDataPath);
     Float64Array& calculatedNormals = dataStructure.getDataRefAs<Float64Array>(triangleNormalsDataPath);
-    std::vector<double> offNorms, calcNorms;
+    std::vector<double> offNorms;
+    std::vector<double> calcNorms;
     for(int64 i = 0; i < officialNormals.getSize(); i++)
     {
       auto result = fabs(officialNormals[i] - calculatedNormals[i]);
@@ -136,7 +137,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter: SIMPL Backwards Compatibility", "[
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 

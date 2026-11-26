@@ -572,9 +572,9 @@ void CreateScalarData(DataStructure& dataStructure, const std::string& name, Dat
 DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
-  auto group1 = DataGroup::Create(dataStructure, DataNames::k_Group1Name);
-  auto group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
-  auto group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
+  auto* group1 = DataGroup::Create(dataStructure, DataNames::k_Group1Name);
+  auto* group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
+  auto* group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
 
   ShapeType tupleShape = {10};
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, tupleShape, group1->getId());
@@ -598,32 +598,32 @@ DataStructure CreateTestDataStructure()
 
   auto vertices = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{3}, 0.0f);
   auto* vertexArray = Float32Array::Create(dataStructure, Constants::k_VertexList, vertices, dataGroup->getId());
-  FillDataStore<float32>(*vertices.get());
+  FillDataStore<float32>(*vertices);
 
   auto edges = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{2}, 0);
   auto* edgesArray = IGeometry::SharedEdgeList::Create(dataStructure, Constants::k_Edges, edges, dataGroup->getId());
-  FillDataStore<uint64>(*edges.get());
+  FillDataStore<uint64>(*edges);
 
   auto triangles = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{3}, 0);
   auto* trianglesArray = IGeometry::SharedTriList::Create(dataStructure, Constants::k_Faces, triangles, dataGroup->getId());
-  FillDataStore<uint64>(*triangles.get());
+  FillDataStore<uint64>(*triangles);
 
   auto polyhedra = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* polyhedraArray = IGeometry::SharedFaceList::Create(dataStructure, Constants::k_Polyhedra, polyhedra, dataGroup->getId());
   REQUIRE(polyhedraArray != nullptr);
-  FillDataStore<uint64>(*polyhedra.get());
+  FillDataStore<uint64>(*polyhedra);
 
   auto quadStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* quadArray = IGeometry::SharedFaceList::Create(dataStructure, Constants::k_QuadArray, quadStore, dataGroup->getId());
-  FillDataStore<uint64>(*quadStore.get());
+  FillDataStore<uint64>(*quadStore);
 
   auto hexStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{8}, 0);
   auto* hexArray = IGeometry::SharedHexList::Create(dataStructure, Constants::k_HexaArray, hexStore, dataGroup->getId());
-  FillDataStore<uint64>(*hexStore.get());
+  FillDataStore<uint64>(*hexStore);
 
   auto tetraStore = std::make_shared<UInt64DataStore>(Constants::k_TupleShape, ShapeType{4}, 0);
   auto* tetraArray = IGeometry::SharedTetList::Create(dataStructure, Constants::k_TetraArray, tetraStore, dataGroup->getId());
-  FillDataStore<uint64>(*tetraStore.get());
+  FillDataStore<uint64>(*tetraStore);
 
   StringArray::collection_type strings = {"1", "2", "3", "4", "5", "6"};
   auto* stringArray = StringArray::CreateWithValues(dataStructure, Constants::k_StringArray, Constants::k_TupleShape, strings, dataGroup->getId());
@@ -656,15 +656,15 @@ DataStructure CreateTestDataStructure()
   ShapeType componentBounds{1};
   auto xBounds = std::make_shared<Float32DataStore>(xShape, componentBounds, 0.0f);
   auto* xBoundsArray = Float32Array::Create(dataStructure, Constants::k_XBounds, xBounds, rectGridGeom->getId());
-  FillDataStore<float32>(*xBounds.get());
+  FillDataStore<float32>(*xBounds);
   ShapeType yShape{Constants::k_TupleShape[1] + 1};
   auto yBounds = std::make_shared<Float32DataStore>(yShape, componentBounds, 0.0f);
   auto* yBoundsArray = Float32Array::Create(dataStructure, Constants::k_YBounds, yBounds, rectGridGeom->getId());
-  FillDataStore<float32>(*yBounds.get());
+  FillDataStore<float32>(*yBounds);
   ShapeType zShape{Constants::k_TupleShape[2] + 1};
   auto zBounds = std::make_shared<Float32DataStore>(zShape, componentBounds, 0.0f);
   auto* zBoundsArray = Float32Array::Create(dataStructure, Constants::k_ZBounds, zBounds, rectGridGeom->getId());
-  FillDataStore<float32>(*zBounds.get());
+  FillDataStore<float32>(*zBounds);
 
   rectGridGeom->setDimensions(Constants::k_TupleShape);
   rectGridGeom->setCellData(cellMatrix->getId());
@@ -697,7 +697,7 @@ DataStructure CreateTestDataStructure()
   auto vertexValues = std::make_shared<Float32DataStore>(Constants::k_TupleShape, ShapeType{1}, 0.0f);
   auto* vertexValuesArray = Float32Array::Create(dataStructure, Constants::k_VertexValues, vertexValues, vertexMatrix->getId());
   REQUIRE(vertexValuesArray != nullptr);
-  FillDataStore<float32>(*vertexValues.get());
+  FillDataStore<float32>(*vertexValues);
 
   // 3D Geometries. Hexahedra have quad faces (4 vertices) and 8-vertex cells; tetrahedra have
   // triangle faces (3 vertices) and 4-vertex cells.
@@ -1202,7 +1202,7 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
   }
 }
 
-void CheckXdmfFile(const fs::path& dream3dPath)
+static void CheckXdmfFile(const fs::path& dream3dPath)
 {
   auto filepath = GetXdmfPath(dream3dPath);
   REQUIRE(fs::exists(filepath));
@@ -1401,7 +1401,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name})) != nullptr);
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name, DataNames::k_Group3Name})) != nullptr);
-    auto attMatrix = dataStructure.getDataAs<AttributeMatrix>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName}));
+    auto* attMatrix = dataStructure.getDataAs<AttributeMatrix>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName}));
     REQUIRE(attMatrix != nullptr);
     REQUIRE(attMatrix->getShape() == ShapeType{10});
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name})) != nullptr);
@@ -1463,7 +1463,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     auto importPipeline = CreateImportPipeline();
     REQUIRE(importPipeline.execute());
     auto importDataStructure = importPipeline[0]->getDataStructure();
-    auto group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
+    auto* group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
     auto size = importDataStructure.getSize();
     REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
@@ -1476,7 +1476,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     auto importPipeline = CreateImportPipeline();
     REQUIRE(importPipeline.preflight());
     auto importDataStructure = importPipeline[0]->getPreflightStructure();
-    auto group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
+    auto* group1Obj = importDataStructure.getData(DataPath({DataNames::k_Group1Name}));
     auto size = importDataStructure.getSize();
     REQUIRE(importDataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     auto* dataArray = importDataStructure.getDataAs<DataArray<int8>>(DataPath({DataNames::k_ArrayName}));
@@ -1816,7 +1816,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[Sim
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1851,7 +1851,7 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[Si
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  auto* filterList = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -2262,7 +2262,7 @@ public:
   bool requireContext = false;
   mutable std::vector<DataPath> paths;
 
-  std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, DataType, uint64) const override
+  std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, DataType /*numericType*/, uint64 /*dataSizeBytes*/) const override
   {
     paths.push_back(path);
     if(reject)
@@ -2657,7 +2657,7 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
     auto* goodImage = ImageGeom::Create(original, goodGeometry.getTargetName());
     REQUIRE(goodImage != nullptr);
     goodImage->setDimensions({1, 1, 1});
-    const auto cellData = AttributeMatrix::Create(original, goodCellData.getTargetName(), ShapeType{1, 1, 1}, goodImage->getId());
+    auto* const cellData = AttributeMatrix::Create(original, goodCellData.getTargetName(), ShapeType{1, 1, 1}, goodImage->getId());
     REQUIRE(cellData != nullptr);
     goodImage->setCellData(*cellData);
     const auto writeResult = DREAM3D::WriteFile(file, original);

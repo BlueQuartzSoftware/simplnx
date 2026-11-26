@@ -942,7 +942,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
 }
 } // namespace
 
-ComputeEuclideanDistMapScanline::ComputeEuclideanDistMapScanline(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel,
+ComputeEuclideanDistMapScanline::ComputeEuclideanDistMapScanline(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& shouldCancel,
                                                                  const ComputeEuclideanDistMapInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)

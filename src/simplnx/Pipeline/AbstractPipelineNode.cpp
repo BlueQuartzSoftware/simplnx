@@ -57,7 +57,7 @@ void AbstractPipelineNode::setDisabled(bool disabled)
 
 void AbstractPipelineNode::setEnabled(bool enabled)
 {
-  return setDisabled(!enabled);
+  setDisabled(!enabled);
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
@@ -77,12 +77,12 @@ void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
   if(dataStructure.memoryUsage() > largeDataStructureSize)
   {
     auto result = dataStructure.transferDataArraysOoc();
-    if(result.warnings().size() > 0)
+    if(!result.warnings().empty())
     {
-      std::cout << "Some DataArrays not converted to out-of-core:" << std::endl;
+      std::cout << "Some DataArrays not converted to out-of-core:" << '\n';
       for(const auto& warning : result.warnings())
       {
-        std::cout << "\tWarning: " << warning.message << std::endl;
+        std::cout << "\tWarning: " << warning.message << '\n';
       }
     }
   }
@@ -298,7 +298,7 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() co
   if(parentPipeline->isEmpty())
   {
     auto name = parentPipeline->getName();
-    auto filterList = parentPipeline->getFilterList();
+    auto* filterList = parentPipeline->getFilterList();
     return std::make_unique<Pipeline>(name, filterList);
   }
 

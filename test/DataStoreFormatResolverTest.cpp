@@ -34,7 +34,8 @@ public:
   : m_Fmt(std::move(fmt))
   {
   }
-  std::string resolveFormat(const nx::core::DataStructure&, const nx::core::DataPath&, nx::core::DataType, nx::core::uint64) const override
+  std::string resolveFormat(const nx::core::DataStructure& /*dataStructure*/, const nx::core::DataPath& /*arrayPath*/, nx::core::DataType /*numericType*/,
+                            nx::core::uint64 /*dataSizeBytes*/) const override
   {
     return m_Fmt;
   }

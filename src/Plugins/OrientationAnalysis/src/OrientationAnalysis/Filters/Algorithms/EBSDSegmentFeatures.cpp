@@ -177,11 +177,7 @@ bool EBSDSegmentFeatures::isValidVoxel(int64 point) const
     return false;
   }
   AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
-  if(cellPhases[point] <= 0)
-  {
-    return false;
-  }
-  return true;
+  return cellPhases[point] > 0;
 }
 
 bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const

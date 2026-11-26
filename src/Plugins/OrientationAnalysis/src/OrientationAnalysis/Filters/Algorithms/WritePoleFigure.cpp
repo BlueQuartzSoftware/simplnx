@@ -398,9 +398,9 @@ Result<> WritePoleFigure::operator()()
         auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name)));
 
         std::vector<size_t> compDims = {1ULL};
-        for(int imageIndex = 0; imageIndex < intensityImages.size(); imageIndex++)
+        for(auto& intensityImage : intensityImages)
         {
-          intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config);
+          intensityImage = flipAndMirrorPoleFigure<double>(intensityImage.get(), config);
         }
 
         // Each intensity image uses one destination transfer.

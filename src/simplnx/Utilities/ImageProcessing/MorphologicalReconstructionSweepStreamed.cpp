@@ -1414,10 +1414,12 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
     }
   }
   if(m_ShouldCancel)
+  {
     if(m_ShouldCancel)
     {
       return {};
     }
+  }
   if(Result<> result = m_Out.copyFromBuffer(0, nonstd::span<const T>(residentWork.get(), residentValues)); result.invalid())
   {
     return result;

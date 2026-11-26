@@ -118,7 +118,7 @@ Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterCon
         {
           return {static_cast<T>(0)};
         }
-        else if(tmp > std::numeric_limits<T>::max())
+        if(tmp > std::numeric_limits<T>::max())
         {
           return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will overflow when converting to expected type. json '{}'", json.dump()));
         }

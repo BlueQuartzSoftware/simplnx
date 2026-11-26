@@ -98,7 +98,7 @@ public:
 
     std::vector<float64> costs = optimizeClusters(numTuples, numCompDims, clusterIdxs);
 
-    bool update = optClusterIdxs == clusterIdxs ? false : true;
+    bool update = optClusterIdxs != clusterIdxs;
     usize iteration = 1;
 
     while(update)
@@ -114,7 +114,7 @@ public:
 
       costs = optimizeClusters(numTuples, numCompDims, clusterIdxs);
 
-      update = optClusterIdxs == clusterIdxs ? false : true;
+      update = optClusterIdxs != clusterIdxs;
 
       float64 sum = std::accumulate(std::begin(costs), std::end(costs), 0.0);
       m_Filter->updateProgress(fmt::format("Clustering Data || Iteration {} || Total Cost: {}", iteration, sum));
