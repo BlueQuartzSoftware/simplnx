@@ -352,49 +352,49 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Valid Execution", "[SimplnxCore
 
   // Luminosity Algorithm testing
   // Test defaults
-  std::cout << "Testing luminosity algorithm..." << std::endl;
+  std::cout << "Testing luminosity algorithm..." << '\n';
   std::cout << "Default weights (0.2125, 0.7154, 0.0721)...";
   scope.execute([&] { RunTest(0, ConvertColorToGrayScale::ConversionType::Luminosity, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Test custom
   std::vector<float32> colorWeights{0.75, 0.75, 0.75};
-  std::cout << "Custom weights (0.75, 0.75, 0.75)..." << std::endl;
+  std::cout << "Custom weights (0.75, 0.75, 0.75)..." << '\n';
   RunTest(1, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test <0
   colorWeights = {-0.75, -0.75, -0.75};
-  std::cout << "Testing weights < 0 (-0.75, -0.75, -0.75)..." << std::endl;
+  std::cout << "Testing weights < 0 (-0.75, -0.75, -0.75)..." << '\n';
   RunTest(2, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test >1
   colorWeights = {1.75, 1.75, 1.75};
-  std::cout << "Testing weights > 1 (1.75, 1.75, 1.75)..." << std::endl;
+  std::cout << "Testing weights > 1 (1.75, 1.75, 1.75)..." << '\n';
   RunTest(3, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test <-1
   colorWeights = {-1.75, -1.75, -1.75};
-  std::cout << "Testing weights < -1 (-1.75, -1.75, -1.75)..." << std::endl;
+  std::cout << "Testing weights < -1 (-1.75, -1.75, -1.75)..." << '\n';
   RunTest(4, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Average Algorithm testing
-  std::cout << "Testing average algorithm..." << std::endl;
+  std::cout << "Testing average algorithm..." << '\n';
   scope.execute([&] { RunTest(5, ConvertColorToGrayScale::ConversionType::Average, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Lightness Algorithm testing
-  std::cout << "Testing lightness algorithm..." << std::endl;
+  std::cout << "Testing lightness algorithm..." << '\n';
   scope.execute([&] { RunTest(6, ConvertColorToGrayScale::ConversionType::Lightness, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Single Channel Algorithm testing
   // Red channel
-  std::cout << "Testing red channel algorithm..." << std::endl;
+  std::cout << "Testing red channel algorithm..." << '\n';
   scope.execute([&] { RunTest(7, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Green channel
-  std::cout << "Testing green channel algorithm..." << std::endl;
+  std::cout << "Testing green channel algorithm..." << '\n';
   scope.execute([&] { RunTest(8, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 1, false); });
 
   // Blue channel
-  std::cout << "Testing blue channel algorithm..." << std::endl;
+  std::cout << "Testing blue channel algorithm..." << '\n';
   scope.execute([&] { RunTest(9, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 2, false); });
 }
 

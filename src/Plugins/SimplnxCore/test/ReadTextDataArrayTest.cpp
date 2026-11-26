@@ -81,7 +81,7 @@ static void writeFile(const std::string& filePath, char delimiter)
         outfile << delimiter;
       }
     }
-    outfile << std::endl;
+    outfile << '\n';
   }
 }
 

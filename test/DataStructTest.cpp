@@ -105,7 +105,7 @@ TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 
   const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsGraphViz_test.dot", unit_test::k_BinaryTestOutputDir));
-  std::cout << outputPath << std::endl;
+  std::cout << outputPath << '\n';
   std::ofstream output(outputPath, std::ios_base::trunc);
   dataStructure.exportHierarchyAsGraphViz(output);
 
@@ -149,7 +149,7 @@ TEST_CASE("SimplnxCore::exportHierarchyAsText")
 
   const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsText_test.txt", unit_test::k_BinaryTestOutputDir));
-  std::cout << outputPath << std::endl;
+  std::cout << outputPath << '\n';
   std::ofstream output(outputPath, std::ios_base::trunc);
   dataStructure.exportHierarchyAsText(output);
 

@@ -79,10 +79,10 @@ void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
     auto result = dataStructure.transferDataArraysOoc();
     if(result.warnings().size() > 0)
     {
-      std::cout << "Some DataArrays not converted to out-of-core:" << std::endl;
+      std::cout << "Some DataArrays not converted to out-of-core:" << '\n';
       for(const auto& warning : result.warnings())
       {
-        std::cout << "\tWarning: " << warning.message << std::endl;
+        std::cout << "\tWarning: " << warning.message << '\n';
       }
     }
   }

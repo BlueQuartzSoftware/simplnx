@@ -155,10 +155,10 @@ public:
    */
   CliStream& endline()
   {
-    std::cout << std::endl;
+    std::cout << '\n';
     if(m_LogStream.is_open())
     {
-      m_LogStream << std::endl;
+      m_LogStream << '\n';
     }
     return *this;
   }

@@ -109,7 +109,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     {
       for(const auto& error : preflightResult.outputActions.errors())
       {
-        std::cout << error.code << ": " << error.message << std::endl;
+        std::cout << error.code << ": " << error.message << '\n';
       }
     }
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

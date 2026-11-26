@@ -455,7 +455,7 @@ TEST_CASE("SimplnxCore::ConvertData: Valid Execution", "[SimplnxCore][ConvertDat
   UnitTest::AlgorithmTestScope scope(scenario);
   UnitTest::LoadPlugins();
 
-  std::cout << "#### ConvertDataTest Starting ####" << std::endl;
+  std::cout << "#### ConvertDataTest Starting ####" << '\n';
 
   scope.execute([&] { TestInt8Signed(); });
   scope.execute([&] { TestInt8Unsigned(); });

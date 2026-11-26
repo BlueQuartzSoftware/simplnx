@@ -198,7 +198,7 @@ bool DataObject::canRename(const std::string& name) const
     const auto* baseGroupPtr = dataStructPtr->getDataAs<BaseGroup>(parentId);
     if(baseGroupPtr == nullptr)
     {
-      std::cout << "DataObject::canRename(name=" << name << ") cannot get baseGroup from parentId = " << parentId << std::endl;
+      std::cout << "DataObject::canRename(name=" << name << ") cannot get baseGroup from parentId = " << parentId << '\n';
     }
     return baseGroupPtr != nullptr && baseGroupPtr->contains(name);
   });

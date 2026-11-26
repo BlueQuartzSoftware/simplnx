@@ -277,7 +277,7 @@ static std::vector<std::string> ReadFile(const std::filesystem::path& filePath, 
 
   if(!file.is_open())
   {
-    std::cerr << "Failed to open the file: " << filePath << std::endl;
+    std::cerr << "Failed to open the file: " << filePath << '\n';
     return lines;
   }
 

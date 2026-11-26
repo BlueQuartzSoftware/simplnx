@@ -117,7 +117,7 @@ public:
       return listStorePtr;
     } catch(const std::exception& e)
     {
-      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << std::endl;
+      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << '\n';
       return nullptr;
     }
   }

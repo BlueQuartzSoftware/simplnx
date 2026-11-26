@@ -55,9 +55,9 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
 
   auto plugins = filterList->getLoadedPlugins();
 
-  std::cout << std::endl;
-  std::cout << "| Plugin | Filter Name | SIMPL UUID | SIMPLNX UUID | Has Fixture |" << std::endl;
-  std::cout << "|--------|-------------|------------|--------------|-------------|" << std::endl;
+  std::cout << '\n';
+  std::cout << "| Plugin | Filter Name | SIMPL UUID | SIMPLNX UUID | Has Fixture |" << '\n';
+  std::cout << "|--------|-------------|------------|--------------|-------------|" << '\n';
 
   usize totalEntries = 0;
   usize uniqueNxFilters = 0;
@@ -101,15 +101,15 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
         }
       }
 
-      std::cout << fmt::format("| {} | {} | {} | {} | {} |", pluginName, filterClassName, simplUuidStr, nxUuid, hasFixture ? "Yes" : "**NO**") << std::endl;
+      std::cout << fmt::format("| {} | {} | {} | {} | {} |", pluginName, filterClassName, simplUuidStr, nxUuid, hasFixture ? "Yes" : "**NO**") << '\n';
     }
   }
 
-  std::cout << std::endl;
-  std::cout << fmt::format("Total SIMPL->SIMPLNX mappings: {} ({} unique NX filters)", totalEntries, uniqueNxFilters) << std::endl;
-  std::cout << fmt::format("With backwards compatibility fixture: {}", withFixture) << std::endl;
-  std::cout << fmt::format("Missing fixture: {}", withoutFixture) << std::endl;
-  std::cout << std::endl;
+  std::cout << '\n';
+  std::cout << fmt::format("Total SIMPL->SIMPLNX mappings: {} ({} unique NX filters)", totalEntries, uniqueNxFilters) << '\n';
+  std::cout << fmt::format("With backwards compatibility fixture: {}", withFixture) << '\n';
+  std::cout << fmt::format("Missing fixture: {}", withoutFixture) << '\n';
+  std::cout << '\n';
 }
 
 /**

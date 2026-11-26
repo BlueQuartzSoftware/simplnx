@@ -43,12 +43,12 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
     return MakeErrorResult(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::FailedToOpenOutputFile), fmt::format("Failed to open output file \"{}\".", outputFilePath.string()));
   }
 
-  file << fmt::format("# This file was created by simplnx v{}", Version::Complete()) << std::endl;
+  file << fmt::format("# This file was created by simplnx v{}", Version::Complete()) << '\n';
 
   if(includeArrayHeaders)
   {
     WriteValue(file, StringUtilities::join(arrayHeaders, " "));
-    file << std::endl;
+    file << '\n';
   }
   usize numComps = array.getNumberOfComponents();
   for(usize i = 0; i < array.getNumberOfTuples(); i++)
@@ -73,7 +73,7 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
         file << " ";
       }
     }
-    file << std::endl;
+    file << '\n';
   }
 
   return {};

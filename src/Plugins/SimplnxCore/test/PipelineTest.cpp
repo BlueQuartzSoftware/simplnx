@@ -164,7 +164,7 @@ TEST_CASE("PipelineTest:Execute Pipeline")
   for(const auto& filepath : fileList)
   {
     std::fstream file(filepath, std::ios_base::out);
-    file << "TEST" << std::endl;
+    file << "TEST" << '\n';
   }
 
   args.insert("param3", std::move(defaultValue));

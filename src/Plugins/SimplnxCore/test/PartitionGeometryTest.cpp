@@ -851,7 +851,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
       s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
     }
 
-    std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
+    std::cout << "Basic Partition Arguments: " << filePaths[index] << '\n';
     const IntVec3& numOfPartitionsPerAxis = partitionDimensions[index];
     const DataPath inputGeometryPath = {{"DataContainer"}};
     DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
@@ -961,7 +961,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
       s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
     }
 
-    std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
+    std::cout << "Basic Partition Arguments: " << filePaths[index] << '\n';
     const IntVec3& numOfPartitionsPerAxis = partitionDimensions[index];
     const DataPath inputGeometryPath = {{"DataContainer"}};
     DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
@@ -1063,7 +1063,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
       s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
     }
 
-    std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
+    std::cout << "Basic Partition Arguments: " << filePaths[index] << '\n';
     const IntVec3& numOfPartitionsPerAxis = partitionDimensions[index];
     const DataPath inputGeometryPath = {{"DataContainer"}};
     DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};

@@ -87,8 +87,8 @@ TestFileSentinel::TestFileSentinel(std::string testFilesDir, std::string inputAr
     const auto errorCode = decompress();
     if(errorCode)
     {
-      std::cout << "std::error_code.value(): " << errorCode.value() << std::endl;
-      std::cout << "std::error_code.message(): " << errorCode.message() << std::endl;
+      std::cout << "std::error_code.value(): " << errorCode.value() << '\n';
+      std::cout << "std::error_code.message(): " << errorCode.message() << '\n';
       //        REQUIRE(errorCode.value() == 0);
     }
   }
@@ -102,7 +102,7 @@ TestFileSentinel::~TestFileSentinel()
     fs::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
     if(errorCode)
     {
-      std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
+      std::cout << "Removing decompressed data failed: " << errorCode.message() << '\n';
     }
   }
 }
@@ -180,7 +180,7 @@ std::error_code TestFileSentinel::decompress()
   gzFile gz = gzopen(archivePath.c_str(), "rb");
   if(gz == nullptr)
   {
-    std::cout << "Failed to open archive: " << archivePath << std::endl;
+    std::cout << "Failed to open archive: " << archivePath << '\n';
     return std::make_error_code(std::errc::no_such_file_or_directory);
   }
 
@@ -198,7 +198,7 @@ std::error_code TestFileSentinel::decompress()
       }
       if(bytesRead < 0 || bytesRead != k_BlockSize)
       {
-        std::cout << "Failed to read tar header from: " << archivePath << std::endl;
+        std::cout << "Failed to read tar header from: " << archivePath << '\n';
         gzclose(gz);
         return std::make_error_code(std::errc::io_error);
       }
@@ -213,7 +213,7 @@ std::error_code TestFileSentinel::decompress()
     // Validate each header before its fields control path or size calculations.
     if(!validateChecksum(header))
     {
-      std::cout << "Invalid tar header checksum in: " << archivePath << std::endl;
+      std::cout << "Invalid tar header checksum in: " << archivePath << '\n';
       gzclose(gz);
       return std::make_error_code(std::errc::io_error);
     }
@@ -245,7 +245,7 @@ std::error_code TestFileSentinel::decompress()
         int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive reading GNU long name in: " << archivePath << std::endl;
+          std::cout << "Unexpected end of archive reading GNU long name in: " << archivePath << '\n';
           gzclose(gz);
           return std::make_error_code(std::errc::io_error);
         }
@@ -271,7 +271,7 @@ std::error_code TestFileSentinel::decompress()
         int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive reading GNU long link in: " << archivePath << std::endl;
+          std::cout << "Unexpected end of archive reading GNU long link in: " << archivePath << '\n';
           gzclose(gz);
           return std::make_error_code(std::errc::io_error);
         }
@@ -295,7 +295,7 @@ std::error_code TestFileSentinel::decompress()
       std::ofstream outFile(fullPath, std::ios::binary);
       if(!outFile)
       {
-        std::cout << "Failed to create file: " << fullPath << std::endl;
+        std::cout << "Failed to create file: " << fullPath << '\n';
         gzclose(gz);
         return std::make_error_code(std::errc::io_error);
       }
@@ -307,7 +307,7 @@ std::error_code TestFileSentinel::decompress()
         int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive reading: " << entryPath << std::endl;
+          std::cout << "Unexpected end of archive reading: " << entryPath << '\n';
           gzclose(gz);
           return std::make_error_code(std::errc::io_error);
         }
@@ -325,7 +325,7 @@ std::error_code TestFileSentinel::decompress()
         int bytesRead = gzread(gz, header.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive skipping data for: " << entryPath << std::endl;
+          std::cout << "Unexpected end of archive skipping data for: " << entryPath << '\n';
           gzclose(gz);
           return std::make_error_code(std::errc::io_error);
         }
@@ -708,7 +708,7 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         }
         case nx::core::DataObject::Type::ScalarData: {
           // This recursive helper reports ScalarData objects without comparing values.
-          std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
+          std::cout << objectA->getTypeName() << ": " << objectA->getName() << '\n';
           break;
         }
         case nx::core::DataObject::Type::AbstractMontage: {
@@ -770,7 +770,7 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         }
         default: {
           auto underlyingDataType = to_underlying(objectADataObjectType);
-          std::cout << "Missing DataType: " << underlyingDataType << std::endl;
+          std::cout << "Missing DataType: " << underlyingDataType << '\n';
           INFO(fmt::format("Object at path ({}) has unhandled type ({})", childPath.toString(), underlyingDataType));
           REQUIRE(false);
           break;

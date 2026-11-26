@@ -154,7 +154,7 @@ static IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::s
 static void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition, const int* expectedNumberOfTuples = nullptr,
              const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
 {
-  std::cout << "  Testing equation: ==>" << equation << "<==" << std::endl;
+  std::cout << "  Testing equation: ==>" << equation << "<==" << '\n';
 
   ArrayCalculatorFilter filter;
   DataStructure dataStructure = ::createDataStructure();
@@ -928,7 +928,7 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Filter Execution")
 {
   UnitTest::LoadPlugins();
 
-  std::cout << "#### ArrayCalculatorTest Starting ####" << std::endl;
+  std::cout << "#### ArrayCalculatorTest Starting ####" << '\n';
 
   SingleComponentArrayCalculatorTest1();
   SingleComponentArrayCalculatorTest2();

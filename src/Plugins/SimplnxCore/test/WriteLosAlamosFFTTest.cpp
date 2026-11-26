@@ -132,7 +132,7 @@ void CompareResults() // compare hash of both file strings
   {
     if(exemplar[i] != data[i])
     {
-      std::cout << "Output difference at byte offset " << i << std::endl;
+      std::cout << "Output difference at byte offset " << i << '\n';
       REQUIRE(exemplar[i] == data[i]);
       break;
     }

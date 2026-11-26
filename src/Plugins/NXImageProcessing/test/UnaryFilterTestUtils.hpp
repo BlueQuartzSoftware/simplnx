@@ -48,7 +48,7 @@ inline DataPath BuildRampImage(DataStructure& ds, usize dim, double startValue =
   auto& ref = array->getDataStoreRef();
 
   const usize total = ref.getSize();
-  std::cout << "  [build] filling " << dim << "^3 ramp (" << total << " values) via bulk I/O..." << std::endl;
+  std::cout << "  [build] filling " << dim << "^3 ramp (" << total << " values) via bulk I/O..." << '\n';
   constexpr usize k_ChunkValues = 65536;
   auto buffer = std::make_unique<T[]>(k_ChunkValues);
   for(usize start = 0; start < total; start += k_ChunkValues)

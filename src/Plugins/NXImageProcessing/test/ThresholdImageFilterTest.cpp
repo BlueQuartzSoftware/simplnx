@@ -28,7 +28,7 @@ namespace
 // runs show live activity instead of appearing to hang.
 IFilter::MessageHandler MakeConsoleMessageHandler(std::string label)
 {
-  return IFilter::MessageHandler{[messageLabel = std::move(label)](const IFilter::Message& msg) { std::cout << "  [" << messageLabel << "] " << msg.message << std::endl; }};
+  return IFilter::MessageHandler{[messageLabel = std::move(label)](const IFilter::Message& msg) { std::cout << "  [" << messageLabel << "] " << msg.message << '\n'; }};
 }
 
 // Builds an ImageGeom "Image Geometry" with a cell AttributeMatrix "CellData" and a float32 cell
@@ -53,7 +53,7 @@ DataPath BuildRampImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
   auto& ref = array->getDataStoreRef();
 
   const usize total = ref.getSize();
-  std::cout << "  [build] filling " << dimX << "x" << dimY << "x" << dimZ << " ramp (" << total << " values) via bulk I/O..." << std::endl;
+  std::cout << "  [build] filling " << dimX << "x" << dimY << "x" << dimZ << " ramp (" << total << " values) via bulk I/O..." << '\n';
   constexpr usize k_ChunkValues = 65536;
   auto buffer = std::make_unique<float32[]>(k_ChunkValues);
   for(usize start = 0; start < total; start += k_ChunkValues)
@@ -66,7 +66,7 @@ DataPath BuildRampImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
     Result<> writeResult = ref.copyFromBuffer(start, nonstd::span<const float32>(buffer.get(), count));
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
-  std::cout << "  [build] done" << std::endl;
+  std::cout << "  [build] done" << '\n';
   return inputPath;
 }
 } // namespace
@@ -78,7 +78,7 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   // independent computed-expected oracle (every voxel checked against the threshold semantics) as a plain
   // in-memory ForceInCore case.
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
-  std::cout << "\n[TEST] ThresholdImageFilter: Small Correctness (in-memory)" << std::endl;
+  std::cout << "\n[TEST] ThresholdImageFilter: Small Correctness (in-memory)" << '\n';
 
   constexpr usize kDim = 10;
   DataStructure ds;
@@ -105,7 +105,7 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
   REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(outputPath));
   auto& outStore = ds.getDataRefAs<Float32Array>(outputPath).getDataStoreRef();
-  std::cout << "  [verify] checking " << outStore.getSize() << " output values..." << std::endl;
+  std::cout << "  [verify] checking " << outStore.getSize() << " output values..." << '\n';
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     const auto v = static_cast<float32>(i);

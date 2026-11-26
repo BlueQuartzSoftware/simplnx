@@ -326,7 +326,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
   std::string invalidPath = fmt::format("/{}", millisFromEpoch);
 #endif
 
-  std::cout << "InvalidPath: '" << invalidPath << "'" << std::endl;
+  std::cout << "InvalidPath: '" << invalidPath << "'" << '\n';
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteBinaryDataFilter::k_Endianess_Key, std::make_any<ChoicesParameter::ValueType>(0)); // uint64 0 and 1
   args.insertOrAssign(WriteBinaryDataFilter::k_OutputPath_Key, std::make_any<fs::path>(invalidPath));
