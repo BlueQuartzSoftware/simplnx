@@ -337,7 +337,7 @@ std::filesystem::path getHomeDirectory()
   return getenv("USERPROFILE");
 #else
   const char* homedir = nullptr;
-  if((homedir = getenv("HOME")) == NULL)
+  if((homedir = getenv("HOME")) == nullptr)
   {
     homedir = getpwuid(getuid())->pw_dir;
   }

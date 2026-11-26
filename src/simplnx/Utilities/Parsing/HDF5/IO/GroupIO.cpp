@@ -75,7 +75,7 @@ IdType getGroupId(IdType parentId, const std::string& groupName)
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 
   HDF_ERROR_HANDLER_OFF
-  auto status = H5Gget_objinfo(parentId, groupName.c_str(), 0, NULL);
+  auto status = H5Gget_objinfo(parentId, groupName.c_str(), 0, nullptr);
   HDF_ERROR_HANDLER_ON
 
   if(status == 0)

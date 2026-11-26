@@ -900,7 +900,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         std::vector<unsigned long long> countVec(count->begin(), count->end());
         if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startData.data(), NULL, countVec.data(), NULL) < 0)
 #else
-        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, count->data(), NULL) < 0)
+        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), nullptr, count->data(), nullptr) < 0)
 #endif
         {
           errorCode = -1003;
@@ -919,7 +919,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         std::vector<unsigned long long> startData(start->begin(), start->end());
         if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startData.data(), NULL, countRemaining.data(), NULL) < 0)
 #else
-        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), NULL, countRemaining.data(), NULL) < 0)
+        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start->data(), nullptr, countRemaining.data(), nullptr) < 0)
 #endif
         {
           errorCode = -1004;
@@ -934,7 +934,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         std::vector<unsigned long long> countVec(count->begin(), count->end());
         if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, countVec.data(), NULL) < 0)
 #else
-        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), NULL, count->data(), NULL) < 0)
+        if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startZeros.data(), nullptr, count->data(), nullptr) < 0)
 #endif
         {
           errorCode = -1005;
@@ -956,7 +956,7 @@ Result<> DatasetIO::readIntoSpan(nonstd::span<T> data, const std::optional<std::
         }
         else
         {
-          hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), NULL);
+          hid_t memSpaceId = H5Screate_simple(memDims.size(), memDims.data(), nullptr);
           if(memSpaceId < 0)
           {
             errorCode = -1007;
@@ -1741,10 +1741,10 @@ nx::core::Result<> DatasetIO::readChunk(const ChunkedDataInfo& chunkInfo, const 
           }
 
           // Select hyperslab
-          error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, chunkShapeVec.data(), NULL);
+          error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), nullptr, chunkShapeVec.data(), nullptr);
 
           // Create memory dataspace for the hyperslab
-          const hid_t memspaceId = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
+          const hid_t memspaceId = H5Screate_simple(rank, chunkShapeVec.data(), nullptr);
 
           // Read hyperslab from the dataset
           error = H5Dread(h5Id, HdfTypeForPrimitive<T>(), memspaceId, dataspaceId, H5P_DEFAULT, data);
@@ -1824,10 +1824,10 @@ Result<> DatasetIO::writeChunk(const ChunkedDataInfo& chunkInfo, const DimsType&
       // Open chunk handles permit one leaf lock around selection, write, and cleanup.
       {
         const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), NULL, trueChunkShapeVec.data(), NULL);
+        error = H5Sselect_hyperslab(dataspaceId, H5S_SELECT_SET, offsetVec.data(), nullptr, trueChunkShapeVec.data(), nullptr);
 
         // Create memory dataspace for the hyperslab
-        hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), NULL);
+        hid_t memspace_id = H5Screate_simple(rank, chunkShapeVec.data(), nullptr);
 
         if(chunkShape != trueChunkDims)
         {
