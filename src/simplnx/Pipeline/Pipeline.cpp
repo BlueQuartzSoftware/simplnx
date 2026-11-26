@@ -616,7 +616,7 @@ bool Pipeline::contains(AbstractPipelineNode* node) const
 
 bool Pipeline::contains(IFilter* filter) const
 {
-  for(auto node : *this)
+  for(const auto& node : *this)
   {
     auto filterNode = dynamic_cast<PipelineFilter*>(node.get());
     if(filterNode == nullptr)
@@ -760,7 +760,7 @@ std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
 {
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
   pipelineCopy->setDisabled(isDisabled());
-  for(auto childNode : *this)
+  for(const auto& childNode : *this)
   {
     pipelineCopy->push_back(childNode->deepCopy());
   }

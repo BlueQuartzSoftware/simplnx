@@ -416,7 +416,7 @@ TEST_CASE("Preferences validates OOC size values without mutation", "[Core][Pref
 {
   for(const auto& key : k_ThresholdKeys)
   {
-    for(const nlohmann::json value : {nlohmann::json(int64{0}), nlohmann::json(int64{17}), nlohmann::json(uint64{0}), nlohmann::json(uint64{17}), nlohmann::json(std::numeric_limits<uint64>::max())})
+    for(const nlohmann::json& value : {nlohmann::json(int64{0}), nlohmann::json(int64{17}), nlohmann::json(uint64{0}), nlohmann::json(uint64{17}), nlohmann::json(std::numeric_limits<uint64>::max())})
     {
       DYNAMIC_SECTION(key << "=" << value.dump() << " type=" << static_cast<int>(value.type()))
       {

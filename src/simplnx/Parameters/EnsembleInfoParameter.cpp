@@ -56,7 +56,7 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
   for(const auto& vector : table)
   {
     nlohmann::json cols;
-    for(auto cell : vector)
+    for(const auto& cell : vector)
     {
       cols.push_back(cell);
     }

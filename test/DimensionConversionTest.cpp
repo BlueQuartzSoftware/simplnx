@@ -134,7 +134,7 @@ TEST_CASE("simplnx::CreateStringArrayAction: checked counts in both modes", "[si
     }
     CHECK(ds.getData(path) == nullptr);
   }
-  for(const ShapeType shape : {ShapeType{0}, ShapeType{2}})
+  for(const ShapeType& shape : {ShapeType{0}, ShapeType{2}})
   {
     DataStructure ds;
     CreateStringArrayAction action(shape, DataPath({"Strings"}), "value");
