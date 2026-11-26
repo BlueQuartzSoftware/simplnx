@@ -719,7 +719,7 @@ H5ClassT TestH5ImplicitCopy(H5ClassT&& originalObject, std::string_view testedCl
 
   /*HDF5::IdType originalId = GetId(originalObject);*/
 
-  H5ClassT moveConstructorObject(std::move(originalObject));
+  H5ClassT moveConstructorObject(std::forward<H5ClassT>(originalObject));
 
   // REQUIRE_FALSE(originalObject.isValid());
   // REQUIRE(GetId(originalObject) != originalId);
