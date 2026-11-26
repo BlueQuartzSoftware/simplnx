@@ -14,7 +14,7 @@
 #include <vector>
 
 #if defined(__linux__)
-#include <limits.h>
+#include <climits>
 #include <unistd.h>
 #elif defined(_WIN32)
 #include <Windows.h>

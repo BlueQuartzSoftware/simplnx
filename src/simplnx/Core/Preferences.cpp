@@ -28,8 +28,8 @@
 #include <stdlib.h>
 #else
 #include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
 #endif
 

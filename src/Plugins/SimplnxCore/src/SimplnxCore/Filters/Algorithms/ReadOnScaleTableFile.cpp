@@ -13,7 +13,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
-#include <locale.h>
+#include <clocale>
 #include <string>
 #include <string_view>
 
