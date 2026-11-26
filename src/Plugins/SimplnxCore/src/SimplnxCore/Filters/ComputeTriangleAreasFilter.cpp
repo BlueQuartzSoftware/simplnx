@@ -101,9 +101,9 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
 
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
+  const AttributeMatrix* faceAttributeMatrix = triangleGeomPtr->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
     return {.outputActions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
@@ -111,7 +111,7 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
   }
   {
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

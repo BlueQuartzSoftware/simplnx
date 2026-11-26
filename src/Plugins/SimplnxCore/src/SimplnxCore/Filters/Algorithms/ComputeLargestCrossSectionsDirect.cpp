@@ -79,13 +79,13 @@ struct XzCrossSectionScratch
    * @param initialLargestCrossSections Provides the output values before work.
    */
   XzCrossSectionScratch(usize numFeatures, const std::vector<float32>& initialLargestCrossSections)
-  : featureCounts(numFeatures, 0.0f)
-  , largestCrossSections(initialLargestCrossSections)
+  : feature_counts(numFeatures, 0.0f)
+  , largest_cross_sections(initialLargestCrossSections)
   {
   }
 
-  std::vector<float32> featureCounts;
-  std::vector<float32> largestCrossSections;
+  std::vector<float32> feature_counts;
+  std::vector<float32> largest_cross_sections;
 };
 
 using XzCrossSectionThreadScratch = tbb::combinable<XzCrossSectionScratch>;
@@ -139,17 +139,17 @@ public:
       {
         return;
       }
-      std::fill(scratch.featureCounts.begin(), scratch.featureCounts.end(), 0.0f);
+      std::fill(scratch.feature_counts.begin(), scratch.feature_counts.end(), 0.0f);
 
       for(usize zIndex = 0; zIndex < m_ZCells; zIndex++)
       {
         const int32* rowFeatureIds = m_FeatureIds + (zIndex * m_SliceSize) + (yIndex * m_XCells);
         for(usize xIndex = 0; xIndex < m_XCells; xIndex++)
         {
-          scratch.featureCounts[static_cast<usize>(rowFeatureIds[xIndex])]++;
+          scratch.feature_counts[static_cast<usize>(rowFeatureIds[xIndex])]++;
         }
       }
-      UpdateLargestCrossSections(scratch.featureCounts.data(), m_NumFeatures, m_AreaScalar, scratch.largestCrossSections.data());
+      UpdateLargestCrossSections(scratch.feature_counts.data(), m_NumFeatures, m_AreaScalar, scratch.largest_cross_sections.data());
     }
   }
 
@@ -283,7 +283,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
       threadScratch.combine_each([&](const XzCrossSectionScratch& scratch) {
         for(usize featureId = 1; featureId < numFeatures; featureId++)
         {
-          largestCrossSectionsData[featureId] = std::max(scratch.largestCrossSections[featureId], largestCrossSectionsData[featureId]);
+          largestCrossSectionsData[featureId] = std::max(scratch.largest_cross_sections[featureId], largestCrossSectionsData[featureId]);
         }
       });
       return {};

@@ -46,7 +46,7 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
 {
   constexpr size_t A = 0;
   constexpr size_t B = 1;
-  constexpr size_t C = 2;
+  constexpr size_t k_CIdx = 2;
   std::array<size_t, 3> idx = {0, 1, 2};
   if(a > b && a > c)
   {
@@ -55,13 +55,13 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
     {
       // sorted[1] = b;
       // sorted[0] = c;
-      idx = {C, B, A};
+      idx = {k_CIdx, B, A};
     }
     else
     {
       // sorted[1] = c;
       // sorted[0] = b;
-      idx = {B, C, A};
+      idx = {B, k_CIdx, A};
     }
   }
   else if(b > a && b > c)
@@ -71,13 +71,13 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
     {
       // sorted[1] = a;
       // sorted[0] = c;
-      idx = {C, A, B};
+      idx = {k_CIdx, A, B};
     }
     else
     {
       // sorted[1] = c;
       // sorted[0] = a;
-      idx = {A, C, B};
+      idx = {A, k_CIdx, B};
     }
   }
   else if(a > b)
@@ -85,21 +85,21 @@ std::array<size_t, 3> TripletSort(T a, T b, T c, bool lowToHigh)
     // sorted[1] = a;
     // sorted[0] = b;
     // sorted[2] = c;
-    idx = {B, A, C};
+    idx = {B, A, k_CIdx};
   }
   else if(a >= c && b >= c)
   {
     // sorted[0] = c;
     // sorted[1] = a;
     // sorted[2] = b;
-    idx = {C, A, B};
+    idx = {k_CIdx, A, B};
   }
   else
   {
     // sorted[0] = a;
     // sorted[1] = b;
     // sorted[2] = c;
-    idx = {A, B, C};
+    idx = {A, B, k_CIdx};
   }
 
   if(!lowToHigh)
@@ -757,19 +757,19 @@ void ComputeShapes::findAxisEulers2D()
       return;
     }
 
-    double Ixx = m_FeatureMoments[featureId * 6 + 0];
-    double Iyy = m_FeatureMoments[featureId * 6 + 1];
-    double Ixy = m_FeatureMoments[featureId * 6 + 2];
-    if(Ixy == 0)
+    double ixx = m_FeatureMoments[featureId * 6 + 0];
+    double iyy = m_FeatureMoments[featureId * 6 + 1];
+    double ixy = m_FeatureMoments[featureId * 6 + 2];
+    if(ixy == 0)
     {
-      if(Ixx > Iyy)
+      if(ixx > iyy)
       {
         axisEulerAngles[3 * featureId] = nx::core::numbers::pi / 2.0F;
         axisEulerAngles[3 * featureId + 1] = 0.0f;
         axisEulerAngles[3 * featureId + 2] = 0.0f;
         continue;
       }
-      if(Iyy >= Ixx)
+      if(iyy >= ixx)
       {
         axisEulerAngles[3 * featureId] = 0.0f;
         axisEulerAngles[3 * featureId + 1] = 0.0f;
@@ -777,11 +777,11 @@ void ComputeShapes::findAxisEulers2D()
         continue;
       }
     }
-    double I1 = (Ixx + Iyy) / 2.0 + std::sqrt(((Ixx + Iyy) * (Ixx + Iyy)) / 4.0 + (Ixy * Ixy - Ixx * Iyy));
-    double I2 = (Ixx + Iyy) / 2.0 - std::sqrt(((Ixx + Iyy) * (Ixx + Iyy)) / 4.0 + (Ixy * Ixy - Ixx * Iyy));
-    double n1x = (Ixx - I1) / Ixy;
+    double I1 = (ixx + iyy) / 2.0 + std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 + (ixy * ixy - ixx * iyy));
+    double I2 = (ixx + iyy) / 2.0 - std::sqrt(((ixx + iyy) * (ixx + iyy)) / 4.0 + (ixy * ixy - ixx * iyy));
+    double n1x = (ixx - I1) / ixy;
     double n1y = 1.0;
-    double n2x = (Ixx - I2) / Ixy;
+    double n2x = (ixx - I2) / ixy;
     double n2y = 1.0;
     double norm1 = sqrt((n1x * n1x + n1y * n1y));
     double norm2 = sqrt((n2x * n2x + n2y * n2y));

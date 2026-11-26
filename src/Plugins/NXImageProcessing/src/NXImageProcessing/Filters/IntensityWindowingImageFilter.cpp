@@ -18,16 +18,16 @@ namespace
 {
 struct IntensityWindowingOperation
 {
-  float64 windowMinimum = 0.0;
-  float64 windowMaximum = 255.0;
+  float64 window_minimum = 0.0;
+  float64 window_maximum = 255.0;
   float64 outputMinimum = 0.0;
   float64 outputMaximum = 255.0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 wMin = windowMinimum;
-    const float64 wMax = windowMaximum;
+    const float64 wMin = window_minimum;
+    const float64 wMax = window_maximum;
     const float64 oMin = outputMinimum;
     const float64 oMax = outputMaximum;
     const float64 scale = (oMax - oMin) / (wMax - wMin);
@@ -120,7 +120,7 @@ Result<> IntensityWindowingImageFilter::executeImpl(DataStructure& dataStructure
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const IntensityWindowingOperation operation{.windowMinimum = windowMinimum, .windowMaximum = windowMaximum, .outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
+  const IntensityWindowingOperation operation{.window_minimum = windowMinimum, .window_maximum = windowMaximum, .outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
   return ImageProcessing::ExecuteImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

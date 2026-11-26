@@ -304,12 +304,12 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
     {
       // Solve the Least Squares fit
-      static const uint32_t NO_NORMALS = 3;
-      static const uint32_t USE_NORMALS = 7;
-      uint32_t cols = NO_NORMALS;
+      static constexpr uint32_t k_NoNormals = 3;
+      static constexpr uint32_t k_UseNormals = 7;
+      uint32_t cols = k_NoNormals;
       if(m_UseNormalsForCurveFitting)
       {
-        cols = USE_NORMALS;
+        cols = k_UseNormals;
       }
       size_t rows = patchCentroids->getNumberOfTuples();
       Eigen::MatrixXd A(rows, cols);
@@ -340,7 +340,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
       if(!m_UseNormalsForCurveFitting)
       {
-        using Vector3d = Eigen::Matrix<double, NO_NORMALS, 1>;
+        using Vector3d = Eigen::Matrix<double, k_NoNormals, 1>;
         Vector3d sln1 = A.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C constants we can solve the Eigen value/vector problem
         // to get the principal curvatures and principal directions.
@@ -348,7 +348,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       }
       else
       {
-        using Vector7d = Eigen::Matrix<double, USE_NORMALS, 1>;
+        using Vector7d = Eigen::Matrix<double, k_UseNormals, 1>;
         Vector7d sln1 = A.colPivHouseholderQr().solve(b);
         // Now that we have the A, B, C, D, E, F & G constants we can solve the Eigen value/vector problem
         // to get the principal curvatures and principal directions.

@@ -553,11 +553,11 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: gen
   auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featurePhasesPath, {k_FeatureTuples}, {1});
   auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, avgQuatsPath, {k_FeatureTuples}, {4});
   auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
-  auto* featurePhases = Int32Array::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, featureData->getId());
+  auto* featurePhasesPtr = Int32Array::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, featureData->getId());
   auto* avgQuats = Float32Array::Create(dataStructure, avgQuatsPath.getTargetName(), avgQuatsStore, featureData->getId());
   auto* neighborList = NeighborList<int32>::Create(dataStructure, neighborListPath.getTargetName(), {k_FeatureTuples}, featureData->getId());
   auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleData->getId());
-  REQUIRE(featurePhases != nullptr);
+  REQUIRE(featurePhasesPtr != nullptr);
   REQUIRE(avgQuats != nullptr);
   REQUIRE(neighborList != nullptr);
   REQUIRE(crystalStructures != nullptr);
@@ -575,7 +575,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: gen
   std::copy(tailQuat.cbegin(), tailQuat.cend(), avgQuatValues.begin() + k_TailTuple * 4);
   const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Cubic_High};
 
-  auto featurePhasesWriteResult = featurePhases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featurePhaseValues.data(), featurePhaseValues.size()));
+  auto featurePhasesWriteResult = featurePhasesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featurePhaseValues.data(), featurePhaseValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(featurePhasesWriteResult);
   auto avgQuatsWriteResult = avgQuats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(avgQuatValues.data(), avgQuatValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(avgQuatsWriteResult);
@@ -585,7 +585,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: gen
   neighborList->setList(k_LastFullChunkTuple, std::vector<int32>{1});
   neighborList->setList(k_TailTuple, std::vector<int32>{1});
 
-  REQUIRE(featurePhases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(featurePhasesPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(avgQuats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const auto quaternionMetadata = avgQuats->getDataStoreRef().getRecoveryMetadata();
   REQUIRE(quaternionMetadata.at("OocChunkShape") == "65536");

@@ -262,9 +262,9 @@ TEST_CASE("PipelineTest:PipelineJson")
   {
     const auto* originalNode = dynamic_cast<const PipelineFilter*>(pipeline.at(i));
 
-    const AbstractPipelineNode* node = pipeline2.at(i);
-    REQUIRE(node != nullptr);
-    const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(node);
+    const AbstractPipelineNode* nodePtr = pipeline2.at(i);
+    REQUIRE(nodePtr != nullptr);
+    const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(nodePtr);
     REQUIRE(pipelineFilter != nullptr);
     const IFilter* filter = pipelineFilter->getFilter();
     REQUIRE(filter != nullptr);

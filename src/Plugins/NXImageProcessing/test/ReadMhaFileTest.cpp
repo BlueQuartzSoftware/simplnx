@@ -833,10 +833,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round trip", "[NXImageProcessing][ReadMhaFileFilter]")
 {
   UnitTest::LoadPlugins();
-  const usize X = 4;
-  const usize Y = 3;
+  const usize x = 4;
+  const usize y = 3;
   const usize comp = 2;
-  std::vector<float32> voxels(X * Y * comp);
+  std::vector<float32> voxels(x * y * comp);
   std::iota(voxels.begin(), voxels.end(), 0.5f);
   const fs::path p = MhaOutputDir() / "rt_multicomp.mha";
   WriteMhaAttached(p,

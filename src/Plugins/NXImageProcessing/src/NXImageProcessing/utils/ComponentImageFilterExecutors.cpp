@@ -172,8 +172,8 @@ struct DoubleThresholdExecuteFn
   float64 threshold2;
   float64 threshold3;
   float64 threshold4;
-  uint8 insideValue;
-  uint8 outsideValue;
+  uint8 inside_value;
+  uint8 outside_value;
   bool fullyConnected;
   const std::atomic_bool& shouldCancel;
   const IFilter::MessageHandler& messageHandler;
@@ -203,7 +203,7 @@ struct DoubleThresholdExecuteFn
     AbstractDataStore<uint8>& markerStore = *markerStorePtr;
     AbstractDataStore<uint8>& maskStore = *maskStorePtr;
 
-    if(Result<> r = StreamDoubleThresholdMarkers<T>(inStore, markerStore, maskStore, t2, t3, t1, t4, insideValue, outsideValue, shouldCancel); r.invalid())
+    if(Result<> r = StreamDoubleThresholdMarkers<T>(inStore, markerStore, maskStore, t2, t3, t1, t4, inside_value, outside_value, shouldCancel); r.invalid())
     {
       return r;
     }
@@ -919,8 +919,8 @@ Result<> ExecuteDoubleThresholdImageFilter(DataStructure& dataStructure, const D
                                              .threshold2 = threshold2,
                                              .threshold3 = threshold3,
                                              .threshold4 = threshold4,
-                                             .insideValue = insideValue,
-                                             .outsideValue = outsideValue,
+                                             .inside_value = insideValue,
+                                             .outside_value = outsideValue,
                                              .fullyConnected = fullyConnected,
                                              .shouldCancel = shouldCancel,
                                              .messageHandler = messageHandler};

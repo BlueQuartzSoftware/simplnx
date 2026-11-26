@@ -35,7 +35,7 @@ using matindex = Eigen::Matrix<int, Eigen::Dynamic, 1>;
 using EdgePair = std::pair<int, int>;
 using EdgeList = std::vector<EdgePair>;
 using SpMat = Eigen::SparseMatrix<double>;
-using Triplet = Eigen::Triplet<double>;
+using TripletType = Eigen::Triplet<double>;
 using Smoother = Eigen::ConjugateGradient<SpMat, Eigen::Upper | Eigen::Lower>;
 
 // Use std::map for the edge/boundary dictionaries to ensure deterministic iteration
@@ -99,7 +99,7 @@ SpMat sliceSparse(const SpMat& mat, const matindex& rowIdx, const matindex& colI
     colMap[colIdx(i)] = i;
   }
 
-  std::vector<Triplet> triplets;
+  std::vector<TripletType> triplets;
   triplets.reserve(mat.nonZeros());
   for(int k = 0; k < mat.outerSize(); ++k)
   {
@@ -261,7 +261,7 @@ public:
 
   std::tuple<SpMat, matindex> graphLaplacian() const
   {
-    std::vector<Triplet> tripletList;
+    std::vector<TripletType> tripletList;
     tripletList.reserve(m_Unique.size() + 2 * m_Dict.size());
     for(const auto& it : m_Dict)
     {
@@ -420,7 +420,7 @@ private:
 
 SpMat laplacian2D(int n, const std::string& type = "serial")
 {
-  std::vector<Triplet> tripletList;
+  std::vector<TripletType> tripletList;
   tripletList.reserve(3 * n);
   for(int i = 0; i < n; i++)
   {
@@ -451,8 +451,8 @@ std::tuple<SpMat, SpMat> analyzeLaplacian(const SpMat& gl)
 {
   SpMat d(gl.rows(), gl.cols());
   SpMat a(gl.rows(), gl.cols());
-  std::vector<Triplet> dt;
-  std::vector<Triplet> at;
+  std::vector<TripletType> dt;
+  std::vector<TripletType> at;
 
   for(int k = 0; k < gl.outerSize(); ++k)
   {

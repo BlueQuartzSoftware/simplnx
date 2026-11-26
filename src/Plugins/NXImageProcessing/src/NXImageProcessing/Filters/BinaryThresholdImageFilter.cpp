@@ -20,16 +20,16 @@ namespace
 {
 struct BinaryThresholdOperation
 {
-  float64 lowerThreshold = 0.0;
-  float64 upperThreshold = 255.0;
+  float64 lower_threshold = 0.0;
+  float64 upper_threshold = 255.0;
   uint8 insideValue = 1;
   uint8 outsideValue = 0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 lo = lowerThreshold;
-    const float64 hi = upperThreshold;
+    const float64 lo = lower_threshold;
+    const float64 hi = upper_threshold;
     const uint8 inV = insideValue;
     const uint8 outV = outsideValue;
     return [lo, hi, inV, outV](T value) -> U {
@@ -124,7 +124,7 @@ Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, c
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  const BinaryThresholdOperation operation{.lowerThreshold = lowerThreshold, .upperThreshold = upperThreshold, .insideValue = insideValue, .outsideValue = outsideValue};
+  const BinaryThresholdOperation operation{.lower_threshold = lowerThreshold, .upper_threshold = upperThreshold, .insideValue = insideValue, .outsideValue = outsideValue};
   return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

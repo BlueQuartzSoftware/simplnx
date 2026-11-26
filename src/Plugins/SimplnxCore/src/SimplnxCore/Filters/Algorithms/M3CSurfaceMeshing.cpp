@@ -1278,7 +1278,7 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
     int numN = count[j1];
     to = to + numN;
     from = to - numN;
-    std::vector<SiteId> burnt_loop(static_cast<usize>(numN) + 2, 0);
+    std::vector<SiteId> burntLoop(static_cast<usize>(numN) + 2, 0);
 
     for(int i1 = from; i1 < to; i1++)
     {
@@ -1311,7 +1311,7 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
         e1[startEdge].nSpin[1] = tspin;
       }
 
-      burnt_loop[0] = startEdge;
+      burntLoop[0] = startEdge;
       int index = 1;
       SiteId endNode = static_cast<SiteId>(e1[startEdge].node_id[1]);
       SiteId chaser = startEdge;
@@ -1325,12 +1325,12 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
           SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
-            burnt_loop[index] = cedge;
+            burntLoop[index] = cedge;
             index++;
           }
           else if((cedge != chaser) && (endNode == cnode2))
           {
-            burnt_loop[index] = cedge;
+            burntLoop[index] = cedge;
             index++;
             SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
@@ -1348,7 +1348,7 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
         {
           break; // degenerate input: the pass matched no edge, so the chain can never close
         }
-        chaser = burnt_loop[index - 1];
+        chaser = burntLoop[index - 1];
         endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
@@ -1364,7 +1364,7 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
     else
     {
       SiteId startEdge2 = burnt_list[from];
-      burnt_loop[0] = startEdge2;
+      burntLoop[0] = startEdge2;
       int index = 1;
       SiteId endNode = static_cast<SiteId>(e1[startEdge2].node_id[1]);
       SiteId chaser = startEdge2;
@@ -1378,12 +1378,12 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
           SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
-            burnt_loop[index] = cedge;
+            burntLoop[index] = cedge;
             index++;
           }
           else if((cedge != chaser) && (endNode == cnode2))
           {
-            burnt_loop[index] = cedge;
+            burntLoop[index] = cedge;
             index++;
             SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
@@ -1401,7 +1401,7 @@ int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const
         {
           break; // degenerate input: the pass matched no edge, so the chain can never close
         }
-        chaser = burnt_loop[index - 1];
+        chaser = burntLoop[index - 1];
         endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 

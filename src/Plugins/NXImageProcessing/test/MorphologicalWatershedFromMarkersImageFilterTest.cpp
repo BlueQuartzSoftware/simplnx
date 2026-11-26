@@ -292,14 +292,14 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
   const bool fullyConnected = GENERATE(false, true);
   CAPTURE(markWatershedLine, fullyConnected);
 
-  constexpr usize dx = 12;
-  constexpr usize dy = 12;
-  constexpr usize dz = 1;
-  const std::vector<int16> gray = rt::MakePlateauPattern<int16>(dx, dy, dz);
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 12;
+  constexpr usize k_Dz = 1;
+  const std::vector<int16> gray = rt::MakePlateauPattern<int16>(k_Dx, k_Dy, k_Dz);
   // A solid 3x3 block of label 5 with a single 0 hole punched at its center (2,2), plus a distant second seed. The
   // large remaining 0 field is likewise unmarked -> flooded between the two basins.
-  std::vector<uint32> markers(dx * dy * dz, 0u);
-  auto set = [&](usize x, usize y, uint32 v) { markers[rt::FlatIndex(x, y, 0, dx, dy)] = v; };
+  std::vector<uint32> markers(k_Dx * k_Dy * k_Dz, 0u);
+  auto set = [&](usize x, usize y, uint32 v) { markers[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = v; };
   for(usize yy = 1; yy <= 3; ++yy)
   {
     for(usize xx = 1; xx <= 3; ++xx)
@@ -307,18 +307,18 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
       set(xx, yy, 5u);
     }
   }
-  set(2, 2, 0u);           // the 0 in the middle of the block (fully enclosed by label 5)
-  set(dx - 2, dy - 2, 9u); // a second, distant seed
+  set(2, 2, 0u);               // the 0 in the middle of the block (fully enclosed by label 5)
+  set(k_Dx - 2, k_Dy - 2, 9u); // a second, distant seed
 
   // Directly confirm the punched 0 voxel was flooded to the enclosing basin (label 5), i.e. treated as unmarked --
   // never left at 0 and never a distinct seed. Enclosed on all four sides by label 5, so it is not a watershed line
   // regardless of MarkWatershedLine.
   DataStructure ds;
-  const auto [inputPath, markerPath] = BuildGrayscaleAndMarker<int16, uint32>(ds, dx, dy, dz, gray, markers);
+  const auto [inputPath, markerPath] = BuildGrayscaleAndMarker<int16, uint32>(ds, k_Dx, k_Dy, k_Dz, gray, markers);
   WSFilter filter;
   RunWatershed(filter, ds, inputPath, markerPath, markWatershedLine, fullyConnected);
   const auto& store = ds.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})).getIDataStoreRefAs<AbstractDataStore<uint32>>();
-  REQUIRE(store.getValue(rt::FlatIndex(2, 2, 0, dx, dy)) == 5u);
+  REQUIRE(store.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 5u);
 }
 
 // -----------------------------------------------------------------------------

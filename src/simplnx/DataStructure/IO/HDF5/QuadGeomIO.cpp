@@ -29,8 +29,8 @@ Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const group_
 
 Result<> QuadGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
 {
-  auto* geom = dataStructure.getDataAs<QuadGeom>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<QuadGeom>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50590, fmt::format("Failed to finish importing QuadGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }

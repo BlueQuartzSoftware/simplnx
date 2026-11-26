@@ -187,8 +187,8 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
                          const DataStore<int32>& cellPhasesStore, const std::atomic_bool& shouldCancel)
 {
   const usize totalTuples = dims[0] * dims[1] * dims[2];
-  const float32* eulerAngles = eulerAnglesStore.data();
-  const int32* featureIds = featureIdsStore.data();
+  const float32* eulerAnglesPtr = eulerAnglesStore.data();
+  const int32* featureIdsPtr = featureIdsStore.data();
   const int32* cellPhases = cellPhasesStore.data();
 
   for(usize tupleOffset = 0; tupleOffset < totalTuples; tupleOffset += k_ChunkTuples)
@@ -199,8 +199,8 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
     }
 
     const usize tupleCount = std::min(k_ChunkTuples, totalTuples - tupleOffset);
-    const float32* eulerAnglesChunk = eulerAngles + (tupleOffset * k_EulerComponents);
-    const int32* featureIdsChunk = featureIds + tupleOffset;
+    const float32* eulerAnglesChunk = eulerAnglesPtr + (tupleOffset * k_EulerComponents);
+    const int32* featureIdsChunk = featureIdsPtr + tupleOffset;
     const int32* cellPhasesChunk = cellPhases + tupleOffset;
 
     usize x = tupleOffset % dims[0];

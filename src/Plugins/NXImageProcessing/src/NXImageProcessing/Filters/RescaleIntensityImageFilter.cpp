@@ -20,8 +20,8 @@ namespace
 {
 struct RescaleIntensityOperation
 {
-  float64 outputMinimum = 0.0;
-  float64 outputMaximum = 255.0;
+  float64 output_minimum = 0.0;
+  float64 output_maximum = 255.0;
 
   template <class T>
   Result<ImageProcessing::ArrayStatistics<T>> computeStatistics(const AbstractDataStore<T>& inputStore, const std::atomic_bool& shouldCancel) const
@@ -50,8 +50,8 @@ struct RescaleIntensityOperation
   {
     const double inMin = static_cast<double>(stats.min);
     const double inMax = static_cast<double>(stats.max);
-    const double outMin = outputMinimum;
-    const double outMax = outputMaximum;
+    const double outMin = output_minimum;
+    const double outMax = output_maximum;
     double scale = 0.0;
     if(inMin != inMax)
     {
@@ -143,7 +143,7 @@ Result<> RescaleIntensityImageFilter::executeImpl(DataStructure& dataStructure, 
   auto outputMinimum = filterArgs.value<float64>(k_OutputMinimum_Key);
   auto outputMaximum = filterArgs.value<float64>(k_OutputMaximum_Key);
 
-  const RescaleIntensityOperation operation{.outputMinimum = outputMinimum, .outputMaximum = outputMaximum};
+  const RescaleIntensityOperation operation{.output_minimum = outputMinimum, .output_maximum = outputMaximum};
   return ImageProcessing::ExecuteTwoPassImageFilter(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 

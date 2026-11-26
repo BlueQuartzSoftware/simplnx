@@ -107,17 +107,17 @@ constexpr int32 k_FailedReadingDataArrayData_Code = -7893;
 constexpr int32 k_FailedCreatingArray_Code = -7894;
 constexpr int32 k_FailedCreatingNeighborList_Code = -7895;
 
-namespace Type
+namespace geometry_type
 {
 constexpr StringLiteral ImageGeom = "ImageGeometry";
-constexpr StringLiteral EdgeGeom = "EdgeGeometry";
+constexpr StringLiteral k_EdgeGeom = "EdgeGeometry";
 constexpr StringLiteral HexGeom = "HexahedralGeometry";
-constexpr StringLiteral QuadGeom = "QuadrilateralGeometry";
-constexpr StringLiteral RectGridGeom = "RectGridGeometry";
-constexpr StringLiteral TetrahedralGeom = "TetrahedralGeometry";
-constexpr StringLiteral TriangleGeom = "TriangleGeometry";
-constexpr StringLiteral VertexGeom = "VertexGeometry";
-} // namespace Type
+constexpr StringLiteral k_QuadGeom = "QuadrilateralGeometry";
+constexpr StringLiteral k_RectGridGeom = "RectGridGeometry";
+constexpr StringLiteral k_TetrahedralGeom = "TetrahedralGeometry";
+constexpr StringLiteral k_TriangleGeom = "TriangleGeometry";
+constexpr StringLiteral k_VertexGeom = "VertexGeometry";
+} // namespace geometry_type
 } // namespace Legacy
 
 std::pair<std::string, usize> GetXdmfTypeAndSize(DataType type)
@@ -2166,35 +2166,35 @@ static Result<> readLegacyDataContainer(DataStructure& dataStructure, const nx::
     }
     leadingWarnings = std::move(geomNameResult.warnings());
     geomName = std::move(geomNameResult.value());
-    if(geomName == Legacy::Type::ImageGeom)
+    if(geomName == Legacy::geometry_type::ImageGeom)
     {
       containerResult = readLegacyImageGeom(dataStructure, geomGroup, dcName, deferredImageMetadata);
     }
-    else if(geomName == Legacy::Type::EdgeGeom)
+    else if(geomName == Legacy::geometry_type::k_EdgeGeom)
     {
       containerResult = readLegacyEdgeGeom(dataStructure, geomGroup, dcName, preflight);
     }
-    else if(geomName == Legacy::Type::HexGeom)
+    else if(geomName == Legacy::geometry_type::HexGeom)
     {
       containerResult = readLegacyHexGeom(dataStructure, geomGroup, dcName, preflight);
     }
-    else if(geomName == Legacy::Type::QuadGeom)
+    else if(geomName == Legacy::geometry_type::k_QuadGeom)
     {
       containerResult = readLegacyQuadGeom(dataStructure, geomGroup, dcName, preflight);
     }
-    else if(geomName == Legacy::Type::RectGridGeom)
+    else if(geomName == Legacy::geometry_type::k_RectGridGeom)
     {
       containerResult = readLegacyRectGridGeom(dataStructure, geomGroup, dcName, preflight, deferredImageMetadata != nullptr);
     }
-    else if(geomName == Legacy::Type::TetrahedralGeom)
+    else if(geomName == Legacy::geometry_type::k_TetrahedralGeom)
     {
       containerResult = readLegacyTetrahedralGeom(dataStructure, geomGroup, dcName, preflight);
     }
-    else if(geomName == Legacy::Type::TriangleGeom)
+    else if(geomName == Legacy::geometry_type::k_TriangleGeom)
     {
       containerResult = readLegacyTriangleGeom(dataStructure, geomGroup, dcName, preflight);
     }
-    else if(geomName == Legacy::Type::VertexGeom)
+    else if(geomName == Legacy::geometry_type::k_VertexGeom)
     {
       containerResult = readLegacyVertexGeom(dataStructure, geomGroup, dcName, preflight);
     }
@@ -2369,35 +2369,35 @@ static Result<> finishImportingLegacyDataContainer(DataStructure& dataStructure,
       return ConvertResult(std::move(geomNameResult));
     }
     geomName = std::move(geomNameResult.value());
-    if(geomName == Legacy::Type::ImageGeom)
+    if(geomName == Legacy::geometry_type::ImageGeom)
     {
       return finishImportingLegacyImageGeom(dataStructure, geometryPtr, geomGroup);
     }
-    if(geomName == Legacy::Type::EdgeGeom)
+    if(geomName == Legacy::geometry_type::k_EdgeGeom)
     {
       return finishImportingLegacyEdgeGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::HexGeom)
+    else if(geomName == Legacy::geometry_type::HexGeom)
     {
       return finishImportingLegacyHexGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::QuadGeom)
+    else if(geomName == Legacy::geometry_type::k_QuadGeom)
     {
       return finishImportingLegacyQuadGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::RectGridGeom)
+    else if(geomName == Legacy::geometry_type::k_RectGridGeom)
     {
       return finishImportingLegacyRectGridGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::TetrahedralGeom)
+    else if(geomName == Legacy::geometry_type::k_TetrahedralGeom)
     {
       return finishImportingLegacyTetrahedralGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::TriangleGeom)
+    else if(geomName == Legacy::geometry_type::k_TriangleGeom)
     {
       return finishImportingLegacyTriangleGeom(dataStructure, geometryPtr, geomGroup);
     }
-    else if(geomName == Legacy::Type::VertexGeom)
+    else if(geomName == Legacy::geometry_type::k_VertexGeom)
     {
       return finishImportingLegacyVertexGeom(dataStructure, geometryPtr, geomGroup);
     }

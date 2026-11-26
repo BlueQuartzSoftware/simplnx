@@ -244,11 +244,11 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Kern
   UnitTest::LoadPlugins();
   const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize dim = 4;
-  const ShapeType cellShape = {dim, dim, dim};
+  constexpr usize k_Dim = 4;
+  const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
   DataStructure ds;
   auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
+  imageGeom->setDimensions({k_Dim, k_Dim, k_Dim});
   REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());

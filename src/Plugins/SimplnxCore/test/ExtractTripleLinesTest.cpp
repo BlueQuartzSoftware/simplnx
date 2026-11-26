@@ -460,14 +460,14 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: M3C triple line vertices stay 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
   const auto& tripleLineGeom = dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath);
-  constexpr float32 k_Epsilon = 0.0001f;
+  constexpr float32 k_VertexEpsilon = 0.0001f;
   const auto& vertices = tripleLineGeom.getVertices()->getDataStoreRef();
   for(usize vertexIdx = 0; vertexIdx < tripleLineGeom.getNumberOfVertices(); vertexIdx++)
   {
     const float32 zCoord = vertices[(vertexIdx * 3) + 2];
     CAPTURE(vertexIdx, zCoord);
-    REQUIRE(zCoord >= -k_Epsilon);
-    REQUIRE(zCoord <= 1.0f + k_Epsilon);
+    REQUIRE(zCoord >= -k_VertexEpsilon);
+    REQUIRE(zCoord <= 1.0f + k_VertexEpsilon);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -747,16 +747,16 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<Result<>> result(mod, "Result");
   result.def(py::init<>([](std::optional<std::vector<Error>> errors, std::optional<std::vector<Warning>> warnings) {
-               Result<> result_;
+               Result<> pyResult;
                if(errors.has_value())
                {
-                 result_.m_Expected = nonstd::make_unexpected(std::move(*errors));
+                 pyResult.m_Expected = nonstd::make_unexpected(std::move(*errors));
                }
                if(warnings.has_value())
                {
-                 result_.warnings() = std::move(*warnings);
+                 pyResult.warnings() = std::move(*warnings);
                }
-               return result_;
+               return pyResult;
              }),
              "errors"_a = py::none(), "warnings"_a = py::none());
   result.def_property_readonly("errors", [](Result<>& self) {

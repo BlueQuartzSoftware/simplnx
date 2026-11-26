@@ -820,10 +820,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[NXImageProcessi
 {
   UnitTest::LoadPlugins();
 
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   for(usize i = 0; i < fileValues.size(); ++i)
   {
     fileValues[i] = static_cast<int16_t>(i) - 5;
@@ -851,13 +851,13 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[NXImageProcessi
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
-  REQUIRE(geom.getDimensions()[0] == X);
-  REQUIRE(geom.getDimensions()[1] == Y);
-  REQUIRE(geom.getDimensions()[2] == Z);
+  REQUIRE(geom.getDimensions()[0] == k_X);
+  REQUIRE(geom.getDimensions()[1] == k_Y);
+  REQUIRE(geom.getDimensions()[2] == k_Z);
 
   const DataPath arrayPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
   const auto& store = dataStructure.getDataRefAs<DataArray<int16_t>>(arrayPath).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y * Z);
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   // No cropping => destination tuple order equals file order, so store[i] == fileValues[i].
   for(usize i = 0; i < fileValues.size(); ++i)
   {
@@ -1359,10 +1359,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate re
 
   // 128^3 int32_t == 8 MiB decompressed. A splitmix64-mixed fill is effectively
   // incompressible, so the gzip stream stays above the 4 MiB compressed buffer.
-  const usize X = 128;
-  const usize Y = 128;
-  const usize Z = 128;
-  std::vector<int32_t> voxels(X * Y * Z);
+  constexpr usize k_X = 128;
+  constexpr usize k_Y = 128;
+  constexpr usize k_Z = 128;
+  std::vector<int32_t> voxels(k_X * k_Y * k_Z);
   uint64_t state = 0x9E3779B97F4A7C15ULL;
   for(int& voxel : voxels)
   {

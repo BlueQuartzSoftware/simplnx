@@ -499,22 +499,22 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[N
 
 TEST_CASE("NXImageProcessing::ReadNrrdFile: RGB component axis interleaves components", "[NXImageProcessing][NrrdUtilities]")
 {
-  constexpr usize comp = 3;
+  constexpr usize k_Comp = 3;
   constexpr usize X = 4;
   constexpr usize Y = 2; // Z == 1 (2D image)
-  std::vector<uint8_t> fileValues(comp * X * Y);
+  std::vector<uint8_t> fileValues(k_Comp * X * Y);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<uint8_t>(0));
 
   const fs::path p = NrrdOutputDir() / "algo_rgb.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: unsigned char", "dimension: 3", "space dimension: 2", "sizes: 3 4 2", "space directions: none (1,0) (0,1)", "kinds: vector domain domain", "encoding: raw"},
                fileValues);
 
-  DataStructure ds = BuildNrrdTarget(DataType::uint8, {X, Y, 1}, comp);
+  DataStructure ds = BuildNrrdTarget(DataType::uint8, {X, Y, 1}, k_Comp);
   REQUIRE(RunReadNrrdFile(ds, p).valid());
 
   const auto& store = ds.getDataRefAs<DataArray<uint8>>(ImageDataPath()).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == X * Y);
-  REQUIRE(store.getNumberOfComponents() == comp);
+  REQUIRE(store.getNumberOfComponents() == k_Comp);
   // Component axis is fastest in the file (comp, X, Y) which already matches the
   // interleaved simplnx layout, so store[i] == fileValues[i].
   for(usize i = 0; i < fileValues.size(); i++)
