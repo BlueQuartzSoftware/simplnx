@@ -14,7 +14,7 @@ The per-vertex voxel indices produced by this filter are commonly used as the in
 
 ### Sampling Grid Type
 
-A newly created sampling grid inherits the point cloud’s length unit. The *Sampling Grid Type* parameter controls how the target grid is defined:
+A newly created sampling grid inherits the point cloud's length unit. The *Sampling Grid Type* parameter controls how the target grid is defined:
 
 - **Manual [0]**: The user specifies the grid dimensions directly as voxel counts along X, Y, and Z (dimensionless counts). The filter creates a new **Image Geometry** with those dimensions to use as the sampling grid.
 - **Use Existing Image Geometry [1]**: The user selects a pre-existing **Image Geometry** from the data structure to use as the sampling grid.

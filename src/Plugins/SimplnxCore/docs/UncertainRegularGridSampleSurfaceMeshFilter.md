@@ -22,7 +22,7 @@ For the variant that samples onto a regular grid without positional uncertainty,
 
 The output Image Geometry associates the selected Cell Attribute Matrix with its cells. That matrix contains the selected Feature Ids array. The matrix can have the same name as the output geometry. Geometry dimensions use `{X,Y,Z}` order. The matrix and Feature Ids tuple shapes use `{Z,Y,X}` order, with X varying fastest in the flat array.
 
-The sampled image inherits the input surface mesh’s length unit.
+The sampled image inherits the input surface mesh's length unit.
 
 ### Required Input Sources
 

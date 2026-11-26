@@ -8,7 +8,7 @@ Sampling (Sampling)
 
 This **Filter** converts a **Rectilinear Grid Geometry** (which has variable spacing along each axis) into an **Image Geometry** (which has uniform spacing along each axis). Selected cell-level arrays from the rectilinear grid are copied onto the new uniform grid using a *last-one-wins* rule.
 
-The output image retains the rectilinear grid’s length unit.
+The output image retains the rectilinear grid's length unit.
 
 ### When to Use This Filter
 

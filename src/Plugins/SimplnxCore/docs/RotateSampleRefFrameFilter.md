@@ -10,7 +10,7 @@ This **Filter** rotates the *spatial reference frame* of an **Image Geometry** a
 
 When copied, child objects retain their names, including Attribute Matrix and DataArray names that contain the source geometry's name. For example, copying `Geom/Geom Feature Data/Geom Values` to `Geom Out` creates `Geom Out/Geom Feature Data/Geom Values`.
 
-The rotated image retains the input geometry’s length unit.
+The rotated image retains the input geometry's length unit.
 
 ### Supported Rotations (Important)
 

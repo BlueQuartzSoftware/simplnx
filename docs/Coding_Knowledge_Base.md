@@ -1070,8 +1070,10 @@ the offset to `RectGridGeom::ValidateBounds()` to check the float32 result befor
 formula. Boundary (corner) coordinates and cell-center coordinates need different formulas; name which one the code
 computes.
 
-**Example of the broken rule:** `ComputeShapes` computed its moments from corner coordinates (PR #1124).
-Issue #1878 tracked a half-cell shift in Flying Edges contours, exported VTK grid boundaries, and sampling positions for odd-sized GBCD pole figures.
+**Example of the broken rule:** `ComputeShapes` computed its moments from corner coordinates (PR #1124). `FlyingEdges`
+`getPosCube()`, the boundary coordinates of `WriteVtkRectilinearGrid` and the odd-size sampling of
+`ComputeGBCDPoleFigure` used a local formula. `ResampleImageGeom` and `NearestPointFuseRegularGrids` sampled the
+minimum corner of each destination cell instead of its center. Each one shifted its output by half a cell (issue #1878).
 
 **Why:** a local formula that treats the origin as the center of cell 0, or that omits the half cell, shifts every
 result by half a cell.
@@ -1087,7 +1089,7 @@ that is already a corner; integer half-dimension arithmetic.
 geometry whose coordinates are not lengths (orientation-space values, projection values, image pixels without a
 physical scale) uses `IGeometry::LengthUnit::Unspecified`, and the filter documentation says why.
 `CreateImageGeometryAction` requires an explicit unit in both C++ and Python. When creating a new grid in the
-coordinate system of an existing geometry, pass the source geometry’s unit.
+coordinate system of an existing geometry, pass the source geometry's unit.
 
 **Example of the broken rule:** the Rodrigues geometry of `ConvertOrientationsToVertexGeometry` reported Meter, and the
 pole-figure images of `WritePoleFigure` and `ComputeGBCDPoleFigure` reported Micrometer (issue #1803, PR #1838). The
