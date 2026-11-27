@@ -91,6 +91,7 @@ simplnx_utilities.check_filter_result(nximgproc.RegionalMinimaImageFilter, resul
 # Filter 6: Connected Component Image Filter
 result = nximgproc.ConnectedComponentImageFilter.execute(
     data_structure=data_structure,
+    provisional_label_limit_handling_index=0,
     fully_connected=True,
     input_image_data_path=nx.DataPath('Powder Particles/Cell Data/Marker Mask'),
     input_image_geometry_path=nx.DataPath('Powder Particles'),

@@ -12,10 +12,11 @@ namespace nx::core
  * @brief ITK-free, out-of-core-capable connected-component labeling via a streaming scanline union-find.
  *
  * Labels the objects in a binary image: non-zero input voxels are foreground, zero-valued voxels are background.
- * Each distinct foreground object is assigned a unique consecutive label (1, 2, 3, ...) in raster-scan order of
- * first appearance; background voxels are labeled 0. The input may be ANY integer scalar type; the output is a
+ * When all provisional IDs fit in uint32, objects receive consecutive labels from 1 in raster order of first appearance.
+ * Background voxels receive 0. The input may be ANY integer scalar type; the output is a
  * FIXED uint32 label image regardless of the input element type. Matches the legacy ITK Connected Component Image
- * Filter exactly (byte-identical label values). Out-of-core capable.
+ * Filter while all provisional IDs fit in uint32. Error (default) stops on the first ID above that limit. Explicit legacy continuation
+ * retains wrap to zero and reused IDs, so segmentation and downstream counts/statistics can be incorrect.
  */
 class NXIMAGEPROCESSING_EXPORT ConnectedComponentImageFilter : public IFilter
 {
@@ -33,6 +34,8 @@ public:
   static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
   static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
   static constexpr StringLiteralType k_FullyConnected_Key = "fully_connected";
+  // NOLINTNEXTLINE(readability-identifier-naming) -- Use the same k_Name_Key spelling as the other filter argument keys.
+  static constexpr StringLiteralType k_ProvisionalLabelLimitHandling_Key = "provisional_label_limit_handling_index";
 
   std::string name() const override;
   std::string className() const override;

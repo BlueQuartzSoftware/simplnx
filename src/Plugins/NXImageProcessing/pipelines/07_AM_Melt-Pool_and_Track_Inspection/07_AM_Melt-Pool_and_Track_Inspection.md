@@ -198,6 +198,7 @@ Key parameters:
 - `input_image_data_path`: `"Melt Pool Image/Cell Data/Track Mask"`
 - `input_image_geometry_path`: `"Melt Pool Image"`
 - `output_array_name`: `"Track Labels"`
+- `provisional_label_limit_handling_index`: `0`
 
 Resolved inputs:
 

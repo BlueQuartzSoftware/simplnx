@@ -12,7 +12,7 @@ This filter is an iterative auto-thresholding method: it bisection-searches for 
 
 At each step of the search, the image is binary-thresholded at a candidate threshold value (paired with the fixed **Upper Boundary**), the resulting foreground is labeled into connected components (face connectivity only), and the number of components at least **Minimum Object Size In Pixels** in size is counted. The bisection converges on the threshold value that maximizes this count.
 
-The input array must be single-component (scalar) and may be **any scalar type** (integer or floating point). The output is a fixed **uint8** binary image (**Inside Value** / **Outside Value**) regardless of the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Threshold Maximum Connected Components Image Filter, and matches it exactly (byte-identical binary output).
+The input array must be single-component (scalar) and may be **any scalar type** (integer or floating point). The output is a fixed **uint8** binary image (**Inside Value** / **Outside Value**) regardless of the input element type. The filter always stops if any candidate threshold mask requires more than 4,294,967,295 uninterrupted foreground runs along X, even when those runs form fewer objects. Within this limit, this ITK-free, out-of-core-capable implementation matches the legacy ITK Threshold Maximum Connected Components Image Filter exactly (byte-identical binary output).
 
 ### Minimum Object Size In Pixels
 

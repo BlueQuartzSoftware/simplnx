@@ -273,7 +273,11 @@
           "value": "Marker Labels",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "provisional_label_limit_handling_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "Assign a unique label to each watershed marker.",
       "filter": {

@@ -281,7 +281,11 @@
           "value": "Track Labels",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2,
+        "provisional_label_limit_handling_index": {
+          "value": 0,
+          "version": 1
+        }
       },
       "comments": "Label the melt pool and separated spatter regions.",
       "filter": {
