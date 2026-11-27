@@ -17,6 +17,7 @@
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/DataStructure/IO/HDF5/StringArrayIO.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -2042,4 +2043,80 @@ TEST_CASE("RectGridGeomIO rejects invalid bounds on write across a validation bl
   CHECK(writeResult.errors().front().code == -4007);
   CHECK(writeResult.errors().front().message.find("Y bounds array is not strictly monotonically increasing at index 4096") != std::string::npos);
   CHECK(writeResult.errors().front().message.find(filePath.filename().string()) != std::string::npos);
+}
+
+TEST_CASE("StringStore HDF5 finalization rejects mismatched values", "[simplnx][StringStore]")
+{
+  unit_test::LoadPlugins();
+  const auto filePath = GetDataDir() / "StringStoreMismatch.h5";
+  struct Cleanup
+  {
+    fs::path path;
+    ~Cleanup()
+    {
+      std::error_code error;
+      fs::remove(path, error);
+    }
+  } cleanup{filePath};
+  auto file = hdf5::FileIO::WriteFile(filePath);
+  REQUIRE(file.isValid());
+  auto group = file.createGroup("Arrays");
+  auto dataset = group.createDataset("Strings");
+  std::vector<std::string> values{"one"};
+  auto writeResult = dataset.writeVectorOfStrings(values);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  DataStructure dataStructure;
+  REQUIRE(StringArray::CreateWithValues(dataStructure, "Strings", {2}, {"", ""}) != nullptr);
+  hdf5::StringArrayIO io;
+  auto result = io.finishImportingData(dataStructure, DataPath({"Strings"}), group);
+  REQUIRE(result.invalid());
+  REQUIRE(result.errors().front().code == -151202);
+  REQUIRE(result.errors().front().message.find("tuple shape [2] holds 2 tuples, but the string count is 1") != std::string::npos);
+  REQUIRE(dataStructure.getDataRefAs<StringArray>(DataPath({"Strings"})).size() == 2);
+}
+
+TEST_CASE("H5 StringArray import without TupleDimensions uses the dataset size", "[simplnx][H5][StringStore]")
+{
+  unit_test::LoadPlugins();
+  const auto filePath = GetDataDir() / "StringArrayMissingTupleDimensions.dream3d";
+  struct Cleanup
+  {
+    fs::path path;
+    ~Cleanup()
+    {
+      std::error_code error;
+      fs::remove(path, error);
+    }
+  } cleanup{filePath};
+  DataStructure source;
+  REQUIRE(StringArray::CreateWithValues(source, "Strings", ShapeType{3}, {"a", "b", "c"}) != nullptr);
+  auto writeResult = dream3d::WriteFile(filePath, source);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+  const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
+  REQUIRE(fileId >= 0);
+  const hid_t datasetId = H5Dopen2(fileId, "DataStructure/Strings", H5P_DEFAULT);
+  if(datasetId < 0)
+  {
+    H5Fclose(fileId);
+  }
+  REQUIRE(datasetId >= 0);
+  const herr_t deleteResult = H5Adelete(datasetId, "TupleDimensions");
+  const herr_t datasetCloseResult = H5Dclose(datasetId);
+  const herr_t fileCloseResult = H5Fclose(fileId);
+  REQUIRE(deleteResult >= 0);
+  REQUIRE(datasetCloseResult >= 0);
+  REQUIRE(fileCloseResult >= 0);
+
+  auto loaded = dream3d::LoadDataStructure(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(loaded);
+  auto* array = loaded.value().getDataAs<StringArray>(DataPath({"Strings"}));
+  REQUIRE(array != nullptr);
+  REQUIRE(array->getTupleShape() == ShapeType{3});
+  REQUIRE(array->values() == std::vector<std::string>{"a", "b", "c"});
+
+  auto metadata = dream3d::LoadDataStructureMetadata(filePath);
+  SIMPLNX_RESULT_REQUIRE_VALID(metadata);
+  auto* placeholder = metadata.value().getDataAs<StringArray>(DataPath({"Strings"}));
+  REQUIRE(placeholder != nullptr);
+  REQUIRE(placeholder->getTupleShape() == ShapeType{3});
 }
