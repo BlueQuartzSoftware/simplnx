@@ -1,6 +1,7 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
   SmokeTest.cpp
   ImageFilterExecutorsLinkTest.cpp
+  ImageFilterIntegrationTestUtils.cpp
   ExamplePipelineCoverageTest.cpp
   ExamplePipelineExecutionTest.cpp
   ItkGoldenTestUtilsSelfTest.cpp

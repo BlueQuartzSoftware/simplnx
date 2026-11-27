@@ -1,10 +1,14 @@
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
+#include "NXImageProcessing/utils/HConvexUtilities.hpp"
 #include "NXImageProcessing/utils/ImageFilterExecutorDetail.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/MorphologyEngine.hpp"
@@ -23,7 +27,7 @@ namespace detail
 namespace
 {
 /**
- * @brief Dispatched execute body for the three grayscale reconstruction filters. Derives the marker (@ref
+ * @brief Dispatched execute body for the grayscale reconstruction filters. Derives the marker (@ref
  *        BuildReconstructionMarker) into an out-of-core-inheriting scratch store, then reconstructs it under the
  *        original input (the mask) into the output. The engine's DispatchAlgorithm keys the in-core/out-of-core
  *        path on the real input + output arrays (the scratch marker inherits the input's storage mode), so an
@@ -38,7 +42,7 @@ struct MorphologicalReconstructionExecuteFn
   ReconstructOp op;
   bool fully_connected;
   ReconMarker marker_kind;
-  float64 height;
+  ReconstructionHeightType height;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
   bool difference_from_input; // HConvex: after reconstruction, output = input - reconstruction (the h-dome)
@@ -74,29 +78,50 @@ struct MorphologicalReconstructionExecuteFn
       // Marker scratch inherits the input's storage format (out-of-core input -> out-of-core scratch), keeping the
       // whole filter memory-bounded through the streamed sweep path.
       markerStore = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerStore, dims, marker_kind, height, should_cancel); r.invalid())
+      if(auto markerResult = BuildReconstructionMarker<T>(inStore, *markerStore, dims, marker_kind, height, should_cancel); markerResult.invalid())
       {
-        return r;
+        return markerResult;
       }
       markerPtr = markerStore.get();
     }
     // Mask == the ORIGINAL input; the engine reconstructs the marker under it into outStore. OOC detection uses
     // the real input (mask) + output arrays (the scratch marker has no IDataArray).
     const bool useTemporaryWork = marker_kind == ReconMarker::FillholeMaxBorder || marker_kind == ReconMarker::GrindPeakMinBorder;
-    if(Result<> r = ApplyMorphologicalReconstruction<T>(*markerPtr, inStore, outStore, dims, op, fully_connected, inArray, outArray, should_cancel, message_handler, useTemporaryWork, markerOptions);
-       r.invalid())
+    auto reconstructionResult =
+        ApplyMorphologicalReconstruction<T>(*markerPtr, inStore, outStore, dims, op, fully_connected, inArray, outArray, should_cancel, message_handler, useTemporaryWork, markerOptions);
+    if(reconstructionResult.invalid())
     {
-      return r;
+      return reconstructionResult;
     }
     if(difference_from_input)
     {
-      // HConvex: output = input - reconstruction (the h-maxima result), i.e. the h-dome. SubtractStores is
-      // alias-safe (out == b), and hmax <= input everywhere so the difference never underflows.
-      return SubtractStores<T>(inStore, outStore, outStore, should_cancel);
+      // HConvex owns exact integer markers and checked signed contrast. Other callers retain their existing defaults.
+      return MergeResults(std::move(reconstructionResult), SubtractHConvexContrast<T>(inStore, outStore, outStore, input_array_path, should_cancel));
     }
-    return {};
+    return reconstructionResult;
   }
 };
+
+Result<> ExecutePreparedMorphologicalReconstruction(DataStructure& dataStructure, const DataPath& imageGeomPath, DataType inputType, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
+                                                    ReconstructOp operation, bool fullyConnected, ReconMarker markerKind, ReconstructionHeightType height, const std::atomic_bool& shouldCancel,
+                                                    const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
+{
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  const MorphologicalReconstructionExecuteFn executeFn{
+      .data_structure = dataStructure,
+      .input_array_path = inputArrayPath,
+      .output_array_path = outputArrayPath,
+      .dims = imageGeom.getDimensions(),
+      .op = operation,
+      .fully_connected = fullyConnected,
+      .marker_kind = markerKind,
+      .height = height,
+      .should_cancel = shouldCancel,
+      .message_handler = messageHandler,
+      .difference_from_input = differenceFromInput,
+  };
+  return AllNumeric::Dispatch(inputType, executeFn);
+}
 
 /**
  * @brief Streamed compare-select for the PreserveIntensities pass of opening/closing-by-reconstruction: for each
@@ -274,23 +299,21 @@ Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStruct
                                                        bool fullyConnected, detail::ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
                                                        const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
 {
-  using TypeSetPolicyType = AllNumeric;
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const DataType inputType = inputArray.getDataType();
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3Type dims = imageGeom.getDimensions();
-  detail::MorphologicalReconstructionExecuteFn executeFn{.data_structure = dataStructure,
-                                                         .input_array_path = inputArrayPath,
-                                                         .output_array_path = outputArrayPath,
-                                                         .dims = dims,
-                                                         .op = op,
-                                                         .fully_connected = fullyConnected,
-                                                         .marker_kind = markerKind,
-                                                         .height = height,
-                                                         .should_cancel = shouldCancel,
-                                                         .message_handler = messageHandler,
-                                                         .difference_from_input = differenceFromInput};
-  return TypeSetPolicyType::Dispatch(inputType, executeFn);
+  const auto inputType = dataStructure.getDataRefAs<IDataArray>(inputArrayPath).getDataType();
+  return detail::ExecutePreparedMorphologicalReconstruction(dataStructure, imageGeomPath, inputType, inputArrayPath, outputArrayPath, op, fullyConnected, markerKind, height, shouldCancel,
+                                                            messageHandler, differenceFromInput);
+}
+
+// -----------------------------------------------------------------------------
+Result<> detail::ExecuteMorphologicalReconstructionWithValidatedHeight(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
+                                                                       ReconstructOp operation, bool fullyConnected, ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
+                                                                       const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
+{
+  const auto inputType = dataStructure.getDataRefAs<IDataArray>(inputArrayPath).getDataType();
+  const ReconstructionHeightType offset =
+      GetIntegerScalarTypes().contains(inputType) ? ReconstructionHeightType{ExactReconstructionHeight{SaturateCastFromDouble<uint64>(height)}} : ReconstructionHeightType{height};
+  return ExecutePreparedMorphologicalReconstruction(dataStructure, imageGeomPath, inputType, inputArrayPath, outputArrayPath, operation, fullyConnected, markerKind, offset, shouldCancel,
+                                                    messageHandler, differenceFromInput);
 }
 
 // -----------------------------------------------------------------------------

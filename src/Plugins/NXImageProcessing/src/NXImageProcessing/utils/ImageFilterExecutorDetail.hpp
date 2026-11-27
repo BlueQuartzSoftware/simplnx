@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/MorphologicalReconstructionEngine.hpp"
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -608,8 +609,8 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  *        stays bounded (a fixed chunk for the height markers, one z-plane for Fillhole), so an out-of-core input
  *        yields an out-of-core-bounded marker. @p dims is (X,Y,Z); @p height feeds MinusHeight/PlusHeight only.
  *
- * MinusHeight/PlusHeight offset every voxel by +/-height through @ref SaturateCastFromDouble, so an offset that
- * leaves the type range saturates (ITK-faithful clamp) instead of wrapping.
+ * For integer pixels an exact offset preserves native units, including values beyond float64 precision.
+ * A floating offset uses floating-point arithmetic. Both paths saturate integer marker values to native bounds.
  *
  * The Fillhole/GrindPeak marker border is the boundary in ITK's EFFECTIVE dimensionality: the legacy filter
  * processes a (W,H,1) volume as a 2D ITK image (ITKArrayHelper selects Dimension 2 when Z==1), so X and Y are always
@@ -619,15 +620,23 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  * rule, including "needle" geometries where a non-collapsed axis has extent 1 (every voxel is then a border voxel
  * and the image is left unchanged).
  *
- * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
+ * @tparam T Scalar marker type.
+ * @param inStore Original mask values.
+ * @param markerStore Receives marker values; has the input's tuple and element layout.
+ * @param dims Image dimensions in X, Y, Z order.
+ * @param kind Selects a height or border marker.
+ * @param height Prepared offset in intensity units.
+ * @param shouldCancel Requests cancellation between transfers.
+ * @return The first store or min/max error, or a valid result.
+ * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest).
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3Type& dims, ReconMarker kind, float64 height,
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3Type& dims, ReconMarker kind, const ReconstructionHeightType& height,
                                    const std::atomic_bool& shouldCancel)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
-    const float64 signedHeight = (kind == ReconMarker::MinusHeight) ? -height : height;
+    const bool lower = kind == ReconMarker::MinusHeight;
     const usize total = inStore.getSize();
     const usize chunkValues = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || markerStore.getStoreType() == IDataStore::StoreType::OutOfCore ?
                                   std::max<usize>(1, (64ULL * 1024ULL * 1024ULL) / sizeof(T)) :
@@ -644,10 +653,7 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
       {
         return r;
       }
-      for(usize i = 0; i < count; ++i)
-      {
-        buffer[i] = SaturateCastFromDouble<T>(static_cast<float64>(buffer[i]) + signedHeight);
-      }
+      ApplyReconstructionHeight(nonstd::span<T>(buffer.get(), count), height, lower);
       if(Result<> r = markerStore.copyFromBuffer(start, nonstd::span<const T>(buffer.get(), count)); r.invalid())
       {
         return r;
