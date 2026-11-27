@@ -758,7 +758,6 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array 
   CAPTURE(inputIndex, useStringArray);
   const std::array<StringLiteralType, 3> inputKeys = {RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key,
                                                       RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key};
-  constexpr std::array<int32, 3> k_ExpectedCodes = {-59574, -59575, -59576};
   DataStructure dataStructure;
   discriminating_fixture::PopulateDataStructure(dataStructure);
   Arguments args = CreateArrayKindValidationArguments();
@@ -789,11 +788,10 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array 
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.errors().size() == 1);
   const auto& error = preflightResult.output_actions.errors().front();
-  CHECK(error.code == k_ExpectedCodes.at(inputIndex));
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(error.message.find(rejectedPath.toString()) != std::string::npos);
-  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
-  CHECK(error.message.find("scalar int32 DataArray") != std::string::npos);
-  CHECK(error.message.find("Select a scalar int32 DataArray") != std::string::npos);
+  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborListArray") != std::string::npos);
+  CHECK(error.message.find("Select an array of one of these kinds: DataArray") != std::string::npos);
   CHECK(dataStructure.getAllDataPaths() == initialPaths);
   CHECK(dataStructure.getNextId() == initialNextId);
   if(useStringArray)
@@ -838,7 +836,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Inactive phases skip array
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede feature array-kind errors", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
+TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Feature array-kind errors precede tuple errors", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
   unit_test::LoadPlugins();
   const bool replaceNeighbors = GENERATE(false, true);
@@ -876,7 +874,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede featu
   REQUIRE_NOTHROW(preflightResult = RequireMinNumNeighborsFilter().preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.errors().size() == 1);
-  CHECK(preflightResult.output_actions.errors().front().code == (cellMismatch ? -59571 : -252));
+  CHECK(preflightResult.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 

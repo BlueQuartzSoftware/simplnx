@@ -68,9 +68,9 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBCDArrayPath_Key, "Input GBCD",
                                                           "5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere",
-                                                          DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64}));
+                                                          DataPath({"Face Ensemble Data", "GBCD"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float64}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Pole Figure"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryName_Key, "Image Geometry", "The path to the created image geometry", DataPath({"GBCD Pole Figure"})));

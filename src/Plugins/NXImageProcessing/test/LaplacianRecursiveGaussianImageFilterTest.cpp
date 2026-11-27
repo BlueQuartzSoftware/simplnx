@@ -3,6 +3,7 @@
 
 #include "NXImageProcessing/Filters/LaplacianRecursiveGaussianImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -274,4 +275,9 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: FromSIMPLJs
 TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][LaplacianRecursiveGaussianImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<LaplacianRecursiveGaussianImageFilter>("RA-Float.nrrd", "BasicFilters_LaplacianRecursiveGaussianImageFilter_default.nrrd", /*tolerance=*/0.0001);
+}
+
+TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<LaplacianRecursiveGaussianImageFilter, float32>();
 }

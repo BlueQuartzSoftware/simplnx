@@ -52,15 +52,15 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                                     "The DataPath to the AttributeMatrix that holds feature data for the faces",
                                                                     DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "Input DataPath to the **Feature Centroids** for the face data",
-                                                          DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
+                                                          DataPath({"Face Feature Data", "Centroids"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});

@@ -1,4 +1,5 @@
 #include "ProjectionFilterTestUtils.hpp"
+#include "UnaryFilterTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/MedianProjectionImageFilter.hpp"
 
@@ -26,4 +27,9 @@ TEST_CASE("NXImageProcessing::MedianProjectionImageFilter: ITK real-image golden
 TEST_CASE("NXImageProcessing::MedianProjectionImageFilter: ITK real-image golden (short)", "[NXImageProcessing][ItkGolden][MedianProjectionImageFilter]")
 {
   projection_test::RunProjectionMd5ItkGolden<MedianProjectionImageFilter>("Ramp-Up-Short.nrrd", /*projDim=*/1, /*removeOriginalGeometry=*/true, "9fcc7164f3294811cbf2d875b0e494d1");
+}
+
+TEST_CASE("NXImageProcessing::MedianProjectionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][MedianProjectionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<MedianProjectionImageFilter, float32>();
 }

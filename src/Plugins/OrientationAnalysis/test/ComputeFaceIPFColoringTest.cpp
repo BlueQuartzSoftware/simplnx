@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -38,14 +39,12 @@ DataPath FeatureDataPath = SmallIn100Group.createChildPath(nx::core::constants::
 DataPath AvgEulerAnglesPath = FeatureDataPath.createChildPath(nx::core::constants::k_AvgEulerAngles);
 DataPath FeaturePhasesPath = FeatureDataPath.createChildPath(nx::core::constants::k_Phases);
 DataPath CrystalStructurePath = SmallIn100Group.createChildPath(nx::core::constants::k_PhaseData).createChildPath(nx::core::constants::k_CrystalStructures);
-DataPath AvgQuatsPath = FeatureDataPath.createChildPath("AvgQuats");
 
 DataPath TriangleDataContainerPath({nx::core::constants::k_TriangleDataContainerName});
 DataPath FaceDataGroup = TriangleDataContainerPath.createChildPath(nx::core::constants::k_FaceData);
 
 DataPath FaceLabels = FaceDataGroup.createChildPath(nx::core::constants::k_FaceLabels);
 DataPath FaceNormals = FaceDataGroup.createChildPath(nx::core::constants::k_FaceNormals);
-DataPath FaceAreas = FaceDataGroup.createChildPath(nx::core::constants::k_FaceAreas);
 
 const DataPath k_BoundsFaceLabelsPath({"Bounds Data", "FaceLabels"});
 const DataPath k_BoundsFaceNormalsPath({"Bounds Data", "FaceNormals"});
@@ -382,42 +381,42 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Unreferenced Featu
 
 TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter execution", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
 {
-  unit_test::LoadPlugins();
-
-  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
-
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  DataStructure dataStructure;
+  Arguments args = BuildPhaseBoundsFixture(dataStructure);
   ComputeFaceIPFColoringFilter filter;
-  Arguments args;
+  int32 expectedCode = 0;
 
   SECTION("Inconsistent face data tuple dimensions")
   {
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(FaceLabels));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(AvgQuatsPath));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(AvgEulerAnglesPath));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(FeaturePhasesPath));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(CrystalStructurePath));
+    auto* faceNormalsArray = dataStructure.getDataAs<Float64ArrayType>(k_BoundsFaceNormalsPath);
+    REQUIRE(faceNormalsArray != nullptr);
+    const auto resizeResult = faceNormalsArray->resizeTuples({2});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    expectedCode = -2430;
   }
-  SECTION("Inconsistent cell data tuple dimensions")
+  SECTION("Inconsistent feature data tuple dimensions")
   {
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(FaceLabels));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(FaceNormals));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(AvgEulerAnglesPath));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(FaceAreas));
-    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(CrystalStructurePath));
+    auto* featurePhasesArray = dataStructure.getDataAs<Int32ArrayType>(k_BoundsFeaturePhasesPath);
+    REQUIRE(featurePhasesArray != nullptr);
+    const auto resizeResult = featurePhasesArray->resizeTuples({3});
+    SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
+    expectedCode = -2432;
+  }
+  SECTION("Missing face labels")
+  {
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, k_BoundsFaceLabelsPath.replaceName("Missing Face Labels"));
+    expectedCode = filter_parameter::constants::k_ValidateDoesNotExist;
   }
 
-  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  CHECK(preflightResult.output_actions.errors().front().code == expectedCode);
 
-  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().size() == 1);
+  CHECK(executeResult.result.errors().front().code == expectedCode);
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

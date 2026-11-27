@@ -76,7 +76,8 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
 

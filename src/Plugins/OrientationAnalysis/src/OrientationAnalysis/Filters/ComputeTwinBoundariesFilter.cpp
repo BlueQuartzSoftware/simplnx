@@ -62,22 +62,23 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "Specifies to which Feature each Face of Triangle belongs to",
-                                                          DataPath({"Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
+                                                          DataPath({"Face Data", "FaceLabels"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Face Normals", "Specifies the Normal of each face. Only required if Find Coherence is checked",
-                                                          DataPath({"Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
+                                                          DataPath({"Face Data", "FaceNormals"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of the Feature in quaternion representation",
-                                                          DataPath({"Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
+                                                          DataPath({"Feature Data", "AvgQuats"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath({"Feature Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Specifies the crystal structure for each phase (in enumeration representation)",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
@@ -118,10 +119,6 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
 
   const auto* faceLabelsPtr = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
-  if(faceLabelsPtr == nullptr)
-  {
-    return MakePreflightErrorResult(-94730, "Input Face Labels Array must be valid.");
-  }
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   if(pBoundariesArrayTypeChoice == 0ULL)

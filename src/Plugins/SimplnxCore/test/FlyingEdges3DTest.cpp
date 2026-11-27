@@ -224,7 +224,7 @@ TEST_CASE("SimplnxCore::FlyingEdges3D: rejects nonnumeric input arrays", "[Simpl
   IFilter::PreflightResult preflight;
   REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
-  REQUIRE(preflight.output_actions.errors().front().code == -10512);
+  REQUIRE(preflight.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
   REQUIRE(preflight.output_actions.errors().front().message.find("Input") != std::string::npos);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

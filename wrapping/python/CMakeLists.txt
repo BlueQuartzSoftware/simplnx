@@ -348,4 +348,11 @@ if(SIMPLNX_BUILD_PYTHON_TESTS)
     INPUT_DIR ${simplnx_SOURCE_DIR}/wrapping/python/testing
     TEST_NAMES storage_contract_test
   )
+  AddPythonTest(NAME PY_SIMPLNX_array_selection_test
+    FILE ${simplnx_SOURCE_DIR}/wrapping/python/testing/array_selection_test.py
+    PYTHONPATH
+      "$<TARGET_FILE_DIR:simplnx>"
+      "${simplnx_SOURCE_DIR}/wrapping/python/plugins/ExamplePlugin/src"
+      "${simplnx_SOURCE_DIR}/wrapping/python/plugins/NXDataAnalysisToolkit/src"
+  )
 endif()

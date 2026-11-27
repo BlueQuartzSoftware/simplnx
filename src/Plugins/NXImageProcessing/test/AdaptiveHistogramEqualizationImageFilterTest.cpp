@@ -3,6 +3,7 @@
 
 #include "NXImageProcessing/Filters/AdaptiveHistogramEqualizationImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
@@ -16,11 +17,6 @@
 
 using namespace nx::core;
 namespace aht = ahe_test;
-
-namespace
-{
-constexpr int32 k_NonScalarInput = -8540;
-} // namespace
 
 // (2) Independent double-precision oracle on a small in-memory image. Real-disk out-of-core coverage for this
 //     filter is retired to the generic SimplnxOoc store tests (the adopted model); this case keeps the UNIQUE
@@ -100,7 +96,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Prefligh
 
     auto result = filter.preflight(dataStructure, makeArgs(vecPath));
     REQUIRE(result.output_actions.invalid());
-    REQUIRE(result.output_actions.errors().front().code == k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
 }
 

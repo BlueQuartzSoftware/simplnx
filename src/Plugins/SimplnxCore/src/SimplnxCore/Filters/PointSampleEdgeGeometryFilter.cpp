@@ -67,7 +67,7 @@ Parameters PointSampleEdgeGeometryFilter::parameters() const
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Edge Attribute Arrays to Transfer",
                                                                "The paths to the Edge Attribute Arrays to transfer to the created Vertex Geometry", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameter(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_SampledVertexGeometryPath_Key, "Output Vertex Geometry",

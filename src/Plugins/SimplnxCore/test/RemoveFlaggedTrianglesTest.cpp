@@ -154,6 +154,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   (*valuesPtr)[0] = 17;
   auto* maskPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {1}, {1}, faceAmPtr->getId());
   (*maskPtr)[0] = false;
+  auto* flag = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Flag", {1}, {1}, faceAmPtr->getId());
+  REQUIRE(flag != nullptr);
+  (*flag)[0] = true;
   if(withEdges)
   {
     auto* edgeAmPtr = AttributeMatrix::Create(dataStructure, "EdgesCustom", {0}, geomPtr->getId());
@@ -168,7 +171,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(facePath.createChildPath("Mask")));
   args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(outputPath));
   args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_TriangleDataHandling_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_TriangleDataSelectedArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{facePath.createChildPath("Value")}));
+  args.insertOrAssign(RemoveFlaggedTrianglesFilter::k_TriangleDataSelectedArrays_Key, std::vector<DataPath>{facePath.createChildPath("Value"), facePath.createChildPath("Flag")});
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto* reducedPtr = dataStructure.getDataAs<TriangleGeom>(outputPath);
@@ -182,5 +185,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   REQUIRE(outputPtr != nullptr);
   // A false removal mask retains the single face and its scalar value 17.
   CHECK((*outputPtr)[0] == 17);
+  const auto* outputFlag = dataStructure.getDataAs<BoolArrayType>(outputPath.createChildPath("FacesCustom").createChildPath("Flag"));
+  REQUIRE(outputFlag != nullptr);
+  CHECK((*outputFlag)[0]);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

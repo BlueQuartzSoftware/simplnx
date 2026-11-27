@@ -87,10 +87,11 @@ Parameters ExtractTripleLinesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The surface mesh from which to extract the triple lines", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The Array specifying which Features are on either side of each Face in the Triangle Geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types",
-                                                          "The array specifies the type of each node in the source Triangle Geometry and is copied onto the created vertices.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_NodeTypesArrayPath_Key, "Node Types", "The array specifies the type of each node in the source Triangle Geometry and is copied onto the created vertices.", DataPath{}, GetDataArrayOnlyTypes(),
+      ArraySelectionParameter::AllowedDataTypes{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Triple Line Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTripleLineGeometryPath_Key, "Created Triple Line Geometry", "The name of the created Triple Line Edge Geometry",

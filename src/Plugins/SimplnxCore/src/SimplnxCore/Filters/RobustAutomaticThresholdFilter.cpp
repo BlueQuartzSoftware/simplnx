@@ -50,10 +50,11 @@ Parameters RobustAutomaticThresholdFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   // Input cannot be bool array
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Input Array", "DataArray to Threshold", DataPath(), nx::core::GetAllNumericTypes(),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Input Array", "DataArray to Threshold", DataPath(), GetDataArrayOnlyTypes(), nx::core::GetAllNumericTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath_Key, "Gradient Magnitude Data", "The complete path to the Array specifying the gradient magnitude of the Input Array",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath(), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ArrayCreationName_Key, "Mask", "Created mask based on Input Array and Gradient Magnitude", "mask"));
 
   return params;

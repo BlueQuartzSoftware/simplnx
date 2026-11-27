@@ -121,3 +121,8 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: ITK real-image golden (
 {
   projection_test::RunProjectionBaselineItkGolden<MeanProjectionImageFilter>("RA-Float.nrrd", "BasicFilters_MeanProjectionImageFilter_z_projection.nrrd", /*projDim=*/2, /*tolerance=*/0.0001);
 }
+
+TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][MeanProjectionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<MeanProjectionImageFilter, float32>();
+}

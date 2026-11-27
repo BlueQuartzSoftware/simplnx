@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/Filters/DilateObjectMorphologyImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -382,12 +383,12 @@ TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: ITK real-image 
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (k_NonScalarInput == -8520) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")
 {
-  omt::RequirePreflightRejectsNonScalar<DilateObjectMorphologyImageFilter, uint8>(-8520, omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0));
+  omt::RequirePreflightRejectsNonScalar<DilateObjectMorphologyImageFilter, uint8>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                                  omt::DilateParamSetter<DilateObjectMorphologyImageFilter>(1.0));
 }
 
 TEST_CASE("NXImageProcessing::DilateObjectMorphologyImageFilter: Kernel Radius representability", "[NXImageProcessing][DilateObjectMorphologyImageFilter]")

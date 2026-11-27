@@ -3,6 +3,7 @@
 
 #include "NXImageProcessing/Filters/GradientMagnitudeRecursiveGaussianImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -224,4 +225,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: Fro
 TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][GradientMagnitudeRecursiveGaussianImageFilter]")
 {
   rt::RunDistanceMapItkGoldenBaseline<GradientMagnitudeRecursiveGaussianImageFilter>("RA-Float.nrrd", "BasicFilters_GradientMagnitudeRecursiveGaussianImageFilter_default.nrrd", /*tolerance=*/0.0001);
+}
+
+TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][GradientMagnitudeRecursiveGaussianImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<GradientMagnitudeRecursiveGaussianImageFilter, float32>();
 }

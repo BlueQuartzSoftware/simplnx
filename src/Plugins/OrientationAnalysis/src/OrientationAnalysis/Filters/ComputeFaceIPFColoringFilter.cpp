@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ComputeFaceIPFColoring.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -64,17 +64,20 @@ Parameters ComputeFaceIPFColoringFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FirstFaceIPFColorsArrayName_Key, "First Set of IPF Colors", "The first set of RGB color schemes encoded as unsigned chars for each Face",
@@ -121,12 +124,6 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
                 MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32ArrayType>(pSurfaceMeshFaceLabelsArrayPathValue);
-  if(faceLabelsPtr == nullptr)
-  {
-    return MakePreflightErrorResult(-2431, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
-  }
-
   // make sure all the cell data has same number of tuples (i.e. they should all be coming from the same Image Geometry)
   std::vector<DataPath> imageArrayPaths = {pFeatureEulerAnglesArrayPathValue, pFeaturePhasesArrayPathValue};
   tupleValidityCheck = dataStructure.validateNumberOfTuples(imageArrayPaths);
@@ -136,12 +133,13 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
                 MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
+  const auto& faceLabels = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
   DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pFirstFaceIPFColorsArrayNameValue);
-  auto firstAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
+  auto firstAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels.getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(firstAction));
 
   faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSecondFaceIPFColorsArrayNameValue);
-  auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
+  auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels.getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(secondAction));
 
   return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};

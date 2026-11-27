@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -61,8 +62,8 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a FIXED
-//     float32 output array (AlwaysFloat32Type), regardless of the input element type.
+// (1) Preflight guards: a multi-component input is rejected; a valid scalar input produces a FIXED
+//     float32 output array (AlwaysFloat32), regardless of the input element type.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "[NXImageProcessing][GradientMagnitudeImageFilter]")
 {
@@ -86,7 +87,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "
     args.insertOrAssign(GradMagFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar input creates a float32 output")
   {

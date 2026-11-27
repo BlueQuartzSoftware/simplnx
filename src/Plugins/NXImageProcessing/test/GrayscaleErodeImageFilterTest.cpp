@@ -1,5 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 
 #include "NXImageProcessing/Filters/GrayscaleErodeImageFilter.hpp"
 
@@ -152,12 +153,12 @@ TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: ITK real-image golden (
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (error -8360) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][GrayscaleErodeImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<GrayscaleErodeImageFilter, float32>(-8360, morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>());
+  morph_test::RequirePreflightRejectsNonScalar<GrayscaleErodeImageFilter, float32>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                                   morph_test::DefaultKernelParamSetter<GrayscaleErodeImageFilter>());
 }
 
 TEST_CASE("NXImageProcessing::GrayscaleErodeImageFilter: Kernel Radius representability", "[NXImageProcessing][GrayscaleErodeImageFilter]")

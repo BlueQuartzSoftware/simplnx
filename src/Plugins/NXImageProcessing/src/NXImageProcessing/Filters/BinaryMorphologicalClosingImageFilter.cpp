@@ -18,8 +18,6 @@
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 #include <utility>
 
 using namespace nx::core;
@@ -29,7 +27,6 @@ namespace
 // Error/warning codes for this filter (verified free by grepping the codebase for -84xx codes; -8490..-8493 do
 // not collide with any existing filter -- the grayscale composites use -8390/-8400/-8410/-8420, Binary
 // Erode/Dilate use -8440..-8443 / -8460..-8463, Binary Opening uses -8480..-8483).
-constexpr int32 k_NonScalarInput = -8490;
 constexpr int32 k_NonFiniteBinaryValue = -8491;
 constexpr int32 k_BinaryValueOutOfRange = -8492;
 constexpr int32 k_BinaryValueTruncated = -8493;
@@ -74,8 +71,8 @@ Parameters BinaryMorphologicalClosingImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetIntegerScalarTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetIntegerScalarTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -113,14 +110,8 @@ IFilter::PreflightResult BinaryMorphologicalClosingImageFilter::preflightImpl(co
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Morphological Closing requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};

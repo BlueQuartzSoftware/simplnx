@@ -24,7 +24,6 @@ namespace convert_orientations_constants
 // Error Code constants
 constexpr int32 k_InputRepresentationTypeError = -67001;
 constexpr int32 k_OutputRepresentationTypeError = -67002;
-constexpr int32 k_InputComponentDimensionError = -67003;
 constexpr int32 k_InputComponentCountError = -67004;
 constexpr int32 k_MatchingTypesError = -67005;
 } // namespace convert_orientations_constants

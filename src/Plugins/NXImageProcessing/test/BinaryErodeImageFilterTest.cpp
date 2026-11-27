@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/BinaryErodeImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <fmt/format.h>
@@ -249,12 +250,12 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: ITK real-image golden (Whi
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (k_NonScalarInput == -8440) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryErodeImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<BinaryErodeImageFilter, uint8>(-8440, morph_test::BinaryKernelParamSetter<BinaryErodeImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
+  morph_test::RequirePreflightRejectsNonScalar<BinaryErodeImageFilter, uint8>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                              morph_test::BinaryKernelParamSetter<BinaryErodeImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
 }
 
 TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryErodeImageFilter]")

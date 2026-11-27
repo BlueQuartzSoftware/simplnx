@@ -22,7 +22,6 @@ namespace nx::core
 
 using FeatureIdsArrayType = Int32ArrayType;
 using NumCellsArrayType = Int32ArrayType;
-using PhasesArrayType = Int32ArrayType;
 
 namespace
 {
@@ -69,14 +68,14 @@ Parameters RequireMinimumSizeFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Input Image Geometry", "The input image geometry (cell)", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureNumCellsPath_Key, "Feature Num. Cells Array", "DataPath to NumCells DataArray", DataPath({"NumElements"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "DataPath to Feature Phases DataArray", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureNumCellsPath_Key, "Feature Num. Cells Array", "DataPath to NumCells DataArray", DataPath({"NumElements"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "DataPath to Feature Phases DataArray", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   // Link the checkbox to the other parameters
   params.linkParameters(k_ApplySinglePhase_Key, k_SinglePhaseNumber_Key, std::make_any<bool>(true));
   params.linkParameters(k_ApplySinglePhase_Key, k_FeaturePhasesPath_Key, std::make_any<bool>(true));
@@ -133,11 +132,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
 
   if(applyToSinglePhase)
   {
-    const auto* featurePhasesPtr = dataStructure.getDataAs<PhasesArrayType>(featurePhasesPath);
-    if(featurePhasesPtr != nullptr)
-    {
-      dataArrayPaths.push_back(featurePhasesPath);
-    }
+    dataArrayPaths.push_back(featurePhasesPath);
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);

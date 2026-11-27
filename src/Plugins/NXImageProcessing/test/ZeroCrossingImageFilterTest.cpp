@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -77,7 +78,7 @@ std::vector<T> MakeZeroCrossingField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: an unsigned input is rejected (SignedScalar); a multi-component input is rejected
-//     (requireScalar); a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8Type).
+//    ; a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXImageProcessing][ZeroCrossingImageFilter]")
 {
@@ -117,7 +118,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXIm
     args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar signed input creates a uint8 output")
   {

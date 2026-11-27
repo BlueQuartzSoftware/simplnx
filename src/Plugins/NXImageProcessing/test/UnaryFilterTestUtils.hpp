@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
@@ -21,6 +22,37 @@
 namespace ip_test
 {
 using namespace nx::core;
+
+/**
+ * @brief Verifies that a scalar-only image filter rejects a three-component selection during parameter validation.
+ */
+template <class FilterT, class T>
+inline void RequirePreflightRejectsNonScalarInput()
+{
+  DataStructure dataStructure;
+  const ShapeType tupleShape{4, 4, 4};
+  const DataPath geometryPath({"Image Geometry"});
+  const DataPath inputPath = geometryPath.createChildPath("Cell Data").createChildPath("Input");
+  auto* imageGeom = ImageGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(imageGeom != nullptr);
+  imageGeom->setDimensions({4, 4, 4});
+  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeom->getId());
+  REQUIRE(cellData != nullptr);
+  imageGeom->setCellData(*cellData);
+
+  auto store = data_store_utilities::CreateDataStoreWithFormat<T>("", tupleShape, {3}, IDataAction::Mode::Preflight);
+  auto* input = DataArray<T>::Create(dataStructure, inputPath.getTargetName(), store, cellData->getId());
+  REQUIRE(input != nullptr);
+
+  const FilterT filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(geometryPath));
+  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  const auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
+}
 
 /**
  * @brief Builds an ImageGeom "Image Geometry" with cell AttributeMatrix "CellData" and a cell array

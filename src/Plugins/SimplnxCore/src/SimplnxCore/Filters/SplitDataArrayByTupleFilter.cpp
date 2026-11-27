@@ -327,7 +327,7 @@ Parameters SplitDataArrayByTupleFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_DataArrayPath_Key, "Data Array", "The data array to split by tuples.", DataPath{}, GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_DataArrayPath_Key, "Data Array", "The data array to split by tuples.", DataPath{}, GetAllArrayTypes(), GetAllDataTypes()));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputContainer, "Output Container", "Set the output container where the output split arrays will be stored.",
                                                                     static_cast<ChoicesParameter::ValueType>(SplitDataArrayByTuple::OutputContainer::NewDataGroup),
                                                                     ChoicesParameter::ChoicesType{"New Data Group", "Existing Data Group", "New Attribute Matrix", "Existing Attribute Matrix"}));
@@ -465,37 +465,23 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   }
 
   // Create the split arrays
+  const auto arrayType = inputArray.getArrayType();
   for(usize i = 0; i < arrayPaths.size(); ++i)
   {
-    switch(inputArray.getArrayType())
+    if(arrayType == IArray::ArrayType::DataArray)
     {
-    case IArray::ArrayType::DataArray: {
-      const auto* iInputDataArrayPtr = dynamic_cast<const IDataArray*>(&inputArray);
+      auto iInputDataArrayPtr = dynamic_cast<const IDataArray*>(&inputArray);
       ShapeType cDims = iInputDataArrayPtr->getComponentShape();
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArrayPtr->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
-      break;
     }
-    case IArray::ArrayType::NeighborListArray: {
-      const auto* iInputNeighborListPtr = dynamic_cast<const INeighborList*>(&inputArray);
+    else if(arrayType == IArray::ArrayType::NeighborListArray)
+    {
+      auto iInputNeighborListPtr = dynamic_cast<const INeighborList*>(&inputArray);
       resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborListPtr->getDataType(), tupleShapes[i], arrayPaths[i]));
-      break;
     }
-    case IArray::ArrayType::StringArray: {
+    else
+    {
       resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(tupleShapes[i], arrayPaths[i]));
-      break;
-    }
-    case IArray::ArrayType::Any: {
-      return {.output_actions =
-                  MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
-                                                 fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", pInputArrayPath.toString())),
-              .output_values = preflightUpdatedValues};
-    }
-    default: {
-      return {.output_actions = MakeErrorResult<OutputActions>(
-                  to_underlying(SplitDataArrayByTuple::ErrorCodes::UnsupportedArrayType),
-                  fmt::format("The input array '{}' has an array type that is currently not supported by this filter, so please contact the developers.", pInputArrayPath.toString())),
-              .output_values = preflightUpdatedValues};
-    }
     }
   }
 

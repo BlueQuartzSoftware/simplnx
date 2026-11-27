@@ -17,8 +17,6 @@
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 using namespace nx::core;
 
 namespace
@@ -26,7 +24,6 @@ namespace
 // Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree
 // (and all of src/) for -85xx codes: the -85xx blocks up to -8503 are already taken (Binary Contour -8500..
 // -8503), so this filter uses the still-unused -8520 block.
-constexpr int32 k_NonScalarInput = -8520;
 constexpr int32 k_NonFiniteObjectValue = -8521;
 constexpr int32 k_ObjectValueOutOfRange = -8522;
 constexpr int32 k_ObjectValueTruncated = -8523;
@@ -71,8 +68,8 @@ Parameters DilateObjectMorphologyImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -109,14 +106,8 @@ IFilter::PreflightResult DilateObjectMorphologyImageFilter::preflightImpl(const 
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Dilate Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -125,7 +116,7 @@ IFilter::PreflightResult DilateObjectMorphologyImageFilter::preflightImpl(const 
   // The Float64 Object Value is cast to the input element type by the object-morphology façade. That
   // conversion is UNDEFINED for a non-finite or out-of-range value on an integer type (and a non-finite value
   // would break the exact-equality object test on any type), so validate it here (the array is guaranteed
-  // present/scalar by the checks above).
+  // selection parameter validates the array).
   const DataType inputType = inputArray.getDataType();
   Result<> paramGuard = ImageProcessing::ValidateScalarValueForType(inputType, objectValue, "Object Value", k_NonFiniteObjectValue, k_ObjectValueOutOfRange, k_ObjectValueTruncated);
   if(paramGuard.invalid())

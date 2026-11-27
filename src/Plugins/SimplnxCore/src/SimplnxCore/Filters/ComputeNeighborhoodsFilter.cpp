@@ -89,9 +89,10 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters",
       "Path to the array specifying the diameter of a sphere with the same volume as the Feature. Only required when 'Search Radius Type' is 'Multiples of Equivalent Diameter'.",
-      DataPath({"Cell Feature Data", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+      DataPath({"Cell Feature Data", "EquivalentDiameters"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
+      ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "Path to the array specifying the X, Y, Z coordinates of Feature center of mass",
-                                                          DataPath({"Cell Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
+                                                          DataPath({"Cell Feature Data", "Centroids"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",

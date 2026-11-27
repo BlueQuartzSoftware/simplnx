@@ -25,22 +25,15 @@ IFilter::PreflightResult ValidateArrayTypes(const DataStructure& dataStructure, 
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath))
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+    if(!dataType.has_value())
     {
-      if(!dataType.has_value())
-      {
-        dataType = dataArrayPtr->getDataType();
-      }
-      else if(dataType != dataArrayPtr->getDataType())
-      {
-        std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
-        return {.output_actions = MakeErrorResult<OutputActions>(-90001, ss)};
-      }
+      dataType = dataArrayPtr->getDataType();
     }
-    else
+    else if(dataType != dataArrayPtr->getDataType())
     {
-      std::string ss = fmt::format("Selected DataPath must point to a DataArray");
-      return {.output_actions = MakeErrorResult<OutputActions>(-90002, ss)};
+      std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
+      return {MakeErrorResult<OutputActions>(-90001, ss)};
     }
   }
   return {};
@@ -113,8 +106,10 @@ Parameters ComputeDifferencesMapFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FirstInputArrayPath_Key, "First Input Array", "DataPath to the first input DataArray", DataPath{}, GetAllDataTypes()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SecondInputArrayPath_Key, "Second Input Array", "DataPath to the second input DataArray", DataPath{}, GetAllDataTypes()));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_FirstInputArrayPath_Key, "First Input Array", "DataPath to the first input DataArray", DataPath{}, GetDataArrayOnlyTypes(), GetAllDataTypes()));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_SecondInputArrayPath_Key, "Second Input Array", "DataPath to the second input DataArray", DataPath{}, GetDataArrayOnlyTypes(), GetAllDataTypes()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DifferenceMapArrayPath_Key, "Difference Map", "DataPath for created Difference Map DataArray", DataPath{}));
   return params;
 }

@@ -530,3 +530,20 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: External tuple shapes
   SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Rejects Boolean arrays in preflight", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
+{
+  DataStructure dataStructure = CreateDataStructure({1, 1, 1});
+  const auto& image = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  const auto arrayPath = k_ImageGeomPath.createChildPath("Boolean Values");
+  REQUIRE(BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, arrayPath.getTargetName(), {1, 1, 1}, {1}, image.getId()) != nullptr);
+
+  const auto args = CreateArgs({arrayPath}, k_ImageGeomPath, 0, 0, 0, 0, 0, 0, InitializeImageGeomCellDataFilter::InitType::Manual, 1.0, {0.0, 1.0});
+  const auto result = InitializeImageGeomCellDataFilter{}.preflight(dataStructure, args);
+
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  const auto& error = result.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_ValidateAllowedTypeError);
+  CHECK(error.message.find(arrayPath.toString()) != std::string::npos);
+}

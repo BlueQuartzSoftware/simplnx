@@ -1218,6 +1218,35 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Supplied support ownership"
   CheckSupportOwnership(incidence, neighbors, labelComponents, false);
 }
 
+TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: labels require scalar or two-component shape", "[SimplnxCore][VerifyTriangleWindingFilter]")
+{
+  DataStructure dataStructure;
+  auto args = CreateSupportFixture(dataStructure, false, false, 2);
+  const auto componentShape = GENERATE(ShapeType{1}, ShapeType{2}, ShapeType{3}, (ShapeType{1, 2}));
+  CAPTURE(componentShape);
+
+  const auto faceDataPath = k_SupportLabelsPath.getParent();
+  const auto labelsPath = faceDataPath.createChildPath("Selected Labels");
+  const auto& faceData = dataStructure.getDataRefAs<AttributeMatrix>(faceDataPath);
+  auto store = std::make_unique<DataStore<int32>>(ShapeType{4}, componentShape, 1);
+  REQUIRE(Int32ArrayType::Create(dataStructure, labelsPath.getTargetName(), std::move(store), faceData.getId()) != nullptr);
+  args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, labelsPath);
+
+  const auto result = VerifyTriangleWindingFilter{}.preflight(dataStructure, args);
+  if(componentShape == ShapeType{1} || componentShape == ShapeType{2})
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  }
+  else
+  {
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& error = result.output_actions.errors().front();
+    CHECK(error.code == filter_parameter::constants::k_ValidateTupleShapeValue);
+    CHECK(error.message.find(labelsPath.toString()) != std::string::npos);
+  }
+}
+
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Producer failure cleanup", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);

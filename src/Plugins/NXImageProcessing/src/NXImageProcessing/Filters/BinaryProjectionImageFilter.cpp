@@ -129,8 +129,8 @@ Parameters BinaryProjectionImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(std::make_unique<StringParameter>(k_OutputImageGeomName_Key, "Created Image Geometry", "The name of the projected geometry", "Projected Image"));
@@ -167,21 +167,14 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   auto foregroundValue = filterArgs.value<float64>(k_ForegroundValue_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
 
-  // Binary projection preserves the element type (output == input), but unlike Min/Median it accepts the
-  // full set of scalar numeric types, so the façade is instantiated with the AllNumeric type policy (the
-  // default SameAsInput OutTypeMap keeps the allocated and written output types in lock-step). The scalar
-  // (single-component) and tuple-consistency checks are performed inside PreflightAxisProjection.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric>(
-      dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
+  Result<OutputActions> resultOutputActions =
+      ImageProcessing::PreflightAxisProjection(dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
   }
 
-  // BinaryReduce casts the Float64 foreground/background parameters to the input element type. For an
-  // integer input type that conversion is UNDEFINED for a non-finite or out-of-range value, so validate the
-  // parameters here (the array is guaranteed present/scalar by the successful PreflightAxisProjection above).
-  // Float input types can represent any Float64 value, so they are skipped.
+  // Narrowing a Float64 parameter to an integer requires a range check.
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   if(ImageProcessing::GetIntegerScalarTypes().contains(inputType))
   {

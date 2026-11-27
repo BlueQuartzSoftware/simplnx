@@ -12,6 +12,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -54,8 +55,8 @@ void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath&
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (2) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
-//     type, incl. float) produces a FIXED uint32 output array (AlwaysUInt32Type).
+// (2) Preflight guards: a multi-component input is rejected; a valid scalar input (of ANY numeric
+//     type, incl. float) produces a FIXED uint32 output array (AlwaysUInt32).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guards", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
@@ -81,7 +82,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guard
     args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar input creates a uint32 output")
   {

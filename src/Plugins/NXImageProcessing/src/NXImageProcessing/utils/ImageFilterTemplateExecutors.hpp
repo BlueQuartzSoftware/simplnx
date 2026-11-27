@@ -351,13 +351,12 @@ Result<> ExecuteHistogramImageFilter(DataStructure& dataStructure, const DataPat
 /**
  * @brief Execute for an axis-projection filter. Reads the input dims from the ImageGeom, resolves the
  *        input/output stores, dispatches on the input element type via @p TypeSetPolicy (ProjectionScalar's
- *        4 types uint8/int16/uint16/float32 by default; Binary passes AllNumeric), and runs the
+ *        4 types uint8/int16/uint16/float32 by default), and runs the
  *        axis-projection engine with the supplied reduce functor. The output element type is the input type
  *        mapped through @p OutTypeMap (SameAsInput for Max/Min/Median/Binary; a fixed float map for
  *        Mean/StdDev/Sum) -- this MUST be the same OutTypeMap passed to PreflightAxisProjection, or the
- *        resolved output store type will not match what was allocated. @p TypeSetPolicy MUST likewise match
- *        the one PreflightAxisProjection validated against, so the dispatched-over types and the accepted
- *        types agree. Single-implementation: identical code path in-core and OOC.
+ *        resolved output store type will not match what was allocated. @p TypeSetPolicy must dispatch every
+ *        element type the selection parameter accepts. The same implementation runs on each store type.
  *
  * @p outputArrayPath is the array's location DURING execute; for an in-place run that is the temporary
  *   geometry created by PreflightAxisProjection (see ProjectionOutputArrayPath), which the deferred swap

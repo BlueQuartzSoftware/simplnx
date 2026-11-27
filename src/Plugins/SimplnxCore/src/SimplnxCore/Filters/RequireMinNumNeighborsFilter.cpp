@@ -74,19 +74,20 @@ Parameters RequireMinNumNeighborsFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighborsPath_Key, "Number of Neighbors", "Number of contiguous neighboring Features for each Feature",
-                                                          DataPath({"Data Container", "Feature Data", "NumNeighbors"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
+                                                          DataPath({"Data Container", "Feature Data", "NumNeighbors"}), GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases",
+                                                          "Specifies to which Ensemble each Feature belongs. Only required if Apply to Single Phase Only is checked",
+                                                          DataPath({"Data Container", "Feature Data", "Phases"}), GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(
-      k_FeaturePhasesPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs. Only required if Apply to Single Phase Only is checked",
-      DataPath({"Data Container", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   // Attribute Arrays to Ignore
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredVoxelArrays_Key, "Cell Arrays to Ignore", "The arrays to ignore when applying the minimum neighbors algorithm",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   params.linkParameters(k_ApplyToSinglePhase_Key, k_PhaseNumber_Key, std::make_any<bool>(true));
   params.linkParameters(k_ApplyToSinglePhase_Key, k_FeaturePhasesPath_Key, std::make_any<bool>(true));
@@ -125,9 +126,6 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath).getCellDataPath();
   featureIdsPath = MapToGeometryCellDataPath(cellDataPath, featureIdsPath);
 
-  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
-  // Keep the local type checks until the parameter validates supported array kinds.
-  // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
   const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
   if(featureIdsPtr == nullptr)
   {
@@ -172,19 +170,6 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   if(!tupleValidityCheck)
   {
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
-  }
-
-  if(dataStructure.getDataAs<Int32ArrayType>(numNeighborsPath) == nullptr)
-  {
-    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(numNeighborsPath);
-    return MakePreflightErrorResult(-59575, fmt::format("The selected Number of Neighbors object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
-                                                        numNeighborsPath.toString(), selectedObject.getTypeName()));
-  }
-  if(applyToSinglePhase && dataStructure.getDataAs<Int32ArrayType>(featurePhasesPath) == nullptr)
-  {
-    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featurePhasesPath);
-    return MakePreflightErrorResult(-59576, fmt::format("The selected Feature Phases object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
-                                                        featurePhasesPath.toString(), selectedObject.getTypeName()));
   }
 
   // Report arrays that the filter modifies in place.

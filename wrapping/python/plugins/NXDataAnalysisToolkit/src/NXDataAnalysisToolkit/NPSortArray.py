@@ -60,7 +60,7 @@ class NPSortArray:
     """
     params = nx.Parameters()
 
-    params.insert(nx.ArraySelectionParameter(NPSortArray.INPUT_ARRAY_KEY, 'Input Data Array', 'The input array to sort.', nx.DataPath(), nx.get_all_data_types()))
+    params.insert(nx.ArraySelectionParameter(NPSortArray.INPUT_ARRAY_KEY, 'Input Data Array', 'The input array to sort.', nx.DataPath(), {nx.IArray.ArrayType.DataArray}, nx.get_all_data_types()))
 
     return params
 

@@ -77,7 +77,7 @@ Parameters BinaryThresholdImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -108,9 +108,8 @@ IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStr
     return {.output_actions = MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
   }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {.output_actions = std::move(resultOutputActions)};
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  return {std::move(resultOutputActions)};
 }
 Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

@@ -201,7 +201,7 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
-                                                          nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrixPath_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
@@ -209,14 +209,15 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Feature/Ensemble Algorithm Options"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ChoicesParameter>(
       k_RangeType_Key, "Feature Range Type", "Set a range to manipulate output size in various ways. See detailed breakdown and tips in the documentation...",
       to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None),
@@ -351,30 +352,14 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   std::vector<DataPath> inputDataArrayPaths;
 
-  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-
-  if(inputArrayPtr == nullptr)
-  {
-    return MakePreflightErrorResult(-57202, fmt::format("Could not find selected input array at path '{}' ", pSelectedArrayPathValue.toString()));
-  }
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(pSelectedArrayPathValue);
 
   inputDataArrayPaths.push_back(pSelectedArrayPathValue);
 
-  if(inputArrayPtr->getNumberOfComponents() != 1)
-  {
-    return MakePreflightErrorResult(-57203, fmt::format("Input array must be a scalar array"));
-  }
-
   ShapeType tupleDims = {1};
-  const Int32ArrayType* featureIdsPtr = nullptr;
   if(pComputeByIndexValue)
   {
     auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-    featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
-    if(featureIdsPtr == nullptr)
-    {
-      return MakePreflightErrorResult(-57204, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString()));
-    }
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
 
     tupleDims = {0};
@@ -420,15 +405,6 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   if(pUseMaskValue)
   {
-    const auto* maskPtr = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
-    if(maskPtr == nullptr)
-    {
-      return MakePreflightErrorResult(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString()));
-    }
-    if(maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)
-    {
-      return MakePreflightErrorResult(-57206, fmt::format("Mask array must be of type Boolean or UInt8"));
-    }
     inputDataArrayPaths.push_back(pMaskArrayPathValue);
   }
 
@@ -445,7 +421,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-57208, fmt::format(R"(To find the median of the data, the "Find Length" option must also be checked)"));
   }
 
-  if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
+  if(pFindModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArray.getDataType()))
   {
     return MakePreflightErrorResult(-57211, "Finding the mode requires selecting an input array with an integer data type (int8, uint8, int16, uint16, int32, uint32, int64, uint64).");
   }

@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/HMinimaImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -246,4 +247,9 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: ITK real-image golden (HMinima
 {
   rt::RunReconstructionMd5ItkGolden<HMinimaImageFilter>("RA-Short.nrrd", "7778067eeb752b6ac396dd9e362e8346",
                                                         [](Arguments& args) { args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });
+}
+
+TEST_CASE("NXImageProcessing::HMinimaImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][HMinimaImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<HMinimaImageFilter, float32>();
 }

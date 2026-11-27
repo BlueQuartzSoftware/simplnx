@@ -73,12 +73,13 @@ Parameters WriteStlFileFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Face Phases", "The face phases array (the phase on each side of each triangle) to further order/index files by",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_PartNumberPath_Key, "Part Numbers", "The Part Numbers to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_PartNumberPath_Key, "Part Numbers", "The Part Numbers to order/index files by", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   // link params -- GroupingType enum is stored in the algorithm header [WriteStlFile.hpp]
   //------------ Group by Features -------------
@@ -153,43 +154,31 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(pGroupingTypeValue == GroupingType::Features || pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
-    const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsPathValue);
-    if(featureIdsPtr == nullptr)
-    {
-      return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
-    }
-    if(featureIdsPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
+    const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsPathValue);
+    if(featureIds.getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pFeatureIdsPathValue.toString(),
-                                                          featureIdsPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
+                                                          featureIds.getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
     }
   }
 
   if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
-    const auto* featurePhasesPtr = dataStructure.getDataAs<Int32ArrayType>(pFeaturePhasesPathValue);
-    if(featurePhasesPtr == nullptr)
-    {
-      return MakePreflightErrorResult(-27872, fmt::format("Face Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
-    }
-    if(featurePhasesPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
+    const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(pFeaturePhasesPathValue);
+    if(featurePhases.getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pFeaturePhasesPathValue.toString(),
-                                                          featurePhasesPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
+                                                          featurePhases.getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
     }
   }
 
   if(pGroupingTypeValue == GroupingType::PartNumber)
   {
-    const auto* partNumbersPtr = dataStructure.getDataAs<Int32ArrayType>(pPartNumberPathValue);
-    if(partNumbersPtr == nullptr)
-    {
-      return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
-    }
-    if(partNumbersPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
+    const auto& partNumbers = dataStructure.getDataRefAs<Int32ArrayType>(pPartNumberPathValue);
+    if(partNumbers.getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pPartNumberPathValue.toString(),
-                                                          partNumbersPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
+                                                          partNumbers.getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
     }
   }
 

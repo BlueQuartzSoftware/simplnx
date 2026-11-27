@@ -216,6 +216,29 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Unsupported component shapes", "[OrientationAnalysis][ConvertOrientationsFilter]")
+{
+  const ShapeType componentShape = GENERATE(ShapeType{1, 3}, ShapeType{5});
+  const DataPath inputPath({"Input Orientations"});
+  DataStructure dataStructure;
+  REQUIRE(unit_test::CreateTestDataArray<float32>(dataStructure, inputPath.getTargetName(), {1}, componentShape) != nullptr);
+
+  const ConvertOrientationsFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, ChoicesParameter::ValueType{0});
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, ChoicesParameter::ValueType{1});
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, inputPath);
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::string{"Output Orientations"});
+
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_ValidateTupleShapeValue);
+  CHECK(error.message.find("component shape") != std::string::npos);
+  CHECK(error.message.find(inputPath.toString()) != std::string::npos);
+}
+
 /**
  * @brief Verifies the filter's value-add (NOT the EbsdLib transform math, which EbsdLib's own
  * Orientation*Test.cpp suite verifies): that the (inputType, outputType) switch dispatches to the

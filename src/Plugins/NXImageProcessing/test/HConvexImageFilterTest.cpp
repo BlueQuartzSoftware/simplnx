@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/HConvexImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -168,10 +169,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Height beyond dynamic range re
 }
 
 // -----------------------------------------------------------------------------
-// (2e) Preflight scalar guard: a multi-component (non-scalar) input is rejected (requireScalar=true; the grayscale
-//      reconstruction operator is defined on scalar images). HConvex uniquely lacked this coverage that its siblings
-//      GrayscaleFillhole/GrayscaleGrindPeak have; the input ArraySelectionParameter imposes no component-shape
-//      restriction, so the guard lives in preflightImpl and returns k_NonScalarInput (-8550).
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-component rejected)", "[NXImageProcessing][HConvexImageFilter]")
 {
@@ -194,7 +192,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-
   args.insertOrAssign(HConvexImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
   const auto result = filter.preflight(dataStructure, args);
   REQUIRE(result.output_actions.invalid());
-  REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+  REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
 }
 
 // -----------------------------------------------------------------------------

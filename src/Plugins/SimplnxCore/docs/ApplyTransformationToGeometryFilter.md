@@ -139,7 +139,7 @@ represents the 4x4 matrix:
 
 When Clear Feature Attribute Matrix is on, error **-67460** rejects a matrix registered as Cell, Vertex, Edge, Face, or Polyhedron data by any geometry. This also applies to matrices shared through links. Select a Feature Attribute Matrix that is not registered as element data, or turn Clear off.
 
-With Clear and Renumber on, error **-67455** rejects a Feature Ids selection that is not a single-component int32 DataArray. Select a single-component int32 DataArray from the geometry's element Attribute Matrix.
+When Clear is on, select a single-component int32 DataArray for *Feature Ids*. The selection reports **-211** for a different array kind, **-207** for a different element type, and **-208** for a different component shape.
 
 Error **-67456** rejects a transform-matrix output whose parent is the Feature Attribute Matrix that will be cleared. This also applies to another link to that matrix. Save the transform matrix under a different parent, or turn Clear off.
 

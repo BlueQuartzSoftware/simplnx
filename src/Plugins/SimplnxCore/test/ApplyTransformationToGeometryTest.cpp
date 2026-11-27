@@ -22,6 +22,7 @@
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -2461,9 +2462,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject nonnumeric F
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   REQUIRE(result.output_actions.errors().size() == 1);
-  CHECK(result.output_actions.errors()[0].code == -67455);
+  CHECK(result.output_actions.errors()[0].code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(result.output_actions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
-  CHECK(result.output_actions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find("Select an array of one of these kinds: DataArray.") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Reject matrix output in cleared Feature AM", "[SimplnxCore][ApplyTransformationToGeometryFilter][ClearFeatureAM]")

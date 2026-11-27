@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -64,7 +65,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (3) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a
+// (3) Preflight guards: a multi-component input is rejected; a valid scalar input produces a
 //     SameAsInput output array (same element type as the input).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[NXImageProcessing][DiscreteGaussianImageFilter]")
@@ -92,7 +93,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[
     args.insertOrAssign(DgFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar input creates a SameAsInput output")
   {

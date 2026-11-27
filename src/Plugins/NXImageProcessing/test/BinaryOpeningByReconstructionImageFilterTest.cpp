@@ -4,6 +4,8 @@
 
 #include "NXImageProcessing/Filters/BinaryOpeningByReconstructionImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 
@@ -187,12 +189,7 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
 }
 
 // -----------------------------------------------------------------------------
-// (2d) Preflight type guard: a float32 input is rejected. NOTE: the -8000 k_UnsupportedDataType branch inside
-//      PreflightImageFilter<IntegerOnly> is a DEFENSIVE backstop that filter.preflight() never reaches -- the input
-//      ArraySelectionParameter admits only integer scalar types (GetIntegerScalarTypes), so the parameter-validation
-//      layer rejects a float32 array first (k_Validate_AllowedType_Error). Either way a non-integer input cannot be
-//      processed; this test pins that observable contract at the filter level (mirrors RelabelComponent's float-input
-//      reject, which uses the same IntegerOnly policy).
+// The input selection requires an integer element type.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight rejects float32 input", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
@@ -210,7 +207,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1.0));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0.0));
   const auto result = filter.preflight(dataStructure, args);
-  REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateAllowedTypeError);
 }
 
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
@@ -364,4 +362,9 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Kernel R
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Ordinary Kernel Radius control", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
   morph_test::RequireOrdinaryKernelRadius<BinaryOpeningByReconstructionImageFilter>({0, 0, 0});
+}
+
+TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<BinaryOpeningByReconstructionImageFilter, uint8>();
 }

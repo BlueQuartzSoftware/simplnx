@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/BinaryDilateImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <fmt/format.h>
@@ -226,12 +227,12 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: ITK real-image golden (Wh
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (k_NonScalarInput == -8460) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<BinaryDilateImageFilter, uint8>(-8460, morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
+  morph_test::RequirePreflightRejectsNonScalar<BinaryDilateImageFilter, uint8>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                               morph_test::BinaryKernelParamSetter<BinaryDilateImageFilter>(1.0, 0.0, /*boundaryToForeground=*/false));
 }
 
 TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryDilateImageFilter]")

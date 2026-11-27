@@ -685,7 +685,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: All integer Featur
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects unsupported array kinds after output path errors", "[SimplnxCore][WriteOnScaleTableFileFilter]")
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects unsupported array kinds before output path checks", "[SimplnxCore][WriteOnScaleTableFileFilter]")
 {
   unit_test::LoadPlugins();
   const bool useStringArray = GENERATE(false, true);
@@ -732,7 +732,10 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects unsupported array k
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.errors().size() == 1);
   const auto& error = preflightResult.output_actions.errors().front();
-  CHECK(error.code == (outputPathIsFile ? -12023 : -12042));
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find(rejectedPath.toString()) != std::string::npos);
+  CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborListArray") != std::string::npos);
+  CHECK(error.message.find("Select an array of one of these kinds: DataArray") != std::string::npos);
   if(outputPathIsFile)
   {
     CHECK(ReadFile(outputPath) == "Existing regular file");
@@ -740,10 +743,6 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects unsupported array k
   }
   else
   {
-    CHECK(error.message.find(rejectedPath.toString()) != std::string::npos);
-    CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
-    CHECK(error.message.find("scalar integer DataArray") != std::string::npos);
-    CHECK(error.message.find("Select a scalar integer DataArray") != std::string::npos);
     CHECK_FALSE(fs::exists(outputPath));
   }
   CHECK(dataStructure.getAllDataPaths() == initialPaths);
@@ -753,6 +752,20 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects unsupported array k
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(k_PhaseNamesPath));
   CHECK(dataStructure.getDataRefAs<StringArray>(k_PhaseNamesPath)[1] == "Phase1");
   unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Rejects a DataArray for Phase Names", "[SimplnxCore][WriteOnScaleTableFileFilter]")
+{
+  DataStructure dataStructure = CreateImageDataStructure<int32>({2, 2, 1}, {1, 2, 3, 1}, {"", "Phase1", "Phase2", "Phase3"});
+  auto args = CreateArguments(fs::path(unit_test::k_BinaryTestOutputDir.view()), "Rejected_Phase_Names");
+  args.insertOrAssign(WriteOnScaleTableFileFilter::k_PhaseNamesArrayPath_Key, k_FeatureIdsPath);
+
+  const auto result = WriteOnScaleTableFileFilter().preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  const auto& error = result.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find("phase_names_array_path") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Empty Phase Names Warns During Preflight", "[SimplnxCore][WriteOnScaleTableFileFilter]")

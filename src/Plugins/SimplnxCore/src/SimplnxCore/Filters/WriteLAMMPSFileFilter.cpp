@@ -61,7 +61,8 @@ Parameters WriteLAMMPSFileFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath, "Input Vertex Geometry", "The vertex geometry holding the arrays to write", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AtomLabelsPath_Key, "Atom Feature Labels", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }

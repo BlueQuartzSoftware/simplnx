@@ -1,5 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 
 #include "NXImageProcessing/Filters/BlackTopHatImageFilter.hpp"
 
@@ -161,12 +162,12 @@ TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: ITK real-image golden (Bal
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (error -8420) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BlackTopHatImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<BlackTopHatImageFilter, float32>(-8420, morph_test::CompositeKernelParamSetter<BlackTopHatImageFilter>(/*safeBorder=*/true));
+  morph_test::RequirePreflightRejectsNonScalar<BlackTopHatImageFilter, float32>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                                morph_test::CompositeKernelParamSetter<BlackTopHatImageFilter>(/*safeBorder=*/true));
 }
 
 TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Kernel Radius representability", "[NXImageProcessing][BlackTopHatImageFilter]")

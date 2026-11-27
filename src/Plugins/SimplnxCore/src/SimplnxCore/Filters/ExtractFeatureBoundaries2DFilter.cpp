@@ -60,8 +60,8 @@ Parameters ExtractFeatureBoundaries2DFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
-      k_FeatureIdsArrayPath_Key, "Feature Ids", "The feature ids that will be used to draw the boundary edge geometry.", DataPath{},
-      ArraySelectionParameter::AllowedTypeSetType{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
+      k_FeatureIdsArrayPath_Key, "Feature Ids", "The feature ids that will be used to draw the boundary edge geometry.", DataPath{}, GetDataArrayOnlyTypes(),
+      ArraySelectionParameter::AllowedDataTypes{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
       ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Z Value Options"});

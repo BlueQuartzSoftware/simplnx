@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/HMaximaImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <array>
@@ -240,4 +241,9 @@ TEST_CASE("NXImageProcessing::HMaximaImageFilter: ITK real-image golden (HMaxima
 {
   rt::RunReconstructionMd5ItkGolden<HMaximaImageFilter>("RA-Short.nrrd", "b30d403fb1c5948abfb17fa9c346cecd",
                                                         [](Arguments& args) { args.insertOrAssign(HMaximaImageFilter::k_Height_Key, std::make_any<float64>(2000.0)); });
+}
+
+TEST_CASE("NXImageProcessing::HMaximaImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][HMaximaImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<HMaximaImageFilter, float32>();
 }

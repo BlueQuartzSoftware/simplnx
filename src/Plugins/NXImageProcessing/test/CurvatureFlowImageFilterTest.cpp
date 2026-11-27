@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -60,7 +61,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a
+// (1) Preflight guards: a multi-component input is rejected; a valid scalar input produces a
 //     SameAsInput output array (unlike GradientMagnitude's fixed float32, CurvatureFlow preserves the input type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: preflight guards", "[NXImageProcessing][CurvatureFlowImageFilter]")
@@ -86,7 +87,7 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: preflight guards", "[NXI
     args.insertOrAssign(CurvFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("scalar input creates a SameAsInput output")
   {

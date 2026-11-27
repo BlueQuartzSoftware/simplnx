@@ -60,8 +60,8 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RemoveComponentsFromArray_Key, "Remove Extracted Components from Old Array", "If true the extracted components will be deleted", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multi-Component Attribute Array", "The array to extract components from", DataPath{}, nx::core::GetAllNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multi-Component Attribute Array", "The array to extract components from", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NewArrayName_Key, "Scalar Attribute Array", "The DataArray to store the extracted components", "Extracted Component"));

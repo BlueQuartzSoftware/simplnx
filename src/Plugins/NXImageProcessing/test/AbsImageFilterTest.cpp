@@ -13,10 +13,7 @@
 
 using namespace nx::core;
 
-// PART C multi-component (vector) input: the pointwise filters call PreflightImageFilter with requireScalar=false,
-// so a MULTI-COMPONENT input is ACCEPTED and every component is transformed independently -- ApplyPointwise streams
-// the flat store whose length is tuples*components, applying the op to each value. This asserts that shared
-// requireScalar=false multi-component path once via Abs; it is identical for ALL the pointwise filters.
+// Abs accepts vector images and applies the pointwise operation to every stored component.
 TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is processed per-component", "[NXImageProcessing][AbsImageFilter]")
 {
   unit_test::LoadPlugins();

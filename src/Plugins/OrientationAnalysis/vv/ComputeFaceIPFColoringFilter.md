@@ -68,15 +68,15 @@ This branch fixes all defects in this table. The fix will be in the DREAM3D-NX r
 
 ## Code path coverage
 
-The table maps current source routes to named tests. The missing-array guard is unreachable through normal parameter validation. The invalid Color Key and crystal-structure guards remain untested.
+The table maps current source routes to named tests. Parameter validation rejects a missing face labels array. The invalid Color Key and crystal-structure guards remain untested.
 
 Sources: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeFaceIPFColoring.cpp`, its shared `OrientationTupleLookup.hpp`, and `ComputeFaceIPFColoringFilter.cpp` preflight/execute. Validation reads face labels in blocks of 65,536. OOC computation uses at most 262,144 faces per block and reduces the block when the admitted lookup plan requires it. The resident path uses direct array access. Short test names below use the `OrientationAnalysis::ComputeFaceIPFColoringFilter: ` prefix.
 
 | #  | Phase            | Path          | Test case           |
 |----|------------------|-----------------------------------------------------------------------------------|------------------------------------------------------------------------|
 | 1  | (a) Preflight    | face label/normal tuple mismatch → error `-2430`| `Invalid filter execution` — "Inconsistent face data tuple dimensions" |
-| 2  | (a) Preflight    | feature euler/phase tuple mismatch → error `-2432`               | `Invalid filter execution` — "Inconsistent cell data tuple dimensions" |
-| 3  | (a) Preflight    | face labels array missing → error `-2431`       | *Unreachable dead code: the path is an `ArraySelectionParameter`, which guarantees existence before `preflightImpl` runs, and the `-2430` tuple validation would fail first anyway.* |
+| 2  | (a) Preflight    | feature Euler angle/phase tuple mismatch → error `-2432` | `Invalid filter execution` — "Inconsistent feature data tuple dimensions" |
+| 3  | (a) Preflight    | face labels array missing → parameter error `-204` | `Invalid filter execution` — "Missing face labels" |
 | 4  | (b) Execute      | Color Key 0/1/2 → TSL/PUCM/Nolze-Hielscher       | `ColorKey choice reaches algorithm` — all three kinds |
 | 5  | (b) Execute      | Color Key out of [0,2] → error `-24340`         | *Not directly tested. `ChoicesParameter` constrains the index; low-value.* |
 | 6  | (c) Per-face     | `feature1 > 0` → `phase1 = m_Phases[feature1]`   | `Class 1 Oracle - mixed-phase analytical` — faces 0, 2, 3     |
@@ -107,7 +107,7 @@ Public cases are in `test/ComputeFaceIPFColoringTest.cpp`. With OOC enabled, the
 | `working headroom applies only to OOC computation` | current public | Exhausts shared working headroom. Checks `-24359` for the OOC algorithm on resident stores and literal red for the resident algorithm. |
 | Companion low-memory verification | companion | Checks analytical colors, insufficient-memory errors, diagnostics, warnings, and cancellation with disk-backed storage. See [BlueQuartzSoftware/SimplnxOoc#4](https://github.com/BlueQuartzSoftware/SimplnxOoc/pull/4). |
 | `Valid filter execution` | retired | Compared against `SurfaceMeshFaceIPFColors` baked into `6_6_Small_IN100_GBCD` — the filter's own pre-fix output (circular oracle). It encoded the bug on `feature1`-invalid boundary faces, so the fix correctly broke it. Superseded by the Class 1 analytical test; real-data exercise retained by the Color-Key test below. |
-| `Invalid filter execution` | kept | Two preflight tuple-mismatch sections (`-2430`, `-2432`). |
+| `Invalid filter execution` | current public | Checks face and feature tuple mismatches (`-2430`, `-2432`) and a missing face labels path (`-204`). |
 | `ColorKey choice reaches algorithm` | kept | Runs the filter on the full Small IN100 GBCD surface mesh three times (TSL/PUCM/NH) and asserts the outputs differ — real-data smoke test independent of any baked exemplar. |
 | `SIMPL Backwards Compatibility` | kept | 6.4 and 6.5 SIMPL JSON → Arguments round-trip. |
 

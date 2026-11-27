@@ -226,7 +226,7 @@ TEST_CASE("SimplnxCore::AddBadData: rejects nonnumeric input arrays", "[SimplnxC
   IFilter::PreflightResult preflight;
   REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
-  REQUIRE(preflight.output_actions.errors().front().code == -76240);
+  REQUIRE(preflight.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
   REQUIRE(preflight.output_actions.errors().front().message.find("Input") != std::string::npos);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

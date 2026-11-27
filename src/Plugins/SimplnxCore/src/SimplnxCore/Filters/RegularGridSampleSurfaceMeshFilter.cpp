@@ -99,7 +99,7 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType ::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels/Part Numbers",
                                                           "Array specifying which Features are on either side of each Face. Accepts 1-component (single part number per face) or 2-component arrays.",
-                                                          DataPath{}, nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}, {2}}));
+                                                          DataPath{}, GetDataArrayOnlyTypes(), nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}, {2}}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingImageGeomPath_Key, "Image Geometry", "The path to the existing image geometry to use", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType::Image}));
 

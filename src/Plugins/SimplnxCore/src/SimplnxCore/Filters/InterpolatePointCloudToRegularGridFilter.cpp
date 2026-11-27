@@ -72,13 +72,14 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean or uint8 mask array. Values that are true will mark that vertex as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
+                                                               MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
+                                                               MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -189,16 +190,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(interpolatePath);
 
-    const auto* srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(interpolatePath);
-    if(srcDataArrayPtr->getDataType() == DataType::boolean)
-    {
-      return MakePreflightErrorResult(-205, fmt::format("Boolean array '{}' cannot be selected for interpolation. Select a numeric array.", interpolatePath.toString()));
-    }
-    if(srcDataArrayPtr->getNumberOfComponents() != 1)
-    {
-      return MakePreflightErrorResult(-11002, fmt::format("Attribute Arrays selected for interpolation must be scalar arrays"));
-    }
-    const std::string& destArrayName = srcDataArrayPtr->getName();
+    const std::string destArrayName = interpolatePath.getTargetName();
 
     // Create the interpolated (weighted average) output array as float64
     {
@@ -251,18 +243,10 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(copyPath);
 
-    const auto* srcDataArrayPtr = dataStructure.getDataAs<IDataArray>(copyPath);
-    if(srcDataArrayPtr->getDataType() == DataType::boolean)
-    {
-      return MakePreflightErrorResult(-205, fmt::format("Boolean array '{}' cannot be selected for copying. Select a numeric array.", copyPath.toString()));
-    }
-    if(srcDataArrayPtr->getNumberOfComponents() != 1)
-    {
-      return MakePreflightErrorResult(-11002, fmt::format("Attribute Arrays selected for copying must be scalar arrays"));
-    }
-    auto dataType = srcDataArrayPtr->getDataType();
-    auto destArrayDataPath = interpolatedGroupPath.createChildPath(srcDataArrayPtr->getName());
-    auto createAction = std::make_unique<CreateArrayAction>(dataType, tupleDims, srcDataArrayPtr->getComponentShape(), destArrayDataPath);
+    const auto& srcDataArray = dataStructure.getDataRefAs<IDataArray>(copyPath);
+    auto dataType = srcDataArray.getDataType();
+    auto destArrayDataPath = interpolatedGroupPath.createChildPath(srcDataArray.getName());
+    auto createAction = std::make_unique<CreateArrayAction>(dataType, tupleDims, srcDataArray.getComponentShape(), destArrayDataPath);
     actions.appendAction(std::move(createAction));
   }
 

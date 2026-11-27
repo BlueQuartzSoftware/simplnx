@@ -304,14 +304,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
             -67453, fmt::format("**Feature Ids** DataArray '{}' must be in {} of the selected geometry '{}'. Select an array from that Attribute Matrix.", featureIdsPath.toString(),
                                 imageGeomPtr != nullptr ? "the selected Cell Attribute Matrix" : "a Vertex, Edge, Face, or Polyhedron Attribute Matrix", pSelectedGeometryPathValue.toString()));
       }
-      const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
-      if(featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1)
-      {
-        return {.output_actions = MakeErrorResult<OutputActions>(
-                    -67455, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.",
-                                        featureIdsPath.toString()))};
-      }
-      const auto& featureIds = *featureIdsPtr;
+      const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
       if(featureIds.getNumberOfTuples() != *elementCount)
       {
         return IFilter::MakePreflightErrorResult(

@@ -525,6 +525,29 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 two populated p
   CheckTwoPhaseIntensityTupleShapes(DataStorageMode::ForceOutOfCore);
 }
 
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Rejects a DataArray for Material Name", "[OrientationAnalysis][WritePoleFigureFilter]")
+{
+  DataStructure dataStructure;
+  REQUIRE(Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Eulers", {1}, {3}) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Phases", {1}, {1}) != nullptr);
+  REQUIRE(UInt32ArrayType::CreateWithStore<UInt32DataStoreType>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+
+  const WritePoleFigureFilter filter;
+  auto args = filter.getDefaultArguments();
+  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, false);
+  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, DataPath({"Eulers"}));
+  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, DataPath({"Phases"}));
+  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, DataPath({"CrystalStructures"}));
+  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, DataPath({"CrystalStructures"}));
+
+  const auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  const auto& error = result.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find("material_name_array_path") != std::string::npos);
+}
+
 // -----------------------------------------------------------------------------
 // SIMPL JSON backwards compatibility.
 // -----------------------------------------------------------------------------

@@ -12,6 +12,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include <simplnx/Parameters/ChoicesParameter.hpp>
@@ -1257,9 +1258,9 @@ TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Reject nonnumeric Feature Ids", 
   auto result = filter.preflight(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   REQUIRE(result.output_actions.errors().size() == 1);
-  CHECK(result.output_actions.errors()[0].code == -67415);
+  CHECK(result.output_actions.errors()[0].code == filter_parameter::constants::k_Validate_ArrayType_Error);
   CHECK(result.output_actions.errors()[0].message.find(idsPath.toString()) != std::string::npos);
-  CHECK(result.output_actions.errors()[0].message.find("single-component int32 DataArray") != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find("Select an array of one of these kinds: DataArray.") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::CropEdgeGeometryFilter: Reject another geometry element Feature AM", "[SimplnxCore][CropEdgeGeometryFilter][ClearFeatureAM]")

@@ -70,7 +70,8 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances",
@@ -123,13 +124,8 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* cellDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
-  if(nullptr == cellDataArrayPtr)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
-  }
-
-  ShapeType tupleShape = cellDataArrayPtr->getIDataStore()->getTupleShape();
+  const auto& cellDataArray = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
+  ShapeType tupleShape = cellDataArray.getTupleShape();
   DataType outputDataType = DataType::int32;
   if(!pCalcManhattanDistValue)
   {

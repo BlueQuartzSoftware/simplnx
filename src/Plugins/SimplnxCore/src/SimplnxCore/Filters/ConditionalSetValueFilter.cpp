@@ -16,7 +16,6 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_EmptyParameterValue = -123;
-constexpr int32 k_IncorrectInputArrayType = -124;
 constexpr int32 k_ConvertReplaceValueTypeError = -125;
 constexpr int32 k_ConvertRemoveValueTypeError = -126;
 }; // namespace
@@ -61,12 +60,12 @@ Parameters ConditionalSetValueFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_InvertMask_Key, "Invert Mask", "This makes the filter replace values that are marked FALSE in the conditional array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_ConditionalArrayPath_Key, "Conditional Array", "The complete path to the conditional array that will determine which values/entries will be replaced if index is TRUE", DataPath{},
-      ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+      GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<StringParameter>(k_RemoveValue_Key, "Value To Replace", "The numerical value that will be replaced in the array", "0"));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array", "The complete path to array that will have values replaced", DataPath{}, nx::core::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array", "The complete path to array that will have values replaced", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::GetAllDataTypes()));
 
   params.linkParameters(k_UseConditional_Key, k_RemoveValue_Key, false);
   params.linkParameters(k_UseConditional_Key, k_ConditionalArrayPath_Key, true);
@@ -89,11 +88,9 @@ IFilter::UniquePointerType ConditionalSetValueFilter::clone() const
 IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
-  auto useConditionalValue = filterArgs.value<bool>(k_UseConditional_Key);
   auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto pConditionalPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
 
   const auto& inputDataObject = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
 
@@ -104,18 +101,6 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(removeValueString.empty())
   {
     return MakePreflightErrorResult(::k_EmptyParameterValue, fmt::format("{}: Remove parameter cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
-  }
-
-  if(useConditionalValue)
-  {
-    // Validate that the Conditional Array is of the correct type
-    const auto* dataObjectPtr = dataStructure.getDataAs<IDataArray>(pConditionalPath);
-
-    if(dataObjectPtr->getDataType() != nx::core::DataType::boolean && dataObjectPtr->getDataType() != nx::core::DataType::uint8 && dataObjectPtr->getDataType() != nx::core::DataType::int8)
-    {
-      return MakePreflightErrorResult(::k_IncorrectInputArrayType,
-                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObjectPtr->getTypeName()));
-    }
   }
 
   // Sanity check all the inputs here

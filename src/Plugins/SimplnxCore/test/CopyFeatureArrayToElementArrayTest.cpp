@@ -336,12 +336,15 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - 
 
   CopyFeatureArrayToElementArrayFilter filter;
   Arguments args = analytical_fixtures::CreateArguments();
-  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPaths_Key,
-                      std::make_any<std::vector<DataPath>>(std::vector<DataPath>{analytical_fixtures::k_FeatureAMPath.createChildPath("NeighborList")}));
+  const DataPath neighborListPath = analytical_fixtures::k_FeatureAMPath.createChildPath("NeighborList");
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPaths_Key, std::vector<DataPath>{neighborListPath});
 
-  auto preflightResult = filter.preflight(dataStructure, args);
-  auto assertionResult4 = preflightResult.output_actions;
-  SIMPLNX_RESULT_REQUIRE_INVALID(assertionResult4);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find(neighborListPath.toString()) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - Suffix contains '/' (-3021)", "[SimplnxCore][CopyFeatureArrayToElementArrayFilter]")

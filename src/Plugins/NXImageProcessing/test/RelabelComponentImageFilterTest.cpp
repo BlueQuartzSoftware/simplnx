@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/CacheMemoryBudgetManager.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -195,7 +196,7 @@ std::vector<T> MakeLabeledField(usize dimX, usize dimY, usize dimZ)
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
+// (1) Preflight guards: a multi-component input is rejected; a non-integer (float32) input is
 //     rejected (IntegerOnly); a valid integer scalar input produces a SameAsInput output array.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[NXImageProcessing][RelabelComponentImageFilter]")
@@ -221,7 +222,7 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
     args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(true));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("float input rejected")
   {

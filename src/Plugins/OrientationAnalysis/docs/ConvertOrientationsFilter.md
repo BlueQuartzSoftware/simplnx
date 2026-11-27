@@ -55,6 +55,8 @@ The *Output Orientation Type* parameter provides the following choices:
 
 ### Data Layout
 
+Select an input array with component shape `{3}`, `{4}`, or `{9}` as listed for the input representation. Store each orientation matrix as nine components in row-major order.
+
 | Orientation Representation | No. of Components  | Data Layout |
 |----------------------------|---------------------|-------------|
 | EulerAngles                | 3 | phi1, Phi, phi2 |

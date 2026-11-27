@@ -22,7 +22,6 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -49,14 +48,9 @@ inline Result<> AddMorphologyLayoutGeometryContext(Result<> result, const DataPa
   return result;
 }
 
-// Element-type dispatch policies. Each reuses a core ExecuteDataFunction* helper + its matching
-// allowed-DataType set — no duplicated type switch.
+// Element-type dispatch policies. Filter parameters declare which types preflight accepts.
 struct AllNumeric
 {
-  static const std::set<DataType>& AllowedTypes()
-  {
-    return GetScalarNumericTypes();
-  }
   template <class FuncT>
   static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
@@ -66,10 +60,6 @@ struct AllNumeric
 
 struct IntegerOnly
 {
-  static const std::set<DataType>& AllowedTypes()
-  {
-    return GetIntegerScalarTypes();
-  }
   template <class FuncT>
   static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
@@ -86,10 +76,6 @@ struct IntegerOnly
  */
 struct ProjectionScalar
 {
-  static const std::set<DataType>& AllowedTypes()
-  {
-    return GetProjectionScalarTypes();
-  }
   template <class FuncT>
   static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
@@ -111,10 +97,6 @@ struct ProjectionScalar
 
 struct SignedScalar
 {
-  static const std::set<DataType>& AllowedTypes()
-  {
-    return GetSignedScalarTypes();
-  }
   template <class FuncT>
   static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
@@ -146,10 +128,6 @@ struct SignedScalar
  */
 struct FloatingScalar
 {
-  static const std::set<DataType>& AllowedTypes()
-  {
-    return GetFloatingScalarTypes();
-  }
   template <class FuncT>
   static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
@@ -361,7 +339,7 @@ struct ScalarValueRangeGuard
  * @p nonFiniteCode / @p outOfRangeCode) and warns (via @p truncatedWarnCode) when a value has a fractional part
  * that will be truncated. The three error/warning codes are supplied by the caller so each filter keeps its own
  * unique codes. Shared by the Binary Dilate/Erode filters (and Task-5 binary composites); @p inputType must be
- * an integer scalar type (the callers guarantee this via PreflightImageFilter<IntegerOnly>).
+ * an integer scalar type (the filter's input parameter guarantees this).
  */
 inline Result<> ValidateBinaryFgBgInRange(DataType inputType, float64 foreground, float64 background, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
@@ -378,7 +356,7 @@ inline Result<> ValidateBinaryFgBgInRange(DataType inputType, float64 foreground
  *        value has a fractional part that will be truncated. This is the single-value analogue of
  *        @ref ValidateBinaryFgBgInRange for a filter that exposes only a Background Value (no Foreground), so the
  *        error message names "Background Value" rather than borrowing the foreground label. @p inputType must be
- *        an integer scalar type (the caller guarantees this via PreflightImageFilter<IntegerOnly>).
+ *        an integer scalar type (the filter's input parameter guarantees this).
  */
 inline Result<> ValidateBackgroundInRange(DataType inputType, float64 background, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
@@ -606,33 +584,19 @@ inline DataPath ProjectionOutputArrayPath(const DataStructure& dataStructure, co
 }
 
 /**
- * @brief Preflight for an image filter. Validates the input array's type against the compile-time
- *        ArrayTypeOptions bool-pack and against the geometry, then emits a CreateArrayAction for the
- *        output array. The output array inherits the input store's data format, so an OOC input
- *        produces an OOC output. @p chunkShapeHint optionally requests tuple-space chunks for the output store.
+ * @brief Checks that the selected input array's tuple count matches the Image Geometry's cell count,
+ *        then plans an output array that inherits the input store's data format.
+ * @tparam OutTypeMap Maps the input element type to the output element type.
+ * @param chunkShapeHint Optional tuple-space chunk shape for the output store.
+ * @pre Selection parameters have validated both input paths, including the array kind, element type,
+ *      and any required component shape.
  */
-template <class TypeSetPolicy = AllNumeric, template <class> class OutTypeMap = SameAsInput>
+template <template <class> class OutTypeMap = SameAsInput>
 Result<OutputActions> PreflightImageFilter(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath,
-                                           bool requireScalar = false, std::optional<ShapeType> chunkShapeHint = {},
-                                           DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
+                                           std::optional<ShapeType> chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
 {
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-
-  const DataType inputType = inputArray.getDataType();
-  if(TypeSetPolicy::AllowedTypes().count(inputType) == 0)
-  {
-    return MakeErrorResult<OutputActions>(k_UnsupportedDataType,
-                                          fmt::format("Input array '{}' has DataType '{}', which is not supported by this filter.", inputArrayPath.toString(), DataTypeToString(inputType)));
-  }
-
-  // Opt-in single-component check (SH2). Left off by default so existing callers are unchanged; the grayscale
-  // reconstruction filters pass requireScalar=true because their ITK operators are defined on scalar images.
-  if(requireScalar && inputArray.getNumberOfComponents() != 1)
-  {
-    return MakeErrorResult<OutputActions>(
-        k_NonScalarInput, fmt::format("This filter requires a single-component (scalar) input array, but '{}' has {} components.", inputArrayPath.toString(), inputArray.getNumberOfComponents()));
-  }
 
   if(inputArray.getNumberOfTuples() != imageGeom.getNumberOfCells())
   {
@@ -640,7 +604,7 @@ Result<OutputActions> PreflightImageFilter(const DataStructure& dataStructure, c
                                                                           inputArray.getNumberOfTuples(), imageGeomPath.toString(), imageGeom.getNumberOfCells()));
   }
 
-  const DataType outputType = GetMappedOutputType<OutTypeMap>(inputType);
+  const DataType outputType = GetMappedOutputType<OutTypeMap>(inputArray.getDataType());
 
   OutputActions outputActions;
   outputActions.appendAction(std::make_unique<CreateArrayAction>(outputType, inputArray.getTupleShape(), inputArray.getComponentShape(), outputArrayPath, inputArray.getDataFormat(), "",
@@ -648,12 +612,16 @@ Result<OutputActions> PreflightImageFilter(const DataStructure& dataStructure, c
   return {std::move(outputActions)};
 }
 
-template <class TypeSetPolicy = AllNumeric, template <class> class OutTypeMap = SameAsInput>
+/**
+ * @brief Plans an image filter output that execution will fully overwrite.
+ * @pre Selection parameters have validated both input paths, including the array kind, element type,
+ *      and any required component shape.
+ */
+template <template <class> class OutTypeMap = SameAsInput>
 Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath,
-                                                        bool requireScalar = false, std::optional<ShapeType> chunkShapeHint = {})
+                                                        std::optional<ShapeType> chunkShapeHint = {})
 {
-  return PreflightImageFilter<TypeSetPolicy, OutTypeMap>(dataStructure, inputArrayPath, imageGeomPath, outputArrayPath, requireScalar, std::move(chunkShapeHint),
-                                                         DataStoreInitializationMode::DeferredZeroFill);
+  return PreflightImageFilter<OutTypeMap>(dataStructure, inputArrayPath, imageGeomPath, outputArrayPath, std::move(chunkShapeHint), DataStoreInitializationMode::DeferredZeroFill);
 }
 
 /**
@@ -678,12 +646,11 @@ Result<OutputActions> PreflightFullOverwriteImageFilter(const DataStructure& dat
  *
  * The output element type is the input type mapped through @p OutTypeMap (SameAsInput for type-preserving
  * reducers like Max; a fixed float map for Mean/StdDev/Sum). The execute façade MUST be instantiated with
- * the SAME OutTypeMap so the allocated type and the written type agree. The input array is validated to be
- * scalar (1 component), of a type allowed by @p TypeSetPolicy (ProjectionScalar's 4 types by default;
- * Binary passes AllNumeric), and tuple-consistent with the geometry. The output array inherits the input
- * store's data format, so an OOC input produces an OOC output.
+ * the same OutTypeMap so the allocated type and the written type agree. This helper checks that the input array's
+ * tuple count matches the geometry's cell count. The output array inherits the input store's data format.
+ * @pre Selection parameters have validated both input paths, including the array kind, element type, and scalar shape.
  */
-template <class TypeSetPolicy = ProjectionScalar, template <class> class OutTypeMap = SameAsInput>
+template <template <class> class OutTypeMap = SameAsInput>
 Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, usize projDim, bool performInPlace,
                                               const std::string& outputGeomName, const std::string& outputArrayName)
 {
@@ -694,28 +661,6 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return MakeErrorResult<OutputActions>(
-        -8341, fmt::format("Axis projection requires a single-component (scalar) input array, but '{}' has {} components.", inputArrayPath.toString(), inputArray.getNumberOfComponents()));
-  }
-
-  const DataType inputType = inputArray.getDataType();
-  if(TypeSetPolicy::AllowedTypes().count(inputType) == 0)
-  {
-    std::string supportedTypes;
-    for(const DataType allowedType : TypeSetPolicy::AllowedTypes())
-    {
-      if(!supportedTypes.empty())
-      {
-        supportedTypes += ", ";
-      }
-      supportedTypes += DataTypeToString(allowedType);
-    }
-    return MakeErrorResult<OutputActions>(k_UnsupportedDataType, fmt::format("Input array '{}' has DataType '{}', which this axis-projection filter does not support. Supported types: {}.",
-                                                                             inputArrayPath.toString(), DataTypeToString(inputType), supportedTypes));
-  }
 
   if(inputArray.getNumberOfTuples() != imageGeom.getNumberOfCells())
   {
@@ -741,7 +686,7 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
   const auto spacing = imageGeom.getSpacing().toContainer<CreateImageGeometryAction::SpacingType>();
 
   // Output element type: the input type mapped through OutTypeMap (kept identical to the execute façade).
-  const DataType outputDataType = GetMappedOutputType<OutTypeMap>(inputType);
+  const DataType outputDataType = GetMappedOutputType<OutTypeMap>(inputArray.getDataType());
 
   Result<OutputActions> result;
 

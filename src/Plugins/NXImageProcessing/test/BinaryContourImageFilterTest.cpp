@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/BinaryContourImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
@@ -64,4 +65,9 @@ TEST_CASE("NXImageProcessing::BinaryContourImageFilter: ITK real-image golden (c
 {
   contour_test::RunContourMd5ItkGolden<BinaryContourImageFilter>("2th_cthead1.png", "09212e4d204a0ed90a445dc832047b22",
                                                                  contour_test::BinaryContourParamSetter<BinaryContourImageFilter>(/*fullyConnected=*/true, /*foreground=*/100.0, /*background=*/0.0));
+}
+
+TEST_CASE("NXImageProcessing::BinaryContourImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][BinaryContourImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<BinaryContourImageFilter, uint8>();
 }

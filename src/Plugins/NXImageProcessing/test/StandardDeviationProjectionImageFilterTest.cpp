@@ -327,3 +327,8 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Warning na
   }
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<StandardDeviationProjectionImageFilter, float32>();
+}

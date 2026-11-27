@@ -54,7 +54,7 @@ Parameters CombineTransformationMatricesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypesType{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -96,12 +96,6 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
     return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::OneInputArray), "Only one input array has been selected.  Please select at least 2 input arrays.");
   }
 
-  // Check for unequal array types, data types, and component dimensions
-  ShapeType cDims;
-  IArray::ArrayType arrayType;
-  std::string arrayTypeName;
-  usize numTuples = 0;
-  nx::core::DataType arrayDataType;
   for(usize i = 0; i < inputArrayPaths.size(); ++i)
   {
     const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[i]);
@@ -115,33 +109,12 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
                                                              inputArrayPaths[i].toString(), totalElements, inputDataArray.getNumberOfTuples(), inputDataArray.getNumberOfComponents()))};
     }
 
-    for(usize j = i + 1; j < inputArrayPaths.size(); ++j)
+    if(i + 1 < inputArrayPaths.size() && inputDataArray.getNumberOfComponents() != 1)
     {
-      const auto& inputDataArray2 = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[j]);
-
-      if(inputDataArray.getDataType() != inputDataArray2.getDataType())
-      {
-        return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::TypeNameMismatch),
-                                        fmt::format("Input array '{}' has array type '{}', but input array '{}' has array type '{}'.  The array types must match.", inputArrayPaths[i].toString(),
-                                                    inputDataArray.getTypeName(), inputArrayPaths[j].toString(), inputDataArray2.getTypeName()));
-      }
-
-      if(inputDataArray.getNumberOfComponents() != 1)
-
-      {
-        return MakePreflightErrorResult(to_underlying(CombineTransformationMatrices::ErrorCodes::ComponentShapeMismatch),
-                                        fmt::format("Input array '{}' has component shape '{}'. Input arrays must only have a single component.", inputArrayPaths[i].toString(),
-                                                    fmt::join(inputDataArray.getComponentShape(), ","), inputArrayPaths[j].toString()));
-      }
-
-      cDims = inputDataArray.getComponentShape();
-      arrayType = inputDataArray.getArrayType();
-      arrayTypeName = inputDataArray.getTypeName();
-      arrayDataType = inputDataArray.getDataType();
+      return MakePreflightErrorResult(
+          to_underlying(CombineTransformationMatrices::ErrorCodes::ComponentShapeMismatch),
+          fmt::format("Input array '{}' has component shape '{}'. Input arrays must only have a single component.", inputArrayPaths[i].toString(), fmt::join(inputDataArray.getComponentShape(), ",")));
     }
-
-    auto tupleShape = inputDataArray.getTupleShape();
-    numTuples = std::accumulate(tupleShape.begin(), tupleShape.end(), static_cast<usize>(1), std::multiplies<>());
   }
 
   // create the destination array for the calculated results

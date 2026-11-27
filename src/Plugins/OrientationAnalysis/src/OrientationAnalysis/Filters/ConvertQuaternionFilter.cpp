@@ -66,7 +66,8 @@ Parameters ConvertQuaternionFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Input Quaternions", "Specifies the quaternions to convert", DataPath({"Cell Data", "Quats"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::float32, DataType::float64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Output Quaternions", "The DataPath to the converted quaternions", "Quaternions [Converted]"));
 

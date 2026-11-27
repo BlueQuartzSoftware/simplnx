@@ -1,5 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 
 #include "NXImageProcessing/Filters/MorphologicalGradientImageFilter.hpp"
 
@@ -195,12 +196,12 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: ITK real-image g
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (error -8380) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<MorphologicalGradientImageFilter, float32>(-8380, morph_test::DefaultKernelParamSetter<MorphologicalGradientImageFilter>());
+  morph_test::RequirePreflightRejectsNonScalar<MorphologicalGradientImageFilter, float32>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                                          morph_test::DefaultKernelParamSetter<MorphologicalGradientImageFilter>());
 }
 
 TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Kernel Radius representability", "[NXImageProcessing][MorphologicalGradientImageFilter]")

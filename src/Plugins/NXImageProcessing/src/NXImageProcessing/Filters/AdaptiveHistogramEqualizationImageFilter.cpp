@@ -14,19 +14,9 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 #include <array>
 
 using namespace nx::core;
-
-namespace
-{
-// Error code for this filter. The -85xx blocks up to -8533 are taken (object morphology ends at -8533); this
-// filter uses the still-unused -8540 block. Only the non-scalar-input guard is needed (Alpha/Beta are native
-// float32 params -> no cast guard; PreflightFullOverwriteImageFilter covers type-membership and geometry/tuple mismatch).
-constexpr int32 k_NonScalarInput = -8540;
-} // namespace
 
 namespace nx::core
 {
@@ -64,8 +54,8 @@ Parameters AdaptiveHistogramEqualizationImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -88,16 +78,7 @@ IFilter::PreflightResult AdaptiveHistogramEqualizationImageFilter::preflightImpl
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions =
-                MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Adaptive Histogram Equalization requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                             selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
-
-  return {.output_actions =
-              ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)};
+  return {ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)};
 }
 Result<> AdaptiveHistogramEqualizationImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

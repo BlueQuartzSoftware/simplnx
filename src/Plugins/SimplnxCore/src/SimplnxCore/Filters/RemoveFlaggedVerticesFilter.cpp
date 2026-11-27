@@ -63,8 +63,8 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array (Mask)",
-                                                          "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
                                                                  "Recreates the selected Feature Attribute Matrix in the reduced geometry with no arrays. Removing vertices changes which vertices "
@@ -76,7 +76,8 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after removing vertices", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexFeatureIdsPath_Key, "Vertex Feature Ids", "Specifies to which feature each vertex belongs.", DataPath({"Vertex Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
@@ -110,13 +111,6 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   const bool renumberFeatures = clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
   const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
   const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
-
-  const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
-  if(renumberFeatures && (featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1))
-  {
-    return MakePreflightErrorResult(
-        -67425, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()));
-  }
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -201,7 +195,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
             fmt::format("**Vertex Feature Ids** DataArray '{}' must be in the Vertex Attribute Matrix '{}' of the selected Vertex Geometry '{}'. Select the DataArray from that Attribute Matrix.",
                         featureIdsPath.toString(), vertexGeomPath.createChildPath(vertexAttrMatName).toString(), vertexGeomPath.toString()));
       }
-      const auto& featureIds = *featureIdsPtr;
+      const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
       if(featureIds.getNumberOfTuples() != numVertices)
       {
         return MakePreflightErrorResult(

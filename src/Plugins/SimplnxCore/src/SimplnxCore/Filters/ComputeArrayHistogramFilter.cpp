@@ -33,7 +33,6 @@ Result<> ValidateNumberOfBins(int32 numberOfBins)
 }
 
 constexpr int32 k_MaskTupleCountError = -57207;
-constexpr int32 k_InvalidMaskArrayError = -57222;
 
 ComputeArrayHistogramInputValues CreateInputValues(const Arguments& filterArgs)
 {
@@ -101,12 +100,12 @@ Parameters ComputeArrayHistogramFilter::parameters() const
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          DataPath{}, GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::boolean, DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -170,13 +169,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   const IDataArray* maskArrayPtr = nullptr;
   if(useMask)
   {
-    // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
-    maskArrayPtr = dataStructure.getDataAs<IDataArray>(maskArrayPath);
-    if(maskArrayPtr == nullptr)
-    {
-      return {.output_actions = MakeErrorResult<OutputActions>(
-                  k_InvalidMaskArrayError, fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
-    }
+    maskArrayPtr = &dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
   }
 
   nx::core::Result<OutputActions> resultOutputActions;

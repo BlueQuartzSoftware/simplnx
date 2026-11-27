@@ -183,8 +183,8 @@ We want this filter to take in two existing arrays, so that means we need to use
         """
         params = nx.Parameters()
 
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
 
         return params
 
@@ -212,8 +212,8 @@ We also need to allow the user to pick a mathematical operation to perform eleme
         """
         params = nx.Parameters()
 
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
 
         params.insert(nx.ChoicesParameter(name=ArrayStatisticsFilter.MATH_OPERATION_KEY, human_name='Element-wise Operation', help_text='The operation to perform element-wise on both arrays.', default_value=0, choices=['Add', 'Subtract', 'Multiply', 'Divide']))
 
@@ -248,8 +248,8 @@ Finally, we want to create a new array to store the output, so to do that we wil
         """
         params = nx.Parameters()
 
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
 
         params.insert(nx.ChoicesParameter(name=ArrayStatisticsFilter.MATH_OPERATION_KEY, human_name='Element-wise Operation', help_text='The operation to perform element-wise on both arrays.', default_value=0, choices=['Add', 'Subtract', 'Multiply', 'Divide']))
 
@@ -289,8 +289,8 @@ It's possible to group parameters using the Separator class:
         params = nx.Parameters()
 
         params.insert(params.Separator("Input Parameters"))     # Group the input parameters
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
-        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
 
         params.insert(nx.ChoicesParameter(name=ArrayStatisticsFilter.MATH_OPERATION_KEY, human_name='Element-wise Operation', help_text='The operation to perform element-wise on both arrays.', default_value=0, choices=['Add', 'Subtract', 'Multiply', 'Divide']))
         
@@ -369,8 +369,8 @@ Don't forget to add the numpy import statement at the top of the file:
 .. code:: python
 
     # required_comps = [[1]]
-    params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
-    params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+    params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+    params.insert(nx.ArraySelectionParameter(name=ArrayStatisticsFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
 
 We also need to create the output array.  First, we are going to create an OutputActions object, which is a container that holds action objects that modify the DataStructure:
 
@@ -650,8 +650,8 @@ The finished `execute_impl` method should look like this:
         params = nx.Parameters()
 
         params.insert(params.Separator("Input Parameters"))
-        params.insert(nx.ArraySelectionParameter(name=ArrayCalculationFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
-        params.insert(nx.ArraySelectionParameter(name=ArrayCalculationFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayCalculationFilter.ARRAY_1_PATH_KEY, human_name='Array 1', help_text='The 1st array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
+        params.insert(nx.ArraySelectionParameter(name=ArrayCalculationFilter.ARRAY_2_PATH_KEY, human_name='Array 2', help_text='The 2nd array that will be used in the statistics calculations', default_value=nx.DataPath(), allowed_array_types={nx.IArray.ArrayType.DataArray}, allowed_data_types={nx.DataType.float32, nx.DataType.float64}, required_comps=[[1]]))
 
         params.insert(nx.ChoicesParameter(name=ArrayCalculationFilter.MATH_OPERATION_KEY, human_name='Element-wise Operation', help_text='The operation to perform element-wise on both arrays.', default_value=0, choices=['Add', 'Subtract', 'Multiply', 'Divide']))
         

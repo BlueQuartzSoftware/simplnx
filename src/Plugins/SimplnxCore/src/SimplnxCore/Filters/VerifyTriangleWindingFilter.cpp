@@ -75,15 +75,15 @@ Parameters VerifyTriangleWindingFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_LabelsPath_Key, "Face labels or Region Ids Array",
-                                                          "The path to the face labels or region ids array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_LabelsPath_Key, "Face labels or Region Ids Array", "The path to the face labels or region ids array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
+      GetDataArrayOnlyTypes(), ArraySelectionParameter::AllowedDataTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}, {2}}));
 
   params.insertSeparator(Parameters::Separator{"Optional"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If enabled, the triangle normals will be recomputed if the triangle normals exist", true));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          ArraySelectionParameter::AllowedDataTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.linkParameters(k_RepairNormals_Key, k_TriangleNormalsPath_Key, true);
 
@@ -111,13 +111,6 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
   if(targetGeomResult.invalid())
   {
     return MakePreflightErrorResult(-25741, fmt::format("Error trying to locate parent TriangleGeometry on path {}", pLabelsPath.toString()));
-  }
-
-  usize numComp = dataStructure.getDataAs<IDataArray>(pLabelsPath)->getNumberOfComponents();
-  if(numComp != 1 && numComp != 2)
-  {
-    return MakePreflightErrorResult(
-        -25742, fmt::format("Input labels array must be 1 component (Region Ids) or 2 component (Face Labels). Supplied array {} has {} components.", pLabelsPath.getTargetName(), numComp));
   }
 
   if(filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key))

@@ -17,8 +17,6 @@
 #include "simplnx/Utilities/ImageProcessing/StructuringElement.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
-
 using namespace nx::core;
 
 namespace
@@ -26,7 +24,6 @@ namespace
 // Error/warning codes for this filter. Verified free by grepping the whole src/Plugins/NXImageProcessing tree
 // (and all of src/) for -85xx codes: the -8520 block is used by Dilate Object Morphology, so this filter uses
 // the still-unused -8530 block.
-constexpr int32 k_NonScalarInput = -8530;
 constexpr int32 k_NonFiniteValue = -8531;
 constexpr int32 k_ValueOutOfRange = -8532;
 constexpr int32 k_ValueTruncated = -8533;
@@ -75,8 +72,8 @@ Parameters ErodeObjectMorphologyImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
-                                                          nx::core::ImageProcessing::GetScalarNumericTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{}, GetDataArrayOnlyTypes(),
+                                                          nx::core::ImageProcessing::GetScalarNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageArrayName_Key, "Output Cell Data",
@@ -114,14 +111,8 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  if(inputArray.getNumberOfComponents() != 1)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Erode Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
-  }
 
-  Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
     return {.output_actions = std::move(resultOutputActions)};
@@ -131,7 +122,7 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   // object-morphology façade. That conversion is UNDEFINED for a non-finite or out-of-range value on an
   // integer type (and non-finite would break the exact-equality object test on any type). Validate the Object
   // Value first, then the Background Value; return early on the FIRST error and accumulate any truncation
-  // warnings from both (the array is guaranteed present/scalar by the checks above).
+  // warnings from both.
   const DataType inputType = inputArray.getDataType();
   Result<> objectGuard = ImageProcessing::ValidateScalarValueForType(inputType, objectValue, "Object Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(objectGuard.invalid())

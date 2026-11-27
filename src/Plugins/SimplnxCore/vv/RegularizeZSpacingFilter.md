@@ -102,7 +102,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | 25 | (d) | SIMPL 6.x conversion sets Clear off; converted pipeline preflights on a geometry with only cell data | `SIMPL Backwards Compatibility` |
 | 26 | (d) | Feature Attribute Matrix is registered as another geometry's element data → error `-67460` | `Reject another geometry element Feature AM` checks a linked Vertex Attribute Matrix. |
 | 27 | (c) | Slice transfer fails → return the store error before compaction or deferred source replacement. | `Transfer failure preserves source` injects `-95120` on the second slice; checks source identity, dimensions, arrays and uncompacted partial output. |
-| 28 | (b) | Feature Ids is a StringArray or NeighborList → existing error `-5561`, without an exception. | `Reject nonnumeric Feature Ids` checks both types. |
+| 28 | Parameter | The Cell Feature Ids selection returns error `-211` for a StringArray or NeighborList. | `Reject nonnumeric Feature Ids` checks both array kinds. |
 
 ## Test inventory
 
@@ -132,7 +132,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | `Feature AM nested alias regression` | new on `topic/correct_feature_am_updates` | The Feature matrix is also linked in `Image/Misc`, and `Misc` is also linked in `Outside`. Clear, Renumber and the selected path (direct or nested) are each on and off. With Clear on, the output matrix has no arrays and `Misc` has no copy of the matrix; with Clear off, it has 3 arrays and the nested copy keeps the original counts. `Misc/Keep` is 123 in every case. The source matrix keeps its ID, parents, shape, 3 arrays, counts and the `Outside` link. |
 | `Reject another geometry element Feature AM` | review regression | Rejects clearing a linked matrix registered by a second geometry; asserts `-67460`. |
 | `Transfer failure preserves source` | review regression | One successful slice precedes the injected read error. Asserts `-95120`, unchanged source data and no destination feature compaction. |
-| `Reject nonnumeric Feature Ids` | review regression | StringArray and NeighborList inputs return the existing `-5561` error without throwing. |
+| `Reject nonnumeric Feature Ids` | review regression | StringArray and NeighborList inputs return selection error `-211` without throwing. The test checks the path and accepted array kind in the message. |
 | `Preflight warns for unchanged Attribute Matrices` | PR #1913 review | Checks preflight warning `-4041`. The warning lists the Ensemble path and excludes the cleared Feature matrix. A geometry with only its registered Cell Attribute Matrix gives no warning. |
 
 Before the current review update, the report listed 25 `TEST_CASE`s: 6 from the V&V cycle (all modified on `topic/correct_feature_am_updates`), 13 new on that branch, 3 from upstream #1897, and 3 review regressions. 24 are registered with CTest; `real HDF5 slice-copy oracle` is hidden. The earlier 21-case in-core result is from 2026-11-04. The review validation results are recorded separately.

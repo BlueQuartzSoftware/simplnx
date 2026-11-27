@@ -29,7 +29,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_InvalidInputArrayError = -76240;
 constexpr int32 k_CellTupleCountError = -76238;
 
 AddBadDataInputValues CreateInputValues(const Arguments& filterArgs)
@@ -104,7 +103,7 @@ Parameters AddBadDataFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "This is the GB Manhattan Distances array", DataPath{},
-                                                          std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          GetDataArrayOnlyTypes(), std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_PoissonNoise_Key, k_PoissonVolFraction_Key, true);
@@ -137,13 +136,6 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   auto pGBEuclideanDistancesArrayPathValue = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
-
-  // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
-  if(dataStructure.getDataAs<IDataArray>(pGBEuclideanDistancesArrayPathValue) == nullptr)
-  {
-    return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.",
-                                                                                                   pGBEuclideanDistancesArrayPathValue.toString()))};
-  }
 
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, k_CellTupleCountError);
   if(tupleCountResult.invalid())

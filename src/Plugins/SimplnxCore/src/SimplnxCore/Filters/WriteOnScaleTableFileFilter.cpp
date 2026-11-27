@@ -3,14 +3,12 @@
 #include "SimplnxCore/Filters/Algorithms/WriteOnScaleTableFile.hpp"
 
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 // This header declares DataContainerSelectionFilterParameterConverter.
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
-#include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
@@ -75,12 +73,14 @@ Parameters WriteOnScaleTableFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
-      k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "The feature ID for each cell.", DataPath{},
-      ArraySelectionParameter::AllowedTypeSetType{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
+      k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "The feature ID for each cell.", DataPath{}, GetDataArrayOnlyTypes(),
+      ArraySelectionParameter::AllowedDataTypes{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
       ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_PhaseNamesArrayPath_Key, "Phase Names", "The name for each positive feature ID.", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_PhaseNamesArrayPath_Key, "Phase Names", "The name for each positive feature ID.", DataPath{},
+                                                          ArraySelectionParameter::AllowedArrayTypes{IArray::ArrayType::StringArray}, ArraySelectionParameter::AllowedDataTypes::StringOnly(),
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -108,29 +108,16 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   const auto geometryPath = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
   const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>(geometryPath);
   const auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
-  // Keep the local type check until the parameter validates supported array kinds.
-  // TODO(#1833): Revisit this guard after the shared fix preserves generic array support.
   const auto* featureIdsPtr = dataStructure.getDataAs<IDataArray>(featureIdsPath);
-  if(featureIdsPtr == nullptr)
-  {
-    const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featureIdsPath);
-    return MakePreflightErrorResult(-12042, fmt::format("The selected Feature Ids object '{}' has type '{}', but a scalar integer DataArray is required. Select a scalar integer DataArray.",
-                                                        featureIdsPath.toString(), selectedObject.getTypeName()));
-  }
   auto cellTupleResult = ValidateCellTupleCount(geometry, geometryPath, featureIdsPtr->getNumberOfTuples(), featureIdsPath, -12024);
   if(cellTupleResult.invalid())
   {
     return {.output_actions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
-  const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
-  const auto* phaseNamesPtr = dataStructure.getDataAs<StringArray>(phaseNamesPath);
-  if(phaseNamesPtr == nullptr)
-  {
-    return MakePreflightErrorResult(-12025, fmt::format("The phase names object '{}' is not a StringArray. Select a StringArray that contains the phase names.", phaseNamesPath.toString()));
-  }
-  if(phaseNamesPtr->getNumberOfTuples() == 0)
+  const auto phaseNamesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_PhaseNamesArrayPath_Key);
+  const auto& phaseNames = dataStructure.getDataRefAs<StringArray>(phaseNamesPath);
+  if(phaseNames.getNumberOfTuples() == 0)
   {
     resultOutputActions.warnings().push_back(
         Warning{.code = -12038, .message = fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});
@@ -156,7 +143,7 @@ Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.num_keypoints = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumKeypoints_Key);
   inputValues.input_geometry_path = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
   inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.phase_names_array_path = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
+  inputValues.phase_names_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_PhaseNamesArrayPath_Key);
 
   return WriteOnScaleTableFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

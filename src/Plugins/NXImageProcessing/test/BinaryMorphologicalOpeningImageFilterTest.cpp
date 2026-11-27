@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/BinaryMorphologicalOpeningImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 
 #include <algorithm>
@@ -227,12 +228,11 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-im
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (k_NonScalarInput == -8480) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<OpeningFilterType, uint8>(-8480, OpeningKernelParamSetter(1.0, 0.0));
+  morph_test::RequirePreflightRejectsNonScalar<OpeningFilterType, uint8>(filter_parameter::constants::k_ValidateTupleShapeValue, OpeningKernelParamSetter(1.0, 0.0));
 }
 
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")

@@ -1,6 +1,7 @@
 #include "ItkGoldenTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/MedianImageFilter.hpp"
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/BoxNeighborhoodEngine.hpp"
@@ -355,4 +356,9 @@ TEST_CASE("NXImageProcessing::MedianImageFilter: ITK real-image golden (defaults
 TEST_CASE("NXImageProcessing::MedianImageFilter: ITK real-image golden (by23)", "[NXImageProcessing][ItkGolden][MedianImageFilter]")
 {
   RunMedianItkGolden(/*radius=*/std::vector<uint32>{2, 3, 0}, "4afeba184100773dc279a776b1ae493b");
+}
+
+TEST_CASE("NXImageProcessing::MedianImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][MedianImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<MedianImageFilter, float32>();
 }

@@ -3,6 +3,7 @@
 #include "NXImageProcessing/Filters/SignedDanielssonDistanceMapImageFilter.hpp"
 
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -189,7 +190,7 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight 
     DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
     const auto result = filter.preflight(dataStructure, argsFor(path));
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == -8550);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("tuple mismatch")
   {

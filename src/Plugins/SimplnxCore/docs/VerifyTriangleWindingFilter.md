@@ -64,6 +64,8 @@ The pipeline for multi-object meshes should look something like this:
 - **Triangle Geometry** -- the surface mesh whose winding will be verified and repaired.
 - **Face Labels (or Region Ids)** -- the per-face array identifying the **Features** on either side of each triangle, produced by a surface-meshing filter such as [Create Surface Mesh (Surface Nets)](SurfaceNetsFilter.md) or [Create Surface Mesh (QuickMesh)](QuickSurfaceMeshFilter.md), or assembled from region ids via [Label CAD Geometry](LabelTriangleGeometryFilter.md) as described above.
 
+Use component shape `{1}` for Region Ids or `{2}` for Face Labels.
+
 % Auto generated parameter table will be inserted here
 
 ## Connectivity lifetime and saving

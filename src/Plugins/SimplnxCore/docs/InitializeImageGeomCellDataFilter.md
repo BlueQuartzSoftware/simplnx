@@ -20,7 +20,7 @@ The selected **Cell** data is initialized in bounded contiguous blocks. This kee
 
 The *Initialization Type* parameter provides three modes:
 
-- **Manual [0]**: every cell in the subvolume is set to a single user-specified constant value. The value is reinterpreted into each array's data type (e.g., 1.5 → 1 for an int array, 1.5 → 1.5 for a float array, anything non-zero → true for a bool array).
+- **Manual [0]**: every cell in the subvolume is set to a single user-specified constant value. The filter converts the value to each array's data type. For example, 1.5 becomes 1 in an integer array.
 - **Random [1]**: every cell is set to an independent random value drawn from the **full range of the array's data type**. For uint8, this means 0-255. For float32, this means the full IEEE-754 range (which produces extreme values rarely useful for visualization).
 - **Random With Range [2]**: every cell is set to an independent random value drawn from the user-specified [min, max] interval. The min/max are interpreted in the array's data type.
 
@@ -30,14 +30,10 @@ Multiple cell arrays can be initialized in one filter pass; each gets independen
 
 The random modes use a configurable seed for reproducibility. Enable *Use Seed for Random Generation* and supply an integer to make results deterministic across pipeline runs. With the option disabled, a time-based seed is used (results vary per run).
 
-### Behavior on Boolean Arrays
-
-For boolean arrays in random modes, each cell is set to a uniformly-chosen true/false. Range parameters are ignored for boolean arrays.
-
 ### Required Input Sources
 
 - **Input Image Geometry** -- the geometry whose cell data will be modified in-place. Typically produced by [Create Image Geometry](CreateImageGeometryFilter.md), [Read Image Stack](../NXImageProcessing/ReadImageStackFilter.md), or an EBSD reader.
-- **Cell Arrays** -- one or more arrays with one tuple per cell of the selected Image Geometry. The arrays can be in any Attribute Matrix.
+- **Cell Arrays** -- one or more numeric arrays with one tuple per cell of the selected Image Geometry. The arrays can be in any Attribute Matrix.
 
 % Auto generated parameter table will be inserted here
 

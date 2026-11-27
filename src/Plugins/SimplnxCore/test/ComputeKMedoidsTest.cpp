@@ -563,7 +563,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
+TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject StringArray mask before checking tuple counts", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
 {
   DataStructure dataStructure;
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {6});
@@ -585,12 +585,10 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in 
   args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
-  const auto& errors = preflightResult.output_actions.errors();
-  const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7589; });
-  REQUIRE(error != errors.end());
-  CHECK(error->message.find(inputPath.toString()) != std::string::npos);
-  CHECK(error->message.find(maskPath.toString()) != std::string::npos);
-  CHECK(error->message.find("6 tuples") != std::string::npos);
-  CHECK(error->message.find("4 tuples") != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find(maskPath.toString()) != std::string::npos);
+  CHECK(error.message.find("has kind StringArray") != std::string::npos);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

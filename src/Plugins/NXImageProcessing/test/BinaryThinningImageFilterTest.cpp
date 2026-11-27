@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -55,7 +56,7 @@ void RunThinning(IFilter& filter, DataStructure& dataStructure, const DataPath& 
 } // namespace
 
 // -----------------------------------------------------------------------------
-// (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
+// (1) Preflight guards: a multi-component input is rejected; a non-integer (float32) input is
 //     rejected (IntegerOnly); a valid integer scalar input produces a SameAsInput output array.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NXImageProcessing][BinaryThinningImageFilter]")
@@ -79,7 +80,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningImageFilter: preflight guards", "[NX
     args.insertOrAssign(BtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     const auto result = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("float input rejected")
   {

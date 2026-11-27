@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -110,7 +111,7 @@ TEST_CASE("NXImageProcessing::ApproximateSignedDistanceMapImageFilter: preflight
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     auto result = runPreflight(dataStructure, vecPath);
     REQUIRE(result.output_actions.invalid());
-    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
   SECTION("tuple mismatch rejected")
   {

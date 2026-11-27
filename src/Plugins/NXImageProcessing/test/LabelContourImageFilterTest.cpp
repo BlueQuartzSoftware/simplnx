@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/Filters/LabelContourImageFilter.hpp"
 
+#include "UnaryFilterTestUtils.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
@@ -57,4 +58,9 @@ TEST_CASE("NXImageProcessing::LabelContourImageFilter: ITK real-image golden (de
 {
   contour_test::RunContourMd5ItkGolden<LabelContourImageFilter>("2th_cthead1.png", "d742c05a8d8aa9b41f58b8d2aad6b5d0",
                                                                 contour_test::LabelContourParamSetter<LabelContourImageFilter>(/*fullyConnected=*/false, /*background=*/0.0));
+}
+
+TEST_CASE("NXImageProcessing::LabelContourImageFilter: preflight rejects a non-scalar input", "[NXImageProcessing][LabelContourImageFilter]")
+{
+  ip_test::RequirePreflightRejectsNonScalarInput<LabelContourImageFilter, uint8>();
 }

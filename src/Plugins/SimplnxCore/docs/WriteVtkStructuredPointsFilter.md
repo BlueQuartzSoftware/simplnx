@@ -25,7 +25,7 @@ Arrays are written as legacy VTK `SCALARS`, which supports 1 to 4 components. Pr
 ### Required Input Sources
 
 - **Image Geometry** -- the geometry whose origin, spacing, and dimensions define the grid.
-- **Cell Data Array(s) to write** -- any per-cell arrays with 1 to 4 components on the **Image Geometry**. A common choice is a *FeatureIds* array produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
+- **Cell Data Array(s) to write** -- per-cell integer or floating-point arrays with 1 to 4 components on the **Image Geometry**. A common choice is a *FeatureIds* array produced by [Segment Features (Scalar)](ScalarSegmentFeaturesFilter.md).
 
 % Auto generated parameter table will be inserted here
 

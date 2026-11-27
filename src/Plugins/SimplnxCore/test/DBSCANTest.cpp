@@ -907,7 +907,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
 }
 
-TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
+TEST_CASE("SimplnxCore::DBSCAN: Reject StringArray mask before checking tuple counts", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
   DataStructure dataStructure;
   auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
@@ -922,12 +922,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[S
   args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
   args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.output_actions.invalid());
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.errors().size() == 1);
-  REQUIRE(preflightResult.output_actions.errors()[0].code == -7587);
-  const auto& message = preflightResult.output_actions.errors()[0].message;
-  REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Points' has 4 tuples"));
-  REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK(error.message.find("'Mask' has kind StringArray") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid input shapes", "[SimplnxCore][DBSCAN][ComponentShape]")

@@ -1,5 +1,6 @@
 #include "MorphologyFilterTestUtils.hpp"
 #include "UnaryFilterTestUtils.hpp"
+#include "simplnx/Filter/IParameter.hpp"
 
 #include "NXImageProcessing/Filters/GrayscaleMorphologicalOpeningImageFilter.hpp"
 
@@ -178,13 +179,12 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: ITK real
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (error -8390) fires before the shared PreflightImageFilter, so a 3-component input is rejected at preflight.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")
 {
   morph_test::RequirePreflightRejectsNonScalar<GrayscaleMorphologicalOpeningImageFilter, float32>(
-      -8390, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));
+      filter_parameter::constants::k_ValidateTupleShapeValue, morph_test::CompositeKernelParamSetter<GrayscaleMorphologicalOpeningImageFilter>(/*safeBorder=*/true));
 }
 
 TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Kernel Radius representability", "[NXImageProcessing][GrayscaleMorphologicalOpeningImageFilter]")

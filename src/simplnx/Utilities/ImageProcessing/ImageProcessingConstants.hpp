@@ -13,9 +13,6 @@ namespace nx::core::ImageProcessing
 inline constexpr int32 k_UnsupportedDataType = -8000;
 inline constexpr int32 k_GeometryMismatch = -8001;
 inline constexpr int32 k_NonBinaryInput = -8002;
-// Shared opt-in check (PreflightImageFilter requireScalar): input must be single-component. Used by the
-// grayscale reconstruction filters, whose ITK marker/geodesic operators are defined on scalar images only.
-inline constexpr int32 k_NonScalarInput = -8550;
 inline constexpr int32 k_RecursiveGaussianTooFewPixels = -8570;
 inline constexpr int32 k_RecursiveGaussianNonPositiveSigma = -8571;
 // The recursive Gaussian divides sigma by the per-axis spacing; ITK's RecursiveGaussianImageFilter::SetUp throws when

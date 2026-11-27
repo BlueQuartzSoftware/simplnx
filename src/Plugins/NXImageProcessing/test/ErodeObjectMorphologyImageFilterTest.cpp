@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/Filters/ErodeObjectMorphologyImageFilter.hpp"
 
+#include "simplnx/Filter/IParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -385,12 +386,12 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: ITK real-image g
 }
 
 // -----------------------------------------------------------------------------
-// Preflight rejects a NON-SCALAR (multi-component) input. The filter's own getNumberOfComponents() != 1 guard
-// (k_NonScalarInput == -8530) fires before the shared PreflightImageFilter, so a 3-component input is rejected.
+// The input selection requires a scalar component shape.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
-  omt::RequirePreflightRejectsNonScalar<ErodeObjectMorphologyImageFilter, uint8>(-8530, omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0));
+  omt::RequirePreflightRejectsNonScalar<ErodeObjectMorphologyImageFilter, uint8>(filter_parameter::constants::k_ValidateTupleShapeValue,
+                                                                                 omt::ErodeParamSetter<ErodeObjectMorphologyImageFilter>(1.0, 0.0));
 }
 
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Kernel Radius representability", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")

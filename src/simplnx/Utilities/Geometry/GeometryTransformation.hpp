@@ -150,6 +150,7 @@ private:
  * @brief Plans geometry transformation actions without a plugin dependency.
  * @param dataStructure Contains the selected geometry and related data.
  * @param inputValues Contains transformation settings and data paths.
+ * @pre When clearing the Feature Attribute Matrix and renumbering features, the caller validates FeatureIdsPath as a single-component int32 DataArray.
  * @return Output actions, warnings, display values, or a validation error.
  */
 SIMPLNX_EXPORT IFilter::PreflightResult PreflightGeometryTransformation(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues);

@@ -5,6 +5,8 @@
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -489,6 +491,29 @@ TEST_CASE("SimplnxCore::ConvertData: Valid Execution", "[SimplnxCore][ConvertDat
 
   TestInvalidDataArray();
   TestOverwriteArray();
+}
+
+TEST_CASE("SimplnxCore::ConvertData: Preflight rejects unsupported array kinds", "[SimplnxCore][ConvertDataFilter]")
+{
+  const bool useStringArray = GENERATE(false, true);
+  DataStructure dataStructure;
+  const DataPath inputPath({"Input"});
+  if(useStringArray)
+  {
+    REQUIRE(StringArray::CreateWithValues(dataStructure, inputPath.getTargetName(), {1}, {"1"}) != nullptr);
+  }
+  else
+  {
+    REQUIRE(NeighborList<int32>::Create(dataStructure, inputPath.getTargetName(), {1}) != nullptr);
+  }
+
+  const auto args = GetArgs(inputPath, DataType::float32, "Converted");
+  IFilter::PreflightResult preflight;
+  REQUIRE_NOTHROW(preflight = ConvertDataFilter().preflight(dataStructure, args));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+  REQUIRE(preflight.output_actions.errors().size() == 1);
+  CHECK(preflight.output_actions.errors().front().code == filter_parameter::constants::k_Validate_ArrayType_Error);
+  CHECK_FALSE(dataStructure.containsData(DataPath({"Converted"})));
 }
 
 TEST_CASE("SimplnxCore::ConvertData: In Place Execution", "[SimplnxCore][ConvertDataFilter]")

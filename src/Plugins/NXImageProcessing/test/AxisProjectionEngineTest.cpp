@@ -662,8 +662,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers 
     DataStructure dataStructure;
     const DataPath inputPath = buildInput(dataStructure);
     const DataPath outputPath({"Projected Same", "CellData", "Same Output"});
-    auto preflightResult = PreflightAxisProjection<ProjectionScalar, SameAsInput>(dataStructure, DataPath({"Image Geometry"}), inputPath, /*projDim=*/0,
-                                                                                  /*performInPlace=*/false, "Projected Same", "Same Output");
+    auto preflightResult = PreflightAxisProjection(dataStructure, DataPath({"Image Geometry"}), inputPath, /*projDim=*/0,
+                                                   /*performInPlace=*/false, "Projected Same", "Same Output");
     requireOutputAction(preflightResult, outputPath);
 
     const Result<> applyResult = preflightResult.value().applyAll(dataStructure, IDataAction::Mode::Execute);
@@ -677,8 +677,8 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers 
     DataStructure dataStructure;
     const DataPath inputPath = buildInput(dataStructure);
     const DataPath actionPath({k_ProjectionTempGeomName, "CellData", "Float Output"});
-    auto preflightResult = PreflightAxisProjection<ProjectionScalar, AlwaysFloat64Type>(dataStructure, DataPath({"Image Geometry"}), inputPath, /*projDim=*/1,
-                                                                                        /*performInPlace=*/true, "Ignored Projected Geometry", "Float Output");
+    auto preflightResult = PreflightAxisProjection<AlwaysFloat64Type>(dataStructure, DataPath({"Image Geometry"}), inputPath, /*projDim=*/1,
+                                                                      /*performInPlace=*/true, "Ignored Projected Geometry", "Float Output");
     requireOutputAction(preflightResult, actionPath);
 
     const Result<> applyResult = preflightResult.value().applyAll(dataStructure, IDataAction::Mode::Execute);
