@@ -297,7 +297,7 @@ template <typename T>
 OocCounters ReadOocCounters(const AbstractDataStore<T>& store)
 {
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  if(const auto* oocStore = dynamic_cast<const SimplnxOoc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
+  if(const auto* oocStore = dynamic_cast<const simplnx_ooc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
   {
     return {oocStore->getReturnedExtentReadCount(), oocStore->getCallerProvidedExtentReadCount(), oocStore->getParallelChunkCacheMissCount(), oocStore->getParallelChunkMetadataBatchCount()};
   }
@@ -317,7 +317,7 @@ template <typename T>
 std::string ChunkShape(const AbstractDataStore<T>& store)
 {
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  if(const auto* oocStore = dynamic_cast<const SimplnxOoc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
+  if(const auto* oocStore = dynamic_cast<const simplnx_ooc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
   {
     const std::optional<ShapeType> shapeResult = oocStore->getChunkShape();
     if(!shapeResult.has_value())
@@ -607,8 +607,8 @@ int main(int argc, char** argv)
   }
 
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  SimplnxOoc::registerIOManager(application->getIOCollection());
-  DataStructure::setDefaultFormatResolver(std::make_shared<SimplnxOoc::PreferenceFormatResolver>());
+  simplnx_ooc::RegisterIoManager(application->getIOCollection());
+  DataStructure::SetDefaultFormatResolver(std::make_shared<simplnx_ooc::PreferenceFormatResolver>());
 #endif
 
   if(options.storage_mode == DataStorageMode::ForceOutOfCore && !data_store_utilities::GetIOCollection().anyManagerFinalizesImport())
@@ -639,7 +639,7 @@ int main(int argc, char** argv)
   }
 
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  SimplnxOoc::shutdown();
+  simplnx_ooc::Shutdown();
 #endif
   return 0;
 }

@@ -13,9 +13,9 @@
 #ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
 // Only present in the OOC harness build (where the SimplnxOoc target exists). These wire up the disk-backed
 // "HDF5-OOC" backend so `--mode ooc` produces real out-of-core stores; the standalone build compiles none of it.
-#include "SimplnxOoc/OocDataIOManager.hpp"         // SimplnxOoc::registerIOManager / SimplnxOoc::shutdown
-#include "SimplnxOoc/PreferenceFormatResolver.hpp" // SimplnxOoc::PreferenceFormatResolver
-#include "simplnx/DataStructure/DataStructure.hpp" // DataStructure::setDefaultFormatResolver
+#include "SimplnxOoc/OocDataIOManager.hpp"         // simplnx_ooc::RegisterIoManager / simplnx_ooc::Shutdown
+#include "SimplnxOoc/PreferenceFormatResolver.hpp" // simplnx_ooc::PreferenceFormatResolver
+#include "simplnx/DataStructure/DataStructure.hpp" // DataStructure::SetDefaultFormatResolver
 
 #include <memory>
 #endif
@@ -280,8 +280,8 @@ int main(int argc, char** argv)
   // stores. Mirrors SimplnxOoc's unit-test bootstrap: the ForceOutOfCore preference set below is INERT without BOTH
   // the registered manager AND the resolver that maps that preference to the "HDF5-OOC" format. Only compiled in the
   // OOC harness build; the standalone build has no backend, so its OOC column self-skips (as designed).
-  SimplnxOoc::registerIOManager(app->getIOCollection());
-  DataStructure::setDefaultFormatResolver(std::make_shared<SimplnxOoc::PreferenceFormatResolver>());
+  simplnx_ooc::RegisterIoManager(app->getIOCollection());
+  DataStructure::SetDefaultFormatResolver(std::make_shared<simplnx_ooc::PreferenceFormatResolver>());
   fmt::print("OOC backend registered: yes\n");
 #endif
 
@@ -381,7 +381,7 @@ int main(int argc, char** argv)
     if(missingResult)
     {
 #ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
-      SimplnxOoc::shutdown();
+      simplnx_ooc::Shutdown();
 #endif
       return 1;
     }
@@ -400,7 +400,7 @@ int main(int argc, char** argv)
   }
 
 #ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
-  SimplnxOoc::shutdown(); // flush dirty chunks + release OOC session files before exit
+  simplnx_ooc::Shutdown(); // flush dirty chunks + release OOC session files before exit
 #endif
 
   return 0;
