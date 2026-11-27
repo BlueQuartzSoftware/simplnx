@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
+#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
@@ -12,6 +13,7 @@
 #include <catch2/catch.hpp>
 
 #include <algorithm>
+#include <any>
 #include <array>
 #include <atomic>
 #include <limits>
@@ -468,6 +470,45 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
   }
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Reports out-of-range counts per input array", "[SimplnxCore][ComputeArrayHistogramByFeature]")
+{
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  CAPTURE(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const auto createArray = [&](const std::string& name, const std::vector<int32>& values) {
+    auto* arrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, name, {values.size()}, {1});
+    REQUIRE(arrayPtr != nullptr);
+    FillArray(*arrayPtr, values);
+    return DataPath({name});
+  };
+  const DataPath featureIds = createArray("FeatureIds", {1, 1, 1});
+  const MultiArraySelectionParameter::ValueType inputs = {createArray("First", {0, 2, 3}), createArray("Second", {0, 1, 2}), createArray("Third", {0, 1, 1})};
+
+  ComputeArrayHistogramByFeatureFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIds));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_SelectedArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputs));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histograms"})));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_UserDefinedRange_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_MinRange_Key, std::make_any<float64>(0.0));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_MaxRange_Key, std::make_any<float64>(2.0));
+  args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NumberOfBins_Key, std::make_any<int32>(2));
+
+  std::vector<std::string> overflowMessages;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    if(message.type == IFilter::Message::Type::Info && message.message.find("not categorized into bin") != std::string::npos)
+    {
+      overflowMessages.push_back(message.message);
+    }
+  }};
+  const auto result = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(overflowMessages.size() == 2);
+  CHECK_THAT(overflowMessages[0], Catch::Matchers::StartsWith("2 ") && Catch::Matchers::EndsWith(" First"));
+  CHECK_THAT(overflowMessages[1], Catch::Matchers::StartsWith("1 ") && Catch::Matchers::EndsWith(" Second"));
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Rejects invalid output shapes before execution", "[SimplnxCore][ComputeArrayHistogram]")

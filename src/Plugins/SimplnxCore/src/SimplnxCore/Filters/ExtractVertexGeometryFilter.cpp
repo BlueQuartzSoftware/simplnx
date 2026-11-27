@@ -69,7 +69,7 @@ Parameters ExtractVertexGeometryFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Cell Arrays to Move/Copy"});
-  params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", to_underlying(ArrayHandlingType::Move),
+  params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Copy or [1] Move input data arrays", to_underlying(ArrayHandlingType::Move),
                                                    ChoicesParameter::ChoicesType{"Copy Attribute Arrays", "Move Attribute Arrays"}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",

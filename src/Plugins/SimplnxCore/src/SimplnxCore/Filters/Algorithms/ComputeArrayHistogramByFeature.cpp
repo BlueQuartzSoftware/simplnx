@@ -1356,7 +1356,6 @@ Result<> ComputeArrayHistogramByFeature::operator()()
 {
   const int32 numBins = m_InputValues->number_of_bins;
   const std::vector<DataPath> selectedArrayPaths = m_InputValues->selected_array_paths;
-  std::atomic<usize> overflow = 0;
 
   const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIdsArray.getDataStoreRef();
@@ -1395,6 +1394,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       modalBinRangesPtr = m_DataStructure.getDataAs<INeighborList>(m_InputValues->created_bin_modal_ranges_data_paths->at(i));
     }
 
+    std::atomic<usize> overflow = 0;
     const std::function<Result<>()> executeDirect = [&]() -> Result<> {
       Result<> resizeResult = binRangesPtr->resizeTuples({numFeatures});
       if(resizeResult.invalid())

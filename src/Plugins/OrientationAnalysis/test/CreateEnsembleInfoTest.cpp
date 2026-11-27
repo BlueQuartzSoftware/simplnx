@@ -1,15 +1,18 @@
 #include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/EnsembleInfoParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
+#include <any>
 #include <catch2/catch.hpp>
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 using namespace nx::core;
 using namespace nx::core::unit_test;
@@ -52,38 +55,55 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Invalid filter executi
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
-  SECTION("Invalid crystal structure ensemble phase data")
-  {
-    // Create default Parameters for the filter.
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{{"", "Primary", "Cubic"}}));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>("CrystalStructures"));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>("PhaseTypes"));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
-  }
-
-  SECTION("Invalid phase type ensemble phase data")
-  {
-    // Create default Parameters for the filter.
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(EnsembleInfoParameter::ValueType{{"Cubic-High m-3m", "Uknown", "Cubic"}}));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"EnsembleAttributeMatrix"})));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key, std::make_any<std::string>("CrystalStructures"));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key, std::make_any<std::string>("PhaseTypes"));
-    args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
-  }
-
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: Reports invalid ensemble values and their row", "[OrientationAnalysis][CreateEnsembleInfoFilter]")
+{
+  const CreateEnsembleInfoFilter filter;
+  DataStructure dataStructure;
+  auto args = filter.getDefaultArguments();
+  EnsembleInfoParameter::ValueType ensemble = {{"Cubic-High m-3m", "Primary", "First phase"}, {"Cubic-High m-3m", "Primary", "Second phase"}, {"Cubic-High m-3m", "Primary", "Third phase"}};
+  const usize rowNumber = GENERATE(usize{1}, usize{2});
+  CAPTURE(rowNumber);
+  auto& invalidRowRef = ensemble[rowNumber - 1];
+  std::string invalidValue;
+  int32 expectedCode = 0;
+
+  SECTION("Empty crystal structure")
+  {
+    invalidRowRef[0].clear();
+    expectedCode = -10006;
+  }
+
+  SECTION("Invalid crystal structure")
+  {
+    invalidValue = "Unlisted lattice";
+    invalidRowRef[0] = invalidValue;
+    expectedCode = -10006;
+  }
+
+  SECTION("Invalid phase type")
+  {
+    invalidValue = "Unlisted phase type";
+    invalidRowRef[1] = invalidValue;
+    expectedCode = -10007;
+  }
+
+  args.insertOrAssign(CreateEnsembleInfoFilter::k_Ensemble_Key, std::make_any<EnsembleInfoParameter::ValueType>(ensemble));
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
+  const auto& errorRef = execute.result.errors().front();
+  CHECK(errorRef.code == expectedCode);
+  CHECK_THAT(errorRef.message, Catch::Matchers::Contains("'" + invalidValue + "'"));
+  CHECK_THAT(errorRef.message, Catch::Matchers::Matches(".*\\brow " + std::to_string(rowNumber) + "\\b.*"));
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
