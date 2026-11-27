@@ -75,19 +75,19 @@ Result<> CreateEnsembleInfo::operator()()
   for(int i = 0; i < numPhases; i++)
   {
     // Crystal Structure
-    uint32 crystalStructure = CrystalStructureFromString(m_InputValues->ensemble[i][0]);
+    const uint32 crystalStructure = CrystalStructureFromString(m_InputValues->ensemble[i][0]);
     if(crystalStructure == ebsdlib::CrystalStructure::UnknownCrystalStructure)
     {
-      return MakeErrorResult(-10006, fmt::format("Incorrect crystal structure name '{}'", crystalStructure));
+      return MakeErrorResult(-10006, fmt::format("Incorrect crystal structure name '{}' in ensemble row {}.", m_InputValues->ensemble[i][0], i + 1));
     }
 
     crystalStructures[i + 1] = crystalStructure;
 
     // Phase Type
-    uint32_t phaseType = PhaseTypeFromString(m_InputValues->ensemble[i][1]); // static_cast<uint32_t>(phaseTypes[i]);
+    const uint32_t phaseType = PhaseTypeFromString(m_InputValues->ensemble[i][1]);
     if(static_cast<PhaseType::Type>(phaseType) == PhaseType::Type::Unknown)
     {
-      return MakeErrorResult(-10007, fmt::format("Incorrect phase type '{}'", phaseType)); // The phase type name was not found in the lookup table
+      return MakeErrorResult(-10007, fmt::format("Incorrect phase type '{}' in ensemble row {}.", m_InputValues->ensemble[i][1], i + 1));
     }
 
     phaseTypes[i + 1] = phaseType;
@@ -96,7 +96,7 @@ Result<> CreateEnsembleInfo::operator()()
     std::string phaseName = m_InputValues->ensemble[i][2];
     if(phaseName.empty())
     {
-      return MakeErrorResult(-10008, fmt::format("Phase name cannot be empty for phase index {}.", i + 1)); // The phase name was not found
+      return MakeErrorResult(-10008, fmt::format("Phase name cannot be empty in ensemble row {}.", i + 1)); // The phase name was not found
     }
 
     phaseNames[i + 1] = phaseName;

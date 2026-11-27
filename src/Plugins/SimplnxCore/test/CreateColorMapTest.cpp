@@ -1,4 +1,5 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
+#include <any>
 #include <array>
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -10,8 +11,10 @@
 #include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 #include "SimplnxCore/Filters/ReadTextDataArrayFilter.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
@@ -250,6 +253,37 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
   }
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CreateColorMapFilter: Invalid color preset diagnostics", "[SimplnxCore][CreateColorMapFilter]")
+{
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto [presetName, expectedCode, expectedReason] = GENERATE(table<std::string, int32, std::string>({
+      {"Nonexistent Test Preset", -36782, "Unknown color preset"},
+      {"KAAMS", -36783, "does not define 'RGBPoints'"},
+  }));
+  CAPTURE(scenario, presetName);
+  unit_test::AlgorithmTestScope scope(scenario);
+
+  DataStructure dataStructure;
+  const DataPath inputPath({"Values"});
+  const auto* inputPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, inputPath.getTargetName(), {1}, {1});
+  REQUIRE(inputPtr != nullptr);
+  scope.requireExpectedStore(*inputPtr);
+
+  const CreateColorMapFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
+  args.insertOrAssign(CreateColorMapFilter::k_SelectedPreset_Key, std::make_any<std::string>(presetName));
+
+  const auto result = scope.executeFilter(filter, dataStructure, args).result;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE(result.errors().size() == 1);
+  const auto& errorRef = result.errors().front();
+  CHECK(errorRef.code == expectedCode);
+  CHECK(errorRef.message.find(presetName) != std::string::npos);
+  CHECK(errorRef.message.find(expectedReason) != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::ColorTableUtilities: RGB interpolation helpers", "[SimplnxCore][ColorTableUtilities]")
