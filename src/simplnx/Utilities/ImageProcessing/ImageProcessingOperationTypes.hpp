@@ -1,7 +1,19 @@
 #pragma once
 
+#include "simplnx/Common/Types.hpp"
+
 namespace nx::core::ImageProcessing
 {
+/**
+ * @enum ConnectedComponentLabelLimitHandling
+ * @brief Controls how Connected Component and Watershed From Markers handle labels that cannot retain their identity in uint32.
+ */
+enum class ConnectedComponentLabelLimitHandling : uint8
+{
+  Error = 0,                ///< Stops when a label would change.
+  WarnAndContinueLegacy = 1 ///< Reports changed labels and continues with legacy uint32 conversion.
+};
+
 /**
  * @brief The grayscale morphology operation to apply through a flat structuring element.
  *

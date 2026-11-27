@@ -1025,8 +1025,8 @@ Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inSt
 // ITK-free port of MorphologicalWatershedFromMarkersImageFilter: a hierarchical-queue (FAH) marker-controlled
 // watershed flood, transcribed verbatim from itkMorphologicalWatershedFromMarkersImageFilter.hxx::GenerateData
 // (both Meyer/watershed-line and Beucher variants). Labels are flooded in uint32; `borderSentinel` reproduces ITK's
-// NumericTraits<TLabel>::max() marker-image boundary constant (pass static_cast<uint32>(markerType_max)) so uint32
-// flooding is bit-identical to ITK's native-TLabel flood including the label==type-max collision. `TInput` (the FAH
+// NumericTraits<TLabel>::max() marker-image boundary constant (pass static_cast<uint32>(markerType_max)). In-bounds seeds of the
+// same value keep their label. `TInput` (the FAH
 // key = gray level) is the only template parameter. Resident endpoints use the original contiguous-RAM map-of-FIFOs
 // implementation below. An OOC 8/16-bit integral endpoint uses that contiguous implementation only when a conservative
 // full-state reservation fits the shared cache budget; a partial grant, allocation failure, or wider/floating input
@@ -1047,7 +1047,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
 
   // Precondition: borderSentinel must be non-zero (it is NumericTraits<TLabel>::max() by contract). The Beucher branch
   // maps out-of-bounds neighbors to borderSentinel and gates propagation on `o == wsLabel(0)`, so a non-zero sentinel
-  // guarantees an OOB neighbor can never alias a real label (nor flat index 0). All type maxes are > 0, so this holds.
+  // prevents an out-of-bounds neighbor from being treated as background and enqueued at flat index 0.
   assert(borderSentinel != k_WsLabel);
 
   const int64 nX = static_cast<int64>(dims[0]);

@@ -8,42 +8,58 @@ NXImageProcessing (Watersheds / Segmentation)
 
 ## Description
 
-Floods a grayscale image from a set of user-supplied **marker** (seed) labels, growing each marked region outward over ascending gray levels until neighboring regions meet. The result is a label image in which every voxel is assigned the label of the marker whose basin claimed it. This is the marker-controlled watershed: unlike the parameter-free morphological watershed, the number and identity of the output regions are determined entirely by the markers, so it does not over-segment.
+Floods a grayscale image from integer seed labels called **markers**. Seed regions grow as the gray level rises.
+The output labels identify the regions, or **basins**, formed when they meet.
 
-Two flooding variants are provided via **Mark Watershed Line**:
+- **Mark Watershed Line** is on by default. An initially unmarked pixel can remain zero where competing basins meet.
+  If neighboring pixels already have different nonzero seed IDs after marker conversion, their basins touch directly.
+  With this choice off, the filter assigns reached pixels to basins without a separating line.
+- **Fully Connected** is off by default. The filter uses face neighbors (4 in 2D, 6 in 3D).
+  Enable it to include diagonal neighbors (8 total in 2D, 26 in 3D).
 
-- **On (Meyer's algorithm, the default):** voxels equidistant between two different marker labels are left as a *watershed line* (label 0), producing a thin ridge of background separating the basins.
-- **Off (Beucher's algorithm):** every voxel is assigned to a basin (no separating line); this is also slightly faster.
+### Input Guidance
 
-**Fully Connected** selects the neighborhood used for flooding: face connectivity (6-connected in 3D, 4-connected in 2D) when off, or face+edge+vertex connectivity (26-connected in 3D, 8-connected in 2D) when on.
+Select a single-component grayscale image and a single-component integer marker image with the same tuple count. Marker
+ID 0 means unmarked. Pixels that use the same nonzero ID are one seed region, even if they are in separate locations.
+If no nonzero seed remains, the output stays unmarked. An in-bounds UInt32 marker of 4,294,967,295 is a valid seed.
 
-### Required Inputs
+The output has the marker array's element type and the grayscale image's tuple dimensions.
 
-- **Input Cell Data (grayscale):** a single-component scalar image of any numeric type. The flood ascends this image's gray levels.
-- **Marker Cell Data:** a single-component **integer** scalar image with the same number of tuples as the grayscale input. Nonzero voxels are markers/seeds; a value of 0 means "unmarked". Voxels sharing the same nonzero label belong to the same seed region, so two disjoint blobs with the same label flood into one basin.
+### Marker ID Conversion Handling
 
-### Created Outputs
+The filter converts marker IDs to `uint32` for flooding, then restores the marker type. All 8-, 16-, and 32-bit
+integer values keep their original IDs, including signed negatives. For `int64` and `uint64`, the values that keep
+their IDs range from 0 through 4,294,967,295, inclusive.
 
-- A label image with the **same element type as the marker image**. Basin labels are copied from the markers; watershed-line voxels (when Mark Watershed Line is on) are 0.
+- **Error** (default) stops before flooding if an ID changes during conversion. The error identifies the marker array,
+  flat index, original ID, and ID after conversion back to the marker type.
+- **Warn and Continue (Legacy Behavior)** uses the old conversion and continues flooding. It reports how many marker
+  values changed and identifies the first change.
 
-### Notes / Limitations
+| Original marker in Warn mode | ID after conversion | Effect |
+| --- | --- | --- |
+| `uint64` 4,294,967,296 | 0 | The seed disappears. |
+| `uint64` 4,294,967,297 | 1 | The seed can merge with seed 1. |
+| `int64` −1 | 4,294,967,295 | The seed gets a different label. |
 
-- The output reproduces the legacy ITK `MorphologicalWatershedFromMarkersImageFilter` exactly, including the label *values*.
-- Internally the flood runs in `uint32`. A marker label of `0xFFFFFFFF` is valid and is handled as a normal in-bounds marker. Labels stored in a wider integer type are narrowed to 32 bits during the flood.
-
-This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Morphological Watershed From Markers Image Filter.
+Seed changes can alter basin boundaries, feature counts, and measurements. Saved pipelines without the choice use
+**Error**. Select **Warn and Continue (Legacy Behavior)** only when you intend to keep the old conversion and can accept
+those effects.
 
 ## Algorithm
 
-Resident input uses an in-memory hierarchical queue. The filter processes the lowest gray level first. It uses FIFO order for voxels at the same level.
+Flooding processes lower gray levels first and preserves arrival order at the same gray level. The filter checks
+marker IDs as it copies them in groups of up to 65,536 values.
 
-An out-of-core endpoint keeps the same processing order with bounded, file-backed state. The engine gets an adaptive working-memory grant from the shared cache budget. It uses only the useful part of that grant and keeps a disk-backed fallback. If a complete state fits, the engine can keep it resident. Otherwise, it keeps fixed record pages in memory. Large partial 3-D state uses 32 x 32 x 8 voxel tiles so face neighbors usually share one page.
-
-Eight- and sixteen-bit gray types use ordered gray-level buckets. Each bucket stores 64-bit voxel indexes in file-backed FIFO blocks. Wider integers and floating-point types use a file-backed minimum heap keyed by flood level and insertion order. Marker values are streamed during initialization and are not kept in each voxel record. Input and output transfers use bounded bulk I/O.
+The in-memory path holds the flood state in memory. The out-of-core path can also use memory when the state fits.
+For larger data it keeps the flood state on disk and reads and writes data in bounded groups. Both paths use the same
+flood order.
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
+
+The **Powder Particle Watershed Segmentation** bookmark uses connected-component labels as markers on a gradient image to produce its final **Particle Labels**. [Example pipeline guide](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/NXImageProcessing/pipelines/08_Powder_Particle_Watershed_Segmentation/08_Powder_Particle_Watershed_Segmentation.md)
 
 ## License & Copyright
 

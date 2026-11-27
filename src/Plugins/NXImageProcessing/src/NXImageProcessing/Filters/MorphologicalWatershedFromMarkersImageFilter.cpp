@@ -2,10 +2,12 @@
 
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -14,7 +16,9 @@
 
 #include <fmt/core.h>
 
+#include <memory>
 #include <optional>
+#include <utility>
 
 using namespace nx::core;
 
@@ -52,6 +56,10 @@ Parameters MorphologicalWatershedFromMarkersImageFilter::parameters() const
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
+  params.insert(std::make_unique<ChoicesParameter>(k_MarkerIdConversionHandling_Key, "Marker ID Conversion Handling",
+                                                   "Error (default) stops before flooding if conversion changes a marker ID. Choose Warn and Continue only to reproduce legacy results, "
+                                                   "which can remove or rename seeds, merge basins and change region measurements.",
+                                                   to_underlying(ImageProcessing::MarkerIdConversionHandling::Error), ChoicesParameter::ChoicesType{"Error", "Warn and Continue (Legacy Behavior)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -70,7 +78,7 @@ Parameters MorphologicalWatershedFromMarkersImageFilter::parameters() const
 }
 IFilter::VersionType MorphologicalWatershedFromMarkersImageFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 IFilter::UniquePointerType MorphologicalWatershedFromMarkersImageFilter::clone() const
 {
@@ -166,8 +174,15 @@ Result<> MorphologicalWatershedFromMarkersImageFilter::executeImpl(DataStructure
 
   auto markWatershedLine = filterArgs.value<bool>(k_MarkWatershedLine_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  const auto conversionHandling = static_cast<ImageProcessing::MarkerIdConversionHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_MarkerIdConversionHandling_Key));
 
-  return ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter(dataStructure, imageGeomPath, selectedInputArray, markerArrayPath, outputArrayPath, markWatershedLine, fullyConnected,
-                                                                              shouldCancel, messageHandler);
+  auto result = ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter(dataStructure, imageGeomPath, selectedInputArray, markerArrayPath, outputArrayPath, markWatershedLine,
+                                                                                     fullyConnected, shouldCancel, messageHandler, conversionHandling);
+  // IFilter::execute currently replaces a successful result on cancellation, dropping its warnings (simplnx #1987).
+  if(shouldCancel && result.valid() && !result.warnings().empty())
+  {
+    return MergeResults(std::move(result), MakeErrorResult(-1, "Filter cancelled"));
+  }
+  return result;
 }
 } // namespace nx::core

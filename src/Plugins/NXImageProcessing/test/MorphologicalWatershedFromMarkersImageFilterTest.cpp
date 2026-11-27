@@ -1,17 +1,34 @@
 #include "ItkGoldenTestUtils.hpp"
 #include "ReconstructionFilterTestUtils.hpp"
+#include "WatershedFromMarkersTestUtils.hpp"
 #include "WatershedPreflightTestUtils.hpp"
 
 #include "NXImageProcessing/Filters/MorphologicalWatershedFromMarkersImageFilter.hpp"
+#include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
+#include "NXImageProcessing/utils/WatershedMarkerConversion.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/IParameter.hpp"
+#include "simplnx/Filter/Parameters.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
@@ -21,9 +38,16 @@
 // filter is disabled/broken, so there is no runtime-createable legacy filter to compare against).
 
 #include <catch2/catch.hpp>
+#include <nlohmann/json.hpp>
+#include <nonstd/span.hpp>
 
+#include <algorithm>
+#include <any>
+#include <atomic>
+#include <cctype>
 #include <limits>
 #include <memory>
+#include <new>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -32,9 +56,213 @@
 using namespace nx::core;
 namespace rt = recon_test;
 
+Arguments watershed_marker_test::CreateArguments(const DataPath& inputPath, const DataPath& markerPath, bool markWatershedLine, bool fullyConnected, const std::string& outputName)
+{
+  using WSFilter = MorphologicalWatershedFromMarkersImageFilter;
+  const DataPath geomPath = inputPath.getParent().getParent();
+  Arguments args;
+  args.insertOrAssign(WSFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(WSFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(WSFilter::k_MarkerImageDataPath_Key, std::make_any<DataPath>(markerPath));
+  args.insertOrAssign(WSFilter::k_MarkWatershedLine_Key, std::make_any<bool>(markWatershedLine));
+  args.insertOrAssign(WSFilter::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
+  args.insertOrAssign(WSFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  return args;
+}
+
 namespace
 {
+using watershed_marker_test::BuildGrayscaleAndMarker;
 using WsFilterType = MorphologicalWatershedFromMarkersImageFilter;
+
+// The normal filter fixture uses the same array builder as the private store tests. Resident fault
+// cases replace only the participating store, before any execution read or write is observed.
+template <class T>
+Arguments createMarkerLineArguments(DataStructure& dataStructure, const std::vector<T>& markers, bool markWatershedLine, bool fullyConnected,
+                                    std::shared_ptr<AbstractDataStore<float32>> inputStorePtr = {}, std::shared_ptr<AbstractDataStore<T>> markerStorePtr = {})
+{
+  REQUIRE_FALSE(markers.empty());
+  const auto [inputPath, markerPath] = BuildGrayscaleAndMarker<float32, T>(dataStructure, markers.size(), 1, 1, std::vector<float32>(markers.size(), 0.0F), markers);
+  auto* input = dataStructure.getDataAs<Float32ArrayType>(inputPath);
+  auto* marker = dataStructure.getDataAs<DataArray<T>>(markerPath);
+  REQUIRE((input != nullptr));
+  REQUIRE((marker != nullptr));
+  if(inputStorePtr != nullptr)
+  {
+    const auto result = input->setDataStore(std::move(inputStorePtr));
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  if(markerStorePtr != nullptr)
+  {
+    for(usize index = 0; index < markers.size(); ++index)
+    {
+      markerStorePtr->setValue(index, markers[index]);
+    }
+    const auto result = marker->setDataStore(std::move(markerStorePtr));
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+  }
+  REQUIRE((input->getStoreType() == IDataStore::StoreType::InMemory));
+  REQUIRE((marker->getStoreType() == IDataStore::StoreType::InMemory));
+  return watershed_marker_test::CreateArguments(inputPath, markerPath, markWatershedLine, fullyConnected);
+}
+template <class T>
+void requireMarkerLine(const std::vector<T>& markers, const std::vector<T>& expected, ChoicesParameter::ValueType handling, bool markWatershedLine, bool fullyConnected, usize changedCount = 0)
+{
+  DataStructure dataStructure;
+  auto args = createMarkerLineArguments<T>(dataStructure, markers, markWatershedLine, fullyConnected);
+  args.insertOrAssign(WsFilterType::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(handling));
+  const WsFilterType filter;
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE((preflightResult.output_actions.value().actions.size() == 1));
+  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.output_actions.value().actions.front().get());
+  REQUIRE((actionPtr != nullptr));
+  REQUIRE((actionPtr->type() == GetDataType<T>()));
+  REQUIRE((actionPtr->dims() == ShapeType{1, 1, markers.size()}));
+  REQUIRE((actionPtr->componentDims() == ShapeType{1}));
+  bool enteredFlood = false;
+  bool enteredExternalSeeding = false;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    enteredFlood |= message.message == "Computing Watershed From Markers";
+    enteredExternalSeeding |= message.message == "Seeding Watershed Regions";
+  }};
+  const auto result = filter.execute(dataStructure, args, nullptr, handler);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  if(handling == 0 && changedCount != 0)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE((result.result.errors().size() == 1));
+    REQUIRE((result.result.errors().front().code == -79073));
+    REQUIRE((result.result.errors().front().message.find("Image Geometry/CellData/Marker") != std::string::npos));
+    REQUIRE_FALSE(enteredFlood);
+    return;
+  }
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  REQUIRE(enteredFlood);
+  REQUIRE_FALSE(enteredExternalSeeding);
+  REQUIRE((result.result.warnings().size() == (changedCount == 0 ? 0 : 1)));
+  if(changedCount != 0)
+  {
+    REQUIRE((result.result.warnings().front().code == -79074));
+    REQUIRE((result.result.warnings().front().message.find(std::to_string(changedCount) + " changed marker occurrence(s)") != std::string::npos));
+  }
+  const DataPath outputPath({"Image Geometry", "CellData", "Output"});
+  const IDataArray* outputBasePtr = nullptr;
+  REQUIRE_NOTHROW(outputBasePtr = &dataStructure.getDataRefAs<IDataArray>(outputPath));
+  REQUIRE((outputBasePtr->getDataType() == GetDataType<T>()));
+  REQUIRE((outputBasePtr->getTupleShape() == ShapeType{1, 1, markers.size()}));
+  REQUIRE((outputBasePtr->getComponentShape() == ShapeType{1}));
+  REQUIRE((outputBasePtr->getStoreType() == IDataStore::StoreType::InMemory));
+  const DataArray<T>* outputArrayPtr = nullptr;
+  REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(outputPath));
+  REQUIRE((expected.size() == markers.size()));
+  for(usize index = 0; index < expected.size(); ++index)
+  {
+    REQUIRE((outputArrayPtr->getDataStoreRef().getValue(index) == expected.at(index)));
+  }
+}
+
+template <class T>
+class MarkerTransferStore : public DataStore<T>
+{
+public:
+  explicit MarkerTransferStore(usize size)
+  : DataStore<T>(ShapeType{1, 1, size}, ShapeType{1}, T{})
+  {
+  }
+  ~MarkerTransferStore() noexcept override = default;
+  MarkerTransferStore(const MarkerTransferStore&) = delete;
+  MarkerTransferStore(MarkerTransferStore&&) = delete;
+  MarkerTransferStore& operator=(const MarkerTransferStore&) = delete;
+  MarkerTransferStore& operator=(MarkerTransferStore&&) = delete;
+
+  Result<> copyIntoBuffer(usize start, nonstd::span<T> buffer) const override
+  {
+    m_Reads.emplace_back(start, buffer.size());
+    if(readCount() == m_CancelAfterRead && m_ShouldCancelPtr != nullptr)
+    {
+      *m_ShouldCancelPtr = true;
+    }
+    if(readCount() == m_FailRead)
+    {
+      if(m_ThrowAllocationFailure)
+      {
+        throw std::bad_alloc{};
+      }
+      return MakeErrorResult(-1874151, "Injected marker-watershed read failure.");
+    }
+    auto result = DataStore<T>::copyIntoBuffer(start, buffer);
+    if(m_WarnOnRead)
+    {
+      result = MergeResults(std::move(result), MakeWarningVoidResult(1874153, "Delivered marker-watershed read warning."));
+    }
+    return result;
+  }
+  Result<> copyFromBuffer(usize start, nonstd::span<const T> buffer) override
+  {
+    m_Writes.emplace_back(start, buffer.size());
+    if(writeCount() == m_FailWrite)
+    {
+      return MakeErrorResult(-1874152, "Injected marker-watershed write failure.");
+    }
+    auto result = DataStore<T>::copyFromBuffer(start, buffer);
+    if(m_WarnOnWrite)
+    {
+      result = MergeResults(std::move(result), MakeWarningVoidResult(1874154, "Delivered marker-watershed write warning."));
+    }
+    return result;
+  }
+  void failRead(usize call, bool throwAllocationFailure = false) noexcept
+  {
+    m_FailRead = call;
+    m_ThrowAllocationFailure = throwAllocationFailure;
+  }
+  void failWrite(usize call) noexcept
+  {
+    m_FailWrite = call;
+  }
+  void cancelAfterRead(usize call, std::atomic_bool& shouldCancel) noexcept
+  {
+    m_CancelAfterRead = call;
+    m_ShouldCancelPtr = &shouldCancel;
+  }
+  void warnOnRead() noexcept
+  {
+    m_WarnOnRead = true;
+  }
+  void warnOnWrite() noexcept
+  {
+    m_WarnOnWrite = true;
+  }
+  usize readCount() const noexcept
+  {
+    return m_Reads.size();
+  }
+  usize writeCount() const noexcept
+  {
+    return m_Writes.size();
+  }
+  using Transfers = std::vector<std::pair<usize, usize>>;
+  const Transfers& reads() const noexcept
+  {
+    return m_Reads;
+  }
+  const Transfers& writes() const noexcept
+  {
+    return m_Writes;
+  }
+
+private:
+  mutable Transfers m_Reads;
+  Transfers m_Writes;
+  usize m_FailRead = 0;
+  usize m_FailWrite = 0;
+  bool m_ThrowAllocationFailure = false;
+  usize m_CancelAfterRead = 0;
+  std::atomic_bool* m_ShouldCancelPtr = nullptr;
+  bool m_WarnOnRead = false;
+  bool m_WarnOnWrite = false;
+};
 
 //------------------------------------------------------------------------------
 // A deterministic MARKER (seed) field over the grid, exercising the interesting cases the flood must reproduce:
@@ -75,42 +303,11 @@ std::vector<TLabel> MakeMarkerField(usize dx, usize dy, usize dz)
   return m;
 }
 
-//------------------------------------------------------------------------------
-// Build "Image Geometry"/"CellData" with a scalar grayscale array "Input" (type TInput) and a scalar marker array
-// "Marker" (type TLabel) sharing the grid. Returns {grayscalePath, markerPath}.
-template <class TInput, class TLabel>
-std::pair<DataPath, DataPath> BuildGrayscaleAndMarker(DataStructure& dataStructure, usize dx, usize dy, usize dz, const std::vector<TInput>& gray, const std::vector<TLabel>& markers)
-{
-  const DataPath inputPath = rt::BuildImageFromPattern<TInput>(dataStructure, dx, dy, dz, gray);
-
-  const ShapeType cellShape = {dz, dy, dx};
-  const DataPath markerPath({"Image Geometry", "CellData", "Marker"});
-  auto markerStore = data_store_utilities::CreateDataStore<TLabel>(dataStructure, markerPath, cellShape, {1});
-  const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-  auto* markerArrayPtr = DataArray<TLabel>::Create(dataStructure, "Marker", markerStore, cellAM.getId());
-  auto& ref = markerArrayPtr->getDataStoreRef();
-  constexpr usize k_ChunkValues = 65536;
-  for(usize start = 0; start < markers.size(); start += k_ChunkValues)
-  {
-    const usize count = std::min(k_ChunkValues, markers.size() - start);
-    Result<> writeResult = ref.copyFromBuffer(start, nonstd::span<const TLabel>(markers.data() + start, count));
-    SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-  }
-  return {inputPath, markerPath};
-}
-
 // Set the standard keys + the two bool params, run preflight + execute, require both succeed.
 void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const DataPath& markerPath, bool markWatershedLine, bool fullyConnected,
                   const std::string& outputName = "Output")
 {
-  const DataPath geomPath = inputPath.getParent().getParent();
-  Arguments args;
-  args.insertOrAssign(WsFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(WsFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(WsFilterType::k_MarkerImageDataPath_Key, std::make_any<DataPath>(markerPath));
-  args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(markWatershedLine));
-  args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
-  args.insertOrAssign(WsFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  const auto args = watershed_marker_test::CreateArguments(inputPath, markerPath, markWatershedLine, fullyConnected, outputName);
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
@@ -144,6 +341,549 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
   return m;
 }
 } // namespace
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker conversion policy defaults to Error", "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  const WsFilterType filter;
+  REQUIRE((filter.parametersVersion() == 2));
+  const Parameters parameters = filter.parameters();
+  const std::string policyKey = "marker_id_conversion_handling_index";
+
+  REQUIRE(parameters.contains(policyKey));
+  const auto* policyPtr = dynamic_cast<const ChoicesParameter*>(parameters.at(policyKey).get());
+  REQUIRE((policyPtr != nullptr));
+  REQUIRE((policyPtr->humanName() == "Marker ID Conversion Handling"));
+  REQUIRE((policyPtr->choices() == ChoicesParameter::ChoicesType{"Error", "Warn and Continue (Legacy Behavior)"}));
+  REQUIRE((policyPtr->defaultIndex() == 0));
+  const Arguments defaultArguments = filter.getDefaultArguments();
+  REQUIRE((defaultArguments.value<ChoicesParameter::ValueType>(policyKey) == 0));
+  std::string tooltip = policyPtr->helpText();
+  std::ranges::transform(tooltip, tooltip.begin(), [](unsigned char character) { return static_cast<char>(std::tolower(character)); });
+  for(const auto* termPtr : {"default", "before", "flood", "seed", "merge", "measurements"})
+  {
+    INFO(termPtr);
+    REQUIRE((tooltip.find(termPtr) != std::string::npos));
+  }
+}
+
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: native lossless seeds propagate exactly",
+                   "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64)
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const bool markWatershedLine = GENERATE(true, false);
+  const bool fullyConnected = GENERATE(false, true);
+  std::vector<TestType> seeds{0, 1};
+  if constexpr(sizeof(TestType) <= sizeof(uint32))
+  {
+    seeds.push_back(std::numeric_limits<TestType>::max());
+    if constexpr(std::is_signed_v<TestType>)
+    {
+      seeds.push_back(std::numeric_limits<TestType>::lowest());
+      seeds.push_back(-1);
+    }
+  }
+  else
+  {
+    seeds.push_back(TestType{4294967295ULL});
+  }
+  for(const TestType seed : seeds)
+  {
+    CAPTURE(seed, handling, markWatershedLine, fullyConnected);
+    requireMarkerLine<TestType>({seed, 0, 0}, {seed, seed, seed}, handling, markWatershedLine, fullyConnected);
+  }
+}
+
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: wide marker bounds have literal legacy results",
+                   "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const bool markWatershedLine = GENERATE(true, false);
+  const bool fullyConnected = GENERATE(false, true);
+  requireMarkerLine<TestType>({TestType{4294967296ULL}, 0, 0}, {0, 0, 0}, handling, markWatershedLine, fullyConnected, 1);
+  requireMarkerLine<TestType>({TestType{4294967297ULL}, 0, 0}, {1, 1, 1}, handling, markWatershedLine, fullyConnected, 1);
+  requireMarkerLine<TestType>({std::numeric_limits<TestType>::max(), 0, 0}, {TestType{4294967295ULL}, TestType{4294967295ULL}, TestType{4294967295ULL}}, handling, markWatershedLine, fullyConnected,
+                              1);
+  if constexpr(std::is_signed_v<TestType>)
+  {
+    requireMarkerLine<TestType>({-1, 0, 0}, {TestType{4294967295ULL}, TestType{4294967295ULL}, TestType{4294967295ULL}}, handling, markWatershedLine, fullyConnected, 1);
+    requireMarkerLine<TestType>({std::numeric_limits<TestType>::lowest(), 0, 0}, {0, 0, 0}, handling, markWatershedLine, fullyConnected, 1);
+  }
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: alias and lost seed choices have exact flood consequences",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto handling = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+  const bool markWatershedLine = GENERATE(true, false);
+  const bool fullyConnected = GENERATE(false, true);
+  requireMarkerLine<uint64>({1, 0, 4294967297ULL}, {1, 1, 1}, handling, markWatershedLine, fullyConnected, 1);
+  requireMarkerLine<uint64>({4294967296ULL, 0, 9}, {9, 9, 9}, handling, markWatershedLine, fullyConnected, 1);
+  requireMarkerLine<uint64>({4294967297ULL, 0, 4294967297ULL}, {1, 1, 1}, handling, markWatershedLine, fullyConnected, 2);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker copy checks chunk boundaries before writing",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const usize changedIndex = GENERATE(usize{65535}, usize{65536}, usize{65537});
+  const auto handling = GENERATE(ImageProcessing::MarkerIdConversionHandling::Error, ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
+  constexpr usize valueCount = 65538;
+  const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
+  std::vector<uint64> markers(valueCount, 0);
+  markers.at(changedIndex) = 4294967297ULL;
+  DataStructure dataStructure;
+  createMarkerLineArguments<uint64>(dataStructure, markers, true, false, {}, markerStorePtr);
+  MarkerTransferStore<uint32> destination(valueCount);
+  const std::atomic_bool shouldCancel = false;
+  const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel, handling);
+  const std::string* messagePtr = nullptr;
+  if(handling == ImageProcessing::MarkerIdConversionHandling::Error)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE((result.errors().size() == 1));
+    REQUIRE((result.errors().front().code == -79073));
+    REQUIRE((destination.writeCount() == changedIndex / 65536));
+    messagePtr = &result.errors().front().message;
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE((result.warnings().size() == 1));
+    REQUIRE((result.warnings().front().code == -79074));
+    REQUIRE((destination.writeCount() == 2));
+    REQUIRE((destination.getValue(changedIndex) == 1));
+    messagePtr = &result.warnings().front().message;
+  }
+  REQUIRE((messagePtr->find("flat index " + std::to_string(changedIndex)) != std::string::npos));
+  REQUIRE((messagePtr->find("native ID 4294967297 restores as 1") != std::string::npos));
+  REQUIRE((messagePtr->find("1 changed marker occurrence(s)") != std::string::npos));
+  REQUIRE((markerStorePtr->readCount() == (handling == ImageProcessing::MarkerIdConversionHandling::Error ? (changedIndex / 65536) + 1 : 2)));
+  MarkerTransferStore<uint64>::Transfers expectedReads{{0, 65536}};
+  if(handling == ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy || changedIndex >= 65536)
+  {
+    expectedReads.emplace_back(65536, 2);
+  }
+  REQUIRE((markerStorePtr->reads() == expectedReads));
+  if(handling == ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy)
+  {
+    REQUIRE((destination.writes() == expectedReads));
+  }
+  else
+  {
+    expectedReads.pop_back();
+    REQUIRE((destination.writes() == expectedReads));
+  }
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: invalid policy is rejected before execution",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  auto args = createMarkerLineArguments<uint64>(dataStructure, {1}, true, false);
+  args.insertOrAssign(WsFilterType::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  const WsFilterType filter;
+  const auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE((result.output_actions.errors().size() == 1));
+  REQUIRE((result.output_actions.errors().front().code == filter_parameter::constants::k_ValidateOutOfRangeError));
+  REQUIRE((result.output_actions.errors().front().message.find("Marker ID Conversion Handling") != std::string::npos));
+  REQUIRE((dataStructure.getData(DataPath({"Image Geometry", "CellData", "Output"})) == nullptr));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEMPLATE_TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: diagnostic context keeps exact 64-bit extrema",
+                   "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]", int64, uint64)
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  createMarkerLineArguments<TestType>(dataStructure, {0, std::numeric_limits<TestType>::max(), std::numeric_limits<TestType>::max()}, true, false);
+  MarkerTransferStore<uint32> destination(3);
+  const auto handling = GENERATE(ImageProcessing::MarkerIdConversionHandling::Error, ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
+  const std::atomic_bool shouldCancel = false;
+  const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel, handling);
+  const std::string* messagePtr = nullptr;
+  if(handling == ImageProcessing::MarkerIdConversionHandling::Error)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE((result.errors().size() == 1));
+    REQUIRE((result.errors().front().code == -79073));
+    REQUIRE((destination.writeCount() == 0));
+    messagePtr = &result.errors().front().message;
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE((result.warnings().size() == 1));
+    REQUIRE((result.warnings().front().code == -79074));
+    REQUIRE((result.warnings().front().message.find("2 changed marker occurrence(s)") != std::string::npos));
+    messagePtr = &result.warnings().front().message;
+  }
+  const std::string nativeText = std::is_signed_v<TestType> ? "9223372036854775807" : "18446744073709551615";
+  REQUIRE((messagePtr->find("native ID " + nativeText + " restores as 4294967295") != std::string::npos));
+  REQUIRE((messagePtr->find("First change at flat index 1") != std::string::npos));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy cancellation retains observed warning only",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize valueCount = 65537;
+  const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
+  DataStructure dataStructure;
+  std::vector<uint64> markers(valueCount, 0);
+  markers.at(0) = 4294967297ULL;
+  markers.at(valueCount - 1) = 4294967296ULL;
+  createMarkerLineArguments<uint64>(dataStructure, markers, true, false, {}, markerStorePtr);
+  MarkerTransferStore<uint32> destination(valueCount);
+  std::atomic_bool shouldCancel = false;
+  markerStorePtr->cancelAfterRead(1, shouldCancel);
+  const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel,
+                                                                         ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  REQUIRE(shouldCancel.load());
+  REQUIRE((result.warnings().size() == 1));
+  REQUIRE((result.warnings().front().code == -79074));
+  REQUIRE((result.warnings().front().message.find("1 changed marker occurrence(s)") != std::string::npos));
+  REQUIRE((markerStorePtr->readCount() == 1));
+  REQUIRE((destination.writeCount() == 1));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: copy warning survives transfer failure or allocation failure",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize valueCount = 65537;
+  const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
+  std::vector<uint64> markers(valueCount, 0);
+  markers.at(0) = 4294967297ULL;
+  markers.at(valueCount - 1) = 4294967296ULL;
+  DataStructure dataStructure;
+  createMarkerLineArguments<uint64>(dataStructure, markers, true, false, {}, markerStorePtr);
+  MarkerTransferStore<uint32> destination(valueCount);
+  int32 expectedCode = 0;
+  SECTION("later marker read fails")
+  {
+    markerStorePtr->failRead(2);
+    expectedCode = -1874151;
+  }
+  SECTION("scratch chunk write fails")
+  {
+    destination.failWrite(1);
+    expectedCode = -1874152;
+  }
+  SECTION("later marker read throws allocation failure")
+  {
+    markerStorePtr->failRead(2, true);
+    expectedCode = -79075;
+  }
+  const std::atomic_bool shouldCancel = false;
+  const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel,
+                                                                         ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE((result.errors().size() == 1));
+  REQUIRE((result.errors().front().code == expectedCode));
+  REQUIRE((result.warnings().size() == 1));
+  REQUIRE((result.warnings().front().code == -79074));
+  REQUIRE((result.warnings().front().message.find("1 changed marker occurrence(s)") != std::string::npos));
+  REQUIRE((markerStorePtr->readCount() <= 2));
+  REQUIRE((destination.writeCount() == 1));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: conversion warning survives later facade outcomes",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const auto inputStorePtr = std::make_shared<MarkerTransferStore<float32>>(3);
+  DataStructure dataStructure;
+  createMarkerLineArguments<uint64>(dataStructure, {4294967297ULL, 0, 0}, true, false, inputStorePtr);
+  const auto outputStorePtr = std::make_shared<MarkerTransferStore<uint64>>(3);
+  const AttributeMatrix* cellDataPtr = nullptr;
+  REQUIRE_NOTHROW(cellDataPtr = &dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})));
+  REQUIRE((UInt64ArrayType::Create(dataStructure, "Output", outputStorePtr, cellDataPtr->getId()) != nullptr));
+  std::atomic_bool shouldCancel = false;
+  bool cancelAtFlood = false;
+  int32 expectedCode = 0;
+  SECTION("grayscale read error after conversion")
+  {
+    inputStorePtr->failRead(1);
+    expectedCode = -1874151;
+  }
+  SECTION("grayscale allocation failure after conversion")
+  {
+    inputStorePtr->failRead(1, true);
+    expectedCode = -79045;
+  }
+  SECTION("native restoration write error after conversion")
+  {
+    outputStorePtr->failWrite(1);
+    expectedCode = -1874152;
+  }
+  SECTION("facade cancellation after conversion retains valid Result warning")
+  {
+    cancelAtFlood = true;
+  }
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
+    if(cancelAtFlood && message.message == "Computing Watershed From Markers")
+    {
+      shouldCancel = true;
+    }
+  }};
+  // The facade returns a valid partial result on cancellation. The public filter reports cancellation as an error.
+  const auto result = ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter(dataStructure, DataPath({"Image Geometry"}), DataPath({"Image Geometry", "CellData", "Input"}),
+                                                                                           DataPath({"Image Geometry", "CellData", "Marker"}), DataPath({"Image Geometry", "CellData", "Output"}), true,
+                                                                                           false, shouldCancel, handler, ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
+  if(cancelAtFlood)
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(shouldCancel.load());
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE((result.errors().size() == 1));
+    REQUIRE((result.errors().front().code == expectedCode));
+  }
+  REQUIRE((result.warnings().size() == 1));
+  REQUIRE((result.warnings().front().code == -79074));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: successful transfer warnings survive later marker-copy failure",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize valueCount = 65537;
+  const auto markerStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
+  std::vector<uint64> markers(valueCount, 0);
+  markers.at(0) = 4294967297ULL;
+  DataStructure dataStructure;
+  createMarkerLineArguments<uint64>(dataStructure, markers, true, false, {}, markerStorePtr);
+  markerStorePtr->warnOnRead();
+  markerStorePtr->failRead(2);
+  MarkerTransferStore<uint32> destination(valueCount);
+  destination.warnOnWrite();
+  const std::atomic_bool shouldCancel = false;
+  const auto result = ImageProcessing::detail::WidenIntegerArrayToUInt32(dataStructure, DataPath({"Image Geometry", "CellData", "Marker"}), destination, shouldCancel,
+                                                                         ImageProcessing::MarkerIdConversionHandling::WarnAndContinueLegacy);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE((result.errors().size() == 1));
+  REQUIRE((result.errors().front().code == -1874151));
+  REQUIRE((result.warnings().size() == 3));
+  REQUIRE((result.warnings().at(0).code == 1874153));
+  REQUIRE((result.warnings().at(1).code == 1874154));
+  REQUIRE((result.warnings().at(2).code == -79074));
+  REQUIRE((markerStorePtr->readCount() == 2));
+  REQUIRE((destination.writeCount() == 1));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: restoration retains transfer warnings through a short final chunk",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize valueCount = 65537;
+  DataStructure dataStructure;
+  createMarkerLineArguments<uint64>(dataStructure, std::vector<uint64>(valueCount, 0), true, false);
+  const auto outputStorePtr = std::make_shared<MarkerTransferStore<uint64>>(valueCount);
+  const AttributeMatrix* cellDataPtr = nullptr;
+  REQUIRE_NOTHROW(cellDataPtr = &dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})));
+  REQUIRE((UInt64ArrayType::Create(dataStructure, "Output", outputStorePtr, cellDataPtr->getId()) != nullptr));
+  MarkerTransferStore<uint32> source(valueCount);
+  source.setValue(0, 1);
+  source.setValue(valueCount - 1, 4294967295U);
+  source.warnOnRead();
+  outputStorePtr->warnOnWrite();
+  bool failFinalWrite = false;
+  bool failRestoreAllocation = false;
+  SECTION("all delivered warnings survive success")
+  {
+  }
+  SECTION("earlier warnings survive final write failure")
+  {
+    outputStorePtr->failWrite(2);
+    failFinalWrite = true;
+  }
+  SECTION("allocation failure during the last restoration read")
+  {
+    source.failRead(2, true);
+    failRestoreAllocation = true;
+  }
+  const std::atomic_bool shouldCancel = false;
+  const auto result = ImageProcessing::detail::NarrowUInt32StoreToIntegerArray(source, dataStructure, DataPath({"Image Geometry", "CellData", "Output"}), shouldCancel);
+  if(failRestoreAllocation)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE((result.errors().size() == 1));
+    REQUIRE((result.errors().front().code == -79076));
+    REQUIRE((result.errors().front().message.find("while restoring marker IDs") != std::string::npos));
+    REQUIRE((outputStorePtr->getValue(valueCount - 1) == 0));
+  }
+  else if(failFinalWrite)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE((result.errors().size() == 1));
+    REQUIRE((result.errors().front().code == -1874152));
+    REQUIRE((outputStorePtr->getValue(valueCount - 1) == 0));
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE((outputStorePtr->getValue(valueCount - 1) == 4294967295ULL));
+  }
+  REQUIRE((outputStorePtr->getValue(0) == 1));
+  std::vector<int32> expectedWarnings{1874153, 1874154};
+  if(!failRestoreAllocation)
+  {
+    expectedWarnings.push_back(1874153);
+    if(!failFinalWrite)
+    {
+      expectedWarnings.push_back(1874154);
+    }
+  }
+  REQUIRE((result.warnings().size() == expectedWarnings.size()));
+  for(usize index = 0; index < expectedWarnings.size(); ++index)
+  {
+    REQUIRE((result.warnings().at(index).code == expectedWarnings.at(index)));
+  }
+  const MarkerTransferStore<uint32>::Transfers allReads{{0, 65536}, {65536, 1}};
+  auto expectedWrites = allReads;
+  if(failRestoreAllocation)
+  {
+    expectedWrites.pop_back();
+  }
+  REQUIRE((source.reads() == allReads));
+  REQUIRE((outputStorePtr->writes() == expectedWrites));
+  REQUIRE((source.readCount() == 2));
+  REQUIRE((outputStorePtr->writeCount() == (failRestoreAllocation ? 1 : 2)));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: saved policies and version 1 arguments", "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  const WsFilterType filter;
+  const std::string key = WsFilterType::k_MarkerIdConversionHandling_Key.str();
+  auto arguments = filter.getDefaultArguments();
+  SECTION("version 1 supplies Error with a missing-key warning")
+  {
+    auto legacy = filter.toJson(arguments);
+    legacy["parameters_version"] = 1;
+    REQUIRE((legacy.erase(key) == 1));
+    const auto loaded = filter.fromJson(legacy);
+    SIMPLNX_RESULT_REQUIRE_VALID(loaded);
+    REQUIRE((loaded.value().value<ChoicesParameter::ValueType>(key) == 0));
+    REQUIRE((loaded.warnings().size() == 1));
+    CHECK((loaded.warnings().front().code == -5432));
+    CHECK((loaded.warnings().front().message.find(key) != std::string::npos));
+  }
+  SECTION("both choices round-trip in the persisted schema")
+  {
+    const auto choice = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
+    arguments.insertOrAssign(key, std::make_any<ChoicesParameter::ValueType>(choice));
+    const auto saved = filter.toJson(arguments);
+    CHECK((saved.at("parameters_version") == 2));
+    CHECK((saved.at(key).at("value") == choice));
+    CHECK((saved.at(key).at("version") == 1));
+    const auto loaded = filter.fromJson(nlohmann::json::parse(saved.dump()));
+    SIMPLNX_RESULT_REQUIRE_VALID(loaded);
+    REQUIRE(loaded.warnings().empty());
+    CHECK((loaded.value().value<ChoicesParameter::ValueType>(key) == choice));
+  }
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: omitted policy stops before flooding", "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const auto args = createMarkerLineArguments<uint64>(dataStructure, {0, 4294967297ULL, 0}, true, false);
+  const DataPath input({"Image Geometry", "CellData", "Input"});
+  const auto marker = input.getParent().createChildPath("Marker");
+  const auto output = input.getParent().createChildPath("Output");
+  bool enteredFlood = false;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) { enteredFlood |= message.message == "Computing Watershed From Markers"; }};
+  Result<> result;
+  SECTION("omitted filter argument")
+  {
+    result = WsFilterType{}.execute(dataStructure, args, nullptr, handler).result;
+  }
+  SECTION("omitted trailing argument at the exported C++ entry point")
+  {
+    const auto cellId = dataStructure.getId(input.getParent());
+    REQUIRE(cellId.has_value());
+    auto store = data_store_utilities::CreateDataStore<uint64>(dataStructure, output, ShapeType{1, 1, 3}, ShapeType{1});
+    REQUIRE((UInt64ArrayType::Create(dataStructure, output.getTargetName(), store, *cellId) != nullptr));
+    result = ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter(dataStructure, input.getParent().getParent(), input, marker, output, true, false, false, handler);
+  }
+  SIMPLNX_RESULT_REQUIRE_INVALID(result);
+  REQUIRE((result.errors().size() == 1));
+  REQUIRE((result.errors().front().code == -79073));
+  REQUIRE((result.errors().front().message.find("flat index 1") != std::string::npos));
+  REQUIRE((result.errors().front().message.find("native ID 4294967297 restores as 1") != std::string::npos));
+  REQUIRE_FALSE(enteredFlood);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: public execute retains conversion warnings on cancellation and transfer failure",
+          "[NXImageProcessing][Issue1874][MorphologicalWatershedFromMarkersImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  constexpr usize count = 65537;
+  std::vector<uint64> markers(count, 0);
+  markers.at(4) = 4294967297ULL;
+  markers.back() = 4294967296ULL;
+  DataStructure dataStructure;
+  const auto store = std::make_shared<MarkerTransferStore<uint64>>(count);
+  auto args = createMarkerLineArguments<uint64>(dataStructure, markers, true, false, {}, store);
+  args.insertOrAssign(WsFilterType::k_MarkerIdConversionHandling_Key, std::make_any<ChoicesParameter::ValueType>(1));
+  std::atomic_bool shouldCancel = false;
+  store->warnOnRead();
+  int32 expectedCode = -1;
+  SECTION("cancel while reading the first batch")
+  {
+    store->cancelAfterRead(1, shouldCancel);
+  }
+  SECTION("a genuine error remains primary when the second read also cancels")
+  {
+    store->failRead(2);
+    store->cancelAfterRead(2, shouldCancel);
+    expectedCode = -1874151;
+  }
+  bool enteredFlood = false;
+  const IFilter::MessageHandler handler{[&](const IFilter::Message& message) { enteredFlood |= message.message == "Computing Watershed From Markers"; }};
+  const auto result = WsFilterType{}.execute(dataStructure, args, nullptr, handler, shouldCancel);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+  REQUIRE(shouldCancel.load());
+  REQUIRE((result.result.errors().size() == 1));
+  REQUIRE((result.result.errors().front().code == expectedCode));
+  REQUIRE((result.result.warnings().size() == 2));
+  REQUIRE((result.result.warnings().at(0).code == 1874153));
+  const auto& warning = result.result.warnings().at(1);
+  REQUIRE((warning.code == -79074));
+  REQUIRE((warning.message.find("1 changed marker occurrence(s)") != std::string::npos));
+  REQUIRE((warning.message.find("flat index 4") != std::string::npos));
+  REQUIRE_FALSE(enteredFlood);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
 
 // -----------------------------------------------------------------------------
 // (4) Preflight guards: a multi-component grayscale is rejected (requireScalar); a non-integer (float32) marker is

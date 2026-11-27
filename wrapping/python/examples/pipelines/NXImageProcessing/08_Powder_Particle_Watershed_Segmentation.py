@@ -101,6 +101,7 @@ simplnx_utilities.check_filter_result(nximgproc.ConnectedComponentImageFilter, r
 # Filter 7: Morphological Watershed From Markers Image Filter
 result = nximgproc.MorphologicalWatershedFromMarkersImageFilter.execute(
     data_structure=data_structure,
+    marker_id_conversion_handling_index=0,
     fully_connected=True,
     input_image_data_path=nx.DataPath('Powder Particles/Cell Data/Particle Gradient'),
     input_image_geometry_path=nx.DataPath('Powder Particles'),
