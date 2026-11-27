@@ -56,9 +56,9 @@ color_table_utilities::ColorPreset::ColorPreset(const nlohmann::json& a)
   {
     this->source = a["Source"].get<std::string>();
   }
-  if(a.contains("Licence") && a["Licence"].is_string())
+  if(a.contains("License") && a["License"].is_string())
   {
-    this->license = a["Licence"].get<std::string>();
+    this->license = a["License"].get<std::string>();
   }
   if(a.contains("Creator") && a["Creator"].is_string())
   {
