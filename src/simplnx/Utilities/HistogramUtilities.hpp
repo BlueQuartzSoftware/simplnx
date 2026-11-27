@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <functional>
 #include <vector>
 

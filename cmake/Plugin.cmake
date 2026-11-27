@@ -383,7 +383,9 @@ function(create_simplnx_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Require all test files be downloaded first before running tests
   #------------------------------------------------------------------------------
-  add_dependencies(${UNIT_TEST_TARGET} Fetch_Remote_Data_Files)
+  if(TARGET Fetch_Remote_Data_Files)
+    add_dependencies(${UNIT_TEST_TARGET} Fetch_Remote_Data_Files)
+  endif()
 
   set_target_properties(${UNIT_TEST_TARGET}
     PROPERTIES
