@@ -38,7 +38,7 @@
 namespace pybind11::detail
 {
 template <>
-struct type_caster<nx::core::AnyParameter>
+struct type_caster<nx::core::AnyParameterType>
 {
 public:
   /**
@@ -46,7 +46,7 @@ public:
    * function signatures and declares a local variable
    * 'value' of type AnyParameter
    */
-  PYBIND11_TYPE_CASTER(nx::core::AnyParameter, const_name("AnyParameter"));
+  PYBIND11_TYPE_CASTER(nx::core::AnyParameterType, const_name("AnyParameter"));
 
   /**
    * Conversion part 1 (Python->C++): convert a PyObject into a AnyParameter
@@ -72,7 +72,7 @@ public:
    * ``return_value_policy::reference_internal``) and are generally
    * ignored by implicit casters.
    */
-  static handle cast(const nx::core::AnyParameter& src, return_value_policy /* policy */, handle /* parent */)
+  static handle cast(const nx::core::AnyParameterType& src, return_value_policy /* policy */, handle /* parent */)
   {
     return pybind11::cast(src->clone()).release();
   }
@@ -84,7 +84,7 @@ namespace nx::core::nx_pybind
 namespace py = pybind11;
 
 template <class T>
-using CastNameT = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
+using CastNameTType = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
 
 template <usize N, class... Ts>
 boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>* /*unused*/)
@@ -93,7 +93,7 @@ boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>* /*
 }
 
 template <class T>
-using ParamTypeListT = decltype(ExtractListFromDescr(static_cast<CastNameT<T>*>(nullptr)));
+using ParamTypeListTType = decltype(ExtractListFromDescr(static_cast<CastNameTType<T>*>(nullptr)));
 
 inline std::string GetFullPythonNameFromType(py::handle type)
 {
@@ -138,7 +138,7 @@ std::string GetFixedPythonTypeCasterName()
   using namespace boost::mp11;
 
   std::string typeName = py::detail::make_caster<T>::name.text;
-  using TypesType = ParamTypeListT<T>;
+  using TypesType = ParamTypeListTType<T>;
   static constexpr usize k_N = mp_size<TypesType>::value;
   mp_for_each<mp_iota_c<k_N>>([&](auto I) {
     using CurrentType = mp_at_c<TypesType, static_cast<usize>(I)>;
@@ -169,12 +169,12 @@ std::string GetFullPythonName()
 
 struct PyParameterInfo
 {
-  using ToPyObjectFunc = py::object (*)(const std::any&);
-  using FromPyObjectFunc = std::any (*)(py::handle);
+  using ToPyObjectFuncType = py::object (*)(const std::any&);
+  using FromPyObjectFuncType = std::any (*)(py::handle);
 
-  ToPyObjectFunc toPyObjectFunc = {};
-  FromPyObjectFunc fromPyObjectFunc = {};
-  std::string pythonTypeName;
+  ToPyObjectFuncType to_py_object_func = {};
+  FromPyObjectFuncType from_py_object_func = {};
+  std::string python_type_name;
 
   template <class T>
   static PyParameterInfo Create()
@@ -325,10 +325,10 @@ inline py::dict ConvertArgsToDict(const Internals& internals, const Parameters& 
       continue;
     }
 
-    const AnyParameter& anyParam = parameters.at(name);
+    const AnyParameterType& anyParam = parameters.at(name);
     const IParameter& param = anyParam.getRef();
     Uuid uuid = param.uuid();
-    py::object object = internals.at(uuid).toPyObjectFunc(value);
+    py::object object = internals.at(uuid).to_py_object_func(value);
     dict[name.c_str()] = std::move(object);
   }
   return dict;
@@ -346,10 +346,10 @@ inline Arguments ConvertDictToArgs(const Internals& internals, const Parameters&
       continue;
     }
 
-    const AnyParameter& anyParam = parameters.at(name);
+    const AnyParameterType& anyParam = parameters.at(name);
     const IParameter& param = anyParam.getRef();
     Uuid uuid = param.uuid();
-    std::any value = internals.at(uuid).fromPyObjectFunc(item.second);
+    std::any value = internals.at(uuid).from_py_object_func(item.second);
     args.insert(std::move(name), std::move(value));
   }
   return args;
@@ -382,9 +382,9 @@ inline std::vector<std::string> MakePythonParamListString(const Parameters& para
   for(const auto& [name, p] : params)
   {
     const auto& info = internals.at(p->uuid());
-    py::object defaultValue = info.toPyObjectFunc(p->defaultValue());
+    py::object defaultValue = info.to_py_object_func(p->defaultValue());
     std::string defaultValueString = py::repr(defaultValue).cast<std::string>();
-    paramList.push_back(MakePythonParamStringWithDefaulValue(p->name(), info.pythonTypeName, defaultValueString));
+    paramList.push_back(MakePythonParamStringWithDefaulValue(p->name(), info.python_type_name, defaultValueString));
   }
   return paramList;
 }
@@ -523,7 +523,7 @@ std::map<std::string, py::object> CreateDefaultArgs(const Internals& internals)
   std::map<std::string, py::object> defaults;
   for(const auto& [name, param] : params)
   {
-    defaults.insert({name, internals.at(param->uuid()).toPyObjectFunc(param->defaultValue())});
+    defaults.insert({name, internals.at(param->uuid()).to_py_object_func(param->defaultValue())});
   }
 
   return defaults;
@@ -654,10 +654,10 @@ protected:
       return result;
     } catch(const py::error_already_set& pyException)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
     } catch(const std::exception& exception)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
     }
   }
 

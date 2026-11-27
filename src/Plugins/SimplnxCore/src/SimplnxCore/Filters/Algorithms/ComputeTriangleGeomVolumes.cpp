@@ -30,34 +30,34 @@ const std::atomic_bool& ComputeTriangleGeomVolumes::getCancel()
 Result<> ComputeTriangleGeomVolumes::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
-  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
-  const auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
+  const auto& faceLabels = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_array_path)->getDataStoreRef();
 
   auto maxFaceLabel = std::max_element(faceLabels.begin(), faceLabels.end()); // Ensure the max value is set.
 
   ShapeType tDims = {static_cast<usize>(*maxFaceLabel) + 1ULL};
-  auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
+  auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->feature_attribute_matrix_path);
   Result<> resizeResult = featAttrMat.resizeTuples(tDims);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  auto& volumes = m_DataStructure.getDataAs<Float32Array>(m_InputValues->VolumesArrayPath)->getDataStoreRef();
+  auto& volumes = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->volumes_array_path)->getDataStoreRef();
   volumes.fill(0.0f); // Initialize all volumes to ZERO
 
   // Ensure any FeatureId/FaceLabel that is used will be a valid index into the volumes array.
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->VolumesArrayPath,
-                                                                                  m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath), true, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->volumes_array_path,
+                                                                                  m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_array_path), true, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
   }
 
-  auto result = MeshingUtilities::CalculateFeatureVolumes(triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getVertices()->getDataStoreRef(), faceLabels, volumes, m_ShouldCancel);
+  auto result = meshing_utilities::CalculateFeatureVolumes(triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getVertices()->getDataStoreRef(), faceLabels, volumes, m_ShouldCancel);
   if(result.invalid())
   {
     return result;

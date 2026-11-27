@@ -75,7 +75,7 @@ public:
   {
     static constexpr StringLiteralType k_Prefix = "CreateGeometry2DAction: ";
     using MeshIndexType = IGeometry::MeshIndexType;
-    using SharedTriListType = IGeometry::SharedTriList;
+    using SharedTriListType = IGeometry::SharedTriListType;
     const DataPath faceDataPath = getFaceDataPath();
     const DataPath vertexDataPath = getVertexDataPath();
 
@@ -104,7 +104,7 @@ public:
       return MakeErrorResult(-5504, fmt::format("{}CreateGeometry2DAction: Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
     }
 
-    auto* const verticesPtr = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    auto* const verticesPtr = dataStructure.getDataAs<Float32ArrayType>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && verticesPtr == nullptr)
     {
       return MakeErrorResult(-5505, fmt::format("{}CreateGeometry2DAction: Could not find vertices array at path '{}'", k_Prefix, m_InputVertices.toString()));
@@ -129,7 +129,7 @@ public:
     if(m_ArrayHandlingType == ArrayHandlingType::Copy)
     {
       std::shared_ptr<DataObject> vertexCopy = verticesPtr->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
-      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
+      const auto vertexArray = std::dynamic_pointer_cast<Float32ArrayType>(vertexCopy);
 
       std::shared_ptr<DataObject> facesCopy = facesPtr->deepCopy(getCreatedPath().createChildPath(m_SharedFacesName));
       const auto facesArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(facesCopy);
@@ -175,7 +175,7 @@ public:
     else
     {
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
-      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
+      Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", k_Prefix, trianglesPath.toString())));
@@ -190,12 +190,12 @@ public:
       // Vertices use three coordinates.
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
+      result = array_creation_utilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", k_Prefix, vertexPath.toString())));
       }
-      auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(vertexPath);
+      auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(vertexPath);
       if(vertexArrayPtr == nullptr)
       {
         throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
@@ -287,6 +287,6 @@ private:
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
 };
 
-using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;
-using CreateQuadGeometryAction = CreateGeometry2DAction<QuadGeom>;
+using CreateTriangleGeometryActionType = CreateGeometry2DAction<TriangleGeom>;
+using CreateQuadGeometryActionType = CreateGeometry2DAction<QuadGeom>;
 } // namespace nx::core

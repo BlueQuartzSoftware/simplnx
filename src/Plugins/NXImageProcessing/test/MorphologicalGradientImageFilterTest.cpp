@@ -52,10 +52,10 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Computed-expecte
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Empty-SE all-zero output (Annulus r{0,0,0})", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Sanity: confirm Annulus {0,0,0} really is the empty-SE case this test targets.
   REQUIRE(morph_test::MakeStructuringElement(morph_test::KernelType::Annulus, {0, 0, 0}).offsets.empty());
@@ -74,7 +74,7 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Empty-SE all-zer
   args.insertOrAssign(MorphologicalGradientImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{0, 0, 0}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -102,11 +102,11 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Empty-SE all-zer
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][MorphologicalGradientImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 32;
   constexpr int64 k_Rx = 2;
@@ -180,7 +180,7 @@ TEST_CASE("NXImageProcessing::MorphologicalGradientImageFilter: Ramp computed-ex
     UNSCOPED_INFO("slot=" << badSlot << " got=" << badGot << " expected=" << badExp);
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

@@ -22,16 +22,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT InitializeImageGeomCellDataInputValues
 {
-  MultiArraySelectionParameter::ValueType CellArrays;
-  VectorFloat64ParameterType::ValueType InitRange;
-  ChoicesParameter::ValueType InitTypeIndex{};
-  Float64ParameterType::ValueType InitValue{};
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  VectorUInt64ParameterType::ValueType MaxPoint;
-  VectorUInt64ParameterType::ValueType MinPoint;
-  DataObjectNameParameter::ValueType SeedArrayName;
-  UInt64ParameterType::ValueType SeedValue{};
-  BoolParameter::ValueType UseSeed{};
+  MultiArraySelectionParameter::ValueType cell_arrays;
+  VectorFloat64ParameterType::ValueType init_range;
+  ChoicesParameter::ValueType init_type_index{};
+  Float64ParameterType::ValueType init_value{};
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  VectorUInt64ParameterType::ValueType max_point;
+  VectorUInt64ParameterType::ValueType min_point;
+  DataObjectNameParameter::ValueType seed_array_name;
+  UInt64ParameterType::ValueType seed_value{};
+  BoolParameter::ValueType use_seed{};
 };
 
 /**

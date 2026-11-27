@@ -88,10 +88,10 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insert(std::make_unique<Int32ParameterType>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
 
   params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square", 0,
-                                                   ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
+                                                   ChoicesParameter::ChoicesType{"Horizontal", "Vertical", "Square"}));
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 0,
-                                                                    ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
+                                                                    ChoicesParameter::ChoicesType{"Color Intensity", "Discrete"}));
   params.insert(std::make_unique<Int32ParameterType>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
   params.insert(std::make_unique<Int32ParameterType>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
   params.insert(
@@ -102,21 +102,21 @@ Parameters WritePoleFigureFilter::parameters() const
       "  X parallel to a: EDAX/TSL/OIM Analysis convention. This is the convention every released DREAM.3D / DREAM3DNX / SIMPL / SIMPLNX file stores hex/trig EulerAngles in.\n"
       "  X parallel to a*: MTEX / Oxford Channel 5 / AZtec convention. Pick this for apples-to-apples comparison against MTEX-produced pole figures.\n"
       "Cubic, tetragonal, orthorhombic, monoclinic, and triclinic phases ignore this setting.",
-      0, ChoicesParameter::Choices{"X || A (EDAX/TSL)", "X || A* (MTEX/Aztec)"}));
+      0, ChoicesParameter::ChoicesType{"X || A (EDAX/TSL)", "X || A* (MTEX/Aztec)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Orientation Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Euler angle belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Should the algorithm use a mask array to remove non-indexed points", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the input Mask DataArray", DataPath({"Mask"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_MaterialNameArrayPath_Key, "Material Name", "DataPath to the input DataArray that holds the material names", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Output Image File"});
@@ -200,7 +200,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   if(pImageSizeValue <= 0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-680002, fmt::format("'Image Size (Square Pixels)' must be greater than zero. Value given: {}", pImageSizeValue)), .outputValues = {}};
+    return {.output_actions = MakeErrorResult<OutputActions>(-680002, fmt::format("'Image Size (Square Pixels)' must be greater than zero. Value given: {}", pImageSizeValue)), .output_values = {}};
   }
   // The marker radius is only active (and only used) for the Discrete pole figure type.
   if(filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key) == 1ULL)
@@ -208,17 +208,17 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
     const auto pDiscreteMarkerRadiusValue = filterArgs.value<int32>(k_DiscreteMarkerRadius_Key);
     if(pDiscreteMarkerRadiusValue < 1)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-680003, fmt::format("'Discrete Marker Radius (Pixels)' must be at least 1. Value given: {}", pDiscreteMarkerRadiusValue)),
-              .outputValues = {}};
+      return {.output_actions = MakeErrorResult<OutputActions>(-680003, fmt::format("'Discrete Marker Radius (Pixels)' must be at least 1. Value given: {}", pDiscreteMarkerRadiusValue)),
+              .output_values = {}};
     }
   }
 
   const auto* materialNamePtr = dataStructure.getDataAs<StringArray>(pMaterialNameArrayPathValue);
   if(nullptr == materialNamePtr)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-680000, fmt::format("MaterialNames DataArray should be of type 'StringArray'. Selected array was '{}'", pMaterialNameArrayPathValue.toString())),
-            .outputValues = {}};
+            .output_values = {}};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -294,7 +294,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   }
 
   // Return actions and updated preflight values.
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -303,42 +303,42 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
 
   WritePoleFigureInputValues inputValues;
 
-  inputValues.Title = filterArgs.value<StringParameter::ValueType>(k_Title_Key);
-  inputValues.GenerationAlgorithm = filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key);
-  inputValues.LambertSize = filterArgs.value<int32>(k_LambertSize_Key);
-  inputValues.NumColors = filterArgs.value<int32>(k_NumColors_Key);
-  inputValues.ImageSize = filterArgs.value<int32>(k_ImageSize_Key);
-  inputValues.DiscreteMarkerRadius = static_cast<float32>(filterArgs.value<int32>(k_DiscreteMarkerRadius_Key)) / static_cast<float32>(inputValues.ImageSize);
-  inputValues.ImageLayout = filterArgs.value<ChoicesParameter::ValueType>(k_ImageLayout_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.ImagePrefix = filterArgs.value<StringParameter::ValueType>(k_ImagePrefix_Key);
+  inputValues.title = filterArgs.value<StringParameter::ValueType>(k_Title_Key);
+  inputValues.generation_algorithm = filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key);
+  inputValues.lambert_size = filterArgs.value<int32>(k_LambertSize_Key);
+  inputValues.num_colors = filterArgs.value<int32>(k_NumColors_Key);
+  inputValues.image_size = filterArgs.value<int32>(k_ImageSize_Key);
+  inputValues.discrete_marker_radius = static_cast<float32>(filterArgs.value<int32>(k_DiscreteMarkerRadius_Key)) / static_cast<float32>(inputValues.image_size);
+  inputValues.image_layout = filterArgs.value<ChoicesParameter::ValueType>(k_ImageLayout_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.image_prefix = filterArgs.value<StringParameter::ValueType>(k_ImagePrefix_Key);
 
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.MaterialNameArrayPath = filterArgs.value<DataPathSelectionParameter::ValueType>(k_MaterialNameArrayPath_Key);
-  inputValues.SaveAsImageGeometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
-  inputValues.WriteImageToDisk = filterArgs.value<bool>(k_WriteImageToDisk);
-  inputValues.OutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.cell_euler_angles_array_path = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.material_name_array_path = filterArgs.value<DataPathSelectionParameter::ValueType>(k_MaterialNameArrayPath_Key);
+  inputValues.save_as_image_geometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
+  inputValues.write_image_to_disk = filterArgs.value<bool>(k_WriteImageToDisk);
+  inputValues.output_image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   // Keep +Y upward to match the fixed renderer orientation.
-  inputValues.FlipFinalImage = true;
+  inputValues.flip_final_image = true;
 
-  inputValues.SaveIntensityData = filterArgs.value<bool>(k_SaveIntensityDataArrays);
-  inputValues.NormalizeToMRD = filterArgs.value<bool>(k_NormalizeToMRD);
-  inputValues.IntensityGeometryDataPath = filterArgs.value<DataPath>(k_IntensityGeometryPath);
-  inputValues.IntensityPlot1Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
-  inputValues.IntensityPlot2Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
-  inputValues.IntensityPlot3Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot3Name);
+  inputValues.save_intensity_data = filterArgs.value<bool>(k_SaveIntensityDataArrays);
+  inputValues.normalize_to_mrd = filterArgs.value<bool>(k_NormalizeToMRD);
+  inputValues.intensity_geometry_data_path = filterArgs.value<DataPath>(k_IntensityGeometryPath);
+  inputValues.intensity_plot1_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
+  inputValues.intensity_plot2_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
+  inputValues.intensity_plot3_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot3Name);
   const auto hexConventionChoice = filterArgs.value<ChoicesParameter::ValueType>(k_HexConvention_Key);
   switch(hexConventionChoice)
   {
   case 0:
-    inputValues.HexConvention = ebsdlib::HexConvention::XParallelA;
+    inputValues.hex_convention = ebsdlib::HexConvention::XParallelA;
     break;
   case 1:
-    inputValues.HexConvention = ebsdlib::HexConvention::XParallelAStar;
+    inputValues.hex_convention = ebsdlib::HexConvention::XParallelAStar;
     break;
   default:
     return MakeErrorResult(-680010, fmt::format("Invalid Hex Convention choice: {}. Valid range is [0, 1].", hexConventionChoice));

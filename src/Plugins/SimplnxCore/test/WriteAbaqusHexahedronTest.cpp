@@ -28,7 +28,7 @@ using namespace nx::core;
 
 namespace
 {
-const DataPath k_FeatureIdsPath = DataPath({Constants::k_DataContainer}).createChildPath(Constants::k_EbsdScanData).createChildPath(Constants::k_FeatureIds);
+const DataPath k_FeatureIdsPath = DataPath({constants::k_DataContainer}).createChildPath(constants::k_EbsdScanData).createChildPath(constants::k_FeatureIds);
 const DataPath k_TestImageGeometryPath({"ImageGeometry"});
 const DataPath k_TestCellDataPath = k_TestImageGeometryPath.createChildPath("CellData");
 const DataPath k_TestFeatureIdsPath = k_TestCellDataPath.createChildPath("FeatureIds");
@@ -46,7 +46,7 @@ DataStructure CreateIntegrationTypeTestDataStructure()
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_TestCellDataPath.getTargetName(), cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_TestFeatureIdsPath, cellShape, {1});
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_TestFeatureIdsPath, cellShape, {1});
   auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, k_TestFeatureIdsPath.getTargetName(), featureIdsStore, cellDataPtr->getId());
   featureIdsPtr->getDataStoreRef()[0] = 1;
 
@@ -156,11 +156,11 @@ void CompareResults(const std::string& exemplarDir)
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Missing Output Directory", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
   const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -176,8 +176,8 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Missing Output Directory", 
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_TestImageGeometryPath));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(std::count_if(preflightResult.outputActions.warnings().cbegin(), preflightResult.outputActions.warnings().cend(), [](const Warning& warning) { return warning.code == -17; }) == 1);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE(std::count_if(preflightResult.output_actions.warnings().cbegin(), preflightResult.output_actions.warnings().cend(), [](const Warning& warning) { return warning.code == -17; }) == 1);
   REQUIRE_FALSE(fs::exists(missingPath.parent_path()));
 
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
@@ -189,12 +189,12 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Missing Output Directory", 
   }
 
   fs::remove_all(missingPath.parent_path());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Output Path Is A File", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
   const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -215,27 +215,27 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Output Path Is A File", "[S
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_TestImageGeometryPath));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors().front().code == -1112);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors().front().code == -1112);
 
   fs::remove(outputPath);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Default Omits Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const Arguments args = WriteAbaqusHexahedronFilter().getDefaultArguments();
   REQUIRE_FALSE(args.value<bool>(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key));
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Integration Type", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   const WriteAbaqusHexahedronFilter filter;
   const fs::path outputPath(unit_test::k_BinaryTestOutputDir.view());
 
@@ -252,7 +252,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Integration Type", "[Simpln
     args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -266,7 +266,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Integration Type", "[Simpln
     CHECK(sections.find("*Hourglass Stiffness") == std::string::npos);
     CHECK(sections.find("417") == std::string::npos);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Reduced integration uses hourglass stiffness")
@@ -283,7 +283,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Integration Type", "[Simpln
     args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -296,24 +296,24 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Integration Type", "[Simpln
     const std::string sections(sectionsBytes.cbegin(), sectionsBytes.cend());
     CHECK(sections.find("*Hourglass Stiffness\n417\n") != std::string::npos);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz", "7_0_abaqus_hexahedron_writer_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz", "7_0_abaqus_hexahedron_writer_test");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const WriteAbaqusHexahedronFilter filter;
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -323,37 +323,37 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Valid Dummy Node", "[Simpln
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Abaqus_Hexahedron_Writer_Test"));
-  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/dummy_node", unit_test::k_TestFilesDir));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz", "7_0_abaqus_hexahedron_writer_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "7_0_abaqus_hexahedron_writer_test.tar.gz", "7_0_abaqus_hexahedron_writer_test");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const WriteAbaqusHexahedronFilter filter;
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -363,33 +363,33 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: No Dummy Node", "[SimplnxCo
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Abaqus_Hexahedron_Writer_Test"));
-  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   ::CompareResults(fmt::format("{}/7_0_abaqus_hexahedron_writer_test/raw", unit_test::k_TestFilesDir));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before file boundaries", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const WriteAbaqusHexahedronFilter filter;
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_WriteDummyNode_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_UseReducedIntegration_Key, std::make_any<bool>(false));
@@ -397,13 +397,13 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_JobName_Key, std::make_any<StringParameter::ValueType>("UnitTest"));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>("Abaqus_Hexahedron_Progress_Test"));
-  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
   args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   std::vector<IFilter::Message> messages;
-  const auto handler = UnitTest::RecordMessages(messages);
+  const auto handler = unit_test::RecordMessages(messages);
   auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -449,7 +449,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
   CHECK(lastProgress[1] == 100);
   // AbaqusElementSets::write passes the throttle only to its resident grouping path. The external-sort
   // and repeated-scan writers used by the OOC algorithm report no "Grouping Element Sets" progress.
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     CHECK(lastProgress[2] == 100);
   }
@@ -459,12 +459,12 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Progress finishes before fi
   }
   CHECK(lastOverallProgress == 100);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAbaqusHexahedronFilter][BackwardsCompatibility]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto app = Application::GetOrCreateInstance();
   auto* filterListPtr = app->getFilterList();
 
@@ -509,7 +509,7 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: SIMPL Backwards Compatibili
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Label And Feature Limits", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
   const WriteAbaqusHexahedronFilter filter;
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusHexahedron" / "Limits";
@@ -524,46 +524,46 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Label And Feature Limits", 
   {
     imageGeom.setDimensions({1000, 1000, 1000});
     auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -1121);
-    REQUIRE(result.outputActions.errors().front().message.find("element count") != std::string::npos);
-    REQUIRE(result.outputActions.errors().front().message.find("999999999") != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -1121);
+    REQUIRE(result.output_actions.errors().front().message.find("element count") != std::string::npos);
+    REQUIRE(result.output_actions.errors().front().message.find("999999999") != std::string::npos);
   }
   SECTION("Node count exceeds the limit while element count fits")
   {
     imageGeom.setDimensions({1000, 1000, 999});
     auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -1121);
-    REQUIRE(result.outputActions.errors().front().message.find("node count") != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -1121);
+    REQUIRE(result.output_actions.errors().front().message.find("node count") != std::string::npos);
   }
   SECTION("Dimension products cannot overflow the check")
   {
     imageGeom.setDimensions({std::numeric_limits<usize>::max(), 2, 2});
     auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -1121);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -1121);
   }
   SECTION("Sparse enormous feature ID fails before table allocation")
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_TestFeatureIdsPath));
-    dataStructure.getDataRefAs<Int32Array>(k_TestFeatureIdsPath)[0] = 100'000'001;
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_TestFeatureIdsPath));
+    dataStructure.getDataRefAs<Int32ArrayType>(k_TestFeatureIdsPath)[0] = 100'000'001;
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto result = filter.execute(dataStructure, args);
     REQUIRE(result.result.invalid());
     REQUIRE(result.result.errors().front().code == -1120);
     REQUIRE(result.result.errors().front().message.find("Renumber") != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Tiny Spacing", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
   const WriteAbaqusHexahedronFilter filter;
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteAbaqusHexahedron" / "TinySpacing";
@@ -591,12 +591,12 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Tiny Spacing", "[SimplnxCor
     }
   }
   REQUIRE(found);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Invalid Output File Prefix", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
   const WriteAbaqusHexahedronFilter filter;
   const fs::path outputPath(unit_test::k_BinaryTestOutputDir.view());
@@ -610,17 +610,17 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Invalid Output File Prefix"
       args.insertOrAssign(WriteAbaqusHexahedronFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_TestImageGeometryPath));
       args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
       const auto result = filter.preflight(dataStructure, args);
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().size() == 1);
-      REQUIRE(result.outputActions.errors().front().code == -1122);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().size() == 1);
+      REQUIRE(result.output_actions.errors().front().code == -1122);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Output Target Is A Directory", "[SimplnxCore][WriteAbaqusHexahedronFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateIntegrationTypeTestDataStructure();
   const WriteAbaqusHexahedronFilter filter;
   const auto uniqueSuffix = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -640,18 +640,18 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Output Target Is A Director
       args.insertOrAssign(WriteAbaqusHexahedronFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_TestFeatureIdsPath));
       const auto result = filter.preflight(dataStructure, args);
       fs::remove_all(outputPath);
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().size() == 1);
-      REQUIRE(result.outputActions.errors().front().code == -1123);
-      REQUIRE(result.outputActions.errors().front().message.find(targetPath.string()) != std::string::npos);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().size() == 1);
+      REQUIRE(result.output_actions.errors().front().code == -1123);
+      REQUIRE(result.output_actions.errors().front().message.find(targetPath.string()) != std::string::npos);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Geometry cell tuple count", "[SimplnxCore][WriteAbaqusHexahedronFilter][TupleCount]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FilterType = WriteAbaqusHexahedronFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -681,13 +681,13 @@ TEST_CASE("SimplnxCore::WriteAbaqusHexahedronFilter: Geometry cell tuple count",
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -1124);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;

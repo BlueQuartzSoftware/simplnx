@@ -105,12 +105,12 @@ IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStr
   const auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);
   if(lowerThreshold > upperThreshold)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
   }
 
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
@@ -147,8 +147,8 @@ Result<Arguments> BinaryThresholdImageFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_LowerThresholdKey, k_LowerThreshold_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_UpperThresholdKey, k_UpperThreshold_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_LowerThresholdKey, k_LowerThreshold_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_UpperThresholdKey, k_UpperThreshold_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_InsideValueKey, k_InsideValue_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_OutsideValueKey, k_OutsideValue_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));

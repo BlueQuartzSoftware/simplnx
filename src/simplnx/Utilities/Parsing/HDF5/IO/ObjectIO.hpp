@@ -149,7 +149,7 @@ public:
    * @brief Returns the parent object name.
    * @return Name, or empty string for an invalid object.
    */
-  static std::string getParentName();
+  static std::string GetParentName();
 
   /**
    * @brief Returns object attribute count.

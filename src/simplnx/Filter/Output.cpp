@@ -4,7 +4,7 @@ using namespace nx::core;
 
 namespace nx::core
 {
-Result<> OutputActions::ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode)
+Result<> OutputActions::ApplyActions(nonstd::span<const AnyDataActionType> actions, DataStructure& dataStructure, IDataAction::Mode mode)
 {
   std::vector<Error> errors;
   std::vector<Warning> warnings;
@@ -28,7 +28,7 @@ Result<> OutputActions::applyRegular(DataStructure& dataStructure, IDataAction::
 
 Result<> OutputActions::applyDeferred(DataStructure& dataStructure, IDataAction::Mode mode) const
 {
-  return ApplyActions(deferredActions, dataStructure, mode);
+  return ApplyActions(deferred_actions, dataStructure, mode);
 }
 
 Result<> OutputActions::applyAll(DataStructure& dataStructure, IDataAction::Mode mode) const

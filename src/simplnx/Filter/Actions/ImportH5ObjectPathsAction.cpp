@@ -137,7 +137,7 @@ public:
    * @param sourceId Supplies a retained reference after source-wide ID reassignment.
    * @return The direct-child or unique descendant ID, or the unchanged reference when neither rule selects a target.
    */
-  DataObject::OptionalId mapReference(const DataPath& geometryPath, DataObject::OptionalId sourceId) const
+  DataObject::OptionalIdType mapReference(const DataPath& geometryPath, DataObject::OptionalIdType sourceId) const
   {
     if(!sourceId.has_value())
     {
@@ -341,7 +341,7 @@ void ClearExcludedGeometryReferences(DataStructure& sourceStructure, const std::
     }
   }
 
-  const auto selectedReference = [&selectedIds](DataObject::OptionalId id) { return id.has_value() && selectedIds.find(*id) == selectedIds.end() ? DataObject::OptionalId{} : id; };
+  const auto selectedReference = [&selectedIds](DataObject::OptionalIdType id) { return id.has_value() && selectedIds.find(*id) == selectedIds.end() ? DataObject::OptionalIdType{} : id; };
   for(const auto& path : paths)
   {
     auto* geometryPtr = sourceStructure.getDataAs<IGeometry>(path);
@@ -388,9 +388,9 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   {
     return ConvertResult(std::move(metadata));
   }
-  const bool legacy = metadata.value().fileVersion == dream3d::k_LegacyFileVersion;
+  const bool legacy = metadata.value().file_version == dream3d::k_LegacyFileVersion;
   auto validation = metadata.value().applyImageMetadata(m_H5FilePath, m_Paths, m_UseDefaultGeometryValues);
-  DataStructure sourceStructure = std::move(metadata.value().dataStructure);
+  DataStructure sourceStructure = std::move(metadata.value().data_structure);
   Result<> importResult = MergeResults(ConvertResult(std::move(metadata)), std::move(validation));
   if(importResult.invalid() || m_Paths.empty())
   {
@@ -533,7 +533,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       return MergeResults(std::move(importResult), MakeErrorResult(-6213, fmt::format("Cannot stage '{}' from '{}': source identifier {} already belongs to another prepared object.", path.toString(),
                                                                                       m_H5FilePath.string(), placement.source_id)));
     }
-    auto shell = DataStructure::makeImportPublicationCopy(*placement.source_ptr);
+    auto shell = DataStructure::MakeImportPublicationCopy(*placement.source_ptr);
     if(shell == nullptr)
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6202, fmt::format("Cannot prepare an independent copy of '{}' from '{}'.", path.toString(), m_H5FilePath.string())));
@@ -546,7 +546,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     }
     if(auto* geometryPtr = dynamic_cast<IGeometry*>(shell.get()); geometryPtr != nullptr)
     {
-      TransformGeometryReferences(*geometryPtr, [&](DataObject::OptionalId referenceId) { return referenceRemapper.mapReference(path, referenceId); });
+      TransformGeometryReferences(*geometryPtr, [&](DataObject::OptionalIdType referenceId) { return referenceRemapper.mapReference(path, referenceId); });
     }
     // Only an exact known first copy can trigger insert's one-ID assignment in this unpublished structure.
     if(!preparedStructure.insert(shell, path.getParent()))

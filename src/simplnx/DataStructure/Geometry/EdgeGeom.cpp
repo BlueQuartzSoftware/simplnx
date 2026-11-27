@@ -74,9 +74,9 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 
     INodeGeometry1D::copyMembersInto(*copy, copyPath);
     copy->m_EdgeDataArrayId = deepCopyOwnedChild(copyPath, getEdges());
-    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltsContainingVert);
-    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltNeighbors);
-    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32Array>(copyPath, k_EltCentroids);
+    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltsContainingVert);
+    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltNeighbors);
+    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32ArrayType>(copyPath, k_EltCentroids);
 
     return copy;
   }
@@ -85,7 +85,7 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 
 Result<> EdgeGeom::findElementSizes(bool recalculate)
 {
-  auto* sizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  auto* sizesPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_ElementSizesId);
   if(sizesPtr != nullptr && !recalculate)
   {
     return {};
@@ -104,7 +104,7 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
 
   m_ElementSizesId = sizesPtr->getId();
 
-  std::array<FloatVec3, 2> verts = {FloatVec3(0.0f, 0.0f, 0.0f), FloatVec3(0.0f, 0.0f, 0.0f)};
+  std::array<FloatVec3Type, 2> verts = {FloatVec3Type(0.0f, 0.0f, 0.0f), FloatVec3Type(0.0f, 0.0f, 0.0f)};
 
   for(usize i = 0; i < INodeGeometry1D::getNumberOfCells(); i++)
   {
@@ -127,7 +127,7 @@ usize EdgeGeom::getNumberOfVerticesPerEdge() const
 
 Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* edgesContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* edgesContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellContainingVertDataArrayId);
   if(edgesContainingVertPtr != nullptr && !recalculate)
   {
     return {};
@@ -143,7 +143,7 @@ Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVertPtr, getNumberOfVertices());
+  auto findResult = geometry_helpers::connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVertPtr, getNumberOfVertices());
   if(findResult.invalid())
   {
     m_CellContainingVertDataArrayId.reset();
@@ -156,7 +156,7 @@ Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
 
 Result<> EdgeGeom::findElementNeighbors(bool recalculate)
 {
-  auto* edgeNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* edgeNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellNeighborsDataArrayId);
   if(edgeNeighborsPtr != nullptr && !recalculate)
   {
     return {};
@@ -170,7 +170,7 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
   }
   if(edgeNeighborsPtr == nullptr)
   {
-    edgeNeighborsPtr = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+    edgeNeighborsPtr = ElementDynamicListType::Create(*getDataStructure(), k_EltNeighbors, getId());
     if(edgeNeighborsPtr == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
@@ -180,7 +180,7 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
 
   m_CellNeighborsDataArrayId = edgeNeighborsPtr->getId();
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighborsPtr, Type::Edge);
+  auto findResult = geometry_helpers::connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighborsPtr, Type::Edge);
   if(findResult.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
@@ -192,7 +192,7 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
 
 Result<> EdgeGeom::findElementCentroids(bool recalculate)
 {
-  auto* edgeCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* edgeCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_CellCentroidsDataArrayId);
   if(edgeCentroidsPtr != nullptr && !recalculate)
   {
     return {};
@@ -209,7 +209,7 @@ Result<> EdgeGeom::findElementCentroids(bool recalculate)
     }
   }
 
-  GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroidsPtr);
+  geometry_helpers::topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroidsPtr);
   m_CellCentroidsDataArrayId = edgeCentroidsPtr->getId();
 
   return {};

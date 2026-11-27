@@ -35,17 +35,17 @@ const std::atomic_bool& ErodeDilateBadData::getCancel() const
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateBadData::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
 
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-  SizeVec3 udims = selectedImageGeom.getDimensions();
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  SizeVec3Type udims = selectedImageGeom.getDimensions();
   std::array<int64, 3> dims = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
 
   // Precompute face-neighbor offsets: given a flat voxel index, adding one of
   // these offsets yields the flat index of the corresponding face neighbor.
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
@@ -111,7 +111,7 @@ Result<> ErodeDilateBadData::operator()()
   // Collect all sibling arrays in the same Attribute Matrix as FeatureIds,
   // excluding user-specified ignored arrays. These will all be updated
   // during the transfer phase to stay consistent with FeatureId changes.
-  const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+  const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->feature_ids_array_path, m_InputValues->ignored_data_array_paths);
   const usize dimZ = static_cast<usize>(dims[2]);
 
   // Commits one Z-slice of marks across all sibling arrays.
@@ -130,7 +130,7 @@ Result<> ErodeDilateBadData::operator()()
   };
 
   m_MessageHandler.sendInfoMessage("Applying morphology and transferring sibling arrays");
-  m_Throttle.reset(static_cast<usize>(m_InputValues->NumIterations) * dimZ, "Scanning and transferring morphology slices");
+  m_Throttle.reset(static_cast<usize>(m_InputValues->num_iterations) * dimZ, "Scanning and transferring morphology slices");
 
   // The iterations write the selected FeatureIds and sibling cell arrays in place. A return
   // part way leaves the input partly changed, and nothing restores it, so the iterations run
@@ -144,7 +144,7 @@ Result<> ErodeDilateBadData::operator()()
   // Each iteration performs one complete pass of the morphological operation.
   // The rolling window and mark arrays are reset at the start of each
   // iteration because the previous pass's transfers alter the data.
-  for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
+  for(int32 iteration = 0; iteration < m_InputValues->num_iterations; iteration++)
   {
     // Clear all mark arrays for this iteration
     for(auto& m : marks)
@@ -202,8 +202,8 @@ Result<> ErodeDilateBadData::operator()()
 
             // Determine which face neighbors are within the volume bounds,
             // then mask off directions the user has disabled.
-            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-            adjustValidNeighbors(isValidFaceNeighbor, m_InputValues->XDirOn, m_InputValues->YDirOn, m_InputValues->ZDirOn);
+            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            AdjustValidNeighbors(isValidFaceNeighbor, m_InputValues->x_dir_on, m_InputValues->y_dir_on, m_InputValues->z_dir_on);
 
             // Global flat index of this voxel (used as source index in marks)
             const int64 voxelIndex = xIdx + yIdx * dims[0] + zIdx * static_cast<int64>(sliceSize);
@@ -232,14 +232,14 @@ Result<> ErodeDilateBadData::operator()()
               const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
               const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
 
-              if(m_InputValues->Operation == detail::k_DilateIndex && feature > 0)
+              if(m_InputValues->operation == detail::k_DilateIndex && feature > 0)
               {
                 // DILATION: Mark the good NEIGHBOR to receive this bad voxel's
                 // data. The neighbor lives in rolling-window slot
                 // k_NeighborSlot[faceIndex], so we mark that slot's array.
                 marks[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] = voxelIndex;
               }
-              if(feature > 0 && m_InputValues->Operation == detail::k_ErodeIndex)
+              if(feature > 0 && m_InputValues->operation == detail::k_ErodeIndex)
               {
                 // EROSION: Tally this good neighbor's FeatureId and track
                 // which one is the most common ("majority vote").
@@ -256,7 +256,7 @@ Result<> ErodeDilateBadData::operator()()
 
             // Reset featureCount entries for this voxel's neighbors so the
             // array is clean for the next bad voxel (avoids a full memset).
-            if(m_InputValues->Operation == detail::k_ErodeIndex)
+            if(m_InputValues->operation == detail::k_ErodeIndex)
             {
               for(const auto& faceIndex : k_FaceNeighborInternalIdx)
               {

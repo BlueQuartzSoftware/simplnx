@@ -59,8 +59,8 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_InterpolationTechnique_Key, "Interpolation Technique", "Selected Interpolation Technique", 0, std::vector<std::string>{"Uniform", "Gaussian"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
+      std::make_unique<VectorFloat32ParameterType>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
                                                          std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Destination Image Geometry"});
@@ -72,14 +72,14 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean or uint8 mask array. Values that are true will mark that vertex as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
-                                                               MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                               MultiArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
-                                                               MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                               MultiArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   // params.insert(std::make_unique<DataObjectNameParameter>(k_InterpolatedGroupName_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", "InterpolatedData"));
@@ -178,7 +178,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const DataPath interpolatedGroupPath = imageGeomRef.getCellDataPath();
-  const SizeVec3 imageDims = imageGeomRef.getDimensions();
+  const SizeVec3Type imageDims = imageGeomRef.getDimensions();
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
   const auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
@@ -275,7 +275,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrays);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-11003, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -288,29 +288,29 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 {
   InterpolatePointCloudToRegularGridInputValues inputValues;
 
-  inputValues.interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
-  inputValues.vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.interpolatedDataPaths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
-  inputValues.copyDataPaths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
-  inputValues.kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
+  inputValues.interpolation_technique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
+  inputValues.vertex_geom_path = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  inputValues.image_geom_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.interpolated_data_paths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
+  inputValues.copy_data_paths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
+  inputValues.kernel_size = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
   inputValues.sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
-  inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.maskDataPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.mask_data_path = filterArgs.value<DataPath>(k_InputMaskPath_Key);
 
-  inputValues.findLength = filterArgs.value<bool>(k_FindLength_Key);
-  inputValues.findMin = filterArgs.value<bool>(k_FindMin_Key);
-  inputValues.findMax = filterArgs.value<bool>(k_FindMax_Key);
-  inputValues.findMean = filterArgs.value<bool>(k_FindMean_Key);
-  inputValues.findStdDeviation = filterArgs.value<bool>(k_FindStdDeviation_Key);
-  inputValues.findSummation = filterArgs.value<bool>(k_FindSummation_Key);
+  inputValues.find_length = filterArgs.value<bool>(k_FindLength_Key);
+  inputValues.find_min = filterArgs.value<bool>(k_FindMin_Key);
+  inputValues.find_max = filterArgs.value<bool>(k_FindMax_Key);
+  inputValues.find_mean = filterArgs.value<bool>(k_FindMean_Key);
+  inputValues.find_std_deviation = filterArgs.value<bool>(k_FindStdDeviation_Key);
+  inputValues.find_summation = filterArgs.value<bool>(k_FindSummation_Key);
 
-  inputValues.lengthSuffix = filterArgs.value<std::string>(k_LengthSuffix_Key);
-  inputValues.minSuffix = filterArgs.value<std::string>(k_MinSuffix_Key);
-  inputValues.maxSuffix = filterArgs.value<std::string>(k_MaxSuffix_Key);
-  inputValues.meanSuffix = filterArgs.value<std::string>(k_MeanSuffix_Key);
-  inputValues.stdDeviationSuffix = filterArgs.value<std::string>(k_StdDeviationSuffix_Key);
-  inputValues.summationSuffix = filterArgs.value<std::string>(k_SummationSuffix_Key);
+  inputValues.length_suffix = filterArgs.value<std::string>(k_LengthSuffix_Key);
+  inputValues.min_suffix = filterArgs.value<std::string>(k_MinSuffix_Key);
+  inputValues.max_suffix = filterArgs.value<std::string>(k_MaxSuffix_Key);
+  inputValues.mean_suffix = filterArgs.value<std::string>(k_MeanSuffix_Key);
+  inputValues.std_deviation_suffix = filterArgs.value<std::string>(k_StdDeviationSuffix_Key);
+  inputValues.summation_suffix = filterArgs.value<std::string>(k_SummationSuffix_Key);
 
   return InterpolatePointCloudToRegularGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -340,8 +340,8 @@ Result<Arguments> InterpolatePointCloudToRegularGridFilter::FromSIMPLJson(const 
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_InterpolationTechniqueKey, k_InterpolationTechnique_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_KernelSizeKey, k_KernelSize_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SigmasKey, k_GaussianSigmas_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_KernelSizeKey, k_KernelSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_SigmasKey, k_GaussianSigmas_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_InterpolatedDataContainerNameKey, k_SelectedVertexGeometryPath_Key));

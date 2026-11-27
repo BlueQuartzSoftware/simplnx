@@ -21,27 +21,27 @@ inline constexpr uint32_t k_Height = 150;
  */
 using Vec3fType = nx::core::Vec3<float>;
 
-inline float deg2rad(float deg)
+inline float Deg2rad(float deg)
 {
-  return deg * nx::core::Constants::k_PiOver180<float>;
+  return deg * nx::core::constants::k_PiOver180<float>;
 }
 
-inline float clamp(float lo, float hi, float v)
+inline float Clamp(float lo, float hi, float v)
 {
   return std::max(lo, std::min(hi, v));
 }
 
 inline std::array<float, 6> GetBoundingBoxAtTri(nx::core::TriangleGeom& tri, size_t triId)
 {
-  nx::core::IGeometry::SharedTriList& triList = tri.getFacesRef();
+  nx::core::IGeometry::SharedTriListType& triList = tri.getFacesRef();
   // nx::core::IGeometry::SharedVertexList& vertList = tri.getVerticesRef();
 
   // nx::core::uint64* Tri = &triList[triId];
-  std::array<nx::core::FloatVec3, 3> triCoords;
+  std::array<nx::core::FloatVec3Type, 3> triCoords;
   tri.getFaceCoordinates(triId, triCoords);
-  nx::core::FloatVec3 vert1 = triCoords[0];
-  nx::core::FloatVec3 vert2 = triCoords[1];
-  nx::core::FloatVec3 vert3 = triCoords[2];
+  nx::core::FloatVec3Type vert1 = triCoords[0];
+  nx::core::FloatVec3Type vert2 = triCoords[1];
+  nx::core::FloatVec3Type vert3 = triCoords[2];
   // nx::core::float32* vert1 = &vertList[Tri[0] * 3];
   // nx::core::float32* vert2 = &vertList[Tri[1]*3+1];
   // nx::core::float32* vert3 = &vertList[Tri[2]*3+2];
@@ -236,9 +236,9 @@ struct MTPointsCache
   PointType origin;
 
   // Triangle Vertices
-  PointType pointA;
-  PointType pointB;
-  PointType pointC;
+  PointType point_a;
+  PointType point_b;
+  PointType point_c;
 
   // Specific edges
   // edge1 = pointB - pointA;
@@ -248,9 +248,9 @@ struct MTPointsCache
 
   // Pre-calculations
   // sDist = origin - pointA;
-  PointType sDist;
+  PointType s_dist;
   // sCrossE1 = sDist.cross(edge1);
-  PointType sCrossE1;
+  PointType s_cross_e1;
 };
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance (Cached)
@@ -270,7 +270,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec,
   }
 
   T invDet = 1.0 / determinant;
-  T uCoff = invDet * cache.sDist.dot(crossE2);
+  T uCoff = invDet * cache.s_dist.dot(crossE2);
 
   // Allow ADL for efficient absolute value function
   using std::abs;
@@ -280,7 +280,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec,
     return {};
   }
 
-  T vCoff = invDet * dirVec.dot(cache.sCrossE1);
+  T vCoff = invDet * dirVec.dot(cache.s_cross_e1);
 
   if((vCoff < 0 && abs(vCoff) > epsilon) || (uCoff + vCoff > 1 && abs(uCoff + vCoff - 1.0) > epsilon))
   {
@@ -288,7 +288,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec,
     return {};
   }
 
-  T tCoff = invDet * cache.edge2.dot(cache.sCrossE1);
+  T tCoff = invDet * cache.edge2.dot(cache.s_cross_e1);
 
   if(tCoff > epsilon)
   {

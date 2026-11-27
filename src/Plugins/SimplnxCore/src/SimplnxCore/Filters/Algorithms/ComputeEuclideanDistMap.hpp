@@ -20,16 +20,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeEuclideanDistMapInputValues
 {
-  bool CalcManhattanDist{}; ///< True to create int32 city-block maps. False creates float32 Euclidean maps.
+  bool calc_manhattan_dist{}; ///< True to create int32 city-block maps. False creates float32 Euclidean maps.
   // These flags select seeds with one, two, or three distinct neighboring Feature IDs.
-  bool DoBoundaries{};
-  bool DoTripleLines{};
-  bool DoQuadPoints{};
-  DataPath FeatureIdsArrayPath;
-  DataPath GBDistancesArrayPath;
-  DataPath TJDistancesArrayPath;
-  DataPath QPDistancesArrayPath;
-  DataPath InputImageGeometry;
+  bool do_boundaries{};
+  bool do_triple_lines{};
+  bool do_quad_points{};
+  DataPath feature_ids_array_path;
+  DataPath gb_distances_array_path;
+  DataPath tj_distances_array_path;
+  DataPath qp_distances_array_path;
+  DataPath input_image_geometry;
 };
 
 /**

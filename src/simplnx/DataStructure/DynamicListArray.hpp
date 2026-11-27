@@ -11,7 +11,7 @@
 namespace nx::core
 {
 
-namespace DynamicListArrayConstants
+namespace dynamic_list_array_constants
 {
 inline constexpr StringLiteralType k_TypeName = "DynamicListArray";
 }
@@ -22,11 +22,11 @@ class DynamicListArray : public DataObject
 public:
   friend class DataStructure;
 
-  using Self = DynamicListArray<T, K>;
+  using SelfType = DynamicListArray<T, K>;
 
   struct ElementList
   {
-    T numCells;
+    T num_cells;
     K* cells;
   };
 
@@ -142,7 +142,7 @@ public:
    */
   std::string getTypeName() const override
   {
-    return DynamicListArrayConstants::k_TypeName;
+    return dynamic_list_array_constants::k_TypeName;
   }
 
   /**
@@ -174,7 +174,7 @@ public:
     // Figure out how many entries, and for each entry, how many cells
     for(usize pointId = 0; pointId < m_Size; pointId++)
     {
-      linkCounts[pointId] = this->m_Array[pointId].numCells;
+      linkCounts[pointId] = this->m_Array[pointId].num_cells;
     }
     // Allocate all that in the copy
     copy->allocateLists(linkCounts);
@@ -234,13 +234,13 @@ public:
     {
       return false;
     }
-    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numCells > 0)
+    if(m_Array[pointId].cells != nullptr && m_Array[pointId].num_cells > 0)
     {
       delete[] this->m_Array[pointId].cells;
       m_Array[pointId].cells = nullptr;
-      m_Array[pointId].numCells = 0;
+      m_Array[pointId].num_cells = 0;
     }
-    m_Array[pointId].numCells = numCells;
+    m_Array[pointId].num_cells = numCells;
     // If numCells is huge then there could be problems with this
     this->m_Array[pointId].cells = new K[numCells];
     std::memcpy(m_Array[pointId].cells, data, sizeof(K) * numCells);
@@ -255,19 +255,19 @@ public:
    */
   bool setElementList(usize pointId, ElementList& list)
   {
-    T nCells = list.numCells;
+    T nCells = list.num_cells;
     K* dataPtr = list.cells;
     if(pointId >= m_Size)
     {
       return false;
     }
-    if(m_Array[pointId].cells != nullptr && m_Array[pointId].numCells > 0)
+    if(m_Array[pointId].cells != nullptr && m_Array[pointId].num_cells > 0)
     {
       delete[] this->m_Array[pointId].cells;
       m_Array[pointId].cells = nullptr;
-      m_Array[pointId].numCells = 0;
+      m_Array[pointId].num_cells = 0;
     }
-    m_Array[pointId].numCells = nCells;
+    m_Array[pointId].num_cells = nCells;
     // If numCells is huge then there could be problems with this
     this->m_Array[pointId].cells = new K[nCells];
     std::memcpy(m_Array[pointId].cells, dataPtr, sizeof(K) * nCells);
@@ -281,7 +281,7 @@ public:
    */
   T getNumberOfElements(usize pointId) const
   {
-    return this->m_Array[pointId].numCells;
+    return this->m_Array[pointId].num_cells;
   }
 
   /**
@@ -311,7 +311,7 @@ public:
     for(usize i = 0; i < numElements; ++i)
     {
       numCellsPtr = reinterpret_cast<T*>(bufPtr + offset);
-      this->m_Array[i].numCells = *numCellsPtr; // Set the number of cells in this link
+      this->m_Array[i].num_cells = *numCellsPtr; // Set the number of cells in this link
       offset += 2;
       this->m_Array[i].cells = new K[(*numCellsPtr)];                                   // Allocate a new chunk of memory to store the list
       std::memcpy(this->m_Array[i].cells, bufPtr + offset, (*numCellsPtr) * sizeof(K)); // Copy from the buffer into the new list memory
@@ -329,10 +329,10 @@ public:
     allocate(linkCounts.size());
     for(typename std::vector<T>::size_type i = 0; i < linkCounts.size(); i++)
     {
-      this->m_Array[i].numCells = linkCounts[i];
+      this->m_Array[i].num_cells = linkCounts[i];
       if(linkCounts[i] > 0)
       {
-        this->m_Array[i].cells = new K[this->m_Array[i].numCells];
+        this->m_Array[i].cells = new K[this->m_Array[i].num_cells];
       }
     }
   }
@@ -399,7 +399,7 @@ private:
   usize m_Size = 0;
 };
 
-using Int32Int32DynamicListArray = DynamicListArray<int32, int32>;
-using UInt16Int64DynamicListArray = DynamicListArray<uint16, int64>;
-using Int64Int64DynamicListArray = DynamicListArray<int64, int64>;
+using Int32Int32DynamicListArrayType = DynamicListArray<int32, int32>;
+using UInt16Int64DynamicListArrayType = DynamicListArray<uint16, int64>;
+using Int64Int64DynamicListArrayType = DynamicListArray<int64, int64>;
 } // namespace nx::core

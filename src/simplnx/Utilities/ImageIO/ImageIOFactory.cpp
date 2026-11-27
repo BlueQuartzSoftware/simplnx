@@ -11,7 +11,7 @@ using namespace nx::core;
 
 Result<std::unique_ptr<IImageIO>> nx::core::CreateImageIO(const std::filesystem::path& filePath)
 {
-  const std::string ext = nx::core::StringUtilities::toLower(filePath.extension().string());
+  const std::string ext = nx::core::string_utilities::ToLower(filePath.extension().string());
 
   if(ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp")
   {

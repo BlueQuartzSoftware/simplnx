@@ -288,7 +288,7 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::files
   }
 
   OnScaleTableFileHeader header;
-  header.InputFile = inputFile;
+  header.input_file = inputFile;
 
   // The header scan validates bounds without retaining a second copy of the coordinate data.
   std::string line;
@@ -320,8 +320,8 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::files
       }
 
       const usize axis = AxisIndex(section);
-      header.BoundsCounts[axis] = count;
-      header.BoundsPresent[axis] = true;
+      header.bounds_counts[axis] = count;
+      header.bounds_present[axis] = true;
       auto valuesResult =
           ReadSectionTokens(input, line, lineNumber, inputFile, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
             auto valueResult = ParseFloat(token, tokenLine, section, inputFile);
@@ -331,11 +331,11 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::files
             }
             if(index == 0)
             {
-              header.FirstBounds[axis] = valueResult.value();
+              header.first_bounds[axis] = valueResult.value();
             }
             if(index + 1 == count)
             {
-              header.LastBounds[axis] = valueResult.value();
+              header.last_bounds[axis] = valueResult.value();
             }
             return {};
           });
@@ -346,7 +346,7 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::files
     }
     else if(section == Section::Names)
     {
-      header.NameCount = count;
+      header.name_count = count;
       auto namesResult = ReadSectionTokens(input, line, lineNumber, inputFile, section, count, true, k_NameValuesTooShortError, [](std::string_view, usize, usize) -> Result<> { return {}; });
       if(namesResult.invalid())
       {
@@ -355,7 +355,7 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::files
     }
     else if(section == Section::Materials)
     {
-      header.MaterialCount = count;
+      header.material_count = count;
       foundMaterials = true;
       break;
     }
@@ -371,21 +371,21 @@ Result<OnScaleTableFileHeader> ReadOnScaleTableFile::ReadHeader(const std::files
 
 Result<> ReadOnScaleTableFile::operator()()
 {
-  std::ifstream input(m_InputValues->InputFile, std::ios::binary);
+  std::ifstream input(m_InputValues->input_file, std::ios::binary);
   if(!input.is_open())
   {
-    return MakeErrorResult(k_FileAccessError, fmt::format("The OnScale table file '{}' could not be opened for reading. Check the file permissions.", m_InputValues->InputFile.string()));
+    return MakeErrorResult(k_FileAccessError, fmt::format("The OnScale table file '{}' could not be opened for reading. Check the file permissions.", m_InputValues->input_file.string()));
   }
 
-  auto& geometry = m_DataStructure.getDataRefAs<RectGridGeom>(m_InputValues->RectGridGeometryPath);
+  auto& geometry = m_DataStructure.getDataRefAs<RectGridGeom>(m_InputValues->rect_grid_geometry_path);
   geometry.setUnits(IGeometry::LengthUnit::Meter);
-  std::array<Float32Array*, 3> boundsArrays = {
-      &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RectGridGeometryPath.createChildPath("X Bounds")),
-      &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RectGridGeometryPath.createChildPath("Y Bounds")),
-      &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RectGridGeometryPath.createChildPath("Z Bounds")),
+  std::array<Float32ArrayType*, 3> boundsArrays = {
+      &m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->rect_grid_geometry_path.createChildPath("X Bounds")),
+      &m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->rect_grid_geometry_path.createChildPath("Y Bounds")),
+      &m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->rect_grid_geometry_path.createChildPath("Z Bounds")),
   };
-  auto& names = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNamesArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& names = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->material_names_array_path);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   // Attach the populated bounds only after the file's coordinates pass validation.
   Result<> result = geometry.setBounds(nullptr, nullptr, nullptr);
   if(result.invalid())
@@ -395,10 +395,10 @@ Result<> ReadOnScaleTableFile::operator()()
 
   for(usize axis = 0; axis < boundsArrays.size(); axis++)
   {
-    if(!m_InputValues->Header.BoundsPresent[axis])
+    if(!m_InputValues->header.bounds_present[axis])
     {
-      (*boundsArrays[axis])[0] = m_InputValues->FallbackOrigin[axis];
-      (*boundsArrays[axis])[1] = m_InputValues->FallbackOrigin[axis] + m_InputValues->FallbackSpacing[axis];
+      (*boundsArrays[axis])[0] = m_InputValues->fallback_origin[axis];
+      (*boundsArrays[axis])[1] = m_InputValues->fallback_origin[axis] + m_InputValues->fallback_spacing[axis];
     }
   }
 
@@ -418,7 +418,7 @@ Result<> ReadOnScaleTableFile::operator()()
       continue;
     }
 
-    Result<usize> countResult = ParseCount(line, lineNumber, section, m_InputValues->InputFile);
+    Result<usize> countResult = ParseCount(line, lineNumber, section, m_InputValues->input_file);
     if(countResult.invalid())
     {
       return ConvertResult(std::move(countResult));
@@ -431,13 +431,13 @@ Result<> ReadOnScaleTableFile::operator()()
       if(count != boundsArrays[axis]->getNumberOfTuples())
       {
         return MakeErrorResult(k_FileChangedError, fmt::format("The '{}' section in '{}' declares {} bounds, but preflight found {} bounds. The file changed after preflight.", SectionName(section),
-                                                               m_InputValues->InputFile.string(), count, boundsArrays[axis]->getNumberOfTuples()));
+                                                               m_InputValues->input_file.string(), count, boundsArrays[axis]->getNumberOfTuples()));
       }
 
       m_MessageHandler.sendInfoMessage(fmt::format("Reading {} bounds", SectionName(section).substr(0, 1)));
       auto valuesResult =
-          ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
-            auto valueResult = ParseFloat(token, tokenLine, section, m_InputValues->InputFile);
+          ReadSectionTokens(input, line, lineNumber, m_InputValues->input_file, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
+            auto valueResult = ParseFloat(token, tokenLine, section, m_InputValues->input_file);
             if(valueResult.invalid())
             {
               return ConvertResult(std::move(valueResult));
@@ -456,12 +456,12 @@ Result<> ReadOnScaleTableFile::operator()()
       if(count != names.getNumberOfTuples())
       {
         return MakeErrorResult(k_FileChangedError, fmt::format("The 'name' section in '{}' declares {} names, but preflight found {} names. The file changed after preflight.",
-                                                               m_InputValues->InputFile.string(), count, names.getNumberOfTuples()));
+                                                               m_InputValues->input_file.string(), count, names.getNumberOfTuples()));
       }
 
       m_MessageHandler.sendInfoMessage("Reading names");
       auto namesResult =
-          ReadSectionTokens(input, line, lineNumber, m_InputValues->InputFile, section, count, true, k_NameValuesTooShortError, [&](std::string_view token, usize, usize index) -> Result<> {
+          ReadSectionTokens(input, line, lineNumber, m_InputValues->input_file, section, count, true, k_NameValuesTooShortError, [&](std::string_view token, usize, usize index) -> Result<> {
             names.setValue(index, std::string(token));
             return {};
           });
@@ -478,7 +478,7 @@ Result<> ReadOnScaleTableFile::operator()()
       if(count != numCells)
       {
         const std::string message = fmt::format("The 'matr' header in '{}' declares {} values, but the created geometry has {} cells. The reader will use exactly {} values.",
-                                                m_InputValues->InputFile.string(), count, numCells, numCells);
+                                                m_InputValues->input_file.string(), count, numCells, numCells);
         result.warnings().push_back({k_MaterialCountMismatchWarning, message});
       }
 
@@ -505,7 +505,7 @@ Result<> ReadOnScaleTableFile::operator()()
               }
             }
 
-            auto valueResult = ParseMaterial(token, lineNumber, m_InputValues->InputFile);
+            auto valueResult = ParseMaterial(token, lineNumber, m_InputValues->input_file);
             if(valueResult.invalid())
             {
               return ConvertResult(std::move(valueResult));
@@ -525,12 +525,12 @@ Result<> ReadOnScaleTableFile::operator()()
       if(materialCount != numCells)
       {
         return MakeErrorResult(k_MaterialValuesTooShortError,
-                               fmt::format("The 'matr' section in '{}' contains {} values, but the created geometry requires {} values.", m_InputValues->InputFile.string(), materialCount, numCells));
+                               fmt::format("The 'matr' section in '{}' contains {} values, but the created geometry requires {} values.", m_InputValues->input_file.string(), materialCount, numCells));
       }
       if(extraCount > 0)
       {
         const std::string message = fmt::format("The 'matr' section in '{}' contains {} trailing values after the required {} values. The reader ignored the trailing values.",
-                                                m_InputValues->InputFile.string(), extraCount, numCells);
+                                                m_InputValues->input_file.string(), extraCount, numCells);
         result.warnings().push_back({k_ExtraMaterialValuesWarning, message});
       }
       break;
@@ -539,22 +539,22 @@ Result<> ReadOnScaleTableFile::operator()()
 
   for(usize axis = 0; axis < boundsRead.size(); axis++)
   {
-    if(boundsRead[axis] != m_InputValues->Header.BoundsPresent[axis])
+    if(boundsRead[axis] != m_InputValues->header.bounds_present[axis])
     {
       constexpr std::array<std::string_view, 3> k_AxisNames = {"X", "Y", "Z"};
       return MakeErrorResult(k_FileChangedError,
                              fmt::format("The {} bounds section in '{}' was expected to be {} after preflight but was found {}. The file changed after preflight.", k_AxisNames[axis],
-                                         m_InputValues->InputFile.string(), m_InputValues->Header.BoundsPresent[axis] ? "present" : "absent", boundsRead[axis] ? "present" : "absent"));
+                                         m_InputValues->input_file.string(), m_InputValues->header.bounds_present[axis] ? "present" : "absent", boundsRead[axis] ? "present" : "absent"));
     }
   }
-  if(m_InputValues->Header.NameCount > 0 && !namesRead)
+  if(m_InputValues->header.name_count > 0 && !namesRead)
   {
     return MakeErrorResult(k_FileChangedError, fmt::format("The 'name' section in '{}' was expected because preflight found {} names, but the section was not found. The file changed after preflight.",
-                                                           m_InputValues->InputFile.string(), m_InputValues->Header.NameCount));
+                                                           m_InputValues->input_file.string(), m_InputValues->header.name_count));
   }
   if(!foundMaterials)
   {
-    return MakeErrorResult(k_MissingMaterialSectionError, fmt::format("The OnScale table file '{}' does not contain a 'matr' section header.", m_InputValues->InputFile.string()));
+    return MakeErrorResult(k_MissingMaterialSectionError, fmt::format("The OnScale table file '{}' does not contain a 'matr' section header.", m_InputValues->input_file.string()));
   }
   auto boundsResult = geometry.setBounds(boundsArrays[0], boundsArrays[1], boundsArrays[2]);
   if(boundsResult.invalid())
@@ -562,7 +562,7 @@ Result<> ReadOnScaleTableFile::operator()()
     for(auto& error : boundsResult.errors())
     {
       error.message =
-          fmt::format("Cannot read bounds for rectilinear grid geometry '{}' from '{}': {}", m_InputValues->RectGridGeometryPath.toString(), m_InputValues->InputFile.string(), error.message);
+          fmt::format("Cannot read bounds for rectilinear grid geometry '{}' from '{}': {}", m_InputValues->rect_grid_geometry_path.toString(), m_InputValues->input_file.string(), error.message);
     }
   }
   return MergeResults(std::move(result), std::move(boundsResult));

@@ -21,7 +21,7 @@ class Ray
 {
 public:
   using PointType = Vec3<T>;
-  using ZXZEulerType = ZXZEuler;
+  using ZXZEulerType = ZxzEulerType;
   using LengthType = T;
 
   /**

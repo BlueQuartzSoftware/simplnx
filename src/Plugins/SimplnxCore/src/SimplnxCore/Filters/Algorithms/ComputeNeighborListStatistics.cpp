@@ -95,32 +95,32 @@ public:
       }
       if(m_Min)
       {
-        T val = StatisticsCalculations::findMin(tmpList);
+        T val = statistics_calculations::FindMin(tmpList);
         array1Ptr->setValue(i, val);
       }
       if(m_Max)
       {
-        T val = StatisticsCalculations::findMax(tmpList);
+        T val = statistics_calculations::FindMax(tmpList);
         array2Ptr->setValue(i, val);
       }
       if(m_Mean)
       {
-        float val = StatisticsCalculations::findMean(tmpList);
+        float val = statistics_calculations::FindMean(tmpList);
         array3Ptr->setValue(i, val);
       }
       if(m_Median)
       {
-        float val = StatisticsCalculations::findMedian(tmpList);
+        float val = statistics_calculations::FindMedian(tmpList);
         array4Ptr->setValue(i, val);
       }
       if(m_StdDeviation)
       {
-        float val = StatisticsCalculations::findStdDeviation(tmpList);
+        float val = statistics_calculations::findStdDeviation(tmpList);
         array5Ptr->setValue(i, val);
       }
       if(m_Summation)
       {
-        float val = StatisticsCalculations::findSummation(tmpList);
+        float val = statistics_calculations::FindSummation(tmpList);
         array6Ptr->setValue(i, val);
       }
 
@@ -174,7 +174,7 @@ void ComputeNeighborListStatistics::sendThreadSafeProgressMessage(usize counter)
 // -----------------------------------------------------------------------------
 Result<> ComputeNeighborListStatistics::operator()()
 {
-  const auto& inputINeighborList = m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->TargetNeighborListPath);
+  const auto& inputINeighborList = m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->target_neighbor_list_path);
 
   DataType type = inputINeighborList.getDataType();
   if(type == DataType::boolean)
@@ -190,33 +190,33 @@ Result<> ComputeNeighborListStatistics::operator()()
 
   std::vector<IDataArray*> arrays(7, nullptr);
 
-  if(m_InputValues->FindLength)
+  if(m_InputValues->find_length)
   {
-    arrays[0] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->LengthPath);
+    arrays[0] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->length_path);
   }
-  if(m_InputValues->FindMin)
+  if(m_InputValues->find_min)
   {
-    arrays[1] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MinPath);
+    arrays[1] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->min_path);
   }
-  if(m_InputValues->FindMax)
+  if(m_InputValues->find_max)
   {
-    arrays[2] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaxPath);
+    arrays[2] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->max_path);
   }
-  if(m_InputValues->FindMean)
+  if(m_InputValues->find_mean)
   {
-    arrays[3] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeanPath);
+    arrays[3] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mean_path);
   }
-  if(m_InputValues->FindMedian)
+  if(m_InputValues->find_median)
   {
-    arrays[4] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedianPath);
+    arrays[4] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->median_path);
   }
-  if(m_InputValues->FindStdDeviation)
+  if(m_InputValues->find_std_deviation)
   {
-    arrays[5] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->StdDeviationPath);
+    arrays[5] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->std_deviation_path);
   }
-  if(m_InputValues->FindSummation)
+  if(m_InputValues->find_summation)
   {
-    arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationPath);
+    arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->summation_path);
   }
 
   m_Throttle.reset(numTuples, "Finding Statistics");
@@ -224,8 +224,8 @@ Result<> ComputeNeighborListStatistics::operator()()
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->FindLength, m_InputValues->FindMin, m_InputValues->FindMax,
-                                                                            m_InputValues->FindMean, m_InputValues->FindMedian, m_InputValues->FindStdDeviation, m_InputValues->FindSummation, arrays,
+  ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->find_length, m_InputValues->find_min, m_InputValues->find_max,
+                                                                            m_InputValues->find_mean, m_InputValues->find_median, m_InputValues->find_std_deviation, m_InputValues->find_summation, arrays,
                                                                             m_ShouldCancel);
 
   return {};

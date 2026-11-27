@@ -50,14 +50,14 @@ concept ArithmeticNotBool = std::is_arithmetic_v<T> && !std::is_same_v<T, bool>;
  * @return Clipped minimum and maximum voxel indices in X-Y-Z order.
  * @pre Preflight has verified nonzero image spacing.
  */
-std::array<usize, 6> GetVoxelIndices(const Float32AbstractDataStore& unifiedBounds, usize targetBoundsIndex, const ImageGeom& image)
+std::array<usize, 6> GetVoxelIndices(const Float32AbstractDataStoreType& unifiedBounds, usize targetBoundsIndex, const ImageGeom& image)
 {
   std::array<usize, 6> voxelIndices = {};
 
   // Preflight verifies nonzero spacing, so this function does not repeat that check.
-  FloatVec3 spacing = image.getSpacing();
-  FloatVec3 origin = image.getOrigin();
-  SizeVec3 dims = image.getDimensions();
+  FloatVec3Type spacing = image.getSpacing();
+  FloatVec3Type origin = image.getOrigin();
+  SizeVec3Type dims = image.getDimensions();
 
   // The lower bound from input is expected to be the lower corner of the voxel
   for(usize i = 0; i < 3; i++)
@@ -112,9 +112,9 @@ std::array<usize, 6> GetVoxelIndices(const Float32AbstractDataStore& unifiedBoun
 std::array<usize, 6> GetVoxelIndices(nonstd::span<const float32> unifiedBounds, usize targetBoundsIndex, const ImageGeom& image)
 {
   std::array<usize, 6> voxelIndices = {};
-  const FloatVec3 spacing = image.getSpacing();
-  const FloatVec3 origin = image.getOrigin();
-  const SizeVec3 dims = image.getDimensions();
+  const FloatVec3Type spacing = image.getSpacing();
+  const FloatVec3Type origin = image.getOrigin();
+  const SizeVec3Type dims = image.getDimensions();
 
   for(usize i = 0; i < 3; i++)
   {
@@ -773,7 +773,7 @@ Result<> CalculateFrequencyStats(const std::filesystem::path& sortedPath, Comple
  */
 template <typename T, class CacheT>
 Result<> StreamStdDeviation(const ImageGeom& imageGeom, const AbstractDataStore<T>& inputStore, nonstd::span<const float32> unifiedBounds, T* inputBuffer, const std::vector<CacheT>& statsVector,
-                            Float32AbstractDataStore& stdDevStore, const std::atomic_bool& shouldCancel, const ScanProgressType& reportProgress, const BoundsProgressType& reportCompleted)
+                            Float32AbstractDataStoreType& stdDevStore, const std::atomic_bool& shouldCancel, const ScanProgressType& reportProgress, const BoundsProgressType& reportCompleted)
 {
   for(usize targetBoundsIndex = 0; targetBoundsIndex < statsVector.size(); targetBoundsIndex++)
   {
@@ -819,10 +819,10 @@ concept CacheType = std::is_base_of_v<StatsCache<typename Cache::value_type>, Ca
 template <typename T, CacheType StatsCacheT>
 Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues)
 {
-  AbstractDataStore<bool>* boundsHasDataArrayPtr = dataStructure.getDataRefAs<BoolArray>(inputValues->BoundsHasDataPath).getDataStore();
+  AbstractDataStore<bool>* boundsHasDataArrayPtr = dataStructure.getDataRefAs<BoolArrayType>(inputValues->bounds_has_data_path).getDataStore();
   if(boundsHasDataArrayPtr == nullptr)
   {
-    return MakeErrorResult(-69309, fmt::format("Bounds Has Data array from path {} invalid", inputValues->BoundsHasDataPath.toString()));
+    return MakeErrorResult(-69309, fmt::format("Bounds Has Data array from path {} invalid", inputValues->bounds_has_data_path.toString()));
   }
 
   AbstractDataStore<uint64>* lengthArrayPtr = nullptr;
@@ -833,62 +833,62 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
   AbstractDataStore<float32>* medianArrayPtr = nullptr;
   AbstractDataStore<int32>* numUniqueValuesArrayPtr = nullptr;
 
-  if(inputValues->CalculateLength)
+  if(inputValues->calculate_length)
   {
-    lengthArrayPtr = dataStructure.getDataRefAs<UInt64Array>(inputValues->LengthPath).getDataStore();
+    lengthArrayPtr = dataStructure.getDataRefAs<UInt64ArrayType>(inputValues->length_path).getDataStore();
     if(lengthArrayPtr == nullptr)
     {
-      return MakeErrorResult(-69310, fmt::format("Count array from path {} invalid", inputValues->LengthPath.toString()));
+      return MakeErrorResult(-69310, fmt::format("Count array from path {} invalid", inputValues->length_path.toString()));
     }
   }
-  if(inputValues->CalculateMin)
+  if(inputValues->calculate_min)
   {
-    minArrayPtr = dataStructure.getDataRefAs<DataArray<T>>(inputValues->MinPath).getDataStore();
+    minArrayPtr = dataStructure.getDataRefAs<DataArray<T>>(inputValues->min_path).getDataStore();
     if(minArrayPtr == nullptr)
     {
-      return MakeErrorResult(-69311, fmt::format("Min array from path {} invalid", inputValues->MinPath.toString()));
+      return MakeErrorResult(-69311, fmt::format("Min array from path {} invalid", inputValues->min_path.toString()));
     }
   }
-  if(inputValues->CalculateMax)
+  if(inputValues->calculate_max)
   {
-    maxArrayPtr = dataStructure.getDataRefAs<DataArray<T>>(inputValues->MaxPath).getDataStore();
+    maxArrayPtr = dataStructure.getDataRefAs<DataArray<T>>(inputValues->max_path).getDataStore();
     if(maxArrayPtr == nullptr)
     {
-      return MakeErrorResult(-69312, fmt::format("Max array from path {} invalid", inputValues->MaxPath.toString()));
+      return MakeErrorResult(-69312, fmt::format("Max array from path {} invalid", inputValues->max_path.toString()));
     }
   }
-  if(inputValues->CalculateSummation)
+  if(inputValues->calculate_summation)
   {
-    summationArrayPtr = dataStructure.getDataRefAs<DataArray<float32>>(inputValues->SummationPath).getDataStore();
+    summationArrayPtr = dataStructure.getDataRefAs<DataArray<float32>>(inputValues->summation_path).getDataStore();
     if(summationArrayPtr == nullptr)
     {
-      return MakeErrorResult(-69313, fmt::format("Summation array from path {} invalid", inputValues->SummationPath.toString()));
+      return MakeErrorResult(-69313, fmt::format("Summation array from path {} invalid", inputValues->summation_path.toString()));
     }
   }
-  if(inputValues->CalculateMean)
+  if(inputValues->calculate_mean)
   {
-    meanArrayPtr = dataStructure.getDataRefAs<Float32Array>(inputValues->MeanPath).getDataStore();
+    meanArrayPtr = dataStructure.getDataRefAs<Float32ArrayType>(inputValues->mean_path).getDataStore();
     if(meanArrayPtr == nullptr)
     {
-      return MakeErrorResult(-69314, fmt::format("Mean array from path {} invalid", inputValues->MeanPath.toString()));
+      return MakeErrorResult(-69314, fmt::format("Mean array from path {} invalid", inputValues->mean_path.toString()));
     }
   }
   if constexpr(std::is_same_v<StatsCacheT, CompleteStatsCache<typename StatsCacheT::value_type>>)
   {
-    if(inputValues->CalculateMedian)
+    if(inputValues->calculate_median)
     {
-      medianArrayPtr = dataStructure.getDataRefAs<Float32Array>(inputValues->MedianPath).getDataStore();
+      medianArrayPtr = dataStructure.getDataRefAs<Float32ArrayType>(inputValues->median_path).getDataStore();
       if(medianArrayPtr == nullptr)
       {
-        return MakeErrorResult(-69315, fmt::format("Median array from path {} invalid", inputValues->MedianPath.toString()));
+        return MakeErrorResult(-69315, fmt::format("Median array from path {} invalid", inputValues->median_path.toString()));
       }
     }
-    if(inputValues->CalculateNumUniqueValues)
+    if(inputValues->calculate_num_unique_values)
     {
-      numUniqueValuesArrayPtr = dataStructure.getDataRefAs<Int32Array>(inputValues->NumUniqueValuesPath).getDataStore();
+      numUniqueValuesArrayPtr = dataStructure.getDataRefAs<Int32ArrayType>(inputValues->num_unique_values_path).getDataStore();
       if(numUniqueValuesArrayPtr == nullptr)
       {
-        return MakeErrorResult(-69316, fmt::format("Number of Unique Value array from path {} invalid", inputValues->MedianPath.toString()));
+        return MakeErrorResult(-69316, fmt::format("Number of Unique Value array from path {} invalid", inputValues->median_path.toString()));
       }
     }
   }
@@ -951,7 +951,7 @@ template <bool UseModeV = false>
 struct ExecuteBoundsStatsCalculationsScanline
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues, const ImageGeom& imageGeom, const Float32AbstractDataStore& unifiedBoundsStore,
+  Result<> operator()(DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues, const ImageGeom& imageGeom, const Float32AbstractDataStoreType& unifiedBoundsStore,
                       const IDataArray& inputIDataArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     const usize numBounds = unifiedBoundsStore.getNumberOfTuples();
@@ -982,7 +982,7 @@ struct ExecuteBoundsStatsCalculationsScanline
 
     const auto& inputStore = dynamic_cast<const DataArray<T>&>(inputIDataArray).getDataStoreRef();
     auto inputBuffer = std::make_unique<T[]>(k_ChunkSize);
-    const bool calculateFrequencyStats = inputValues->CalculateMedian || inputValues->CalculateNumUniqueValues || inputValues->CalculateMode;
+    const bool calculateFrequencyStats = inputValues->calculate_median || inputValues->calculate_num_unique_values || inputValues->calculate_mode;
     if(calculateFrequencyStats)
     {
       messageHandler.sendInfoMessage("Sorting Bounding Box Values for Frequency Statistics");
@@ -1005,7 +1005,7 @@ struct ExecuteBoundsStatsCalculationsScanline
       NeighborList<T>* modesListPtr = nullptr;
       if constexpr(UseModeV)
       {
-        modesListPtr = &dataStructure.getDataRefAs<NeighborList<T>>(inputValues->ModePath);
+        modesListPtr = &dataStructure.getDataRefAs<NeighborList<T>>(inputValues->mode_path);
       }
 
       for(usize targetBoundsIndex = 0; targetBoundsIndex < numBounds; targetBoundsIndex++)
@@ -1036,10 +1036,10 @@ struct ExecuteBoundsStatsCalculationsScanline
         reportCompleted();
       }
 
-      if(inputValues->CalculateStdDev)
+      if(inputValues->calculate_std_dev)
       {
         startPhase("Computing Bounding Box Standard Deviation");
-        auto& stdDevStore = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
+        auto& stdDevStore = dataStructure.getDataRefAs<Float32ArrayType>(inputValues->std_dev_path).getDataStoreRef();
         Result<> stdDevResult = StreamStdDeviation(imageGeom, inputStore, nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), inputBuffer.get(), statsVector, stdDevStore, shouldCancel,
                                                    reportProgress, reportCompleted);
         if(stdDevResult.invalid() || shouldCancel)
@@ -1070,10 +1070,10 @@ struct ExecuteBoundsStatsCalculationsScanline
       reportCompleted();
     }
 
-    if(inputValues->CalculateStdDev)
+    if(inputValues->calculate_std_dev)
     {
       startPhase("Computing Bounding Box Standard Deviation");
-      auto& stdDevStore = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDevPath).getDataStoreRef();
+      auto& stdDevStore = dataStructure.getDataRefAs<Float32ArrayType>(inputValues->std_dev_path).getDataStoreRef();
       Result<> stdDevResult = StreamStdDeviation(imageGeom, inputStore, nonstd::span<const float32>(unifiedBounds.get(), numBoundValues), inputBuffer.get(), statsVector, stdDevStore, shouldCancel,
                                                  reportProgress, reportCompleted);
       if(stdDevResult.invalid() || shouldCancel)
@@ -1106,14 +1106,14 @@ ComputeBoundingBoxStatsScanline::ComputeBoundingBoxStatsScanline(DataStructure& 
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStatsScanline::operator()()
 {
-  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
-  auto& unifiedArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedPath).getDataStoreRef();
-  auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputPath);
+  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
+  auto& unifiedArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->unified_path).getDataStoreRef();
+  auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_path);
   if(inputArray.getDataType() == DataType::boolean)
   {
     return MakeErrorResult(-98500, "Boolean arrays cannot be used as inputs to this filter.");
   }
-  if(m_InputValues->CalculateMode)
+  if(m_InputValues->calculate_mode)
   {
     return ExecuteNeighborFunction(ExecuteBoundsStatsCalculationsScanline<true>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray, m_ShouldCancel,
                                    m_MessageHandler);

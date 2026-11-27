@@ -222,8 +222,8 @@ SourceArrayValidator RequireUint8ZeroAndNonzero(std::string purpose)
 Result<DataPath> BuildPrimaryInput(DataStructure& dataStructure, const ip_bench::BenchmarkInputContext& context, const SourceArrayValidator& sourceValidator = {})
 {
   DataPath inputPath;
-  Result<> buildResult = ip_bench::BuildTiledInput(dataStructure, context.realInputPath, context.geometryPath, context.cellAttributeMatrixName, context.inputArrayName, context.targetVoxels,
-                                                   context.minZSlices, context.storeMode, inputPath, context.force_2d, sourceValidator);
+  Result<> buildResult = ip_bench::BuildTiledInput(dataStructure, context.real_input_path, context.geometry_path, context.cell_attribute_matrix_name, context.input_array_name, context.target_voxels,
+                                                   context.min_z_slices, context.store_mode, inputPath, context.force_2d, sourceValidator);
   return ConvertResultTo<DataPath>(std::move(buildResult), std::move(inputPath));
 }
 
@@ -237,7 +237,7 @@ Result<DataPath> PrepareMaskInput(DataStructure& dataStructure, const ip_bench::
 
   const DataPath primaryPath = primaryResult.value();
   DataPath maskPath;
-  Result<> maskResult = ip_bench::AddTiledArray(dataStructure, ip_golden::InputPath("STAPLE2.png"), context.geometryPath, context.cellAttributeMatrixName, "Mask", context.storeMode, maskPath,
+  Result<> maskResult = ip_bench::AddTiledArray(dataStructure, ip_golden::InputPath("STAPLE2.png"), context.geometry_path, context.cell_attribute_matrix_name, "Mask", context.store_mode, maskPath,
                                                 RequireUint8ZeroAndNonzero("Mask benchmark mask"));
   if(maskResult.invalid())
   {
@@ -269,16 +269,16 @@ Result<DataPath> PrepareAdaptiveHistogramInput(DataStructure& dataStructure, con
   ConvertColorToGrayScaleFilter colorToGrayScaleFilter;
   Arguments args;
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ConversionAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
+  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorChannel_Key, std::make_any<Int32ParameterType::ValueType>(0));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayPath_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{rgbPath}));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("GrayScale_"));
 
   const IFilter::PreflightResult preflightResult = colorToGrayScaleFilter.preflight(dataStructure, args);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
     return MakeErrorResult<DataPath>(k_InputPreparationFailed, fmt::format("AdaptiveHistogramEqualization benchmark grayscale preflight failed for RGB input '{}': {}", rgbPath.toString(),
-                                                                           FirstErrorMessage(preflightResult.outputActions.errors())));
+                                                                           FirstErrorMessage(preflightResult.output_actions.errors())));
   }
   const IFilter::ExecuteResult executeResult = colorToGrayScaleFilter.execute(dataStructure, args);
   if(executeResult.result.invalid())
@@ -320,7 +320,7 @@ Result<DataPath> PrepareWatershedMarkersInput(DataStructure& dataStructure, cons
 
   const DataPath primaryPath = primaryResult.value();
   DataPath markerPath;
-  Result<> markerResult = ip_bench::AddTiledArray(dataStructure, ip_golden::InputPath("cthead1-marker.png"), context.geometryPath, context.cellAttributeMatrixName, "Marker", context.storeMode,
+  Result<> markerResult = ip_bench::AddTiledArray(dataStructure, ip_golden::InputPath("cthead1-marker.png"), context.geometry_path, context.cell_attribute_matrix_name, "Marker", context.store_mode,
                                                   markerPath, RequireUint8Values({uint8{0}, uint8{1}, uint8{2}}, "MorphologicalWatershedFromMarkers marker labels"));
   if(markerResult.invalid())
   {

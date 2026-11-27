@@ -52,7 +52,7 @@ private:
 
 TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));
   DataStructure dataStructure;
@@ -78,7 +78,7 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
@@ -97,7 +97,7 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);
@@ -105,7 +105,7 @@ TEST_CASE("SimplnxCore::GeneratePythonSkeleton")
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Trimmed filter names", "[SimplnxCore][CreatePythonSkeletonFilter]")
@@ -131,8 +131,8 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Trimmed filter names", "[Sim
                                      std::string("FirstFilter, SecondFilter,"), std::string("FirstFilter, SecondFilter, \t"));
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, names);
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  CHECK(preflight.outputValues.at(0).value.find((sourceDir / "SecondFilter.py").string()) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  CHECK(preflight.output_values.at(0).value.find((sourceDir / "SecondFilter.py").string()) != std::string::npos);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CHECK(fs::exists(sourceDir / "FirstFilter.py"));
@@ -155,7 +155,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Trimmed filter names", "[Sim
       CHECK(text.find("__all__.append('SecondFilter')\n") != std::string::npos);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Invalid filter names", "[SimplnxCore][CreatePythonSkeletonFilter]")
@@ -165,17 +165,17 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Invalid filter names", "[Sim
   const std::string badEntry = GENERATE("1Bad", "Bad-Name", "Bad Name", "", " \t", "class", "None", "__debug__");
   const bool trailingEntry = GENERATE(false, true);
   // A single trailing empty token is allowed; an empty token before it is still invalid.
-  const std::string names = trailingEntry ? "A," + badEntry + (StringUtilities::trimmed(badEntry).empty() ? "," : "") : "A," + badEntry + ",B";
+  const std::string names = trailingEntry ? "A," + badEntry + (string_utilities::Trimmed(badEntry).empty() ? "," : "") : "A," + badEntry + ",B";
   Arguments args;
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginOutputDirectory_Key, fs::path(unit_test::k_BinaryTestOutputDir.str()));
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, names);
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -105150);
-  const auto& message = result.outputActions.errors()[0].message;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -105150);
+  const auto& message = result.output_actions.errors()[0].message;
   CHECK(message.find("'" + badEntry + "'") != std::string::npos);
-  if(StringUtilities::trimmed(badEntry).empty())
+  if(string_utilities::Trimmed(badEntry).empty())
   {
     CHECK(message.find("is empty. Remove the extra comma.") != std::string::npos);
   }
@@ -187,12 +187,12 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Invalid filter names", "[Sim
   {
     CHECK(message.find("is not a valid Python identifier.") != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Empty filter names create a plugin without filters", "[SimplnxCore][CreatePythonSkeletonFilter][L15]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePythonSkeletonFilter filter;
   const ScopedOutputDirectory outputDir("CreatePythonSkeleton_EmptyNames");
@@ -202,7 +202,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Empty filter names create a 
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginName_Key, std::string("EmptyPlugin"));
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, names);
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto sourceDir = outputDir.path() / "EmptyPlugin" / "src" / "EmptyPlugin";
@@ -239,7 +239,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Plugin writer rejects invali
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Embedded NUL is not a separator", "[SimplnxCore][CreatePythonSkeletonFilter][L15]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool existing = GENERATE(false, true);
   DataStructure dataStructure;
   CreatePythonSkeletonFilter filter;
@@ -250,11 +250,11 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Embedded NUL is not a separa
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, names);
   // CHECK, not REQUIRE, so that the writer checks below also run when preflight accepts the name.
   auto preflight = filter.preflight(dataStructure, args);
-  CHECK(preflight.outputActions.invalid());
-  if(preflight.outputActions.invalid())
+  CHECK(preflight.output_actions.invalid());
+  if(preflight.output_actions.invalid())
   {
-    REQUIRE(preflight.outputActions.errors().size() == 1);
-    CHECK(preflight.outputActions.errors()[0].code == -105150);
+    REQUIRE(preflight.output_actions.errors().size() == 1);
+    CHECK(preflight.output_actions.errors()[0].code == -105150);
   }
   const auto pluginDir = outputDir.path() / "NulPlugin";
   const auto sourceDir = pluginDir / "src" / "NulPlugin";
@@ -281,7 +281,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Embedded NUL is not a separa
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Preserves plugin human name", "[SimplnxCore][CreatePythonSkeletonFilter][L14]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePythonSkeletonFilter filter;
   const ScopedOutputDirectory outputDir("CreatePythonSkeleton_HumanName");
@@ -292,7 +292,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Preserves plugin human name"
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::string("Laboratory Quality Checks"));
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::string("CheckFeatureTable,CheckPhaseMetadata"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
@@ -329,17 +329,17 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Preserves plugin human name"
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::string("Unused Existing Plugin Label"));
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::string("AdditionalCheck"));
   auto existingPreflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(existingPreflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(existingPreflight.output_actions);
   auto existingResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(existingResult.result);
   checkMetadata();
   CHECK(fs::is_regular_file(sourceDir / "AdditionalCheck.py"));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Escapes plugin human name in Python literal", "[SimplnxCore][CreatePythonSkeletonFilter][L14]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePythonSkeletonFilter filter;
   const ScopedOutputDirectory outputDir("CreatePythonSkeleton_HumanNameEscape");
@@ -351,7 +351,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Escapes plugin human name in
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginHumanName_Key, std::string("O'Brien \\ Lab\nTools\tA\x01"));
   args.insertOrAssign(CreatePythonSkeletonFilter::k_PluginFilterNames, std::string("CheckFeatureTable"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
@@ -364,7 +364,7 @@ TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Escapes plugin human name in
   text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());
   // Python reads this literal back as the exact human name.
   CHECK(text.find("    return 'O\\'Brien \\\\ Lab\\nTools\\tA\\x01'\n\n  def vendor") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreatePythonSkeletonFilter: Preserves template tokens in human name", "[SimplnxCore][CreatePythonSkeletonFilter][L14]")

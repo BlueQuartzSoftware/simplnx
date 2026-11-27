@@ -114,21 +114,21 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   // set, which would silently classify every voxel into a single (labelOffset-valued) class.
   if(numberOfThresholds == 0 || numberOfThresholds >= numberOfHistogramBins)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.",
+    return {.output_actions = MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.",
                                                                                selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   // Output is a uint8 label image regardless of the (numeric) input element type.
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

@@ -24,7 +24,7 @@ namespace fs = std::filesystem;
 namespace
 {
 
-void FillDataArray(BoolArray* inputArray)
+void FillDataArray(BoolArrayType* inputArray)
 {
   usize numComps = inputArray->getNumberOfComponents();
   bool num = false;
@@ -66,37 +66,37 @@ DataStructure CreateDataStructure()
   DataStructure dataStructure;
   AttributeMatrix* am1Ptr = AttributeMatrix::Create(dataStructure, "AttributeMatrix", {10});
 
-  UInt32Array* mcArray1Ptr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt32ArrayType* mcArray1Ptr = UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint32>(mcArray1Ptr);
 
-  BoolArray* mcArray2Ptr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "MultiComponent Array bool", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  BoolArrayType* mcArray2Ptr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "MultiComponent Array bool", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray(mcArray2Ptr);
 
-  Int8Array* mcArray4Ptr = Int8Array::CreateWithStore<DataStore<int8>>(dataStructure, "MultiComponent Array int8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Int8ArrayType* mcArray4Ptr = Int8ArrayType::CreateWithStore<DataStore<int8>>(dataStructure, "MultiComponent Array int8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<int8>(mcArray4Ptr);
 
-  UInt8Array* mcArray5Ptr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "MultiComponent Array uint8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt8ArrayType* mcArray5Ptr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "MultiComponent Array uint8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint8>(mcArray5Ptr);
 
-  Int16Array* mcArray6Ptr = Int16Array::CreateWithStore<DataStore<int16>>(dataStructure, "MultiComponent Array int16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Int16ArrayType* mcArray6Ptr = Int16ArrayType::CreateWithStore<DataStore<int16>>(dataStructure, "MultiComponent Array int16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<int16>(mcArray6Ptr);
 
-  UInt16Array* mcArray7Ptr = UInt16Array::CreateWithStore<DataStore<uint16>>(dataStructure, "MultiComponent Array uint16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt16ArrayType* mcArray7Ptr = UInt16ArrayType::CreateWithStore<DataStore<uint16>>(dataStructure, "MultiComponent Array uint16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint16>(mcArray7Ptr);
 
-  Int32Array* mcArray8Ptr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "MultiComponent Array int32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Int32ArrayType* mcArray8Ptr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "MultiComponent Array int32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<int32>(mcArray8Ptr);
 
-  Int64Array* mcArray9Ptr = Int64Array::CreateWithStore<DataStore<int64>>(dataStructure, "MultiComponent Array int64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Int64ArrayType* mcArray9Ptr = Int64ArrayType::CreateWithStore<DataStore<int64>>(dataStructure, "MultiComponent Array int64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<int64>(mcArray9Ptr);
 
-  UInt64Array* mcArray10Ptr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "MultiComponent Array uint64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt64ArrayType* mcArray10Ptr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "MultiComponent Array uint64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint64>(mcArray10Ptr);
 
-  Float32Array* mcArray11Ptr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "MultiComponent Array float", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Float32ArrayType* mcArray11Ptr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "MultiComponent Array float", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<float32>(mcArray11Ptr);
 
-  Float64Array* mcArray12Ptr = Float64Array::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Float64ArrayType* mcArray12Ptr = Float64ArrayType::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<float64>(mcArray12Ptr);
 
   return dataStructure;
@@ -142,7 +142,7 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
   std::map<usize, DataArrayPtrType> mcArraysAfterSplit;
   for(const auto& comp : compsToCheck)
   {
-    DataArrayPtrType mcArrayPtr = dataStructure.getDataAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType + "Component" + StringUtilities::number(comp)}));
+    DataArrayPtrType mcArrayPtr = dataStructure.getDataAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType + "Component" + string_utilities::Number(comp)}));
     mcArraysAfterSplit[comp] = mcArrayPtr;
   }
 
@@ -162,10 +162,10 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
 
 TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArrayByComponentFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateDataStructure();
 
@@ -181,13 +181,13 @@ TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArra
   scope.execute([&] { TestSplitByType<float>(dataStructure, "float"); });
   scope.execute([&] { TestSplitByType<double>(dataStructure, "double"); });
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SplitDataArrayByComponentFilter: SIMPL Backwards Compatibility", "[SimplnxCore][SplitDataArrayByComponentFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

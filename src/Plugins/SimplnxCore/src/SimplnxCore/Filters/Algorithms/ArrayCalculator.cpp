@@ -72,17 +72,17 @@ const OperatorDef& GetUnaryNegativeOp()
   static const OperatorDef sUnaryNeg = {.token = "neg",
                                         .kind = OperatorDef::UnaryPrefix,
                                         .precedence = 4,
-                                        .numArgs = 1,
+                                        .num_args = 1,
                                         .associativity = OperatorDef::Right,
-                                        .trigMode = OperatorDef::None,
-                                        .unaryOp = [](double x) { return -x; },
-                                        .binaryOp = nullptr};
+                                        .trig_mode = OperatorDef::None,
+                                        .unary_op = [](double x) { return -x; },
+                                        .binary_op = nullptr};
   return sUnaryNeg;
 }
 
 const OperatorDef* FindOperatorByToken(const std::string& token)
 {
-  const auto& registry = getOperatorRegistry();
+  const auto& registry = GetOperatorRegistry();
   for(const auto& opDef : registry)
   {
     if(opDef.token == token)
@@ -351,7 +351,7 @@ std::vector<usize> ComputeSpanStarts(const std::vector<RpnItem>& rpn)
   for(usize i = 0; i < rpn.size(); i++)
   {
     const RpnItem& item = rpn[i];
-    const bool isBinaryOperator = item.type == RpnItem::Type::Operator && item.op != nullptr && item.op->numArgs == 2;
+    const bool isBinaryOperator = item.type == RpnItem::Type::Operator && item.op != nullptr && item.op->num_args == 2;
     const bool consumesOneOperand = (item.type == RpnItem::Type::Operator && !isBinaryOperator) || item.type == RpnItem::Type::ComponentExtract || item.type == RpnItem::Type::TupleComponentExtract;
 
     usize myStart = i;
@@ -398,18 +398,18 @@ Result<float64> EvaluateSingleValue(const DataStructure& dataStructure, const st
   switch(item.type)
   {
   case RpnItem::Type::Scalar:
-    return {item.scalarValue};
+    return {item.scalar_value};
 
   case RpnItem::Type::ArrayRef: {
-    const auto* sourceArrayPtr = dataStructure.getDataAs<IDataArray>(item.arrayPath);
+    const auto* sourceArrayPtr = dataStructure.getDataAs<IDataArray>(item.array_path);
     if(sourceArrayPtr == nullptr)
     {
       return MakeErrorResult<float64>(static_cast<int32>(CalculatorErrorCode::InvalidEquation),
-                                      fmt::format("Internal error: array '{}' could not be resolved during evaluation.", item.arrayPath.toString()));
+                                      fmt::format("Internal error: array '{}' could not be resolved during evaluation.", item.array_path.toString()));
     }
     const usize numComps = sourceArrayPtr->getNumberOfComponents();
     const usize flatIndex = tupleIdx * numComps + compIdx;
-    const float64 value = ExecuteDataFunction(ReadSingleElementFunctor{}, item.sourceDataType, *sourceArrayPtr, flatIndex);
+    const float64 value = ExecuteDataFunction(ReadSingleElementFunctor{}, item.source_data_type, *sourceArrayPtr, flatIndex);
     return {value};
   }
 
@@ -420,7 +420,7 @@ Result<float64> EvaluateSingleValue(const DataStructure& dataStructure, const st
       return MakeErrorResult<float64>(static_cast<int32>(CalculatorErrorCode::InvalidEquation), "Internal error: null operator encountered during scalar evaluation.");
     }
 
-    if(opPtr->numArgs == 1)
+    if(opPtr->num_args == 1)
     {
       Result<float64> operandResult = EvaluateSingleValue(dataStructure, rpn, nodeIndex - 1, spanStart, tupleIdx, compIdx, units);
       if(operandResult.invalid())
@@ -428,12 +428,12 @@ Result<float64> EvaluateSingleValue(const DataStructure& dataStructure, const st
         return operandResult;
       }
       float64 val = operandResult.value();
-      if(opPtr->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+      if(opPtr->trig_mode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
       {
         val = val * (std::numbers::pi / 180.0);
       }
-      float64 res = opPtr->unaryOp(val);
-      if(opPtr->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+      float64 res = opPtr->unary_op(val);
+      if(opPtr->trig_mode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
       {
         res = res * (180.0 / std::numbers::pi);
       }
@@ -455,12 +455,12 @@ Result<float64> EvaluateSingleValue(const DataStructure& dataStructure, const st
     {
       return leftResult;
     }
-    return {opPtr->binaryOp(leftResult.value(), rightResult.value())};
+    return {opPtr->binary_op(leftResult.value(), rightResult.value())};
   }
 
   case RpnItem::Type::ComponentExtract: {
     // The literal index applies to the complete operand subtree.
-    return EvaluateSingleValue(dataStructure, rpn, nodeIndex - 1, spanStart, tupleIdx, item.componentIndex, units);
+    return EvaluateSingleValue(dataStructure, rpn, nodeIndex - 1, spanStart, tupleIdx, item.component_index, units);
   }
 
   case RpnItem::Type::TupleComponentExtract:
@@ -525,7 +525,7 @@ Result<ShapeSimResult> SimulateShapes(const DataStructure& dataStructure, const 
       break;
 
     case RpnItem::Type::ArrayRef: {
-      const auto* sourceArrayPtr = dataStructure.getDataAs<IDataArray>(item.arrayPath);
+      const auto* sourceArrayPtr = dataStructure.getDataAs<IDataArray>(item.array_path);
       const usize numComps = (sourceArrayPtr != nullptr) ? sourceArrayPtr->getNumberOfComponents() : 1;
       stack.push_back({false, numComps});
       break;
@@ -537,19 +537,19 @@ Result<ShapeSimResult> SimulateShapes(const DataStructure& dataStructure, const 
       {
         return MakeErrorResult<ShapeSimResult>(static_cast<int32>(CalculatorErrorCode::InvalidEquation), fmt::format("Expression item {} has no operator definition.", i));
       }
-      if(opPtr->numArgs != 1 && opPtr->numArgs != 2)
+      if(opPtr->num_args != 1 && opPtr->num_args != 2)
       {
         return MakeErrorResult<ShapeSimResult>(
             static_cast<int32>(CalculatorErrorCode::InvalidEquation),
-            fmt::format("Operator '{}' at expression item {} has an unsupported argument count of {}. Only one or two arguments are supported.", opPtr->token, i, opPtr->numArgs));
+            fmt::format("Operator '{}' at expression item {} has an unsupported argument count of {}. Only one or two arguments are supported.", opPtr->token, i, opPtr->num_args));
       }
-      if(stack.size() < static_cast<usize>(opPtr->numArgs))
+      if(stack.size() < static_cast<usize>(opPtr->num_args))
       {
         return MakeErrorResult<ShapeSimResult>(
             static_cast<int32>(CalculatorErrorCode::InvalidEquation),
-            fmt::format("Operator '{}' at expression item {} requires {} operands, but only {} are available. Supply each missing operand.", opPtr->token, i, opPtr->numArgs, stack.size()));
+            fmt::format("Operator '{}' at expression item {} requires {} operands, but only {} are available. Supply each missing operand.", opPtr->token, i, opPtr->num_args, stack.size()));
       }
-      if(opPtr->numArgs == 2)
+      if(opPtr->num_args == 2)
       {
         const RpnNodeShape right = stack.back();
         stack.pop_back();
@@ -579,15 +579,15 @@ Result<ShapeSimResult> SimulateShapes(const DataStructure& dataStructure, const 
       if(stack.empty())
       {
         return MakeErrorResult<ShapeSimResult>(static_cast<int32>(CalculatorErrorCode::InvalidEquation),
-                                               fmt::format("Component extraction [{}] at expression item {} has no operand.", item.componentIndex, i));
+                                               fmt::format("Component extraction [{}] at expression item {} has no operand.", item.component_index, i));
       }
       const RpnNodeShape operand = stack.back();
       stack.pop_back();
       const usize numComps = operand.is_scalar ? 1 : operand.num_components;
-      if(item.componentIndex >= numComps)
+      if(item.component_index >= numComps)
       {
         return MakeErrorResult<ShapeSimResult>(static_cast<int32>(CalculatorErrorCode::ComponentOutOfRange),
-                                               fmt::format("Component index {} is out of range for array with {} components.", item.componentIndex, numComps));
+                                               fmt::format("Component index {} is out of range for array with {} components.", item.component_index, numComps));
       }
       // Extracting component zero from a scalar preserves scalar broadcasting.
       stack.push_back({operand.is_scalar, 1});
@@ -598,7 +598,7 @@ Result<ShapeSimResult> SimulateShapes(const DataStructure& dataStructure, const 
       if(stack.empty())
       {
         return MakeErrorResult<ShapeSimResult>(static_cast<int32>(CalculatorErrorCode::InvalidEquation),
-                                               fmt::format("Tuple/component extraction [{}, {}] at expression item {} has no operand.", item.tupleIndex, item.componentIndex, i));
+                                               fmt::format("Tuple/component extraction [{}, {}] at expression item {} has no operand.", item.tuple_index, item.component_index, i));
       }
       // Literal tuple/component extraction supplies a scalar without reading its value.
       stack.back() = {.is_scalar = true, .num_components = 1};
@@ -634,7 +634,7 @@ usize FindOperandNumTuples(const DataStructure& dataStructure, const std::vector
   {
     if(rpn[i].type == RpnItem::Type::ArrayRef)
     {
-      const auto* sourceArrayPtr = dataStructure.getDataAs<IDataArray>(rpn[i].arrayPath);
+      const auto* sourceArrayPtr = dataStructure.getDataAs<IDataArray>(rpn[i].array_path);
       if(sourceArrayPtr != nullptr)
       {
         return sourceArrayPtr->getNumberOfTuples();
@@ -676,8 +676,8 @@ Result<> ResolveTupleComponentExtracts(const DataStructure& dataStructure, std::
     const usize operandIdx = tceIndex - 1;
     const usize operandStart = spanStart[operandIdx];
 
-    const usize tupleIdx = rpn[tceIndex].tupleIndex;
-    const usize compIdx = rpn[tceIndex].componentIndex;
+    const usize tupleIdx = rpn[tceIndex].tuple_index;
+    const usize compIdx = rpn[tceIndex].component_index;
 
     const usize numTuplesOperand = FindOperandNumTuples(dataStructure, rpn, operandStart, operandIdx);
     if(tupleIdx >= numTuplesOperand)
@@ -704,7 +704,7 @@ Result<> ResolveTupleComponentExtracts(const DataStructure& dataStructure, std::
 
     RpnItem scalarItem;
     scalarItem.type = RpnItem::Type::Scalar;
-    scalarItem.scalarValue = valueResult.value();
+    scalarItem.scalar_value = valueResult.value();
 
     rpn.erase(rpn.begin() + static_cast<std::ptrdiff_t>(operandStart), rpn.begin() + static_cast<std::ptrdiff_t>(tceIndex) + 1);
     rpn.insert(rpn.begin() + static_cast<std::ptrdiff_t>(operandStart), scalarItem);
@@ -715,7 +715,7 @@ Result<> ResolveTupleComponentExtracts(const DataStructure& dataStructure, std::
 
 } // anonymous namespace
 
-const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
+const std::vector<OperatorDef>& nx::core::GetOperatorRegistry()
 {
   static const std::vector<OperatorDef> sRegistry = []() {
     std::vector<OperatorDef> reg;
@@ -763,7 +763,7 @@ ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure,
 {
 }
 
-std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
+std::vector<Token> ArrayCalculatorParser::Tokenize(const std::string& equation)
 {
   std::vector<Token> tokens;
   const size_t len = equation.size();
@@ -889,7 +889,7 @@ Result<> ArrayCalculatorParser::parse()
 {
   Result<> result;
 
-  std::vector<Token> tokens = tokenize(m_InfixEquation);
+  std::vector<Token> tokens = Tokenize(m_InfixEquation);
   if(tokens.empty())
   {
     return MakeErrorResult(static_cast<int>(CalculatorErrorCode::EmptyEquation), "The infix expression is empty.");
@@ -1509,34 +1509,34 @@ Result<> ArrayCalculatorParser::parse()
 
       if(!hasValueInside && commaCount == 0)
       {
-        if(item.op->numArgs == 2)
+        if(item.op->num_args == 2)
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments),
-                                 fmt::format("The function '{}' requires {} arguments, but none were provided.", item.op->token, item.op->numArgs));
+                                 fmt::format("The function '{}' requires {} arguments, but none were provided.", item.op->token, item.op->num_args));
         }
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
       }
 
       if(!hasValueInside && commaCount > 0)
       {
-        if(item.op->numArgs == 1)
+        if(item.op->num_args == 1)
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TooManyArguments),
-                                 fmt::format("The function '{}' requires {} argument, but more were provided.", item.op->token, item.op->numArgs));
+                                 fmt::format("The function '{}' requires {} argument, but more were provided.", item.op->token, item.op->num_args));
         }
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
       }
 
       int providedArgs = commaCount + 1;
-      if(item.op->numArgs == 1 && commaCount > 0)
+      if(item.op->num_args == 1 && commaCount > 0)
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TooManyArguments),
-                               fmt::format("The function '{}' requires {} argument, but {} were provided.", item.op->token, item.op->numArgs, providedArgs));
+                               fmt::format("The function '{}' requires {} argument, but {} were provided.", item.op->token, item.op->num_args, providedArgs));
       }
-      if(item.op->numArgs == 2 && commaCount < 1 && hasValueInside)
+      if(item.op->num_args == 2 && commaCount < 1 && hasValueInside)
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments),
-                               fmt::format("The function '{}' requires {} arguments, but only {} was provided.", item.op->token, item.op->numArgs, providedArgs));
+                               fmt::format("The function '{}' requires {} arguments, but only {} was provided.", item.op->token, item.op->num_args, providedArgs));
       }
     }
   }
@@ -1737,7 +1737,7 @@ Result<> ArrayCalculatorParser::parse()
     case ParsedItem::Kind::Scalar: {
       RpnItem rpn;
       rpn.type = RpnItem::Type::Scalar;
-      rpn.scalarValue = item.scalar_value;
+      rpn.scalar_value = item.scalar_value;
       m_RpnItems.push_back(rpn);
       break;
     }
@@ -1745,8 +1745,8 @@ Result<> ArrayCalculatorParser::parse()
     case ParsedItem::Kind::ArrayRef: {
       RpnItem rpn;
       rpn.type = RpnItem::Type::ArrayRef;
-      rpn.arrayPath = item.array_path;
-      rpn.sourceDataType = item.source_data_type;
+      rpn.array_path = item.array_path;
+      rpn.source_data_type = item.source_data_type;
       m_RpnItems.push_back(rpn);
       break;
     }
@@ -1829,7 +1829,7 @@ Result<> ArrayCalculatorParser::parse()
     case ParsedItem::Kind::ComponentExtract: {
       RpnItem rpn;
       rpn.type = RpnItem::Type::ComponentExtract;
-      rpn.componentIndex = item.component_index;
+      rpn.component_index = item.component_index;
       m_RpnItems.push_back(rpn);
       break;
     }
@@ -1837,8 +1837,8 @@ Result<> ArrayCalculatorParser::parse()
     case ParsedItem::Kind::TupleComponentExtract: {
       RpnItem rpn;
       rpn.type = RpnItem::Type::TupleComponentExtract;
-      rpn.tupleIndex = item.tuple_index;
-      rpn.componentIndex = item.component_index;
+      rpn.tuple_index = item.tuple_index;
+      rpn.component_index = item.component_index;
       m_RpnItems.push_back(rpn);
       break;
     }
@@ -1951,11 +1951,11 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
   {
     if(rpn[i].type == RpnItem::Type::ArrayRef)
     {
-      resolvedArrays[i] = m_DataStructure.getDataAs<IDataArray>(rpn[i].arrayPath);
+      resolvedArrays[i] = m_DataStructure.getDataAs<IDataArray>(rpn[i].array_path);
       if(resolvedArrays[i] == nullptr)
       {
         return MakeErrorResult(static_cast<int32>(CalculatorErrorCode::InvalidEquation),
-                               fmt::format("Internal error: array '{}' could not be resolved during evaluation.", rpn[i].arrayPath.toString()));
+                               fmt::format("Internal error: array '{}' could not be resolved during evaluation.", rpn[i].array_path.toString()));
       }
     }
   }
@@ -1999,7 +1999,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
       {
       case RpnItem::Type::Scalar: {
         stack[depth].is_scalar = true;
-        stack[depth].scalar_value = item.scalarValue;
+        stack[depth].scalar_value = item.scalar_value;
         depth++;
         break;
       }
@@ -2012,9 +2012,9 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         entry.is_scalar = false;
         entry.num_components = numComps;
         entry.buffer.resize(count);
-        if(item.sourceDataType == DataType::float64)
+        if(item.source_data_type == DataType::float64)
         {
-          const auto& typedArray = dynamic_cast<const Float64Array&>(*sourceArrayPtr);
+          const auto& typedArray = dynamic_cast<const Float64ArrayType&>(*sourceArrayPtr);
           Result<> readResult = typedArray.getDataStoreRef().copyIntoBuffer(tupleStart * numComps, nonstd::span<float64>(entry.buffer.data(), count));
           if(readResult.invalid())
           {
@@ -2023,7 +2023,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         }
         else
         {
-          Result<> readResult = ExecuteDataFunction(ReadChunkToFloat64Functor{}, item.sourceDataType, *sourceArrayPtr, tupleStart * numComps, nonstd::span<float64>(entry.buffer.data(), count));
+          Result<> readResult = ExecuteDataFunction(ReadChunkToFloat64Functor{}, item.source_data_type, *sourceArrayPtr, tupleStart * numComps, nonstd::span<float64>(entry.buffer.data(), count));
           if(readResult.invalid())
           {
             return readResult;
@@ -2035,18 +2035,18 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
       case RpnItem::Type::Operator: {
         const OperatorDef* opPtr = item.op;
-        if(opPtr->numArgs == 1)
+        if(opPtr->num_args == 1)
         {
           ChunkStackEntry& operand = stack[depth - 1];
           if(operand.is_scalar)
           {
             float64 val = operand.scalar_value;
-            if(opPtr->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+            if(opPtr->trig_mode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
             {
               val = val * (std::numbers::pi / 180.0);
             }
-            float64 res = opPtr->unaryOp(val);
-            if(opPtr->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+            float64 res = opPtr->unary_op(val);
+            if(opPtr->trig_mode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
             {
               res = res * (180.0 / std::numbers::pi);
             }
@@ -2058,12 +2058,12 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
             for(usize i = 0; i < count; i++)
             {
               float64 val = operand.buffer[i];
-              if(opPtr->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+              if(opPtr->trig_mode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
               {
                 val = val * (std::numbers::pi / 180.0);
               }
-              float64 res = opPtr->unaryOp(val);
-              if(opPtr->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+              float64 res = opPtr->unary_op(val);
+              if(opPtr->trig_mode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
               {
                 res = res * (180.0 / std::numbers::pi);
               }
@@ -2079,7 +2079,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
           if(left.is_scalar && right.is_scalar)
           {
-            left.scalar_value = opPtr->binaryOp(left.scalar_value, right.scalar_value);
+            left.scalar_value = opPtr->binary_op(left.scalar_value, right.scalar_value);
           }
           else
           {
@@ -2095,7 +2095,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
             {
               const float64 lv = leftWasScalar ? leftScalarVal : left.buffer[i];
               const float64 rv = rightWasScalar ? rightScalarVal : right.buffer[i];
-              left.buffer[i] = opPtr->binaryOp(lv, rv);
+              left.buffer[i] = opPtr->binary_op(lv, rv);
             }
             left.is_scalar = false;
             left.num_components = numComps;
@@ -2106,7 +2106,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
       case RpnItem::Type::ComponentExtract: {
         ChunkStackEntry& operand = stack[depth - 1];
-        const usize compIdx = item.componentIndex;
+        const usize compIdx = item.component_index;
         if(!operand.is_scalar)
         {
           const usize numComps = operand.num_components;
@@ -2140,7 +2140,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
     if(outputDataType == DataType::float64)
     {
-      auto& outputStore = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+      auto& outputStore = dataStructure.getDataRefAs<Float64ArrayType>(outputPath).getDataStoreRef();
       Result<> writeResult = outputStore.copyFromBuffer(tupleStart * outputNumComps, nonstd::span<const float64>(outWriteBuf.data(), tupleCount * outputNumComps));
       if(writeResult.invalid())
       {
@@ -2177,6 +2177,6 @@ const std::atomic_bool& ArrayCalculator::getCancel()
 
 Result<> ArrayCalculator::operator()()
 {
-  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, m_ShouldCancel);
-  return parser.evaluateInto(m_DataStructure, m_InputValues->CalculatedArray, m_InputValues->ScalarType, m_InputValues->Units, m_MessageHandler);
+  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->selected_group, m_InputValues->infix_equation, m_ShouldCancel);
+  return parser.evaluateInto(m_DataStructure, m_InputValues->calculated_array, m_InputValues->scalar_type, m_InputValues->units, m_MessageHandler);
 }

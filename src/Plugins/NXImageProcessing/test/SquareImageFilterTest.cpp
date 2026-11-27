@@ -10,8 +10,8 @@ using namespace nx::core;
 // float32 yields +inf. ITK's Sqr functor squares the same way, so this pins the observed overflow to +inf.
 TEST_CASE("NXImageProcessing::SquareImageFilter: square near sqrt(FLT_MAX) overflows to +inf (domain edge)", "[NXImageProcessing][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<float32>(dataStructure, {1.0e20f});
@@ -29,8 +29,8 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: square near sqrt(FLT_MAX) overf
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SquareImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -46,7 +46,7 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
   args.insertOrAssign(SquareImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   SquareImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -55,5 +55,5 @@ TEST_CASE("NXImageProcessing::SquareImageFilter: ITK real-image golden (defaults
   INFO(fmt::format("SquareImageFilter defaults md5: ours='{}' committed='{}'", ourMd5, "314065b457b66e102b9cafd7c49be6b3"));
   REQUIRE(ourMd5 == "314065b457b66e102b9cafd7c49be6b3");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

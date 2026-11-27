@@ -27,14 +27,14 @@ enum class Functionality : uint64
  */
 struct SIMPLNXCORE_EXPORT RemoveFlaggedFeaturesInputValues
 {
-  bool FillRemovedFeatures{};
-  uint64 ExtractFeatures{};
-  DataPath FeatureIdsArrayPath;
-  DataPath FlaggedFeaturesArrayPath;
-  DataPath ImageGeometryPath;
-  DataPath TempBoundsPath;
-  std::string CreatedImageGeometryPrefix;
-  MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
+  bool fill_removed_features{};
+  uint64 extract_features{};
+  DataPath feature_ids_array_path;
+  DataPath flagged_features_array_path;
+  DataPath image_geometry_path;
+  DataPath temp_bounds_path;
+  std::string created_image_geometry_prefix;
+  MultiArraySelectionParameter::ValueType ignored_data_array_paths;
 };
 
 /**

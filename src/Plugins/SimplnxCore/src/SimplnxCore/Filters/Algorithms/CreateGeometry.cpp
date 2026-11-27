@@ -18,7 +18,7 @@ constexpr uint64 k_QuadGeometry = 5;
 constexpr uint64 k_TetGeometry = 6;
 constexpr uint64 k_HexGeometry = 7;
 
-Result<> CheckGeometryArraysCompatible(const Float32AbstractDataStore& vertices, const UInt64AbstractDataStore& cells, bool treatWarningsAsErrors, const std::string& cellType)
+Result<> CheckGeometryArraysCompatible(const Float32AbstractDataStoreType& vertices, const UInt64AbstractDataStoreType& cells, bool treatWarningsAsErrors, const std::string& cellType)
 {
   Result<> warningResults;
   usize numVertices = vertices.getNumberOfTuples();
@@ -40,7 +40,7 @@ Result<> CheckGeometryArraysCompatible(const Float32AbstractDataStore& vertices,
   return warningResults;
 }
 
-Result<> CheckGridBoundsResolution(const Float32AbstractDataStore& bounds, bool treatWarningsAsErrors, const std::string& boundType)
+Result<> CheckGridBoundsResolution(const Float32AbstractDataStoreType& bounds, bool treatWarningsAsErrors, const std::string& boundType)
 {
   Result<> warningResults;
   float32 val = bounds[0];
@@ -76,12 +76,12 @@ CreateGeometry::CreateGeometry(DataStructure& dataStructure, const IFilter::Mess
 // -----------------------------------------------------------------------------
 Result<> CreateGeometry::operator()()
 {
-  auto geometryPath = m_InputValues->OutputGeometryPath;
-  auto geometryType = m_InputValues->GeometryTypeIndex;
-  auto treatWarningsAsErrors = m_InputValues->WarningsAsErrors;
+  auto geometryPath = m_InputValues->output_geometry_path;
+  auto geometryType = m_InputValues->geometry_type_index;
+  auto treatWarningsAsErrors = m_InputValues->warnings_as_errors;
 
   auto* iGeometryPtr = m_DataStructure.getDataAs<IGeometry>(geometryPath);
-  auto lengthUnit = static_cast<IGeometry::LengthUnit>(m_InputValues->LengthUnitIndex);
+  auto lengthUnit = static_cast<IGeometry::LengthUnit>(m_InputValues->length_unit_index);
   iGeometryPtr->setUnits(lengthUnit);
 
   DataPath sharedVertexListArrayPath;
@@ -90,23 +90,23 @@ Result<> CreateGeometry::operator()()
 
   if(geometryType == k_VertexGeometry || geometryType == k_EdgeGeometry || geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry || geometryType == k_TetGeometry || geometryType == 7)
   {
-    sharedVertexListArrayPath = m_InputValues->VertexListPath;
+    sharedVertexListArrayPath = m_InputValues->vertex_list_path;
   }
   if(geometryType == k_TriangleGeometry)
   {
-    sharedFaceListArrayPath = m_InputValues->TriangleListPath;
+    sharedFaceListArrayPath = m_InputValues->triangle_list_path;
   }
   if(geometryType == k_QuadGeometry)
   {
-    sharedFaceListArrayPath = m_InputValues->QuadrilateralListPath;
+    sharedFaceListArrayPath = m_InputValues->quadrilateral_list_path;
   }
   if(geometryType == k_TetGeometry)
   {
-    sharedCellListArrayPath = m_InputValues->TetrahedralListPath;
+    sharedCellListArrayPath = m_InputValues->tetrahedral_list_path;
   }
   if(geometryType == k_HexGeometry)
   {
-    sharedCellListArrayPath = m_InputValues->HexahedralListPath;
+    sharedCellListArrayPath = m_InputValues->hexahedral_list_path;
   }
 
   Result<> warningResults;
@@ -114,10 +114,10 @@ Result<> CreateGeometry::operator()()
   // These checks must be done in execute since we are accessing the array values!
   if(geometryType == k_EdgeGeometry)
   {
-    auto sharedEdgeListArrayPath = m_InputValues->EdgeListPath;
+    auto sharedEdgeListArrayPath = m_InputValues->edge_list_path;
     const DataPath destEdgeListPath = geometryPath.createChildPath(sharedEdgeListArrayPath.getTargetName());
-    const auto& edgesList = m_DataStructure.getDataAs<UInt64Array>(destEdgeListPath)->getDataStoreRef();
-    const auto& vertexList = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& edgesList = m_DataStructure.getDataAs<UInt64ArrayType>(destEdgeListPath)->getDataStoreRef();
+    const auto& vertexList = m_DataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
     auto results = CheckGeometryArraysCompatible(vertexList, edgesList, treatWarningsAsErrors, "edge");
     if(results.invalid())
     {
@@ -128,8 +128,8 @@ Result<> CreateGeometry::operator()()
   if(geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry)
   {
     const DataPath destFaceListPath = geometryPath.createChildPath(sharedFaceListArrayPath.getTargetName());
-    const auto& faceList = m_DataStructure.getDataAs<UInt64Array>(destFaceListPath)->getDataStoreRef();
-    const auto& vertexList = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& faceList = m_DataStructure.getDataAs<UInt64ArrayType>(destFaceListPath)->getDataStoreRef();
+    const auto& vertexList = m_DataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
     auto results = CheckGeometryArraysCompatible(vertexList, faceList, treatWarningsAsErrors, (geometryType == 4 ? "triangle" : "quadrilateral"));
     if(results.invalid())
     {
@@ -140,8 +140,8 @@ Result<> CreateGeometry::operator()()
   if(geometryType == k_TetGeometry || geometryType == k_HexGeometry)
   {
     const DataPath destCellListPath = geometryPath.createChildPath(sharedCellListArrayPath.getTargetName());
-    const auto& cellList = m_DataStructure.getDataAs<UInt64Array>(destCellListPath)->getDataStoreRef();
-    const auto& vertexList = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& cellList = m_DataStructure.getDataAs<UInt64ArrayType>(destCellListPath)->getDataStoreRef();
+    const auto& vertexList = m_DataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
     auto results = CheckGeometryArraysCompatible(vertexList, cellList, treatWarningsAsErrors, (geometryType == 6 ? "tetrahedral" : "hexahedral"));
     if(results.invalid())
     {
@@ -151,12 +151,12 @@ Result<> CreateGeometry::operator()()
   }
   if(geometryType == k_RectGridGeometry)
   {
-    auto xBoundsArrayPath = m_InputValues->XBoundsPath;
-    auto yBoundsArrayPath = m_InputValues->YBoundsPath;
-    auto zBoundsArrayPath = m_InputValues->ZBoundsPath;
-    const auto& srcXBounds = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()))->getDataStoreRef();
-    const auto& srcYBounds = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()))->getDataStoreRef();
-    const auto& srcZBounds = m_DataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()))->getDataStoreRef();
+    auto xBoundsArrayPath = m_InputValues->x_bounds_path;
+    auto yBoundsArrayPath = m_InputValues->y_bounds_path;
+    auto zBoundsArrayPath = m_InputValues->z_bounds_path;
+    const auto& srcXBounds = m_DataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& srcYBounds = m_DataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()))->getDataStoreRef();
+    const auto& srcZBounds = m_DataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()))->getDataStoreRef();
     auto xResults = CheckGridBoundsResolution(srcXBounds, treatWarningsAsErrors, "X");
     auto yResults = CheckGridBoundsResolution(srcYBounds, treatWarningsAsErrors, "Y");
     auto zResults = CheckGridBoundsResolution(srcZBounds, treatWarningsAsErrors, "Z");

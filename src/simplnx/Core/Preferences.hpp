@@ -42,10 +42,10 @@ class SIMPLNX_EXPORT Preferences
   friend class AbstractPlugin;
 
 public:
-  static constexpr int32 k_FailedToCreateDirectory_Code = -585;
-  static constexpr int32 k_FileDoesNotExist_Code = -586;
-  static constexpr int32 k_FileCouldNotOpen_Code = -587;
-  static constexpr int32 k_JsonParseError_Code = -588;
+  static constexpr int32 k_FailedToCreateDirectoryCode = -585;
+  static constexpr int32 k_FileDoesNotExistCode = -586;
+  static constexpr int32 k_FileCouldNotOpenCode = -587;
+  static constexpr int32 k_JsonParseErrorCode = -588;
 
   static constexpr StringLiteralType k_LargeDataSize_Key = "large_data_size";
 
@@ -77,7 +77,7 @@ public:
   // The persisted value is the DataStorageMode integer.
   static constexpr StringLiteralType k_DataStorageMode_Key = "data_storage_mode";
 
-  static constexpr nx::core::StringLiteralType k_OoCTempDirectory_ID = "ooc_temp_directory";
+  static constexpr nx::core::StringLiteralType k_OoCTempDirectoryId = "ooc_temp_directory";
 
   static constexpr StringLiteralType k_AutoRangeComputation_Key = "auto_range_computation";
 

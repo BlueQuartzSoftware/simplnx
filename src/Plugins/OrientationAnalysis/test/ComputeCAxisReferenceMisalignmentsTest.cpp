@@ -37,7 +37,7 @@ using FilterType = ComputeCAxisReferenceMisalignmentsFilter;
 using AlgorithmType = ComputeCAxisReferenceMisalignments;
 using InputValuesType = ComputeCAxisReferenceMisalignmentsInputValues;
 using EulerType = std::array<float64, 3>;
-constexpr float64 k_Radians = numbers::pi / 180.0;
+constexpr float64 k_Radians = numbers::k_Pi / 180.0;
 constexpr float32 k_NaN = std::numeric_limits<float32>::quiet_NaN();
 const DataPath k_Quats({"Orientations", "Quats"});
 const DataPath k_Phases({"Orientations", "Phases"});
@@ -48,7 +48,7 @@ const DataPath k_Output({"Orientations", "CAxisReferenceMisalignments"});
 template <typename T>
 DataArray<T>& CreateArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& shape, usize components, DataObject::IdType parent)
 {
-  auto storePtr = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, shape, {components});
+  auto storePtr = data_store_utilities::CreateDataStore<T>(dataStructure, path, shape, {components});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), storePtr, parent);
   REQUIRE(arrayPtr != nullptr);
   return *arrayPtr;
@@ -116,7 +116,7 @@ DataStructure MakeData(const std::vector<EulerType>& eulers, const ShapeType& sh
 Arguments MakeArgs(const std::vector<float32>& reference = {0, 0, 1}, bool useMask = false, const std::string& groupName = "")
 {
   Arguments args;
-  args.insertOrAssign(FilterType::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(reference));
+  args.insertOrAssign(FilterType::k_ReferenceDir_Key, std::make_any<VectorFloat32ParameterType::ValueType>(reference));
   args.insertOrAssign(FilterType::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(FilterType::k_MaskArrayPath_Key, std::make_any<DataPath>(InGroup(groupName, k_Mask)));
   args.insertOrAssign(FilterType::k_QuatsArrayPath_Key, std::make_any<DataPath>(InGroup(groupName, k_Quats)));
@@ -141,11 +141,11 @@ void CheckOutput(const DataStructure& dataStructure, const std::vector<EulerType
 {
   const DataPath outputPath = InGroup(groupName, k_Output);
   const DataPath quatsPath = InGroup(groupName, k_Quats);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(quatsPath));
-  const auto& outputRef = dataStructure.getDataRefAs<Float32Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(quatsPath));
+  const auto& outputRef = dataStructure.getDataRefAs<Float32ArrayType>(outputPath);
   REQUIRE(outputRef.getNumberOfComponents() == 1);
-  REQUIRE(outputRef.getIDataStoreRef().getTupleShape() == dataStructure.getDataRefAs<Float32Array>(quatsPath).getIDataStoreRef().getTupleShape());
+  REQUIRE(outputRef.getIDataStoreRef().getTupleShape() == dataStructure.getDataRefAs<Float32ArrayType>(quatsPath).getIDataStoreRef().getTupleShape());
   std::vector<float32> outputValues(outputRef.getSize());
   auto outputReadResult = outputRef.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(outputValues.data(), outputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(outputReadResult);
@@ -168,20 +168,20 @@ void CheckOutput(const DataStructure& dataStructure, const std::vector<EulerType
 
 // The shared algorithm has no dispatch event. Use the scenario's store guard,
 // but do not call executeFilter(), which requires a Direct/Scanline dispatch.
-Result<> ExecuteInScope(DataStructure& dataStructure, const Arguments& args, const UnitTest::AlgorithmTestScope& scope, const std::string& groupName = "")
+Result<> ExecuteInScope(DataStructure& dataStructure, const Arguments& args, const unit_test::AlgorithmTestScope& scope, const std::string& groupName = "")
 {
   FilterType filter;
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const DataPath outputPath = InGroup(groupName, k_Output);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(outputPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
   return std::move(result.result);
 }
 
-void ExecuteAndCheck(DataStructure& dataStructure, const Arguments& args, const UnitTest::AlgorithmTestScope& scope, const std::string& groupName = "")
+void ExecuteAndCheck(DataStructure& dataStructure, const Arguments& args, const unit_test::AlgorithmTestScope& scope, const std::string& groupName = "")
 {
   const Result<> result = ExecuteInScope(dataStructure, args, scope, groupName);
   REQUIRE(result.warnings().empty());
@@ -202,13 +202,13 @@ DataStructure MakeDirectCallData()
 InputValuesType MakeDirectCallInputValues()
 {
   InputValuesType inputValues;
-  inputValues.ReferenceDirection = {0.0F, 0.0F, 1.0F};
-  inputValues.UseMask = true;
-  inputValues.QuatsArrayPath = k_Quats;
-  inputValues.PhasesArrayPath = k_Phases;
-  inputValues.MaskArrayPath = k_Mask;
-  inputValues.CrystalStructuresArrayPath = k_CrystalStructures;
-  inputValues.OutputArrayPath = k_Output;
+  inputValues.reference_direction = {0.0F, 0.0F, 1.0F};
+  inputValues.use_mask = true;
+  inputValues.quats_array_path = k_Quats;
+  inputValues.phases_array_path = k_Phases;
+  inputValues.mask_array_path = k_Mask;
+  inputValues.crystal_structures_array_path = k_CrystalStructures;
+  inputValues.output_array_path = k_Output;
   return inputValues;
 }
 
@@ -222,9 +222,9 @@ Result<> RunAlgorithm(DataStructure& dataStructure, const InputValuesType& input
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: cell and feature analytical oracle", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool featureLevel = GENERATE(false, true);
   const float64 azimuthOffset = GENERATE(0.0, 43.0, 172.0);
   std::vector<EulerType> eulers = {{0, 0, 71}, {22, 30, 15}, {147, 45, 92}, {271, 90, 13}, {81, 120, 245}};
@@ -236,42 +236,42 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: cell and fea
   auto ds = MakeData(eulers, featureLevel ? ShapeType{5} : ShapeType{1, 1, 5});
   ExecuteAndCheck(ds, MakeArgs(), scope);
   CheckOutput(ds, eulers, {0, 0, 1});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: nonunit reference oracle", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const auto reference = GENERATE(std::vector<float32>{3, 0, 3}, std::vector<float32>{1, 2, -2}, std::vector<float32>{-1, -2, 2});
   const std::vector<EulerType> eulers = {{0, 0, 71}, {90, 45, 31}, {147, 45, 92}, {271, 90, 13}, {81, 120, 245}};
   auto ds = MakeData(eulers, {5});
   ExecuteAndCheck(ds, MakeArgs(reference), scope);
   CheckOutput(ds, eulers, reference);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: inputs inside a DataGroup", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const std::string groupName = "Group";
   const std::vector<EulerType> eulers = {{22, 30, 15}, {147, 45, 92}, {271, 90, 13}};
   auto ds = MakeData(eulers, {3}, {}, std::numeric_limits<usize>::max(), groupName);
   ExecuteAndCheck(ds, MakeArgs({1, 2, -2}, false, groupName), scope, groupName);
   CheckOutput(ds, eulers, {1, 2, -2}, {}, groupName);
   // The output is created beside the nested quaternions, not at the root.
-  REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(ds.getDataAs<Float32ArrayType>(k_Output) == nullptr);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: fixed seed sweep", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   std::mt19937 generator(1729);
   std::uniform_real_distribution<float64> azimuth(0.0, 360.0);
   std::uniform_real_distribution<float64> inclination(0.0, 180.0);
@@ -287,15 +287,15 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: fixed seed s
     auto ds = MakeData(eulers, {8, 8, 6});
     ExecuteAndCheck(ds, MakeArgs(reference), scope);
     CheckOutput(ds, eulers, reference);
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    unit_test::CheckArraysInheritTupleDims(ds);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: masks and chunk boundaries", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool byteMask = GENERATE(false, true);
   // Cross two 4096-tuple boundaries and exercise a partial final chunk.
   std::vector<EulerType> eulers(8201);
@@ -325,19 +325,19 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: masks and ch
       maskRef[tupleIdx] = false;
     }
   }
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-  ds.getDataRefAs<Int32Array>(k_Phases)[4096] = -1; // Masking takes precedence over phase validation.
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(k_Phases));
+  ds.getDataRefAs<Int32ArrayType>(k_Phases)[4096] = -1; // Masking takes precedence over phase validation.
   ExecuteAndCheck(ds, MakeArgs({1, 2, -2}, true), scope);
   CheckOutput(ds, eulers, {1, 2, -2}, excluded);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: out-of-core stores", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool byteMask = GENERATE(false, true);
   CAPTURE(byteMask);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   // Cross three 4096-tuple boundaries and exercise a partial final chunk.
   constexpr usize k_NumTuples = 3 * 4096 + 17;
@@ -369,13 +369,13 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: out-of-core 
   }
   auto ds = MakeData(eulers, {k_NumTuples}, phaseValues, k_ZeroQuaternion);
   REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32Array>(k_CrystalStructures));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32ArrayType>(k_Quats));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(k_Phases));
+  REQUIRE_NOTHROW(ds.getDataRefAs<UInt32ArrayType>(k_CrystalStructures));
   const auto parent = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
-  auto& quats = ds.getDataRefAs<Float32Array>(k_Quats);
-  auto& phases = ds.getDataRefAs<Int32Array>(k_Phases);
-  const auto& crystalStructures = ds.getDataRefAs<UInt32Array>(k_CrystalStructures);
+  auto& quats = ds.getDataRefAs<Float32ArrayType>(k_Quats);
+  auto& phases = ds.getDataRefAs<Int32ArrayType>(k_Phases);
+  const auto& crystalStructures = ds.getDataRefAs<UInt32ArrayType>(k_CrystalStructures);
   if(byteMask)
   {
     auto& mask = CreateArray<uint8>(ds, k_Mask, {k_NumTuples}, 1, parent);
@@ -412,35 +412,35 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: out-of-core 
   const auto args = MakeArgs(reference, true);
   FilterType filter;
   auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(result.result.warnings().size() == 1);
   REQUIRE(result.result.warnings()[0].code == AlgorithmType::k_NonHexagonalPhasesWarning);
   REQUIRE(result.result.warnings()[0].message.find(std::to_string(expectedNonHexagonalCount) + " tuples") == 0);
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Output));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32ArrayType>(k_Output));
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
-    REQUIRE(ds.getDataRefAs<Float32Array>(k_Output).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(ds.getDataRefAs<Float32ArrayType>(k_Output).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   }
   CheckOutput(ds, eulers, reference, excluded);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: hexagonal phases only", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const std::vector<EulerType> eulers(5, {23, 37, 89});
   auto ds = MakeData(eulers, {5});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-  auto& phasesRef = ds.getDataRefAs<Int32Array>(k_Phases);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(k_Phases));
+  auto& phasesRef = ds.getDataRefAs<Int32ArrayType>(k_Phases);
   phasesRef[2] = 2;
   phasesRef[3] = 0;
   // A zero quaternion has no c-axis and must not be reported as perpendicular (90 degrees).
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
-  auto& quatsRef = ds.getDataRefAs<Float32Array>(k_Quats);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32ArrayType>(k_Quats));
+  auto& quatsRef = ds.getDataRefAs<Float32ArrayType>(k_Quats);
   for(usize compIdx = 0; compIdx < 4; ++compIdx)
   {
     quatsRef[compIdx] = 0.0F;
@@ -475,20 +475,20 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: hexagonal ph
     REQUIRE(result.warnings()[0].code == AlgorithmType::k_NonHexagonalPhasesWarning);
     REQUIRE(result.warnings()[0].message.find(std::to_string(expectedNonHexagonalCount) + " tuples") == 0);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: masked non-hexagonal tuples are not counted", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool byteMask = GENERATE(false, true);
   CAPTURE(byteMask);
   const std::vector<EulerType> eulers(6, {23, 37, 89});
   auto ds = MakeData(eulers, {6});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-  auto& phasesRef = ds.getDataRefAs<Int32Array>(k_Phases);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(k_Phases));
+  auto& phasesRef = ds.getDataRefAs<Int32ArrayType>(k_Phases);
   phasesRef[1] = 3;
   phasesRef[2] = 4;
   REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
@@ -530,20 +530,20 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: masked non-h
     REQUIRE(result.warnings()[0].code == AlgorithmType::k_NonHexagonalPhasesWarning);
     REQUIRE(result.warnings()[0].message.find("1 tuples") == 0);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: zero quaternion is undefined", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const usize count = GENERATE(1, 4096, 4097, 8192);
   CAPTURE(count);
   const std::vector<EulerType> eulers(count, {23, 37, 89});
   auto ds = MakeData(eulers, {count});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
-  auto& quatsRef = ds.getDataRefAs<Float32Array>(k_Quats);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32ArrayType>(k_Quats));
+  auto& quatsRef = ds.getDataRefAs<Float32ArrayType>(k_Quats);
   for(usize compIdx = 0; compIdx < 4; ++compIdx)
   {
     quatsRef[4 * (count - 1) + compIdx] = 0.0F;
@@ -551,72 +551,72 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: zero quatern
   ExecuteAndCheck(ds, MakeArgs(), scope);
   // A zero quaternion defines no orientation, so it cannot have a finite angle.
   CheckOutput(ds, eulers, {0, 0, 1}, {count - 1});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: nonfinite quaternions", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const usize compIdx = GENERATE(0, 1, 2, 3);
   const float32 value = GENERATE(as<float32>{}, k_NaN, std::numeric_limits<float32>::infinity(), -std::numeric_limits<float32>::infinity());
   CAPTURE(compIdx, value);
   REQUIRE_FALSE(std::isfinite(value));
   const std::vector<EulerType> eulers(2, {23, 37, 89});
   auto ds = MakeData(eulers, {2});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
-  ds.getDataRefAs<Float32Array>(k_Quats)[compIdx] = value;
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32ArrayType>(k_Quats));
+  ds.getDataRefAs<Float32ArrayType>(k_Quats)[compIdx] = value;
   ExecuteAndCheck(ds, MakeArgs(), scope);
   CheckOutput(ds, eulers, {0, 0, 1}, {0});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: quaternion scale invariance", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const float32 scale = GENERATE(-2.0F, 0.5F, 1.0e-30F, 1.0e30F);
   CAPTURE(scale);
   const std::vector<EulerType> eulers = {{0, 0, 71}, {90, 45, 31}, {147, 45, 92}, {271, 90, 13}, {81, 120, 245}};
   auto ds = MakeData(eulers, {eulers.size()});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_Quats));
-  auto& quatsRef = ds.getDataRefAs<Float32Array>(k_Quats);
+  REQUIRE_NOTHROW(ds.getDataRefAs<Float32ArrayType>(k_Quats));
+  auto& quatsRef = ds.getDataRefAs<Float32ArrayType>(k_Quats);
   for(usize valueIdx = 0; valueIdx < quatsRef.getSize(); ++valueIdx)
   {
     quatsRef[valueIdx] *= scale;
   }
   ExecuteAndCheck(ds, MakeArgs({1, 2, -2}), scope);
   CheckOutput(ds, eulers, {1, 2, -2});
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: empty input", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto ds = MakeData({}, {0});
   ExecuteAndCheck(ds, MakeArgs(), scope);
   CheckOutput(ds, {}, {0, 0, 1});
-  REQUIRE(ds.getDataRefAs<Float32Array>(k_Output).getNumberOfTuples() == 0);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(ds.getDataRefAs<Float32ArrayType>(k_Output).getNumberOfTuples() == 0);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: cancellation", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool cancelBeforeExecute = GENERATE(false, true);
   CAPTURE(cancelBeforeExecute);
   std::atomic_bool shouldCancel = cancelBeforeExecute;
   const std::vector<EulerType> eulers(4097, {23, 37, 89});
   auto ds = MakeData(eulers, {eulers.size()});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(k_Phases));
   // If cancellation is ignored at the next chunk boundary, this phase gives k_PhaseOutOfRangeError.
-  ds.getDataRefAs<Int32Array>(k_Phases)[4096] = -1;
+  ds.getDataRefAs<Int32ArrayType>(k_Phases)[4096] = -1;
   const IFilter::MessageHandler messageHandler{[&shouldCancel](const IFilter::Message& message) {
     if(message.type == IFilter::Message::Type::Progress)
     {
@@ -629,28 +629,28 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: cancellation
   REQUIRE(result.result.errors()[0].code == -1);
   if(cancelBeforeExecute)
   {
-    REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
+    REQUIRE(ds.getDataAs<Float32ArrayType>(k_Output) == nullptr);
   }
   else
   {
     REQUIRE(shouldCancel.load());
     CheckOutput(ds, std::vector<EulerType>(4096, eulers.front()), {0, 0, 1});
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: invalid reference", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const auto reference =
       GENERATE(std::vector<float32>{0, 0, 0}, std::vector<float32>{k_NaN, 0, 1}, std::vector<float32>{0, std::numeric_limits<float32>::infinity(), 1}, std::vector<float32>{0, 0, 1.0e-13F});
   auto ds = MakeData({{0, 30, 0}}, {1});
   auto result = FilterType().preflight(ds, MakeArgs(reference));
-  REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_InvalidReferenceDirectionError);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(result.output_actions.invalid());
+  REQUIRE(result.output_actions.errors()[0].code == AlgorithmType::k_InvalidReferenceDirectionError);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: reference with wrong component count", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
@@ -665,9 +665,9 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: reference wi
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: tuple mismatch", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool mismatchMask = GENERATE(false, true);
   auto ds = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
   auto* otherPtr = AttributeMatrix::Create(ds, "Other", {3});
@@ -685,26 +685,26 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: tuple mismat
     args.insertOrAssign(FilterType::k_PhasesArrayPath_Key, std::make_any<DataPath>(otherPath));
   }
   auto result = FilterType().preflight(ds, args);
-  REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_TupleCountMismatchError);
-  const auto& messageRef = result.outputActions.errors()[0].message;
+  REQUIRE(result.output_actions.invalid());
+  REQUIRE(result.output_actions.errors()[0].code == AlgorithmType::k_TupleCountMismatchError);
+  const auto& messageRef = result.output_actions.errors()[0].message;
   REQUIRE(messageRef.find(mismatchMask ? "Mask array" : "Phases array") == 0);
   REQUIRE(messageRef.find("Quats") != std::string::npos);
   REQUIRE(messageRef.find("Mismatched") != std::string::npos);
   REQUIRE(messageRef.find('2') != std::string::npos);
   REQUIRE(messageRef.find('3') != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: phase index error", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const int32 phase = GENERATE(-1, 5, std::numeric_limits<int32>::max());
   auto ds = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_Phases));
-  ds.getDataRefAs<Int32Array>(k_Phases)[1] = phase;
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(k_Phases));
+  ds.getDataRefAs<Int32ArrayType>(k_Phases)[1] = phase;
   auto result = FilterType().execute(ds, MakeArgs());
   REQUIRE(result.result.invalid());
   REQUIRE(result.result.errors()[0].code == AlgorithmType::k_PhaseOutOfRangeError);
@@ -713,14 +713,14 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: phase index 
   REQUIRE(messageRef.find("CrystalStructures") != std::string::npos);
   REQUIRE(messageRef.find(std::to_string(phase)) != std::string::npos);
   REQUIRE(messageRef.find("tuple index 1") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: rejects Euler angle input", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto ds = MakeData({{0, 30, 0}, {0, 45, 0}}, {2});
   REQUIRE_NOTHROW(ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()));
   const auto parentId = ds.getDataRefAs<AttributeMatrix>(k_Quats.getParent()).getId();
@@ -729,11 +729,11 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: rejects Eule
   auto args = MakeArgs();
   args.insertOrAssign(FilterType::k_QuatsArrayPath_Key, std::make_any<DataPath>(eulersPath));
   auto result = FilterType().preflight(ds, args);
-  REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors().size() == 1);
-  REQUIRE(result.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
-  REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(result.output_actions.invalid());
+  REQUIRE(result.output_actions.errors().size() == 1);
+  REQUIRE(result.output_actions.errors()[0].code == filter_parameter::constants::k_ValidateTupleShapeValue);
+  REQUIRE(ds.getDataAs<Float32ArrayType>(k_Output) == nullptr);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: output name equal to an input name", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
@@ -746,10 +746,10 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: output name 
   auto args = MakeArgs({0, 0, 1}, true);
   args.insertOrAssign(FilterType::k_CAxisReferenceMisalignmentsArrayName_Key, std::make_any<std::string>(inputName));
   auto result = FilterType().preflight(ds, args);
-  REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors().size() == 1);
-  REQUIRE(result.outputActions.errors()[0].code == AlgorithmType::k_OutputPathCollisionError);
-  REQUIRE(result.outputActions.errors()[0].message.find("Orientations/" + inputName) != std::string::npos);
+  REQUIRE(result.output_actions.invalid());
+  REQUIRE(result.output_actions.errors().size() == 1);
+  REQUIRE(result.output_actions.errors()[0].code == AlgorithmType::k_OutputPathCollisionError);
+  REQUIRE(result.output_actions.errors()[0].message.find("Orientations/" + inputName) != std::string::npos);
   REQUIRE(ds.getDataRefAs<IDataArray>(k_Quats.replaceName(inputName)).getNumberOfComponents() == (inputName == "Quats" ? 4 : 1));
 }
 
@@ -776,11 +776,11 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: preflight re
   }
   IFilter::PreflightResult result;
   REQUIRE_NOTHROW(result = FilterType().preflight(ds, args));
-  REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors().size() == 1);
-  REQUIRE(result.outputActions.errors()[0].code == expectedCode);
-  REQUIRE(result.outputActions.errors()[0].message.find("has type 'StringArray'") != std::string::npos);
-  REQUIRE(ds.getDataAs<Float32Array>(k_Output) == nullptr);
+  REQUIRE(result.output_actions.invalid());
+  REQUIRE(result.output_actions.errors().size() == 1);
+  REQUIRE(result.output_actions.errors()[0].code == expectedCode);
+  REQUIRE(result.output_actions.errors()[0].message.find("has type 'StringArray'") != std::string::npos);
+  REQUIRE(ds.getDataAs<Float32ArrayType>(k_Output) == nullptr);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm validates its own inputs", "[OrientationAnalysis][ComputeCAxisReferenceMisalignments]")
@@ -803,105 +803,105 @@ TEST_CASE("OrientationAnalysis::ComputeCAxisReferenceMisalignments: algorithm va
   }
   SECTION("Missing quaternion array")
   {
-    inputValues.QuatsArrayPath = DataPath({"Orientations", "Missing"});
+    inputValues.quats_array_path = DataPath({"Orientations", "Missing"});
     expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
     expectedPhrase = "does not exist";
   }
   SECTION("Quaternion array of the wrong type")
   {
     CreateArray<float64>(dataStructure, wrongPath, {2}, 4, parentId);
-    inputValues.QuatsArrayPath = wrongPath;
+    inputValues.quats_array_path = wrongPath;
     expectedCode = AlgorithmType::k_InvalidQuatsArrayError;
     expectedPhrase = "has type 'float64', but type 'float32' is required";
   }
   SECTION("Quaternion array with five components")
   {
     CreateArray<float32>(dataStructure, wrongPath, {2}, 5, parentId);
-    inputValues.QuatsArrayPath = wrongPath;
+    inputValues.quats_array_path = wrongPath;
     expectedCode = AlgorithmType::k_QuatsComponentShapeError;
   }
   SECTION("Phases array of the wrong type")
   {
     CreateArray<uint32>(dataStructure, wrongPath, {2}, 1, parentId);
-    inputValues.PhasesArrayPath = wrongPath;
+    inputValues.phases_array_path = wrongPath;
     expectedCode = AlgorithmType::k_InvalidPhasesArrayError;
   }
   SECTION("Phases array with two components")
   {
     CreateArray<int32>(dataStructure, wrongPath, {2}, 2, parentId);
-    inputValues.PhasesArrayPath = wrongPath;
+    inputValues.phases_array_path = wrongPath;
     expectedCode = AlgorithmType::k_PhasesComponentShapeError;
   }
   SECTION("Phases array with a different tuple count")
   {
     CreateArray<int32>(dataStructure, otherPath, {3}, 1, otherId);
-    inputValues.PhasesArrayPath = otherPath;
+    inputValues.phases_array_path = otherPath;
     expectedCode = AlgorithmType::k_TupleCountMismatchError;
     expectedPhrase = "Phases array 'Other/Mismatched' has 3 tuples";
   }
   SECTION("Mask array of the wrong type")
   {
     CreateArray<int32>(dataStructure, wrongPath, {2}, 1, parentId);
-    inputValues.MaskArrayPath = wrongPath;
+    inputValues.mask_array_path = wrongPath;
     expectedCode = AlgorithmType::k_InvalidMaskArrayError;
     expectedPhrase = "has type 'int32', but type 'bool' or 'uint8' is required";
   }
   SECTION("Mask array with two components")
   {
     CreateArray<uint8>(dataStructure, wrongPath, {2}, 2, parentId);
-    inputValues.MaskArrayPath = wrongPath;
+    inputValues.mask_array_path = wrongPath;
     expectedCode = AlgorithmType::k_MaskComponentShapeError;
   }
   SECTION("Mask array with a different tuple count")
   {
     CreateArray<bool>(dataStructure, otherPath, {3}, 1, otherId);
-    inputValues.MaskArrayPath = otherPath;
+    inputValues.mask_array_path = otherPath;
     expectedCode = AlgorithmType::k_TupleCountMismatchError;
     expectedPhrase = "Mask array 'Other/Mismatched' has 3 tuples";
   }
   SECTION("Crystal Structures array of the wrong type")
   {
     CreateArray<int32>(dataStructure, otherPath, {3}, 1, otherId);
-    inputValues.CrystalStructuresArrayPath = otherPath;
+    inputValues.crystal_structures_array_path = otherPath;
     expectedCode = AlgorithmType::k_InvalidCrystalStructuresArrayError;
   }
   SECTION("Crystal Structures array with two components")
   {
     CreateArray<uint32>(dataStructure, otherPath, {3}, 2, otherId);
-    inputValues.CrystalStructuresArrayPath = otherPath;
+    inputValues.crystal_structures_array_path = otherPath;
     expectedCode = AlgorithmType::k_CrystalStructuresComponentShapeError;
   }
   SECTION("Missing output array")
   {
-    inputValues.OutputArrayPath = DataPath({"Orientations", "Missing"});
+    inputValues.output_array_path = DataPath({"Orientations", "Missing"});
     expectedCode = AlgorithmType::k_InvalidOutputArrayError;
   }
   SECTION("Output array with two components")
   {
     CreateArray<float32>(dataStructure, wrongPath, {2}, 2, parentId);
-    inputValues.OutputArrayPath = wrongPath;
+    inputValues.output_array_path = wrongPath;
     expectedCode = AlgorithmType::k_OutputComponentShapeError;
   }
   SECTION("Output array with a different tuple count")
   {
     CreateArray<float32>(dataStructure, otherPath, {3}, 1, otherId);
-    inputValues.OutputArrayPath = otherPath;
+    inputValues.output_array_path = otherPath;
     expectedCode = AlgorithmType::k_OutputTupleCountMismatchError;
   }
   SECTION("Non-finite reference direction")
   {
-    inputValues.ReferenceDirection = {k_NaN, 0.0F, 1.0F};
+    inputValues.reference_direction = {k_NaN, 0.0F, 1.0F};
     expectedCode = AlgorithmType::k_InvalidReferenceDirectionError;
   }
   SECTION("Reference direction with two components")
   {
-    inputValues.ReferenceDirection = {0.0F, 1.0F};
+    inputValues.reference_direction = {0.0F, 1.0F};
     expectedCode = AlgorithmType::k_ReferenceDirectionSizeError;
   }
   SECTION("Phase outside the Crystal Structures array")
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_Phases));
-    dataStructure.getDataRefAs<Int32Array>(k_Phases)[1] = 5;
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_Phases));
+    dataStructure.getDataRefAs<Int32ArrayType>(k_Phases)[1] = 5;
     expectedCode = AlgorithmType::k_PhaseOutOfRangeError;
   }
   CAPTURE(expectedCode);

@@ -70,7 +70,7 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances",
@@ -113,7 +113,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPathValue}, -12805);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
@@ -123,10 +123,10 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* cellDataArrayPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto* cellDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   if(nullptr == cellDataArrayPtr)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
   }
 
   ShapeType tupleShape = cellDataArrayPtr->getIDataStore()->getTupleShape();
@@ -138,7 +138,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
 
   if(!pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
                                     "Distance to Quadruple Points.",
                                     pFeatureIdsArrayPathValue.toString()))};
@@ -169,7 +169,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -178,16 +178,16 @@ Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure
 {
   ComputeEuclideanDistMapInputValues inputValues;
 
-  inputValues.CalcManhattanDist = filterArgs.value<bool>(k_CalcManhattanDist_Key);
-  inputValues.DoBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
-  inputValues.DoTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
-  inputValues.DoQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  DataPath parentGroupPath = inputValues.FeatureIdsArrayPath.getParent();
-  inputValues.GBDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
-  inputValues.TJDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
-  inputValues.QPDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.calc_manhattan_dist = filterArgs.value<bool>(k_CalcManhattanDist_Key);
+  inputValues.do_boundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
+  inputValues.do_triple_lines = filterArgs.value<bool>(k_DoTripleLines_Key);
+  inputValues.do_quad_points = filterArgs.value<bool>(k_DoQuadPoints_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  DataPath parentGroupPath = inputValues.feature_ids_array_path.getParent();
+  inputValues.gb_distances_array_path = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
+  inputValues.tj_distances_array_path = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
+  inputValues.qp_distances_array_path = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeEuclideanDistMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

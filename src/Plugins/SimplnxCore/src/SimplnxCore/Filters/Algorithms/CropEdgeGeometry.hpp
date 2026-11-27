@@ -19,19 +19,19 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CropEdgeGeometryInputValues
 {
-  DataPath srcEdgeGeomPath;
-  DataPath destEdgeGeomPath;
-  std::vector<float32> minCoords;
-  std::vector<float32> maxCoords;
-  bool removeOriginalGeometry{};
-  bool cropXDim{};
-  bool cropYDim{};
-  bool cropZDim{};
-  uint64 boundaryIntersectionBehavior{};
-  BoolParameter::ValueType clearFeatureAttributeMatrix = false;
-  BoolParameter::ValueType renumberFeatures = false;
-  AttributeMatrixSelectionParameter::ValueType featureAttributeMatrixPath;
-  ArraySelectionParameter::ValueType edgeFeatureIdsPath;
+  DataPath src_edge_geom_path;
+  DataPath dest_edge_geom_path;
+  std::vector<float32> min_coords;
+  std::vector<float32> max_coords;
+  bool remove_original_geometry{};
+  bool crop_x_dim{};
+  bool crop_y_dim{};
+  bool crop_z_dim{};
+  uint64 boundary_intersection_behavior{};
+  BoolParameter::ValueType clear_feature_attribute_matrix = false;
+  BoolParameter::ValueType renumber_features = false;
+  AttributeMatrixSelectionParameter::ValueType feature_attribute_matrix_path;
+  ArraySelectionParameter::ValueType edge_feature_ids_path;
 };
 
 /**

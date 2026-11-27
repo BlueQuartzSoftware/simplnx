@@ -20,8 +20,8 @@ TEST_CASE("simplnx::UpdateImageGeomAction: copied actions preserve centering", "
   const bool centerOrigin = GENERATE(true, false);
   CAPTURE(mode, centerOrigin);
   const DataPath geometryPath({"Image"});
-  const FloatVec3 requestedOrigin{-2.0f, 7.0f, -5.0f};
-  const FloatVec3 requestedSpacing{2.0f, 3.0f, 4.0f};
+  const FloatVec3Type requestedOrigin{-2.0f, 7.0f, -5.0f};
+  const FloatVec3Type requestedSpacing{2.0f, 3.0f, 4.0f};
   OutputActions actions;
   actions.appendAction(std::make_unique<UpdateImageGeomAction>(requestedOrigin, requestedSpacing, geometryPath, centerOrigin));
   const OutputActions copiedActions = actions;
@@ -38,15 +38,15 @@ TEST_CASE("simplnx::UpdateImageGeomAction: copied actions preserve centering", "
     SIMPLNX_RESULT_REQUIRE_VALID(result);
 
     // Half extents are (4, 3, 12), so centering at (-2, 7, -5) requires origin (-6, 4, -17).
-    const FloatVec3 expectedOrigin = centerOrigin ? FloatVec3{-6.0f, 4.0f, -17.0f} : requestedOrigin;
+    const FloatVec3Type expectedOrigin = centerOrigin ? FloatVec3Type{-6.0f, 4.0f, -17.0f} : requestedOrigin;
     CHECK(geometryPtr->getOrigin() == expectedOrigin);
     CHECK(geometryPtr->getSpacing() == requestedSpacing);
-    CHECK(geometryPtr->getDimensions() == SizeVec3(4, 2, 6));
+    CHECK(geometryPtr->getDimensions() == SizeVec3Type(4, 2, 6));
     if(centerOrigin)
     {
-      CHECK(geometryPtr->getBoundingBoxf().center() == FloatVec3(-2.0f, 7.0f, -5.0f));
+      CHECK(geometryPtr->getBoundingBoxf().center() == FloatVec3Type(-2.0f, 7.0f, -5.0f));
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -62,31 +62,31 @@ TEST_CASE("simplnx::UpdateImageGeomAction: Invalid metadata is rejected before e
   auto* geomPtr = ImageGeom::Create(dataStructure, "Image", parentPtr->getId());
   REQUIRE(geomPtr != nullptr);
   geomPtr->setDimensions({10, 1, 1});
-  const FloatVec3 oldSpacing{1, 1, 1};
-  const FloatVec3 oldOrigin{0, 0, 0};
+  const FloatVec3Type oldSpacing{1, 1, 1};
+  const FloatVec3Type oldOrigin{0, 0, 0};
   REQUIRE(geomPtr->setSpacing(oldSpacing).valid());
   REQUIRE(geomPtr->setOrigin(oldOrigin).valid());
 
-  std::optional<FloatVec3> spacing;
-  FloatVec3 origin{5, 0, 0};
+  std::optional<FloatVec3Type> spacing;
+  FloatVec3Type origin{5, 0, 0};
   bool centerOrigin = false;
   int32 expectedCode = -1557;
   std::string expectedMessage;
   SECTION("Assigned zero spacing")
   {
-    spacing = FloatVec3{0, 1, 1};
+    spacing = FloatVec3Type{0, 1, 1};
     expectedCode = -1556;
     expectedMessage = "Spacing on the X axis must be finite and greater than zero. Received 0.";
   }
   SECTION("Assigned infinite origin")
   {
-    spacing = FloatVec3{2, 1, 1};
+    spacing = FloatVec3Type{2, 1, 1};
     origin[0] = std::numeric_limits<float32>::infinity();
     expectedMessage = "Origin on the X axis must be finite. Received inf.";
   }
   SECTION("Centered origin overflows")
   {
-    spacing = FloatVec3{3e38f, 1, 1};
+    spacing = FloatVec3Type{3e38f, 1, 1};
     centerOrigin = true;
     expectedMessage = "Origin on the X axis must be finite. Received -inf.";
   }

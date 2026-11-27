@@ -16,7 +16,7 @@
 
 #include <ctime>
 
-MMSurfaceNet::MMSurfaceNet(TriangleGeom::SharedVertexList::StoreType& verticesStore, Int32Array* labels, size_t arraySize[3], float voxelSize[3])
+MMSurfaceNet::MMSurfaceNet(TriangleGeom::SharedVertexListType::StoreType& verticesStore, Int32ArrayType* labels, size_t arraySize[3], float voxelSize[3])
 {
   m_CellMap = std::make_shared<MMCellMap>(verticesStore, labels, arraySize, voxelSize);
   if(!m_CellMap->valid())

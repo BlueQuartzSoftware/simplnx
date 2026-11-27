@@ -27,7 +27,7 @@ usize FlatIndex(usize x, usize y, usize z, usize dimX, usize dimY)
 
 template <class T>
 std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, const std::vector<float64>& variance, uint32 maxKernelWidth, const std::vector<float64>& maxError, bool useSpacing,
-                     FloatVec3 spacing, const DiscreteGaussianPassOptions& options = {})
+                     FloatVec3Type spacing, const DiscreteGaussianPassOptions& options = {})
 {
   DataStore<T> inStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   for(usize i = 0; i < field.size(); ++i)
@@ -37,7 +37,7 @@ std::vector<T> RunDG(const std::vector<T>& field, usize dx, usize dy, usize dz, 
   DataStore<T> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ApplyDiscreteGaussian<T>(inStore, outStore, SizeVec3{dx, dy, dz}, variance, maxKernelWidth, maxError, useSpacing, std::move(spacing), shouldCancel, messageHandler, options);
+  const Result<> r = ApplyDiscreteGaussian<T>(inStore, outStore, SizeVec3Type{dx, dy, dz}, variance, maxKernelWidth, maxError, useSpacing, std::move(spacing), shouldCancel, messageHandler, options);
   REQUIRE(r.valid());
   std::vector<T> out(field.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -71,33 +71,33 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: storage plan selects autom
   {
     const auto plan =
         nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::InMemory, k_InputResidentFormat, IDataStore::StoreType::InMemory, k_OutputResidentFormat);
-    REQUIRE_FALSE(plan.useFusedPlanePass);
-    REQUIRE_FALSE(plan.useTemporaryRecordStore);
-    REQUIRE(plan.workingDataFormat == k_InputResidentFormat);
+    REQUIRE_FALSE(plan.use_fused_plane_pass);
+    REQUIRE_FALSE(plan.use_temporary_record_store);
+    REQUIRE(plan.working_data_format == k_InputResidentFormat);
   }
 
   SECTION("resident input and OOC output automatically fuse and select the output format")
   {
     const auto plan = nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::InMemory, k_InputResidentFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat);
-    REQUIRE(plan.useFusedPlanePass);
-    REQUIRE(plan.useTemporaryRecordStore);
-    REQUIRE(plan.workingDataFormat == k_OutputOocFormat);
+    REQUIRE(plan.use_fused_plane_pass);
+    REQUIRE(plan.use_temporary_record_store);
+    REQUIRE(plan.working_data_format == k_OutputOocFormat);
   }
 
   SECTION("OOC input and resident output automatically fuse and select the input format")
   {
     const auto plan = nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::InMemory, k_OutputResidentFormat);
-    REQUIRE(plan.useFusedPlanePass);
-    REQUIRE(plan.useTemporaryRecordStore);
-    REQUIRE(plan.workingDataFormat == k_InputOocFormat);
+    REQUIRE(plan.use_fused_plane_pass);
+    REQUIRE(plan.use_temporary_record_store);
+    REQUIRE(plan.working_data_format == k_InputOocFormat);
   }
 
   SECTION("OOC input takes scratch-format precedence when both endpoints are OOC")
   {
     const auto plan = nx::core::ImageProcessing::detail::SelectDiscreteGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat);
-    REQUIRE(plan.useFusedPlanePass);
-    REQUIRE(plan.useTemporaryRecordStore);
-    REQUIRE(plan.workingDataFormat == k_InputOocFormat);
+    REQUIRE(plan.use_fused_plane_pass);
+    REQUIRE(plan.use_temporary_record_store);
+    REQUIRE(plan.working_data_format == k_InputOocFormat);
   }
 }
 
@@ -107,23 +107,23 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: true 2D planner bounds ful
   const auto benchmarkPlan = ImageProcessing::detail::BuildDiscreteGaussian2DBufferPlan(5824, 5824, 4, 4, sizeof(float32), k_ResidentLimit);
   REQUIRE(benchmarkPlan.valid);
   REQUIRE_FALSE(benchmarkPlan.overflow);
-  REQUIRE(benchmarkPlan.coreCols == 5824);
-  REQUIRE(benchmarkPlan.coreRows > 0);
-  REQUIRE(benchmarkPlan.coreRows < 5824);
-  REQUIRE(benchmarkPlan.residentBytes <= k_ResidentLimit);
+  REQUIRE(benchmarkPlan.core_cols == 5824);
+  REQUIRE(benchmarkPlan.core_rows > 0);
+  REQUIRE(benchmarkPlan.core_rows < 5824);
+  REQUIRE(benchmarkPlan.resident_bytes <= k_ResidentLimit);
 
   const auto tilePlan = ImageProcessing::detail::BuildDiscreteGaussian2DBufferPlan(16385, 17, 4, 4, sizeof(float64), 4096);
   REQUIRE(tilePlan.valid);
   REQUIRE_FALSE(tilePlan.overflow);
-  REQUIRE(tilePlan.coreRows == 1);
-  REQUIRE(tilePlan.coreCols > 0);
-  REQUIRE(tilePlan.coreCols < 16385);
-  REQUIRE(tilePlan.residentBytes <= 4096);
+  REQUIRE(tilePlan.core_rows == 1);
+  REQUIRE(tilePlan.core_cols > 0);
+  REQUIRE(tilePlan.core_cols < 16385);
+  REQUIRE(tilePlan.resident_bytes <= 4096);
 
   const auto oneColumnPlan = ImageProcessing::detail::BuildDiscreteGaussian2DBufferPlan(16385, 17, 4, 4, sizeof(float64), 728);
   REQUIRE(oneColumnPlan.valid);
-  REQUIRE(oneColumnPlan.coreCols == 1);
-  REQUIRE(oneColumnPlan.residentBytes <= 728);
+  REQUIRE(oneColumnPlan.core_cols == 1);
+  REQUIRE(oneColumnPlan.resident_bytes <= 728);
 
   REQUIRE_FALSE(ImageProcessing::detail::BuildDiscreteGaussian2DBufferPlan(16385, 17, 4, 4, sizeof(float64), 727).valid);
   const auto overflowPlan = ImageProcessing::detail::BuildDiscreteGaussian2DBufferPlan(std::numeric_limits<usize>::max(), 17, 4, 4, sizeof(float64), k_ResidentLimit);
@@ -229,7 +229,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: batched Z streaming matche
 
   const std::vector<int16> singleBatch = RunDG<int16>(field, k_DimX, k_DimY, k_DimZ, {2.0, 2.0, 2.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f});
   DiscreteGaussianPassOptions batchedOptions;
-  batchedOptions.stagingByteBudget = 1600; // Four Y rows per batch, leaving a three-row final batch.
+  batchedOptions.staging_byte_budget = 1600; // Four Y rows per batch, leaving a three-row final batch.
   const std::vector<int16> batched = RunDG<int16>(field, k_DimX, k_DimY, k_DimZ, {2.0, 2.0, 2.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, batchedOptions);
   REQUIRE(batched == singleBatch);
 }
@@ -246,7 +246,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: forced fused plan
   }
 
   DiscreteGaussianPassOptions fusedOptions;
-  fusedOptions.forceFusedPlanePass = true;
+  fusedOptions.force_fused_plane_pass = true;
 
   SECTION("2D")
   {
@@ -260,8 +260,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: forced fused plan
   SECTION("3D with a short final Z-staging batch")
   {
     DiscreteGaussianPassOptions directOptions;
-    directOptions.stagingByteBudget = 1600;
-    fusedOptions.stagingByteBudget = 1600; // int16: 4+4+3 Y rows; float32: 2+2+2+2+2+1 Y rows.
+    directOptions.staging_byte_budget = 1600;
+    fusedOptions.staging_byte_budget = 1600; // int16: 4+4+3 Y rows; float32: 2+2+2+2+2+1 Y rows.
     const std::vector<TestType> direct = RunDG<TestType>(field, k_DimX, k_DimY, k_DimZ, {2.0, 3.0, 4.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, directOptions);
     const std::vector<TestType> fused = RunDG<TestType>(field, k_DimX, k_DimY, k_DimZ, {2.0, 3.0, 4.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, fusedOptions);
     REQUIRE(fused == direct);
@@ -282,7 +282,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: fused plane pass preserves
 
   const std::vector<int16> direct = RunDG<int16>(integerField, k_DimX, k_DimY, 1, {2.0, 3.0, 0.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f});
   DiscreteGaussianPassOptions fusedOptions;
-  fusedOptions.forceFusedPlanePass = true;
+  fusedOptions.force_fused_plane_pass = true;
   const std::vector<int16> fused = RunDG<int16>(integerField, k_DimX, k_DimY, 1, {2.0, 3.0, 0.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, fusedOptions);
   REQUIRE(fused == direct);
 
@@ -306,9 +306,9 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: pre-cancellation leaves fu
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
   DiscreteGaussianPassOptions options;
-  options.forceFusedPlanePass = true;
+  options.force_fused_plane_pass = true;
 
-  const Result<> result = ApplyDiscreteGaussian<int16>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, {2.0, 2.0, 2.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, shouldCancel,
+  const Result<> result = ApplyDiscreteGaussian<int16>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, {2.0, 2.0, 2.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, shouldCancel,
                                                        messageHandler, options);
   REQUIRE(result.valid());
   for(usize i = 0; i < outputStore.getSize(); ++i)

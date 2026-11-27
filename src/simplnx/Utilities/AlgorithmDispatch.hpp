@@ -262,12 +262,12 @@ enum class AlgorithmPath : uint8
  */
 struct AlgorithmPathExecutionCounts
 {
-  uint64 InCore = 0;
-  uint64 OutOfCore = 0;
-  uint64 InCoreOnInMemoryStore = 0;
-  uint64 InCoreOnOutOfCoreStore = 0;
-  uint64 OutOfCoreOnInMemoryStore = 0;
-  uint64 OutOfCoreOnOutOfCoreStore = 0;
+  uint64 in_core = 0;
+  uint64 out_of_core = 0;
+  uint64 in_core_on_in_memory_store = 0;
+  uint64 in_core_on_out_of_core_store = 0;
+  uint64 out_of_core_on_in_memory_store = 0;
+  uint64 out_of_core_on_out_of_core_store = 0;
 };
 
 /**

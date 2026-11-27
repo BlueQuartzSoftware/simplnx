@@ -133,13 +133,13 @@ public:
    * @brief Takes pending preference-load warnings once.
    * @return Warnings from all loads since the previous take, in load order.
    */
-  WarningCollection takePreferenceLoadWarnings();
+  WarningCollectionType takePreferenceLoadWarnings();
 
   /**
    * @brief Returns no JSON pipeline builder.
    * @return nullptr.
    */
-  static JsonPipelineBuilder* getPipelineBuilder();
+  static JsonPipelineBuilder* GetPipelineBuilder();
 
   /**
    * @brief Returns the collection of data I/O managers.
@@ -227,7 +227,7 @@ private:
    */
   Result<> loadPlugin(const std::filesystem::path& path, bool verbose = false);
 
-  static std::shared_ptr<Application> s_Instance;
+  static std::shared_ptr<Application> SInstance;
 
   std::unique_ptr<nx::core::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
@@ -236,6 +236,6 @@ private:
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
   NameTypeMapType m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;
-  WarningCollection m_PendingPreferenceLoadWarnings;
+  WarningCollectionType m_PendingPreferenceLoadWarnings;
 };
 } // namespace nx::core

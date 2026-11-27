@@ -27,7 +27,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace
 {
 const std::string k_ExemplarDir = fmt::format("{}/6_6_write_stl_file_test", unit_test::k_TestFilesDir);
@@ -61,7 +61,7 @@ void CreatePhasesAndFeaturesFixture(DataStructure& dataStructure)
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "TriGeom");
   REQUIRE(triangleGeomPtr != nullptr);
   auto* verticesPtr =
-      Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"TriGeom", "Vertices"}), {5}, {3}), triangleGeomPtr->getId());
+      Float32ArrayType::Create(dataStructure, "Vertices", data_store_utilities::CreateDataStore<float32>(dataStructure, DataPath({"TriGeom", "Vertices"}), {5}, {3}), triangleGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   const std::array<float32, 15> vertices = {0, 0, 0, 2, 0, 0.5f, 0, 3, 1, 2, 3, 1.5f, 4, 1, 2};
   for(usize index = 0; index < vertices.size(); index++)
@@ -70,7 +70,7 @@ void CreatePhasesAndFeaturesFixture(DataStructure& dataStructure)
   }
   triangleGeomPtr->setVertices(*verticesPtr);
 
-  auto* facesPtr = UInt64Array::Create(dataStructure, "Faces", DataStoreUtilities::CreateDataStore<uint64>(dataStructure, DataPath({"TriGeom", "Faces"}), {3}, {3}), triangleGeomPtr->getId());
+  auto* facesPtr = UInt64ArrayType::Create(dataStructure, "Faces", data_store_utilities::CreateDataStore<uint64>(dataStructure, DataPath({"TriGeom", "Faces"}), {3}, {3}), triangleGeomPtr->getId());
   REQUIRE(facesPtr != nullptr);
   const std::array<uint64, 9> faces = {0, 1, 2, 1, 3, 2, 1, 4, 3};
   for(usize index = 0; index < faces.size(); index++)
@@ -83,9 +83,9 @@ void CreatePhasesAndFeaturesFixture(DataStructure& dataStructure)
   REQUIRE(faceDataPtr != nullptr);
   triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
   auto* labelsPtr =
-      Int32Array::Create(dataStructure, "FaceLabels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"TriGeom", "FaceData", "FaceLabels"}), {3}, {2}), faceDataPtr->getId());
+      Int32ArrayType::Create(dataStructure, "FaceLabels", data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"TriGeom", "FaceData", "FaceLabels"}), {3}, {2}), faceDataPtr->getId());
   auto* phasesPtr =
-      Int32Array::Create(dataStructure, "FacePhases", DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"TriGeom", "FaceData", "FacePhases"}), {3}, {2}), faceDataPtr->getId());
+      Int32ArrayType::Create(dataStructure, "FacePhases", data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"TriGeom", "FaceData", "FacePhases"}), {3}, {2}), faceDataPtr->getId());
   REQUIRE(labelsPtr != nullptr);
   REQUIRE(phasesPtr != nullptr);
   const std::array<int32, 6> labels = {1, 2, 3, 2, 3, -1};
@@ -234,7 +234,7 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
     bool found = false;
     const fs::path& targetPath = exemplarDirectoryEntry.path();
     auto exemplarFileContents = ReadIn(targetPath);
-    std::string exemplarMD5Hash = nx::core::UnitTest::ComputeMD5Hash(exemplarFileContents);
+    std::string exemplarMD5Hash = nx::core::unit_test::ComputeMD5Hash(exemplarFileContents);
 
     for(const auto& computedDirectoryEntry : fs::directory_iterator(computedDirPath))
     {
@@ -244,7 +244,7 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
         found = true;
 
         auto computedFileContents = ReadIn(currentPath);
-        std::string computedMD5Hash = nx::core::UnitTest::ComputeMD5Hash(computedFileContents);
+        std::string computedMD5Hash = nx::core::unit_test::ComputeMD5Hash(computedFileContents);
 
         REQUIRE(computedMD5Hash == exemplarMD5Hash);
 
@@ -267,14 +267,14 @@ void CompareDirectories(const fs::path& exemplarDirPath, const fs::path& compute
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStlFileFilter filter;
   auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -286,7 +286,7 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore]
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -294,19 +294,19 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Multiple File Valid", "[SimplnxCore]
 
   ::CompareMultipleResults();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStlFileFilter filter;
   auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -316,7 +316,7 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][W
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -324,16 +324,16 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Single File Valid", "[SimplnxCore][W
 
   ::CompareSingleResult();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, "6_6_combine_stl_files_v2.tar.gz", "6_6_combine_stl_files.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, "6_6_combine_stl_files_v2.tar.gz", "6_6_combine_stl_files.dream3d");
   DataStructure dataStructure;
 
   {
@@ -354,7 +354,7 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -375,7 +375,7 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -385,91 +385,91 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter:Part_Number", "[SimplnxCore][WriteStl
   fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Part_Number_1.stl");
   REQUIRE(fs::exists(writtenFilePath));
   auto fileContents = ReadIn(writtenFilePath);
-  std::string md5Hash = nx::core::UnitTest::ComputeMD5Hash(fileContents);
+  std::string md5Hash = nx::core::unit_test::ComputeMD5Hash(fileContents);
   REQUIRE(md5Hash == "a0383b898d0668d70f08e135e5064efb");
 
   writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/Part_Number_2.stl");
   REQUIRE(fs::exists(writtenFilePath));
   fileContents = ReadIn(writtenFilePath);
-  md5Hash = nx::core::UnitTest::ComputeMD5Hash(fileContents);
+  md5Hash = nx::core::unit_test::ComputeMD5Hash(fileContents);
   REQUIRE(md5Hash == "d45a0d99495df506384fdbbb46a79f5c");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Single File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   auto dataFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(dataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(dataFilePath);
 
   const fs::path firstFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/overflow/single/Generated.stl");
   const fs::path computedDirPath = firstFilePath.parent_path();
 
   WriteStlFileInputValues inputValues;
 
-  inputValues.GroupingType = static_cast<ChoicesParameter::ValueType>(2);
-  inputValues.OutputStlFile = firstFilePath;
-  inputValues.TriangleGeomPath = DataPath({"TriangleDataContainer"});
+  inputValues.grouping_type = static_cast<ChoicesParameter::ValueType>(2);
+  inputValues.output_stl_file = firstFilePath;
+  inputValues.triangle_geom_path = DataPath({"TriangleDataContainer"});
 
-  inputValues.HIDDEN_MaxTrianglesPerFile = static_cast<usize>(10);
+  inputValues.hidden_max_triangles_per_file = static_cast<usize>(10);
 
   REQUIRE(WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)().valid());
 
   // validation check
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "write_stl_overflow_test.tar.gz", "write_stl_overflow_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "write_stl_overflow_test.tar.gz", "write_stl_overflow_test");
 
   const fs::path exemplarDirPath = fs::path(std::string(nx::core::unit_test::k_TestFilesDir) + "/write_stl_overflow_test/single");
 
   ::CompareDirectories(exemplarDirPath, computedDirPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Overflow Multiple File Valid", "[SimplnxCore][WriteStlFileFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_write_stl_file_test.tar.gz", "6_6_write_stl_file_test");
 
   // Instantiate a DataStructure object and an Arguments Object
   auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   const fs::path computedDirPath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/overflow/multiple");
 
   WriteStlFileInputValues inputValues;
 
-  inputValues.GroupingType = static_cast<ChoicesParameter::ValueType>(0);
-  inputValues.OutputStlDirectory = computedDirPath;
-  inputValues.OutputStlPrefix = "Triangle";
-  inputValues.TriangleGeomPath = DataPath({"TriangleDataContainer"});
-  inputValues.FeatureIdsPath = DataPath({"TriangleDataContainer", "FaceData", "FaceLabels"});
+  inputValues.grouping_type = static_cast<ChoicesParameter::ValueType>(0);
+  inputValues.output_stl_directory = computedDirPath;
+  inputValues.output_stl_prefix = "Triangle";
+  inputValues.triangle_geom_path = DataPath({"TriangleDataContainer"});
+  inputValues.feature_ids_path = DataPath({"TriangleDataContainer", "FaceData", "FaceLabels"});
 
-  inputValues.HIDDEN_MaxTrianglesPerFile = static_cast<usize>(10);
+  inputValues.hidden_max_triangles_per_file = static_cast<usize>(10);
 
   REQUIRE(WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)().valid());
 
   // validation check
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "write_stl_overflow_test.tar.gz", "write_stl_overflow_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "write_stl_overflow_test.tar.gz", "write_stl_overflow_test");
 
   const fs::path exemplarDirPath = fs::path(std::string(nx::core::unit_test::k_TestFilesDir) + "/write_stl_overflow_test/multiple");
 
   ::CompareDirectories(exemplarDirPath, computedDirPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features writes one file per feature named by phase", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePhasesAndFeaturesFixture(dataStructure);
   const auto directory = FreshPhasesAndFeaturesDirectory("write_stl_phases_features");
   const auto args = PhasesAndFeaturesArguments(directory);
   WriteStlFileFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -478,12 +478,12 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features writes one file 
   RequireStl(directory / "PF_Ensemble_6_Feature_2.stl", "DREAM3D Generated For Feature ID 2 Phase 6", {k_T0Reverse, k_T1Reverse});
   RequireStl(directory / "PF_Ensemble_7_Feature_3.stl", "DREAM3D Generated For Feature ID 3 Phase 7", {k_T1Forward, k_T2Forward});
   RequireStl(directory / "PF_Ensemble_0_Feature_-1.stl", "DREAM3D Generated For Feature ID -1 Phase 0", {k_T2Reverse});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features rejects a 1-component phases array", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePhasesAndFeaturesFixture(dataStructure);
   const auto directory = FreshPhasesAndFeaturesDirectory("write_stl_phases_features_one_component");
@@ -491,20 +491,20 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features rejects a 1-comp
   auto* faceDataPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"TriGeom", "FaceData"}));
   REQUIRE(faceDataPtr != nullptr);
   const DataPath phasesPath({"TriGeom", "FaceData", "FacePhases1"});
-  auto* phasesPtr = Int32Array::Create(dataStructure, "FacePhases1", DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {3}, {1}), faceDataPtr->getId());
+  auto* phasesPtr = Int32ArrayType::Create(dataStructure, "FacePhases1", data_store_utilities::CreateDataStore<int32>(dataStructure, phasesPath, {3}, {1}), faceDataPtr->getId());
   REQUIRE(phasesPtr != nullptr);
   phasesPtr->fill(5);
   args.insertOrAssign(WriteStlFileFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(phasesPath));
 
   WriteStlFileFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features requires one tuple per face", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::array<std::string, 3> cases = {"phases with 2 tuples", "phases with 4 tuples", "labels with 2 tuples"};
   for(usize caseIdx = 0; caseIdx < cases.size(); caseIdx++)
   {
@@ -523,7 +523,7 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features requires one tup
       REQUIRE(matrixPtr != nullptr);
       const std::string arrayName = hasShortLabels ? "FaceLabels" : "FacePhases";
       const DataPath arrayPath({"TriGeom", matrixName, arrayName});
-      auto* arrayPtr = Int32Array::Create(dataStructure, arrayName, DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {tupleCount}, {2}), matrixPtr->getId());
+      auto* arrayPtr = Int32ArrayType::Create(dataStructure, arrayName, data_store_utilities::CreateDataStore<int32>(dataStructure, arrayPath, {tupleCount}, {2}), matrixPtr->getId());
       REQUIRE(arrayPtr != nullptr);
       arrayPtr->fill(1);
       args.insertOrAssign(hasShortLabels ? WriteStlFileFilter::k_FeatureIdsPath_Key : WriteStlFileFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(arrayPath));
@@ -531,17 +531,17 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features requires one tup
       // Preflight must reject the mismatch before execution can access a missing tuple.
       WriteStlFileFilter filter;
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-      REQUIRE_FALSE(preflightResult.outputActions.errors().empty());
-      REQUIRE(preflightResult.outputActions.errors().front().code == -27888);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+      REQUIRE_FALSE(preflightResult.output_actions.errors().empty());
+      REQUIRE(preflightResult.output_actions.errors().front().code == -27888);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Part Number requires one tuple per face", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePhasesAndFeaturesFixture(dataStructure);
   const auto directory = FreshPhasesAndFeaturesDirectory("write_stl_part_number_tuple_count");
@@ -553,14 +553,14 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Part Number requires one tuple per f
   auto* shortPtr = AttributeMatrix::Create(dataStructure, "Short", {2}, triangleGeomPtr->getId());
   REQUIRE(shortPtr != nullptr);
   const DataPath parts2Path({"TriGeom", "Short", "Parts2"});
-  auto* parts2Ptr = Int32Array::Create(dataStructure, "Parts2", DataStoreUtilities::CreateDataStore<int32>(dataStructure, parts2Path, {2}, {1}), shortPtr->getId());
+  auto* parts2Ptr = Int32ArrayType::Create(dataStructure, "Parts2", data_store_utilities::CreateDataStore<int32>(dataStructure, parts2Path, {2}, {1}), shortPtr->getId());
   REQUIRE(parts2Ptr != nullptr);
   parts2Ptr->fill(1);
 
   auto* faceDataPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"TriGeom", "FaceData"}));
   REQUIRE(faceDataPtr != nullptr);
   const DataPath parts3Path({"TriGeom", "FaceData", "Parts3"});
-  auto* parts3Ptr = Int32Array::Create(dataStructure, "Parts3", DataStoreUtilities::CreateDataStore<int32>(dataStructure, parts3Path, {3}, {1}), faceDataPtr->getId());
+  auto* parts3Ptr = Int32ArrayType::Create(dataStructure, "Parts3", data_store_utilities::CreateDataStore<int32>(dataStructure, parts3Path, {3}, {1}), faceDataPtr->getId());
   REQUIRE(parts3Ptr != nullptr);
   (*parts3Ptr)[0] = 1;
   (*parts3Ptr)[1] = 2;
@@ -571,33 +571,33 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Part Number requires one tuple per f
   {
     args.insertOrAssign(WriteStlFileFilter::k_PartNumberPath_Key, std::make_any<DataPath>(parts2Path));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE_FALSE(preflightResult.outputActions.errors().empty());
-    REQUIRE(preflightResult.outputActions.errors().front().code == -27888);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE_FALSE(preflightResult.output_actions.errors().empty());
+    REQUIRE(preflightResult.output_actions.errors().front().code == -27888);
   }
   DYNAMIC_SECTION("matched")
   {
     args.insertOrAssign(WriteStlFileFilter::k_PartNumberPath_Key, std::make_any<DataPath>(parts3Path));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features splits groups into overflow files", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePhasesAndFeaturesFixture(dataStructure);
   const auto directory = FreshPhasesAndFeaturesDirectory("write_stl_phases_features_overflow");
   WriteStlFileInputValues inputValues{};
-  inputValues.GroupingType = 1;
-  inputValues.OutputStlDirectory = directory;
-  inputValues.OutputStlPrefix = "PF_";
-  inputValues.TriangleGeomPath = DataPath({"TriGeom"});
-  inputValues.FeatureIdsPath = DataPath({"TriGeom", "FaceData", "FaceLabels"});
-  inputValues.FeaturePhasesPath = DataPath({"TriGeom", "FaceData", "FacePhases"});
-  inputValues.HIDDEN_MaxTrianglesPerFile = 1;
+  inputValues.grouping_type = 1;
+  inputValues.output_stl_directory = directory;
+  inputValues.output_stl_prefix = "PF_";
+  inputValues.triangle_geom_path = DataPath({"TriGeom"});
+  inputValues.feature_ids_path = DataPath({"TriGeom", "FaceData", "FaceLabels"});
+  inputValues.feature_phases_path = DataPath({"TriGeom", "FaceData", "FacePhases"});
+  inputValues.hidden_max_triangles_per_file = 1;
   auto result = WriteStlFile(dataStructure, IFilter::MessageHandler{}, std::atomic_bool{false}, &inputValues)();
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -609,15 +609,15 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features splits groups in
   RequireStl(directory / "PF_Ensemble_7_Feature_3.stl", "DREAM3D Generated For Feature ID 3 Phase 7", {k_T1Forward});
   RequireStl(directory / "PF_Ensemble_7_Feature_3_overflow_1.stl", "DREAM3D Generated For Feature ID 3 Phase 7", {k_T2Forward});
   RequireStl(directory / "PF_Ensemble_0_Feature_-1.stl", "DREAM3D Generated For Feature ID -1 Phase 0", {k_T2Reverse});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features names a feature by the phase of its first triangle", "[SimplnxCore][WriteStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   CreatePhasesAndFeaturesFixture(dataStructure);
-  auto* phasesPtr = dataStructure.getDataAs<Int32Array>(DataPath({"TriGeom", "FaceData", "FacePhases"}));
+  auto* phasesPtr = dataStructure.getDataAs<Int32ArrayType>(DataPath({"TriGeom", "FaceData", "FacePhases"}));
   REQUIRE(phasesPtr != nullptr);
   // This pins the first-occurrence rule for inconsistent input: feature 3 first occurs at t1, side 0.
   (*phasesPtr)[2] = 8;
@@ -625,19 +625,19 @@ TEST_CASE("SimplnxCore::WriteStlFileFilter: Phases and Features names a feature 
   const auto args = PhasesAndFeaturesArguments(directory);
   WriteStlFileFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   RequireFileNames(directory, {"PF_Ensemble_5_Feature_1.stl", "PF_Ensemble_6_Feature_2.stl", "PF_Ensemble_8_Feature_3.stl", "PF_Ensemble_0_Feature_-1.stl"});
   RequireStl(directory / "PF_Ensemble_8_Feature_3.stl", "DREAM3D Generated For Feature ID 3 Phase 8", {k_T1Forward, k_T2Forward});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteStlFileFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteStlFileFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

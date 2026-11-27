@@ -56,10 +56,10 @@ inline constexpr usize k_ZeroCrossingDirectGroupValues = usize{16} << 20;
  */
 struct ZeroCrossingSlabPlan
 {
-  usize corePlanes = 0;
-  usize inputPlanes = 0;
-  usize inputBytes = 0;
-  usize outputBytes = 0;
+  usize core_planes = 0;
+  usize input_planes = 0;
+  usize input_bytes = 0;
+  usize output_bytes = 0;
 };
 
 /**
@@ -69,7 +69,7 @@ struct ZeroCrossingSlabPlan
  * @return Useful bytes, or error -8761 if the calculation overflows. An empty dimension returns zero.
  */
 template <class T>
-Result<usize> ZeroCrossingSlabUsefulBytes(const SizeVec3& dims)
+Result<usize> ZeroCrossingSlabUsefulBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -84,7 +84,7 @@ Result<usize> ZeroCrossingSlabUsefulBytes(const SizeVec3& dims)
      !ZeroCrossingCheckedMultiply(volumeValues, valueBytes, usefulBytes))
   {
     return MakeErrorResult<usize>(-8761, fmt::format("Zero crossing dimensions ({}) and input element size ({} bytes) overflow while sizing the complete input and uint8 output buffers.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {usefulBytes};
 }
@@ -101,7 +101,7 @@ Result<usize> ZeroCrossingSlabUsefulBytes(const SizeVec3& dims)
  * A complete grant removes halo storage and permits one bulk read and one bulk write.
  */
 template <class T>
-ZeroCrossingSlabPlan PlanZeroCrossingSlab(const SizeVec3& dims, uint64 grantBytes)
+ZeroCrossingSlabPlan PlanZeroCrossingSlab(const SizeVec3Type& dims, uint64 grantBytes)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -114,14 +114,14 @@ ZeroCrossingSlabPlan PlanZeroCrossingSlab(const SizeVec3& dims, uint64 grantByte
   const usize usefulBytes = dims[2] * (inputPlaneBytes + outputPlaneBytes);
   if(grantBytes >= usefulBytes)
   {
-    return {.corePlanes = dims[2], .inputPlanes = dims[2], .inputBytes = dims[2] * inputPlaneBytes, .outputBytes = dims[2] * outputPlaneBytes};
+    return {.core_planes = dims[2], .input_planes = dims[2], .input_bytes = dims[2] * inputPlaneBytes, .output_bytes = dims[2] * outputPlaneBytes};
   }
 
   const uint64 haloBytes = uint64{2} * inputPlaneBytes;
   const uint64 corePlaneBytes = inputPlaneBytes + outputPlaneBytes;
   const usize fittingCorePlanes = grantBytes > haloBytes ? static_cast<usize>((grantBytes - haloBytes) / corePlaneBytes) : usize{0};
   const usize corePlanes = std::max<usize>(usize{1}, fittingCorePlanes);
-  return {.corePlanes = corePlanes, .inputPlanes = corePlanes + 2, .inputBytes = (corePlanes + 2) * inputPlaneBytes, .outputBytes = corePlanes * outputPlaneBytes};
+  return {.core_planes = corePlanes, .input_planes = corePlanes + 2, .input_bytes = (corePlanes + 2) * inputPlaneBytes, .output_bytes = corePlanes * outputPlaneBytes};
 }
 
 /**
@@ -278,33 +278,33 @@ struct ZeroCrossing2DBlockBody
 {
   const T* input;
   uint8* output;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
   uint8 foreground;
   uint8 background;
 
   void operator()(const Range& range) const
   {
-    const int64 maxX = static_cast<int64>(dimX) - 1;
-    const int64 maxY = static_cast<int64>(dimY) - 1;
+    const int64 maxX = static_cast<int64>(dim_x) - 1;
+    const int64 maxY = static_cast<int64>(dim_y) - 1;
     const auto clamp = [](int64 value, int64 upper) { return value < 0 ? int64{0} : (value > upper ? upper : value); };
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
-      const T center = input[(y - inputYBegin) * inputWidth + (x - inputXBegin)];
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
+      const T center = input[(y - input_y_begin) * input_width + (x - input_x_begin)];
       const auto valueAt = [&](int64 neighborX, int64 neighborY) {
         const usize clampedX = static_cast<usize>(clamp(neighborX, maxX));
         const usize clampedY = static_cast<usize>(clamp(neighborY, maxY));
-        return input[(clampedY - inputYBegin) * inputWidth + (clampedX - inputXBegin)];
+        return input[(clampedY - input_y_begin) * input_width + (clampedX - input_x_begin)];
       };
       const auto crosses = [&](T neighbor, bool positiveDirection) {
         const bool signChange = ((center < T{}) && (neighbor > T{})) || ((center > T{}) && (neighbor < T{})) || ((center == T{}) && (neighbor != T{})) || ((center != T{}) && (neighbor == T{}));
@@ -344,7 +344,7 @@ struct ZeroCrossing2DBlockBody
  * Single-slice images use checked row blocks or X tiles with bounded buffers.
  */
 template <class T>
-Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStore<uint8>& outStore, const SizeVec3& dims, uint8 foregroundValue, uint8 backgroundValue,
+Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStore<uint8>& outStore, const SizeVec3Type& dims, uint8 foregroundValue, uint8 backgroundValue,
                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_RadiusOneStencil2DTargetBytes)
 {
   if(dims[2] == 1)
@@ -354,14 +354,14 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
         [&](const T* input, uint8* output, usize inputXBegin, usize inputYBegin, usize inputWidth, usize outputXBegin, usize outputYBegin, usize outputWidth) {
           return detail::ZeroCrossing2DBlockBody<T>{.input = input,
                                                     .output = output,
-                                                    .dimX = dims[0],
-                                                    .dimY = dims[1],
-                                                    .inputXBegin = inputXBegin,
-                                                    .inputYBegin = inputYBegin,
-                                                    .inputWidth = inputWidth,
-                                                    .outputXBegin = outputXBegin,
-                                                    .outputYBegin = outputYBegin,
-                                                    .outputWidth = outputWidth,
+                                                    .dim_x = dims[0],
+                                                    .dim_y = dims[1],
+                                                    .input_x_begin = inputXBegin,
+                                                    .input_y_begin = inputYBegin,
+                                                    .input_width = inputWidth,
+                                                    .output_x_begin = outputXBegin,
+                                                    .output_y_begin = outputYBegin,
+                                                    .output_width = outputWidth,
                                                     .foreground = foregroundValue,
                                                     .background = backgroundValue};
         });
@@ -435,24 +435,24 @@ Result<> ApplyZeroCrossing(const AbstractDataStore<T>& inStore, AbstractDataStor
   std::unique_ptr<uint8[]> output;
   try
   {
-    input = std::make_unique_for_overwrite<T[]>(plan.inputPlanes * slice);
-    output = std::make_unique_for_overwrite<uint8[]>(plan.corePlanes * slice);
+    input = std::make_unique_for_overwrite<T[]>(plan.input_planes * slice);
+    output = std::make_unique_for_overwrite<uint8[]>(plan.core_planes * slice);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(
         -8762,
         fmt::format("Zero crossing could not allocate the planned slab with {} input planes ({} bytes) and {} output planes ({} bytes). The working-memory grant is {} bytes for dimensions ({}).",
-                    plan.inputPlanes, plan.inputBytes, plan.corePlanes, plan.outputBytes, reservation.sizeBytes(), StringUtilities::formatDimensions3D(dims)));
+                    plan.input_planes, plan.input_bytes, plan.core_planes, plan.output_bytes, reservation.sizeBytes(), string_utilities::FormatDimensions3D(dims)));
   }
 
-  for(usize z0 = 0; z0 < nz; z0 += plan.corePlanes)
+  for(usize z0 = 0; z0 < nz; z0 += plan.core_planes)
   {
     if(shouldCancel)
     {
       return {};
     }
     const usize zLo = z0 > 0 ? z0 - 1 : 0;
-    const usize count = std::min(nz, z0 + plan.corePlanes);
+    const usize count = std::min(nz, z0 + plan.core_planes);
     const usize zHi = std::min(nz, count + 1);
     const usize inputValueCount = (zHi - zLo) * slice;
     if(Result<> result = inStore.copyIntoBuffer(zLo * slice, nonstd::span<T>(input.get(), inputValueCount)); result.invalid())

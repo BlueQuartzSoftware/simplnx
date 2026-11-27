@@ -92,7 +92,7 @@ IFilter::PreflightResult GradientAnisotropicDiffusionImageFilter::preflightImpl(
     ImageProcessing::AppendUnstableTimeStepWarning(resultOutputActions, timeStep, imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> GradientAnisotropicDiffusionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -114,7 +114,7 @@ Result<> GradientAnisotropicDiffusionImageFilter::executeImpl(DataStructure& dat
   // ITK-fidelity defaults (false/0.0) since this filter (matching the legacy wrapper) never exposes them.
   return ImageProcessing::ExecuteFiniteDifferenceImageFilter<ImageProcessing::detail::GradientAnisoFn, ImageProcessing::FloatingScalar>(
       dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
-      ImageProcessing::detail::GradientAnisoFn{/*m_K=*/.m_K = 0.0,
+      ImageProcessing::detail::GradientAnisoFn{/*m_K=*/.m_k = 0.0,
                                                /*conductance=*/.conductance = conductanceParameter,
                                                /*interval=*/.interval = conductanceScalingUpdateInterval},
       timeStep, numberOfIterations, shouldCancel, messageHandler);

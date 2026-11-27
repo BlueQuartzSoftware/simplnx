@@ -65,11 +65,11 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array when extracting cell centers.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Cell Arrays to Move/Copy"});
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", to_underlying(ArrayHandlingType::Move),
-                                                   ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays"}));
+                                                   ChoicesParameter::ChoicesType{"Copy Attribute Arrays", "Move Attribute Arrays"}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
@@ -117,7 +117,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
 
   const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
-  SizeVec3 dims = geometry.getDimensions();
+  SizeVec3Type dims = geometry.getDimensions();
   usize geomElementCount = dims[0] * dims[1] * dims[2];
 
   // Create the Vertex Geometry
@@ -136,7 +136,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -147,7 +147,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPaths.front());
     if(dataArray.getNumberOfTuples() != geomElementCount)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
+      return {.output_actions = MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
                                                                                  " selected DataArrays have {} tuples.)",
                                                                                  pInputGeometryPathValue.toString(), geomElementCount, dataArray.getNumberOfTuples()))};
     }
@@ -175,7 +175,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -183,14 +183,14 @@ Result<> ExtractVertexGeometryFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractVertexGeometryInputValues inputValues;
-  inputValues.ArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.InputGeometryPath = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
-  inputValues.IncludedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IncludedDataArrayPaths_Key);
-  inputValues.VertexGeometryPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
-  inputValues.VertexAttrMatrixName = filterArgs.value<std::string>(k_VertexAttrMatrixName_Key);
-  inputValues.SharedVertexListName = filterArgs.value<std::string>(k_SharedVertexListName_Key);
+  inputValues.array_handling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.input_geometry_path = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
+  inputValues.included_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IncludedDataArrayPaths_Key);
+  inputValues.vertex_geometry_path = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
+  inputValues.vertex_attr_matrix_name = filterArgs.value<std::string>(k_VertexAttrMatrixName_Key);
+  inputValues.shared_vertex_list_name = filterArgs.value<std::string>(k_SharedVertexListName_Key);
 
   return ExtractVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

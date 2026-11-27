@@ -162,7 +162,7 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
                     arrayTypeName));
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -171,8 +171,8 @@ Result<> ConcatenateDataArraysFilter::executeImpl(DataStructure& dataStructure, 
 {
   ConcatenateDataArraysInputValues inputValues;
 
-  inputValues.InputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
-  inputValues.OutputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
+  inputValues.input_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
+  inputValues.output_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
 
   return ConcatenateDataArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

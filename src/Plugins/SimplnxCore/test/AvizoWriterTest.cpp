@@ -100,11 +100,11 @@ struct AvizoFixture
     const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
     output_root = outputBase / ("AvizoStreamFailure-" + std::to_string(stamp));
     REQUIRE(std::filesystem::create_directory(output_root));
-    values.OutputFile = output_root / "output.am";
-    values.WriteBinaryFile = binary;
-    values.GeometryPath = DataPath({"ImageGeom"});
-    values.FeatureIdsArrayPath = DataPath({"ImageGeom", "CellData", "FeatureIds"});
-    values.Units = "microns";
+    values.output_file = output_root / "output.am";
+    values.write_binary_file = binary;
+    values.geometry_path = DataPath({"ImageGeom"});
+    values.feature_ids_array_path = DataPath({"ImageGeom", "CellData", "FeatureIds"});
+    values.units = "microns";
     auto* geomPtr = ImageGeom::Create(data_structure, "ImageGeom");
     REQUIRE(geomPtr != nullptr);
     geomPtr->setDimensions({tupleCount, 1, 1});
@@ -114,7 +114,7 @@ struct AvizoFixture
     REQUIRE(cellsPtr != nullptr);
     geomPtr->setCellData(*cellsPtr);
     source = std::make_shared<ObservedAvizoStore>(tupleCount);
-    REQUIRE(Int32Array::Create(data_structure, "FeatureIds", source, cellsPtr->getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(data_structure, "FeatureIds", source, cellsPtr->getId()) != nullptr);
   }
 
   /**
@@ -386,16 +386,16 @@ void CheckClosedOnce(const WriterType& writer, const AvizoFixture& fixture)
   CHECK(writer.close_calls == 1);
   CHECK(writer.native_close_status == 0);
   std::error_code error;
-  CHECK(std::filesystem::remove(fixture.values.OutputFile, error));
+  CHECK(std::filesystem::remove(fixture.values.output_file, error));
   CHECK_FALSE(error);
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 void CheckOutputFailure(const Result<>& result, const AvizoFixture& fixture)
 {
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
-  CHECK(result.errors().front().message.find(fixture.values.OutputFile.string()) != std::string::npos);
+  CHECK(result.errors().front().message.find(fixture.values.output_file.string()) != std::string::npos);
 }
 
 template <class AlgorithmType>
@@ -420,7 +420,7 @@ void CheckBinaryWindowFailure(usize failedWindow, bool closeAlsoFails)
   CHECK(writer.flush_calls == 0);
   if(closeAlsoFails)
   {
-    CHECK(result.errors().back().message.find(fixture.values.OutputFile.string()) != std::string::npos);
+    CHECK(result.errors().back().message.find(fixture.values.output_file.string()) != std::string::npos);
     CHECK(result.errors().back().message.find("close") != std::string::npos);
   }
   CheckClosedOnce(writer, fixture);
@@ -476,7 +476,7 @@ void CheckSourceWarnings(bool readFails, bool closeFails)
 
 TEST_CASE("SimplnxCore::AvizoWriter: Short binary feature writes stop later reads", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize failedWindow = GENERATE(usize{1}, usize{2}, usize{3});
   const bool closeAlsoFails = GENERATE(false, true);
   SECTION("Uniform")
@@ -491,7 +491,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Short binary feature writes stop later read
 
 TEST_CASE("SimplnxCore::AvizoWriter: Text failures stop production output", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto item = GENERATE(std::pair<std::string_view, usize>{"# AmiraMesh 3D ASCII 2.0\n", 0}, std::pair<std::string_view, usize>{"%d", 1}, std::pair<std::string_view, usize>{" ", 1});
   SECTION("Uniform")
   {
@@ -505,7 +505,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Text failures stop production output", "[Si
 
 TEST_CASE("SimplnxCore::AvizoWriter: Final feature newline is checked", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool rectilinear = GENERATE(false, true);
   const bool writeBinary = GENERATE(false, true);
   AvizoFixture fixture(1, writeBinary);
@@ -537,7 +537,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Final feature newline is checked", "[Simpln
 
 TEST_CASE("SimplnxCore::AvizoWriter: Rectilinear coordinate failures stop later axes", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   SECTION("Coordinate delimiter")
   {
     CheckTextFailure<WriteAvizoRectilinearCoordinate>("@2 # x coordinates, then y, then z\n", true, 2);
@@ -577,7 +577,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Rectilinear coordinate failures stop later 
 
 TEST_CASE("SimplnxCore::AvizoWriter: Flush and consuming close failures are checked", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool flushFails = GENERATE(false, true);
   const bool closeFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
@@ -604,7 +604,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Flush and consuming close failures are chec
 
 TEST_CASE("SimplnxCore::AvizoWriter: Stage Result errors precede consuming close errors", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool headerFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
   FaultAvizoWriter<StageAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
@@ -614,7 +614,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Stage Result errors precede consuming close
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 2);
   CHECK(result.errors()[0].code == (headerFails ? -92562 : -92563));
-  CHECK(result.errors()[1].message.find(fixture.values.OutputFile.string()) != std::string::npos);
+  CHECK(result.errors()[1].message.find(fixture.values.output_file.string()) != std::string::npos);
   CHECK(result.errors()[1].message.find("close") != std::string::npos);
   CHECK(writer.data_calls == (headerFails ? usize{0} : usize{1}));
   CHECK(writer.flush_calls == 0);
@@ -625,7 +625,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Stage Result errors precede consuming close
 
 TEST_CASE("SimplnxCore::AvizoWriter: Stage exceptions close once", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto fault = GENERATE(StageFault::HeaderStandard, StageFault::DataStandard, StageFault::HeaderUnknown, StageFault::DataUnknown);
   const bool closeFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
@@ -646,7 +646,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Stage exceptions close once", "[SimplnxCore
 
 TEST_CASE("SimplnxCore::AvizoWriter: Allocation exceptions preserve their type after cleanup", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto fault = GENERATE(StageFault::HeaderAllocation, StageFault::DataAllocation);
   const bool closeFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
@@ -660,7 +660,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Allocation exceptions preserve their type a
 
 TEST_CASE("SimplnxCore::AvizoWriter: Callback print exceptions and close exceptions retain ownership", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool printThrows = GENERATE(false, true);
   AvizoFixture fixture(1, true);
   FaultAvizoWriter<WriteAvizoUniformCoordinate> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
@@ -675,7 +675,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Callback print exceptions and close excepti
 
 TEST_CASE("SimplnxCore::AvizoWriter: Source warnings survive a later read error and close error", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool readFails = GENERATE(false, true);
   const bool closeFails = GENERATE(false, true);
   SECTION("Uniform")
@@ -690,7 +690,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Source warnings survive a later read error 
 
 TEST_CASE("SimplnxCore::AvizoWriter: Faults remain local to one writer", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   AvizoFixture failed(1, true);
   AvizoFixture healthy(1, true);
   FaultAvizoWriter<WriteAvizoUniformCoordinate> first(failed.data_structure, failed.handler, failed.should_cancel, &failed.values);
@@ -708,7 +708,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Faults remain local to one writer", "[Simpl
 
 TEST_CASE("SimplnxCore::AvizoWriter: Byte-count overflow stops before the transfer operation", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool reverseOperands = GENERATE(false, true);
   AvizoFixture fixture(1, true);
   FaultAvizoWriter<OverflowAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);

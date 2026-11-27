@@ -30,7 +30,7 @@ constexpr int32 k_BackgroundValueOutOfRange = -8561;
 constexpr int32 k_BackgroundValueTruncated = -8562;
 
 template <class T>
-std::optional<ShapeType> PredictMaurerChunkHint(const SizeVec3& dims)
+std::optional<ShapeType> PredictMaurerChunkHint(const SizeVec3Type& dims)
 {
   if(dims[2] <= 1)
   {
@@ -41,7 +41,7 @@ std::optional<ShapeType> PredictMaurerChunkHint(const SizeVec3& dims)
   {
     return std::nullopt;
   }
-  const auto& budgetManager = CacheMemoryBudgetManager::instance();
+  const auto& budgetManager = CacheMemoryBudgetManager::Instance();
   const uint64 maximumBytes = budgetManager.maximumWorkingMemoryBytes();
   const uint64 reservedBytes = budgetManager.reservedWorkingMemoryBytes();
   const uint64 availableBytes = maximumBytes > reservedBytes ? maximumBytes - reservedBytes : 0;
@@ -51,7 +51,7 @@ std::optional<ShapeType> PredictMaurerChunkHint(const SizeVec3& dims)
   return hintResult.valid() ? std::optional<ShapeType>{std::move(hintResult.value())} : std::nullopt;
 }
 
-std::optional<ShapeType> PredictMaurerChunkHint(const IDataArray& inputArray, const SizeVec3& dims)
+std::optional<ShapeType> PredictMaurerChunkHint(const IDataArray& inputArray, const SizeVec3Type& dims)
 {
   switch(inputArray.getDataType())
   {
@@ -148,7 +148,7 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true, PredictMaurerChunkHint(inputArray, imageGeom.getDimensions()));
   if(resultOutputActions.invalid())
   {
-    return {.outputActions = std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   // The Float64 BackgroundValue is cast to the (integer) input element type at execute; a non-finite or out-of-range
@@ -159,13 +159,13 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
   Result<> backgroundGuard = ImageProcessing::ValidateBackgroundInRange(inputType, backgroundValue, k_NonFiniteBackgroundValue, k_BackgroundValueOutOfRange, k_BackgroundValueTruncated);
   if(backgroundGuard.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(backgroundGuard), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(backgroundGuard), OutputActions{})};
   }
   for(Warning& warning : backgroundGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 Result<> SignedMaurerDistanceMapImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
@@ -206,7 +206,7 @@ Result<Arguments> SignedMaurerDistanceMapImageFilter::FromSIMPLJson(const nlohma
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_InsideIsPositiveKey, k_InsideIsPositive_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_SquaredDistanceKey, k_SquaredDistance_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseImageSpacingKey, k_UseImageSpacing_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));

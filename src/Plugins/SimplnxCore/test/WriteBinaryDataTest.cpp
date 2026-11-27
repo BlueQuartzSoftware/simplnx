@@ -237,7 +237,7 @@ private:
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(m_DataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(m_DataStructure, args);
@@ -253,9 +253,9 @@ private:
 
 TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
 
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;
@@ -271,7 +271,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
   RunBinaryTest<float32>(dsRef).execute();
   RunBinaryTest<float64>(dsRef).execute();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 } // end of test case
 
 //
@@ -280,7 +280,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 // definitely would NOT happen macOS. Linux is iffy.
 TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
@@ -335,7 +335,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

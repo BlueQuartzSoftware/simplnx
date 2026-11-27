@@ -10,12 +10,12 @@ namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT CreateColorMapInputValues
 {
-  std::string PresetName;
-  DataPath SelectedDataArrayPath;
-  DataPath RgbArrayPath;
-  bool UseMask{};
-  DataPath MaskArrayPath;
-  std::vector<uint8> InvalidColor;
+  std::string preset_name;
+  DataPath selected_data_array_path;
+  DataPath rgb_array_path;
+  bool use_mask{};
+  DataPath mask_array_path;
+  std::vector<uint8> invalid_color;
 };
 
 class SIMPLNXCORE_EXPORT CreateColorMap

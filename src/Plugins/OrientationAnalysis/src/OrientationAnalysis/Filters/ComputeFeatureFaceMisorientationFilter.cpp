@@ -52,15 +52,15 @@ Parameters ComputeFeatureFaceMisorientationFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
 
   params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationArrayName_Key, "Misorientation",
@@ -112,11 +112,11 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(imageArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-98410, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
+  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32ArrayType>(pSurfaceMeshFaceLabelsArrayPathValue);
   if(faceLabelsPtr == nullptr)
   {
     return MakePreflightErrorResult(-98411, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
@@ -128,7 +128,7 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -137,11 +137,11 @@ Result<> ComputeFeatureFaceMisorientationFilter::executeImpl(DataStructure& data
 {
   ComputeFeatureFaceMisorientationInputValues inputValues;
 
-  inputValues.surfaceMeshFaceLabelsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.avgQuatsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
-  inputValues.featurePhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
-  inputValues.crystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
-  inputValues.misorientationArrayPath = inputValues.surfaceMeshFaceLabelsArrayPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_MisorientationArrayName_Key));
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
+  inputValues.misorientation_array_path = inputValues.surface_mesh_face_labels_array_path.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_MisorientationArrayName_Key));
 
   return ComputeFeatureFaceMisorientation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

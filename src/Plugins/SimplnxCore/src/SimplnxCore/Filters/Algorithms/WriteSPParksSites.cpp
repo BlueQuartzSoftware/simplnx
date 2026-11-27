@@ -24,8 +24,8 @@ namespace
  */
 Result<> WriteHeader(const DataStructure& dataStructure, const WriteSPParksSitesInputValues* inputValues, std::ofstream& outfile)
 {
-  SizeVec3 dims = dataStructure.getDataAs<ImageGeom>(inputValues->ImageGeomPath)->getDimensions();
-  const auto& featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  SizeVec3Type dims = dataStructure.getDataAs<ImageGeom>(inputValues->image_geom_path)->getDimensions();
+  const auto& featureIds = dataStructure.getDataAs<Int32ArrayType>(inputValues->feature_ids_array_path)->getDataStoreRef();
 
   const size_t totalPoints = featureIds.getNumberOfTuples();
 
@@ -58,8 +58,8 @@ Result<> WriteHeader(const DataStructure& dataStructure, const WriteSPParksSites
 Result<> WriteFile(const DataStructure& dataStructure, const WriteSPParksSitesInputValues* inputValues, std::ofstream& outfile, const IFilter::MessageHandler& messageHandler,
                    const std::atomic_bool& shouldCancel)
 {
-  SizeVec3 dims = dataStructure.getDataAs<ImageGeom>(inputValues->ImageGeomPath)->getDimensions();
-  const auto& featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  SizeVec3Type dims = dataStructure.getDataAs<ImageGeom>(inputValues->image_geom_path)->getDimensions();
+  const auto& featureIds = dataStructure.getDataAs<Int32ArrayType>(inputValues->feature_ids_array_path)->getDataStoreRef();
 
   size_t totalpoints = featureIds.getNumberOfTuples();
 
@@ -113,16 +113,16 @@ const std::atomic_bool& WriteSPParksSites::getCancel()
 Result<> WriteSPParksSites::operator()()
 {
   // Create parent directories before opening the requested output path.
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
+  std::ofstream file = std::ofstream(m_InputValues->output_file, std::ios_base::out | std::ios_base::binary);
   if(!file.is_open())
   {
-    return MakeErrorResult(-77450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-77450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->output_file.string()));
   }
 
   Result<> result = WriteHeader(m_DataStructure, m_InputValues, file);
@@ -132,7 +132,7 @@ Result<> WriteSPParksSites::operator()()
   }
   if(result.invalid())
   {
-    return MakeErrorResult(-77451, fmt::format("Error writing header to file: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-77451, fmt::format("Error writing header to file: {}", m_InputValues->output_file.string()));
   }
 
   result = WriteFile(m_DataStructure, m_InputValues, file, m_MessageHandler, m_ShouldCancel);
@@ -142,7 +142,7 @@ Result<> WriteSPParksSites::operator()()
   }
   if(result.invalid())
   {
-    return MakeErrorResult(-77452, fmt::format("Error writing body of file: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-77452, fmt::format("Error writing body of file: {}", m_InputValues->output_file.string()));
   }
 
   file.flush();

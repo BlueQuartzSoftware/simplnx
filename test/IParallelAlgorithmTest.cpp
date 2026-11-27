@@ -402,7 +402,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
 
     algorithm.requireArraysInMemory({nullptr});
     REQUIRE(algorithm.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("array requirements disable work when OOC follows resident storage")
@@ -411,7 +411,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
     algorithm.requireArraysInMemory({inMemoryArrayPtr});
     algorithm.requireArraysInMemory({oocArrayPtr});
     REQUIRE(algorithm.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("store requirements keep an earlier OOC restriction")
@@ -431,7 +431,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
 
     algorithm.requireStoresInMemory({nullptr});
     REQUIRE(algorithm.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("store requirements disable work when OOC follows resident storage")
@@ -443,7 +443,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
     algorithm.requireStoresInMemory({&residentStore});
     algorithm.requireStoresInMemory({&localOocStore});
     REQUIRE(algorithm.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("array and store requirements keep restrictions across helpers")
@@ -460,7 +460,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
     arrayThenStore.requireArraysInMemory({oocArrayPtr});
     arrayThenStore.requireStoresInMemory({&residentStore});
     REQUIRE(arrayThenStore.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("explicit disable remains in effect for array and store requirements")
@@ -484,7 +484,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
     REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
     storeAlgorithm.requireStoresInMemory({nullptr});
     REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -507,7 +507,7 @@ TEST_CASE("IParallelAlgorithm: storage requirements are cumulative", "[simplnx][
     REQUIRE(storeAlgorithm.getParallelizationEnabled() == true);
     storeAlgorithm.requireStoresInMemory({&localOocStore});
     REQUIRE(storeAlgorithm.getParallelizationEnabled() == false);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 #endif
 }

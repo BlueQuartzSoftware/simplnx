@@ -19,7 +19,7 @@ namespace nx::core::memory_utilities
 {
 constexpr double k_Gigabyte = 1024.0 * 1024.0 * 1024.0;
 constexpr double k_Megabyte = 1024.0 * 1024.0;
-dataStorage GetAvailableStorage()
+DataStorage GetAvailableStorage()
 {
   return GetAvailableStorageOnDrive(std::filesystem::temp_directory_path());
 }
@@ -60,10 +60,10 @@ uint64 GetTotalMemory()
   return pages * pageSize;
 }
 
-dataStorage GetAvailableStorageOnDrive(const std::filesystem::path& directory)
+DataStorage GetAvailableStorageOnDrive(const std::filesystem::path& directory)
 {
   std::filesystem::space_info info = std::filesystem::space(directory);
-  dataStorage storage;
+  DataStorage storage;
   storage.free = info.available;
   storage.total = info.capacity;
   return storage;

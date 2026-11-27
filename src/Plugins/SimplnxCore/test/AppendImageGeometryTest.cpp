@@ -19,8 +19,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -109,7 +109,7 @@ void CreateNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
     const float32 factor = static_cast<float32>(i) * 0.001;
     std::vector<float32> list = {factor * 117, factor * 875, factor * 1035, factor * 3905, factor * 4214};
     neighborListPtr->setList(i, std::make_shared<std::vector<float32>>(list));
-    stringArrayValues[i] = "String_" + StringUtilities::number(factor);
+    stringArrayValues[i] = "String_" + string_utilities::Number(factor);
   }
 
   const auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, "StringArray", cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
@@ -206,7 +206,7 @@ void AppendGeometries(DataStructure& dataStructure, const DataPath& destinationP
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -230,9 +230,9 @@ static usize num = 1;
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   // Read in starting/exemplar image geometry
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -322,14 +322,14 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   // Read in test image geometries
   auto geomFilePath = fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir));
@@ -398,18 +398,18 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][AppendImageGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -448,7 +448,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: SIMPL Backwards Compatibility
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[SimplnxCore][AppendImageGeometryFilter][L05]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   for(const auto& name : {"Destination", "Input"})
   {
@@ -460,7 +460,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[Simpln
     auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 2, width}, geomPtr->getId());
     REQUIRE(cellDataPtr != nullptr);
     geomPtr->setCellData(*cellDataPtr);
-    auto* valuesPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1, 2, width}, ShapeType{1}, 0), cellDataPtr->getId());
+    auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1, 2, width}, ShapeType{1}, 0), cellDataPtr->getId());
     REQUIRE(valuesPtr != nullptr);
     const std::vector<int32> initial = width == 2 ? std::vector<int32>{1, 2, 3, 4} : std::vector<int32>{5, 6};
     std::copy(initial.begin(), initial.end(), valuesPtr->begin());
@@ -468,8 +468,8 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[Simpln
 
   AppendGeometries(dataStructure, DataPath({"Destination"}), {DataPath({"Input"})}, 0, std::nullopt, false);
   const DataPath valuesPath({"Destination", "Cell Data", "Values"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(valuesPath));
-  const auto& values = dataStructure.getDataRefAs<Int32Array>(valuesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(valuesPath));
+  const auto& values = dataStructure.getDataRefAs<Int32ArrayType>(valuesPath);
   // X is fastest: append 5 to row {1, 2} and 6 to row {3, 4}.
   const std::vector<int32> expected = {1, 2, 5, 3, 4, 6};
   REQUIRE(values.getSize() == expected.size());
@@ -478,5 +478,5 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[Simpln
     CAPTURE(i);
     CHECK(values[i] == expected[i]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

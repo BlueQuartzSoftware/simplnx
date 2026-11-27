@@ -271,7 +271,7 @@ struct PrintBinaryDataArray
 
       if(swapEndian)
       {
-        std::transform(buffer.get(), buffer.get() + count, buffer.get(), [](ScalarType value) { return nx::core::byteswap(value); });
+        std::transform(buffer.get(), buffer.get() + count, buffer.get(), [](ScalarType value) { return nx::core::Byteswap(value); });
       }
 
       outputStrm.write(reinterpret_cast<const char*>(buffer.get()), static_cast<std::streamsize>(sizeof(ScalarType) * count));
@@ -536,7 +536,7 @@ struct AddTupleWriter
 };
 } // namespace
 
-namespace nx::core::OStreamUtilities
+namespace nx::core::o_stream_utilities
 {
 std::string DelimiterToString(uint64 delim)
 {

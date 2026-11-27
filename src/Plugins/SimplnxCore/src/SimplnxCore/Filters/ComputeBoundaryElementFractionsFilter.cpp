@@ -52,11 +52,11 @@ Parameters ComputeBoundaryElementFractionsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_BoundaryCellsArrayPath_Key, "Surface Elements",
                                                           "DataArray containing the number of neighboring Elements of a given Element that belong to a different Feature than itself", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Attribute Matrix"});
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureDataAMPath_Key, "Feature Data", "Parent Attribute Matrix for the Surface Element Fractions Array to be created in", DataPath{}));
@@ -99,7 +99,7 @@ IFilter::PreflightResult ComputeBoundaryElementFractionsFilter::preflightImpl(co
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -108,10 +108,10 @@ Result<> ComputeBoundaryElementFractionsFilter::executeImpl(DataStructure& dataS
 {
   ComputeBoundaryElementFractionsInputValues inputValues;
   // Replace the keys below with the variables from the header.
-  inputValues.BoundaryCellFractionsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellFractionsArrayName_Key);
-  inputValues.BoundaryCellsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_BoundaryCellsArrayPath_Key);
-  inputValues.FeatureDataAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureDataAMPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
+  inputValues.boundary_cell_fractions_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellFractionsArrayName_Key);
+  inputValues.boundary_cells_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_BoundaryCellsArrayPath_Key);
+  inputValues.feature_data_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureDataAMPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
 
   return ComputeBoundaryElementFractions(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

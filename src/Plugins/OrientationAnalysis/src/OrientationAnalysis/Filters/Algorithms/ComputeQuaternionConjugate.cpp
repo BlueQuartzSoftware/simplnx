@@ -24,8 +24,8 @@ const std::atomic_bool& ComputeQuaternionConjugate::getCancel()
 
 Result<> ComputeQuaternionConjugate::operator()()
 {
-  const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);
-  const auto& output = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
+  const auto& input = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quaternion_data_array_path);
+  const auto& output = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->output_data_array_path);
 
   return DispatchAlgorithm<ComputeQuaternionConjugateDirect, ComputeQuaternionConjugateScanline>({&input, &output}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

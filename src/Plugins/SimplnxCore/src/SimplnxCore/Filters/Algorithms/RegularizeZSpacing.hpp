@@ -18,15 +18,15 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT RegularizeZSpacingInputValues
 {
-  DataPath SelectedImageGeometryPath;
-  std::filesystem::path InputFile;
-  float32 NewZRes = 0.0F;
-  bool RemoveOriginalImageGeom = true;
-  DataPath CreatedImageGeometryPath;
-  BoolParameter::ValueType ClearFeatureAttributeMatrix = false;
-  BoolParameter::ValueType RenumberFeatures = false;
-  ArraySelectionParameter::ValueType FeatureIdsArrayPath;
-  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrix;
+  DataPath selected_image_geometry_path;
+  std::filesystem::path input_file;
+  float32 new_z_res = 0.0F;
+  bool remove_original_image_geom = true;
+  DataPath created_image_geometry_path;
+  BoolParameter::ValueType clear_feature_attribute_matrix = false;
+  BoolParameter::ValueType renumber_features = false;
+  ArraySelectionParameter::ValueType feature_ids_array_path;
+  AttributeMatrixSelectionParameter::ValueType cell_feature_attribute_matrix;
 };
 
 /**

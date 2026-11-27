@@ -9,8 +9,8 @@ using namespace nx::core;
 // -- ITK's equally-unguarded Log10 functor. log10(x<0) is NaN and log10(0) is -inf (IEEE pole). This test pins both.
 TEST_CASE("NXImageProcessing::Log10ImageFilter: log10 of negative is NaN and log10(0) is -inf (domain edge)", "[NXImageProcessing][Log10ImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<float32>(dataStructure, {-2.0f, 0.0f});
@@ -30,8 +30,8 @@ TEST_CASE("NXImageProcessing::Log10ImageFilter: log10 of negative is NaN and log
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::Log10ImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][Log10ImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -47,7 +47,7 @@ TEST_CASE("NXImageProcessing::Log10ImageFilter: ITK real-image golden (defaults)
   args.insertOrAssign(Log10ImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   Log10ImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -59,5 +59,5 @@ TEST_CASE("NXImageProcessing::Log10ImageFilter: ITK real-image golden (defaults)
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

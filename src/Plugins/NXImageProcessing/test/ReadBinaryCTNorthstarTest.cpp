@@ -140,7 +140,7 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
@@ -154,25 +154,25 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter executio
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath));
-  const Float32Array& densityResult = dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_DensityArrayPath));
+  const Float32ArrayType& densityResult = dataStructure.getDataRefAs<Float32ArrayType>(k_DensityArrayPath);
   REQUIRE(densityResult.getSize() == k_XDim * k_YDim * k_ZDim);
   for(usize i = 0; i < densityResult.getSize(); i++)
   {
     REQUIRE(densityResult[i] == i);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid relative header path")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path relativeFixtureDir = k_TestDirPath / "relative_northstar";
   fs::create_directories(relativeFixtureDir);
@@ -193,25 +193,25 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid relative header
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(relativeHeaderPath));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath));
-  const Float32Array& densityResult = dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_DensityArrayPath));
+  const Float32ArrayType& densityResult = dataStructure.getDataRefAs<Float32ArrayType>(k_DensityArrayPath);
   REQUIRE(densityResult.getSize() == k_XDim * k_YDim * k_ZDim);
   for(usize index = 0; index < densityResult.getSize(); index++)
   {
     REQUIRE(densityResult[index] == index);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
@@ -228,13 +228,13 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter executio
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 6}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath));
-  const Float32Array& densityResult = dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_DensityArrayPath));
+  const Float32ArrayType& densityResult = dataStructure.getDataRefAs<Float32ArrayType>(k_DensityArrayPath);
   auto startVoxelCoord = args.value<VectorInt32ParameterType::ValueType>(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key);
   auto endVoxelCoord = args.value<VectorInt32ParameterType::ValueType>(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key);
   usize subvolumeXDim = endVoxelCoord[0] - startVoxelCoord[0] + 1;
@@ -254,12 +254,12 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter executio
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const usize file1WrongZCount = 2;
 
@@ -279,12 +279,12 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -38705);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string kMissingFileName = "this_should_not_exist.nsidat";
 
@@ -304,12 +304,12 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -38704);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Write the binary fixture files.
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
@@ -410,13 +410,13 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -38718);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: SIMPL Backwards Compatibility", "[NXImageProcessing][ReadBinaryCTNorthstarFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -479,10 +479,10 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: override spacing befo
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, true);
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::vector<int32>{1, 2, 4});
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::vector<int32>{4, 3, 6});
-  UnitTest::RequireBadReaderMetadata(filter, args, k_NsiHeaderPath, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, k_NsiHeaderPath, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   // The cropped origin is input origin plus start voxel times spacing.
-  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), {6, 3, 24}, {2, 3, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), {6, 3, 24}, {2, 3, 4});
 }
 
 TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: spacing for a wide location range", "[NXImageProcessing][ReadBinaryCTNorthstarFilter]")
@@ -498,25 +498,25 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: spacing for a wide lo
     WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2, 4, "-2e38", "2e38");
     WriteNsiBinaryDataFiles<4, k_YDim, k_File1ZCount, k_File2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-    const auto volumeInfo = std::ranges::find(preflight.outputValues, "Original Volume", &IFilter::PreflightValue::name);
-    REQUIRE(volumeInfo != preflight.outputValues.end());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+    const auto volumeInfo = std::ranges::find(preflight.output_values, "Original Volume", &IFilter::PreflightValue::name);
+    REQUIRE(volumeInfo != preflight.output_values.end());
     CHECK(volumeInfo->value.find("inf") == std::string::npos);
     const auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     // A span of 4e38 over four X voxels gives 1e38 per voxel.
-    UnitTest::RequireReaderGeometry(dataStructure, geometryPath, {-2e38F, 0, 0}, {1e38F, 1, 1});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::RequireReaderGeometry(dataStructure, geometryPath, {-2e38F, 0, 0}, {1e38F, 1, 1});
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("One voxel needs a spacing override")
   {
     WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2, 1, "-2e38", "2e38");
     WriteNsiBinaryDataFiles<1, k_YDim, k_File1ZCount, k_File2ZCount>(k_TestDirPath / k_NsiDataFileName1, k_TestDirPath / k_NsiDataFileName2);
-    UnitTest::RequireBadReaderMetadata(filter, args, k_NsiHeaderPath, true);
-    args.insertOrAssign(ImageIO::k_ChangeSpacing, true);
-    args.insertOrAssign(ImageIO::k_Spacing, std::vector<float32>{2, 3, 4});
-    UnitTest::RequireReaderGeometryExecution(filter, args, geometryPath, {-2e38F, 0, 0}, {2, 3, 4});
+    unit_test::RequireBadReaderMetadata(filter, args, k_NsiHeaderPath, true);
+    args.insertOrAssign(image_io::k_ChangeSpacing, true);
+    args.insertOrAssign(image_io::k_Spacing, std::vector<float32>{2, 3, 4});
+    unit_test::RequireReaderGeometryExecution(filter, args, geometryPath, {-2e38F, 0, 0}, {2, 3, 4});
   }
 }
 
@@ -543,19 +543,19 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: overrides out-of-rang
   const ReadBinaryCTNorthstarFilter filter;
   Arguments args;
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, k_NsiHeaderPath);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   for(const bool replaceSpacing : {false, true})
   {
     if(!badMin && replaceSpacing)
     {
       continue;
     }
-    args.insertOrAssign(ImageIO::k_ChangeOrigin, !replaceSpacing);
-    args.insertOrAssign(ImageIO::k_ChangeSpacing, replaceSpacing);
+    args.insertOrAssign(image_io::k_ChangeOrigin, !replaceSpacing);
+    args.insertOrAssign(image_io::k_ChangeSpacing, replaceSpacing);
     DataStructure dataStructure;
     const auto strict = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-    const auto& diagnostic = strict.outputActions.errors().front();
+    SIMPLNX_RESULT_REQUIRE_INVALID(strict.output_actions);
+    const auto& diagnostic = strict.output_actions.errors().front();
     INFO(diagnostic.message);
     CHECK(diagnostic.code == -10352);
     CHECK(diagnostic.message.find(k_NsiHeaderPath.string()) != std::string::npos);
@@ -563,7 +563,7 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthstarFilter: overrides out-of-rang
     CHECK(diagnostic.message.find("1e40") != std::string::npos);
     CHECK(diagnostic.message.find(badMin ? "Enable 'Set Origin' and 'Set Spacing' to use your own values." : "Enable 'Set Spacing' to use your own values.") != std::string::npos);
   }
-  args.insertOrAssign(ImageIO::k_ChangeOrigin, badMin);
-  args.insertOrAssign(ImageIO::k_ChangeSpacing, true);
-  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), badMin ? FloatVec3{4, -3, 8} : FloatVec3{0, 0, 0}, {2, 3, 4});
+  args.insertOrAssign(image_io::k_ChangeOrigin, badMin);
+  args.insertOrAssign(image_io::k_ChangeSpacing, true);
+  unit_test::RequireReaderGeometryExecution(filter, args, DataPath({"CT Image Geometry"}), badMin ? FloatVec3Type{4, -3, 8} : FloatVec3Type{0, 0, 0}, {2, 3, 4});
 }

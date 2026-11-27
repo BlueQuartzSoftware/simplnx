@@ -77,7 +77,7 @@ public:
    * @param outOfBoundsValue Supplies IDs for exterior cells.
    * @param shouldCancel Stops active ranges when true.
    */
-  PartitionImageGeometryImpl(SizeVec3 inputDimensions, const std::vector<usize>& xPartitionIndices, const std::vector<usize>& yPartitionIndices, const std::vector<usize>& zPartitionIndices,
+  PartitionImageGeometryImpl(SizeVec3Type inputDimensions, const std::vector<usize>& xPartitionIndices, const std::vector<usize>& yPartitionIndices, const std::vector<usize>& zPartitionIndices,
                              int32* partitionIds, int startingPartitionId, int outOfBoundsValue, const std::atomic_bool& shouldCancel)
   : m_InputDimensions(std::move(inputDimensions))
   , m_XPartitionIndices(xPartitionIndices)
@@ -147,7 +147,7 @@ public:
   }
 
 private:
-  SizeVec3 m_InputDimensions;
+  SizeVec3Type m_InputDimensions;
   const std::vector<usize>& m_XPartitionIndices;
   const std::vector<usize>& m_YPartitionIndices;
   const std::vector<usize>& m_ZPartitionIndices;
@@ -175,7 +175,7 @@ public:
    * @param outOfBoundsValue Supplies IDs for exterior cells.
    * @param shouldCancel Stops active ranges when true.
    */
-  PartitionCellBasedGeometryImpl(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int startingPartitionId, int outOfBoundsValue,
+  PartitionCellBasedGeometryImpl(const IGridGeometry& inputGeometry, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int startingPartitionId, int outOfBoundsValue,
                                  const std::atomic_bool& shouldCancel)
   : m_InputGeometry(inputGeometry)
   , m_PartitionIdsStore(partitionIdsStore)
@@ -197,7 +197,7 @@ public:
    */
   void compute(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd, size_t zStart, size_t zEnd) const
   {
-    SizeVec3 dims = m_InputGeometry.getDimensions();
+    SizeVec3Type dims = m_InputGeometry.getDimensions();
 
     for(usize z = zStart; z < zEnd; z++)
     {
@@ -238,7 +238,7 @@ public:
 
 private:
   const IGridGeometry& m_InputGeometry;
-  Int32AbstractDataStore& m_PartitionIdsStore;
+  Int32AbstractDataStoreType& m_PartitionIdsStore;
   const ImageGeom& m_PSImageGeom;
   int m_StartingPartitionId;
   int m_OutOfBoundsValue;
@@ -264,8 +264,8 @@ public:
    * @param maskArrayOpt Selects vertices when present.
    * @param shouldCancel Stops active ranges when true.
    */
-  PartitionNodeBasedGeometryImpl(const PartitionGeometryDirect::VertexStore& verticesStore, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int startingPartitionId,
-                                 int outOfBoundsValue, const std::optional<const BoolArray>& maskArrayOpt, const std::atomic_bool& shouldCancel)
+  PartitionNodeBasedGeometryImpl(const PartitionGeometryDirect::VertexStoreType& verticesStore, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int startingPartitionId,
+                                 int outOfBoundsValue, const std::optional<const BoolArrayType>& maskArrayOpt, const std::atomic_bool& shouldCancel)
   : m_VerticesStore(verticesStore)
   , m_PartitionIdsStore(partitionIdsStore)
   , m_PSImageGeom(psImageGeom)
@@ -316,12 +316,12 @@ public:
   }
 
 private:
-  const PartitionGeometryDirect::VertexStore& m_VerticesStore;
-  Int32AbstractDataStore& m_PartitionIdsStore;
+  const PartitionGeometryDirect::VertexStoreType& m_VerticesStore;
+  Int32AbstractDataStoreType& m_PartitionIdsStore;
   const ImageGeom& m_PSImageGeom;
   int m_StartingPartitionId;
   int m_OutOfBoundsValue;
-  const std::optional<const BoolArray>& m_MaskArrayOpt;
+  const std::optional<const BoolArrayType>& m_MaskArrayOpt;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -342,49 +342,49 @@ const std::atomic_bool& PartitionGeometryDirect::getCancel()
 
 Result<> PartitionGeometryDirect::operator()()
 {
-  auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
+  auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->partitioning_mode);
 
   DataPath partitionGridGeomPath;
   if(partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
   {
-    partitionGridGeomPath = m_InputValues->ExistingPartitionGridPath;
+    partitionGridGeomPath = m_InputValues->existing_partition_grid_path;
   }
   else
   {
-    partitionGridGeomPath = m_InputValues->PartitionGridGeomPath;
+    partitionGridGeomPath = m_InputValues->partition_grid_geom_path;
     const DataPath partitionGridFeatureIdsPath =
-        m_InputValues->PartitionGridGeomPath.createChildPath(m_InputValues->PartitionGridCellAMName).createChildPath(m_InputValues->PartitionGridFeatureIDsArrayName);
-    auto& pgFeatureIdsStore = m_DataStructure.getDataAs<Int32Array>(partitionGridFeatureIdsPath)->getDataStoreRef();
+        m_InputValues->partition_grid_geom_path.createChildPath(m_InputValues->partition_grid_cell_am_name).createChildPath(m_InputValues->partition_grid_feature_i_ds_array_name);
+    auto& pgFeatureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(partitionGridFeatureIdsPath)->getDataStoreRef();
 
     for(usize i = 0; i < pgFeatureIdsStore.getNumberOfTuples(); i++)
     {
-      pgFeatureIdsStore[i] = static_cast<int32>(i) + m_InputValues->StartingFeatureID;
+      pgFeatureIdsStore[i] = static_cast<int32>(i) + m_InputValues->starting_feature_id;
     }
   }
 
   const ImageGeom& partitionGridGeom = m_DataStructure.getDataRefAs<ImageGeom>({partitionGridGeomPath});
 
-  std::optional<BoolArray> vertexMask = {};
-  if(m_InputValues->UseVertexMask)
+  std::optional<BoolArrayType> vertexMask = {};
+  if(m_InputValues->use_vertex_mask)
   {
-    vertexMask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->VertexMaskPath);
+    vertexMask = m_DataStructure.getDataRefAs<BoolArrayType>(m_InputValues->vertex_mask_path);
   }
 
-  const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);
-  auto& partitionIdsStore = m_DataStructure.getDataAs<Int32Array>(partitionIdsPath)->getDataStoreRef();
+  const DataPath partitionIdsPath = m_InputValues->input_geom_cell_am_path.createChildPath(m_InputValues->partition_ids_array_name);
+  auto& partitionIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(partitionIdsPath)->getDataStoreRef();
 
-  const IGeometry& iGeomToPartition = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->InputGeometryToPartition);
+  const IGeometry& iGeomToPartition = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->input_geometry_to_partition);
   Result<> result;
   switch(iGeomToPartition.getGeomType())
   {
   case IGeometry::Type::Image: {
-    const ImageGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->InputGeometryToPartition});
-    result = partitionCellBasedGeometry(inputGeomToPartition, partitionIdsStore, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID);
+    const ImageGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->input_geometry_to_partition});
+    result = partitionCellBasedGeometry(inputGeomToPartition, partitionIdsStore, partitionGridGeom, m_InputValues->out_of_bounds_feature_id);
     break;
   }
   case IGeometry::Type::RectGrid: {
-    const RectGridGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->InputGeometryToPartition});
-    result = partitionCellBasedGeometry(inputGeomToPartition, partitionIdsStore, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID);
+    const RectGridGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->input_geometry_to_partition});
+    result = partitionCellBasedGeometry(inputGeomToPartition, partitionIdsStore, partitionGridGeom, m_InputValues->out_of_bounds_feature_id);
     break;
   }
   case IGeometry::Type::Vertex:
@@ -393,13 +393,13 @@ Result<> PartitionGeometryDirect::operator()()
   case IGeometry::Type::Quad:
   case IGeometry::Type::Tetrahedral:
   case IGeometry::Type::Hexahedral: {
-    const INodeGeometry0D& inputGeomToPartition = m_DataStructure.getDataRefAs<INodeGeometry0D>({m_InputValues->InputGeometryToPartition});
-    const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexListStore = inputGeomToPartition.getVertices()->getDataStoreRef();
-    result = partitionNodeBasedGeometry(vertexListStore, partitionIdsStore, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID, vertexMask);
+    const INodeGeometry0D& inputGeomToPartition = m_DataStructure.getDataRefAs<INodeGeometry0D>({m_InputValues->input_geometry_to_partition});
+    const AbstractDataStore<IGeometry::SharedVertexListType::value_type>& vertexListStore = inputGeomToPartition.getVertices()->getDataStoreRef();
+    result = partitionNodeBasedGeometry(vertexListStore, partitionIdsStore, partitionGridGeom, m_InputValues->out_of_bounds_feature_id, vertexMask);
     break;
   }
   default: {
-    return MakeErrorResult(-3012, fmt::format("Unable to partition geometry at path '{}' - Unknown geometry type detected.", m_InputValues->InputGeometryToPartition.toString()));
+    return MakeErrorResult(-3012, fmt::format("Unable to partition geometry at path '{}' - Unknown geometry type detected.", m_InputValues->input_geometry_to_partition.toString()));
   }
   }
 
@@ -411,26 +411,26 @@ Result<> PartitionGeometryDirect::operator()()
   return {};
 }
 
-Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue)
+Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue)
 {
-  const SizeVec3 dims = inputGeometry.getDimensions();
+  const SizeVec3Type dims = inputGeometry.getDimensions();
 
-  IParallelAlgorithm::AlgorithmStores algStores;
+  IParallelAlgorithm::AlgorithmStoresType algStores;
   algStores.push_back(&partitionIdsStore);
 
   ParallelData3DAlgorithm dataAlg;
   dataAlg.setRange(dims[0], dims[1], dims[2]);
   dataAlg.requireStoresInMemory(algStores);
 
-  auto* inMemoryPartitionIdsStorePtr = dynamic_cast<Int32DataStore*>(&partitionIdsStore);
+  auto* inMemoryPartitionIdsStorePtr = dynamic_cast<Int32DataStoreType*>(&partitionIdsStore);
   if(inputGeometry.getGeomType() == IGeometry::Type::Image && inMemoryPartitionIdsStorePtr != nullptr)
   {
     const auto& imageGeom = dynamic_cast<const ImageGeom&>(inputGeometry);
-    const SizeVec3 partitionDimensions = psImageGeom.getDimensions();
-    const FloatVec3 inputOrigin = imageGeom.getOrigin();
-    const FloatVec3 inputSpacing = imageGeom.getSpacing();
-    const FloatVec3 partitionOrigin = psImageGeom.getOrigin();
-    const FloatVec3 partitionSpacing = psImageGeom.getSpacing();
+    const SizeVec3Type partitionDimensions = psImageGeom.getDimensions();
+    const FloatVec3Type inputOrigin = imageGeom.getOrigin();
+    const FloatVec3Type inputSpacing = imageGeom.getSpacing();
+    const FloatVec3Type partitionOrigin = psImageGeom.getOrigin();
+    const FloatVec3Type partitionSpacing = psImageGeom.getSpacing();
 
     const std::vector<usize> xPartitionIndices = CreateImageAxisPartitionIndices(dims[0], inputOrigin[0], inputSpacing[0], partitionDimensions[0], partitionOrigin[0], partitionSpacing[0], 1);
     const std::vector<usize> yPartitionIndices =
@@ -438,24 +438,24 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
     const std::vector<usize> zPartitionIndices =
         CreateImageAxisPartitionIndices(dims[2], inputOrigin[2], inputSpacing[2], partitionDimensions[2], partitionOrigin[2], partitionSpacing[2], partitionDimensions[0] * partitionDimensions[1]);
 
-    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStorePtr->data(), m_InputValues->StartingFeatureID, outOfBoundsValue,
+    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStorePtr->data(), m_InputValues->starting_feature_id, outOfBoundsValue,
                                                m_ShouldCancel));
     return {};
   }
 
-  dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIdsStore, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, m_ShouldCancel));
+  dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIdsStore, psImageGeom, m_InputValues->starting_feature_id, outOfBoundsValue, m_ShouldCancel));
 
   return {};
 }
 
-Result<> PartitionGeometryDirect::partitionNodeBasedGeometry(const VertexStore& vertexListStore, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
-                                                             const std::optional<const BoolArray>& maskArrayOpt)
+Result<> PartitionGeometryDirect::partitionNodeBasedGeometry(const VertexStoreType& vertexListStore, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
+                                                             const std::optional<const BoolArrayType>& maskArrayOpt)
 {
-  IParallelAlgorithm::AlgorithmStores algStores;
+  IParallelAlgorithm::AlgorithmStoresType algStores;
   algStores.push_back(&vertexListStore);
   algStores.push_back(&partitionIdsStore);
 
-  IParallelAlgorithm::AlgorithmArrays algArrays;
+  IParallelAlgorithm::AlgorithmArraysType algArrays;
   if(maskArrayOpt.has_value())
   {
     algArrays.push_back(&(maskArrayOpt.value()));
@@ -465,7 +465,7 @@ Result<> PartitionGeometryDirect::partitionNodeBasedGeometry(const VertexStore& 
   dataAlg.setRange(0, vertexListStore.getNumberOfTuples());
   dataAlg.requireArraysInMemory(algArrays);
   dataAlg.requireStoresInMemory(algStores);
-  dataAlg.execute(PartitionNodeBasedGeometryImpl(vertexListStore, partitionIdsStore, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, maskArrayOpt, m_ShouldCancel));
+  dataAlg.execute(PartitionNodeBasedGeometryImpl(vertexListStore, partitionIdsStore, psImageGeom, m_InputValues->starting_feature_id, outOfBoundsValue, maskArrayOpt, m_ShouldCancel));
 
   return {};
 }

@@ -32,7 +32,7 @@ Uuid CalculatorParameter::uuid() const
   return ParameterTraits<CalculatorParameter>::uuid;
 }
 
-IParameter::AcceptedTypes CalculatorParameter::acceptedTypes() const
+IParameter::AcceptedTypesType CalculatorParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -48,8 +48,8 @@ nlohmann::json CalculatorParameter::toJsonImpl(const std::any& value) const
   const auto& structValue = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   json[k_Equation] = structValue.equation;
-  json[k_Units] = structValue.m_Units;
-  json[k_SelectedGroup] = structValue.m_SelectedGroup.toString();
+  json[k_Units] = structValue.m_units;
+  json[k_SelectedGroup] = structValue.m_selected_group.toString();
   return json;
 }
 
@@ -62,35 +62,35 @@ Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, V
   }
   if(!json.contains(k_SelectedGroup))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry,
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry,
                                      fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_SelectedGroup.view()));
   }
   if(!json.contains(k_Equation))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_Equation.view()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_Equation.view()));
   }
   if(!json.contains(k_Units))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_Units.view()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), k_Units.view()));
   }
   auto units = json[k_Units].get<std::underlying_type_t<AngleUnits>>();
   if(units != to_underlying(AngleUnits::Radians) && units != to_underlying(AngleUnits::Degrees))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotEnumeration,
                                      fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Units.view(), to_underlying(AngleUnits::Radians),
                                                  to_underlying(AngleUnits::Degrees)));
   }
   ValueType value;
   value.equation = json[k_Equation].get<std::string>();
-  value.m_Units = static_cast<AngleUnits>(units);
+  value.m_units = static_cast<AngleUnits>(units);
   auto selectedGroupString = json[k_SelectedGroup].get<std::string>();
   auto selectedGroupPath = DataPath::FromString(selectedGroupString);
   if(!selectedGroupPath.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type,
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType,
                                      fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", k_Prefix, selectedGroupString, k_SelectedGroup));
   }
-  value.m_SelectedGroup = selectedGroupPath.value();
+  value.m_selected_group = selectedGroupPath.value();
   return {{std::move(value)}};
 }
 
@@ -113,9 +113,9 @@ Result<> CalculatorParameter::validate(const std::any& value) const
 {
   static constexpr StringLiteralType k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
-  if(StringUtilities::trimmed(structValue.equation).empty())
+  if(string_utilities::Trimmed(structValue.equation).empty())
   {
-    return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", k_Prefix));
+    return MakeErrorResult(filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}expression cannot be empty", k_Prefix));
   }
 
   // m_SelectedGroup is only a resolution hint for array name lookups.
@@ -179,8 +179,8 @@ Result<CalculatorFilterParameterConverter::ValueType> CalculatorFilterParameterC
 
   ValueType value;
   value.equation = json[k_InfixEquationKey].get<std::string>();
-  value.m_Units = static_cast<ParameterType::AngleUnits>(json[k_UnitsKey].get<int32>());
-  value.m_SelectedGroup = dataPath;
+  value.m_units = static_cast<ParameterType::AngleUnits>(json[k_UnitsKey].get<int32>());
+  value.m_selected_group = dataPath;
 
   return {std::move(value)};
 }

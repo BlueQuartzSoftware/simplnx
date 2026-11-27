@@ -70,13 +70,13 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrixPath_Key, "Face Attribute Matrix", "The AttributeMatrix that holds the triangle face data.", DataPath()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIdsPath_Key, "Feature Face Ids", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{ShapeType{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{ShapeType{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroidsPath_Key, "Face Centroids", "The DataPath to the 'Face Centroids' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{ShapeType{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1Path_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values",
@@ -206,7 +206,7 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -215,22 +215,22 @@ Result<> FeatureFaceCurvatureFilter::executeImpl(DataStructure& dataStructure, c
 {
   FeatureFaceCurvatureInputValues inputValues;
 
-  inputValues.NRingCount = filterArgs.value<int32>(k_NeighborhoodRing_Key);
-  inputValues.triangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
-  inputValues.surfaceMeshPrincipalCurvature1Path = filterArgs.value<DataPath>(k_PrincipalCurvature1Path_Key);
-  inputValues.surfaceMeshFeatureFaceIdsPath = filterArgs.value<DataPath>(k_FeatureFaceIdsPath_Key);
-  inputValues.surfaceMeshFaceLabelsPath = filterArgs.value<DataPath>(k_FaceLabelsPath_Key);
-  inputValues.surfaceMeshFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
-  inputValues.surfaceMeshTriangleCentroidsPath = filterArgs.value<DataPath>(k_FaceCentroidsPath_Key);
+  inputValues.n_ring_count = filterArgs.value<int32>(k_NeighborhoodRing_Key);
+  inputValues.triangle_geom_path = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
+  inputValues.surface_mesh_principal_curvature1_path = filterArgs.value<DataPath>(k_PrincipalCurvature1Path_Key);
+  inputValues.surface_mesh_feature_face_ids_path = filterArgs.value<DataPath>(k_FeatureFaceIdsPath_Key);
+  inputValues.surface_mesh_face_labels_path = filterArgs.value<DataPath>(k_FaceLabelsPath_Key);
+  inputValues.surface_mesh_face_normals_path = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
+  inputValues.surface_mesh_triangle_centroids_path = filterArgs.value<DataPath>(k_FaceCentroidsPath_Key);
 
-  inputValues.useNormalsForCurveFitting = filterArgs.value<bool>(k_UseFaceNormals_Key);
-  inputValues.surfaceMeshPrincipalCurvature1sPath = filterArgs.value<DataPath>(k_PrincipalCurvature1Path_Key);
-  inputValues.surfaceMeshPrincipalCurvature2sPath = filterArgs.value<DataPath>(k_PrincipalCurvature2Path_Key);
-  inputValues.surfaceMeshPrincipalDirection1sPath = filterArgs.value<DataPath>(k_PrincipalDirection1Path_Key);
-  inputValues.surfaceMeshPrincipalDirection2sPath = filterArgs.value<DataPath>(k_PrincipalDirection2Path_Key);
-  inputValues.surfaceMeshMeanCurvaturesPath = filterArgs.value<DataPath>(k_MeanCurvaturePath_Key);
-  inputValues.surfaceMeshGaussianCurvaturesPath = filterArgs.value<DataPath>(k_GaussianCurvaturePath_Key);
-  inputValues.surfaceMeshWeingartenMatrixPath = filterArgs.value<DataPath>(k_WeingartenMatrixPath_Key);
+  inputValues.use_normals_for_curve_fitting = filterArgs.value<bool>(k_UseFaceNormals_Key);
+  inputValues.surface_mesh_principal_curvature1s_path = filterArgs.value<DataPath>(k_PrincipalCurvature1Path_Key);
+  inputValues.surface_mesh_principal_curvature2s_path = filterArgs.value<DataPath>(k_PrincipalCurvature2Path_Key);
+  inputValues.surface_mesh_principal_direction1s_path = filterArgs.value<DataPath>(k_PrincipalDirection1Path_Key);
+  inputValues.surface_mesh_principal_direction2s_path = filterArgs.value<DataPath>(k_PrincipalDirection2Path_Key);
+  inputValues.surface_mesh_mean_curvatures_path = filterArgs.value<DataPath>(k_MeanCurvaturePath_Key);
+  inputValues.surface_mesh_gaussian_curvatures_path = filterArgs.value<DataPath>(k_GaussianCurvaturePath_Key);
+  inputValues.surface_mesh_weingarten_matrix_path = filterArgs.value<DataPath>(k_WeingartenMatrixPath_Key);
 
   return FeatureFaceCurvature(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

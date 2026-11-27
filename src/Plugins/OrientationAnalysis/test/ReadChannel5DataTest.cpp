@@ -29,8 +29,8 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -316,7 +316,7 @@ float64 SumDataArray(const DataArray<T>& array)
   return sum;
 }
 
-std::array<float64, 3> SumEulerComponents(const Float32Array& eulerAngles)
+std::array<float64, 3> SumEulerComponents(const Float32ArrayType& eulerAngles)
 {
   const auto& store = eulerAngles.getDataStoreRef();
   // Read fixed pages so validation uses bulk I/O without full materialization.
@@ -416,10 +416,10 @@ void VerifySyntheticChannel5Output(const DataStructure& dataStructure, bool comp
   REQUIRE(eulerArray.getComponentShape() == ShapeType({3}));
   REQUIRE(phasesArray.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(eulerArray.getIDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
-  REQUIRE(dataStructure.getDataAs<UInt8Array>(cellDataPath.createChildPath(ebsdlib::Ctf::Phase)) == nullptr);
-  REQUIRE(dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::Ctf::phi1)) == nullptr);
-  REQUIRE(dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::Ctf::Phi)) == nullptr);
-  REQUIRE(dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::Ctf::phi2)) == nullptr);
+  REQUIRE(dataStructure.getDataAs<UInt8ArrayType>(cellDataPath.createChildPath(ebsdlib::Ctf::Phase)) == nullptr);
+  REQUIRE(dataStructure.getDataAs<Float32ArrayType>(cellDataPath.createChildPath(ebsdlib::Ctf::phi1)) == nullptr);
+  REQUIRE(dataStructure.getDataAs<Float32ArrayType>(cellDataPath.createChildPath(ebsdlib::Ctf::Phi)) == nullptr);
+  REQUIRE(dataStructure.getDataAs<Float32ArrayType>(cellDataPath.createChildPath(ebsdlib::Ctf::phi2)) == nullptr);
   for(const usize tupleIndex : {usize{0}, usize{65535}, lastTuple})
   {
     CAPTURE(tupleIndex);
@@ -450,12 +450,12 @@ Arguments SyntheticChannel5Arguments(const fs::path& cprPath, bool compatibleArr
 ReadChannel5DataInputValues SyntheticChannel5InputValues(const fs::path& cprPath)
 {
   ReadChannel5DataInputValues inputValues;
-  inputValues.InputFile = cprPath;
-  inputValues.DataContainerName = k_DataContainerPath;
-  inputValues.CellAttributeMatrixName = k_CellDataWithSpaces;
-  inputValues.CellEnsembleAttributeMatrixName = k_EnsembleAttributeMatrix;
-  inputValues.EdaxHexagonalAlignment = false;
-  inputValues.CreateCompatibleArrays = true;
+  inputValues.input_file = cprPath;
+  inputValues.data_container_name = k_DataContainerPath;
+  inputValues.cell_attribute_matrix_name = k_CellDataWithSpaces;
+  inputValues.cell_ensemble_attribute_matrix_name = k_EnsembleAttributeMatrix;
+  inputValues.edax_hexagonal_alignment = false;
+  inputValues.create_compatible_arrays = true;
   return inputValues;
 }
 
@@ -463,18 +463,18 @@ void ApplySyntheticChannel5RegularActions(DataStructure& dataStructure, const fs
 {
   ReadChannel5DataFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, SyntheticChannel5Arguments(cprPath, true));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   // Preserve raw Phase and Euler components for the public algorithm conversion.
-  auto valueResult = preflightResult.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  auto valueResult = preflightResult.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(valueResult);
 }
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadChannel5_Test/7_ReadChannel5_Test.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
@@ -493,7 +493,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
   args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -515,13 +515,13 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
     CompareImageGeometry(exemplarPtr, computedPtr);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_BatchBoundaries", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
 
   const fs::path cprPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadChannel5Data_Synthetic.cpr";
   const fs::path crcPath = cprPath.parent_path() / "ReadChannel5Data_Synthetic.crc";
@@ -545,19 +545,19 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_BatchBoundaries", "[O
     args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
     args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
-    auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+    auto preflightResult2 = filter.preflight(dataStructure, args).output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
     auto executeResult2 = filter.execute(dataStructure, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult2);
     VerifySyntheticChannel5Output(dataStructure, compatibleArrays);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignment", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const bool compatibleArrays = GENERATE(false, true);
   const bool hexagonalAlignment = GENERATE(false, true);
   CAPTURE(compatibleArrays, hexagonalAlignment);
@@ -582,7 +582,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignmen
   Arguments args = SyntheticChannel5Arguments(cprPath, compatibleArrays);
   args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(hexagonalAlignment));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -637,13 +637,13 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignmen
       REQUIRE(components[2][i] == expectedPhi2);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailureAndCancellation", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
 
   const fs::path cprPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadChannel5Data_CompatibleOutput.cpr";
   const fs::path crcPath = cprPath.parent_path() / "ReadChannel5Data_CompatibleOutput.crc";
@@ -660,8 +660,8 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailu
   {
     DataStructure dataStructure;
     ApplySyntheticChannel5RegularActions(dataStructure, cprPath);
-    auto* phasesArrayPtr = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
-    auto* eulerArrayPtr = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
+    auto* phasesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
+    auto* eulerArrayPtr = dataStructure.getDataAs<Float32ArrayType>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     REQUIRE(phasesArrayPtr != nullptr);
     REQUIRE(eulerArrayPtr != nullptr);
     auto phasesStore = std::make_shared<FailOnWriteCallDataStore<int32>>(phasesArrayPtr->getTupleShape(), phasesArrayPtr->getComponentShape(), k_PhaseSentinel, 2, k_CompatibleWriteError);
@@ -689,8 +689,8 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailu
   {
     DataStructure dataStructure;
     ApplySyntheticChannel5RegularActions(dataStructure, cprPath);
-    auto* phasesArrayPtr = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
-    auto* eulerArrayPtr = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
+    auto* phasesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(cellDataPath.createChildPath(ebsdlib::CtfFile::Phases));
+    auto* eulerArrayPtr = dataStructure.getDataAs<Float32ArrayType>(cellDataPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     REQUIRE(phasesArrayPtr != nullptr);
     REQUIRE(eulerArrayPtr != nullptr);
 
@@ -718,9 +718,9 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailu
 
 TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAnalysis][ReadChannel5Data]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadChannel5_Test/7_ReadChannel5_Test.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
@@ -739,7 +739,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
   args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -762,7 +762,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
     CompareImageGeometry(exemplarPtr, computedPtr);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadChannel5DataFilter: override invalid stored spacing", "[OrientationAnalysis][ReadChannel5DataFilter]")
@@ -773,7 +773,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5DataFilter: override invalid stored 
   REQUIRE(WriteSyntheticChannel5Files(cpr, crc, 4, 1, ExpectedPhi2, false, 0.0F));
   const ReadChannel5DataFilter filter;
   auto args = SyntheticChannel5Arguments(cpr, true);
-  UnitTest::RequireBadReaderMetadata(filter, args, cpr, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  UnitTest::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, cpr, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {2, 3, 4});
 }

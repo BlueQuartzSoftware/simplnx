@@ -36,23 +36,23 @@ constexpr ChoicesParameter::ValueType k_ToVectorScalar = 1;
 
 TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis][ConvertQuaternionFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
-  Float32Array* quatsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_QuatName, {4ULL}, {4ULL}, {});
+  Float32ArrayType* quatsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_QuatName, {4ULL}, {4ULL}, {});
 
   for(size_t i = 0; i < 16; i++)
   {
     (*quatsPtr)[i] = static_cast<float32>(i);
   }
-  Float32Array* toScalarVectorPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
+  Float32ArrayType* toScalarVectorPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
   (*toScalarVectorPtr)[0] = 3.0F;
   (*toScalarVectorPtr)[1] = 0.0F;
   (*toScalarVectorPtr)[2] = 1.0F;
@@ -81,13 +81,13 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis]
     args.insertOrAssign(ConvertQuaternionFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(k_ToScalarVector));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
-    UnitTest::CompareDataArrays<float32>(*toScalarVectorPtr, outputArray);
+    auto& outputArray = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({k_ConvertedName}));
+    unit_test::CompareDataArrays<float32>(*toScalarVectorPtr, outputArray);
   }
 
   // The second conversion restores vector-scalar order.
@@ -102,26 +102,26 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter", "[OrientationAnalysis]
     args.insertOrAssign(ConvertQuaternionFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(k_ToVectorScalar));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_Exemplar1}));
-    UnitTest::CompareDataArrays<float32>(*quatsPtr, outputArray);
+    auto& outputArray = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({k_Exemplar1}));
+    unit_test::CompareDataArrays<float32>(*quatsPtr, outputArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter: Float64 conversion preserves exact components before source deletion", "[OrientationAnalysis][ConvertQuaternionFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const auto conversionType = GENERATE(k_ToScalarVector, k_ToVectorScalar);
   CAPTURE(scenario, conversionType);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const DataPath inputPath({"InputQuaternions"});
   const DataPath outputPath({"OutputQuaternions"});
@@ -131,9 +131,9 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter: Float64 conversion pres
   const auto& input = conversionType == k_ToScalarVector ? vectorScalar : scalarVector;
 
   DataStructure dataStructure;
-  auto inputStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, inputPath, {2}, {4});
+  auto inputStore = data_store_utilities::CreateDataStore<float64>(dataStructure, inputPath, {2}, {4});
   REQUIRE(inputStore != nullptr);
-  auto* inputArrayPtr = Float64Array::Create(dataStructure, inputPath.getTargetName(), inputStore);
+  auto* inputArrayPtr = Float64ArrayType::Create(dataStructure, inputPath.getTargetName(), inputStore);
   REQUIRE(inputArrayPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < input.size(); valueIdx++)
   {
@@ -149,12 +149,12 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter: Float64 conversion pres
   args.insertOrAssign(ConvertQuaternionFilter::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(conversionType));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
-  const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Float64ArrayType>(outputPath);
   for(usize valueIdx = 0; valueIdx < expected.size(); valueIdx++)
   {
     INFO("value index " << valueIdx);
@@ -162,13 +162,13 @@ TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter: Float64 conversion pres
   }
 
   REQUIRE_FALSE(dataStructure.containsData(inputPath));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ConvertQuaternionFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ConvertQuaternionFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

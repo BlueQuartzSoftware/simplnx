@@ -33,8 +33,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -103,10 +103,10 @@ inline const DataPath k_FeatureIdsMaskAllPath = k_InputGeometryPath.createChildP
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: No Valid Voxels Returns Error", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   RunNoValidVoxelsErrorTest<CAxisSegmentFeaturesFilter>(scope, [](Arguments& args, DataStructure& dataStructure, const DataPath& geomPath, const DataPath& cellDataPath, const DataPath& maskPath) {
     const ShapeType cellShape = {3, 3, 3};
@@ -131,10 +131,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: No Valid Voxels Returns Er
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Randomize Feature IDs", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Three Z layers with one merge-pair pillar yield three features.
   constexpr usize k_ExpectedFeatures = 3;
@@ -151,16 +151,16 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Randomize Feature IDs", "[
   BuildExemplarArgs(args, /*useMask=*/false, /*tolerance=*/5.0f, /*neighborScheme=*/0, /*randomize=*/true);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ExemplarActivePath));
-  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(k_ExemplarActivePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_ExemplarActivePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(k_ExemplarActivePath);
   REQUIRE(actives.getNumberOfTuples() == k_ExpectedFeatures + 1);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ExemplarFeatureIdsPath));
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_ExemplarFeatureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_ExemplarFeatureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_ExemplarFeatureIdsPath);
   const auto& featureStore = featureIds.getDataStoreRef();
   std::set<int32> uniqueIds;
   int32 minId = std::numeric_limits<int32>::max();
@@ -179,10 +179,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Randomize Feature IDs", "[
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: High Tolerance Merges All", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const ShapeType cellShape = {k_SmallDim, k_SmallDim, k_SmallDim};
   const std::array<usize, 3> dims = {k_SmallDim, k_SmallDim, k_SmallDim};
@@ -197,18 +197,18 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: High Tolerance Merges All"
   BuildExemplarArgs(args, /*useMask=*/false, /*tolerance=*/90.0f);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // The c-axis metric folds into 90 degrees, so this tolerance merges all
   // valid cells.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ExemplarActivePath));
-  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(k_ExemplarActivePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_ExemplarActivePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(k_ExemplarActivePath);
   REQUIRE(actives.getNumberOfTuples() == 2); // Feature index zero is reserved.
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ExemplarFeatureIdsPath));
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_ExemplarFeatureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_ExemplarFeatureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_ExemplarFeatureIdsPath);
   const auto& featureStore = featureIds.getDataStoreRef();
   for(usize i = 0; i < featureStore.getNumberOfTuples(); i++)
   {
@@ -218,10 +218,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: High Tolerance Merges All"
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivity", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr float32 k_DegToRad = 3.14159265358979323846f / 180.0f;
 
@@ -232,7 +232,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
 
     // Quaternions: background = 60° X-rotation, pairs = identity and 30° (EBSDlib order: x,y,z,w)
     const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
-    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(dataStructure, cellDataPath.createChildPath("Quats"), cellShape, {4});
+    auto quatsDS = data_store_utilities::CreateDataStore<float32>(dataStructure, cellDataPath.createChildPath("Quats"), cellShape, {4});
     auto* quatsArrPtr = DataArray<float32>::Create(dataStructure, "Quats", quatsDS, am.getId());
     auto& quatsStore = quatsArrPtr->getDataStoreRef();
     for(usize i = 0; i < 27; i++)
@@ -258,14 +258,14 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
       quatsStore[idx * 4 + 3] = std::cos(pairHalf);
     }
 
-    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("Phases"), cellShape, {1});
+    auto phasesDS = data_store_utilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("Phases"), cellShape, {1});
     auto* phasesArrPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDS, am.getId());
     phasesArrPtr->fill(1);
 
     const ShapeType ensShape = {2};
     auto* ensAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ensShape, geom.getId());
     const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
-    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystStructsPath, ensShape, {1});
+    auto crystDS = data_store_utilities::CreateDataStore<uint32>(dataStructure, crystStructsPath, ensShape, {1});
     auto* crystArrPtr = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystDS, ensAmPtr->getId());
     auto& crystStore = crystArrPtr->getDataStoreRef();
     crystStore[0] = 999;
@@ -292,7 +292,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][.GenerateTestData]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const auto outputDir = fs::path(fmt::format("{}/generated_test_data/caxis_segment_features", unit_test::k_BinaryTestOutputDir));
   fs::create_directories(outputDir);
@@ -313,7 +313,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[Ori
     BuildOrientationTestData(dataStructure, cellShape, geomMasked.getId(), amMaskedPtr->getId(), 0, k_SmallBlockSize);
     BuildSphericalMask(dataStructure, cellShape, amMaskedPtr->getId());
 
-    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "small_input.dream3d");
+    unit_test::WriteTestDataStructure(dataStructure, outputDir / "small_input.dream3d");
   }
 
   // The large fixture exercises bounded data access with a mask.
@@ -327,18 +327,18 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[Ori
     BuildOrientationTestData(dataStructure, cellShape, geom.getId(), amPtr->getId(), 0, k_LargeBlockSize); // Hexagonal_High
     BuildSphericalMask(dataStructure, cellShape, amPtr->getId());
 
-    UnitTest::WriteTestDataStructure(dataStructure, outputDir / "large_input.dream3d");
+    unit_test::WriteTestDataStructure(dataStructure, outputDir / "large_input.dream3d");
   }
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:Face", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   {
     CAxisSegmentFeaturesFilter filter;
@@ -361,36 +361,36 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:Face", "[OrientationAnalysi
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
-    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(caxis_segment_features_constants::k_ActivesArrayPath);
+    UInt8ArrayType& actives = dataStructure.getDataRefAs<UInt8ArrayType>(caxis_segment_features_constants::k_ActivesArrayPath);
     size_t numFeatures = actives.getNumberOfTuples();
     REQUIRE(numFeatures == 57);
   }
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsFacePath);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsFacePath);
 
-    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:All", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   {
     CAxisSegmentFeaturesFilter filter;
@@ -413,36 +413,36 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:All", "[OrientationAnalysis
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
-    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(caxis_segment_features_constants::k_ActivesArrayPath);
+    UInt8ArrayType& actives = dataStructure.getDataRefAs<UInt8ArrayType>(caxis_segment_features_constants::k_ActivesArrayPath);
     size_t numFeatures = actives.getNumberOfTuples();
     REQUIRE(numFeatures == 37);
   }
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsAllPath);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsAllPath);
 
-    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskFace", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   {
     CAxisSegmentFeaturesFilter filter;
@@ -465,36 +465,36 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskFace", "[OrientationAna
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
-    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(caxis_segment_features_constants::k_ActivesArrayPath);
+    UInt8ArrayType& actives = dataStructure.getDataRefAs<UInt8ArrayType>(caxis_segment_features_constants::k_ActivesArrayPath);
     size_t numFeatures = actives.getNumberOfTuples();
     REQUIRE(numFeatures == 31);
   }
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsMaskFacePath);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsMaskFacePath);
 
-    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskAll", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   {
     CAxisSegmentFeaturesFilter filter;
@@ -517,26 +517,26 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskAll", "[OrientationAnal
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   {
-    UInt8Array& actives = dataStructure.getDataRefAs<UInt8Array>(caxis_segment_features_constants::k_ActivesArrayPath);
+    UInt8ArrayType& actives = dataStructure.getDataRefAs<UInt8ArrayType>(caxis_segment_features_constants::k_ActivesArrayPath);
     size_t numFeatures = actives.getNumberOfTuples();
     REQUIRE(numFeatures == 25);
   }
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(caxis_segment_features_constants::k_FeatureIdsMaskAllPath);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsArrayPath);
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32ArrayType>(caxis_segment_features_constants::k_FeatureIdsMaskAllPath);
 
-    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 namespace
@@ -568,7 +568,7 @@ const DataPath k_ActivePath = k_CellFeatureAMPath.createChildPath(k_ActiveName);
 // antiparallel directions into [0,90], so each fixture has a closed-form angle.
 std::array<float32, 4> QuatFromPhiDeg(float32 phiDeg)
 {
-  const float32 halfAngleRad = (phiDeg * 0.5f) * Constants::k_PiOver180F;
+  const float32 halfAngleRad = (phiDeg * 0.5f) * constants::k_PiOver180F;
   return {std::sin(halfAngleRad), 0.0f, 0.0f, std::cos(halfAngleRad)};
 }
 
@@ -582,9 +582,9 @@ struct FixtureData
   ImageGeom* geom = nullptr;
   AttributeMatrix* cell_am = nullptr;
   AttributeMatrix* ensemble_am = nullptr;
-  Float32Array* quats = nullptr;
-  Int32Array* phases = nullptr;
-  UInt32Array* crystal_structures = nullptr;
+  Float32ArrayType* quats = nullptr;
+  Int32ArrayType* phases = nullptr;
+  UInt32ArrayType* crystal_structures = nullptr;
 };
 
 // Build valid image, cell, and ensemble arrays. Cells start in phase one with
@@ -678,22 +678,22 @@ IFilter::ExecuteResult RunFilter(DataStructure& dataStructure, const Arguments& 
 {
   CAxisSegmentFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   return filter.execute(dataStructure, args);
 }
 
-IFilter::ExecuteResult RunFilter(UnitTest::AlgorithmTestScope& scope, DataStructure& dataStructure, const Arguments& args)
+IFilter::ExecuteResult RunFilter(unit_test::AlgorithmTestScope& scope, DataStructure& dataStructure, const Arguments& args)
 {
   CAxisSegmentFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   return scope.executeFilter(filter, dataStructure, args);
 }
 
 void CheckFeatureIds(const DataStructure& dataStructure, const std::vector<int32>& expectedFeatureIds)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-  const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+  const auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath).getDataStoreRef();
   REQUIRE(featureIdsRef.getNumberOfTuples() == expectedFeatureIds.size());
   for(usize cellIdx = 0; cellIdx < expectedFeatureIds.size(); cellIdx++)
   {
@@ -705,8 +705,8 @@ void CheckFeatureIds(const DataStructure& dataStructure, const std::vector<int32
 // Active has one reserved zero entry and one true entry for each feature.
 void CheckActiveArray(const DataStructure& dataStructure, usize expectedNumFeatures)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
-  const auto& activeRef = dataStructure.getDataRefAs<UInt8Array>(k_ActivePath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_ActivePath));
+  const auto& activeRef = dataStructure.getDataRefAs<UInt8ArrayType>(k_ActivePath).getDataStoreRef();
   REQUIRE(activeRef.getNumberOfTuples() == expectedNumFeatures + 1);
   REQUIRE(activeRef[0] == 0);
   for(usize featureIdx = 1; featureIdx <= expectedNumFeatures; featureIdx++)
@@ -722,10 +722,10 @@ using namespace analytical_fixtures;
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pure-Phi Chain, Face)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // This 10-degree chain yields four partitions: {0,1,2}, {3,4}, {5,6},
   // and {7}.
@@ -741,15 +741,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
   CheckFeatureIds(td.ds, {1, 1, 1, 2, 2, 3, 3, 4});
   CheckActiveArray(td.ds, 4);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Pi-Fold Antiparallel C-Axes)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // The c-axis fold groups Phi 2 and 176 at tolerance 10. Phi 88 remains
   // separate.
@@ -763,15 +763,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
   CheckFeatureIds(td.ds, {1, 1, 2});
   CheckActiveArray(td.ds, 2);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Neighbor Scheme Face vs All)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Only all-neighbor connectivity can join identical diagonal cells zero and
   // three.
@@ -806,17 +806,17 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
       CheckFeatureIds(td.ds, expectation.expected_feature_ids);
       CheckActiveArray(td.ds, expectation.expected_num_features);
-      UnitTest::CheckArraysInheritTupleDims(td.ds);
+      unit_test::CheckArraysInheritTupleDims(td.ds);
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Mask Excludes Voxel 0)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // getSeed() must reject the masked first cell. Otherwise, the driver creates
   // a phantom feature and shifts later identifiers.
@@ -867,17 +867,17 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
       CheckFeatureIds(td.ds, {0, 1, 1, 0, 2});
       CheckActiveArray(td.ds, 2);
-      UnitTest::CheckArraysInheritTupleDims(td.ds);
+      unit_test::CheckArraysInheritTupleDims(td.ds);
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Phase Separation)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Equal orientations in different phases must remain separate. Phase two
   // also exercises Hexagonal_Low validation.
@@ -891,15 +891,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
   CheckFeatureIds(td.ds, {1, 1, 2, 2});
   CheckActiveArray(td.ds, 2);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (3D Linearization, 3x2x2)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // An axis-asymmetric 3x2x2 fixture detects x, y, or z stride swaps in the
   // neighbor decode.
@@ -915,25 +915,25 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
   CheckFeatureIds(td.ds, {1, 1, 2, 1, 3, 2, 1, 4, 5, 1, 3, 6});
   CheckActiveArray(td.ds, 6);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (RectGrid Geometry)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // CAxis accepts RectGridGeom through IGridGeometry. This fixture prevents a
   // stale ImageGeom cast.
   DataStructure dataStructure;
   // Reuse k_GeomName so shared arguments resolve the RectGrid path.
   auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, k_GeomName);
-  rectGridGeomPtr->setDimensions(SizeVec3{3, 1, 1});
-  auto* xBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", ShapeType{4}, ShapeType{1}, rectGridGeomPtr->getId());
-  auto* yBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{2}, ShapeType{1}, rectGridGeomPtr->getId());
-  auto* zBoundsArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{2}, ShapeType{1}, rectGridGeomPtr->getId());
+  rectGridGeomPtr->setDimensions(SizeVec3Type{3, 1, 1});
+  auto* xBoundsArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "xBounds", ShapeType{4}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* yBoundsArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "yBounds", ShapeType{2}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* zBoundsArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "zBounds", ShapeType{2}, ShapeType{1}, rectGridGeomPtr->getId());
   const std::vector<float32> xBoundValues = {0.0f, 0.5f, 2.0f, 10.0f};
   for(usize boundIdx = 0; boundIdx < xBoundValues.size(); boundIdx++)
   {
@@ -971,15 +971,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
   CheckFeatureIds(dataStructure, {1, 1, 2});
   CheckActiveArray(dataStructure, 2);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (Quats Outside Cell AttributeMatrix)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class1]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Selected arrays can be outside CellData. FeatureIds must remain in the
   // geometry cell matrix.
@@ -1007,15 +1007,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 1 Analytical (
 
   CheckFeatureIds(td.ds, {1, 1, 2});
   CheckActiveArray(td.ds, 2);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class4]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Randomization must relabel without changing partitions and must be
   // deterministic.
@@ -1029,15 +1029,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (
     }
     auto executeResult = RunFilter(scope, td.ds, BuildArgs(10.0f, segment_features::k_6NeighborIndex, false, true));
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    const auto& featureIdsRef = td.ds.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+    REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    const auto& featureIdsRef = td.ds.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath).getDataStoreRef();
     std::vector<int32> featureIds(featureIdsRef.getNumberOfTuples());
     for(usize cellIdx = 0; cellIdx < featureIds.size(); cellIdx++)
     {
       featureIds[cellIdx] = featureIdsRef[cellIdx];
     }
     CheckActiveArray(td.ds, 4);
-    UnitTest::CheckArraysInheritTupleDims(td.ds);
+    unit_test::CheckArraysInheritTupleDims(td.ds);
     return featureIds;
   };
 
@@ -1061,10 +1061,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][Class4]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Randomization must preserve reserved identifier zero for masked cells.
   FixtureData td = CreateScaffold(5, 1, 1);
@@ -1083,23 +1083,23 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Class 4 Invariants (
   auto executeResult = RunFilter(scope, td.ds, BuildArgs(10.0f, segment_features::k_6NeighborIndex, true, true));
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-  const auto& featureIdsRef = td.ds.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+  const auto& featureIdsRef = td.ds.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath).getDataStoreRef();
   REQUIRE(featureIdsRef[0] == 0);
   REQUIRE(featureIdsRef[3] == 0);
   REQUIRE(featureIdsRef[1] == featureIdsRef[2]);
   REQUIRE(featureIdsRef[1] != featureIdsRef[4]);
   REQUIRE(std::set<int32>{featureIdsRef[1], featureIdsRef[4]} == std::set<int32>{1, 2});
   CheckActiveArray(td.ds, 2);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Phase 0 (Unindexed) Cells Tolerated", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // EBSD phase zero is unindexed and must remain outside segmentation.
   FixtureData td = CreateScaffold(4, 1, 1);
@@ -1110,15 +1110,15 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Phase 0 (Unindexed) 
 
   CheckFeatureIds(td.ds, {0, 1, 1, 1});
   CheckActiveArray(td.ds, 1);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Masked Non-Hexagonal Cells Tolerated", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // The mask can exclude a non-hexagonal phase before c-axis validation.
   FixtureData td = CreateScaffold(4, 1, 1, 3);
@@ -1136,12 +1136,12 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Masked Non-Hexagonal
 
   CheckFeatureIds(td.ds, {1, 1, 0, 0});
   CheckActiveArray(td.ds, 1);
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - Non-Hexagonal Crystal Structure (-8363)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // C-axis misalignment accepts only hexagonal Laue classes.
   FixtureData td = CreateScaffold(2, 1, 1);
@@ -1154,7 +1154,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - Non-
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - Phase Out of Ensemble Bounds (-8364)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // An out-of-range phase must return an error before an out-of-bounds read.
   FixtureData td = CreateScaffold(2, 1, 1);
@@ -1167,10 +1167,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - Phas
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - No Features Found (-87000)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // An all-masked fixture has no seed and must return -87000.
   FixtureData td = CreateScaffold(3, 1, 1);
@@ -1187,19 +1187,19 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Execute Error - No F
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Zero Tolerance (-655)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   FixtureData td = CreateScaffold(2, 1, 1);
 
   CAxisSegmentFeaturesFilter filter;
   auto preflightResult = filter.preflight(td.ds, BuildArgs(0.0f, segment_features::k_6NeighborIndex, false));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -655);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -655);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell Arrays Smaller Than Geometry (-652)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Nine-tuple arrays pass cross-array validation but fail the 10-cell geometry
   // validation.
@@ -1208,22 +1208,22 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   imageGeomPtr->setDimensions({10, 1, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {9}, {4}, cellAmPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "Quats", {9}, {4}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, cellAmPtr->getId());
   auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
+  unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   CAxisSegmentFeaturesFilter filter;
   const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "CellData", "Quats"}), DataPath({"DataContainer", "CellData", "Phases"}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -652);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -652);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell AttributeMatrix Smaller Than Geometry (-653)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // The selected arrays have ten tuples, but the FeatureIds parent has nine.
   DataStructure dataStructure;
@@ -1232,22 +1232,22 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {9}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   auto* orientationAmPtr = AttributeMatrix::Create(dataStructure, "OrientationData", {10}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, orientationAmPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, orientationAmPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, orientationAmPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {10}, {1}, orientationAmPtr->getId());
   auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
+  unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   CAxisSegmentFeaturesFilter filter;
   const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "OrientationData", "Quats"}), DataPath({"DataContainer", "OrientationData", "Phases"}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -653);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -653);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Cell array tuple count mismatch (-651)", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Quats and CellPhases have different tuple counts and must report -651.
   DataStructure dataStructure;
@@ -1256,27 +1256,27 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Preflight Error - Ce
 
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
 
   // The separate group gives CellPhases nine tuples instead of ten.
   auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
   auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
+  unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   CAxisSegmentFeaturesFilter filter;
   const Arguments args = BuildManualPreflightArgs(DataPath({"DataContainer", "CellData", "Quats"}), DataPath({"DataContainer", "MismatchData", "Phases"}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -651);
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

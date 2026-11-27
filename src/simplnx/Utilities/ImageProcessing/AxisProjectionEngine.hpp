@@ -93,19 +93,19 @@ inline bool AxisProjectionComputeResidentBytes(usize metadataBytes, std::initial
 
 struct AxisProjectionShape
 {
-  usize dimX = 0;
-  usize dimY = 0;
-  usize dimZ = 0;
-  usize planeValues = 0;
-  usize xzValues = 0;
+  usize dim_x = 0;
+  usize dim_y = 0;
+  usize dim_z = 0;
+  usize plane_values = 0;
+  usize xz_values = 0;
   usize volume = 0;
-  usize projectionExtent = 0;
-  usize outputSlots = 0;
+  usize projection_extent = 0;
+  usize output_slots = 0;
   bool empty = false;
 };
 
 template <class TIn, class TOut>
-Result<AxisProjectionShape> ValidateAxisProjection(const AbstractDataStore<TIn>& in, const AbstractDataStore<TOut>& out, const SizeVec3& dims, usize projDim)
+Result<AxisProjectionShape> ValidateAxisProjection(const AbstractDataStore<TIn>& in, const AbstractDataStore<TOut>& out, const SizeVec3Type& dims, usize projDim)
 {
   if(projDim > 2)
   {
@@ -113,40 +113,40 @@ Result<AxisProjectionShape> ValidateAxisProjection(const AbstractDataStore<TIn>&
   }
 
   AxisProjectionShape shape;
-  shape.dimX = dims[0];
-  shape.dimY = dims[1];
-  shape.dimZ = dims[2];
-  if(shape.dimX == 0 || shape.dimY == 0 || shape.dimZ == 0)
+  shape.dim_x = dims[0];
+  shape.dim_y = dims[1];
+  shape.dim_z = dims[2];
+  if(shape.dim_x == 0 || shape.dim_y == 0 || shape.dim_z == 0)
   {
     shape.empty = true;
     return {shape};
   }
 
-  const std::string formattedDims = StringUtilities::formatDimensions3D(dims);
-  if(!AxisProjectionCheckedMultiply(shape.dimX, shape.dimY, shape.planeValues))
+  const std::string formattedDims = string_utilities::FormatDimensions3D(dims);
+  if(!AxisProjectionCheckedMultiply(shape.dim_x, shape.dim_y, shape.plane_values))
   {
     return MakeErrorResult<AxisProjectionShape>(-8345, fmt::format("Axis projection dimensions overflow usize while computing the XY plane size. Actual dimensions: {}.", formattedDims));
   }
-  if(!AxisProjectionCheckedMultiply(shape.dimX, shape.dimZ, shape.xzValues))
+  if(!AxisProjectionCheckedMultiply(shape.dim_x, shape.dim_z, shape.xz_values))
   {
     return MakeErrorResult<AxisProjectionShape>(-8347, fmt::format("Axis projection dimensions overflow usize while computing the XZ staging size. Actual dimensions: {}.", formattedDims));
   }
-  if(!AxisProjectionCheckedMultiply(shape.planeValues, shape.dimZ, shape.volume))
+  if(!AxisProjectionCheckedMultiply(shape.plane_values, shape.dim_z, shape.volume))
   {
     return MakeErrorResult<AxisProjectionShape>(-8346, fmt::format("Axis projection dimensions overflow usize while computing the XYZ volume. Actual dimensions: {}.", formattedDims));
   }
 
-  shape.projectionExtent = dims[projDim];
-  shape.outputSlots = shape.volume / shape.projectionExtent;
+  shape.projection_extent = dims[projDim];
+  shape.output_slots = shape.volume / shape.projection_extent;
   if(in.getSize() != shape.volume)
   {
     return MakeErrorResult<AxisProjectionShape>(
         -8348, fmt::format("Axis projection input store size ({}) does not match the expected XYZ volume ({}) for dimensions {}.", in.getSize(), shape.volume, formattedDims));
   }
-  if(out.getSize() != shape.outputSlots)
+  if(out.getSize() != shape.output_slots)
   {
     return MakeErrorResult<AxisProjectionShape>(-8349, fmt::format("Axis projection output store size ({}) does not match the expected projected size ({}) for dimensions {} and projection axis {}.",
-                                                                   out.getSize(), shape.outputSlots, formattedDims, projDim));
+                                                                   out.getSize(), shape.output_slots, formattedDims, projDim));
   }
   return {shape};
 }
@@ -167,14 +167,14 @@ enum class AxisProjection2DRoute : uint8
 struct AxisProjection2DPlan
 {
   AxisProjection2DRoute route = AxisProjection2DRoute::SingletonZ;
-  usize inputValues = 0;
-  usize outputValues = 0;
-  usize stateSlots = 0;
-  usize pencilValues = 0;
-  usize blockRows = 0;
-  usize tileColumns = 0;
-  usize sortBatchValues = 0;
-  usize residentBytes = 0;
+  usize input_values = 0;
+  usize output_values = 0;
+  usize state_slots = 0;
+  usize pencil_values = 0;
+  usize block_rows = 0;
+  usize tile_columns = 0;
+  usize sort_batch_values = 0;
+  usize resident_bytes = 0;
 };
 
 template <class T>
@@ -243,8 +243,8 @@ private:
 template <class T>
 struct AxisProjection2DServices
 {
-  std::function<Result<std::unique_ptr<AxisProjectionWorkStore<T>>>(usize valueCount, usize maxBatchValues)> createTransposeStore;
-  std::function<Result<std::unique_ptr<IExternalSort>>(const ExternalSortConfig&)> createExternalSort;
+  std::function<Result<std::unique_ptr<AxisProjectionWorkStore<T>>>(usize valueCount, usize maxBatchValues)> create_transpose_store;
+  std::function<Result<std::unique_ptr<IExternalSort>>(const ExternalSortConfig&)> create_external_sort;
 };
 
 template <class ResultT>
@@ -297,7 +297,7 @@ template <class TIn, class TOut>
 Result<std::unique_ptr<AxisProjectionWorkStore<TIn>>> CreateAxisProjectionTransposeStore(const AbstractDataStore<TIn>& in, const AbstractDataStore<TOut>& out, const AxisProjectionShape& shape,
                                                                                          usize maxBatchValues, const std::atomic_bool& shouldCancel)
 {
-  if(DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+  if(data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
   {
     auto temporaryResult = CreateSweepTemporaryStore<TIn>(shape.volume, std::max<usize>(1, maxBatchValues), shouldCancel, "Axis-projection Median Y transpose");
     if(temporaryResult.invalid())
@@ -317,7 +317,7 @@ Result<std::unique_ptr<AxisProjectionWorkStore<TIn>>> CreateAxisProjectionTransp
   }
   try
   {
-    auto dataStore = DataStoreUtilities::CreateDataStoreWithFormat<TIn>(dataFormat, ShapeType{1, shape.dimX, shape.dimY}, ShapeType{1});
+    auto dataStore = data_store_utilities::CreateDataStoreWithFormat<TIn>(dataFormat, ShapeType{1, shape.dim_x, shape.dim_y}, ShapeType{1});
     if(dataStore == nullptr || dataStore->getSize() != shape.volume || dataStore->getStoreType() != IDataStore::StoreType::OutOfCore)
     {
       return MakeErrorResult<std::unique_ptr<AxisProjectionWorkStore<TIn>>>(
@@ -332,7 +332,7 @@ Result<std::unique_ptr<AxisProjectionWorkStore<TIn>>> CreateAxisProjectionTransp
 }
 
 template <class TIn, class TOut, class ReduceFn>
-Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, usize projDim, usize targetBytes = k_AxisProjection2DTargetBytes)
+Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3Type& dims, usize projDim, usize targetBytes = k_AxisProjection2DTargetBytes)
 {
   if(projDim > 2)
   {
@@ -367,7 +367,7 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
   const usize availableBytes = targetBytes - k_AxisProjection2DMetadataBytes;
 
   const auto finalizeResidentBytes = [&](std::initializer_list<std::pair<usize, usize>> allocations) -> Result<AxisProjection2DPlan> {
-    if(!AxisProjectionComputeResidentBytes(k_AxisProjection2DMetadataBytes, allocations, plan.residentBytes) || plan.residentBytes > targetBytes)
+    if(!AxisProjectionComputeResidentBytes(k_AxisProjection2DMetadataBytes, allocations, plan.resident_bytes) || plan.resident_bytes > targetBytes)
     {
       return MakeErrorResult<AxisProjection2DPlan>(
           -8743, fmt::format("Axis projection true-2-D plan overflowed or exceeded its {}-byte target for dimensions {} x {} and projection axis {}.", targetBytes, dimX, dimY, projDim));
@@ -382,15 +382,15 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection singleton-Z value-size planning overflowed.");
     }
-    plan.inputValues = std::min(volume, availableBytes / bytesPerValue);
-    if(plan.inputValues == 0)
+    plan.input_values = std::min(volume, availableBytes / bytesPerValue);
+    if(plan.input_values == 0)
     {
       return MakeErrorResult<AxisProjection2DPlan>(
           -8742, fmt::format("Axis projection singleton-Z target ({} bytes) cannot hold one {}-byte input and one {}-byte output value.", targetBytes, sizeof(TIn), sizeof(TOut)));
     }
-    plan.outputValues = plan.inputValues;
+    plan.output_values = plan.input_values;
     plan.route = AxisProjection2DRoute::SingletonZ;
-    return finalizeResidentBytes({{plan.inputValues, sizeof(TIn)}, {plan.outputValues, sizeof(TOut)}});
+    return finalizeResidentBytes({{plan.input_values, sizeof(TIn)}, {plan.output_values, sizeof(TOut)}});
   }
 
   if constexpr(ReduceFn::k_IsAssociative)
@@ -409,15 +409,15 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
       if(rowCount > 1 || (rowCount == 1 && dimY == 1))
       {
         plan.route = AxisProjection2DRoute::AssociativeXRows;
-        plan.blockRows = rowCount;
-        plan.tileColumns = dimX;
-        plan.stateSlots = rowCount;
-        plan.outputValues = rowCount;
-        if(!AxisProjectionCheckedMultiply(rowCount, dimX, plan.inputValues))
+        plan.block_rows = rowCount;
+        plan.tile_columns = dimX;
+        plan.state_slots = rowCount;
+        plan.output_values = rowCount;
+        if(!AxisProjectionCheckedMultiply(rowCount, dimX, plan.input_values))
         {
           return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection X-row input-count planning overflowed.");
         }
-        return finalizeResidentBytes({{plan.inputValues, sizeof(TIn)}, {plan.stateSlots, sizeof(StateType)}, {plan.outputValues, sizeof(TOut)}});
+        return finalizeResidentBytes({{plan.input_values, sizeof(TIn)}, {plan.state_slots, sizeof(StateType)}, {plan.output_values, sizeof(TOut)}});
       }
 
       if(availableBytes <= sizeof(StateType) + sizeof(TIn))
@@ -425,27 +425,27 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection X-chunk target ({} bytes) cannot hold one reducer state and one output value.", targetBytes));
       }
       const usize maximumOutputValues = (availableBytes - sizeof(StateType) - sizeof(TIn)) / sizeof(TOut);
-      plan.outputValues = std::min({dimY, k_AxisProjectionExternalOutputValues, maximumOutputValues});
-      if(plan.outputValues == 0)
+      plan.output_values = std::min({dimY, k_AxisProjectionExternalOutputValues, maximumOutputValues});
+      if(plan.output_values == 0)
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection X-chunk target ({} bytes) cannot hold one output value.", targetBytes));
       }
       usize outputBytes = 0;
       usize fixedBytes = 0;
-      if(!AxisProjectionCheckedMultiply(plan.outputValues, sizeof(TOut), outputBytes) || !AxisProjectionCheckedAdd(sizeof(StateType), outputBytes, fixedBytes) || fixedBytes >= availableBytes)
+      if(!AxisProjectionCheckedMultiply(plan.output_values, sizeof(TOut), outputBytes) || !AxisProjectionCheckedAdd(sizeof(StateType), outputBytes, fixedBytes) || fixedBytes >= availableBytes)
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection X-chunk output-batch planning overflowed.");
       }
-      plan.inputValues = std::min(dimX, (availableBytes - fixedBytes) / sizeof(TIn));
-      if(plan.inputValues == 0)
+      plan.input_values = std::min(dimX, (availableBytes - fixedBytes) / sizeof(TIn));
+      if(plan.input_values == 0)
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection X-chunk target ({} bytes) cannot hold one input value.", targetBytes));
       }
       plan.route = AxisProjection2DRoute::AssociativeXChunks;
-      plan.blockRows = 1;
-      plan.tileColumns = plan.inputValues;
-      plan.stateSlots = 1;
-      return finalizeResidentBytes({{plan.inputValues, sizeof(TIn)}, {1, sizeof(StateType)}, {plan.outputValues, sizeof(TOut)}});
+      plan.block_rows = 1;
+      plan.tile_columns = plan.input_values;
+      plan.state_slots = 1;
+      return finalizeResidentBytes({{plan.input_values, sizeof(TIn)}, {1, sizeof(StateType)}, {plan.output_values, sizeof(TOut)}});
     }
 
     usize stateAndOutputBytesPerColumn = 0;
@@ -461,15 +461,15 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
     {
       const usize rowCount = std::min(dimY, (availableBytes - fixedColumnBytes) / rowInputBytes);
       plan.route = AxisProjection2DRoute::AssociativeYRows;
-      plan.blockRows = rowCount;
-      plan.tileColumns = dimX;
-      plan.stateSlots = dimX;
-      plan.outputValues = dimX;
-      if(!AxisProjectionCheckedMultiply(rowCount, dimX, plan.inputValues))
+      plan.block_rows = rowCount;
+      plan.tile_columns = dimX;
+      plan.state_slots = dimX;
+      plan.output_values = dimX;
+      if(!AxisProjectionCheckedMultiply(rowCount, dimX, plan.input_values))
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection Y-row input-count planning overflowed.");
       }
-      return finalizeResidentBytes({{plan.inputValues, sizeof(TIn)}, {plan.stateSlots, sizeof(StateType)}, {plan.outputValues, sizeof(TOut)}});
+      return finalizeResidentBytes({{plan.input_values, sizeof(TIn)}, {plan.state_slots, sizeof(StateType)}, {plan.output_values, sizeof(TOut)}});
     }
 
     usize tiledBytesPerColumn = 0;
@@ -477,17 +477,17 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection Y-tile per-column planning overflowed.");
     }
-    plan.tileColumns = std::min(dimX, availableBytes / tiledBytesPerColumn);
-    if(plan.tileColumns == 0)
+    plan.tile_columns = std::min(dimX, availableBytes / tiledBytesPerColumn);
+    if(plan.tile_columns == 0)
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection Y-tile target ({} bytes) cannot hold one input value, reducer state, and output value.", targetBytes));
     }
     plan.route = AxisProjection2DRoute::AssociativeYTiles;
-    plan.blockRows = 1;
-    plan.inputValues = plan.tileColumns;
-    plan.stateSlots = plan.tileColumns;
-    plan.outputValues = plan.tileColumns;
-    return finalizeResidentBytes({{plan.inputValues, sizeof(TIn)}, {plan.stateSlots, sizeof(StateType)}, {plan.outputValues, sizeof(TOut)}});
+    plan.block_rows = 1;
+    plan.input_values = plan.tile_columns;
+    plan.state_slots = plan.tile_columns;
+    plan.output_values = plan.tile_columns;
+    return finalizeResidentBytes({{plan.input_values, sizeof(TIn)}, {plan.state_slots, sizeof(StateType)}, {plan.output_values, sizeof(TOut)}});
   }
   else
   {
@@ -503,15 +503,15 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
       if(rowCount > 0)
       {
         plan.route = AxisProjection2DRoute::MedianXRows;
-        plan.blockRows = rowCount;
-        plan.tileColumns = dimX;
-        plan.outputValues = rowCount;
-        if(!AxisProjectionCheckedMultiply(rowCount, dimX, plan.pencilValues))
+        plan.block_rows = rowCount;
+        plan.tile_columns = dimX;
+        plan.output_values = rowCount;
+        if(!AxisProjectionCheckedMultiply(rowCount, dimX, plan.pencil_values))
         {
           return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection Median X-row pencil-count planning overflowed.");
         }
-        plan.inputValues = plan.pencilValues;
-        return finalizeResidentBytes({{plan.pencilValues, sizeof(TIn)}, {plan.outputValues, sizeof(TOut)}});
+        plan.input_values = plan.pencil_values;
+        return finalizeResidentBytes({{plan.pencil_values, sizeof(TIn)}, {plan.output_values, sizeof(TOut)}});
       }
 
       plan.route = AxisProjection2DRoute::MedianXExternal;
@@ -527,7 +527,7 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
       if(bytesPerColumn <= availableBytes)
       {
         plan.route = AxisProjection2DRoute::MedianYTiles;
-        plan.blockRows = dimY;
+        plan.block_rows = dimY;
         usize workerCount = AxisProjectionMedianWorkerCount(dimX);
         for(;;)
         {
@@ -537,38 +537,38 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
           {
             return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection Median Y worker-scratch planning overflowed.");
           }
-          plan.tileColumns = workerScratchBytes < availableBytes ? std::min(dimX, (availableBytes - workerScratchBytes) / bytesPerColumn) : 0;
-          if(plan.tileColumns > 0)
+          plan.tile_columns = workerScratchBytes < availableBytes ? std::min(dimX, (availableBytes - workerScratchBytes) / bytesPerColumn) : 0;
+          if(plan.tile_columns > 0)
           {
-            plan.stateSlots = workerCount;
-            plan.pencilValues = workerScratchValues;
+            plan.state_slots = workerCount;
+            plan.pencil_values = workerScratchValues;
             break;
           }
           if(workerCount == 1)
           {
             // One complete pencil fits, but a separate worker pencil does not. Read the one-column tile directly
             // and run nth_element in that returned buffer without a second allocation.
-            plan.tileColumns = 1;
-            plan.stateSlots = 0;
-            plan.pencilValues = 0;
+            plan.tile_columns = 1;
+            plan.state_slots = 0;
+            plan.pencil_values = 0;
             break;
           }
           --workerCount;
         }
-        plan.outputValues = plan.tileColumns;
-        if(!AxisProjectionCheckedMultiply(plan.tileColumns, dimY, plan.inputValues))
+        plan.output_values = plan.tile_columns;
+        if(!AxisProjectionCheckedMultiply(plan.tile_columns, dimY, plan.input_values))
         {
           return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection Median Y-tile input-count planning overflowed.");
         }
-        return finalizeResidentBytes({{plan.inputValues, sizeof(TIn)}, {plan.pencilValues, sizeof(TIn)}, {plan.outputValues, sizeof(TOut)}});
+        return finalizeResidentBytes({{plan.input_values, sizeof(TIn)}, {plan.pencil_values, sizeof(TIn)}, {plan.output_values, sizeof(TOut)}});
       }
       plan.route = AxisProjection2DRoute::MedianYExternal;
     }
 
     const usize outputSlots = projDim == 0 ? dimY : dimX;
-    plan.outputValues = std::min(outputSlots, k_AxisProjectionExternalOutputValues);
+    plan.output_values = std::min(outputSlots, k_AxisProjectionExternalOutputValues);
     usize outputBytes = 0;
-    if(!AxisProjectionCheckedMultiply(plan.outputValues, sizeof(TOut), outputBytes) || outputBytes >= availableBytes)
+    if(!AxisProjectionCheckedMultiply(plan.output_values, sizeof(TOut), outputBytes) || outputBytes >= availableBytes)
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection external Median target ({} bytes) cannot hold its bounded output batch.", targetBytes));
     }
@@ -577,15 +577,15 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection external Median sort-record planning overflowed.");
     }
-    plan.sortBatchValues = (availableBytes - outputBytes) / sortBytesPerValue;
-    if(plan.sortBatchValues == 0)
+    plan.sort_batch_values = (availableBytes - outputBytes) / sortBytesPerValue;
+    if(plan.sort_batch_values == 0)
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection external Median target ({} bytes) cannot hold one value and one sort-order entry.", targetBytes));
     }
-    plan.inputValues = plan.sortBatchValues;
+    plan.input_values = plan.sort_batch_values;
 
     usize sortPeakBytes = 0;
-    if(!AxisProjectionComputeResidentBytes(0, {{plan.sortBatchValues, sortBytesPerValue}, {plan.outputValues, sizeof(TOut)}}, sortPeakBytes))
+    if(!AxisProjectionComputeResidentBytes(0, {{plan.sort_batch_values, sortBytesPerValue}, {plan.output_values, sizeof(TOut)}}, sortPeakBytes))
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection external Median sort-peak planning overflowed.");
     }
@@ -598,19 +598,19 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8742, fmt::format("Axis projection external Median Y target ({} bytes) cannot hold a transpose value and row transfer.", targetBytes));
       }
-      plan.blockRows = std::min({dimY, static_cast<usize>(256), transposeCapacity / 2});
-      plan.tileColumns = std::min(dimX, transposeCapacity / (plan.blockRows + 1));
-      if(plan.tileColumns == 0)
+      plan.block_rows = std::min({dimY, static_cast<usize>(256), transposeCapacity / 2});
+      plan.tile_columns = std::min(dimX, transposeCapacity / (plan.block_rows + 1));
+      if(plan.tile_columns == 0)
       {
-        plan.blockRows = 1;
-        plan.tileColumns = std::min(dimX, transposeCapacity / 2);
+        plan.block_rows = 1;
+        plan.tile_columns = std::min(dimX, transposeCapacity / 2);
       }
-      if(plan.tileColumns == 0 || !AxisProjectionCheckedMultiply(plan.tileColumns, plan.blockRows, plan.pencilValues))
+      if(plan.tile_columns == 0 || !AxisProjectionCheckedMultiply(plan.tile_columns, plan.block_rows, plan.pencil_values))
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection external Median Y transpose planning overflowed.");
       }
       usize transposeValues = 0;
-      if(!AxisProjectionCheckedAdd(plan.pencilValues, plan.tileColumns, transposeValues))
+      if(!AxisProjectionCheckedAdd(plan.pencil_values, plan.tile_columns, transposeValues))
       {
         return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection external Median Y transpose-buffer planning overflowed.");
       }
@@ -620,10 +620,10 @@ Result<AxisProjection2DPlan> CreateAxisProjection2DPlan(const SizeVec3& dims, us
         return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection external Median Y transpose-byte planning overflowed.");
       }
       peakBytes = std::max(peakBytes, transposeBytes);
-      plan.inputValues = std::max(plan.inputValues, plan.tileColumns);
+      plan.input_values = std::max(plan.input_values, plan.tile_columns);
     }
 
-    if(!AxisProjectionCheckedAdd(k_AxisProjection2DMetadataBytes, peakBytes, plan.residentBytes) || plan.residentBytes > targetBytes)
+    if(!AxisProjectionCheckedAdd(k_AxisProjection2DMetadataBytes, peakBytes, plan.resident_bytes) || plan.resident_bytes > targetBytes)
     {
       return MakeErrorResult<AxisProjection2DPlan>(-8743, "Axis projection external Median peak-memory planning exceeded its target.");
     }
@@ -636,21 +636,21 @@ Result<> ApplyAssociativeProjection2DX(const AbstractDataStore<TIn>& in, Abstrac
                                        const AxisProjection2DPlan& plan)
 {
   using StateType = typename ReduceFn::template State<TOut>;
-  std::vector<TIn> inputBuffer(plan.inputValues);
-  std::vector<TOut> outputBuffer(plan.outputValues);
-  std::vector<StateType> states(plan.stateSlots);
+  std::vector<TIn> inputBuffer(plan.input_values);
+  std::vector<TOut> outputBuffer(plan.output_values);
+  std::vector<StateType> states(plan.state_slots);
 
   if(plan.route == AxisProjection2DRoute::AssociativeXRows)
   {
-    for(usize rowStart = 0; rowStart < shape.dimY; rowStart += plan.blockRows)
+    for(usize rowStart = 0; rowStart < shape.dim_y; rowStart += plan.block_rows)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize rowCount = std::min(plan.blockRows, shape.dimY - rowStart);
-      const usize inputCount = rowCount * shape.dimX;
-      Result<> readResult = in.copyIntoBuffer(rowStart * shape.dimX, nonstd::span<TIn>(inputBuffer.data(), inputCount));
+      const usize rowCount = std::min(plan.block_rows, shape.dim_y - rowStart);
+      const usize inputCount = rowCount * shape.dim_x;
+      Result<> readResult = in.copyIntoBuffer(rowStart * shape.dim_x, nonstd::span<TIn>(inputBuffer.data(), inputCount));
       if(readResult.invalid())
       {
         return readResult;
@@ -669,8 +669,8 @@ Result<> ApplyAssociativeProjection2DX(const AbstractDataStore<TIn>& in, Abstrac
             return;
           }
           StateType& state = states[localRow];
-          const usize rowOffset = localRow * shape.dimX;
-          for(usize x = 0; x < shape.dimX; ++x)
+          const usize rowOffset = localRow * shape.dim_x;
+          for(usize x = 0; x < shape.dim_x; ++x)
           {
             reduce.accumulate(state, inputBuffer[rowOffset + x]);
           }
@@ -695,17 +695,17 @@ Result<> ApplyAssociativeProjection2DX(const AbstractDataStore<TIn>& in, Abstrac
 
   usize outputStart = 0;
   usize outputCount = 0;
-  for(usize row = 0; row < shape.dimY; ++row)
+  for(usize row = 0; row < shape.dim_y; ++row)
   {
     if(shouldCancel)
     {
       return {};
     }
     StateType state{};
-    for(usize xStart = 0; xStart < shape.dimX; xStart += plan.inputValues)
+    for(usize xStart = 0; xStart < shape.dim_x; xStart += plan.input_values)
     {
-      const usize inputCount = std::min(plan.inputValues, shape.dimX - xStart);
-      Result<> readResult = in.copyIntoBuffer(row * shape.dimX + xStart, nonstd::span<TIn>(inputBuffer.data(), inputCount));
+      const usize inputCount = std::min(plan.input_values, shape.dim_x - xStart);
+      Result<> readResult = in.copyIntoBuffer(row * shape.dim_x + xStart, nonstd::span<TIn>(inputBuffer.data(), inputCount));
       if(readResult.invalid())
       {
         return readResult;
@@ -720,7 +720,7 @@ Result<> ApplyAssociativeProjection2DX(const AbstractDataStore<TIn>& in, Abstrac
       }
     }
     outputBuffer[outputCount++] = reduce.finalize(state);
-    if(outputCount == plan.outputValues || row + 1 == shape.dimY)
+    if(outputCount == plan.output_values || row + 1 == shape.dim_y)
     {
       if(shouldCancel)
       {
@@ -743,21 +743,21 @@ Result<> ApplyAssociativeProjection2DY(const AbstractDataStore<TIn>& in, Abstrac
                                        const AxisProjection2DPlan& plan)
 {
   using StateType = typename ReduceFn::template State<TOut>;
-  std::vector<TIn> inputBuffer(plan.inputValues);
-  std::vector<TOut> outputBuffer(plan.outputValues);
-  std::vector<StateType> states(plan.stateSlots);
+  std::vector<TIn> inputBuffer(plan.input_values);
+  std::vector<TOut> outputBuffer(plan.output_values);
+  std::vector<StateType> states(plan.state_slots);
 
   if(plan.route == AxisProjection2DRoute::AssociativeYRows)
   {
-    for(usize yStart = 0; yStart < shape.dimY; yStart += plan.blockRows)
+    for(usize yStart = 0; yStart < shape.dim_y; yStart += plan.block_rows)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize rowCount = std::min(plan.blockRows, shape.dimY - yStart);
-      const usize inputCount = rowCount * shape.dimX;
-      Result<> readResult = in.copyIntoBuffer(yStart * shape.dimX, nonstd::span<TIn>(inputBuffer.data(), inputCount));
+      const usize rowCount = std::min(plan.block_rows, shape.dim_y - yStart);
+      const usize inputCount = rowCount * shape.dim_x;
+      Result<> readResult = in.copyIntoBuffer(yStart * shape.dim_x, nonstd::span<TIn>(inputBuffer.data(), inputCount));
       if(readResult.invalid())
       {
         return readResult;
@@ -777,12 +777,12 @@ Result<> ApplyAssociativeProjection2DY(const AbstractDataStore<TIn>& in, Abstrac
           StateType& state = states[x];
           for(usize localY = 0; localY < rowCount; ++localY)
           {
-            reduce.accumulate(state, inputBuffer[localY * shape.dimX + x]);
+            reduce.accumulate(state, inputBuffer[localY * shape.dim_x + x]);
           }
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
-      parallelAlgorithm.setRange(0, shape.dimX);
+      parallelAlgorithm.setRange(0, shape.dim_x);
       parallelAlgorithm.execute(accumulateColumns);
       if(shouldCancel)
       {
@@ -797,26 +797,26 @@ Result<> ApplyAssociativeProjection2DY(const AbstractDataStore<TIn>& in, Abstrac
       }
     };
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, shape.dimX);
+    parallelAlgorithm.setRange(0, shape.dim_x);
     parallelAlgorithm.execute(finalizeColumns);
     if(shouldCancel)
     {
       return {};
     }
-    return out.copyFromBuffer(0, nonstd::span<const TOut>(outputBuffer.data(), shape.dimX));
+    return out.copyFromBuffer(0, nonstd::span<const TOut>(outputBuffer.data(), shape.dim_x));
   }
 
-  for(usize xStart = 0; xStart < shape.dimX; xStart += plan.tileColumns)
+  for(usize xStart = 0; xStart < shape.dim_x; xStart += plan.tile_columns)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const usize tileColumns = std::min(plan.tileColumns, shape.dimX - xStart);
+    const usize tileColumns = std::min(plan.tile_columns, shape.dim_x - xStart);
     std::fill(states.begin(), states.begin() + tileColumns, StateType{});
-    for(usize y = 0; y < shape.dimY; ++y)
+    for(usize y = 0; y < shape.dim_y; ++y)
     {
-      Result<> readResult = in.copyIntoBuffer(y * shape.dimX + xStart, nonstd::span<TIn>(inputBuffer.data(), tileColumns));
+      Result<> readResult = in.copyIntoBuffer(y * shape.dim_x + xStart, nonstd::span<TIn>(inputBuffer.data(), tileColumns));
       if(readResult.invalid())
       {
         return readResult;
@@ -857,17 +857,17 @@ template <class TIn, class TOut, class ReduceFn>
 Result<> ApplyMedianProjection2DXRows(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const AxisProjectionShape& shape, ReduceFn reduce, const std::atomic_bool& shouldCancel,
                                       const AxisProjection2DPlan& plan)
 {
-  std::vector<TIn> pencilBuffer(plan.pencilValues);
-  std::vector<TOut> outputBuffer(plan.outputValues);
-  for(usize rowStart = 0; rowStart < shape.dimY; rowStart += plan.blockRows)
+  std::vector<TIn> pencilBuffer(plan.pencil_values);
+  std::vector<TOut> outputBuffer(plan.output_values);
+  for(usize rowStart = 0; rowStart < shape.dim_y; rowStart += plan.block_rows)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const usize rowCount = std::min(plan.blockRows, shape.dimY - rowStart);
-    const usize inputCount = rowCount * shape.dimX;
-    Result<> readResult = in.copyIntoBuffer(rowStart * shape.dimX, nonstd::span<TIn>(pencilBuffer.data(), inputCount));
+    const usize rowCount = std::min(plan.block_rows, shape.dim_y - rowStart);
+    const usize inputCount = rowCount * shape.dim_x;
+    Result<> readResult = in.copyIntoBuffer(rowStart * shape.dim_x, nonstd::span<TIn>(pencilBuffer.data(), inputCount));
     if(readResult.invalid())
     {
       return readResult;
@@ -884,7 +884,7 @@ Result<> ApplyMedianProjection2DXRows(const AbstractDataStore<TIn>& in, Abstract
         {
           return;
         }
-        outputBuffer[localRow] = reduce.template reducePencil<TIn, TOut>(nonstd::span<TIn>(pencilBuffer.data() + localRow * shape.dimX, shape.dimX));
+        outputBuffer[localRow] = reduce.template reducePencil<TIn, TOut>(nonstd::span<TIn>(pencilBuffer.data() + localRow * shape.dim_x, shape.dim_x));
       }
     };
     ParallelDataAlgorithm parallelAlgorithm;
@@ -907,40 +907,40 @@ template <class TIn, class TOut, class ReduceFn>
 Result<> ApplyMedianProjection2DYTiles(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const AxisProjectionShape& shape, ReduceFn reduce, const std::atomic_bool& shouldCancel,
                                        const AxisProjection2DPlan& plan)
 {
-  std::vector<TOut> outputBuffer(plan.outputValues);
-  for(usize xStart = 0; xStart < shape.dimX; xStart += plan.tileColumns)
+  std::vector<TOut> outputBuffer(plan.output_values);
+  for(usize xStart = 0; xStart < shape.dim_x; xStart += plan.tile_columns)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const usize tileColumns = std::min(plan.tileColumns, shape.dimX - xStart);
-    const Extent tileExtent(std::vector<uint64>{0, 0, static_cast<uint64>(xStart)}, std::vector<uint64>{0, static_cast<uint64>(shape.dimY - 1), static_cast<uint64>(xStart + tileColumns - 1)});
+    const usize tileColumns = std::min(plan.tile_columns, shape.dim_x - xStart);
+    const Extent tileExtent(std::vector<uint64>{0, 0, static_cast<uint64>(xStart)}, std::vector<uint64>{0, static_cast<uint64>(shape.dim_y - 1), static_cast<uint64>(xStart + tileColumns - 1)});
     Result<std::vector<TIn>> tileResult = in.readExtent(tileExtent);
     if(tileResult.invalid())
     {
       return MakeErrorResult(-8753, fmt::format("Axis projection Median Y extent read failed for X columns [{}, {}] in dimensions {}: {}", xStart, xStart + tileColumns - 1,
-                                                StringUtilities::formatDimensions3D(SizeVec3{shape.dimX, shape.dimY, shape.dimZ}), tileResult.errors().front().message));
+                                                string_utilities::FormatDimensions3D(SizeVec3Type{shape.dim_x, shape.dim_y, shape.dim_z}), tileResult.errors().front().message));
     }
     std::vector<TIn> rowMajorTile = std::move(tileResult.value());
     if(shouldCancel)
     {
       return {};
     }
-    const usize tileValues = tileColumns * shape.dimY;
+    const usize tileValues = tileColumns * shape.dim_y;
     if(rowMajorTile.size() != tileValues)
     {
       return MakeErrorResult(-8753,
                              fmt::format("Axis projection Median Y extent read returned {} of {} values for X columns [{}, {}].", rowMajorTile.size(), tileValues, xStart, xStart + tileColumns - 1));
     }
-    if(plan.stateSlots == 0)
+    if(plan.state_slots == 0)
     {
       outputBuffer[0] = reduce.template reducePencil<TIn, TOut>(nonstd::span<TIn>(rowMajorTile.data(), rowMajorTile.size()));
     }
     else
     {
       const auto reduceColumn = [&](usize localX, std::vector<TIn>& pencil) {
-        for(usize y = 0; y < shape.dimY; ++y)
+        for(usize y = 0; y < shape.dim_y; ++y)
         {
           pencil[y] = rowMajorTile[y * tileColumns + localX];
         }
@@ -950,10 +950,10 @@ Result<> ApplyMedianProjection2DYTiles(const AbstractDataStore<TIn>& in, Abstrac
       bool parallelized = false;
 #ifdef SIMPLNX_ENABLE_MULTICORE
       ParallelDataAlgorithm parallelControl;
-      if(parallelControl.getParallelizationEnabled() && plan.stateSlots > 1)
+      if(parallelControl.getParallelizationEnabled() && plan.state_slots > 1)
       {
-        tbb::task_arena arena(static_cast<int>(plan.stateSlots));
-        tbb::enumerable_thread_specific<std::vector<TIn>> workerPencils([&]() { return std::vector<TIn>(shape.dimY); });
+        tbb::task_arena arena(static_cast<int>(plan.state_slots));
+        tbb::enumerable_thread_specific<std::vector<TIn>> workerPencils([&]() { return std::vector<TIn>(shape.dim_y); });
         arena.execute([&]() {
           tbb::parallel_for(
               tbb::blocked_range<usize>(0, tileColumns),
@@ -975,7 +975,7 @@ Result<> ApplyMedianProjection2DYTiles(const AbstractDataStore<TIn>& in, Abstrac
 #endif
       if(!parallelized)
       {
-        std::vector<TIn> pencil(shape.dimY);
+        std::vector<TIn> pencil(shape.dim_y);
         for(usize localX = 0; localX < tileColumns; ++localX)
         {
           if(shouldCancel)
@@ -1003,15 +1003,15 @@ template <class TIn, class TOut, class ReduceFn>
 Result<> ApplyProjection2DSingletonZ(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const AxisProjectionShape& shape, ReduceFn reduce, const std::atomic_bool& shouldCancel,
                                      const AxisProjection2DPlan& plan)
 {
-  std::vector<TIn> inputBuffer(plan.inputValues);
-  std::vector<TOut> outputBuffer(plan.outputValues);
-  for(usize start = 0; start < shape.volume; start += plan.inputValues)
+  std::vector<TIn> inputBuffer(plan.input_values);
+  std::vector<TOut> outputBuffer(plan.output_values);
+  for(usize start = 0; start < shape.volume; start += plan.input_values)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const usize count = std::min(plan.inputValues, shape.volume - start);
+    const usize count = std::min(plan.input_values, shape.volume - start);
     Result<> readResult = in.copyIntoBuffer(start, nonstd::span<TIn>(inputBuffer.data(), count));
     if(readResult.invalid())
     {
@@ -1055,16 +1055,16 @@ Result<TOut> ReduceExternalMedianPencil(const StoreT& store, usize valueOffset, 
   {
     return {TOut{}};
   }
-  if(!services.createExternalSort)
+  if(!services.create_external_sort)
   {
     return MakeErrorResult<TOut>(-8746, fmt::format("Axis projection cannot reduce a {}-value Median pencil because no external-sort factory is available.", valueCount));
   }
 
   ExternalSortConfig config;
-  config.recordSize = sizeof(TIn);
-  config.maxRecordsPerBatch = plan.sortBatchValues;
+  config.record_size = sizeof(TIn);
+  config.max_records_per_batch = plan.sort_batch_values;
   config.compare = CompareAxisProjectionRecords<TIn>;
-  auto sortResult = services.createExternalSort(config);
+  auto sortResult = services.create_external_sort(config);
   if(sortResult.invalid())
   {
     return MakeErrorResult<TOut>(-8746, fmt::format("Axis projection failed to create external sorting for a {}-value Median pencil: {}", valueCount, DescribeAxisProjectionProviderError(sortResult)));
@@ -1075,14 +1075,14 @@ Result<TOut> ReduceExternalMedianPencil(const StoreT& store, usize valueOffset, 
     return MakeErrorResult<TOut>(-8746, fmt::format("Axis projection external-sort factory returned null for a {}-value Median pencil.", valueCount));
   }
 
-  std::vector<TIn> inputBuffer(plan.sortBatchValues);
-  for(usize localOffset = 0; localOffset < valueCount; localOffset += plan.sortBatchValues)
+  std::vector<TIn> inputBuffer(plan.sort_batch_values);
+  for(usize localOffset = 0; localOffset < valueCount; localOffset += plan.sort_batch_values)
   {
     if(shouldCancel)
     {
       return {TOut{}};
     }
-    const usize count = std::min(plan.sortBatchValues, valueCount - localOffset);
+    const usize count = std::min(plan.sort_batch_values, valueCount - localOffset);
     Result<> readResult = store.copyIntoBuffer(valueOffset + localOffset, nonstd::span<TIn>(inputBuffer.data(), count));
     if(readResult.invalid())
     {
@@ -1093,7 +1093,7 @@ Result<TOut> ReduceExternalMedianPencil(const StoreT& store, usize valueOffset, 
       return {TOut{}};
     }
     const auto* bytesPtr = reinterpret_cast<const std::byte*>(inputBuffer.data());
-    Result<> appendResult = sorter->append(static_cast<uint64>(count), nonstd::span<const std::byte>(bytesPtr, count * sizeof(TIn)), shouldCancel, ExternalSortProgressCallback{});
+    Result<> appendResult = sorter->append(static_cast<uint64>(count), nonstd::span<const std::byte>(bytesPtr, count * sizeof(TIn)), shouldCancel, ExternalSortProgressCallbackType{});
     if(appendResult.invalid())
     {
       return MakeErrorResult<TOut>(
@@ -1101,7 +1101,7 @@ Result<TOut> ReduceExternalMedianPencil(const StoreT& store, usize valueOffset, 
     }
   }
 
-  Result<> finishResult = sorter->finish(shouldCancel, ExternalSortProgressCallback{});
+  Result<> finishResult = sorter->finish(shouldCancel, ExternalSortProgressCallbackType{});
   if(finishResult.invalid())
   {
     return MakeErrorResult<TOut>(-8748, fmt::format("Axis projection external Median finish failed for a {}-value pencil: {}", valueCount, DescribeAxisProjectionProviderError(finishResult)));
@@ -1130,16 +1130,16 @@ template <class TIn, class TOut>
 Result<> ApplyMedianProjection2DXExternal(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const AxisProjectionShape& shape, const std::atomic_bool& shouldCancel,
                                           const AxisProjection2DPlan& plan, const AxisProjection2DServices<TIn>& services)
 {
-  std::vector<TOut> outputBuffer(plan.outputValues);
+  std::vector<TOut> outputBuffer(plan.output_values);
   usize outputStart = 0;
   usize outputCount = 0;
-  for(usize row = 0; row < shape.dimY; ++row)
+  for(usize row = 0; row < shape.dim_y; ++row)
   {
     if(shouldCancel)
     {
       return {};
     }
-    auto medianResult = ReduceExternalMedianPencil<TIn, TOut>(in, row * shape.dimX, shape.dimX, plan, services, shouldCancel);
+    auto medianResult = ReduceExternalMedianPencil<TIn, TOut>(in, row * shape.dim_x, shape.dim_x, plan, services, shouldCancel);
     if(medianResult.invalid())
     {
       return ConvertResult(std::move(medianResult));
@@ -1149,7 +1149,7 @@ Result<> ApplyMedianProjection2DXExternal(const AbstractDataStore<TIn>& in, Abst
       return {};
     }
     outputBuffer[outputCount++] = medianResult.value();
-    if(outputCount == plan.outputValues || row + 1 == shape.dimY)
+    if(outputCount == plan.output_values || row + 1 == shape.dim_y)
     {
       Result<> writeResult = out.copyFromBuffer(outputStart, nonstd::span<const TOut>(outputBuffer.data(), outputCount));
       if(writeResult.invalid())
@@ -1167,11 +1167,11 @@ template <class TIn, class TOut>
 Result<> ApplyMedianProjection2DYExternal(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const AxisProjectionShape& shape, const std::atomic_bool& shouldCancel,
                                           const AxisProjection2DPlan& plan, const AxisProjection2DServices<TIn>& services)
 {
-  if(!services.createTransposeStore)
+  if(!services.create_transpose_store)
   {
     return MakeErrorResult(-8750, fmt::format("Axis projection cannot transpose {} values for external Median Y because no typed work-store factory is available.", shape.volume));
   }
-  auto storeResult = services.createTransposeStore(shape.volume, std::max<usize>(1, plan.inputValues));
+  auto storeResult = services.create_transpose_store(shape.volume, std::max<usize>(1, plan.input_values));
   if(storeResult.invalid())
   {
     return MakeErrorResult(-8750, fmt::format("Axis projection failed to create its {}-value typed Median Y transpose store: {}", shape.volume, DescribeAxisProjectionProviderError(storeResult)));
@@ -1184,21 +1184,21 @@ Result<> ApplyMedianProjection2DYExternal(const AbstractDataStore<TIn>& in, Abst
   }
 
   {
-    std::vector<TIn> rowBuffer(plan.tileColumns);
-    std::vector<TIn> transposeBuffer(plan.pencilValues);
-    for(usize xStart = 0; xStart < shape.dimX; xStart += plan.tileColumns)
+    std::vector<TIn> rowBuffer(plan.tile_columns);
+    std::vector<TIn> transposeBuffer(plan.pencil_values);
+    for(usize xStart = 0; xStart < shape.dim_x; xStart += plan.tile_columns)
     {
-      const usize tileColumns = std::min(plan.tileColumns, shape.dimX - xStart);
-      for(usize yStart = 0; yStart < shape.dimY; yStart += plan.blockRows)
+      const usize tileColumns = std::min(plan.tile_columns, shape.dim_x - xStart);
+      for(usize yStart = 0; yStart < shape.dim_y; yStart += plan.block_rows)
       {
         if(shouldCancel)
         {
           return {};
         }
-        const usize rowCount = std::min(plan.blockRows, shape.dimY - yStart);
+        const usize rowCount = std::min(plan.block_rows, shape.dim_y - yStart);
         for(usize localY = 0; localY < rowCount; ++localY)
         {
-          Result<> readResult = in.copyIntoBuffer((yStart + localY) * shape.dimX + xStart, nonstd::span<TIn>(rowBuffer.data(), tileColumns));
+          Result<> readResult = in.copyIntoBuffer((yStart + localY) * shape.dim_x + xStart, nonstd::span<TIn>(rowBuffer.data(), tileColumns));
           if(readResult.invalid())
           {
             return readResult;
@@ -1214,7 +1214,7 @@ Result<> ApplyMedianProjection2DYExternal(const AbstractDataStore<TIn>& in, Abst
         }
         for(usize localX = 0; localX < tileColumns; ++localX)
         {
-          Result<> writeResult = transposeStore->copyFromBuffer((xStart + localX) * shape.dimY + yStart, nonstd::span<const TIn>(transposeBuffer.data() + localX * rowCount, rowCount));
+          Result<> writeResult = transposeStore->copyFromBuffer((xStart + localX) * shape.dim_y + yStart, nonstd::span<const TIn>(transposeBuffer.data() + localX * rowCount, rowCount));
           if(writeResult.invalid())
           {
             return writeResult;
@@ -1228,16 +1228,16 @@ Result<> ApplyMedianProjection2DYExternal(const AbstractDataStore<TIn>& in, Abst
     }
   }
 
-  std::vector<TOut> outputBuffer(plan.outputValues);
+  std::vector<TOut> outputBuffer(plan.output_values);
   usize outputStart = 0;
   usize outputCount = 0;
-  for(usize x = 0; x < shape.dimX; ++x)
+  for(usize x = 0; x < shape.dim_x; ++x)
   {
     if(shouldCancel)
     {
       return {};
     }
-    auto medianResult = ReduceExternalMedianPencil<TIn, TOut>(*transposeStore, x * shape.dimY, shape.dimY, plan, services, shouldCancel);
+    auto medianResult = ReduceExternalMedianPencil<TIn, TOut>(*transposeStore, x * shape.dim_y, shape.dim_y, plan, services, shouldCancel);
     if(medianResult.invalid())
     {
       return ConvertResult(std::move(medianResult));
@@ -1247,7 +1247,7 @@ Result<> ApplyMedianProjection2DYExternal(const AbstractDataStore<TIn>& in, Abst
       return {};
     }
     outputBuffer[outputCount++] = medianResult.value();
-    if(outputCount == plan.outputValues || x + 1 == shape.dimX)
+    if(outputCount == plan.output_values || x + 1 == shape.dim_x)
     {
       Result<> writeResult = out.copyFromBuffer(outputStart, nonstd::span<const TOut>(outputBuffer.data(), outputCount));
       if(writeResult.invalid())
@@ -1269,7 +1269,7 @@ Result<> ApplyAxisProjection2D(const AbstractDataStore<TIn>& in, AbstractDataSto
   {
     return {};
   }
-  const SizeVec3 dims{shape.dimX, shape.dimY, shape.dimZ};
+  const SizeVec3Type dims{shape.dim_x, shape.dim_y, shape.dim_z};
   auto planResult = CreateAxisProjection2DPlan<TIn, TOut, ReduceFn>(dims, projDim, targetBytes);
   if(planResult.invalid())
   {
@@ -1279,8 +1279,8 @@ Result<> ApplyAxisProjection2D(const AbstractDataStore<TIn>& in, AbstractDataSto
   AxisProjection2DServices<TIn> defaultServices;
   if(services == nullptr)
   {
-    defaultServices.createExternalSort = [](const ExternalSortConfig& config) { return DataStoreUtilities::GetIOCollection().createExternalSort(config); };
-    defaultServices.createTransposeStore = [&](usize, usize maxBatchValues) { return CreateAxisProjectionTransposeStore(in, out, shape, maxBatchValues, shouldCancel); };
+    defaultServices.create_external_sort = [](const ExternalSortConfig& config) { return data_store_utilities::GetIOCollection().createExternalSort(config); };
+    defaultServices.create_transpose_store = [&](usize, usize maxBatchValues) { return CreateAxisProjectionTransposeStore(in, out, shape, maxBatchValues, shouldCancel); };
     services = &defaultServices;
   }
   try
@@ -1321,7 +1321,7 @@ Result<> ApplyAxisProjection2D(const AbstractDataStore<TIn>& in, AbstractDataSto
   {
     return MakeErrorResult(-8745,
                            fmt::format("Axis projection true-2-D execution failed for dimensions {} on projection axis {} while allocating its bounded {}-byte working set from a {}-byte target: {}",
-                                       StringUtilities::formatDimensions3D(dims), projDim, plan.residentBytes, targetBytes, exception.what()));
+                                       string_utilities::FormatDimensions3D(dims), projDim, plan.resident_bytes, targetBytes, exception.what()));
   }
 }
 } // namespace detail
@@ -1342,14 +1342,14 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
   }
 
   const TIn* const inputValuesPtr = in.data();
-  std::vector<TOut> outputValues(shape.outputSlots);
+  std::vector<TOut> outputValues(shape.output_slots);
 
   auto executePencils = [&](auto inputBaseForSlot, usize inputStride) {
     auto reducePencils = [&](const Range& range) {
       std::vector<TIn> pencil;
       if constexpr(!ReduceFn::k_IsAssociative)
       {
-        pencil.resize(shape.projectionExtent);
+        pencil.resize(shape.projection_extent);
       }
 
       for(usize slot = range.min(); slot < range.max(); ++slot)
@@ -1363,13 +1363,13 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
         {
           typename ReduceFn::template State<TOut> state{};
           constexpr usize k_CancelCheckValues = 65536;
-          for(usize blockStart = 0; blockStart < shape.projectionExtent; blockStart += k_CancelCheckValues)
+          for(usize blockStart = 0; blockStart < shape.projection_extent; blockStart += k_CancelCheckValues)
           {
             if(blockStart != 0 && shouldCancel)
             {
               return;
             }
-            const usize blockEnd = blockStart + std::min(k_CancelCheckValues, shape.projectionExtent - blockStart);
+            const usize blockEnd = blockStart + std::min(k_CancelCheckValues, shape.projection_extent - blockStart);
             for(usize projectionIndex = blockStart; projectionIndex < blockEnd; ++projectionIndex)
             {
               reduce.accumulate(state, inputValuesPtr[inputBase + projectionIndex * inputStride]);
@@ -1379,7 +1379,7 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
         }
         else
         {
-          for(usize projectionIndex = 0; projectionIndex < shape.projectionExtent; ++projectionIndex)
+          for(usize projectionIndex = 0; projectionIndex < shape.projection_extent; ++projectionIndex)
           {
             pencil[projectionIndex] = inputValuesPtr[inputBase + projectionIndex * inputStride];
           }
@@ -1389,27 +1389,27 @@ Result<> ApplyAxisProjectionInMemory(const DataStore<TIn>& in, AbstractDataStore
     };
 
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, shape.outputSlots);
+    parallelAlgorithm.setRange(0, shape.output_slots);
     parallelAlgorithm.execute(reducePencils);
   };
 
   if(projDim == 0)
   {
-    executePencils([&](usize slot) { return slot * shape.dimX; }, usize{1});
+    executePencils([&](usize slot) { return slot * shape.dim_x; }, usize{1});
   }
   else if(projDim == 1)
   {
     executePencils(
         [&](usize slot) {
-          const usize z = slot / shape.dimX;
-          const usize x = slot - z * shape.dimX;
-          return z * shape.planeValues + x;
+          const usize z = slot / shape.dim_x;
+          const usize x = slot - z * shape.dim_x;
+          return z * shape.plane_values + x;
         },
-        shape.dimX);
+        shape.dim_x);
   }
   else
   {
-    executePencils([](usize slot) { return slot; }, shape.planeValues);
+    executePencils([](usize slot) { return slot; }, shape.plane_values);
   }
 
   if(shouldCancel)
@@ -1447,13 +1447,13 @@ template <class TIn, class TOut, class ReduceFn>
 Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const AxisProjectionShape& shape, usize projDim, ReduceFn reduce,
                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  const usize dimX = shape.dimX;
-  const usize dimY = shape.dimY;
-  const usize dimZ = shape.dimZ;
-  const usize planeValues = shape.planeValues;
-  const usize xzValues = shape.xzValues;
+  const usize dimX = shape.dim_x;
+  const usize dimY = shape.dim_y;
+  const usize dimZ = shape.dim_z;
+  const usize planeValues = shape.plane_values;
+  const usize xzValues = shape.xz_values;
   const usize volume = shape.volume;
-  const usize numSlots = shape.outputSlots;
+  const usize numSlots = shape.output_slots;
 
   // copyIntoBuffer/copyFromBuffer are intentionally outside every parallel region because DataStore and
   // AbstractDataStore implementations are not thread-safe. Workers touch only staged vectors and write disjoint
@@ -1664,7 +1664,7 @@ Result<> ApplyAxisProjectionResident(const AbstractDataStore<TIn>& in, AbstractD
  * @brief Validates an axis projection and selects resident staging or bounded true-2-D OOC execution.
  */
 template <class TIn, class TOut, class ReduceFn>
-Result<> ApplyAxisProjection(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const SizeVec3& dims, usize projDim, ReduceFn reduce, const std::atomic_bool& shouldCancel,
+Result<> ApplyAxisProjection(const AbstractDataStore<TIn>& in, AbstractDataStore<TOut>& out, const SizeVec3Type& dims, usize projDim, ReduceFn reduce, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_AxisProjection2DTargetBytes)
 {
   auto shapeResult = detail::ValidateAxisProjection(in, out, dims, projDim);
@@ -1686,7 +1686,7 @@ Result<> ApplyAxisProjection(const AbstractDataStore<TIn>& in, AbstractDataStore
     if(in.getTupleShape().size() != 3)
     {
       return MakeErrorResult(-8344, fmt::format("Axis projection (median pencil) requires a 3-dimensional input tuple shape, but got rank {} for projection dimensions {}.", in.getTupleShape().size(),
-                                                StringUtilities::formatDimensions3D(dims)));
+                                                string_utilities::FormatDimensions3D(dims)));
     }
   }
 
@@ -1698,7 +1698,7 @@ Result<> ApplyAxisProjection(const AbstractDataStore<TIn>& in, AbstractDataStore
       return detail::ApplyAxisProjectionInMemory(*inMemoryStorePtr, out, shape, projDim, reduce, shouldCancel);
     }
   }
-  if(shape.dimZ == 1 && usesOutOfCoreEndpoint)
+  if(shape.dim_z == 1 && usesOutOfCoreEndpoint)
   {
     return detail::ApplyAxisProjection2D(in, out, shape, projDim, reduce, shouldCancel, target2DBytes);
   }

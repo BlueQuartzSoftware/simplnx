@@ -43,7 +43,7 @@ requires IsConcatenatableArrayType<ArrayType>::value
 
     messageHandler.sendInfoMessage(fmt::format("Concatenating array '{}'...", inputArrayPath.toString()));
     const auto& inputDataArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
-    auto result = CopyFromArray::CopyData(inputDataArray, outputDataArray, destTupleOffset, 0, inputDataArray.getNumberOfTuples());
+    auto result = copy_from_array::CopyData(inputDataArray, outputDataArray, destTupleOffset, 0, inputDataArray.getNumberOfTuples());
     if(result.invalid())
     {
       return result;
@@ -81,8 +81,8 @@ Result<> ConcatenateNeighborListsImpl(DataStructure& dataStructure, const std::v
 
 struct SIMPLNXCORE_EXPORT ConcatenateDataArraysInputValues
 {
-  std::vector<DataPath> InputArrayPaths;
-  DataPath OutputArrayPath;
+  std::vector<DataPath> input_array_paths;
+  DataPath output_array_path;
 };
 
 /**

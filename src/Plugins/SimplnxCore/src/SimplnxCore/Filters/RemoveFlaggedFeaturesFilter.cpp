@@ -66,7 +66,7 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_Functionality_Key, "Selected Operation", "Whether to [0] remove features, [1] extract features into new geometry or [2] extract and then remove",
-                                         to_underlying(Functionality::Remove), ChoicesParameter::Choices{"Remove", "Extract", "Extract then Remove"})); // sequence dependent DO NOT REORDER
+                                         to_underlying(Functionality::Remove), ChoicesParameter::ChoicesType{"Remove", "Extract", "Extract then Remove"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<BoolParameter>(k_FillRemovedFeatures_Key, "Fill-in Removed Features", "Whether or not to fill in the gaps left by the removed Features", false));
 
   params.insertSeparator(Parameters::Separator{"Geometry"});
@@ -75,14 +75,14 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<StringParameter>(k_CreatedImageGeometryPrefix_Key, "Created Image Geometry Prefix",
                                                   "The prefix name for each of new cropped (extracted) geometry \n\nNOTE: a '-' will automatically be added between the prefix and number",
                                                   "Extracted_Feature"));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FlaggedFeaturesArrayPath_Key, "Flagged Features", "Specifies whether the Feature will remain in the structure or not", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing flagged features",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
@@ -126,7 +126,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -9893, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   if((operationType == to_underlying(Functionality::Remove) || operationType == to_underlying(Functionality::ExtractThenRemove)) && fillRemovedFeatures)
@@ -134,7 +134,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -9894, "Attribute Arrays to Ignore");
     if(ignoredArraysResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
     }
   }
 
@@ -143,7 +143,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
       ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, cellFeatureAttributeMatrixPath, -9895, "Flagged Features", pFlaggedFeaturesArrayPathValue);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   if(operationType == to_underlying(Functionality::Extract) || operationType == to_underlying(Functionality::ExtractThenRemove))
@@ -151,7 +151,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(elementDataResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(elementDataResult), {})};
     }
   }
 
@@ -170,19 +170,19 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 
     // Inform users that the following arrays are going to be modified in place
     // Cell Data is going to be modified
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, cellDataPath, {});
     // Feature Data is going to be modified
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFlaggedFeaturesArrayPathValue.getParent(), {});
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pFlaggedFeaturesArrayPathValue.getParent(), {});
 
     // This section will warn the user about the removal of NeighborLists
     auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, pFeatureIdsArrayPathValue, pFlaggedFeaturesArrayPathValue, resultOutputActions);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
       return result;
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -191,19 +191,19 @@ Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
 {
   RemoveFlaggedFeaturesInputValues inputValues;
 
-  inputValues.ExtractFeatures = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
-  inputValues.FillRemovedFeatures = filterArgs.value<bool>(k_FillRemovedFeatures_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.FlaggedFeaturesArrayPath = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.CreatedImageGeometryPrefix = filterArgs.value<std::string>(k_CreatedImageGeometryPrefix_Key);
-  inputValues.TempBoundsPath = inputValues.FlaggedFeaturesArrayPath.replaceName(k_BoundsName);
+  inputValues.extract_features = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
+  inputValues.fill_removed_features = filterArgs.value<bool>(k_FillRemovedFeatures_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.flagged_features_array_path = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
+  inputValues.ignored_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.created_image_geometry_prefix = filterArgs.value<std::string>(k_CreatedImageGeometryPrefix_Key);
+  inputValues.temp_bounds_path = inputValues.flagged_features_array_path.replaceName(k_BoundsName);
 
   // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeometryPath).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
-  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.image_geometry_path).getCellDataPath();
+  inputValues.feature_ids_array_path = MapToGeometryCellDataPath(cellDataPath, inputValues.feature_ids_array_path);
+  inputValues.ignored_data_array_paths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignored_data_array_paths);
 
   return RemoveFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

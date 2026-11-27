@@ -58,7 +58,7 @@ protected:
   IDataAction() = default;
 };
 
-using AnyDataAction = AnyCloneable<IDataAction>;
+using AnyDataActionType = AnyCloneable<IDataAction>;
 
 /**
  * @brief The IDataCreationAction class is a subclass of IDataAction used for
@@ -122,9 +122,9 @@ struct SIMPLNX_EXPORT DataObjectModification
     Unknown = 2,
   };
 
-  DataPath modifiedPath;
-  ModifiedType modifiedType = ModifiedType::Unknown;
-  DataObject::Type dataObjectType = DataObject::Type::Unknown;
+  DataPath modified_path;
+  ModifiedType modified_type = ModifiedType::Unknown;
+  DataObject::Type data_object_type = DataObject::Type::Unknown;
 };
 
 /**
@@ -132,9 +132,9 @@ struct SIMPLNX_EXPORT DataObjectModification
  */
 struct SIMPLNX_EXPORT OutputActions
 {
-  std::vector<AnyDataAction> actions;
-  std::vector<AnyDataAction> deferredActions;
-  std::vector<DataObjectModification> modifiedActions;
+  std::vector<AnyDataActionType> actions;
+  std::vector<AnyDataActionType> deferred_actions;
+  std::vector<DataObjectModification> modified_actions;
 
   OutputActions() = default;
 
@@ -167,7 +167,7 @@ struct SIMPLNX_EXPORT OutputActions
   void appendDeferredAction(std::unique_ptr<T> action)
   {
     static_assert(std::is_base_of_v<IDataAction, T>, "OutputActions::appendDeferredAction requires T to be derived from IDataAction");
-    deferredActions.emplace_back(std::move(action));
+    deferred_actions.emplace_back(std::move(action));
   }
 
   /**
@@ -177,7 +177,7 @@ struct SIMPLNX_EXPORT OutputActions
    */
   void appendDataObjectModificationNotification(const DataPath& dataPath, DataObjectModification::ModifiedType modifiedType)
   {
-    modifiedActions.push_back(DataObjectModification{.modifiedPath = dataPath, .modifiedType = modifiedType});
+    modified_actions.push_back(DataObjectModification{.modified_path = dataPath, .modified_type = modifiedType});
   }
 
   /**
@@ -187,7 +187,7 @@ struct SIMPLNX_EXPORT OutputActions
    * @param mode The mode (Preflight or Execute)
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode);
+  static Result<> ApplyActions(nonstd::span<const AnyDataActionType> actions, DataStructure& dataStructure, IDataAction::Mode mode);
 
   /**
    * @brief Applies regular actions to a DataStructure.
@@ -234,14 +234,14 @@ inline OutputActions MergeOutputActions(OutputActions first, OutputActions secon
     outputActions.actions.push_back(std::move(action));
   }
 
-  outputActions.deferredActions.reserve(first.deferredActions.size() + second.deferredActions.size());
-  for(auto&& deferredAction : first.deferredActions)
+  outputActions.deferred_actions.reserve(first.deferred_actions.size() + second.deferred_actions.size());
+  for(auto&& deferredAction : first.deferred_actions)
   {
-    outputActions.deferredActions.push_back(std::move(deferredAction));
+    outputActions.deferred_actions.push_back(std::move(deferredAction));
   }
-  for(auto&& deferredAction : second.deferredActions)
+  for(auto&& deferredAction : second.deferred_actions)
   {
-    outputActions.deferredActions.push_back(std::move(deferredAction));
+    outputActions.deferred_actions.push_back(std::move(deferredAction));
   }
 
   return outputActions;

@@ -40,11 +40,11 @@ using ProgressCallbackType = std::function<void(usize)>;
 Result<std::unique_ptr<ITemporaryRecordStore>> CreateTemporaryRecordStore(uint64 recordSize, uint64 recordCount, bool allowInMemoryFallback)
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = recordSize;
-  config.maxRecordsPerBatch = k_RecordsPerPage;
-  config.initialRecordCount = recordCount;
+  config.record_size = recordSize;
+  config.max_records_per_batch = k_RecordsPerPage;
+  config.initial_record_count = recordCount;
 
-  auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+  auto result = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.invalid() && allowInMemoryFallback)
   {
     auto fallbackResult = InMemoryTemporaryRecordStore::Create(config);
@@ -989,7 +989,7 @@ SegmentFeatures::~SegmentFeatures() = default;
 // equivalences. Periodic merging joins wrapped boundaries. Final resolution writes dense IDs.
 Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore, bool usesOutOfCoreInput)
 {
-  const SizeVec3 udims = gridGeom->getDimensions();
+  const SizeVec3Type udims = gridGeom->getDimensions();
   const int64 dimX = static_cast<int64>(udims[0]);
   const int64 dimY = static_cast<int64>(udims[1]);
   const int64 dimZ = static_cast<int64>(udims[2]);
@@ -1126,8 +1126,8 @@ bool SegmentFeatures::areNeighborsSimilar(int64 /*point1*/, int64 /*point2*/) co
   return false;
 }
 
-Result<> SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
+Result<> SegmentFeatures::randomizeFeatureIds(nx::core::Int32ArrayType* featureIds, uint64 totalFeatures)
 {
   m_MessageHandler.sendInfoMessage("Randomizing Feature Ids");
-  return ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
+  return cluster_utilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

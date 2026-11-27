@@ -558,7 +558,7 @@ public:
 
 using FloatVec2Type = Vec2<float32>;
 using IntVec2Type = Vec2<int32>;
-using SizeVec2 = Vec2<usize>;
+using SizeVec2Type = Vec2<usize>;
 
 // -----------------------------------------------------------------------------
 template <typename T>
@@ -1514,31 +1514,31 @@ public:
   }
 };
 
-using FloatVec3 = Vec3<float32>;
-using Float64Vec3 = Vec3<float64>;
-using IntVec3 = Vec3<int32>;
-using UIntVec3 = Vec3<uint32>;
-using SizeVec3 = Vec3<usize>;
-using UInt64Vec3 = Vec3<uint64>;
-using USizeVec3 = Vec3<usize>;
+using FloatVec3Type = Vec3<float32>;
+using Float64Vec3Type = Vec3<float64>;
+using IntVec3Type = Vec3<int32>;
+using UIntVec3Type = Vec3<uint32>;
+using SizeVec3Type = Vec3<usize>;
+using UInt64Vec3Type = Vec3<uint64>;
+using USizeVec3Type = Vec3<usize>;
 
-using FloatVec4 = Vec4<float32>;
-using IntVec4 = Vec4<int32>;
-using SizeVec4 = Vec4<usize>;
-using USizeVec4 = Vec4<usize>;
+using FloatVec4Type = Vec4<float32>;
+using IntVec4Type = Vec4<int32>;
+using SizeVec4Type = Vec4<usize>;
+using USizeVec4Type = Vec4<usize>;
 
-using FloatVec6 = Vec6<float32>;
-using IntVec6 = Vec6<int32>;
+using FloatVec6Type = Vec6<float32>;
+using IntVec6Type = Vec6<int32>;
 
-using FloatVec7 = Vec7<float32>;
-using IntVec7 = Vec7<int32>;
+using FloatVec7Type = Vec7<float32>;
+using IntVec7Type = Vec7<int32>;
 
 // type aliasing from Vec3<T> to Matrix3x1 so that existing code keeps working
 template <typename T>
-using Matrix3X1 = Vec3<T>;
+using Matrix3X1Type = Vec3<T>;
 
-using Matrix3X1f = Vec3<float32>;
-using Matrix3X1d = Vec3<float64>;
+using Matrix3X1fType = Vec3<float32>;
+using Matrix3X1dType = Vec3<float64>;
 
 // Free operator* functions for scalar * Vec3 with mixed types
 template <typename T1, typename T2>

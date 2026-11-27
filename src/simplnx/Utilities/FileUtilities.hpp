@@ -45,7 +45,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nx::core::FileUtilities
+namespace nx::core::file_utilities
 {
 
 namespace detail
@@ -104,7 +104,7 @@ SIMPLNX_EXPORT Result<> ValidateDirectoryWritePermission(const std::filesystem::
  */
 SIMPLNX_EXPORT std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath);
 
-namespace CSV
+namespace csv
 {
 /**
  * @class AbstractDataParser
@@ -231,7 +231,7 @@ public:
     }
     else
     {
-      Result<T> parseResult = StringInterpretationUtilities::Convert<T>(token);
+      Result<T> parseResult = string_interpretation_utilities::Convert<T>(token);
       if(parseResult.invalid())
       {
         return ConvertResult(std::move(parseResult));
@@ -287,26 +287,26 @@ private:
   usize m_BufferSize = 0;
 };
 
-using Int8Parser = CSVDataParser<Int8Array, int8>;
-using UInt8Parser = CSVDataParser<UInt8Array, uint8>;
+using Int8ParserType = CSVDataParser<Int8ArrayType, int8>;
+using UInt8ParserType = CSVDataParser<UInt8ArrayType, uint8>;
 
-using Int16Parser = CSVDataParser<Int16Array, int16>;
-using UInt16Parser = CSVDataParser<UInt16Array, uint16>;
+using Int16ParserType = CSVDataParser<Int16ArrayType, int16>;
+using UInt16ParserType = CSVDataParser<UInt16ArrayType, uint16>;
 
-using Int32Parser = CSVDataParser<Int32Array, int32>;
-using UInt32Parser = CSVDataParser<UInt32Array, uint32>;
+using Int32ParserType = CSVDataParser<Int32ArrayType, int32>;
+using UInt32ParserType = CSVDataParser<UInt32ArrayType, uint32>;
 
-using Int64Parser = CSVDataParser<Int64Array, int64>;
-using UInt64Parser = CSVDataParser<UInt64Array, uint64>;
+using Int64ParserType = CSVDataParser<Int64ArrayType, int64>;
+using UInt64ParserType = CSVDataParser<UInt64ArrayType, uint64>;
 
-using Float32Parser = CSVDataParser<Float32Array, float32>;
-using Float64Parser = CSVDataParser<Float64Array, float64>;
+using Float32ParserType = CSVDataParser<Float32ArrayType, float32>;
+using Float64ParserType = CSVDataParser<Float64ArrayType, float64>;
 
-using BoolParser = CSVDataParser<BoolArray, bool>;
+using BoolParserType = CSVDataParser<BoolArrayType, bool>;
 
-using StringParser = CSVDataParser<StringArray, std::string>;
+using StringParserType = CSVDataParser<StringArray, std::string>;
 
-using ParsersVector = std::vector<std::unique_ptr<AbstractDataParser>>;
+using ParsersVectorType = std::vector<std::unique_ptr<AbstractDataParser>>;
 
 /**
  * @brief Creates one typed parser for each non-skipped CSV column.
@@ -319,7 +319,7 @@ using ParsersVector = std::vector<std::unique_ptr<AbstractDataParser>>;
  * @pre csvTypes, skippedArrays, and headers have equal sizes. Each non-skipped
  * destination exists and has the requested concrete array type.
  */
-SIMPLNX_EXPORT Result<ParsersVector> CreateParsers(const std::vector<CSVType>& csvTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+SIMPLNX_EXPORT Result<ParsersVectorType> CreateParsers(const std::vector<CSVType>& csvTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
                                                    DataStructure& dataStructure);
 
 /**
@@ -329,7 +329,7 @@ SIMPLNX_EXPORT Result<ParsersVector> CreateParsers(const std::vector<CSVType>& c
  *
  * The function attempts every parser so one failure does not hide later failures.
  */
-SIMPLNX_EXPORT Result<> FlushParsers(const ParsersVector& dataParsers);
+SIMPLNX_EXPORT Result<> FlushParsers(const ParsersVectorType& dataParsers);
 
 /**
  * @brief Parses one CSV line into aligned destination parsers.
@@ -344,7 +344,7 @@ SIMPLNX_EXPORT Result<> FlushParsers(const ParsersVector& dataParsers);
  * @return Parse result for the line.
  * @pre dataParsers and headers cover every token. lineNumber is not less than beginIndex.
  */
-SIMPLNX_EXPORT Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters,
+SIMPLNX_EXPORT Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters,
                                   usize lineNumber, usize beginIndex, bool& flushRequired);
 
 /**

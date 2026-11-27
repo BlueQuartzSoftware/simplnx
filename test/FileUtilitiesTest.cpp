@@ -144,7 +144,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission checks writable ances
   for(const auto& [inputPath, isFile] : cases)
   {
     CAPTURE(inputPath, isFile);
-    const auto result = FileUtilities::ValidateDirectoryWritePermission(inputPath, isFile);
+    const auto result = file_utilities::ValidateDirectoryWritePermission(inputPath, isFile);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
   REQUIRE_FALSE(fs::exists(existingDirectory / "new"));
@@ -197,7 +197,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission returns a status erro
   SECTION("Directory input")
   {
     Result<> result;
-    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(directoryPath, false));
+    REQUIRE_NOTHROW(result = file_utilities::ValidateDirectoryWritePermission(directoryPath, false));
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -4092);
@@ -208,7 +208,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission returns a status erro
   {
     const auto filePath = directoryPath / "out.txt";
     Result<> result;
-    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(filePath, true));
+    REQUIRE_NOTHROW(result = file_utilities::ValidateDirectoryWritePermission(filePath, true));
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -4092);

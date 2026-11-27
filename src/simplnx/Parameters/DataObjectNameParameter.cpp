@@ -22,7 +22,7 @@ Uuid DataObjectNameParameter::uuid() const
   return ParameterTraits<DataObjectNameParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataObjectNameParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataObjectNameParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -78,12 +78,12 @@ Result<> DataObjectNameParameter::validateName(const std::string& value) const
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataObjectName cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataObjectName cannot be empty", prefix));
   }
 
   if(!DataObject::IsValidName(value))
   {
-    return MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_InvalidDataObjectName, fmt::format("{}'{}' is not a valid DataObject name", prefix, value));
+    return MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateInvalidDataObjectName, fmt::format("{}'{}' is not a valid DataObject name", prefix, value));
   }
   return {};
 }

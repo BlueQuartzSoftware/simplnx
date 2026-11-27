@@ -22,17 +22,17 @@ constexpr ChoicesParameter::ValueType k_UserDefinedRange = 1;
 
 struct SIMPLNXCORE_EXPORT SliceTriangleGeometryInputValues
 {
-  ChoicesParameter::ValueType SliceRange{};
-  float32 Zstart{};
-  float32 Zend{};
-  float32 SliceResolution{};
-  bool HaveRegionIds{};
-  DataPath CADDataContainerName;
-  DataPath RegionIdArrayPath;
-  DataGroupCreationParameter::ValueType SliceDataContainerName;
-  DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
-  DataObjectNameParameter::ValueType SliceIdArrayName;
-  DataObjectNameParameter::ValueType SliceAttributeMatrixName;
+  ChoicesParameter::ValueType slice_range{};
+  float32 zstart{};
+  float32 zend{};
+  float32 slice_resolution{};
+  bool have_region_ids{};
+  DataPath cad_data_container_name;
+  DataPath region_id_array_path;
+  DataGroupCreationParameter::ValueType slice_data_container_name;
+  DataObjectNameParameter::ValueType edge_attribute_matrix_name;
+  DataObjectNameParameter::ValueType slice_id_array_name;
+  DataObjectNameParameter::ValueType slice_attribute_matrix_name;
 };
 
 /**
@@ -56,8 +56,8 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  using TriStoreType = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-  using VertsStoreType = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+  using TriStoreType = AbstractDataStore<INodeGeometry2D::SharedFaceListType::value_type>;
+  using VertsStoreType = AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>;
 
 private:
   DataStructure& m_DataStructure;

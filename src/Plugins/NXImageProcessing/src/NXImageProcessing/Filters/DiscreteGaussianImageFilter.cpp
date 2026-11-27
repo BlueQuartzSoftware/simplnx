@@ -96,7 +96,7 @@ IFilter::PreflightResult DiscreteGaussianImageFilter::preflightImpl(const DataSt
   // preflight has no minimum-dimension guard following it.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> DiscreteGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -135,9 +135,9 @@ Result<Arguments> DiscreteGaussianImageFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverter>(args, json, simpl::k_VarianceKey, k_Variance_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverterType>(args, json, simpl::k_VarianceKey, k_Variance_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_MaximumKernelWidthKey, k_MaximumKernelWidth_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverter>(args, json, simpl::k_MaximumErrorKey, k_MaximumError_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverterType>(args, json, simpl::k_MaximumErrorKey, k_MaximumError_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseImageSpacingKey, k_UseImageSpacing_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));

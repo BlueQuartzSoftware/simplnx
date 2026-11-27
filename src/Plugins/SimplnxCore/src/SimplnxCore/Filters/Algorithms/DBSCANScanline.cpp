@@ -44,7 +44,7 @@ namespace
  *
  * The adapter avoids allocating one mask value for each coordinate tuple.
  */
-class AllTrueMaskCompare final : public MaskCompareUtilities::MaskCompare
+class AllTrueMaskCompare final : public mask_compare_utilities::MaskCompare
 {
 public:
   /**
@@ -322,7 +322,7 @@ public:
    */
   Result<> initialize()
   {
-    auto& ioCollection = DataStoreUtilities::GetIOCollection();
+    auto& ioCollection = data_store_utilities::GetIOCollection();
     if(!ioCollection.hasExternalSortCapability() || !ioCollection.hasTemporaryRecordStoreCapability())
     {
       return MakeErrorResult(-54061, "DBSCAN out-of-core execution requires registered external-sort and temporary-record-store providers.");
@@ -373,7 +373,7 @@ public:
           const float32 value = static_cast<float32>(values[index * m_Dimensions + dimension]);
           if(!std::isfinite(value))
           {
-            return DBSCANCommon::MakeNonFiniteCoordinateError(m_InputValues.ClusteringArrayPath, offset + index, dimension, value);
+            return dbscan_common::MakeNonFiniteCoordinateError(m_InputValues.clustering_array_path, offset + index, dimension, value);
           }
           minimum[dimension] = std::isnan(minimum[dimension]) ? value : std::min(minimum[dimension], value);
           maximum[dimension] = std::isnan(maximum[dimension]) ? value : std::max(maximum[dimension], value);
@@ -386,12 +386,12 @@ public:
       return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
     }
 
-    m_SideLength = m_InputValues.Epsilon / std::sqrt(static_cast<float32>(m_Dimensions));
+    m_SideLength = m_InputValues.epsilon / std::sqrt(static_cast<float32>(m_Dimensions));
     for(usize dimension = 0; dimension < m_Dimensions; ++dimension)
     {
       m_Origin[dimension] = minimum[dimension] - m_SideLength;
       // Every unmasked value is finite and lies between the minimum and the maximum, so a valid span keeps each grid coordinate cast defined.
-      Result<float32> spanResult = DBSCANCommon::ComputeAxisCellSpan(m_InputValues.ClusteringArrayPath, dimension, minimum[dimension], maximum[dimension], m_SideLength, false);
+      Result<float32> spanResult = dbscan_common::ComputeAxisCellSpan(m_InputValues.clustering_array_path, dimension, minimum[dimension], maximum[dimension], m_SideLength, false);
       if(spanResult.invalid())
       {
         return ConvertResult(std::move(spanResult));
@@ -399,8 +399,8 @@ public:
     }
 
     ExternalSortConfig membershipConfig;
-    membershipConfig.recordSize = sizeof(DBSCANPointRecord<T>);
-    membershipConfig.maxRecordsPerBatch = k_ExternalBatchRecords;
+    membershipConfig.record_size = sizeof(DBSCANPointRecord<T>);
+    membershipConfig.max_records_per_batch = k_ExternalBatchRecords;
     membershipConfig.compare = ComparePointRecords<T>;
     auto membershipResult = ioCollection.createExternalSort(membershipConfig);
     if(membershipResult.invalid())
@@ -536,7 +536,7 @@ public:
       return flushResult;
     }
 
-    switch(static_cast<DBSCAN::ParseOrder>(m_InputValues.ParseOrder))
+    switch(static_cast<DBSCAN::ParseOrder>(m_InputValues.parse_order))
     {
     case DBSCAN::ParseOrder::LowDensityFirst: {
       Result<> sortResult = quickSortCoreOrder(0, m_CoreGridCount - 1);
@@ -548,7 +548,7 @@ public:
     }
     case DBSCAN::ParseOrder::Random:
     case DBSCAN::ParseOrder::SeededRandom: {
-      std::mt19937_64 generator(m_InputValues.Seed);
+      std::mt19937_64 generator(m_InputValues.seed);
       for(uint64 index = m_CoreGridCount - 1; index > 0; --index)
       {
         if(m_ShouldCancel)
@@ -581,7 +581,7 @@ public:
       break;
     }
     default:
-      return MakeErrorResult(-54072, fmt::format("DBSCAN parse-order value {} is invalid.", m_InputValues.ParseOrder));
+      return MakeErrorResult(-54072, fmt::format("DBSCAN parse-order value {} is invalid.", m_InputValues.parse_order));
     }
     return flushCaches();
   }
@@ -887,10 +887,10 @@ public:
     }
 
     ExternalSortConfig labelConfig;
-    labelConfig.recordSize = sizeof(DBSCANLabelRecord);
-    labelConfig.maxRecordsPerBatch = k_ExternalBatchRecords;
+    labelConfig.record_size = sizeof(DBSCANLabelRecord);
+    labelConfig.max_records_per_batch = k_ExternalBatchRecords;
     labelConfig.compare = CompareLabelRecords;
-    auto labelResult = DataStoreUtilities::GetIOCollection().createExternalSort(labelConfig);
+    auto labelResult = data_store_utilities::GetIOCollection().createExternalSort(labelConfig);
     if(labelResult.invalid())
     {
       return ConvertResult(std::move(labelResult));
@@ -1351,9 +1351,9 @@ private:
           }
           for(uint64 rightIndex = 0; rightIndex < rightCount; ++rightIndex)
           {
-            const float64 distance = ClusterUtilities::GetDistance(m_LeftMergeBuffer[static_cast<usize>(leftIndex)].coordinates, 0, m_RightMergeBuffer[static_cast<usize>(rightIndex)].coordinates, 0,
-                                                                   m_Dimensions, m_InputValues.DistanceMetric);
-            if(distance < m_InputValues.Epsilon)
+            const float64 distance = cluster_utilities::GetDistance(m_LeftMergeBuffer[static_cast<usize>(leftIndex)].coordinates, 0, m_RightMergeBuffer[static_cast<usize>(rightIndex)].coordinates, 0,
+                                                                   m_Dimensions, m_InputValues.distance_metric);
+            if(distance < m_InputValues.epsilon)
             {
               return {true};
             }
@@ -1820,10 +1820,10 @@ private:
     }
 
     TemporaryRecordStoreConfig stateConfig;
-    stateConfig.recordSize = sizeof(DBSCANGridState);
-    stateConfig.maxRecordsPerBatch = k_ExternalBatchRecords;
-    stateConfig.initialRecordCount = m_ActiveGridCount;
-    auto stateResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(stateConfig);
+    stateConfig.record_size = sizeof(DBSCANGridState);
+    stateConfig.max_records_per_batch = k_ExternalBatchRecords;
+    stateConfig.initial_record_count = m_ActiveGridCount;
+    auto stateResult = data_store_utilities::GetIOCollection().createTemporaryRecordStore(stateConfig);
     if(stateResult.invalid())
     {
       return ConvertResult(std::move(stateResult));
@@ -1861,7 +1861,7 @@ private:
       }
       currentState.parent = statesWritten + stateBufferCount;
       currentState.cluster_id = static_cast<int32>(currentState.parent + 1);
-      currentState.is_core = currentState.member_count >= static_cast<uint64>(m_InputValues.MinPoints) ? uint8{1} : uint8{0};
+      currentState.is_core = currentState.member_count >= static_cast<uint64>(m_InputValues.min_points) ? uint8{1} : uint8{0};
       if(currentState.is_core != 0)
       {
         ++m_CoreGridCount;
@@ -1929,10 +1929,10 @@ private:
       return {};
     }
     TemporaryRecordStoreConfig orderConfig;
-    orderConfig.recordSize = sizeof(DBSCANCoreOrder);
-    orderConfig.maxRecordsPerBatch = k_ExternalBatchRecords;
-    orderConfig.initialRecordCount = m_CoreGridCount;
-    auto orderResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(orderConfig);
+    orderConfig.record_size = sizeof(DBSCANCoreOrder);
+    orderConfig.max_records_per_batch = k_ExternalBatchRecords;
+    orderConfig.initial_record_count = m_CoreGridCount;
+    auto orderResult = data_store_utilities::GetIOCollection().createTemporaryRecordStore(orderConfig);
     if(orderResult.invalid())
     {
       return ConvertResult(std::move(orderResult));
@@ -2020,10 +2020,10 @@ private:
     for(usize dimension = 0; dimension < m_Dimensions; ++dimension)
     {
       ExternalSortConfig sortConfig;
-      sortConfig.recordSize = sizeof(DBSCANAxisRecord);
-      sortConfig.maxRecordsPerBatch = k_ExternalBatchRecords;
+      sortConfig.record_size = sizeof(DBSCANAxisRecord);
+      sortConfig.max_records_per_batch = k_ExternalBatchRecords;
       sortConfig.compare = CompareAxisRecords;
-      auto sortResult = DataStoreUtilities::GetIOCollection().createExternalSort(sortConfig);
+      auto sortResult = data_store_utilities::GetIOCollection().createExternalSort(sortConfig);
       if(sortResult.invalid())
       {
         return ConvertResult(std::move(sortResult));
@@ -2120,10 +2120,10 @@ private:
       }
 
       TemporaryRecordStoreConfig axisConfig;
-      axisConfig.recordSize = sizeof(DBSCANAxisRecord);
-      axisConfig.maxRecordsPerBatch = k_ExternalBatchRecords;
-      axisConfig.initialRecordCount = uniqueCount;
-      auto storeResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(axisConfig);
+      axisConfig.record_size = sizeof(DBSCANAxisRecord);
+      axisConfig.max_records_per_batch = k_ExternalBatchRecords;
+      axisConfig.initial_record_count = uniqueCount;
+      auto storeResult = data_store_utilities::GetIOCollection().createTemporaryRecordStore(axisConfig);
       if(storeResult.invalid())
       {
         return ConvertResult(std::move(storeResult));
@@ -2306,7 +2306,7 @@ struct DBSCANExternalFunctor
    * @return Result from label clearing or external clustering.
    */
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const IDataArray* maskArray, Int32Array& featureIds, const std::atomic_bool& shouldCancel,
+  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const IDataArray* maskArray, Int32ArrayType& featureIds, const std::atomic_bool& shouldCancel,
                       int32& finalClusterCount) const
   {
     const auto& inputStore = clusterArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -2316,13 +2316,13 @@ struct DBSCANExternalFunctor
     {
       return zeroResult;
     }
-    if(!inputValues->UseMask)
+    if(!inputValues->use_mask)
     {
       return RunExternalTyped<T, uint8>(inputStore, nullptr, featureIdsStore, *inputValues, shouldCancel, finalClusterCount);
     }
     if(maskArray == nullptr)
     {
-      return MakeErrorResult(-54060, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-54060, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues->mask_array_path.toString()));
     }
     switch(maskArray->getDataType())
     {
@@ -2331,7 +2331,7 @@ struct DBSCANExternalFunctor
     case DataType::uint8:
       return RunExternalTyped<T, uint8>(inputStore, &maskArray->template getIDataStoreRefAs<AbstractDataStore<uint8>>(), featureIdsStore, *inputValues, shouldCancel, finalClusterCount);
     default:
-      return MakeErrorResult(-54060, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-54060, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues->mask_array_path.toString()));
     }
   }
 };
@@ -2440,7 +2440,7 @@ public:
    */
   template <typename T>
   HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -2476,7 +2476,7 @@ public:
         auto xVal = static_cast<float32>(chunkBuf[local * numComps + 0]);
         auto yVal = static_cast<float32>(chunkBuf[local * numComps + 1]);
         auto zVal = static_cast<float32>(chunkBuf[local * numComps + 2]);
-        Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<3>(arrayPath, startTup + local, {xVal, yVal, zVal});
+        Result<> finiteResult = dbscan_common::CheckFiniteCoordinates<3>(arrayPath, startTup + local, {xVal, yVal, zVal});
         if(finiteResult.invalid())
         {
           m_InitializationResult = std::move(finiteResult);
@@ -2508,7 +2508,7 @@ public:
     origin[1] = bounds[1] - buffer;
     origin[2] = bounds[2] - buffer;
 
-    Result<std::array<usize, 3>> dimsResult = DBSCANCommon::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
+    Result<std::array<usize, 3>> dimsResult = dbscan_common::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
     if(dimsResult.invalid())
     {
       m_InitializationResult = ConvertResult(std::move(dimsResult));
@@ -2694,7 +2694,7 @@ public:
    */
   template <typename T>
   HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -2729,7 +2729,7 @@ public:
 
         auto xVal = static_cast<float32>(chunkBuf[local * numComps + 0]);
         auto yVal = static_cast<float32>(chunkBuf[local * numComps + 1]);
-        Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<2>(arrayPath, startTup + local, {xVal, yVal});
+        Result<> finiteResult = dbscan_common::CheckFiniteCoordinates<2>(arrayPath, startTup + local, {xVal, yVal});
         if(finiteResult.invalid())
         {
           m_InitializationResult = std::move(finiteResult);
@@ -2758,7 +2758,7 @@ public:
     origin[0] = bounds[0] - buffer;
     origin[1] = bounds[1] - buffer;
 
-    Result<std::array<usize, 2>> dimsResult = DBSCANCommon::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
+    Result<std::array<usize, 2>> dimsResult = dbscan_common::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
     if(dimsResult.invalid())
     {
       m_InitializationResult = ConvertResult(std::move(dimsResult));
@@ -3134,8 +3134,8 @@ public:
    * @param mask Selects coordinate tuples.
    * @param distMetric Distance metric for pairwise tests.
    */
-  GDCF(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
-       ClusterUtilities::DistanceMetric distMetric)
+  GDCF(const std::atomic_bool& shouldCancel, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask,
+       cluster_utilities::DistanceMetric distMetric)
   : m_HyperGridBitMap(HGBPT(shouldCancel, inputArray, arrayPath, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
@@ -3376,7 +3376,7 @@ private:
 
   float32 m_Epsilon = 0.0f;
   const AbstractDataStore<T>& m_InputDataStore;
-  ClusterUtilities::DistanceMetric m_DistMetric;
+  cluster_utilities::DistanceMetric m_DistMetric;
   const std::atomic_bool& m_ShouldCancel;
 
   /**
@@ -3501,7 +3501,7 @@ private:
       }
       for(usize q = 0; q < m_HyperGridBitMap.grid_voxels[qGridId].size(); q++)
       {
-        float64 dist = ClusterUtilities::GetDistance(pCoords, dims * p, qCoords, dims * q, dims, m_DistMetric);
+        float64 dist = cluster_utilities::GetDistance(pCoords, dims * p, qCoords, dims * q, dims, m_DistMetric);
         if(dist < m_Epsilon)
         {
           return {true};
@@ -3524,10 +3524,10 @@ private:
  * @return Warning, error, or success from grid construction, clustering, and labeling.
  */
 template <class AlgorithmT, typename T>
-Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, Int32ArrayType& featureIds,
                       const std::atomic_bool& shouldCancel)
 {
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, inputArray, inputValues->ClusteringArrayPath, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, inputArray, inputValues->clustering_array_path, inputValues->epsilon, mask, inputValues->distance_metric);
 
   Result<> initializationResult = algorithm.takeInitializationResult();
   if(initializationResult.invalid())
@@ -3540,7 +3540,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
     return {};
   }
 
-  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
+  Result<> result = algorithm.cluster(inputValues->min_points, static_cast<DBSCAN::ParseOrder>(inputValues->parse_order), inputValues->seed);
   if(result.invalid())
   {
     return result;
@@ -3578,7 +3578,7 @@ struct DBSCANScanlineFunctor
    * @return Result from the selected specialization, or an error for another component count.
    */
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, Int32ArrayType& featureIds,
                       const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
@@ -3607,9 +3607,9 @@ DBSCANScanline::DBSCANScanline(DataStructure& dataStructure, const IFilter::Mess
 
 Result<> DBSCANScanline::operator()()
 {
-  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const IDataArray* maskArrayPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
   const bool actualOutOfCore = IsOutOfCore(clusteringArray) || IsOutOfCore(featureIds) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
 
   Result<> result;
@@ -3625,15 +3625,15 @@ Result<> DBSCANScanline::operator()()
   else
   {
     // All-resident inputs use the fallback. Forced Scanline tests exercise this path.
-    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-    if(m_InputValues->UseMask)
+    std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
+    if(m_InputValues->use_mask)
     {
       try
       {
-        maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+        maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
       } catch(const std::out_of_range& exception)
       {
-        std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+        std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
         return MakeErrorResult(-54060, message);
       }
     }
@@ -3673,10 +3673,10 @@ Result<> DBSCANScanline::operator()()
     }
   }
 
-  auto* featureAttributeMatrixPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM);
+  auto* featureAttributeMatrixPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->feature_am);
   if(featureAttributeMatrixPtr == nullptr)
   {
-    return MakeErrorResult(-54090, fmt::format("DBSCAN Feature Attribute Matrix '{}' is missing.", m_InputValues->FeatureAM.toString()));
+    return MakeErrorResult(-54090, fmt::format("DBSCAN Feature Attribute Matrix '{}' is missing.", m_InputValues->feature_am.toString()));
   }
   if(maxCluster == std::numeric_limits<int32>::max())
   {

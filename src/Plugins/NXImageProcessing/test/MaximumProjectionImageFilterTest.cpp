@@ -15,8 +15,8 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards sibling arrays with a warning", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, 8, 0.0, 1.0);
@@ -26,7 +26,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards si
   auto* cellAmPtr = dataStructure.getDataAs<AttributeMatrix>(cellDataPath);
   REQUIRE(cellAmPtr != nullptr);
   const ShapeType cellShape = cellAmPtr->getShape();
-  auto extraStore = DataStoreUtilities::CreateDataStore<int16>(dataStructure, cellDataPath.createChildPath("Extra"), cellShape, {1});
+  auto extraStore = data_store_utilities::CreateDataStore<int16>(dataStructure, cellDataPath.createChildPath("Extra"), cellShape, {1});
   REQUIRE(DataArray<int16>::Create(dataStructure, "Extra", extraStore, cellAmPtr->getId()) != nullptr);
 
   MaximumProjectionImageFilter filter;
@@ -39,8 +39,8 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards si
   args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto& warnings = preflightResult.outputActions.warnings();
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto& warnings = preflightResult.output_actions.warnings();
   bool namesExtra = false;
   for(const auto& warning : warnings)
   {
@@ -58,8 +58,8 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: In-place discards si
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (projDim>2 -8340, non-scalar -8341)", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   MaximumProjectionImageFilter filter;
 
@@ -75,8 +75,8 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
     args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
     args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8340);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8340);
   }
 
   SECTION("Non-scalar (multi-component) input -> -8341")
@@ -90,7 +90,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
     const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-    auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {3}); // 3-component (non-scalar)
+    auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {3}); // 3-component (non-scalar)
     DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
     Arguments args;
     args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
@@ -100,8 +100,8 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Preflight guards (pr
     args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
     args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8341);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8341);
   }
 }
 
@@ -130,7 +130,7 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: ITK real-image golde
 TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discarded objects", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   // No extra cell array, an extra one, and an old array with the output name (also discarded in place).
   const std::string extraName = GENERATE(std::string(""), std::string("Extra"), std::string("Output"));
   DataStructure dataStructure;
@@ -143,8 +143,8 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discar
   if(!extraName.empty())
   {
     auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(inputPath.getParent());
-    auto store = DataStoreUtilities::CreateDataStore<int16>(dataStructure, extraPath, cellAM.getShape(), {1});
-    REQUIRE(Int16Array::Create(dataStructure, extraName, store, cellAM.getId()) != nullptr);
+    auto store = data_store_utilities::CreateDataStore<int16>(dataStructure, extraPath, cellAM.getShape(), {1});
+    REQUIRE(Int16ArrayType::Create(dataStructure, extraName, store, cellAM.getId()) != nullptr);
   }
   MaximumProjectionImageFilter filter;
   Arguments args;
@@ -153,9 +153,9 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discar
   args.insertOrAssign(MaximumProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   std::string discardedWarning;
-  for(const auto& warning : preflightResult.outputActions.warnings())
+  for(const auto& warning : preflightResult.output_actions.warnings())
   {
     if(warning.code == -8343)
     {
@@ -178,29 +178,29 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning names discar
   {
     CHECK(dataStructure.getData(extraPath) == nullptr);
   }
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{1, 3, 3});
-  const auto& output = dataStructure.getDataRefAs<Float32Array>(inputPath.getParent().createChildPath("Output"));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3Type{1, 3, 3});
+  const auto& output = dataStructure.getDataRefAs<Float32ArrayType>(inputPath.getParent().createChildPath("Output"));
   REQUIRE(output.getNumberOfTuples() == 9);
   for(usize slot = 0; slot < 9; ++slot)
   {
     // X columns are {3*s, 3*s+1, 3*s+2}: max = 3*s+2.
     CHECK(output[slot] == static_cast<float32>(3 * slot + 2));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning excludes an input outside cell data", "[NXImageProcessing][MaximumProjectionImageFilter]")
 {
   Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath cellInputPath = ip_test::BuildRampImage<float32>(dataStructure, 3, 0.0, 1.0);
   const DataPath geomPath({"Image Geometry"});
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   // The selected input is a direct child of the geometry. It has the cell tuple count, so it is accepted.
   const DataPath inputPath = geomPath.createChildPath("Geometry Input");
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, ShapeType{3, 3, 3}, {1});
-  REQUIRE(Float32Array::Create(dataStructure, "Geometry Input", store, imageGeom.getId()) != nullptr);
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, ShapeType{3, 3, 3}, {1});
+  REQUIRE(Float32ArrayType::Create(dataStructure, "Geometry Input", store, imageGeom.getId()) != nullptr);
   MaximumProjectionImageFilter filter;
   Arguments args;
   args.insertOrAssign(MaximumProjectionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
@@ -208,9 +208,9 @@ TEST_CASE("NXImageProcessing::MaximumProjectionImageFilter: Warning excludes an 
   args.insertOrAssign(MaximumProjectionImageFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
   args.insertOrAssign(MaximumProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   std::string discardedWarning;
-  for(const auto& warning : preflightResult.outputActions.warnings())
+  for(const auto& warning : preflightResult.output_actions.warnings())
   {
     if(warning.code == -8343)
     {

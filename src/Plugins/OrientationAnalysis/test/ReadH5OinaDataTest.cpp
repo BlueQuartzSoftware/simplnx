@@ -97,7 +97,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 using namespace H5Support;
 
 namespace
@@ -430,13 +430,13 @@ const std::vector<float32> k_FixtureCEulerAligned = {
 
 //------------------------------------------------------------------------------
 Arguments MakeArgs(const fs::path& inputFile, const std::list<std::string>& scanNames, float32 zSpacing = 1.0F, bool hexAlignment = true, bool convertPhaseToInt32 = true, bool readPatternData = false,
-                   uint32 stackingOrder = RefFrameZDir::k_LowtoHigh)
+                   uint32 stackingOrder = ref_frame_z_dir::k_LowtoHigh)
 {
   Arguments args;
-  const OEMEbsdScanSelectionParameter::ValueType scanSelections = {.inputFilePath = inputFile, .stackingOrder = stackingOrder, .scanNames = scanNames};
+  const OEMEbsdScanSelectionParameter::ValueType scanSelections = {.input_file_path = inputFile, .stacking_order = stackingOrder, .scan_names = scanNames};
   args.insertOrAssign(ReadH5OinaDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
   args.insertOrAssign(ReadH5OinaDataFilter::k_ZSpacing_Key, std::make_any<float32>(zSpacing));
-  args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0F)));
+  args.insertOrAssign(ReadH5OinaDataFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>(3, 0.0F)));
   args.insertOrAssign(ReadH5OinaDataFilter::k_ReadPatternData_Key, std::make_any<bool>(readPatternData));
   args.insertOrAssign(ReadH5OinaDataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(hexAlignment));
   args.insertOrAssign(ReadH5OinaDataFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(convertPhaseToInt32));
@@ -499,7 +499,7 @@ std::vector<T> ReadRawDataset(const fs::path& filePath, const std::string& datas
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Class 1 Analytical Oracle", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_oracle.h5oina", {MakeFixtureAScan()});
 
@@ -508,7 +508,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Class 1 Analytical Oracle"
   const Arguments args = MakeArgs(inputFile, {"1"}, 0.75F);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -518,9 +518,9 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Class 1 Analytical Oracle"
   // --- the parameter, and the units are the filter's hard-coded Micrometer. ---
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeom.getDimensions() == SizeVec3(3, 2, 1));
-  REQUIRE(imageGeom.getSpacing() == FloatVec3(0.25F, 0.5F, 0.75F));
-  REQUIRE(imageGeom.getOrigin() == FloatVec3(0.0F, 0.0F, 0.0F));
+  REQUIRE(imageGeom.getDimensions() == SizeVec3Type(3, 2, 1));
+  REQUIRE(imageGeom.getSpacing() == FloatVec3Type(0.25F, 0.5F, 0.75F));
+  REQUIRE(imageGeom.getOrigin() == FloatVec3Type(0.0F, 0.0F, 0.0F));
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
   // --- Cell arrays: eight verbatim copies plus the aligned Euler array. -------
@@ -553,10 +553,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Class 1 Analytical Oracle"
 
   // Class 4 invariant: the ensemble matrix always carries exactly one more tuple
   // than the file has phase groups.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures)));
-  REQUIRE(dataStructure.getDataRefAs<UInt32Array>(k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures)).getNumberOfTuples() == 3);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures)));
+  REQUIRE(dataStructure.getDataRefAs<UInt32ArrayType>(k_EnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures)).getNumberOfTuples() == 3);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -566,7 +566,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Class 1 Analytical Oracle"
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Conversion Option Combinations", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto scan = MakeFixtureAScan();
   scan.phases.push_back(k_HexLowPhase);
@@ -584,7 +584,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Conversion Option Combinat
     const Arguments args = MakeArgs(inputFile, {"1"}, 1.0F, hexAlignment, convertPhaseToInt32);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -607,7 +607,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Conversion Option Combinat
     CompareArrayValues<uint8>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Bands), {1, 2, 3, 4, 5, 6});
     CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::MeanAngularDeviation), {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F});
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -618,7 +618,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Conversion Option Combinat
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Slab Placement", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_multiscan.h5oina", {MakeFixtureBScan1(), MakeFixtureBScan2()});
 
@@ -627,14 +627,14 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Slab Placement"
   const Arguments args = MakeArgs(inputFile, {"1", "2"}, 0.5F);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeom.getDimensions() == SizeVec3(2, 2, 2));
-  REQUIRE(imageGeom.getSpacing() == FloatVec3(0.25F, 0.5F, 0.5F));
+  REQUIRE(imageGeom.getDimensions() == SizeVec3Type(2, 2, 2));
+  REQUIRE(imageGeom.getSpacing() == FloatVec3Type(0.25F, 0.5F, 0.5F));
 
   // 24 Euler values: scan "1"'s 12 then scan "2"'s 12, each verbatim.
   CompareArrayValues<float32>(
@@ -651,7 +651,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Slab Placement"
   CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::X), {0.0F, 0.25F, 0.0F, 0.25F, 1.0F, 1.25F, 1.0F, 1.25F});
   CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Y), {0.0F, 0.0F, 0.5F, 0.5F, 1.0F, 1.0F, 1.5F, 1.5F});
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -661,7 +661,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Slab Placement"
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Hexagonal Alignment", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto scan1 = MakeFixtureCScan1();
   auto scan2 = MakeFixtureCScan2();
@@ -676,17 +676,17 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Hexagonal Align
   const Arguments args = MakeArgs(inputFile, {"1", "2"}, 2.0F);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3(2, 2, 2));
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getSpacing() == FloatVec3(0.5F, 0.25F, 2.0F));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3Type(2, 2, 2));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getSpacing() == FloatVec3Type(0.5F, 0.25F, 2.0F));
 
   CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler), k_FixtureCEulerAligned);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -696,7 +696,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Multi-Scan Hexagonal Align
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Format Version Variants", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const auto variant = GENERATE(as<std::string>{}, "5.0", "2.0", "absent");
 
@@ -709,15 +709,15 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Format Version Variants", 
     const Arguments args = MakeArgs(inputFile, {"1"});
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
-    REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3(3, 2, 1));
+    REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3Type(3, 2, 1));
     CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler), k_FixtureAEulerAligned);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -726,7 +726,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Format Version Variants", 
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Parameter Rejections", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_params.h5oina", {MakeFixtureAScan()});
 
@@ -757,13 +757,13 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Parameter Rejections", "[O
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == expectedCode);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -772,7 +772,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Parameter Rejections", "[O
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Cell Counts rejected (-9584)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan = MakeFixtureAScan();
   std::string fileName;
@@ -800,10 +800,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Cell Counts reject
   const Arguments args = MakeArgs(inputFile, {"1"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9584);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9584);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -814,7 +814,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Cell Counts reject
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Header Mismatch rejected (-9585)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan2 = MakeFixtureBScan2();
 
@@ -844,10 +844,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Header Mismatch rejec
   const Arguments args = MakeArgs(inputFile, {"1", "2"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9585);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9585);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -857,7 +857,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Header Mismatch rejec
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Missing Scan Name rejected (-9586)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_missing_scan.h5oina", {MakeFixtureBScan1(), MakeFixtureBScan2()});
 
@@ -876,10 +876,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Missing Scan Name rejected
   const Arguments args = MakeArgs(inputFile, scanNames);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9586);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9586);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -896,7 +896,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Missing Scan Name rejected
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Phase Index Out Of Range rejected (-9587)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::vector<ScanSpec> scans;
   std::list<std::string> scanNames;
@@ -926,10 +926,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Phase Index Out Of Range r
   const Arguments args = MakeArgs(inputFile, scanNames);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9587);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9587);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -939,7 +939,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Phase Index Out Of Range r
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Phase Group Name rejected (-9582)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan = MakeFixtureBScan1();
   scan.phases[0].group_name = "phase-one";
@@ -950,12 +950,12 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Phase Group Name r
   const Arguments args = MakeArgs(inputFile, {"1"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9582);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find("phase-one") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9582);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find("phase-one") != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -969,7 +969,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Phase Group Name r
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Count Mismatch rejected (-9589)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan1 = MakeFixtureBScan1();
   ScanSpec scan2 = MakeFixtureBScan2();
@@ -994,10 +994,10 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Count Mismatch 
   const Arguments args = MakeArgs(inputFile, {"1", "2"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9589);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9589);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1007,7 +1007,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Count Mismatch 
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Definition Mismatch rejected (-9590)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan2 = MakeFixtureBScan2();
   std::string mismatchField;
@@ -1045,13 +1045,13 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Definition Mism
   const Arguments args = MakeArgs(inputFile, {"1", "2"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9590);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find("'2'") != std::string::npos);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find(mismatchField) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9590);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find("'2'") != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find(mismatchField) != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1060,7 +1060,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Scan Phase Definition Mism
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Scan Spacing rejected (-9591)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan = MakeFixtureAScan();
 
@@ -1084,11 +1084,11 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Scan Spacing rejec
   const Arguments args = MakeArgs(inputFile, {"1"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9591);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9591);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1100,7 +1100,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Invalid Scan Spacing rejec
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch rejected (-8970)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Header declares a 4 x 4 = 16 point scan; the Data datasets hold 8 points.
   ScanSpec scan = MakeFixtureBScan1();
@@ -1123,7 +1123,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch re
   const Arguments args = MakeArgs(inputFile, {"1"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -1131,7 +1131,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch re
   REQUIRE(executeResult.result.errors()[0].message.find("-101100") != std::string::npos);
   REQUIRE(executeResult.result.errors()[0].message.find("Band Contrast") != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1140,7 +1140,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Dataset Extent Mismatch re
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Out-of-Range Phase Value rejected (-34972)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // One phase in the header, so the valid Phase range is [0, 1]; point 2 carries 5.
   ScanSpec scan = MakeFixtureBScan1();
@@ -1153,14 +1153,14 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Out-of-Range Phase Value r
   const Arguments args = MakeArgs(inputFile, {"1"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -34972);
   REQUIRE(executeResult.result.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1170,7 +1170,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Out-of-Range Phase Value r
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough - Missing Data Column (-8970)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ScanSpec scan = MakeFixtureAScan();
   scan.omit_bands_dataset = true;
@@ -1183,7 +1183,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
 
   // The Data datasets are only read at execute, so preflight (header only) succeeds.
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -1192,7 +1192,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
   REQUIRE(executeResult.result.errors()[0].message.find("'1'") != std::string::npos);
   REQUIRE(executeResult.result.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1206,7 +1206,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough - Missing Lattice Angles (-9582)", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::vector<ScanSpec> scans;
   std::list<std::string> scanNames;
@@ -1239,12 +1239,12 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
   const Arguments args = MakeArgs(inputFile, scanNames);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -9582);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find(expectedScanName) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -9582);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find(inputFile.filename().string()) != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find(expectedScanName) != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1259,21 +1259,21 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: EbsdLib Error Passthrough 
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = WriteH5OinaFixture("read_h5oina_vv_stacking.h5oina", {MakeFixtureBScan1(), MakeFixtureBScan2()});
 
   const std::vector<float32> kScan1Euler = {0.125F, 0.25F, 0.375F, 0.5F, 0.625F, 0.75F, 0.875F, 1.0F, 1.125F, 1.25F, 1.375F, 1.5F};
   const std::vector<float32> kScan2Euler = {2.125F, 2.25F, 2.375F, 2.5F, 2.625F, 2.75F, 2.875F, 3.0F, 3.125F, 3.25F, 3.375F, 3.5F};
 
-  uint32 stackingOrder = RefFrameZDir::k_LowtoHigh;
+  uint32 stackingOrder = ref_frame_z_dir::k_LowtoHigh;
   std::vector<float32> expectedEuler;
   std::vector<uint8> expectedBandContrast;
   std::vector<int32> expectedPhase;
 
   SECTION("Low to High stacks the scans in list order")
   {
-    stackingOrder = RefFrameZDir::k_LowtoHigh;
+    stackingOrder = ref_frame_z_dir::k_LowtoHigh;
     expectedEuler = kScan1Euler;
     expectedEuler.insert(expectedEuler.end(), kScan2Euler.cbegin(), kScan2Euler.cend());
     expectedBandContrast = std::vector<uint8>{10, 11, 12, 13, 110, 111, 112, 113};
@@ -1281,7 +1281,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order", "[Orienta
   }
   SECTION("High to Low stacks the scans in reverse list order")
   {
-    stackingOrder = RefFrameZDir::k_HightoLow;
+    stackingOrder = ref_frame_z_dir::k_HightoLow;
     expectedEuler = kScan2Euler;
     expectedEuler.insert(expectedEuler.end(), kScan1Euler.cbegin(), kScan1Euler.cend());
     expectedBandContrast = std::vector<uint8>{110, 111, 112, 113, 10, 11, 12, 13};
@@ -1293,27 +1293,27 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Stacking Order", "[Orienta
   const Arguments args = MakeArgs(inputFile, {"1", "2"}, 1.0F, true, true, false, stackingOrder);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.warnings().empty());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.warnings().empty());
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3(2, 2, 2));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3Type(2, 2, 2));
 
   CompareArrayValues<float32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler), expectedEuler);
   CompareArrayValues<uint8>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::BandContrast), expectedBandContrast);
   CompareArrayValues<int32>(dataStructure, k_CellAMPath.createChildPath(ebsdlib::H5OINA::Phase), expectedPhase);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail and slab oracle", "[OrientationAnalysis][ReadH5OinaDataFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BatchTuples = 65536;
   constexpr usize k_ScanTuples = k_BatchTuples + 1;
 
@@ -1380,8 +1380,8 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail an
   checkScalar(ebsdlib::H5OINA::Y, std::array<float32, 4>{0.25F, 0.25F, 1.25F, 1.25F});
 
   const auto eulerPath = k_CellAMPath.createChildPath(ebsdlib::H5OINA::Euler);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
-  const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulerPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(eulerPath));
+  const auto& eulers = dataStructure.getDataRefAs<Float32ArrayType>(eulerPath);
   REQUIRE(eulers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const std::array<std::array<float32, 3>, 4> expectedEulers = {{{0.25F, 0.5F, 0.6235987544059753F}, {0.25F, 0.5F, 0.34F}, {0.75F, 1.0F, 0.7435987591743469F}, {0.75F, 1.0F, 0.35F}}};
   for(usize witnessIdx = 0; witnessIdx < witnessIndices.size(); witnessIdx++)
@@ -1392,8 +1392,8 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail an
     }
   }
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3(k_ScanTuples, 1, 2));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions() == SizeVec3Type(k_ScanTuples, 1, 2));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -1413,9 +1413,9 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: genuine HDF5 batch-tail an
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Real AZtec File Readback", "[OrientationAnalysis][ReadH5OinaDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "H5Oina_Test_Data.tar.gz", "H5Oina_Test_Data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "H5Oina_Test_Data.tar.gz", "H5Oina_Test_Data");
 
   const fs::path inputFile = fs::path(fmt::format("{}/H5Oina_Test_Data/H5Oina_Test_Data.h5oina", unit_test::k_TestFilesDir));
   REQUIRE(fs::exists(inputFile));
@@ -1425,16 +1425,16 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Real AZtec File Readback",
   const Arguments args = MakeArgs(inputFile, {"1"});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Geometry: X Cells = Y Cells = 25, X Step = Y Step = 4.0, one scan selected.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeom.getDimensions() == SizeVec3(25, 25, 1));
-  REQUIRE(imageGeom.getSpacing() == FloatVec3(4.0F, 4.0F, 1.0F));
-  REQUIRE(imageGeom.getOrigin() == FloatVec3(0.0F, 0.0F, 0.0F));
+  REQUIRE(imageGeom.getDimensions() == SizeVec3Type(25, 25, 1));
+  REQUIRE(imageGeom.getSpacing() == FloatVec3Type(4.0F, 4.0F, 1.0F));
+  REQUIRE(imageGeom.getOrigin() == FloatVec3Type(0.0F, 0.0F, 0.0F));
   REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
 
   // Every cell array is a verbatim copy of the corresponding Data dataset: this
@@ -1483,5 +1483,5 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Real AZtec File Readback",
                                   90.0F,
                               });
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

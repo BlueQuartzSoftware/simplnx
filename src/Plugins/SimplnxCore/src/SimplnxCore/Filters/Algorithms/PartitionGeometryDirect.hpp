@@ -18,7 +18,7 @@ public:
   /**
    * @brief Defines the scalar store used for node coordinates.
    */
-  using VertexStore = PartitionGeometry::VertexStore;
+  using VertexStoreType = PartitionGeometry::VertexStoreType;
 
   /**
    * @brief Creates a direct geometry partitioner.
@@ -63,7 +63,7 @@ private:
    * @param outOfBoundsValue Supplies IDs for coordinates outside the grid.
    * @return Success after completion or cancellation.
    */
-  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
+  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
   /**
    * @brief Partitions nodes from vertex coordinates and an optional mask.
    * @param vertexListStore Provides flat XYZ vertex coordinates.
@@ -73,8 +73,8 @@ private:
    * @param maskArrayOpt Selects vertices when present.
    * @return Success after completion or cancellation.
    */
-  Result<> partitionNodeBasedGeometry(const VertexStore& vertexListStore, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
-                                      const std::optional<const BoolArray>& maskArrayOpt);
+  Result<> partitionNodeBasedGeometry(const VertexStoreType& vertexListStore, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
+                                      const std::optional<const BoolArrayType>& maskArrayOpt);
 };
 
 } // namespace nx::core

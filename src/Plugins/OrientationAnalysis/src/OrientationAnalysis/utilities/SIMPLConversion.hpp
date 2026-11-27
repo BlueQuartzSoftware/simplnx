@@ -31,8 +31,8 @@ struct OEMEbsdScanSelectionFilterParameterConverter
     }
 
     ValueType value;
-    value.inputFilePath = json1.get<std::string>();
-    value.scanNames = json2.get<std::list<std::string>>();
+    value.input_file_path = json1.get<std::string>();
+    value.scan_names = json2.get<std::list<std::string>>();
 
     return {std::move(value)};
   }

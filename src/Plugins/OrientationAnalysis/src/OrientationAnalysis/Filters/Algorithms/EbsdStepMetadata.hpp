@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-namespace nx::core::EbsdStepMetadata
+namespace nx::core::ebsd_step_metadata
 {
 /**
  * @brief Captures the stored scan step before EbsdLib validates or uses it.

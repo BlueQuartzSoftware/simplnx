@@ -35,12 +35,12 @@ const std::atomic_bool& ErodeDilateMask::getCancel() const
 Result<> ErodeDilateMask::operator()()
 {
 
-  auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
+  auto& mask = m_DataStructure.getDataRefAs<BoolArrayType>(m_InputValues->mask_array_path);
   const usize totalPoints = mask.getNumberOfTuples();
 
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
 
-  SizeVec3 udims = selectedImageGeom.getDimensions();
+  SizeVec3Type udims = selectedImageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -49,9 +49,9 @@ Result<> ErodeDilateMask::operator()()
   };
 
   // Precompute face-neighbor index offsets and iteration order
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
   // Three adjacent Z slices prevent random per-voxel store reads.
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
@@ -100,15 +100,15 @@ Result<> ErodeDilateMask::operator()()
   // Maps face-neighbor index to rolling-window slot:
   // -Z -> slot 0, -Y/-X/+X/+Y -> slot 1 (same Z), +Z -> slot 2
   constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
-  const std::string progMessageOpType = m_InputValues->Operation == detail::k_DilateIndex ? "Dilate" : "Erode";
+  const std::string progMessageOpType = m_InputValues->operation == detail::k_DilateIndex ? "Dilate" : "Erode";
   const std::string progressLabel = fmt::format("{} Iterations", progMessageOpType);
-  const usize iterationTotal = static_cast<usize>(std::max(m_InputValues->NumIterations, 0));
+  const usize iterationTotal = static_cast<usize>(std::max(m_InputValues->num_iterations, 0));
 
   // ---- Main iteration loop ----
   ProgressEstimator progressEstimator;
   progressEstimator.restart();
   m_MessageHandler.sendProgressCount(progressLabel, 0, iterationTotal);
-  for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
+  for(int32 iteration = 0; iteration < m_InputValues->num_iterations; iteration++)
   {
     // Re-initialize rolling window from the (potentially modified) store.
     // z=0 -> slot 1 (current), z=1 -> slot 2 (next).
@@ -158,8 +158,8 @@ Result<> ErodeDilateMask::operator()()
           if(maskSlices[1][inSlice] == 0)
           {
             // Determine valid face neighbors and mask off user-disabled directions
-            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-            adjustValidNeighbors(isValidFaceNeighbor, m_InputValues->XDirOn, m_InputValues->YDirOn, m_InputValues->ZDirOn);
+            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            AdjustValidNeighbors(isValidFaceNeighbor, m_InputValues->x_dir_on, m_InputValues->y_dir_on, m_InputValues->z_dir_on);
 
             // Map each face neighbor to its in-slice offset within the
             // appropriate rolling-window slot.
@@ -179,14 +179,14 @@ Result<> ErodeDilateMask::operator()()
                 continue;
               }
 
-              if(m_InputValues->Operation == detail::k_DilateIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
+              if(m_InputValues->operation == detail::k_DilateIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
                 // DILATION: This false voxel has a true neighbor, so it
                 // should become true. Write into the copy buffer for the
                 // current slice (slot 1).
                 maskCopySlices[1][inSlice] = 1;
               }
-              if(m_InputValues->Operation == detail::k_ErodeIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
+              if(m_InputValues->operation == detail::k_ErodeIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
                 // EROSION: This false voxel has a true neighbor. Set the
                 // neighbor to false in the copy buffer. The neighbor may

@@ -24,56 +24,56 @@ namespace detail
 template <template <class> class OutTypeMap, class OperationT>
 struct PointwiseExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   const OperationT& operation;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
     using U = OutTypeMap<T>;
-    const auto& inputStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outputStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
+    const auto& inputStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outputStore = data_structure.getDataRefAs<DataArray<U>>(output_array_path).getDataStoreRef();
     auto mapOp = operation.template makeMapOp<T, U>();
-    return ApplyPointwise<T, U>(inputStore, outputStore, mapOp, shouldCancel, messageHandler);
+    return ApplyPointwise<T, U>(inputStore, outputStore, mapOp, should_cancel, message_handler);
   }
 };
 
 template <template <class> class OutTypeMap, class OperationT>
 struct TwoPassExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   const OperationT& operation;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
     using U = OutTypeMap<T>;
-    const auto& inputStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outputStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
+    const auto& inputStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outputStore = data_structure.getDataRefAs<DataArray<U>>(output_array_path).getDataStoreRef();
 
     Result<ArrayStatistics<T>> statsResult = [&]() {
-      if constexpr(requires { operation.template computeStatistics<T>(inputStore, shouldCancel); })
+      if constexpr(requires { operation.template computeStatistics<T>(inputStore, should_cancel); })
       {
-        return operation.template computeStatistics<T>(inputStore, shouldCancel);
+        return operation.template computeStatistics<T>(inputStore, should_cancel);
       }
       else
       {
-        return ComputeArrayStatistics<T>(inputStore, shouldCancel);
+        return ComputeArrayStatistics<T>(inputStore, should_cancel);
       }
     }();
     if(statsResult.invalid())
     {
       return {nonstd::make_unexpected(std::move(statsResult.errors()))};
     }
-    if(shouldCancel)
+    if(should_cancel)
     {
       return {};
     }
@@ -84,43 +84,43 @@ struct TwoPassExecuteFn
       return validation;
     }
     auto mapOp = operation.template makeMapOp<T, U>(stats);
-    return ApplyPointwise<T, U>(inputStore, outputStore, mapOp, shouldCancel, messageHandler);
+    return ApplyPointwise<T, U>(inputStore, outputStore, mapOp, should_cancel, message_handler);
   }
 };
 
 template <class OperationT>
 struct BoxNeighborhoodExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
   std::array<usize, 3> radius{};
   const OperationT& operation;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inputStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outputStore = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath).getDataStoreRef();
+    const auto& inputStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outputStore = data_structure.getDataRefAs<DataArray<T>>(output_array_path).getDataStoreRef();
     auto reduceFn = operation.template makeReduceOp<T>();
-    return ApplyBoxNeighborhood<T>(inputStore, outputStore, dims, radius, reduceFn, shouldCancel, messageHandler);
+    return ApplyBoxNeighborhood<T>(inputStore, outputStore, dims, radius, reduceFn, should_cancel, message_handler);
   }
 };
 
 template <class PredicateFactoryT>
 struct ContourExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  const std::vector<SEOffset>& neighborOffsets;
-  const PredicateFactoryT& predicateFactory;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  const std::vector<SEOffset>& neighbor_offsets;
+  const PredicateFactoryT& predicate_factory;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
@@ -128,77 +128,77 @@ struct ContourExecuteFn
     // Output type == input type (SameAsInput). The factory casts the Float64 fg/bg parameters to the integer
     // element type here; the caller's preflight guard has already rejected non-finite/out-of-range values, so
     // the narrowing conversion is well-defined.
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath).getDataStoreRef();
-    const auto predicate = predicateFactory.template make<T>();
-    return ApplyContour<T>(inStore, outStore, dims, neighborOffsets, predicate, shouldCancel, messageHandler);
+    const auto& inStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outStore = data_structure.getDataRefAs<DataArray<T>>(output_array_path).getDataStoreRef();
+    const auto predicate = predicate_factory.template make<T>();
+    return ApplyContour<T>(inStore, outStore, dims, neighbor_offsets, predicate, should_cancel, message_handler);
   }
 };
 
 template <template <class> class OutTypeMap, class OperationT>
 struct HistogramExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
   const OperationT& operation;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
     using U = OutTypeMap<T>; // Otsu uses AlwaysUInt8Type (a uint8 label image); generalized like the other façade helpers.
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
+    const auto& inStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outStore = data_structure.getDataRefAs<DataArray<U>>(output_array_path).getDataStoreRef();
 
     Result<Histogram> hist = [&]() -> Result<Histogram> {
       if constexpr(std::is_integral_v<T>)
       {
-        return ComputeIntegralHistogram<T>(inStore, operation.num_bins, shouldCancel);
+        return ComputeIntegralHistogram<T>(inStore, operation.num_bins, should_cancel);
       }
       else
       {
         // Only min/max feed the histogram range below, so the parallel min/max reduction replaces the full
         // (mean/variance-computing) statistics pass.
-        Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(inStore, shouldCancel);
+        Result<ArrayMinMax<T>> stats = ComputeArrayMinMax<T>(inStore, should_cancel);
         if(stats.invalid())
         {
           return {nonstd::make_unexpected(std::move(stats.errors()))};
         }
-        if(shouldCancel)
+        if(should_cancel)
         {
           return {};
         }
-        return ComputeHistogram<T>(inStore, operation.num_bins, static_cast<float64>(stats.value().min), static_cast<float64>(stats.value().max), shouldCancel);
+        return ComputeHistogram<T>(inStore, operation.num_bins, static_cast<float64>(stats.value().min), static_cast<float64>(stats.value().max), should_cancel);
       }
     }();
     if(hist.invalid())
     {
       return {nonstd::make_unexpected(std::move(hist.errors()))};
     }
-    if(shouldCancel)
+    if(should_cancel)
     {
       return {};
     }
 
     const std::vector<float64> thresholds = OtsuMultipleThresholds(hist.value(), operation.num_thresholds, operation.valley_emphasis, operation.return_bin_midpoint);
     auto classifyOp = operation.template makeClassifyOp<T, U>(thresholds);
-    return ApplyPointwise<T, U>(inStore, outStore, classifyOp, shouldCancel, messageHandler);
+    return ApplyPointwise<T, U>(inStore, outStore, classifyOp, should_cancel, message_handler);
   }
 };
 
 template <template <class> class OutTypeMap, class ReduceFn>
 struct AxisProjectionExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  usize projDim{};
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  usize proj_dim{};
   const ReduceFn& reduce;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
@@ -206,9 +206,9 @@ struct AxisProjectionExecuteFn
     // Output element type is the input type mapped through OutTypeMap (T for Max; a float for Mean/Sum/...).
     // Must match the type PreflightAxisProjection<OutTypeMap> allocated, or the getDataRefAs below throws.
     using U = OutTypeMap<T>;
-    const auto& inputStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outputStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
-    return ApplyAxisProjection<T, U, ReduceFn>(inputStore, outputStore, dims, projDim, reduce, shouldCancel, messageHandler);
+    const auto& inputStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outputStore = data_structure.getDataRefAs<DataArray<U>>(output_array_path).getDataStoreRef();
+    return ApplyAxisProjection<T, U, ReduceFn>(inputStore, outputStore, dims, proj_dim, reduce, should_cancel, message_handler);
   }
 };
 
@@ -222,23 +222,23 @@ struct AxisProjectionExecuteFn
 template <class F>
 struct FiniteDifferenceExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  FloatVec3 spacing;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  FloatVec3Type spacing;
   F fn;
-  float64 timeStep{};
-  uint32 numberOfIterations{};
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  float64 time_step{};
+  uint32 number_of_iterations{};
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
-    return ApplyFiniteDifference<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, timeStep, numberOfIterations, shouldCancel, messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
+    return ApplyFiniteDifference<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, spacing, fn, time_step, number_of_iterations, should_cancel, message_handler);
   }
 };
 
@@ -260,7 +260,7 @@ Result<> ExecuteImageFilter(DataStructure& dataStructure, const DataPath& inputA
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   detail::PointwiseExecuteFn<OutTypeMap, OperationT> executeFn{dataStructure, inputArrayPath, outputArrayPath, operation, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 /**
@@ -280,7 +280,7 @@ Result<> ExecuteTwoPassImageFilter(DataStructure& dataStructure, const DataPath&
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   detail::TwoPassExecuteFn<OutTypeMap, OperationT> executeFn{dataStructure, inputArrayPath, outputArrayPath, operation, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 /**
@@ -295,9 +295,9 @@ Result<> ExecuteBoxNeighborhoodImageFilter(DataStructure& dataStructure, const D
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   detail::BoxNeighborhoodExecuteFn<OperationT> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, radius, operation, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 /**
@@ -325,10 +325,10 @@ Result<> ExecuteContourImageFilter(DataStructure& dataStructure, const DataPath&
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   const std::vector<SEOffset> neighborOffsets = MakeContourNeighborOffsets(fullyConnected);
   detail::ContourExecuteFn<PredicateFactoryT> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, neighborOffsets, predicateFactory, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 /// @brief Executes a histogram-driven classification filter such as multi-Otsu thresholding.
@@ -345,7 +345,7 @@ Result<> ExecuteHistogramImageFilter(DataStructure& dataStructure, const DataPat
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   detail::HistogramExecuteFn<OutTypeMap, OperationT> executeFn{dataStructure, inputArrayPath, outputArrayPath, operation, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 /**
@@ -371,9 +371,9 @@ Result<> ExecuteAxisProjectionImageFilter(DataStructure& dataStructure, const Da
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   detail::AxisProjectionExecuteFn<OutTypeMap, ReduceFn> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, projDim, reduce, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 /**
@@ -391,10 +391,10 @@ Result<> ExecuteFiniteDifferenceImageFilter(DataStructure& dataStructure, const 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   detail::FiniteDifferenceExecuteFn<F> executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, spacing, std::move(fn), timeStep, numberOfIterations, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  return TypeSetPolicy::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

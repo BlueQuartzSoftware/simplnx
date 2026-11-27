@@ -63,15 +63,15 @@ Parameters ComputeFeatureNeighborMisorientationsFilter::parameters() const
                                                                  DataPath({"DataContainer", "Feature Data", "NeighborList"}), NeighborListSelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "Defines the average orientation of the Feature in quaternion representation",
                                                           DataPath({"DataContainer", "Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs",
                                                           DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"DataContainer", "Cell Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationListArrayName_Key, "Misorientation List",
@@ -124,14 +124,14 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   std::vector<DataPath> dataArrayPaths;
 
   // Validate the Quats is a 4 component array
-  const auto* avgQuatsPtr = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
+  const auto* avgQuatsPtr = dataStructure.getDataAs<Float32ArrayType>(pAvgQuatsArrayPathValue);
   if(avgQuatsPtr->getNumberOfComponents() != 4)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -34500, fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(), avgQuatsPtr->getNumberOfComponents()))};
   }
 
-  const auto* featurePhasesPtr = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const auto* featurePhasesPtr = dataStructure.getDataAs<Int32ArrayType>(pFeaturePhasesArrayPathValue);
 
   dataArrayPaths.push_back(pAvgQuatsArrayPathValue);
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
@@ -140,7 +140,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-34501, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -159,7 +159,7 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -168,14 +168,14 @@ Result<> ComputeFeatureNeighborMisorientationsFilter::executeImpl(DataStructure&
 {
   ComputeFeatureNeighborMisorientationsInputValues inputValues;
 
-  inputValues.ComputeAvgMisors = filterArgs.value<bool>(k_ComputeAvgMisors_Key);
-  inputValues.NeighborListArrayPath = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto cellFeatDataPath = inputValues.AvgQuatsArrayPath.getParent();
-  inputValues.MisorientationListArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_MisorientationListArrayName_Key));
-  inputValues.AvgMisorientationsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_AvgMisorientationsArrayName_Key));
+  inputValues.compute_avg_misors = filterArgs.value<bool>(k_ComputeAvgMisors_Key);
+  inputValues.neighbor_list_array_path = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  auto cellFeatDataPath = inputValues.avg_quats_array_path.getParent();
+  inputValues.misorientation_list_array_name = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_MisorientationListArrayName_Key));
+  inputValues.avg_misorientations_array_name = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_AvgMisorientationsArrayName_Key));
 
   return ComputeFeatureNeighborMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

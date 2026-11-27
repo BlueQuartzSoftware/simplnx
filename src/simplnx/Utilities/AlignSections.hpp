@@ -57,7 +57,7 @@ public:
    * Cancellation returns a valid result. Arrays can contain a partially applied
    * alignment when cancellation occurs during transfer.
    */
-  Result<> execute(const SizeVec3& udims, const DataPath& imageGeometryPath);
+  Result<> execute(const SizeVec3Type& udims, const DataPath& imageGeometryPath);
 
   const std::atomic_bool& getCancel();
 

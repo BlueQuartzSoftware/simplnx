@@ -11,7 +11,7 @@
 namespace nx::core
 {
 
-inline std::string timestamp()
+inline std::string Timestamp()
 {
   // Waiting on (apple)clang support for P0355R7
   // Migrate to std::chrono::current_zone and zoned_time then

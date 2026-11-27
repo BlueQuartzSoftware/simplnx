@@ -16,7 +16,7 @@ namespace rt = recon_test;
 
 namespace
 {
-rt::ReconParamSetter BallSetter(bool preserveIntensities)
+rt::ReconParamSetterType BallSetter(bool preserveIntensities)
 {
   return rt::SEReconParamSetter<ClosingByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, preserveIntensities);
 }
@@ -29,8 +29,8 @@ rt::ReconParamSetter BallSetter(bool preserveIntensities)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 11;
   constexpr usize k_Dy = 11;
@@ -76,11 +76,11 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)", "[NXImageProcessing][ClosingByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_Dx = 11;
   constexpr usize k_Dy = 11;
@@ -119,7 +119,7 @@ TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: hand-computed 
   REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Dark);  // dark square center preserved
   REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Dark);  // dark square corner regrown
   REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Field); // untouched bright field
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ClosingByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][ClosingByReconstructionImageFilter]")

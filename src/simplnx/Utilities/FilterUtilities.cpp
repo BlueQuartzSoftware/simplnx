@@ -59,7 +59,7 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   if(statusError)
   {
     return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect output path '{}'. Check directory access. Operating system error {}: {}",
-                                                          FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
+                                                          file_utilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
   if(outputExists)
   {
@@ -80,15 +80,15 @@ Result<> CreateOutputDirectories(const fs::path& outputPath)
   if(creationError)
   {
     return MakeErrorResult(k_CreateDirectoryError, fmt::format("Unable to create output directory '{}'. Check the path and write permissions. Operating system error {}: {}",
-                                                               FileUtilities::detail::PathForDiagnostic(outputPath), creationError.value(), creationError.message()));
+                                                               file_utilities::detail::PathForDiagnostic(outputPath), creationError.value(), creationError.message()));
   }
   if(statusError)
   {
     return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect output path '{}' after the directory creation attempt. Check directory access. Operating system error {}: {}",
-                                                          FileUtilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
+                                                          file_utilities::detail::PathForDiagnostic(outputPath), statusError.value(), statusError.message()));
   }
   return MakeErrorResult(k_CreateDirectoryError,
-                         fmt::format("Output directory '{}' no longer exists after the creation attempt. Check the path and try again.", FileUtilities::detail::PathForDiagnostic(outputPath)));
+                         fmt::format("Output directory '{}' no longer exists after the creation attempt. Check the path and try again.", file_utilities::detail::PathForDiagnostic(outputPath)));
 }
 
 // -----------------------------------------------------------------------------
@@ -103,15 +103,15 @@ void AppendDataObjectModifications(const DataStructure& dataStructure, std::vect
   for(const auto& child : result.value())
   {
     modifiedActions.push_back(
-        DataObjectModification{.modifiedPath = child, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getDataRef(child).getDataObjectType()});
+        DataObjectModification{.modified_path = child, .modified_type = DataObjectModification::ModifiedType::Modified, .data_object_type = dataStructure.getDataRef(child).getDataObjectType()});
   }
 }
 
 // -----------------------------------------------------------------------------
 void MarkDataPathModified(const DataStructure& dataStructure, nx::core::Result<OutputActions>& resultOutputActions, const DataPath& targetDataPath)
 {
-  resultOutputActions.value().modifiedActions.push_back(DataObjectModification{
-      .modifiedPath = targetDataPath, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getDataRef(targetDataPath).getDataObjectType()});
+  resultOutputActions.value().modified_actions.push_back(DataObjectModification{
+      .modified_path = targetDataPath, .modified_type = DataObjectModification::ModifiedType::Modified, .data_object_type = dataStructure.getDataRef(targetDataPath).getDataObjectType()});
 }
 
 // -----------------------------------------------------------------------------
@@ -137,11 +137,11 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
   {
     ss.append("  " + featureNeighborList.toString() + "\n");
     auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
-    resultOutputActions.value().deferredActions.emplace_back(std::move(action));
+    resultOutputActions.value().deferred_actions.emplace_back(std::move(action));
   }
 
   // Report modified feature arrays.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureGroupDataPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, featureGroupDataPath, {});
 
   // Only warn when there is actually something to remove. Warning unconditionally announced that
   // NeighborLists would be removed and then listed none, which is noise on every preflight of every

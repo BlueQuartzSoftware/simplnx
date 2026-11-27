@@ -72,19 +72,19 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether to use a boolean array to exclude some Cells from the Feature identification process", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Path to the data array that specifies if the Cell is to be counted in the algorithm", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Input Grid Geometry", "DataPath to input Grid Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", "FeatureIds"));
@@ -129,7 +129,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   auto tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   if(tolerance == 0.0F)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-655, fmt::format("Misorientation Tolerance cannot equal ZERO.", humanName()))};
   }
 
   // Validate the Grid Geometry
@@ -154,12 +154,12 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // Create the Cell Level FeatureIds array
-  const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
+  const auto& quats = dataStructure.getDataRefAs<Float32ArrayType>(pQuatsArrayPathValue);
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, quats.getIDataStore()->getTupleShape(), std::vector<usize>{1}, featureIdsPath);
 
   // Create the Feature Attribute Matrix
@@ -173,7 +173,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {.outputActions = resultOutputActions, .outputValues = preflightUpdatedValues};
+  return {.output_actions = resultOutputActions, .output_values = preflightUpdatedValues};
 }
 
 //------------------------------------------------------------------------------
@@ -182,20 +182,20 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
 {
   EBSDSegmentFeaturesInputValues inputValues;
 
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * nx::core::Constants::k_PiOver180F;
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.RandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatureIds_Key);
-  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  const auto& inputGridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.ImageGeometryPath);
-  inputValues.FeatureIdsArrayPath = FeatureIdsPath(inputGridGeom, filterArgs);
-  inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
-  inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
-  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
-  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.misorientation_tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * nx::core::constants::k_PiOver180F;
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.randomize_feature_ids = filterArgs.value<bool>(k_RandomizeFeatureIds_Key);
+  inputValues.quats_array_path = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  const auto& inputGridGeom = dataStructure.getDataRefAs<IGridGeometry>(inputValues.image_geometry_path);
+  inputValues.feature_ids_array_path = FeatureIdsPath(inputGridGeom, filterArgs);
+  inputValues.cell_feature_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
+  inputValues.active_array_path = inputValues.cell_feature_attribute_matrix_path.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.is_periodic = filterArgs.value<bool>(k_IsPeriodic_Key);
+  inputValues.neighbor_scheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return EBSDSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

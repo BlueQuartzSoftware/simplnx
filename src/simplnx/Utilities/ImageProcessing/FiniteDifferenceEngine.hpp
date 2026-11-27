@@ -55,9 +55,9 @@ constexpr usize k_FiniteDifference2DFixedStateBytes = 4096;
 
 struct FiniteDifference2DBufferPlan
 {
-  usize coreRows = 0;
-  usize coreCols = 0;
-  usize residentBytes = 0;
+  usize core_rows = 0;
+  usize core_cols = 0;
+  usize resident_bytes = 0;
   bool valid = false;
   bool overflow = false;
 };
@@ -82,7 +82,7 @@ inline bool FiniteDifferenceCheckedMultiply(usize left, usize right, usize& resu
   return true;
 }
 
-inline bool FiniteDifferenceNeighborhoodIsInterior(usize x, usize y, usize z, const SizeVec3& dims, int64 radius, uint32 effectiveDimensions)
+inline bool FiniteDifferenceNeighborhoodIsInterior(usize x, usize y, usize z, const SizeVec3Type& dims, int64 radius, uint32 effectiveDimensions)
 {
   if(radius < 0 || (effectiveDimensions != 2 && effectiveDimensions != 3))
   {
@@ -116,21 +116,21 @@ inline FiniteDifferenceInteriorRange CreateFiniteDifferenceInteriorRange(usize d
 struct FiniteDifferenceResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseFiniteDifferenceResidentState(const SizeVec3& dims, uint32 numberOfIterations)
+inline bool ShouldUseFiniteDifferenceResidentState(const SizeVec3Type& dims, uint32 numberOfIterations)
 {
   return dims[2] > 1 && numberOfIterations > 0;
 }
 
 template <class T, class Real>
-Result<usize> CalculateFiniteDifferenceResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateFiniteDifferenceResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -165,7 +165,7 @@ Result<usize> CalculateFiniteDifferenceResidentWorkingMemoryBytes(const SizeVec3
 }
 
 template <class T, class Real>
-Result<FiniteDifferenceResidentMemoryAllocation> ReserveFiniteDifferenceResidentWorkingMemory(const SizeVec3& dims)
+Result<FiniteDifferenceResidentMemoryAllocation> ReserveFiniteDifferenceResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateFiniteDifferenceResidentWorkingMemoryBytes<T, Real>(dims);
   if(requiredResult.invalid())
@@ -246,9 +246,9 @@ inline FiniteDifference2DBufferPlan BuildFiniteDifference2DBufferPlan(usize nx, 
   usize oneRowPeak = 0;
   if(FiniteDifference2DFullWidthPeak(nx, 1, radius, valueBytes, oneRowPeak) && oneRowPeak <= residentLimit)
   {
-    plan.coreCols = nx;
-    plan.coreRows = largestFitting(ny, [nx, radius, valueBytes](usize rows, usize& peak) { return FiniteDifference2DFullWidthPeak(nx, rows, radius, valueBytes, peak); });
-    if(!FiniteDifference2DFullWidthPeak(nx, plan.coreRows, radius, valueBytes, plan.residentBytes))
+    plan.core_cols = nx;
+    plan.core_rows = largestFitting(ny, [nx, radius, valueBytes](usize rows, usize& peak) { return FiniteDifference2DFullWidthPeak(nx, rows, radius, valueBytes, peak); });
+    if(!FiniteDifference2DFullWidthPeak(nx, plan.core_rows, radius, valueBytes, plan.resident_bytes))
     {
       plan.overflow = true;
       return plan;
@@ -256,15 +256,15 @@ inline FiniteDifference2DBufferPlan BuildFiniteDifference2DBufferPlan(usize nx, 
   }
   else
   {
-    plan.coreCols = largestFitting(nx, [radius, valueBytes](usize columns, usize& peak) { return FiniteDifference2DTiledPeak(columns, radius, valueBytes, peak); });
-    plan.coreRows = 1;
-    if(!FiniteDifference2DTiledPeak(plan.coreCols, radius, valueBytes, plan.residentBytes))
+    plan.core_cols = largestFitting(nx, [radius, valueBytes](usize columns, usize& peak) { return FiniteDifference2DTiledPeak(columns, radius, valueBytes, peak); });
+    plan.core_rows = 1;
+    if(!FiniteDifference2DTiledPeak(plan.core_cols, radius, valueBytes, plan.resident_bytes))
     {
       plan.overflow = true;
       return plan;
     }
   }
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 
@@ -507,10 +507,10 @@ double MinMaxStencilAverage(const GetFn& get, const std::vector<std::array<int64
 // method rather than a `static constexpr` -- the driver widens its rolling z-window to 2*radius()+1 planes for it.
 struct MinMaxCurvatureFlowFn
 {
-  int64 stencilRadius = 2;
+  int64 stencil_radius = 2;
 
   explicit MinMaxCurvatureFlowFn(int64 radius = 2)
-  : stencilRadius(radius)
+  : stencil_radius(radius)
   , m_StencilOffsets2D(radius >= 0 && radius <= k_MaxPrecomputedMinMaxStencilRadius ? BuildMinMaxStencilOffsets(2, radius) : std::vector<std::array<int64, 3>>{})
   , m_StencilOffsets3D(radius >= 0 && radius <= k_MaxPrecomputedMinMaxStencilRadius ? BuildMinMaxStencilOffsets(3, radius) : std::vector<std::array<int64, 3>>{})
   , m_InverseStencilPixelCount2D(m_StencilOffsets2D.empty() ? 0.0 : 1.0 / static_cast<double>(m_StencilOffsets2D.size()))
@@ -520,7 +520,7 @@ struct MinMaxCurvatureFlowFn
 
   int64 radius() const
   {
-    return stencilRadius;
+    return stencil_radius;
   }
 
   const std::vector<std::array<int64, 3>>& stencilOffsets(uint32 effDim) const
@@ -554,16 +554,16 @@ struct MinMaxCurvatureFlowFn
     // ComputeNeighborhoodScales), so MinMaxComputeThreshold below keeps using raw sc[] unchanged. Division (not
     // multiplication by a precomputed reciprocal) matches ITK's `ScaleCoefficients[i] / m_Radius[i]` bit-for-bit for
     // every stencilRadius, not merely the powers of two exercised by the current parity tests (1, 2).
-    const double radiusD = static_cast<double>(stencilRadius);
+    const double radiusD = static_cast<double>(stencil_radius);
     const std::array<double, 3> baseSc = {sc[0] / radiusD, sc[1] / radiusD, sc[2] / radiusD};
     const double update = CurvatureFlowFn{}.computeUpdate(get, baseSc, effDim);
     if(update == 0.0)
     {
       return 0.0;
     }
-    const double threshold = MinMaxComputeThreshold(get, sc, effDim, stencilRadius);
+    const double threshold = MinMaxComputeThreshold(get, sc, effDim, stencil_radius);
     const auto& offsets = stencilOffsets(effDim);
-    const double avgValue = offsets.empty() ? MinMaxStencilAverageDynamic(get, effDim, stencilRadius) : MinMaxStencilAverage(get, offsets, inverseStencilPixelCount(effDim));
+    const double avgValue = offsets.empty() ? MinMaxStencilAverageDynamic(get, effDim, stencil_radius) : MinMaxStencilAverage(get, offsets, inverseStencilPixelCount(effDim));
     return (avgValue < threshold) ? std::max(update, 0.0) : std::min(update, 0.0);
   }
 
@@ -585,7 +585,7 @@ struct GradientAnisoFn
   // Modified global average-gradient-magnitude term (itkGradientNDAnisotropicDiffusionFunction.h: m_K), recomputed
   // every iteration by detail::UpdateGlobalConductance via setGlobalK() -- mutable per-iteration STATE, unlike
   // conductance/interval below which are constant parameters fixed by the caller for the whole run.
-  double m_K = 0.0;
+  double m_k = 0.0;
   double conductance = 1.0;
   uint32 interval = 1u;
   // itkAnisotropicDiffusionImageFilter's GradientMagnitudeIsFixed / FixedAverageGradientMagnitude escape hatch:
@@ -617,7 +617,7 @@ struct GradientAnisoFn
   template <class KReal>
   void setGlobalK(double avgGradMagSq)
   {
-    m_K = static_cast<double>(static_cast<KReal>(avgGradMagSq * conductance * conductance * -2.0));
+    m_k = static_cast<double>(static_cast<KReal>(avgGradMagSq * conductance * conductance * -2.0));
   }
 
   template <class GetFn>
@@ -674,10 +674,10 @@ struct GradientAnisoFn
 
       double cx = 0.0;
       double cxd = 0.0;
-      if(m_K != 0.0)
+      if(m_k != 0.0)
       {
-        cx = std::exp((dxForward * dxForward + accum) / m_K);
-        cxd = std::exp((dxBackward * dxBackward + accumD) / m_K);
+        cx = std::exp((dxForward * dxForward + accum) / m_k);
+        cxd = std::exp((dxBackward * dxBackward + accumD) / m_k);
       }
       delta += dxForward * cx - dxBackward * cxd;
     }
@@ -699,7 +699,7 @@ struct CurvatureAnisoFn
   // Same conductance state + m_K formula as GradientAnisoFn -- see that struct's field comments (this is
   // deliberately a byte-for-byte duplicate of that layout, not a shared base, so each functor stays a simple
   // aggregate the caller can brace-initialize in member-declaration order).
-  double m_K = 0.0;
+  double m_k = 0.0;
   double conductance = 1.0;
   uint32 interval = 1u;
   bool gradientMagnitudeFixed = false;
@@ -755,7 +755,7 @@ struct CurvatureAnisoFn
   template <class KReal>
   void setGlobalK(double avgGradMagSq)
   {
-    m_K = static_cast<double>(static_cast<KReal>(avgGradMagSq * conductance * conductance * -2.0));
+    m_k = static_cast<double>(static_cast<KReal>(avgGradMagSq * conductance * conductance * -2.0));
   }
 
   template <class GetFn>
@@ -830,10 +830,10 @@ struct CurvatureAnisoFn
 
       double cx = 0.0;
       double cxd = 0.0;
-      if(m_K != 0.0)
+      if(m_k != 0.0)
       {
-        cx = std::exp(gradMagSq / m_K);
-        cxd = std::exp(gradMagSqD / m_K);
+        cx = std::exp(gradMagSq / m_k);
+        cxd = std::exp(gradMagSqD / m_k);
       }
       // First-order normalized finite-difference conductance products, then the second-order
       // conductance-modified curvature accumulated into `speed`.
@@ -892,7 +892,7 @@ struct CurvatureAnisoFn
 // exactly double-representable from two floats. Each `diff` local below is exactly that Real-precision subtraction;
 // the `static_cast<double>` widening happens only afterward, on the finished difference -- never on the operands.
 template <class F, class Real, class StoreT>
-Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dims, const std::array<double, 3>& sc, uint32 effDim, uint32 iter, const std::atomic_bool& shouldCancel)
+Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3Type& dims, const std::array<double, 3>& sc, uint32 effDim, uint32 iter, const std::atomic_bool& shouldCancel)
 {
   if(fn.gradientMagnitudeFixed)
   {
@@ -1000,7 +1000,7 @@ Result<> UpdateGlobalConductance(F& fn, const StoreT& accum, const SizeVec3& dim
 }
 
 template <class T, class F, class Real, class InputStoreT, class WorkingStoreT>
-Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const InputStoreT& inStore, WorkingStoreT& firstStore, const SizeVec3& dims, const std::array<double, 3>& sc,
+Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const InputStoreT& inStore, WorkingStoreT& firstStore, const SizeVec3Type& dims, const std::array<double, 3>& sc,
                                                               const std::atomic_bool& shouldCancel)
 {
   const int64 nX = static_cast<int64>(dims[0]);
@@ -1099,7 +1099,7 @@ Result<> InitializeFiniteDifferenceWorkingStoreAndConductance(F& fn, const Input
 } // namespace detail
 
 // Keep a cheap count gate for short iterations; the shared throttle controls message frequency.
-inline void throttleProgress(ThrottledMessageHandler& progressThrottle, uint32 iter, uint32 numberOfIterations)
+inline void ThrottleProgress(ThrottledMessageHandler& progressThrottle, uint32 iter, uint32 numberOfIterations)
 {
   if(numberOfIterations == 0)
   {
@@ -1127,7 +1127,7 @@ inline Result<std::unique_ptr<ITemporaryRecordStore>> CreateFiniteDifferenceScra
 {
   try
   {
-    auto result = DataStoreUtilities::CreateTemporaryRecordStore(config);
+    auto result = data_store_utilities::CreateTemporaryRecordStore(config);
     if(result.invalid())
     {
       return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(
@@ -1279,15 +1279,15 @@ Result<> UpdateGlobalConductance2DBounded(F& fn, const StoreT& currentStore, usi
     }
   };
 
-  if(plan.coreCols == nx)
+  if(plan.core_cols == nx)
   {
-    for(usize yBegin = 0; yBegin < ny; yBegin += plan.coreRows)
+    for(usize yBegin = 0; yBegin < ny; yBegin += plan.core_rows)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize yEnd = yBegin + std::min(plan.coreRows, ny - yBegin);
+      const usize yEnd = yBegin + std::min(plan.core_rows, ny - yBegin);
       const usize loadYBegin = yBegin == 0 ? 0 : yBegin - 1;
       const usize loadYEnd = yEnd + std::min(usize{1}, ny - yEnd);
       if(Result<> result = ReadFiniteDifference2DRegion(currentStore, nx, 0, nx, loadYBegin, loadYEnd, inputBuffer); result.invalid())
@@ -1310,9 +1310,9 @@ Result<> UpdateGlobalConductance2DBounded(F& fn, const StoreT& currentStore, usi
       }
       const usize loadYBegin = y == 0 ? 0 : y - 1;
       const usize loadYEnd = std::min(y + 2, ny);
-      for(usize xBegin = 0; xBegin < nx; xBegin += plan.coreCols)
+      for(usize xBegin = 0; xBegin < nx; xBegin += plan.core_cols)
       {
-        const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
+        const usize xEnd = xBegin + std::min(plan.core_cols, nx - xBegin);
         const usize loadXBegin = xBegin == 0 ? 0 : xBegin - 1;
         const usize loadXEnd = xEnd + std::min(usize{1}, nx - xEnd);
         if(Result<> result = ReadFiniteDifference2DRegion(currentStore, nx, loadXBegin, loadXEnd, loadYBegin, loadYEnd, inputBuffer); result.invalid())
@@ -1354,17 +1354,17 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
   usize inputCols = 0;
   usize inputCapacity = 0;
   usize outputCapacity = 0;
-  if(plan.coreCols == nx)
+  if(plan.core_cols == nx)
   {
-    inputRows = plan.coreRows + 2 * planRadius;
+    inputRows = plan.core_rows + 2 * planRadius;
     inputCols = nx;
   }
   else
   {
     inputRows = 1 + 2 * planRadius;
-    inputCols = plan.coreCols + 2 * planRadius;
+    inputCols = plan.core_cols + 2 * planRadius;
   }
-  if(!detail::FiniteDifferenceCheckedMultiply(inputRows, inputCols, inputCapacity) || !detail::FiniteDifferenceCheckedMultiply(plan.coreRows, plan.coreCols, outputCapacity))
+  if(!detail::FiniteDifferenceCheckedMultiply(inputRows, inputCols, inputCapacity) || !detail::FiniteDifferenceCheckedMultiply(plan.core_rows, plan.core_cols, outputCapacity))
   {
     return MakeErrorResult(-8635, fmt::format("Finite-difference 2D working-buffer layout overflows for dimensions {} x {} and radius {}.", nx, ny, planRadius));
   }
@@ -1372,16 +1372,16 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
   {
     std::vector<T> inputBlock(outputCapacity);
     std::vector<Real> castBlock(outputCapacity);
-    for(usize yBegin = 0; yBegin < ny; yBegin += plan.coreRows)
+    for(usize yBegin = 0; yBegin < ny; yBegin += plan.core_rows)
     {
-      const usize yEnd = yBegin + std::min(plan.coreRows, ny - yBegin);
-      for(usize xBegin = 0; xBegin < nx; xBegin += plan.coreCols)
+      const usize yEnd = yBegin + std::min(plan.core_rows, ny - yBegin);
+      for(usize xBegin = 0; xBegin < nx; xBegin += plan.core_cols)
       {
         if(shouldCancel)
         {
           return {};
         }
-        const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
+        const usize xEnd = xBegin + std::min(plan.core_cols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
         if(Result<> result = ReadFiniteDifference2DRegion(inStore, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<T>(inputBlock.data(), inputBlock.size())); result.invalid())
         {
@@ -1420,18 +1420,18 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
 
       progressThrottle.reset(nx * ny, fmt::format("Finite Difference: Updating Tiles for Iteration {} of {}", iter + 1, numberOfIterations));
       usize completedValues = 0;
-      for(usize yBegin = 0; yBegin < ny; yBegin += plan.coreRows)
+      for(usize yBegin = 0; yBegin < ny; yBegin += plan.core_rows)
       {
-        const usize yEnd = yBegin + std::min(plan.coreRows, ny - yBegin);
+        const usize yEnd = yBegin + std::min(plan.core_rows, ny - yBegin);
         const usize loadYBegin = yBegin > radius ? yBegin - radius : 0;
         const usize loadYEnd = yEnd + std::min(radius, ny - yEnd);
-        for(usize xBegin = 0; xBegin < nx; xBegin += plan.coreCols)
+        for(usize xBegin = 0; xBegin < nx; xBegin += plan.core_cols)
         {
           if(shouldCancel)
           {
             return {};
           }
-          const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
+          const usize xEnd = xBegin + std::min(plan.core_cols, nx - xBegin);
           const usize loadXBegin = xBegin > radius ? xBegin - radius : 0;
           const usize loadXEnd = xEnd + std::min(radius, nx - xEnd);
           const usize loadedWidth = loadXEnd - loadXBegin;
@@ -1461,7 +1461,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
               }
             }
           };
-          if(plan.coreCols == nx && coreRows > 1)
+          if(plan.core_cols == nx && coreRows > 1)
           {
             ParallelDataAlgorithm algorithm;
             algorithm.setRange(0, coreRows);
@@ -1483,7 +1483,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
       std::swap(currentStorePtr, nextStorePtr);
       if(!shouldCancel)
       {
-        throttleProgress(progressThrottle, iter, numberOfIterations);
+        ThrottleProgress(progressThrottle, iter, numberOfIterations);
       }
     }
   }
@@ -1491,16 +1491,16 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
   {
     std::vector<Real> workingBlock(outputCapacity);
     std::vector<T> outputValues(outputCapacity);
-    for(usize yBegin = 0; yBegin < ny; yBegin += plan.coreRows)
+    for(usize yBegin = 0; yBegin < ny; yBegin += plan.core_rows)
     {
-      const usize yEnd = yBegin + std::min(plan.coreRows, ny - yBegin);
-      for(usize xBegin = 0; xBegin < nx; xBegin += plan.coreCols)
+      const usize yEnd = yBegin + std::min(plan.core_rows, ny - yBegin);
+      for(usize xBegin = 0; xBegin < nx; xBegin += plan.core_cols)
       {
         if(shouldCancel)
         {
           return {};
         }
-        const usize xEnd = xBegin + std::min(plan.coreCols, nx - xBegin);
+        const usize xEnd = xBegin + std::min(plan.core_cols, nx - xBegin);
         const usize valueCount = (yEnd - yBegin) * (xEnd - xBegin);
         if(Result<> result = ReadFiniteDifference2DRegion(*currentStorePtr, nx, xBegin, xEnd, yBegin, yEnd, nonstd::span<Real>(workingBlock.data(), workingBlock.size())); result.invalid())
         {
@@ -1521,7 +1521,7 @@ Result<> ApplyFiniteDifference2DBounded(const AbstractDataStore<T>& inStore, Abs
 }
 
 template <class T, class F, class Real, class WorkingStoreT>
-Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, WorkingStoreT& firstStore, WorkingStoreT& secondStore, const SizeVec3& dims,
+Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, WorkingStoreT& firstStore, WorkingStoreT& secondStore, const SizeVec3Type& dims,
                                          const std::array<double, 3>& sc, F fn, float64 timeStep, uint32 numberOfIterations, const std::atomic_bool& shouldCancel,
                                          const IFilter::MessageHandler& messageHandler)
 {
@@ -1769,7 +1769,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         {
           if(!shouldCancel)
           {
-            throttleProgress(progressThrottle, iter, numberOfIterations);
+            ThrottleProgress(progressThrottle, iter, numberOfIterations);
           }
           return {};
         }
@@ -1777,7 +1777,7 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
         nextStorePtr = &secondStore;
         if(!shouldCancel)
         {
-          throttleProgress(progressThrottle, iter, numberOfIterations);
+          ThrottleProgress(progressThrottle, iter, numberOfIterations);
         }
         continue;
       }
@@ -1795,21 +1795,21 @@ Result<> ApplyFiniteDifference3DPingPong(const AbstractDataStore<T>& inStore, Ab
     {
       if(!shouldCancel)
       {
-        throttleProgress(progressThrottle, iter, numberOfIterations);
+        ThrottleProgress(progressThrottle, iter, numberOfIterations);
       }
       return {};
     }
     std::swap(currentStorePtr, nextStorePtr);
     if(!shouldCancel)
     {
-      throttleProgress(progressThrottle, iter, numberOfIterations);
+      ThrottleProgress(progressThrottle, iter, numberOfIterations);
     }
   }
   return {};
 }
 
 template <class T, class F, class Real>
-Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::array<double, 3>& sc, const F& fn, float64 timeStep,
+Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, const std::array<double, 3>& sc, const F& fn, float64 timeStep,
                                      uint32 numberOfIterations, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D)
 {
   const usize nx = dims[0];
@@ -1837,17 +1837,17 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
     usize inputCols = 0;
     usize inputCapacity = 0;
     usize outputCapacity = 0;
-    if(plan.coreCols == nx)
+    if(plan.core_cols == nx)
     {
-      inputRows = plan.coreRows + 2 * planRadius;
+      inputRows = plan.core_rows + 2 * planRadius;
       inputCols = nx;
     }
     else
     {
       inputRows = 1 + 2 * planRadius;
-      inputCols = plan.coreCols + 2 * planRadius;
+      inputCols = plan.core_cols + 2 * planRadius;
     }
-    if(!detail::FiniteDifferenceCheckedMultiply(inputRows, inputCols, inputCapacity) || !detail::FiniteDifferenceCheckedMultiply(plan.coreRows, plan.coreCols, outputCapacity))
+    if(!detail::FiniteDifferenceCheckedMultiply(inputRows, inputCols, inputCapacity) || !detail::FiniteDifferenceCheckedMultiply(plan.core_rows, plan.core_cols, outputCapacity))
     {
       return MakeErrorResult(-8635, fmt::format("Finite-difference 2D working-buffer layout overflows for dimensions {} x {} and radius {}.", nx, ny, planRadius));
     }
@@ -1855,9 +1855,9 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
   }
 
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(Real);
-  config.maxRecordsPerBatch = static_cast<uint64>(maxRecordsPerBatch);
-  config.initialRecordCount = static_cast<uint64>(volume);
+  config.record_size = sizeof(Real);
+  config.max_records_per_batch = static_cast<uint64>(maxRecordsPerBatch);
+  config.initial_record_count = static_cast<uint64>(volume);
   auto firstResult = CreateFiniteDifferenceScratchStore(config);
   if(firstResult.invalid())
   {
@@ -1902,7 +1902,7 @@ Result<> ApplyFiniteDifferenceOocRaw(const AbstractDataStore<T>& inStore, Abstra
 // hardcoded to float64, the float32-input live-ITK grid diverged from ITK by ~1 ULP at essentially every voxel --
 // a deterministic precision-MODEL mismatch, not thread-order FP noise -- and resolved once Real became T here).
 template <class T, class F>
-Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, FloatVec3 spacing, F fn, float64 timeStep, uint32 numberOfIterations,
+Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, FloatVec3Type spacing, F fn, float64 timeStep, uint32 numberOfIterations,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_FiniteDifference2DResidentLimit)
 {
   using RealType = std::conditional_t<F::k_NativePrecision, T, float64>;
@@ -2003,14 +2003,14 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
   // Resident/fallback stores: accum (Real) = cast<Real>(in), streamed plane by plane -- ITK's IntermediateType
   // cast-IN (a no-op whenever Real==T, i.e. F::k_NativePrecision).
   const auto workingDataFormat = detail::SelectFiniteDifferenceWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
-  auto accumPtr = DataStoreUtilities::CreateDataStoreWithFormat<RealType>(workingDataFormat, shape, std::vector<usize>{1});
+  auto accumPtr = data_store_utilities::CreateDataStoreWithFormat<RealType>(workingDataFormat, shape, std::vector<usize>{1});
   AbstractDataStore<RealType>& accum = *accumPtr;
 
   ThrottledMessageHandler progressThrottle(messageHandler);
   messageHandler.sendInfoMessage("Applying Finite Difference Iterations");
   // Resident/fallback update buffer: a second full-volume Real store (ITK's UpdateBufferType == the IntermediateType
   // image, or T itself for the native-precision functor).
-  auto updatePtr = DataStoreUtilities::CreateDataStoreWithFormat<RealType>(workingDataFormat, shape, std::vector<usize>{1});
+  auto updatePtr = data_store_utilities::CreateDataStoreWithFormat<RealType>(workingDataFormat, shape, std::vector<usize>{1});
   AbstractDataStore<RealType>& updateStore = *updatePtr;
 
   {
@@ -2152,7 +2152,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
       }
       if(!shouldCancel)
       {
-        throttleProgress(progressThrottle, iter, numberOfIterations);
+        ThrottleProgress(progressThrottle, iter, numberOfIterations);
       }
     }
 
@@ -2285,7 +2285,7 @@ Result<> ApplyFiniteDifference(const AbstractDataStore<T>& inStore, AbstractData
     std::swap(currentStorePtr, nextStorePtr);
     if(!shouldCancel)
     {
-      throttleProgress(progressThrottle, iter, numberOfIterations);
+      ThrottleProgress(progressThrottle, iter, numberOfIterations);
     }
   }
 

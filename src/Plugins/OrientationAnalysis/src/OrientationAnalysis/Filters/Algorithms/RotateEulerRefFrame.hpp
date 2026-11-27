@@ -17,8 +17,8 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameInputValues
 {
-  std::vector<float> rotationAxis; ///< Axis {x, y, z} followed by an angle in degrees.
-  DataPath eulerAngleDataPath;     ///< Three-component Float32 Euler angles in radians.
+  std::vector<float> rotation_axis; ///< Axis {x, y, z} followed by an angle in degrees.
+  DataPath euler_angle_data_path;     ///< Three-component Float32 Euler angles in radians.
 };
 
 /**

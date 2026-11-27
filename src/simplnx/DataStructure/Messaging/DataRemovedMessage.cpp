@@ -29,7 +29,7 @@ DataRemovedMessage::~DataRemovedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataRemovedMessage::getMsgType() const
 {
-  return MsgType;
+  return k_MsgType;
 }
 
 DataObject::IdType DataRemovedMessage::getId() const

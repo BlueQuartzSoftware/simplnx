@@ -32,12 +32,12 @@ public:
 
   static constexpr StringLiteralType k_LengthUnit_Key = "length_unit_index";
 
-  static constexpr StringLiteralType k_ChangeOrigin_Key = ImageIO::k_ChangeOrigin;
+  static constexpr StringLiteralType k_ChangeOrigin_Key = image_io::k_ChangeOrigin;
   static constexpr StringLiteralType k_CenterOrigin_Key = "center_origin";
-  static constexpr StringLiteralType k_Origin_Key = ImageIO::k_Origin;
+  static constexpr StringLiteralType k_Origin_Key = image_io::k_Origin;
 
-  static constexpr StringLiteralType k_ChangeSpacing_Key = ImageIO::k_ChangeSpacing;
-  static constexpr StringLiteralType k_Spacing_Key = ImageIO::k_Spacing;
+  static constexpr StringLiteralType k_ChangeSpacing_Key = image_io::k_ChangeSpacing;
+  static constexpr StringLiteralType k_Spacing_Key = image_io::k_Spacing;
   static constexpr StringLiteralType k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
 
   static constexpr StringLiteralType k_ChangeDataType_Key = "change_image_data_type";

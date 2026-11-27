@@ -19,7 +19,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -47,16 +47,16 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/compute_gbcd_metric_based/compute_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarInputFilePath);
 
   const fs::path exemplarDistOutput(fmt::format("{}/compute_gbcd_metric_based/gbcd_distribution_1.dat", unit_test::k_TestFilesDir));
   const fs::path exemplarErrorsOutput(fmt::format("{}/compute_gbcd_metric_based/gbcd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
@@ -71,7 +71,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
 
     // Create default Parameters for the filter.
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0f, 1.0f, 1.0f, 60.0f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1.0f, 1.0f, 1.0f, 60.0f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ChosenLimitDists_Key, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ExcludeTripleLines_Key, std::make_any<bool>(false));
@@ -90,7 +90,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -105,13 +105,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
     // exemplar distribution
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarDistributionPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -119,13 +119,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
     // exemplar errors
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarErrorPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -133,13 +133,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
     // computed distribution
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedDistributionPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -147,13 +147,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
     // computed errors
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedErrorPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3052)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -161,21 +161,21 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Valid Filter Execu
   }
 
   // compare results
-  UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
-  UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarErrorPath, k_ComputedErrorPath);
+  unit_test::CompareArrays<float32>(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
+  unit_test::CompareArrays<float32>(dataStructure, k_ExemplarErrorPath, k_ComputedErrorPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: InValid Filter Execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/compute_gbcd_metric_based/compute_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarInputFilePath);
 
   const fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
   const fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
@@ -203,60 +203,60 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: InValid Filter Exe
   {
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1, -90.0f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1, -90.0f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
   }
   SECTION("Invalid Misorientation Rotation Axis")
   {
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.0f, 0.0f, 0.0f, 17.9f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.0f, 0.0f, 0.0f, 17.9f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
   }
   SECTION("Invalid Number of Sample Points")
   {
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(0));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
   }
   SECTION("Invalid Phase Of Interest Value (must be > 0)")
   {
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(0));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
   }
   SECTION("Invalid Phase Of Interest Value (cannot be > number of ensembles)")
   {
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(2));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
   }
   SECTION("Invalid Output File Names")
   {
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
+    args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
     args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
   }
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -309,14 +309,14 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: SIMPL Backwards Co
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Laue Index Bounds", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
 
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_gbcd_metric_based" / "compute_gbcd_metric_based.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath));
-  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresPath));
+  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresPath);
   crystalStructuresArrayRef.getDataStoreRef()[1] = 999U;
 
   const fs::path distributionOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_metric_bounds_distribution.dat";
@@ -325,7 +325,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Laue Index Bounds"
   ComputeGBCDMetricBasedFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
-  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F, 60.0F}));
+  args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F, 60.0F}));
   args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(1));
   args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(distributionOutput));
   args.insertOrAssign(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(errorsOutput));
@@ -343,5 +343,5 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: Laue Index Bounds"
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -7240);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -77,7 +77,7 @@ Parameters WriteOnScaleTableFileFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "The feature ID for each cell.", DataPath{},
       ArraySelectionParameter::AllowedTypeSetType{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
-      ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_PhaseNamesArrayPath_Key, "Phase Names", "The name for each positive feature ID.", DataPath{}));
@@ -121,7 +121,7 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
   auto cellTupleResult = ValidateCellTupleCount(geometry, geometryPath, featureIdsPtr->getNumberOfTuples(), featureIdsPath, -12024);
   if(cellTupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
   const auto phaseNamesPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
@@ -136,27 +136,27 @@ IFilter::PreflightResult WriteOnScaleTableFileFilter::preflightImpl(const DataSt
         Warning{.code = -12038, .message = fmt::format("The phase names StringArray '{}' has 0 tuples. Every name will be written as 'Phase_<id>'.", phaseNamesPath.toString())});
   }
 
-  const SizeVec3 dimensions = geometry.getDimensions();
+  const SizeVec3Type dimensions = geometry.getDimensions();
   if(geometry.getGeomType() == IGeometry::Type::RectGrid && (dimensions[0] < dimensions[1] || dimensions[1] < dimensions[2]))
   {
     return MakePreflightErrorResult(-12026,
                                     fmt::format("The Rectilinear Grid Geometry '{}' has dimensions ({}). OnScale export requires X >= Y >= Z. Only Image Geometries can be reordered automatically.",
-                                                geometryPath.toString(), StringUtilities::formatDimensions3D(dimensions)));
+                                                geometryPath.toString(), string_utilities::FormatDimensions3D(dimensions)));
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteOnScaleTableFileInputValues inputValues;
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.NumKeypoints = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumKeypoints_Key);
-  inputValues.InputGeometryPath = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.PhaseNamesArrayPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.file_prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  inputValues.num_keypoints = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumKeypoints_Key);
+  inputValues.input_geometry_path = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.phase_names_array_path = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
 
   return WriteOnScaleTableFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -180,7 +180,7 @@ Result<Arguments> WriteOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::jso
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_OutputFilePrefixKey, k_FilePrefix_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_NumKeypointsKey, k_NumKeypoints_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverterType>(args, json, simpl::k_NumKeypointsKey, k_NumKeypoints_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));

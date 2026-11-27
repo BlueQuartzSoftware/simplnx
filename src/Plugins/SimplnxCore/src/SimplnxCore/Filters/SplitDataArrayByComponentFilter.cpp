@@ -98,7 +98,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
   usize numComponents = inputArrayPtr->getNumberOfComponents();
   if(numComponents <= 1)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-65401, fmt::format("Selected Array '{}' must have more than 1 component", pInputArrayPath.toString()))};
   }
 
   ShapeType tDims = inputArrayPtr->getIDataStoreRef().getTupleShape();
@@ -113,11 +113,11 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
       if(comp >= numComponents || comp < 0)
       {
         return {
-            .outputActions = MakeErrorResult<OutputActions>(
+            .output_actions = MakeErrorResult<OutputActions>(
                 -65402, fmt::format("Selected component '{}' is not a valid component. Input array at path '{}' only has {} components, please choose a component number between 0 and {} to extract.",
                                     comp, pInputArrayPath.toString(), numComponents, numComponents - 1))};
       }
-      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(compIndex, numComponents - 1);
+      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + string_utilities::GenerateIndexString(compIndex, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArrayPtr->getDataType(), tDims, cDims, newArrayPath));
     }
@@ -126,7 +126,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
   {
     for(usize i = 0; i < numComponents; i++)
     {
-      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::GenerateIndexString(i, numComponents - 1);
+      std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + string_utilities::GenerateIndexString(i, numComponents - 1);
       DataPath newArrayPath = pInputArrayPath.replaceName(arrayName);
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArrayPtr->getDataType(), tDims, cDims, newArrayPath));
     }
@@ -137,7 +137,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -145,25 +145,25 @@ Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructu
                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SplitDataArrayByComponentInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
-  inputValues.SplitArraysSuffix = filterArgs.value<std::string>(k_Postfix_Key);
+  inputValues.input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_MultiCompArrayPath_Key);
+  inputValues.split_arrays_suffix = filterArgs.value<std::string>(k_Postfix_Key);
   if(filterArgs.value<bool>(k_SelectComponents_Key))
   {
     auto pExtractComponents = filterArgs.value<DynamicTableParameter::ValueType>(k_ComponentsToExtract_Key)[0];
     ShapeType components;
-    inputValues.ExtractComponents.reserve(pExtractComponents.size());
+    inputValues.extract_components.reserve(pExtractComponents.size());
     for(auto floatValue : pExtractComponents)
     {
-      inputValues.ExtractComponents.push_back(static_cast<usize>(floatValue));
+      inputValues.extract_components.push_back(static_cast<usize>(floatValue));
     }
   }
   else
   {
-    usize numComponents = dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath)->getNumberOfComponents();
-    inputValues.ExtractComponents.reserve(numComponents);
+    usize numComponents = dataStructure.getDataAs<IDataArray>(inputValues.input_array_path)->getNumberOfComponents();
+    inputValues.extract_components.reserve(numComponents);
     for(usize i = 0; i < numComponents; ++i)
     {
-      inputValues.ExtractComponents.push_back(i);
+      inputValues.extract_components.push_back(i);
     }
   }
 

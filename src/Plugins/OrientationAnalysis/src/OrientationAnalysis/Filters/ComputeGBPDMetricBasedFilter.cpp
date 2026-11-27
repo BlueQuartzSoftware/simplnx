@@ -66,26 +66,26 @@ Parameters ComputeGBPDMetricBasedFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types", "Specifies the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Specifies the area of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry Face Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFeatureFaceLabelsArrayPath_Key, "Feature Face Labels",
                                                           "Specifies which original Features are on either side of each boundary Feature", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_DistOutputFile_Key, "Output Distribution File", "The output distribution file path (extension .dat, GMT format)",
                                                           fs::path("distribution.dat"), FileSystemPathParameter::ExtensionsType{".dat"}, FileSystemPathParameter::PathType::OutputFile));
@@ -149,13 +149,13 @@ IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-8323, fmt::format("The phase of interest ({}) must be greater than 0", pPhaseOfInterestValue));
   }
 
-  const auto numEnsembles = static_cast<int>(dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue).getNumberOfTuples());
+  const auto numEnsembles = static_cast<int>(dataStructure.getDataRefAs<UInt32ArrayType>(pCrystalStructuresArrayPathValue).getNumberOfTuples());
   if(pPhaseOfInterestValue >= numEnsembles)
   {
     return MakePreflightErrorResult(-8324, fmt::format("The phase of interest index ({}) is larger than the number of Ensembles ({})", pPhaseOfInterestValue, numEnsembles));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -164,22 +164,22 @@ Result<> ComputeGBPDMetricBasedFilter::executeImpl(DataStructure& dataStructure,
 {
   ComputeGBPDMetricBasedInputValues inputValues;
 
-  inputValues.PhaseOfInterest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  inputValues.LimitDist = filterArgs.value<float32>(k_LimitDist_Key);
-  inputValues.NumSamplPts = filterArgs.value<int32>(k_NumSamplPts_Key);
-  inputValues.ExcludeTripleLines = filterArgs.value<bool>(k_ExcludeTripleLines_Key);
-  inputValues.DistOutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_DistOutputFile_Key);
-  inputValues.ErrOutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ErrOutputFile_Key);
-  inputValues.SaveRelativeErr = filterArgs.value<bool>(k_SaveRelativeErr_Key);
-  inputValues.NodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.SurfaceMeshFaceNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
-  inputValues.SurfaceMeshFaceAreasArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
-  inputValues.SurfaceMeshFeatureFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFeatureFaceLabelsArrayPath_Key);
-  inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  inputValues.phase_of_interest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
+  inputValues.limit_dist = filterArgs.value<float32>(k_LimitDist_Key);
+  inputValues.num_sampl_pts = filterArgs.value<int32>(k_NumSamplPts_Key);
+  inputValues.exclude_triple_lines = filterArgs.value<bool>(k_ExcludeTripleLines_Key);
+  inputValues.dist_output_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_DistOutputFile_Key);
+  inputValues.err_output_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_ErrOutputFile_Key);
+  inputValues.save_relative_err = filterArgs.value<bool>(k_SaveRelativeErr_Key);
+  inputValues.node_types_array_path = filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key);
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.surface_mesh_face_normals_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
+  inputValues.surface_mesh_face_areas_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
+  inputValues.surface_mesh_feature_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFeatureFaceLabelsArrayPath_Key);
+  inputValues.feature_euler_angles_array_path = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
 
   return ComputeGBPDMetricBased(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

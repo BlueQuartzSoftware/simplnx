@@ -21,16 +21,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ExtractInternalSurfacesFromTriangleGeometryInputValues
 {
-  MultiArraySelectionParameter::ValueType CopyTriangleArrayPaths;
-  MultiArraySelectionParameter::ValueType CopyVertexArrayPaths;
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  uint64 CriterionMode{};
-  VectorInt8ParameterType::ValueType NodeTypeRange;
-  ArraySelectionParameter::ValueType NodeTypesPath;
-  DataPath FaceLabelsPath;
-  DataGroupCreationParameter::ValueType OutputTriangleGeometryPath;
-  DataObjectNameParameter::ValueType TriangleAttributeMatrixName;
-  DataObjectNameParameter::ValueType VertexAttributeMatrixName;
+  MultiArraySelectionParameter::ValueType copy_triangle_array_paths;
+  MultiArraySelectionParameter::ValueType copy_vertex_array_paths;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
+  uint64 criterion_mode{};
+  VectorInt8ParameterType::ValueType node_type_range;
+  ArraySelectionParameter::ValueType node_types_path;
+  DataPath face_labels_path;
+  DataGroupCreationParameter::ValueType output_triangle_geometry_path;
+  DataObjectNameParameter::ValueType triangle_attribute_matrix_name;
+  DataObjectNameParameter::ValueType vertex_attribute_matrix_name;
 };
 
 /**

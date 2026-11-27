@@ -79,9 +79,9 @@ std::shared_ptr<DataObject> TetrahedralGeom::deepCopy(const DataPath& copyPath)
 
     INodeGeometry3D::copyMembersInto(*copy, copyPath);
     copy->m_PolyhedronListId = deepCopyOwnedChild(copyPath, getPolyhedra());
-    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltsContainingVert);
-    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltNeighbors);
-    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32Array>(copyPath, k_EltCentroids);
+    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltsContainingVert);
+    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltNeighbors);
+    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32ArrayType>(copyPath, k_EltCentroids);
 
     return copy;
   }
@@ -106,7 +106,7 @@ usize TetrahedralGeom::getNumberOfCells() const
 
 Result<> TetrahedralGeom::findElementSizes(bool recalculate)
 {
-  auto* tetSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  auto* tetSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_ElementSizesId);
   if(tetSizesPtr != nullptr && !recalculate)
   {
     return {};
@@ -123,7 +123,7 @@ Result<> TetrahedralGeom::findElementSizes(bool recalculate)
     }
   }
 
-  GeometryHelpers::Topology::FindTetVolumes(getPolyhedra(), getVertices(), tetSizesPtr);
+  geometry_helpers::topology::FindTetVolumes(getPolyhedra(), getVertices(), tetSizesPtr);
   m_ElementSizesId = tetSizesPtr->getId();
 
   return {};
@@ -131,7 +131,7 @@ Result<> TetrahedralGeom::findElementSizes(bool recalculate)
 
 Result<> TetrahedralGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* tetsContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* tetsContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellContainingVertDataArrayId);
   if(tetsContainingVertPtr != nullptr && !recalculate)
   {
     return {};
@@ -147,7 +147,7 @@ Result<> TetrahedralGeom::findElementsContainingVert(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), tetsContainingVertPtr, getNumberOfVertices());
+  auto findResult = geometry_helpers::connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), tetsContainingVertPtr, getNumberOfVertices());
   if(findResult.invalid())
   {
     m_CellContainingVertDataArrayId.reset();
@@ -160,7 +160,7 @@ Result<> TetrahedralGeom::findElementsContainingVert(bool recalculate)
 
 Result<> TetrahedralGeom::findElementNeighbors(bool recalculate)
 {
-  auto* tetNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* tetNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellNeighborsDataArrayId);
   if(tetNeighborsPtr != nullptr && !recalculate)
   {
     return {};
@@ -185,7 +185,7 @@ Result<> TetrahedralGeom::findElementNeighbors(bool recalculate)
 
   m_CellNeighborsDataArrayId = tetNeighborsPtr->getId();
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighborsPtr, Type::Tetrahedral);
+  auto findResult = geometry_helpers::connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighborsPtr, Type::Tetrahedral);
   if(findResult.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
@@ -197,7 +197,7 @@ Result<> TetrahedralGeom::findElementNeighbors(bool recalculate)
 
 Result<> TetrahedralGeom::findElementCentroids(bool recalculate)
 {
-  auto* tetCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* tetCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_CellCentroidsDataArrayId);
   if(tetCentroidsPtr != nullptr && !recalculate)
   {
     return {};
@@ -215,7 +215,7 @@ Result<> TetrahedralGeom::findElementCentroids(bool recalculate)
     }
   }
 
-  GeometryHelpers::Topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroidsPtr);
+  geometry_helpers::topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroidsPtr);
   m_CellCentroidsDataArrayId = tetCentroidsPtr->getId();
 
   return {};
@@ -265,7 +265,7 @@ Result<> TetrahedralGeom::findEdges(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindTetEdges(getPolyhedra(), edgeListPtr);
+  auto findResult = geometry_helpers::connectivity::FindTetEdges(getPolyhedra(), edgeListPtr);
   if(findResult.invalid())
   {
     m_EdgeDataArrayId.reset();
@@ -294,7 +294,7 @@ Result<> TetrahedralGeom::findFaces(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindTetFaces(getPolyhedra(), triListPtr);
+  auto findResult = geometry_helpers::connectivity::FindTetFaces(getPolyhedra(), triListPtr);
   if(findResult.invalid())
   {
     m_FaceListId.reset();
@@ -324,7 +324,7 @@ Result<> TetrahedralGeom::findUnsharedEdges(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindUnsharedTetEdges<MeshIndexType>(getPolyhedra(), unsharedEdgeListPtr);
+  auto findResult = geometry_helpers::connectivity::FindUnsharedTetEdges<MeshIndexType>(getPolyhedra(), unsharedEdgeListPtr);
   if(findResult.invalid())
   {
     m_UnsharedEdgeListId.reset();
@@ -354,7 +354,7 @@ Result<> TetrahedralGeom::findUnsharedFaces(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindUnsharedTetFaces<MeshIndexType>(getPolyhedra(), unsharedTriListPtr);
+  auto findResult = geometry_helpers::connectivity::FindUnsharedTetFaces<MeshIndexType>(getPolyhedra(), unsharedTriListPtr);
   if(findResult.invalid())
   {
     m_UnsharedFaceListId.reset();

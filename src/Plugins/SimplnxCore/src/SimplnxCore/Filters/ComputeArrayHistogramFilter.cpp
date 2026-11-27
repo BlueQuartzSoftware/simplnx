@@ -39,15 +39,15 @@ ComputeArrayHistogramInputValues CreateInputValues(const Arguments& filterArgs)
 {
   ComputeArrayHistogramInputValues inputValues;
 
-  inputValues.NumberOfBins = filterArgs.value<int32>(ComputeArrayHistogramFilter::k_NumberOfBins_Key);
-  inputValues.UserDefinedRange = filterArgs.value<bool>(ComputeArrayHistogramFilter::k_UserDefinedRange_Key);
-  inputValues.MinRange = filterArgs.value<float64>(ComputeArrayHistogramFilter::k_MinRange_Key);
-  inputValues.MaxRange = filterArgs.value<float64>(ComputeArrayHistogramFilter::k_MaxRange_Key);
-  inputValues.SelectedArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key);
+  inputValues.number_of_bins = filterArgs.value<int32>(ComputeArrayHistogramFilter::k_NumberOfBins_Key);
+  inputValues.user_defined_range = filterArgs.value<bool>(ComputeArrayHistogramFilter::k_UserDefinedRange_Key);
+  inputValues.min_range = filterArgs.value<float64>(ComputeArrayHistogramFilter::k_MinRange_Key);
+  inputValues.max_range = filterArgs.value<float64>(ComputeArrayHistogramFilter::k_MaxRange_Key);
+  inputValues.selected_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(ComputeArrayHistogramFilter::k_SelectedArrayPaths_Key);
 
   if(filterArgs.value<bool>(ComputeArrayHistogramFilter::k_UseMask_Key))
   {
-    inputValues.MaskPath = filterArgs.value<DataPath>(ComputeArrayHistogramFilter::k_MaskArrayPath_Key);
+    inputValues.mask_path = filterArgs.value<DataPath>(ComputeArrayHistogramFilter::k_MaskArrayPath_Key);
   }
   return inputValues;
 }
@@ -101,7 +101,7 @@ Parameters ComputeArrayHistogramFilter::parameters() const
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
@@ -152,7 +152,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
   Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
   }
   auto pNewDataGroupValue = filterArgs.value<bool>(k_CreateNewDataGroup_Key);
   auto pDataGroupNameValue = filterArgs.value<DataPath>(k_DataGroupPath_Key);
@@ -173,7 +173,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     maskArrayPtr = dataStructure.getDataAs<IDataArray>(maskArrayPath);
     if(maskArrayPtr == nullptr)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   k_InvalidMaskArrayError, fmt::format("Mask path '{}' is missing or is not a numeric data array. Select an existing numeric mask array.", maskArrayPath.toString()))};
     }
   }
@@ -201,7 +201,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
     if(maskArrayPtr != nullptr && maskArrayPtr->getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   k_MaskTupleCountError, fmt::format("Mask array '{}' has {} tuples, but input array '{}' has {} tuples. Select a mask with one tuple per input tuple.", maskArrayPath.toString(),
                                                      maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(), dataArrayPtr->getNumberOfTuples()))};
     }
@@ -232,7 +232,7 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
   std::vector<DataPath> createdRangesDataPaths;
   std::vector<DataPath> createdMostPopulatedDataPaths;
   std::vector<DataPath> createdModalRangesDataPaths;
-  for(auto& selectedArrayPath : inputValues.SelectedArrayPaths) // regenerate based on preflight
+  for(auto& selectedArrayPath : inputValues.selected_array_paths) // regenerate based on preflight
   {
     const auto& dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
     auto arrayGroupPath = dataGroupPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
@@ -278,12 +278,12 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
     }
   }
 
-  inputValues.CreatedHistogramCountsDataPaths = createdCountsDataPaths;
-  inputValues.CreatedBinRangeDataPaths = createdRangesDataPaths;
-  inputValues.CreatedBinMostPopulatedDataPaths = createdMostPopulatedDataPaths;
+  inputValues.created_histogram_counts_data_paths = createdCountsDataPaths;
+  inputValues.created_bin_range_data_paths = createdRangesDataPaths;
+  inputValues.created_bin_most_populated_data_paths = createdMostPopulatedDataPaths;
   if(calculateModalRanges)
   {
-    inputValues.CreatedBinModalRangesDataPaths = createdModalRangesDataPaths;
+    inputValues.created_bin_modal_ranges_data_paths = createdModalRangesDataPaths;
   }
 
   return ComputeArrayHistogram(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -313,8 +313,8 @@ Result<Arguments> ComputeArrayHistogramFilter::FromSIMPLJson(const nlohmann::jso
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfBinsKey, k_NumberOfBins_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UserDefinedRangeKey, k_UserDefinedRange_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_MinRangeKey, k_MinRange_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_MaxRangeKey, k_MaxRange_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_MinRangeKey, k_MinRange_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_MaxRangeKey, k_MaxRange_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_NewDataContainerKey, k_CreateNewDataGroup_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_NewDataContainerNameKey, k_NewDataGroupPath_Key));

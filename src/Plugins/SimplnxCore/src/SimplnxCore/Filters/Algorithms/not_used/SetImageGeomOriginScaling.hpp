@@ -31,8 +31,8 @@ struct SIMPLNXCORE_EXPORT SetImageGeomOriginScalingInputValues
   BoolParameter::ValueType ChangeOrigin;
   BoolParameter::ValueType ChangeSpacing;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  VectorFloat32Parameter::ValueType Origin;
-  VectorFloat32Parameter::ValueType Spacing;
+  VectorFloat32ParameterType::ValueType Origin;
+  VectorFloat32ParameterType::ValueType Spacing;
 };
 
 /**

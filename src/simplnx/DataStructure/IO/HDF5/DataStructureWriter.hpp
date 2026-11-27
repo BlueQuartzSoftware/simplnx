@@ -65,7 +65,7 @@ public:
      * Zero does not request deflate. Levels one through nine request deflate.
      * Small arrays can still use the default contiguous layout.
      */
-    int32 compressionLevel = 0;
+    int32 compression_level = 0;
   };
 
   /**

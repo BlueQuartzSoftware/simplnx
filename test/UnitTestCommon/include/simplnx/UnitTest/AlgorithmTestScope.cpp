@@ -9,13 +9,13 @@
 
 namespace
 {
-bool UsesOutOfCoreAlgorithm(nx::core::UnitTest::AlgorithmTestScenario scenario)
+bool UsesOutOfCoreAlgorithm(nx::core::unit_test::AlgorithmTestScenario scenario)
 {
-  return scenario == nx::core::UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
+  return scenario == nx::core::unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
 }
 } // namespace
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 std::ostream& operator<<(std::ostream& output, AlgorithmTestScenario scenario)
 {
@@ -115,14 +115,14 @@ void AlgorithmTestScope::requireExpectedScenario() const
 {
   const AlgorithmPathExecutionCounts observedCounts = GetAlgorithmPathExecutionCounts();
   const bool expectsOutOfCoreAlgorithm = UsesOutOfCoreAlgorithm(m_Scenario);
-  const uint64 expectedCount = expectsOutOfCoreAlgorithm ? observedCounts.OutOfCore : observedCounts.InCore;
-  const uint64 unexpectedCount = expectsOutOfCoreAlgorithm ? observedCounts.InCore : observedCounts.OutOfCore;
-  const uint64 expectedScenarioCount = expectsOutOfCoreAlgorithm ? observedCounts.OutOfCoreOnInMemoryStore : observedCounts.InCoreOnInMemoryStore;
-  const uint64 unexpectedStoreCount = expectsOutOfCoreAlgorithm ? observedCounts.OutOfCoreOnOutOfCoreStore : observedCounts.InCoreOnOutOfCoreStore;
+  const uint64 expectedCount = expectsOutOfCoreAlgorithm ? observedCounts.out_of_core : observedCounts.in_core;
+  const uint64 unexpectedCount = expectsOutOfCoreAlgorithm ? observedCounts.in_core : observedCounts.out_of_core;
+  const uint64 expectedScenarioCount = expectsOutOfCoreAlgorithm ? observedCounts.out_of_core_on_in_memory_store : observedCounts.in_core_on_in_memory_store;
+  const uint64 unexpectedStoreCount = expectsOutOfCoreAlgorithm ? observedCounts.out_of_core_on_out_of_core_store : observedCounts.in_core_on_out_of_core_store;
 
-  INFO("Scenario " << m_Scenario << ": observed paths [in-core=" << observedCounts.InCore << ", out-of-core=" << observedCounts.OutOfCore
-                   << "] and combinations [in-core/in-memory=" << observedCounts.InCoreOnInMemoryStore << ", in-core/OOC=" << observedCounts.InCoreOnOutOfCoreStore
-                   << ", OOC/in-memory=" << observedCounts.OutOfCoreOnInMemoryStore << ", OOC/OOC=" << observedCounts.OutOfCoreOnOutOfCoreStore << "]");
+  INFO("Scenario " << m_Scenario << ": observed paths [in-core=" << observedCounts.in_core << ", out-of-core=" << observedCounts.out_of_core
+                   << "] and combinations [in-core/in-memory=" << observedCounts.in_core_on_in_memory_store << ", in-core/OOC=" << observedCounts.in_core_on_out_of_core_store
+                   << ", OOC/in-memory=" << observedCounts.out_of_core_on_in_memory_store << ", OOC/OOC=" << observedCounts.out_of_core_on_out_of_core_store << "]");
   REQUIRE(expectedCount > 0);
   REQUIRE(unexpectedCount == 0);
   REQUIRE(expectedScenarioCount > 0);

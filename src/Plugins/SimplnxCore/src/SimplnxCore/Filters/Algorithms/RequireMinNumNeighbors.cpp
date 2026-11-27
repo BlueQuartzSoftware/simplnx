@@ -30,24 +30,24 @@ RequireMinNumNeighbors::RequireMinNumNeighbors(DataStructure& dataStructure, con
 
 Result<> RequireMinNumNeighbors::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumNeighborsPath)->getDataStoreRef();
+  auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
+  auto& numNeighbors = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->num_neighbors_path)->getDataStoreRef();
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
   usize totalPoints = imageGeom.getNumberOfCells();
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
   // Fail early when the selected phase has no feature. The feature scan uses
   // direct feature-level access and occurs before cell data changes.
-  if(m_InputValues->ApplyToSinglePhase)
+  if(m_InputValues->apply_to_single_phase)
   {
-    auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStoreRef();
+    auto& featurePhases = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_path)->getDataStoreRef();
 
     usize numFeatures = featurePhases.getNumberOfTuples();
     bool unavailablePhase = true;
     for(usize i = 0; i < numFeatures; i++)
     {
-      if(featurePhases[i] == m_InputValues->PhaseNumber)
+      if(featurePhases[i] == m_InputValues->phase_number)
       {
         unavailablePhase = false;
         break;
@@ -57,7 +57,7 @@ Result<> RequireMinNumNeighbors::operator()()
     if(unavailablePhase)
     {
       std::string ss =
-          fmt::format("The phase number ({}) is not available in the supplied Feature phases array with path ({})", m_InputValues->PhaseNumber, m_InputValues->FeaturePhasesPath.toString());
+          fmt::format("The phase number ({}) is not available in the supplied Feature phases array with path ({})", m_InputValues->phase_number, m_InputValues->feature_phases_path.toString());
       return MakeErrorResult(-5555, ss);
     }
   }
@@ -103,7 +103,7 @@ Result<> RequireMinNumNeighbors::operator()()
   }
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Feature Count Changed: Previous: {} New: {}", totalFeatures, count));
 
-  DataPath cellFeatureGroupPath = m_InputValues->NumNeighborsPath.getParent();
+  DataPath cellFeatureGroupPath = m_InputValues->num_neighbors_path.getParent();
   // Cell IDs already use the shared compaction map. Skip another cell pass and
   // compact only the feature-level arrays.
   Result<> removeResult = nx::core::RemoveInactiveObjects(m_DataStructure, cellFeatureGroupPath, activeObjects, featureIds, totalFeatures, m_MessageHandler, m_ShouldCancel,
@@ -118,7 +118,7 @@ Result<> RequireMinNumNeighbors::operator()()
   return {};
 }
 
-Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThreshold(Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& numNeighbors, usize totalPoints,
+Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThreshold(Int32AbstractDataStoreType& featureIds, const Int32AbstractDataStoreType& numNeighbors, usize totalPoints,
                                                                                        Error& errorReturn)
 {
   usize totalFeatures = numNeighbors.getNumberOfTuples();
@@ -127,16 +127,16 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
   // A feature survives when it meets the threshold or is outside the selected
   // phase. At least one nonbackground feature must survive.
   bool valid = false;
-  if(m_InputValues->ApplyToSinglePhase)
+  if(m_InputValues->apply_to_single_phase)
   {
-    auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStoreRef();
+    auto& featurePhases = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_path)->getDataStoreRef();
     for(usize i = 1; i < totalFeatures; i++)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      if(numNeighbors[i] >= m_InputValues->MinNumNeighbors || featurePhases[i] != m_InputValues->PhaseNumber)
+      if(numNeighbors[i] >= m_InputValues->min_num_neighbors || featurePhases[i] != m_InputValues->phase_number)
       {
         valid = true;
       }
@@ -154,7 +154,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
       {
         return {};
       }
-      if(numNeighbors[i] >= m_InputValues->MinNumNeighbors)
+      if(numNeighbors[i] >= m_InputValues->min_num_neighbors)
       {
         valid = true;
       }
@@ -172,7 +172,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
 
   // Use the same stable mapping that later compacts feature arrays.
   const FeatureRenumbering renumbering = ComputeFeatureRenumbering(activeObjects);
-  const std::vector<size_t>& newNames = renumbering.newNames;
+  const std::vector<size_t>& newNames = renumbering.new_names;
 
   // Fuse marking and renumbering because both operations require the same cell read. Write only chunks that change.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
@@ -198,7 +198,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
       {
         errorReturn = Error{.code = -55567,
                             .message = fmt::format("Feature ID '{}' in array '{}' is outside the valid range [0, {}). The array may have been modified.", oldId,
-                                                   m_InputValues->FeatureIdsPath.toString(), totalFeatures)};
+                                                   m_InputValues->feature_ids_path.toString(), totalFeatures)};
         return {std::move(activeObjects)};
       }
 
@@ -221,7 +221,7 @@ Result<std::vector<bool>> RequireMinNumNeighbors::removeFeaturesUnderNeighborThr
   return {std::move(activeObjects)};
 }
 
-Result<> RequireMinNumNeighbors::assignBadVoxels(const SizeVec3& dimensions, usize totalFeatures)
+Result<> RequireMinNumNeighbors::assignBadVoxels(const SizeVec3Type& dimensions, usize totalFeatures)
 {
-  return FillBadVoxels(m_DataStructure, m_InputValues->FeatureIdsPath, dimensions, m_InputValues->IgnoredVoxelArrayPaths, totalFeatures, m_MessageHandler, m_ShouldCancel);
+  return FillBadVoxels(m_DataStructure, m_InputValues->feature_ids_path, dimensions, m_InputValues->ignored_voxel_array_paths, totalFeatures, m_MessageHandler, m_ShouldCancel);
 }

@@ -11,8 +11,8 @@ using namespace nx::core;
 // int8's [-128, 127], so the input maximum maps to a saturated 127 (NOT 0) and every output is a valid int8.
 TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: int8 output saturates (no out-of-range cast UB)", "[NXImageProcessing][RescaleIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int8>(dataStructure, 4, 0.0, 1.0); // 4x4x4 = 64 values, 0..63 (fits int8)
@@ -49,8 +49,8 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: int8 output saturates
 // OutputMinimum, matching ITK's RescaleIntensity (scale = 1, shift = outMin - inMin -> every voxel -> outMin).
 TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: constant input maps to OutputMinimum", "[NXImageProcessing][RescaleIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr float64 k_OutputMinimum = 5.0;
   constexpr float64 k_OutputMaximum = 255.0;
@@ -94,8 +94,8 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: constant input maps t
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: ITK real-image golden (3d)", "[NXImageProcessing][ItkGolden][RescaleIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -111,7 +111,7 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: ITK real-image golden
   args.insertOrAssign(RescaleIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   RescaleIntensityImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -123,5 +123,5 @@ TEST_CASE("NXImageProcessing::RescaleIntensityImageFilter: ITK real-image golden
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 1e-8);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -194,13 +194,13 @@ Result<> CombineAttributeArrays::operator()()
     return {};
   }
   std::vector<DataObject*> inputArrays;
-  for(const auto& dataPath : m_InputValues->SelectedDataArrayPaths)
+  for(const auto& dataPath : m_InputValues->selected_data_array_paths)
   {
     inputArrays.push_back(m_DataStructure.getData(dataPath));
   }
 
-  auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->StackedDataArrayPath);
+  auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->stacked_data_array_path);
 
-  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues->NormalizeData, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath),
+  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues->normalize_data, inputArrays, m_DataStructure.getData(m_InputValues->stacked_data_array_path),
                              m_ShouldCancel);
 }

@@ -54,7 +54,7 @@ Result<> ExecuteMaskImageFilter(DataStructure& dataStructure, const DataPath& in
                                   .outside_value = outsideValue,
                                   .should_cancel = shouldCancel,
                                   .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

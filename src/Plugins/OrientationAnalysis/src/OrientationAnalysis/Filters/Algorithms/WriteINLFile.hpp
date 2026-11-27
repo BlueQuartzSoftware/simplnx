@@ -17,14 +17,14 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT WriteINLFileInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  DataPath ImageGeomPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath CellEulerAnglesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath MaterialNameArrayPath;
-  DataPath NumFeaturesArrayPath;
+  FileSystemPathParameter::ValueType output_file;
+  DataPath image_geom_path;
+  DataPath feature_ids_array_path;
+  DataPath cell_phases_array_path;
+  DataPath cell_euler_angles_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath material_name_array_path;
+  DataPath num_features_array_path;
 };
 
 /**

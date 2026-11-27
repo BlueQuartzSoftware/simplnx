@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Numbers.hpp"
 
-namespace nx::core::Constants
+namespace nx::core::constants
 {
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
@@ -78,25 +78,25 @@ template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
 inline constexpr T k_1Over3 = static_cast<T>(0.33333333333333331);
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
-inline constexpr T k_ACosNeg1 = numbers::pi_v<T>;
+inline constexpr T k_ACosNeg1 = numbers::k_PiV<T>;
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
 inline constexpr T k_ACos1 = static_cast<T>(0.0);
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
-inline constexpr T k_Tan_OneEighthPi = static_cast<T>(0.41421356237309503);
+inline constexpr T k_TanOneEighthPi = static_cast<T>(0.41421356237309503);
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
-inline constexpr T k_Cos_OneEighthPi = static_cast<T>(0.92387953251128674);
+inline constexpr T k_CosOneEighthPi = static_cast<T>(0.92387953251128674);
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
-inline constexpr T k_Cos_ThreeEighthPi = static_cast<T>(0.38268343236508984);
+inline constexpr T k_CosThreeEighthPi = static_cast<T>(0.38268343236508984);
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
-inline constexpr T k_Sin_ThreeEighthPi = static_cast<T>(0.92387953251128674);
+inline constexpr T k_SinThreeEighthPi = static_cast<T>(0.92387953251128674);
 
-inline constexpr float k_PiF = numbers::pi_v<float>;
-inline constexpr double k_PiD = numbers::pi_v<double>;
+inline constexpr float k_PiF = numbers::k_PiV<float>;
+inline constexpr double k_PiD = numbers::k_PiV<double>;
 
 inline constexpr float k_SqrtPiF = k_SqrtPi<float>;
 inline constexpr double k_SqrtPiD = k_SqrtPi<double>;
@@ -176,15 +176,15 @@ inline constexpr double k_ACosNeg1D = k_ACosNeg1<double>;
 inline constexpr float k_ACos1F = k_ACos1<float>;
 inline constexpr double k_ACos1D = k_ACos1<double>;
 
-inline constexpr float k_Tan_OneEighthPiF = k_Tan_OneEighthPi<float>;
-inline constexpr double k_Tan_OneEighthPiD = k_Tan_OneEighthPi<double>;
+inline constexpr float k_TanOneEighthPiF = k_TanOneEighthPi<float>;
+inline constexpr double k_TanOneEighthPiD = k_TanOneEighthPi<double>;
 
-inline constexpr float k_Cos_OneEighthPiF = k_Cos_OneEighthPi<float>;
-inline constexpr double k_Cos_OneEighthPiD = k_Cos_OneEighthPi<double>;
+inline constexpr float k_CosOneEighthPiF = k_CosOneEighthPi<float>;
+inline constexpr double k_CosOneEighthPiD = k_CosOneEighthPi<double>;
 
-inline constexpr float k_Cos_ThreeEighthPiF = k_Cos_ThreeEighthPi<float>;
-inline constexpr double k_Cos_ThreeEighthPiD = k_Cos_ThreeEighthPi<double>;
+inline constexpr float k_CosThreeEighthPiF = k_CosThreeEighthPi<float>;
+inline constexpr double k_CosThreeEighthPiD = k_CosThreeEighthPi<double>;
 
-inline constexpr float k_Sin_ThreeEighthPiF = k_Sin_ThreeEighthPi<float>;
-inline constexpr double k_Sin_ThreeEighthPiD = k_Sin_ThreeEighthPi<double>;
+inline constexpr float k_SinThreeEighthPiF = k_SinThreeEighthPi<float>;
+inline constexpr double k_SinThreeEighthPiD = k_SinThreeEighthPi<double>;
 } // namespace nx::core::Constants

@@ -35,16 +35,16 @@ constexpr usize k_TileTuples = 128;
  */
 Result<> ReadMask(DataStructure& dataStructure, const SilhouetteInputValues& inputValues, usize offset, usize count, std::vector<uint8>& buffer, bool* boolBuffer)
 {
-  if(!inputValues.UseMask)
+  if(!inputValues.use_mask)
   {
     std::fill_n(buffer.data(), count, 1);
     return {};
   }
 
-  const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(inputValues.MaskArrayPath);
+  const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(inputValues.mask_array_path);
   if(maskArray.getDataType() == DataType::boolean)
   {
-    auto result = dataStructure.getDataRefAs<BoolArray>(inputValues.MaskArrayPath).getDataStoreRef().copyIntoBuffer(offset, nonstd::span<bool>(boolBuffer, count));
+    auto result = dataStructure.getDataRefAs<BoolArrayType>(inputValues.mask_array_path).getDataStoreRef().copyIntoBuffer(offset, nonstd::span<bool>(boolBuffer, count));
     if(result.invalid())
     {
       return result;
@@ -57,9 +57,9 @@ Result<> ReadMask(DataStructure& dataStructure, const SilhouetteInputValues& inp
   }
   if(maskArray.getDataType() == DataType::uint8)
   {
-    return dataStructure.getDataRefAs<UInt8Array>(inputValues.MaskArrayPath).getDataStoreRef().copyIntoBuffer(offset, nonstd::span<uint8>(buffer.data(), count));
+    return dataStructure.getDataRefAs<UInt8ArrayType>(inputValues.mask_array_path).getDataStoreRef().copyIntoBuffer(offset, nonstd::span<uint8>(buffer.data(), count));
   }
-  return MakeErrorResult(-54080, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues.MaskArrayPath.toString()));
+  return MakeErrorResult(-54080, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues.mask_array_path.toString()));
 }
 
 /**
@@ -78,10 +78,10 @@ Result<> ReadMask(DataStructure& dataStructure, const SilhouetteInputValues& inp
 template <typename T>
 Result<> ExecuteScanline(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const SilhouetteInputValues& inputValues)
 {
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputValues.ClusteringArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputValues.clustering_array_path);
   const auto& inputStore = inputArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto& featureStore = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
-  auto& outputStore = dataStructure.getDataRefAs<Float64Array>(inputValues.SilhouetteArrayPath).getDataStoreRef();
+  const auto& featureStore = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.feature_ids_array_path).getDataStoreRef();
+  auto& outputStore = dataStructure.getDataRefAs<Float64ArrayType>(inputValues.silhouette_array_path).getDataStoreRef();
   const usize tupleCount = featureStore.getNumberOfTuples();
   const usize componentCount = inputStore.getNumberOfComponents();
 
@@ -223,7 +223,7 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const std::atomic_bool& s
           }
           const usize cluster = innerFeatures[innerIndex] == 0 ? 0 : denseFeatureIds.at(innerFeatures[innerIndex]);
           clusterDistances[outerIndex * (clusterCount + 1) + cluster] +=
-              ClusterUtilities::GetDistance(outerValues, outerIndex * componentCount, innerValues, innerIndex * componentCount, componentCount, inputValues.DistanceMetric);
+              cluster_utilities::GetDistance(outerValues, outerIndex * componentCount, innerValues, innerIndex * componentCount, componentCount, inputValues.distance_metric);
         }
       }
     }
@@ -317,7 +317,7 @@ SilhouetteScanline::SilhouetteScanline(DataStructure& dataStructure, const IFilt
 
 Result<> SilhouetteScanline::operator()()
 {
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
   Result<> result;
   RunTemplateClass<SilhouetteScanlineRunner, types::NoBooleanType>(inputArray.getDataType(), m_DataStructure, m_ShouldCancel, m_InputValues, result);
   return result;

@@ -29,7 +29,7 @@ namespace fs = std::filesystem;
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 // EbsdLib tests pin renderer pixels and projection details.
 // These tests cover the simplnx value-add: parameter mapping, mask filtering,
@@ -40,10 +40,10 @@ using namespace nx::core::UnitTest;
 // Identical outputs would prove that mask filtering did not reach the renderer.
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the rendered pole figure", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Keep the extracted fixture for the later HexConvention test.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
@@ -54,7 +54,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
   const DataPath kMaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
   auto runWithMask = [&](bool useMask, const std::string& outGeomName) {
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
     WritePoleFigureFilter filter;
     Arguments args;
     args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Mask Test"));
@@ -78,14 +78,14 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
     args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // Snapshot the rendered RGB array so we can compare across two filter runs
     // that live in different DataStructures (lambda-local).
     const DataPath imgPath = DataPath({outGeomName, "Cell Data", "Phase_1"});
-    const auto& store = dataStructure.getDataRefAs<UInt8Array>(imgPath).getDataStoreRef();
+    const auto& store = dataStructure.getDataRefAs<UInt8ArrayType>(imgPath).getDataStoreRef();
     std::vector<uint8> snapshot(store.getSize());
     for(usize i = 0; i < store.getSize(); ++i)
     {
@@ -120,10 +120,10 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the r
 // Intensity and composite outputs must therefore differ.
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reaches algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Keep the extracted fixture for both HexConvention runs.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
@@ -141,7 +141,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
   };
 
   auto runWithConv = [&](ChoicesParameter::ValueType convIndex, const std::string& geomName, const std::string& intensityName) {
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
     WritePoleFigureFilter filter;
     Arguments args;
     args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Conv Test"));
@@ -166,7 +166,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(convIndex));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -180,7 +180,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     // Snapshot the second-family intensity array.
     // Basal-plane families rotate between X||a and X||a*, while the c-axis does not.
     const DataPath intensityPath = DataPath({intensityName, "Cell Data", "Phase_1_<011>"});
-    const auto& intensityStore = dataStructure.getDataRefAs<Float64Array>(intensityPath).getDataStoreRef();
+    const auto& intensityStore = dataStructure.getDataRefAs<Float64ArrayType>(intensityPath).getDataStoreRef();
     snap.intensity.resize(intensityStore.getSize());
     for(usize i = 0; i < intensityStore.getSize(); ++i)
     {
@@ -190,7 +190,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
     // Snapshot the composite RGB array that becomes the PNG and downstream geometry.
     // This second snapshot verifies the composite configuration path separately.
     const DataPath compositePath = DataPath({geomName, "Cell Data", "Phase_1"});
-    const auto& compositeStore = dataStructure.getDataRefAs<UInt8Array>(compositePath).getDataStoreRef();
+    const auto& compositeStore = dataStructure.getDataRefAs<UInt8ArrayType>(compositePath).getDataStoreRef();
     snap.composite_rgb.resize(compositeStore.getSize());
     for(usize i = 0; i < compositeStore.getSize(); ++i)
     {
@@ -244,9 +244,9 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
 // Marker radii of 1 and 10 pixels must also produce different composites.
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker radius reach algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
@@ -256,7 +256,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
   const DataPath kMaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
   auto runPoleFigure = [&](ChoicesParameter::ValueType generationAlgorithm, int32 markerRadius, const std::string& geomName) {
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
     WritePoleFigureFilter filter;
     Arguments args;
     args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Discrete Test"));
@@ -280,12 +280,12 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
     args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(0)); // X||a
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const DataPath compositePath = DataPath({geomName, "Cell Data", "Phase_1"});
-    const auto& compositeStore = dataStructure.getDataRefAs<UInt8Array>(compositePath).getDataStoreRef();
+    const auto& compositeStore = dataStructure.getDataRefAs<UInt8ArrayType>(compositePath).getDataStoreRef();
     std::vector<uint8> snapshot(compositeStore.getSize());
     for(usize i = 0; i < compositeStore.getSize(); ++i)
     {
@@ -325,7 +325,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker 
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block discrete-count oracle", "[OrientationAnalysis][WritePoleFigureFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BlockTuples = 65536;
@@ -335,14 +335,14 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
   const DataPath maskPath({"Mask"});
   const DataPath crystalPath({"CrystalStructures"});
   const DataPath namesPath({"Materials"});
-  auto eulerStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerPath, {k_BlockTuples + 1}, {3});
-  auto phaseStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasePath, {k_BlockTuples + 1}, {1});
-  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, {k_BlockTuples + 1}, {1});
-  auto crystalStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalPath, {2}, {1});
-  auto* eulersPtr = Float32Array::Create(dataStructure, "Eulers", eulerStore);
-  auto* phasesPtr = Int32Array::Create(dataStructure, "Phases", phaseStore);
-  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", maskStore);
-  auto* crystalsPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStore);
+  auto eulerStore = data_store_utilities::CreateDataStore<float32>(dataStructure, eulerPath, {k_BlockTuples + 1}, {3});
+  auto phaseStore = data_store_utilities::CreateDataStore<int32>(dataStructure, phasePath, {k_BlockTuples + 1}, {1});
+  auto maskStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, maskPath, {k_BlockTuples + 1}, {1});
+  auto crystalStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalPath, {2}, {1});
+  auto* eulersPtr = Float32ArrayType::Create(dataStructure, "Eulers", eulerStore);
+  auto* phasesPtr = Int32ArrayType::Create(dataStructure, "Phases", phaseStore);
+  auto* maskPtr = UInt8ArrayType::Create(dataStructure, "Mask", maskStore);
+  auto* crystalsPtr = UInt32ArrayType::Create(dataStructure, "CrystalStructures", crystalStore);
   REQUIRE(eulersPtr != nullptr);
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(maskPtr != nullptr);
@@ -356,7 +356,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
   (*phasesPtr)[k_BlockTuples] = 1;
   (*maskPtr)[k_BlockTuples - 1] = 1;
   (*maskPtr)[k_BlockTuples] = 1;
-  (*eulersPtr)[k_BlockTuples * 3] = numbers::pi_v<float32> / 4.0F;
+  (*eulersPtr)[k_BlockTuples * 3] = numbers::k_PiV<float32> / 4.0F;
   (*crystalsPtr)[0] = 999;
   (*crystalsPtr)[1] = 1;
   REQUIRE(eulerStore->getDataFormat() == "HDF5-OOC");
@@ -387,8 +387,8 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
   for(usize familyIdx = 0; familyIdx < families.size(); familyIdx++)
   {
     const DataPath outputPath({"Counts", "Cell Data", "Phase_1_" + families[familyIdx]});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath));
-    const auto& output = dataStructure.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<Float64ArrayType>(outputPath);
     REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
     std::vector<float64> values(32 * 32);
     auto readResult = output.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(values.data(), values.size()));
@@ -408,7 +408,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 65536-block dis
       REQUIRE(values == expected);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -432,15 +432,15 @@ void CheckTwoPhaseIntensityTupleShapes(DataStorageMode storageMode)
   const DataPath intensityPath({"Counts"});
   const DataPath cellDataPath = intensityPath.createChildPath("Cell Data");
 
-  auto eulerStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, eulerPath, {2}, {3});
-  auto phaseStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasePath, {2}, {1});
-  auto crystalStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalPath, {3}, {1});
+  auto eulerStore = data_store_utilities::CreateDataStore<float32>(dataStructure, eulerPath, {2}, {3});
+  auto phaseStore = data_store_utilities::CreateDataStore<int32>(dataStructure, phasePath, {2}, {1});
+  auto crystalStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalPath, {3}, {1});
   REQUIRE(eulerStore != nullptr);
   REQUIRE(phaseStore != nullptr);
   REQUIRE(crystalStore != nullptr);
-  auto* eulersPtr = Float32Array::Create(dataStructure, "Eulers", eulerStore);
-  auto* phasesPtr = Int32Array::Create(dataStructure, "Phases", phaseStore);
-  auto* crystalsPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStore);
+  auto* eulersPtr = Float32ArrayType::Create(dataStructure, "Eulers", eulerStore);
+  auto* phasesPtr = Int32ArrayType::Create(dataStructure, "Phases", phaseStore);
+  auto* crystalsPtr = UInt32ArrayType::Create(dataStructure, "CrystalStructures", crystalStore);
   REQUIRE(eulersPtr != nullptr);
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(crystalsPtr != nullptr);
@@ -482,7 +482,7 @@ void CheckTwoPhaseIntensityTupleShapes(DataStorageMode storageMode)
   args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(namesPath));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -498,8 +498,8 @@ void CheckTwoPhaseIntensityTupleShapes(DataStorageMode storageMode)
     {
       const DataPath arrayPath = cellDataPath.createChildPath("Phase_" + std::to_string(phase) + "_" + family);
       CAPTURE(arrayPath.toString());
-      const Float64Array* arrayPtr = nullptr;
-      REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<Float64Array>(arrayPath));
+      const Float64ArrayType* arrayPtr = nullptr;
+      REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<Float64ArrayType>(arrayPath));
       REQUIRE(arrayPtr->getDataStoreRef().getStoreType() == expectedStoreType);
       if(isOutOfCore)
       {
@@ -510,7 +510,7 @@ void CheckTwoPhaseIntensityTupleShapes(DataStorageMode storageMode)
       CHECK(arrayPtr->getComponentShape() == expectedComponentShape);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
   std::cout << fmt::format("Pole figure two-phase tuple shape fixture store={} inputs=3 outputs=6 shape={{1,{},{}}}\n", isOutOfCore ? "HDF5-OOC" : "in-memory", k_ImageSize, k_ImageSize);
 }
 } // namespace
@@ -531,7 +531,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: real HDF5 two populated p
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WritePoleFigureFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

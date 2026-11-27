@@ -12,8 +12,8 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT NormalizeImageInputValues
 {
-  DataPath InputArrayPath;
-  DataPath OutputArrayPath;
+  DataPath input_array_path;
+  DataPath output_array_path;
 };
 
 /**

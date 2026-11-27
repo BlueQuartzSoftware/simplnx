@@ -76,17 +76,17 @@ Parameters ComputeGroupingDensityFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_ParentIdsPath_Key, "Feature Parent Ids", "Input Feature level ParentIds", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureVolumesArrayPath_Key, "Feature Volumes", "The Feature Volumes Data Array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.", DataPath{},
                                                                  NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Input Parent Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_ParentVolumesPath_Key, "Parent Volumes", "Input Parent feature level volumes data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
 
@@ -211,7 +211,7 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -220,30 +220,30 @@ Result<> ComputeGroupingDensityFilter::executeImpl(DataStructure& dataStructure,
 {
   ComputeGroupingDensityInputValues inputValues;
 
-  inputValues.ParentIdsPath = filterArgs.value<DataPath>(k_ParentIdsPath_Key);
-  inputValues.ParentVolumesPath = filterArgs.value<DataPath>(k_ParentVolumesPath_Key);
-  inputValues.ContiguousNLPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
-  inputValues.VolumesPath = filterArgs.value<DataPath>(k_FeatureVolumesArrayPath_Key);
-  inputValues.GroupingDensitiesPath = inputValues.ParentVolumesPath.replaceName(filterArgs.value<std::string>(k_GroupingDensitiesName_Key));
+  inputValues.parent_ids_path = filterArgs.value<DataPath>(k_ParentIdsPath_Key);
+  inputValues.parent_volumes_path = filterArgs.value<DataPath>(k_ParentVolumesPath_Key);
+  inputValues.contiguous_nl_path = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
+  inputValues.volumes_path = filterArgs.value<DataPath>(k_FeatureVolumesArrayPath_Key);
+  inputValues.grouping_densities_path = inputValues.parent_volumes_path.replaceName(filterArgs.value<std::string>(k_GroupingDensitiesName_Key));
 
-  inputValues.UseNonContiguousNeighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
-  if(inputValues.UseNonContiguousNeighbors)
+  inputValues.use_non_contiguous_neighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
+  if(inputValues.use_non_contiguous_neighbors)
   {
-    inputValues.NonContiguousNLPath = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
+    inputValues.non_contiguous_nl_path = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
   }
   else
   {
-    inputValues.NonContiguousNLPath = k_ThrowawayNonContiguous;
+    inputValues.non_contiguous_nl_path = k_ThrowawayNonContiguous;
   }
 
-  inputValues.FindCheckedFeatures = filterArgs.value<bool>(k_FindCheckedFeatures_Key);
-  if(inputValues.FindCheckedFeatures)
+  inputValues.find_checked_features = filterArgs.value<bool>(k_FindCheckedFeatures_Key);
+  if(inputValues.find_checked_features)
   {
-    inputValues.CheckedFeaturesPath = inputValues.VolumesPath.replaceName(filterArgs.value<std::string>(k_CheckedFeaturesName_Key));
+    inputValues.checked_features_path = inputValues.volumes_path.replaceName(filterArgs.value<std::string>(k_CheckedFeaturesName_Key));
   }
   else
   {
-    inputValues.CheckedFeaturesPath = k_ThrowawayCheckedFeatures;
+    inputValues.checked_features_path = k_ThrowawayCheckedFeatures;
   }
 
   return ComputeGroupingDensity(dataStructure, messageHandler, shouldCancel, &inputValues)();

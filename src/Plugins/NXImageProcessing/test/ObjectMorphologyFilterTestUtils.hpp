@@ -173,7 +173,7 @@ inline DataPath BuildObjectImage(DataStructure& dataStructure, usize dimX, usize
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -206,7 +206,7 @@ inline DataPath BuildObjectImageWithExtraLabel(DataStructure& dataStructure, usi
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -243,8 +243,8 @@ inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usiz
                                                T objectValue, T backgroundValue)
 {
   DataStructure dataStructure;
-  auto* inArrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "in", {dimZ, dimY, dimX}, {1});
-  auto* outArrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "out", {dimZ, dimY, dimX}, {1});
+  auto* inArrayPtr = unit_test::CreateTestDataArray<T>(dataStructure, "in", {dimZ, dimY, dimX}, {1});
+  auto* outArrayPtr = unit_test::CreateTestDataArray<T>(dataStructure, "out", {dimZ, dimY, dimX}, {1});
   for(usize i = 0; i < input.size(); ++i)
   {
     inArrayPtr->getDataStoreRef().setValue(i, input[i]);
@@ -255,7 +255,7 @@ inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usiz
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ImageProcessing::ApplyObjectMorphology<T>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3{dimX, dimY, dimZ}, se, boxOffsets, op, objectValue,
+  const Result<> result = ImageProcessing::ApplyObjectMorphology<T>(inArrayPtr->getDataStoreRef(), outArrayPtr->getDataStoreRef(), SizeVec3Type{dimX, dimY, dimZ}, se, boxOffsets, op, objectValue,
                                                                     backgroundValue, *inArrayPtr, *outArrayPtr, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
@@ -273,13 +273,13 @@ inline std::vector<T> RunApplyObjectMorphology(const std::vector<T>& input, usiz
  *        Injected into the parity/oracle runners so the Task-2 Erode filter (which adds a Background Value)
  *        can reuse the exact same runners with its own setter.
  */
-using ObjectParamSetter = std::function<void(Arguments&, uint64 kernelType, const std::vector<uint32>& radius)>;
+using ObjectParamSetterType = std::function<void(Arguments&, uint64 kernelType, const std::vector<uint32>& radius)>;
 
 /**
  * @brief Parameter setter for the Dilate Object Morphology filter (kernel type + radius + Object Value).
  */
 template <class NewFilterT>
-inline ObjectParamSetter DilateParamSetter(float64 objectValue)
+inline ObjectParamSetterType DilateParamSetter(float64 objectValue)
 {
   return [objectValue](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
@@ -293,7 +293,7 @@ inline ObjectParamSetter DilateParamSetter(float64 objectValue)
  *        Background Value).
  */
 template <class NewFilterT>
-inline ObjectParamSetter ErodeParamSetter(float64 objectValue, float64 backgroundValue)
+inline ObjectParamSetterType ErodeParamSetter(float64 objectValue, float64 backgroundValue)
 {
   return [objectValue, backgroundValue](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
@@ -314,10 +314,10 @@ inline ObjectParamSetter ErodeParamSetter(float64 objectValue, float64 backgroun
  *        fires before the shared PreflightImageFilter type/geometry checks. Isolates that non-scalar guard.
  */
 template <class NewFilterT, class T>
-inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const ObjectParamSetter& setParams)
+inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const ObjectParamSetterType& setParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dim = 4;
   const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
@@ -330,7 +330,7 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Obje
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {3}); // 3-component (non-scalar)
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {3}); // 3-component (non-scalar)
   DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
 
   NewFilterT filter;
@@ -341,8 +341,8 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Obje
   setParams(args, static_cast<uint64>(KernelType::Box), {1, 1, 1});
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == expectedErrorCode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == expectedErrorCode);
 }
 
 //------------------------------------------------------------------------------
@@ -351,9 +351,9 @@ struct ObjCase
 {
   const char* label;
   std::vector<uint32> radius;
-  usize dimX;
-  usize dimY;
-  usize dimZ;
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
 };
 
 namespace detail
@@ -361,7 +361,7 @@ namespace detail
 // Drives @p filter with a shared Arguments over the standard geom/input/output keys plus the injected params.
 // The function then requires that preflight and execute succeed. It reads the key constants from NewFilterT.
 template <class NewFilterT>
-inline void RunFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint64 kernelType, const std::vector<uint32>& radius, const ObjectParamSetter& setParams)
+inline void RunFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint64 kernelType, const std::vector<uint32>& radius, const ObjectParamSetterType& setParams)
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -370,7 +370,7 @@ inline void RunFilter(IFilter& filter, DataStructure& dataStructure, const DataP
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setParams(args, kernelType, radius);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -384,10 +384,10 @@ inline void RunFilter(IFilter& filter, DataStructure& dataStructure, const DataP
  */
 template <class NewFilterT, class T>
 inline void RunObjectMorphologyComputedExpected(const std::function<DataPath(DataStructure&, usize, usize, usize)>& buildImage, usize dimX, usize dimY, usize dimZ, KernelType kernelType,
-                                                const std::array<int32, 3>& radius, ObjectMorphOp op, T objectValue, T backgroundValue, const ObjectParamSetter& setParams)
+                                                const std::array<int32, 3>& radius, ObjectMorphOp op, T objectValue, T backgroundValue, const ObjectParamSetterType& setParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = buildImage(dataStructure, dimX, dimY, dimZ);
@@ -429,11 +429,11 @@ inline void RunObjectMorphologyComputedExpected(const std::function<DataPath(Dat
  *       @p tolerance (0.01). Storage is pinned ForceInCore for consistency with the rest of the golden suite.
  */
 template <class FilterT, class T>
-inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, ObjectMorphOp op, T objectValue, T backgroundValue, const ObjectParamSetter& setParams,
+inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, ObjectMorphOp op, T objectValue, T backgroundValue, const ObjectParamSetterType& setParams,
                                                  float64 tolerance)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -448,7 +448,7 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   // --- geometry dims + input snapshot (for the deterministic oracle; the filter writes a separate Output array) ---
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(geom);
   REQUIRE(imageGeomPtr != nullptr);
-  const SizeVec3 dims = imageGeomPtr->getDimensions();
+  const SizeVec3Type dims = imageGeomPtr->getDimensions();
   const usize dimX = dims[0];
   const usize dimY = dims[1];
   const usize dimZ = dims[2];
@@ -467,7 +467,7 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   setParams(args, static_cast<uint64>(KernelType::Ball), {1, 1, 1});
   FilterT filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -489,6 +489,6 @@ inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, c
   const Result<> compareResult = ip_golden::CompareImages(dataStructure, baselineGeom, baselineData, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace object_morph_test

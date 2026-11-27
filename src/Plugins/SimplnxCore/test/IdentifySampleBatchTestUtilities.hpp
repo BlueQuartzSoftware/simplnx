@@ -17,7 +17,7 @@
 #include <memory>
 #include <utility>
 
-namespace IdentifySampleBatchTest
+namespace identify_sample_batch_test
 {
 /**
  * @namespace IdentifySampleBatchTest
@@ -89,7 +89,7 @@ private:
  * @param fixedCount Number of planes along the remaining axis.
  * @return Geometry dimensions in X, Y, Z order.
  */
-inline SizeVec3 Dimensions(ChoicesParameter::ValueType plane, usize fixedCount = 19)
+inline SizeVec3Type Dimensions(ChoicesParameter::ValueType plane, usize fixedCount = 19)
 {
   REQUIRE(fixedCount > 0);
   switch(plane)
@@ -182,7 +182,7 @@ DataStructure CreateFixture(ChoicesParameter::ValueType plane, usize fixedCount 
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, imagePtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imagePtr->setCellData(*cellDataPtr);
-  auto store = reportingStore ? std::move(reportingStore) : DataStoreUtilities::CreateDataStore<T>(dataStructure, k_MaskPath, tupleShape, ShapeType{1});
+  auto store = reportingStore ? std::move(reportingStore) : data_store_utilities::CreateDataStore<T>(dataStructure, k_MaskPath, tupleShape, ShapeType{1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getTupleShape() == tupleShape);
   REQUIRE(store->getComponentShape() == ShapeType{1});
@@ -244,8 +244,8 @@ void RequireOutput(const DataStructure& dataStructure, ChoicesParameter::ValueTy
   const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_MaskPath.getParent());
   const auto& mask = dataStructure.getDataRefAs<DataArray<T>>(k_MaskPath);
   REQUIRE(image.getDimensions() == dimensions);
-  REQUIRE(image.getSpacing() == FloatVec3(1.0F, 1.0F, 1.0F));
-  REQUIRE(image.getOrigin() == FloatVec3(0.0F, 0.0F, 0.0F));
+  REQUIRE(image.getSpacing() == FloatVec3Type(1.0F, 1.0F, 1.0F));
+  REQUIRE(image.getOrigin() == FloatVec3Type(0.0F, 0.0F, 0.0F));
   REQUIRE(cellData.getShape() == tupleShape);
   REQUIRE(mask.getTupleShape() == tupleShape);
   REQUIRE(mask.getComponentShape() == ShapeType{1});
@@ -271,7 +271,7 @@ void RequireOutput(const DataStructure& dataStructure, ChoicesParameter::ValueTy
     }
   }
   REQUIRE(trueCount == fixedCount * (fillHoles ? 48 : 47));
-  nx::core::UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  nx::core::unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -292,7 +292,7 @@ void ExecuteAndRequire(ScopeT& scope, DataStructure& dataStructure, ChoicesParam
   IdentifySampleFilter filter;
   const auto args = ArgumentsFor(plane, fillHoles);
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   RequireOutput<T>(dataStructure, plane, fillHoles, fixedCount);

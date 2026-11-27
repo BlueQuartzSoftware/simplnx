@@ -54,7 +54,7 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Array specifying which Ensemble each Cell belong",
                                                           DataPath({"DataContainer", "Cell Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
                                                                     "The path to the cell ensemble attribute matrix where the output volume fractions array will be stored",
@@ -95,7 +95,7 @@ IFilter::PreflightResult ComputeVolumeFractionsFilter::preflightImpl(const DataS
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellEnsembleData.getShape(), std::vector<usize>{1}, volFractionsArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -105,8 +105,8 @@ Result<> ComputeVolumeFractionsFilter::executeImpl(DataStructure& dataStructure,
   auto pCellEnsembleAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
   auto pVolFractionsArrayNameValue = filterArgs.value<std::string>(k_VolFractionsArrayName_Key);
 
-  const auto& cellPhases = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key))->getDataStoreRef();
-  auto& volFractions = dataStructure.getDataAs<Float32Array>(pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue))->getDataStoreRef();
+  const auto& cellPhases = dataStructure.getDataAs<Int32ArrayType>(filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key))->getDataStoreRef();
+  auto& volFractions = dataStructure.getDataAs<Float32ArrayType>(pCellEnsembleAttributeMatrixPathValue.createChildPath(pVolFractionsArrayNameValue))->getDataStoreRef();
 
   const bool usesOutOfCoreStore = cellPhases.getStoreType() == IDataStore::StoreType::OutOfCore || volFractions.getStoreType() == IDataStore::StoreType::OutOfCore;
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (ForceOocAlgorithm() || usesOutOfCoreStore);

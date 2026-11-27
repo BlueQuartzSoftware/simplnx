@@ -14,23 +14,23 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBasedInputValues
 {
-  int32 PhaseOfInterest{};
-  VectorFloat32Parameter::ValueType MisorientationRotation;
-  ChoicesParameter::ValueType ChosenLimitDists{};
-  int32 NumSamplPts{};
-  bool ExcludeTripleLines{};
-  FileSystemPathParameter::ValueType DistOutputFile;
-  FileSystemPathParameter::ValueType ErrOutputFile;
-  bool SaveRelativeErr{};
-  DataPath NodeTypesArrayPath;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath SurfaceMeshFaceNormalsArrayPath;
-  DataPath SurfaceMeshFaceAreasArrayPath;
-  DataPath SurfaceMeshFeatureFaceLabelsArrayPath;
-  DataPath FeatureEulerAnglesArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath TriangleGeometryPath;
+  int32 phase_of_interest{};
+  VectorFloat32ParameterType::ValueType misorientation_rotation;
+  ChoicesParameter::ValueType chosen_limit_dists{};
+  int32 num_sampl_pts{};
+  bool exclude_triple_lines{};
+  FileSystemPathParameter::ValueType dist_output_file;
+  FileSystemPathParameter::ValueType err_output_file;
+  bool save_relative_err{};
+  DataPath node_types_array_path;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath surface_mesh_face_normals_array_path;
+  DataPath surface_mesh_face_areas_array_path;
+  DataPath surface_mesh_feature_face_labels_array_path;
+  DataPath feature_euler_angles_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath triangle_geometry_path;
 };
 
 /**

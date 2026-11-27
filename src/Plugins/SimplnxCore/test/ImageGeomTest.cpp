@@ -14,16 +14,16 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Index Calculation", "[Geometry][ImageGeo
 
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
 
-  SizeVec3 dims = {10, 20, 30};
-  FloatVec3 res = {0.4f, 2.3f, 5.0f};
-  FloatVec3 origin = {-1.0f, 6.0f, 10.0f};
+  SizeVec3Type dims = {10, 20, 30};
+  FloatVec3Type res = {0.4f, 2.3f, 5.0f};
+  FloatVec3Type origin = {-1.0f, 6.0f, 10.0f};
 
   imageGeomPtr->setDimensions(dims);
   REQUIRE(imageGeomPtr->setOrigin(origin).valid());
   REQUIRE(imageGeomPtr->setSpacing(res).valid());
 
   std::array<float, 3> coords = {2.5f, 9.23f, 12.78f};
-  SizeVec3 indices = {0, 0, 0};
+  SizeVec3Type indices = {0, 0, 0};
   ImageGeom::ErrorType err = imageGeomPtr->computeCellIndex(coords, indices);
   REQUIRE(err == ImageGeom::ErrorType::NoError);
 
@@ -55,7 +55,7 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Index Calculation", "[Geometry][ImageGeo
   err = imageGeomPtr->computeCellIndex(coords, indices);
   REQUIRE(err == ImageGeom::ErrorType::ZOutOfBoundsHigh);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]")
@@ -66,9 +66,9 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]
 
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
 
-  SizeVec3 dims = {10, 20, 30};
-  FloatVec3 spacing = {0.5f, 0.5f, 0.5f};
-  FloatVec3 origin = {-10.0f, 5.0f, 2.0f};
+  SizeVec3Type dims = {10, 20, 30};
+  FloatVec3Type spacing = {0.5f, 0.5f, 0.5f};
+  FloatVec3Type origin = {-10.0f, 5.0f, 2.0f};
 
   imageGeomPtr->setDimensions(dims);
   REQUIRE(imageGeomPtr->setOrigin(origin).valid());
@@ -145,5 +145,5 @@ TEST_CASE("SimplnxCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]
     REQUIRE(!result.has_value());
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

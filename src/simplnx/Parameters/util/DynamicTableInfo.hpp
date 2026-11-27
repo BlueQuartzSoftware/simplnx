@@ -31,8 +31,8 @@ public:
    */
   struct SIMPLNX_EXPORT TableDims
   {
-    usize numRows = 0;
-    usize numCols = 0;
+    usize num_rows = 0;
+    usize num_cols = 0;
   };
 
   /**

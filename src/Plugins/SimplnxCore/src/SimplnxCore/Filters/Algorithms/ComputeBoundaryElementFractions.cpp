@@ -27,9 +27,9 @@ ComputeBoundaryElementFractions::ComputeBoundaryElementFractions(DataStructure& 
 
 Result<> ComputeBoundaryElementFractions::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& boundaryCells = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->BoundaryCellsArrayPath);
-  auto& boundaryCellFractions = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureDataAttributeMatrixPath.createChildPath(m_InputValues->BoundaryCellFractionsArrayName));
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  auto& boundaryCells = m_DataStructure.getDataRefAs<Int8ArrayType>(m_InputValues->boundary_cells_array_path);
+  auto& boundaryCellFractions = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_data_attribute_matrix_path.createChildPath(m_InputValues->boundary_cell_fractions_array_name));
 
   const auto& featureIdsStore = featureIds.getDataStoreRef();
   const auto& boundaryCellsStore = boundaryCells.getDataStoreRef();

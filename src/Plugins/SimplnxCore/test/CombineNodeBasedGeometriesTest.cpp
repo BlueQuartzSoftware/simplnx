@@ -215,7 +215,7 @@ static void InitializeNode0DGeometry(INodeGeometry0D& geom, DataStructure& dataS
   InitializeNodeGeometry<INodeGeometry0D, float32>(
       geom, dataStructure, vertexDataInitOption, INodeGeometry0D::k_VertexAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, geom.getNumberOfVertices(),
       [numOfVertexComps](const INodeGeometry0D& /*g*/) { return numOfVertexComps; }, [](INodeGeometry0D& g) { return g.getVertices(); },
-      [](INodeGeometry0D& g, const Float32Array& da) { g.setVertices(da); }, [](INodeGeometry0D& g) { return g.getVertexAttributeMatrix(); },
+      [](INodeGeometry0D& g, const Float32ArrayType& da) { g.setVertices(da); }, [](INodeGeometry0D& g) { return g.getVertexAttributeMatrix(); },
       [](INodeGeometry0D& g, AttributeMatrix& m) { g.setVertexAttributeMatrix(m); });
 }
 
@@ -227,7 +227,7 @@ static void InitializeNode1DGeometry(INodeGeometry1D& geom, DataStructure& dataS
   InitializeNodeGeometry<INodeGeometry1D, uint64>(
       geom, dataStructure, edgeDataInitOption, INodeGeometry1D::k_EdgeAttributeMatrixName, INodeGeometry1D::k_SharedEdgeListName, numOfEdges,
       [](const INodeGeometry1D& g) { return g.getNumberOfVerticesPerEdge(); }, [](INodeGeometry1D& g) { return g.getEdges(); },
-      [](INodeGeometry1D& g, const IGeometry::SharedEdgeList& da) { g.setEdgeList(da); }, [](INodeGeometry1D& g) { return g.getEdgeAttributeMatrix(); },
+      [](INodeGeometry1D& g, const IGeometry::SharedEdgeListType& da) { g.setEdgeList(da); }, [](INodeGeometry1D& g) { return g.getEdgeAttributeMatrix(); },
       [](INodeGeometry1D& g, AttributeMatrix& m) { g.setEdgeAttributeMatrix(m); });
 }
 
@@ -239,7 +239,7 @@ static void InitializeNode2DGeometry(INodeGeometry2D& geom, DataStructure& dataS
   InitializeNodeGeometry<INodeGeometry2D, uint64>(
       geom, dataStructure, faceDataInitOption, INodeGeometry2D::k_FaceAttributeMatrixName, INodeGeometry2D::k_SharedFacesListName, numOfFaces,
       [](const INodeGeometry2D& g) { return g.getNumberOfVerticesPerFace(); }, [](INodeGeometry2D& g) { return g.getFaces(); },
-      [](INodeGeometry2D& g, const IGeometry::SharedFaceList& da) { g.setFaceList(da); }, [](INodeGeometry2D& g) { return g.getFaceAttributeMatrix(); },
+      [](INodeGeometry2D& g, const IGeometry::SharedFaceListType& da) { g.setFaceList(da); }, [](INodeGeometry2D& g) { return g.getFaceAttributeMatrix(); },
       [](INodeGeometry2D& g, AttributeMatrix& m) { g.setFaceAttributeMatrix(m); });
 }
 
@@ -252,7 +252,7 @@ static void InitializeNode3DGeometry(INodeGeometry3D& geom, DataStructure& dataS
   InitializeNodeGeometry<INodeGeometry3D, uint64>(
       geom, dataStructure, polyDataInitOption, INodeGeometry3D::k_PolyhedronDataName, INodeGeometry3D::k_SharedPolyhedronListName, numElements,
       [](const INodeGeometry3D& g) { return g.getNumberOfVerticesPerCell(); }, [](INodeGeometry3D& g) { return g.getPolyhedra(); },
-      [](INodeGeometry3D& g, const IGeometry::SharedFaceList& da) { g.setPolyhedraList(da); }, [](INodeGeometry3D& g) { return g.getPolyhedraAttributeMatrix(); },
+      [](INodeGeometry3D& g, const IGeometry::SharedFaceListType& da) { g.setPolyhedraList(da); }, [](INodeGeometry3D& g) { return g.getPolyhedraAttributeMatrix(); },
       [](INodeGeometry3D& g, AttributeMatrix& m) { g.setPolyhedraAttributeMatrix(m); });
 }
 
@@ -545,13 +545,13 @@ static void InitializeNodeBasedGeometries(DataStructure& dataStructure)
 template <typename NodeGeom>
 static void LoadAndExecute0DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   // Test two 0D node-based geometries
   CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry1Path, k_InputGeometry2Path, k_OutputGeometryPath4, dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
@@ -559,7 +559,7 @@ static void LoadAndExecute0DNodeGeometriesTest(const fs::path& inputFilePath)
 template <typename NodeGeom>
 static void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Vertex")
@@ -573,7 +573,7 @@ static void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry2Path, k_InputGeometry3Path, k_OutputGeometryPath4, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
@@ -581,7 +581,7 @@ static void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
 template <typename NodeGeom>
 static void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Edge")
@@ -600,7 +600,7 @@ static void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry3Path, k_InputGeometry4Path, k_OutputGeometryPath4, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
@@ -608,7 +608,7 @@ static void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
 template <typename NodeGeom>
 static void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Face")
@@ -632,49 +632,49 @@ static void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry4Path, k_InputGeometry5Path, k_OutputGeometryPath4, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
 
 TEST_CASE("Combine Node Geometries: Vertex", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_vertex_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_vertex_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_vertex_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute0DNodeGeometriesTest<VertexGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Edge", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_edge_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_edge_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_edge_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute1DNodeGeometriesTest<EdgeGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Triangle", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_triangle_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_triangle_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_triangle_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute2DNodeGeometriesTest<TriangleGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Quad", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_quad_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_quad_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_quad_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute2DNodeGeometriesTest<QuadGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Tetrahedral", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_tetrahedral_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_tetrahedral_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_tetrahedral_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute3DNodeGeometriesTest<TetrahedralGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Hexahedral", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_hexahedral_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_hexahedral_geometries.dream3d");
 
   auto inputFilePath = std::filesystem::path(fmt::format("{}/combine_node_based_geometries/combine_hexahedral_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute3DNodeGeometriesTest<HexahedralGeom>(inputFilePath);
@@ -1011,7 +1011,7 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == to_underlying(errorCode));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[SimplnxCore][CombineNodeBasedGeometries]")
@@ -1055,13 +1055,13 @@ TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[Simp
   args.insertOrAssign(CombineNodeBasedGeometriesFilter::k_OutputGeometryPath_Key, k_OutputGeometryPath1);
   auto preflight = filter.preflight(dataStructure, args);
   // CHECK (not REQUIRE) so that execute also runs; execute must return the same error and not crash.
-  CHECK(preflight.outputActions.invalid());
-  if(preflight.outputActions.invalid())
+  CHECK(preflight.output_actions.invalid());
+  if(preflight.output_actions.invalid())
   {
-    CHECK((preflight.outputActions.errors().size() == 1 && preflight.outputActions.errors()[0].code == expectedCode));
-    if(!preflight.outputActions.errors().empty())
+    CHECK((preflight.output_actions.errors().size() == 1 && preflight.output_actions.errors()[0].code == expectedCode));
+    if(!preflight.output_actions.errors().empty())
     {
-      const auto& message = preflight.outputActions.errors()[0].message;
+      const auto& message = preflight.output_actions.errors()[0].message;
       CHECK(message.find(k_InputGeometry1Path.toString()) != std::string::npos);
       CHECK(message.find(k_InputGeometry2Path.toString()) != std::string::npos);
       CHECK(message.find("has an element list (the array that defines its elements, usually '") != std::string::npos);
@@ -1071,5 +1071,5 @@ TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[Simp
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors()[0].code == expectedCode);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -91,12 +91,12 @@ IFilter::PreflightResult AdaptiveHistogramEqualizationImageFilter::preflightImpl
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Adaptive Histogram Equalization requires a single-component (scalar) input array, but '{}' has {} components.",
                                                                              selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
-  return {.outputActions =
+  return {.output_actions =
               ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath)};
 }
 Result<> AdaptiveHistogramEqualizationImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -134,7 +134,7 @@ Result<Arguments> AdaptiveHistogramEqualizationImageFilter::FromSIMPLJson(const 
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_RadiusKey, k_Radius_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt32Vec3FilterParameterConverterType>(args, json, simpl::k_RadiusKey, k_Radius_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_AlphaKey, k_Alpha_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_BetaKey, k_Beta_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));

@@ -28,19 +28,19 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
 {
-  float32 MisorientationTolerance = 0.0f;
-  bool UseMask = false;
-  bool RandomizeFeatureIds = false;
-  SegmentFeatures::NeighborScheme NeighborScheme{};
-  DataPath ImageGeometryPath;
-  DataPath QuatsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath MaskArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellFeatureAttributeMatrixPath;
-  DataPath ActiveArrayPath;
-  bool IsPeriodic = false;
+  float32 misorientation_tolerance = 0.0f;
+  bool use_mask = false;
+  bool randomize_feature_ids = false;
+  SegmentFeatures::NeighborScheme neighbor_scheme{};
+  DataPath image_geometry_path;
+  DataPath quats_array_path;
+  DataPath cell_phases_array_path;
+  DataPath mask_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath feature_ids_array_path;
+  DataPath cell_feature_attribute_matrix_path;
+  DataPath active_array_path;
+  bool is_periodic = false;
 };
 
 /**
@@ -57,7 +57,7 @@ public:
   /**
    * @brief Defines the feature ID array type.
    */
-  using FeatureIdsArrayType = Int32Array;
+  using FeatureIdsArrayType = Int32ArrayType;
 
   /**
    * @brief Initializes EBSD segmentation.
@@ -113,9 +113,9 @@ protected:
 
 private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
-  Float32Array* m_QuatsArray = nullptr;
+  Float32ArrayType* m_QuatsArray = nullptr;
   FeatureIdsArrayType* m_CellPhases = nullptr;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> m_GoodVoxelsArray = nullptr;
   DataArray<uint32>* m_CrystalStructures = nullptr;
 
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;

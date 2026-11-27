@@ -12,11 +12,11 @@ namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT ReadEbsdPatternFileInputValues
 {
-  std::filesystem::path inputFile;
-  DataPath outputArrayPath;
-  bool setScanDimensions = false;
-  uint64 numberOfRows = 1;
-  uint64 numberOfColumns = 1;
+  std::filesystem::path input_file;
+  DataPath output_array_path;
+  bool set_scan_dimensions = false;
+  uint64 number_of_rows = 1;
+  uint64 number_of_columns = 1;
 };
 
 class ORIENTATIONANALYSIS_EXPORT ReadEbsdPatternFile

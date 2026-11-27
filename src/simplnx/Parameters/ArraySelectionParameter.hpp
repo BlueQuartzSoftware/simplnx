@@ -20,7 +20,7 @@ class SIMPLNX_EXPORT ArraySelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
   using AllowedTypeSetType = nx::core::DataTypeSetType;
-  using AllowedComponentShapes = std::vector<ShapeType>;
+  using AllowedComponentShapesType = std::vector<ShapeType>;
 
   enum class DataLocation : uint8
   {
@@ -31,7 +31,7 @@ public:
 
   ArraySelectionParameter() = delete;
   ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
-                          AllowedComponentShapes requiredComps = {}, DataLocation location = DataLocation::Any);
+                          AllowedComponentShapesType requiredComps = {}, DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -50,7 +50,7 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
@@ -88,7 +88,7 @@ public:
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  AllowedComponentShapes requiredComponentShapes() const;
+  AllowedComponentShapesType requiredComponentShapes() const;
 
   /**
    * @brief Checks and returns if out-of-core data is allowed.
@@ -151,7 +151,7 @@ protected:
 private:
   ValueType m_DefaultValue;
   AllowedTypeSetType m_AllowedTypes;
-  AllowedComponentShapes m_RequiredComponentShapes;
+  AllowedComponentShapesType m_RequiredComponentShapes;
   DataLocation m_Location = DataLocation::Any;
 };
 

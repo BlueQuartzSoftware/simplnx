@@ -39,15 +39,15 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ReadTextDataArrayInputValues
 {
-  DataStoreFormatParameter::ValueType DataFormat;
-  ChoicesParameter::ValueType DelimiterIndex{};
-  FileSystemPathParameter::ValueType InputFile;
-  UInt64ParameterType::ValueType NumberComp{};
-  DynamicTableParameter::ValueType NumberTuples;
-  ArrayCreationParameter::ValueType OutputDataArrayPath;
-  NumericTypeParameter::ValueType ScalarTypeIndex;
-  BoolParameter::ValueType SetTupleDimensions{};
-  UInt64ParameterType::ValueType SkipLineCount{};
+  DataStoreFormatParameter::ValueType data_format;
+  ChoicesParameter::ValueType delimiter_index{};
+  FileSystemPathParameter::ValueType input_file;
+  UInt64ParameterType::ValueType number_comp{};
+  DynamicTableParameter::ValueType number_tuples;
+  ArrayCreationParameter::ValueType output_data_array_path;
+  NumericTypeParameter::ValueType scalar_type_index;
+  BoolParameter::ValueType set_tuple_dimensions{};
+  UInt64ParameterType::ValueType skip_line_count{};
 };
 
 /**

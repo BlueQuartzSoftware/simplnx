@@ -29,13 +29,13 @@ Result<> ComputeKMeans::operator()()
 {
   // Include every Scanline input/output; an OOC mask or means array must not
   // accidentally route execution to Direct's element-wise implementation.
-  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto* meansArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeansArrayPath);
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  auto* meansArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->means_array_path);
   std::vector<const IArray*> targets = {clusteringArrayPtr, featureIdsArrayPtr, meansArrayPtr};
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
-    targets.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath));
+    targets.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path));
   }
   return DispatchAlgorithm<ComputeKMeansDirect, ComputeKMeansScanline>(AlgorithmArrayTargets(std::move(targets)), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

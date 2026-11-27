@@ -14,7 +14,7 @@
 #include <fstream>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace fs = std::filesystem;
 
 namespace
@@ -77,13 +77,13 @@ DataStructure CreateTestDataStructure()
   ShapeType cDimsMulti = {k_MultiComponentCount};
 
   AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellData, tDims, imagePtr->getId());
-  Float32Array* dataPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_TestArrayFloatName, tDims, cDims, amPtr->getId());
-  Int32Array* data1Ptr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArrayIntName, tDims, cDims, amPtr->getId());
-  Int32Array* multiComponentDataPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, amPtr->getId());
+  Float32ArrayType* dataPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_TestArrayFloatName, tDims, cDims, amPtr->getId());
+  Int32ArrayType* data1Ptr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_TestArrayIntName, tDims, cDims, amPtr->getId());
+  Int32ArrayType* multiComponentDataPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_MultiComponentArrayName, tDims, cDimsMulti, amPtr->getId());
 
   // Mismatched tuple count throws an error.
   // This is not true for mismatched component shapes.
-  Float32Array* problemArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
+  Float32ArrayType* problemArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_MismatchingTuplesArrayPath.getTargetName(), std::vector<usize>{10}, cDims);
   problemArrayPtr->fill(2.0);
 
   usize numComponents = multiComponentDataPtr->getNumberOfComponents();
@@ -129,17 +129,17 @@ DataStructure CreateTestDataStructure2()
   ShapeType cDimsMulti = {k_MultiComponentCount};
 
   AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellData, tDims, imagePtr->getId());
-  auto* int8ArrayPtr = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, "int8", tDims, cDims, amPtr->getId());
-  auto* int16ArrayPtr = Int16Array::CreateWithStore<Int16DataStore>(dataStructure, "int16", tDims, cDims, amPtr->getId());
-  auto* int32ArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "int32", tDims, cDims, amPtr->getId());
-  auto* int64ArrayPtr = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, "int64", tDims, cDims, amPtr->getId());
-  auto* uint8ArrayPtr = UInt8Array::CreateWithStore<UInt8DataStore>(dataStructure, "uint8", tDims, cDims, amPtr->getId());
-  auto* uint16ArrayPtr = UInt16Array::CreateWithStore<UInt16DataStore>(dataStructure, "uint16", tDims, cDims, amPtr->getId());
-  auto* uint32ArrayPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "uint32", tDims, cDims, amPtr->getId());
-  auto* uint64ArrayPtr = UInt64Array::CreateWithStore<UInt64DataStore>(dataStructure, "uint64", tDims, cDims, amPtr->getId());
-  auto* float32ArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "float32", tDims, cDims, amPtr->getId());
-  auto* float64ArrayPtr = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "float64", tDims, cDims, amPtr->getId());
-  auto* boolArrayPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "bool", tDims, cDims, amPtr->getId());
+  auto* int8ArrayPtr = Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, "int8", tDims, cDims, amPtr->getId());
+  auto* int16ArrayPtr = Int16ArrayType::CreateWithStore<Int16DataStoreType>(dataStructure, "int16", tDims, cDims, amPtr->getId());
+  auto* int32ArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "int32", tDims, cDims, amPtr->getId());
+  auto* int64ArrayPtr = Int64ArrayType::CreateWithStore<Int64DataStoreType>(dataStructure, "int64", tDims, cDims, amPtr->getId());
+  auto* uint8ArrayPtr = UInt8ArrayType::CreateWithStore<UInt8DataStoreType>(dataStructure, "uint8", tDims, cDims, amPtr->getId());
+  auto* uint16ArrayPtr = UInt16ArrayType::CreateWithStore<UInt16DataStoreType>(dataStructure, "uint16", tDims, cDims, amPtr->getId());
+  auto* uint32ArrayPtr = UInt32ArrayType::CreateWithStore<UInt32DataStoreType>(dataStructure, "uint32", tDims, cDims, amPtr->getId());
+  auto* uint64ArrayPtr = UInt64ArrayType::CreateWithStore<UInt64DataStoreType>(dataStructure, "uint64", tDims, cDims, amPtr->getId());
+  auto* float32ArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "float32", tDims, cDims, amPtr->getId());
+  auto* float64ArrayPtr = Float64ArrayType::CreateWithStore<Float64DataStoreType>(dataStructure, "float64", tDims, cDims, amPtr->getId());
+  auto* boolArrayPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "bool", tDims, cDims, amPtr->getId());
 
   SetArrayValues<int8>(*int8ArrayPtr);
   SetArrayValues<int16>(*int16ArrayPtr);
@@ -185,9 +185,9 @@ ArrayThresholdSet CreateSingleThreshold(const DataPath& arrayPath, ArrayThreshol
  */
 void RunThresholdSetTest(DataStructure& dataStructure, const ArrayThresholdSet& thresholdSet)
 {
-  const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE_COPY(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   MultiThresholdObjectsFilter filter;
   Arguments args;
@@ -198,14 +198,14 @@ void RunThresholdSetTest(DataStructure& dataStructure, const ArrayThresholdSet& 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Require that the mask array only has one component
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   REQUIRE(thresholdArrayPtr->getNumberOfComponents() == 1);
@@ -260,7 +260,7 @@ bool ExpectedIntSingleComponentMask(ArrayThreshold::ComparisonType comparisonTyp
 
 void CheckIntTestDataSingleComponent(const DataStructure& dataStructure, ArrayThreshold::ComparisonType comparisonType, double thresholdValue, bool isInverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -307,7 +307,7 @@ bool ExpectedFloatSingleComponentMask(ArrayThreshold::ComparisonType comparisonT
 
 void CheckFloatTestDataSingleComponent(const DataStructure& dataStructure, ArrayThreshold::ComparisonType comparisonType, double thresholdValue, bool isInverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -351,7 +351,7 @@ bool ExpectedIntMultiComponentMask(ArrayThreshold::ComparisonType comparisonType
 
 void CheckIntTestDataMultiComponent(const DataStructure& dataStructure, ArrayThreshold::ComparisonType comparisonType, double thresholdValue, bool isInverted, int32 componentIndex)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -389,7 +389,7 @@ namespace multi_threshold_objects_vv
 
 static void CheckExemplar(const DataStructure& dataStructure, const std::array<bool, k_TupleCount>& exemplarMask)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
@@ -401,7 +401,7 @@ static void CheckExemplar(const DataStructure& dataStructure, const std::array<b
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Exemplar Single Thresholds: Int", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_TestArrayIntPath;
@@ -410,12 +410,12 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Exemplar Single Thresholds: I
 
   RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
   CheckExemplar(dataStructure, k_ExemplarInt4);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Exemplar Single Thresholds: Float", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_TestArrayFloatPath;
@@ -424,12 +424,12 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Exemplar Single Thresholds: F
 
   RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
   CheckExemplar(dataStructure, k_ExemplarFloat02);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_TestArrayIntPath;
@@ -459,12 +459,12 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int"
     CheckIntTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Float", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_TestArrayFloatPath;
@@ -494,12 +494,12 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Floa
     CheckFloatTestDataSingleComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int Multi-Component", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_MultiComponentArrayPath;
@@ -530,7 +530,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Single Thresholds: Int 
     CheckIntTestDataMultiComponent(dataStructure, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted, componentIndex);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -698,7 +698,7 @@ static ArrayThresholdSet CreateThresholdSet7()
 
 static void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -711,7 +711,7 @@ static void CheckThresholdSet1(DataStructure& dataStructure, bool inverted)
 
 static void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -724,7 +724,7 @@ static void CheckThresholdSet2(DataStructure& dataStructure, bool inverted)
 
 static void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -746,7 +746,7 @@ static void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
 
 static void CheckThresholdSet4(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -768,7 +768,7 @@ static void CheckThresholdSet4(DataStructure& dataStructure, bool inverted)
 
 static void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -790,7 +790,7 @@ static void CheckThresholdSet5(DataStructure& dataStructure, bool inverted)
 
 static void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -814,7 +814,7 @@ static void CheckThresholdSet6(DataStructure& dataStructure, bool inverted)
 
 static void CheckThresholdSet7(DataStructure& dataStructure, bool inverted)
 {
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
   const auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
@@ -837,7 +837,7 @@ static void CheckThresholdSet7(DataStructure& dataStructure, bool inverted)
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Threshold Sets", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
   bool isInverted = GENERATE(false, true);
@@ -902,14 +902,14 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Threshold Sets", "[Simp
     CheckThresholdSet7(dataStructure, isInverted);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Invalid executions
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
@@ -962,19 +962,19 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution", "[Simplnx
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64, float32)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
@@ -1029,16 +1029,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - 
 
   // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == code);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Boolean Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
@@ -1071,11 +1071,11 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Invalid Execution - Boolean C
 
   // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == code);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // DataType checks
@@ -1106,13 +1106,13 @@ static void CheckMaskValues(const DataStructure& dataStructure, const DataPath& 
 template <typename T>
 static void RunMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& args, DataStructure& dataStructure)
 {
-  const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE_COPY(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -1123,7 +1123,7 @@ static void RunMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& ar
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataType", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
 
@@ -1214,10 +1214,10 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Mask DataTyp
     RunMaskTypeFilter<float64>(filter, args, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-static void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
+static void TestMaskOutputForInputType(Int8AbstractDataStoreType& mask, float64 comparisonValue)
 {
   usize count = mask.size();
   for(usize i = 0; i < count; i++)
@@ -1226,7 +1226,7 @@ static void TestMaskOutputForInputType(Int8AbstractDataStore& mask, float64 comp
     REQUIRE(mask[i] == targetValue);
   }
 }
-static void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 comparisonValue)
+static void TestMaskOutputForBoolInputType(Int8AbstractDataStoreType& mask, float64 comparisonValue)
 {
   usize count = mask.size();
   for(usize i = 0; i < count; i++)
@@ -1238,11 +1238,11 @@ static void TestMaskOutputForBoolInputType(Int8AbstractDataStore& mask, float64 
 
 TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Input Array DataType", "[SimplnxCore][MultiThresholdObjectsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure2();
 
@@ -1328,13 +1328,13 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Input Array 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  auto* maskArrayPtr = dataStructure.getDataAs<Int8Array>(matrixPath.createChildPath(k_ThresholdArrayName));
+  auto* maskArrayPtr = dataStructure.getDataAs<Int8ArrayType>(matrixPath.createChildPath(k_ThresholdArrayName));
   REQUIRE(maskArrayPtr != nullptr);
   auto& maskStore = maskArrayPtr->getDataStoreRef();
   // Bool input
@@ -1347,13 +1347,13 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution, Input Array 
     TestMaskOutputForInputType(maskStore, comparisonValue);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conversion", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   // A legacy "Threshold Objects (Advanced)" pipeline whose thresholds are a leaf sibling to an inverted
@@ -1412,7 +1412,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Nested Set Conver
 TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compatibility", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -1448,11 +1448,11 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter V&V: SIMPL Backwards Compati
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution - Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64,
                    float32, float64)
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   MultiThresholdObjectsFilter filter;
   DataStructure dataStructure = CreateTestDataStructure();
@@ -1479,13 +1479,13 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects V&V: Valid Execution - Cu
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);

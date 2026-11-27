@@ -169,7 +169,7 @@ std::vector<T> RunThinning(const std::vector<T>& mask, usize dx, usize dy, usize
   DataStore<T> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, T{});
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ApplyBinaryThinning<T>(inStore, outStore, SizeVec3{dx, dy, dz}, shouldCancel, messageHandler);
+  const Result<> r = ApplyBinaryThinning<T>(inStore, outStore, SizeVec3Type{dx, dy, dz}, shouldCancel, messageHandler);
   REQUIRE(r.valid());
   std::vector<T> out(mask.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -288,23 +288,23 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: checked 3D slice-batch memor
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
   constexpr usize k_DimZ = 9;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   constexpr usize k_SliceValues = k_DimX * k_DimY;
   constexpr usize k_MarkerWords = (k_SliceValues + 63) / 64;
   constexpr usize k_BytesPerWorker = k_SliceValues * (sizeof(int32) + sizeof(uint8)) + k_MarkerWords * sizeof(uint64);
   const auto planResult = CreateBinaryThinningSliceBatchPlan<int32>(dims, 3 * k_BytesPerWorker, /*maximumWorkers=*/8);
   REQUIRE(planResult.valid());
   const auto& plan = planResult.value();
-  REQUIRE(plan.sliceValues == k_SliceValues);
-  REQUIRE(plan.markerWordsPerSlice == k_MarkerWords);
-  REQUIRE(plan.bytesPerWorker == k_BytesPerWorker);
-  REQUIRE(plan.workerCount == 3);
-  REQUIRE(plan.residentBytes == 3 * k_BytesPerWorker);
+  REQUIRE(plan.slice_values == k_SliceValues);
+  REQUIRE(plan.marker_words_per_slice == k_MarkerWords);
+  REQUIRE(plan.bytes_per_worker == k_BytesPerWorker);
+  REQUIRE(plan.worker_count == 3);
+  REQUIRE(plan.resident_bytes == 3 * k_BytesPerWorker);
 
   REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(dims, k_BytesPerWorker - 1, /*maximumWorkers=*/8).invalid());
-  REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3{0, 5, 3}, k_BytesPerWorker, /*maximumWorkers=*/1).invalid());
+  REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3Type{0, 5, 3}, k_BytesPerWorker, /*maximumWorkers=*/1).invalid());
   REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(dims, k_BytesPerWorker, /*maximumWorkers=*/0).invalid());
-  REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3{std::numeric_limits<usize>::max(), 2, 3}, std::numeric_limits<usize>::max(), /*maximumWorkers=*/8).invalid());
+  REQUIRE(CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 3}, std::numeric_limits<usize>::max(), /*maximumWorkers=*/8).invalid());
 }
 
 TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice batches match one-slice results and transfer each value once", "[NXImageProcessing][BinaryThinningEngine][WorkingMemory]")
@@ -342,10 +342,10 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice batches match one-s
 
   constexpr usize k_MarkerWords = (k_SliceValues + 63) / 64;
   constexpr usize k_BytesPerWorker = k_SliceValues * (sizeof(int32) + sizeof(uint8)) + k_MarkerWords * sizeof(uint64);
-  auto planResult = CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3{k_DimX, k_DimY, k_DimZ}, 2 * k_BytesPerWorker, /*maximumWorkers=*/8);
+  auto planResult = CreateBinaryThinningSliceBatchPlan<int32>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, 2 * k_BytesPerWorker, /*maximumWorkers=*/8);
   REQUIRE(planResult.valid());
   const auto& plan = planResult.value();
-  REQUIRE(plan.workerCount == 2);
+  REQUIRE(plan.worker_count == 2);
 
   TransferCountingDataStore<int32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{0});
   for(usize index = 0; index < input.size(); ++index)
@@ -354,7 +354,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice batches match one-s
   }
   TransferCountingDataStore<int32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{-7});
   std::atomic_bool shouldCancel{false};
-  REQUIRE(ApplyBinaryThinningSliceBatches<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, shouldCancel, plan).valid());
+  REQUIRE(ApplyBinaryThinningSliceBatches<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, shouldCancel, plan).valid());
 
   std::vector<int32> actual(input.size());
   for(usize index = 0; index < actual.size(); ++index)
@@ -372,8 +372,8 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice batches match one-s
   const usize readsBeforeInvalidPlan = inputStore.readCount();
   const usize writesBeforeInvalidPlan = outputStore.writeCount();
   auto invalidPlan = plan;
-  --invalidPlan.bytesPerWorker;
-  REQUIRE(ApplyBinaryThinningSliceBatches<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, shouldCancel, invalidPlan).invalid());
+  --invalidPlan.bytes_per_worker;
+  REQUIRE(ApplyBinaryThinningSliceBatches<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, shouldCancel, invalidPlan).invalid());
   REQUIRE(inputStore.readCount() == readsBeforeInvalidPlan);
   REQUIRE(outputStore.writeCount() == writesBeforeInvalidPlan);
 }
@@ -390,11 +390,11 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: 3D slice-batch cancellation 
   constexpr int32 k_Poison = -77;
   constexpr usize k_MarkerWords = (k_SliceValues + 63) / 64;
   constexpr usize k_BytesPerWorker = k_SliceValues * (sizeof(int32) + sizeof(uint8)) + k_MarkerWords * sizeof(uint64);
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   auto planResult = CreateBinaryThinningSliceBatchPlan<int32>(dims, 2 * k_BytesPerWorker, /*maximumWorkers=*/8);
   REQUIRE(planResult.valid());
   const auto& plan = planResult.value();
-  REQUIRE(plan.workerCount == 2);
+  REQUIRE(plan.worker_count == 2);
 
   SECTION("cancellation after the first batch read preserves caller output")
   {
@@ -453,35 +453,35 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: checked true-2-D memory plan
   const auto fixedResult = CreateBinaryThinningFixed2DPlan<int64>(700000, k_TargetBytes);
   REQUIRE(fixedResult.valid());
   const auto& fixedPlan = fixedResult.value();
-  REQUIRE(fixedPlan.workCapacityValues == 700000);
-  REQUIRE(fixedPlan.markerCapacityWords == (700000 + 63) / 64);
-  REQUIRE(fixedPlan.transferValues > 0);
-  REQUIRE(fixedPlan.transferValues <= fixedPlan.workCapacityValues);
-  REQUIRE(fixedPlan.minimumFixedBytes ==
-          ImageProcessing::detail::k_BinaryThinning2DMetadataHeadroomBytes + fixedPlan.workCapacityValues + fixedPlan.markerCapacityWords * sizeof(uint64) + sizeof(int64));
-  REQUIRE(fixedPlan.residentBytes <= k_TargetBytes);
-  REQUIRE(fixedPlan.useFixedCapacity);
+  REQUIRE(fixedPlan.work_capacity_values == 700000);
+  REQUIRE(fixedPlan.marker_capacity_words == (700000 + 63) / 64);
+  REQUIRE(fixedPlan.transfer_values > 0);
+  REQUIRE(fixedPlan.transfer_values <= fixedPlan.work_capacity_values);
+  REQUIRE(fixedPlan.minimum_fixed_bytes ==
+          ImageProcessing::detail::k_BinaryThinning2DMetadataHeadroomBytes + fixedPlan.work_capacity_values + fixedPlan.marker_capacity_words * sizeof(uint64) + sizeof(int64));
+  REQUIRE(fixedPlan.resident_bytes <= k_TargetBytes);
+  REQUIRE(fixedPlan.use_fixed_capacity);
 
   const auto spillResult = CreateBinaryThinningFixed2DPlan<int64>(k_TargetBytes, k_TargetBytes);
   REQUIRE(spillResult.valid());
-  REQUIRE_FALSE(spillResult.value().useFixedCapacity);
-  REQUIRE(spillResult.value().minimumFixedBytes > k_TargetBytes);
+  REQUIRE_FALSE(spillResult.value().use_fixed_capacity);
+  REQUIRE(spillResult.value().minimum_fixed_bytes > k_TargetBytes);
 
   const usize blockTargetBytes = ImageProcessing::detail::k_BinaryThinning2DMetadataHeadroomBytes + (2 * 2 + 2) * 9;
   const auto blockResult = CreateBinaryThinningExternal2DPlan(/*dimX=*/9, /*dimY=*/7, blockTargetBytes);
   REQUIRE(blockResult.valid());
-  REQUIRE_FALSE(blockResult.value().useTiles);
-  REQUIRE(blockResult.value().coreRows == 2);
-  REQUIRE(blockResult.value().coreColumns == 9);
-  REQUIRE(blockResult.value().residentBytes == blockTargetBytes);
+  REQUIRE_FALSE(blockResult.value().use_tiles);
+  REQUIRE(blockResult.value().core_rows == 2);
+  REQUIRE(blockResult.value().core_columns == 9);
+  REQUIRE(blockResult.value().resident_bytes == blockTargetBytes);
 
   const usize tileTargetBytes = ImageProcessing::detail::k_BinaryThinning2DMetadataHeadroomBytes + 3 * (3 + 2) + 3;
   const auto tileResult = CreateBinaryThinningExternal2DPlan(/*dimX=*/13, /*dimY=*/5, tileTargetBytes);
   REQUIRE(tileResult.valid());
-  REQUIRE(tileResult.value().useTiles);
-  REQUIRE(tileResult.value().coreRows == 1);
-  REQUIRE(tileResult.value().coreColumns == 3);
-  REQUIRE(tileResult.value().residentBytes == tileTargetBytes);
+  REQUIRE(tileResult.value().use_tiles);
+  REQUIRE(tileResult.value().core_rows == 1);
+  REQUIRE(tileResult.value().core_columns == 3);
+  REQUIRE(tileResult.value().resident_bytes == tileTargetBytes);
 
   REQUIRE(CreateBinaryThinningFixed2DPlan<int64>(/*volumeValues=*/1, /*targetBytes=*/0).invalid());
   REQUIRE(CreateBinaryThinningFixed2DPlan<int64>(/*volumeValues=*/1, ImageProcessing::detail::k_BinaryThinning2DMetadataHeadroomBytes + 1).invalid());
@@ -507,9 +507,9 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: work-store adapter supports 
   REQUIRE(actual == k_Expected);
 
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(uint8);
-  config.maxRecordsPerBatch = 3;
-  config.initialRecordCount = k_Expected.size();
+  config.record_size = sizeof(uint8);
+  config.max_records_per_batch = 3;
+  config.initial_record_count = k_Expected.size();
   auto recordResult = InMemoryTemporaryRecordStore::Create(config);
   REQUIRE(recordResult.valid());
   std::atomic_bool shouldCancel{false};
@@ -535,7 +535,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: fixed-capacity true-2-D path
     const auto planResult = CreateBinaryThinningFixed2DPlan<int32>(mask.size(), k_TargetBytes);
     REQUIRE(planResult.valid());
     const auto& plan = planResult.value();
-    REQUIRE(plan.useFixedCapacity);
+    REQUIRE(plan.use_fixed_capacity);
 
     TransferCountingDataStore<int32> inputStore(ShapeType{1, dimY, dimX}, ShapeType{1}, int32{0});
     for(usize index = 0; index < mask.size(); ++index)
@@ -543,15 +543,15 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: fixed-capacity true-2-D path
       inputStore.setValue(index, mask[index]);
     }
     TransferCountingDataStore<int32> outputStore(ShapeType{1, dimY, dimX}, ShapeType{1}, int32{-7});
-    const Result<> result = ApplyBinaryThinningFixed2D<int32>(inputStore, outputStore, SizeVec3{dimX, dimY, 1}, shouldCancel, plan);
+    const Result<> result = ApplyBinaryThinningFixed2D<int32>(inputStore, outputStore, SizeVec3Type{dimX, dimY, 1}, shouldCancel, plan);
     REQUIRE(result.valid());
 
     std::vector<int32> actual(mask.size());
     REQUIRE(outputStore.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size())).valid());
     REQUIRE(actual == expected);
-    REQUIRE(inputStore.maximumReadValues() <= plan.transferValues);
-    REQUIRE(outputStore.maximumWriteValues() <= plan.transferValues);
-    REQUIRE(plan.residentBytes <= k_TargetBytes);
+    REQUIRE(inputStore.maximumReadValues() <= plan.transfer_values);
+    REQUIRE(outputStore.maximumWriteValues() <= plan.transfer_values);
+    REQUIRE(plan.resident_bytes <= k_TargetBytes);
   };
 
   SECTION("multi-iteration interior and border shapes")
@@ -616,8 +616,8 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D row blocks
   const auto planResult = CreateBinaryThinningExternal2DPlan(k_DimX, k_DimY, targetBytes);
   REQUIRE(planResult.valid());
   const auto& plan = planResult.value();
-  REQUIRE_FALSE(plan.useTiles);
-  REQUIRE(plan.coreRows == 2);
+  REQUIRE_FALSE(plan.use_tiles);
+  REQUIRE(plan.core_rows == 2);
 
   std::vector<int32> mask(k_DimX * k_DimY, 0);
   for(usize y = 0; y <= 4; ++y)
@@ -645,7 +645,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D row blocks
       inputStore.setValue(index, mask[index]);
     }
     DataStore<int32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, int32{-7});
-    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, shouldCancel, targetBytes).valid());
+    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, shouldCancel, targetBytes).valid());
 
     std::vector<int32> actual(mask.size());
     REQUIRE(outputStore.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size())).valid());
@@ -663,7 +663,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D row blocks
       inputStore.setValue(sliceValues + index, mask[index]);
     }
     TransferCountingDataStore<int32> outputStore(ShapeType{k_SliceCount, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
-    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, shouldCancel, targetBytes, sliceValues, sliceValues).valid());
+    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, shouldCancel, targetBytes, sliceValues, sliceValues).valid());
 
     for(usize index = 0; index < sliceValues; ++index)
     {
@@ -676,7 +676,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D row blocks
 
     const usize readsBeforeInvalidOffset = inputStore.readCount();
     const usize writesBeforeInvalidOffset = outputStore.writeCount();
-    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, shouldCancel, targetBytes, std::numeric_limits<usize>::max(), 0).invalid());
+    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, shouldCancel, targetBytes, std::numeric_limits<usize>::max(), 0).invalid());
     REQUIRE(inputStore.readCount() == readsBeforeInvalidOffset);
     REQUIRE(outputStore.writeCount() == writesBeforeInvalidOffset);
   }
@@ -694,8 +694,8 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D row blocks
     const Result<bool> result = ApplyBinaryThinningExternalSubstepBlocks(source, destination, k_DimX, k_DimY, /*step=*/1, shouldCancel, plan);
     REQUIRE(result.valid());
     REQUIRE(result.value());
-    REQUIRE(sourceStore.maximumReadValues() <= (plan.coreRows + 2) * k_DimX);
-    REQUIRE(destinationStore.maximumWriteValues() <= plan.coreRows * k_DimX);
+    REQUIRE(sourceStore.maximumReadValues() <= (plan.core_rows + 2) * k_DimX);
+    REQUIRE(destinationStore.maximumWriteValues() <= plan.core_rows * k_DimX);
     bool differsFromSource = false;
     for(usize index = 0; index < mask.size(); ++index)
     {
@@ -720,8 +720,8 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D X tiles ma
   const auto planResult = CreateBinaryThinningExternal2DPlan(k_DimX, k_DimY, targetBytes);
   REQUIRE(planResult.valid());
   const auto& plan = planResult.value();
-  REQUIRE(plan.useTiles);
-  REQUIRE(plan.coreColumns == 3);
+  REQUIRE(plan.use_tiles);
+  REQUIRE(plan.core_columns == 3);
 
   std::vector<int32> mask(k_DimX * k_DimY, 0);
   for(usize y = 0; y <= 3; ++y)
@@ -749,7 +749,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D X tiles ma
       inputStore.setValue(index, mask[index]);
     }
     DataStore<int32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, int32{-7});
-    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, shouldCancel, targetBytes).valid());
+    REQUIRE(ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, shouldCancel, targetBytes).valid());
 
     std::vector<int32> actual(mask.size());
     REQUIRE(outputStore.copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size())).valid());
@@ -769,8 +769,8 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D X tiles ma
     const Result<bool> result = ApplyBinaryThinningExternalSubstepTiles(source, destination, k_DimX, k_DimY, /*step=*/1, shouldCancel, plan);
     REQUIRE(result.valid());
     REQUIRE(result.value());
-    REQUIRE(sourceStore.maximumReadValues() <= plan.coreColumns + 2);
-    REQUIRE(destinationStore.maximumWriteValues() <= plan.coreColumns);
+    REQUIRE(sourceStore.maximumReadValues() <= plan.core_columns + 2);
+    REQUIRE(destinationStore.maximumWriteValues() <= plan.core_columns);
     bool differsFromSource = false;
     for(usize index = 0; index < mask.size(); ++index)
     {
@@ -802,7 +802,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D cancellati
     std::atomic_bool shouldCancel{false};
     CancelAfterFirstReadDataStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, int32{1}, shouldCancel);
     DataStore<int32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
-    const Result<> result = ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, shouldCancel, targetBytes);
+    const Result<> result = ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, shouldCancel, targetBytes);
     REQUIRE(result.valid());
     REQUIRE(inputStore.readCount() == 1);
     for(usize index = 0; index < outputStore.getSize(); ++index)
@@ -829,7 +829,7 @@ TEST_CASE("NXImageProcessing::BinaryThinningEngine: external true-2-D cancellati
     std::atomic_bool shouldCancel{false};
     DataStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, int32{1});
     FailOnFirstWriteDataStore<int32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
-    const Result<> result = ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, shouldCancel, targetBytes);
+    const Result<> result = ApplyBinaryThinningExternal2D<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, shouldCancel, targetBytes);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8719);
     REQUIRE(outputStore.writeCount() == 1);

@@ -116,7 +116,7 @@ class CacheBudgetSentinel
 {
 public:
   explicit CacheBudgetSentinel(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.setBudgetBytes(budgetBytes);
@@ -147,7 +147,7 @@ void RunRelabel(IFilter& filter, DataStructure& dataStructure, const DataPath& i
   args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(minimumObjectSize));
   args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(sortByObjectSize));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -200,15 +200,15 @@ std::vector<T> MakeLabeledField(usize dimX, usize dimY, usize dimZ)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -220,8 +220,8 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
     args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(uint64{0}));
     args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(true));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("float input rejected")
   {
@@ -236,7 +236,7 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
     args.insertOrAssign(RcFilterType::k_MinimumObjectSize_Key, std::make_any<uint64>(uint64{0}));
     args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(true));
     const auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+    REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
   }
   SECTION("scalar integer input creates a SameAsInput output")
   {
@@ -261,8 +261,8 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: preflight guards", "[
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects overflow (int8)", "[NXImageProcessing][RelabelComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 20;
   constexpr usize k_Dy = 10;
@@ -289,7 +289,7 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects over
   args.insertOrAssign(RcFilterType::k_SortByObjectSize_Key, std::make_any<bool>(false));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // the overflow is only detectable at execute
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // the overflow is only detectable at execute
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == nx::core::ImageProcessing::k_RelabelComponentTooManyObjects);
@@ -303,8 +303,8 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: too-many-objects over
 TEMPLATE_TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: pre-cancel preserves output", "[NXImageProcessing][RelabelComponentImageFilter]", uint8, int32)
 {
   using T = TestType;
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 12;
   constexpr usize k_Dy = 12;
@@ -313,7 +313,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: pre-cancel p
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<T>(dataStructure, k_Dx, k_Dy, k_Dz, MakeLabeledField<T>(k_Dx, k_Dy, k_Dz));
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto outputStore = DataStoreUtilities::CreateDataStore<T>(dataStructure, outputPath, {k_Dz, k_Dy, k_Dx}, {1});
+  auto outputStore = data_store_utilities::CreateDataStore<T>(dataStructure, outputPath, {k_Dz, k_Dy, k_Dx}, {1});
   const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(outputPath.getParent());
   auto* outputArrayPtr = DataArray<T>::Create(dataStructure, outputPath.getTargetName(), outputStore, cellAM.getId());
   REQUIRE(outputArrayPtr != nullptr);
@@ -392,8 +392,8 @@ TEST_CASE("NXImageProcessing::RelabelComponentImageFilter: OOC staging aligns co
   const ShapeType tupleShape{4, 12, 12};
   const auto slabPlan = ImageProcessing::detail::CreateRelabelChunkSlabPlan(tupleShape, ShapeType{1, 12, 12}, /*numValues=*/576, sizeof(int32));
   REQUIRE(slabPlan.has_value());
-  REQUIRE(slabPlan->slabValues == 144);
-  REQUIRE(slabPlan->slabBytes == 144 * sizeof(int32));
+  REQUIRE(slabPlan->slab_values == 144);
+  REQUIRE(slabPlan->slab_bytes == 144 * sizeof(int32));
   REQUIRE(ImageProcessing::detail::SelectRelabelStagingValues(/*numValues=*/576, /*grantedBytes=*/1024, sizeof(int32), slabPlan) == 144);
   REQUIRE(ImageProcessing::detail::SelectRelabelStagingValues(/*numValues=*/576, /*grantedBytes=*/575, sizeof(int32), slabPlan) == 143);
   REQUIRE_FALSE(ImageProcessing::detail::CreateRelabelChunkSlabPlan(tupleShape, ShapeType{0, 12, 12}, /*numValues=*/576, sizeof(int32)).has_value());

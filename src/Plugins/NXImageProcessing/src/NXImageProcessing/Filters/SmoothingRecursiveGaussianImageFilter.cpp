@@ -84,27 +84,27 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions = std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   if(Result<> dimCheck = ImageProcessing::ValidateSeparableImageDims(imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianTooFewPixels); dimCheck.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
   }
 
   auto sigma = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_Sigma_Key);
   if(Result<> sigmaCheck = ImageProcessing::ValidatePositiveSigma(sigma, imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSigma); sigmaCheck.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
   }
 
   if(Result<> spacingCheck = ImageProcessing::ValidatePositiveSpacing(imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSpacing, 1e-8);
      spacingCheck.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
   }
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> SmoothingRecursiveGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -140,7 +140,7 @@ Result<Arguments> SmoothingRecursiveGaussianImageFilter::FromSIMPLJson(const nlo
 
   // Legacy ITK Sigma is a per-axis FloatVec3 (SIMPL object {"x","y","z"}). DoubleVec3FilterParameterConverter maps it to
   // the VectorFloat64Parameter ValueType (std::vector<float64>).
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverter>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverterType>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeAcrossScaleKey, k_NormalizeAcrossScale_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));

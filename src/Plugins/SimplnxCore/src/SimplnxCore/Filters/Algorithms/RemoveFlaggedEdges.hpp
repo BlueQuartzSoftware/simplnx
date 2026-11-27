@@ -18,31 +18,31 @@ namespace detail
 const std::string k_CopySelectedTriangleData("Copy Selected Edge Data");
 const std::string k_CopyAllEdgeData("Copy All Edge Data");
 
-const nx::core::ChoicesParameter::Choices k_EdgeDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllEdgeData};
+const nx::core::ChoicesParameter::ChoicesType k_EdgeDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllEdgeData};
 const nx::core::ChoicesParameter::ValueType k_CopySelectedEdgeArraysIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_CopyAllEdgeArraysIdx = 1ULL;
 
 const std::string k_CopySelectedVertexData("Copy Selected Vertex Data");
 const std::string k_CopyAllVertexData("Copy All Vertex Data");
 
-const nx::core::ChoicesParameter::Choices k_VertexDataHandlingChoices = {k_CopySelectedVertexData, k_CopyAllVertexData};
+const nx::core::ChoicesParameter::ChoicesType k_VertexDataHandlingChoices = {k_CopySelectedVertexData, k_CopyAllVertexData};
 const nx::core::ChoicesParameter::ValueType k_CopySelectedVertexArraysIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_CopyAllVertexArraysIdx = 1ULL;
 } // namespace detail
 
 struct SIMPLNXCORE_EXPORT RemoveFlaggedEdgesInputValues
 {
-  DataPath EdgeGeometry;
-  DataPath MaskArrayPath;
-  DataPath ReducedEdgeGeometry;
+  DataPath edge_geometry;
+  DataPath mask_array_path;
+  DataPath reduced_edge_geometry;
   // These variables are associated with the Edge Data Handling
-  nx::core::ChoicesParameter::ValueType EdgeDataHandling{};
-  MultiArraySelectionParameter::ValueType SelectedEdgeData;
-  DataPath EdgeAttributeMatrixPath;
+  nx::core::ChoicesParameter::ValueType edge_data_handling{};
+  MultiArraySelectionParameter::ValueType selected_edge_data;
+  DataPath edge_attribute_matrix_path;
   // These variables are associated with the Vertex Data Handling
-  nx::core::ChoicesParameter::ValueType VertexDataHandling{};
-  MultiArraySelectionParameter::ValueType SelectedVertexData;
-  DataPath VertexAttributeMatrixPath;
+  nx::core::ChoicesParameter::ValueType vertex_data_handling{};
+  MultiArraySelectionParameter::ValueType selected_vertex_data;
+  DataPath vertex_attribute_matrix_path;
 };
 
 /**

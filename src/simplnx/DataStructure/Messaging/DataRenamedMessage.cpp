@@ -34,7 +34,7 @@ DataRenamedMessage::~DataRenamedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataRenamedMessage::getMsgType() const
 {
-  return MsgType;
+  return k_MsgType;
 }
 
 DataObject::IdType DataRenamedMessage::getDataId() const

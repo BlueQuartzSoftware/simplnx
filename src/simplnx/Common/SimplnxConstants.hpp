@@ -4,7 +4,7 @@
 
 #define SIMPLNX_DEF_STRING_CONSTANT(name) StringLiteralType k_##name = #name
 
-namespace nx::core::Constants
+namespace nx::core::constants
 {
 inline constexpr SIMPLNX_DEF_STRING_CONSTANT(Int8);
 inline constexpr SIMPLNX_DEF_STRING_CONSTANT(UInt8);

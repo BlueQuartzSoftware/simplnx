@@ -112,14 +112,14 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
   DataPath cellDataPath = pQuadGeomPathValue.createChildPath(pCellAMNameValue);
 
   // Read from the file if the input file has changed or the input file's time stamp is out of date.
-  if(pInputFilePathValue != SHeaderCache[m_InstanceId].inputFile || SHeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFilePathValue))
+  if(pInputFilePathValue != SHeaderCache[m_InstanceId].input_file || SHeaderCache[m_InstanceId].time_stamp < fs::last_write_time(pInputFilePathValue))
   {
     ReadDeformKeyFileV12InputValues inputValues;
-    inputValues.InputFilePath = pInputFilePathValue;
+    inputValues.input_file_path = pInputFilePathValue;
 
-    inputValues.QuadGeomPath = pQuadGeomPathValue;
-    inputValues.CellAMPath = cellDataPath;
-    inputValues.VertexAMPath = vertexDataPath;
+    inputValues.quad_geom_path = pQuadGeomPathValue;
+    inputValues.cell_am_path = cellDataPath;
+    inputValues.vertex_am_path = vertexDataPath;
 
     // Read from the file
     DataStructure throwaway = DataStructure();
@@ -129,34 +129,34 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
     SHeaderCache[m_InstanceId] = algorithm.getCache();
 
     // Update the cached variables
-    SHeaderCache[m_InstanceId].inputFile = pInputFilePathValue;
-    SHeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFilePathValue);
+    SHeaderCache[m_InstanceId].input_file = pInputFilePathValue;
+    SHeaderCache[m_InstanceId].time_stamp = fs::last_write_time(pInputFilePathValue);
   }
 
   // Read from the cache and create objects
   {
     auto createAction =
-        std::make_unique<CreateQuadGeometryAction>(pQuadGeomPathValue, SHeaderCache[m_InstanceId].cellAttrMatTupleCount, SHeaderCache[m_InstanceId].vertexAttrMatTupleCount,
+        std::make_unique<CreateQuadGeometryActionType>(pQuadGeomPathValue, SHeaderCache[m_InstanceId].cell_attr_mat_tuple_count, SHeaderCache[m_InstanceId].vertex_attr_mat_tuple_count,
                                                    vertexDataPath.getTargetName(), cellDataPath.getTargetName(), nx::core::QuadGeom::k_SharedVertexListName, nx::core::QuadGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  for(const DataArrayMetadata& daMetadata : SHeaderCache[m_InstanceId].dataArrays)
+  for(const DataArrayMetadata& daMetadata : SHeaderCache[m_InstanceId].data_arrays)
   {
     if(daMetadata.path.getParent() == vertexDataPath)
     {
-      if(SHeaderCache[m_InstanceId].vertexAttrMatTupleCount != daMetadata.tupleCount)
+      if(SHeaderCache[m_InstanceId].vertex_attr_mat_tuple_count != daMetadata.tuple_count)
       {
         return MakePreflightErrorResult(-2020, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.path.getTargetName(),
-                                                           daMetadata.tupleCount, pVertexAMNameValue, SHeaderCache[m_InstanceId].vertexAttrMatTupleCount));
+                                                           daMetadata.tuple_count, pVertexAMNameValue, SHeaderCache[m_InstanceId].vertex_attr_mat_tuple_count));
       }
     }
     else if(daMetadata.path.getParent() == cellDataPath)
     {
-      if(SHeaderCache[m_InstanceId].cellAttrMatTupleCount != daMetadata.tupleCount)
+      if(SHeaderCache[m_InstanceId].cell_attr_mat_tuple_count != daMetadata.tuple_count)
       {
         return MakePreflightErrorResult(-2021, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.path.getTargetName(),
-                                                           daMetadata.tupleCount, pCellAMNameValue, SHeaderCache[m_InstanceId].cellAttrMatTupleCount));
+                                                           daMetadata.tuple_count, pCellAMNameValue, SHeaderCache[m_InstanceId].cell_attr_mat_tuple_count));
       }
     }
     else
@@ -165,13 +165,13 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
     }
 
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{daMetadata.tupleCount}, std::vector<usize>{daMetadata.componentCount}, daMetadata.path);
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{daMetadata.tuple_count}, std::vector<usize>{daMetadata.component_count}, daMetadata.path);
       resultOutputActions.value().appendAction(std::move(createAction));
     }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -180,10 +180,10 @@ Result<> ReadDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure, c
 {
   ReadDeformKeyFileV12InputValues inputValues;
 
-  inputValues.InputFilePath = SHeaderCache[m_InstanceId].inputFile;
-  inputValues.QuadGeomPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
-  inputValues.CellAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key));
-  inputValues.VertexAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_VertexAMName_Key));
+  inputValues.input_file_path = SHeaderCache[m_InstanceId].input_file;
+  inputValues.quad_geom_path = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
+  inputValues.cell_am_path = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key));
+  inputValues.vertex_am_path = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_VertexAMName_Key));
 
   return ReadDeformKeyFileV12(dataStructure, messageHandler, shouldCancel, &inputValues)(true);
 }

@@ -81,34 +81,34 @@ Parameters CreateGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_WarningsAsErrors_Key, "Treat Geometry Warnings as Errors", "Whether run time warnings for Geometries should be treated as errors", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling",
                                                    "Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object.",
-                                                   to_underlying(ArrayHandlingType::Move), ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays" /*, "Reference Array"*/}));
+                                                   to_underlying(ArrayHandlingType::Move), ChoicesParameter::ChoicesType{"Copy Attribute Arrays", "Move Attribute Arrays" /*, "Reference Array"*/}));
 
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
                                                         std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+      std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+      std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_YBoundsPath_Key, "Y Bounds", "The spatial locations of the planes along the y direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ZBoundsPath_Key, "Z Bounds", "The spatial locations of the planes along the z direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexListPath_Key, "Shared Vertex List", "The complete path to the data array defining the point coordinates for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeListPath_Key, "Edge List", "The complete path to the data array defining the edges for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleListPath_Key, "Triangle List", "The complete path to the data array defining the (triangular) faces for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuadrilateralListPath_Key, "Quadrilateral List", "The complete path to the data array defining the (quad) faces for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TetrahedralListPath_Key, "Tetrahedral List", "The complete path to the data array defining the tetrahedral elements for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_HexahedralListPath_Key, "Hexahedral List", "The complete path to the data array defining the hexahedral elements for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{8}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapesType{{8}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
@@ -211,17 +211,17 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_ImageGeometry) // ImageGeom
   {
     auto pDimensionsValue = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
-    auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-    auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-    auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
+    auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+    auto pSpacingValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+    auto spacingValidation = geometry_utilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
     if(spacingValidation.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
     }
-    auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
+    auto originValidation = geometry_utilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
     if(originValidation.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(originValidation))};
     }
 
     std::stringstream ss;
@@ -249,9 +249,9 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pXBoundsPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
     auto pYBoundsPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
     auto pZBoundsPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
-    const auto& xBounds = dataStructure.getDataRefAs<Float32Array>(pXBoundsPath);
-    const auto& yBounds = dataStructure.getDataRefAs<Float32Array>(pYBoundsPath);
-    const auto& zBounds = dataStructure.getDataRefAs<Float32Array>(pZBoundsPath);
+    const auto& xBounds = dataStructure.getDataRefAs<Float32ArrayType>(pXBoundsPath);
+    const auto& yBounds = dataStructure.getDataRefAs<Float32ArrayType>(pYBoundsPath);
+    const auto& zBounds = dataStructure.getDataRefAs<Float32ArrayType>(pZBoundsPath);
     usize xTuples = xBounds.getNumberOfTuples();
     usize yTuples = yBounds.getNumberOfTuples();
     usize zTuples = zBounds.getNumberOfTuples();
@@ -276,40 +276,40 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pEdgeListPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     auto pEdgeAMName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
 
-    auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryAction>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, ArrayHandlingType{pArrayHandling});
+    auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryActionType>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
   }
   if(pGeometryType == k_TriangleGeometry) // TriangleGeom
   {
     auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
 
-    auto createTriangleGeomAction = std::make_unique<CreateTriangleGeometryAction>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
+    auto createTriangleGeomAction = std::make_unique<CreateTriangleGeometryActionType>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTriangleGeomAction));
   }
   if(pGeometryType == k_QuadGeometry) // QuadGeom
   {
     auto pQuadListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
 
-    auto createQuadGeomAction = std::make_unique<CreateQuadGeometryAction>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
+    auto createQuadGeomAction = std::make_unique<CreateQuadGeometryActionType>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createQuadGeomAction));
   }
   if(pGeometryType == k_TetGeometry) // TetrahedralGeom
   {
     auto pTetListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
 
-    auto createTetGeomAction = std::make_unique<CreateTetrahedralGeometryAction>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
+    auto createTetGeomAction = std::make_unique<CreateTetrahedralGeometryActionType>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTetGeomAction));
   }
   if(pGeometryType == k_HexGeometry) // HexahedralGeom
   {
     auto pHexListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
 
-    auto createHexGeomAction = std::make_unique<CreateHexahedralGeometryAction>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
+    auto createHexGeomAction = std::make_unique<CreateHexahedralGeometryActionType>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createHexGeomAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -317,27 +317,27 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CreateGeometryInputValues inputValues;
-  inputValues.GeometryTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
-  inputValues.LengthUnitIndex = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key);
-  inputValues.OutputGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  inputValues.WarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
-  inputValues.ArrayHandlingIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
-  inputValues.Dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
-  inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.XBoundsPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
-  inputValues.YBoundsPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
-  inputValues.ZBoundsPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
-  inputValues.VertexListPath = filterArgs.value<DataPath>(k_VertexListPath_Key);
-  inputValues.EdgeListPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
-  inputValues.TriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
-  inputValues.QuadrilateralListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
-  inputValues.TetrahedralListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
-  inputValues.HexahedralListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
-  inputValues.VertexAttributeMatrixName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
-  inputValues.EdgeAttributeMatrixName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
-  inputValues.FaceAttributeMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.geometry_type_index = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
+  inputValues.length_unit_index = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key);
+  inputValues.output_geometry_path = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.warnings_as_errors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
+  inputValues.array_handling_index = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
+  inputValues.dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
+  inputValues.origin = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+  inputValues.spacing = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  inputValues.x_bounds_path = filterArgs.value<DataPath>(k_XBoundsPath_Key);
+  inputValues.y_bounds_path = filterArgs.value<DataPath>(k_YBoundsPath_Key);
+  inputValues.z_bounds_path = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
+  inputValues.vertex_list_path = filterArgs.value<DataPath>(k_VertexListPath_Key);
+  inputValues.edge_list_path = filterArgs.value<DataPath>(k_EdgeListPath_Key);
+  inputValues.triangle_list_path = filterArgs.value<DataPath>(k_TriangleListPath_Key);
+  inputValues.quadrilateral_list_path = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
+  inputValues.tetrahedral_list_path = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
+  inputValues.hexahedral_list_path = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
+  inputValues.vertex_attribute_matrix_name = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+  inputValues.edge_attribute_matrix_name = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
+  inputValues.face_attribute_matrix_name = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
 
   return CreateGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -477,7 +477,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
   if(spacingResult.invalid())
   {
     // 6.5 key for spacing was named resolution
-    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {

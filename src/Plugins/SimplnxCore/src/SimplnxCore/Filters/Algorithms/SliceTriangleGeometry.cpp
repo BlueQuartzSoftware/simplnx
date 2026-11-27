@@ -28,7 +28,7 @@ const std::atomic_bool& SliceTriangleGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SliceTriangleGeometry::operator()()
 {
-  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->CADDataContainerName);
+  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->cad_data_container_name);
   Result<> edgesResult = triangle.findEdges(true);
   if(edgesResult.invalid())
   {
@@ -36,27 +36,27 @@ Result<> SliceTriangleGeometry::operator()()
   }
 
   AbstractDataStore<int32>* triRegionIdPtr = nullptr;
-  if(m_InputValues->HaveRegionIds)
+  if(m_InputValues->have_region_ids)
   {
-    triRegionIdPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdArrayPath)->getDataStore();
+    triRegionIdPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->region_id_array_path)->getDataStore();
   }
-  float zStart = m_InputValues->Zstart;
-  float zEnd = m_InputValues->Zend;
+  float zStart = m_InputValues->zstart;
+  float zEnd = m_InputValues->zend;
 
   // The majority of the algorithm to slice the triangle geometry is in this function
-  GeometryUtilities::SliceTriangleReturnType sliceTriangleResult =
-      GeometryUtilities::SliceTriangleGeometry(triangle, m_ShouldCancel, m_InputValues->SliceRange, zStart, zEnd, m_InputValues->SliceResolution, triRegionIdPtr);
+  geometry_utilities::SliceTriangleReturnType sliceTriangleResult =
+      geometry_utilities::SliceTriangleGeometry(triangle, m_ShouldCancel, m_InputValues->slice_range, zStart, zEnd, m_InputValues->slice_resolution, triRegionIdPtr);
 
   // Now convert the slicing results into actual SIMPLNX Geometries.
-  usize numVerts = sliceTriangleResult.SliceVerts.size() / 3;
-  usize numEdges = sliceTriangleResult.SliceVerts.size() / 6;
+  usize numVerts = sliceTriangleResult.slice_verts.size() / 3;
+  usize numEdges = sliceTriangleResult.slice_verts.size() / 6;
 
   if(numVerts != (2 * numEdges))
   {
     return MakeErrorResult(-62102, fmt::format("Number of sectioned vertices and edges do not make sense.  Number of Vertices: {} and Number of Edges: {}", numVerts, numEdges));
   }
 
-  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
+  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->slice_data_container_name);
   Result<> resizeResult = edgeGeom.resizeVertexList(numVerts);
   if(resizeResult.invalid())
   {
@@ -67,8 +67,8 @@ Result<> SliceTriangleGeometry::operator()()
   {
     return resizeResult;
   }
-  INodeGeometry0D::SharedVertexList& verts = edgeGeom.getVerticesRef();
-  INodeGeometry1D::SharedEdgeList& edges = edgeGeom.getEdgesRef();
+  INodeGeometry0D::SharedVertexListType& verts = edgeGeom.getVerticesRef();
+  INodeGeometry1D::SharedEdgeListType& edges = edgeGeom.getEdgesRef();
   resizeResult = edgeGeom.getVertexAttributeMatrix()->resizeTuples({numVerts});
   if(resizeResult.invalid())
   {
@@ -79,20 +79,20 @@ Result<> SliceTriangleGeometry::operator()()
   {
     return resizeResult;
   }
-  auto& sliceAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->SliceAttributeMatrixName));
-  resizeResult = sliceAM.resizeTuples({sliceTriangleResult.NumberOfSlices});
+  auto& sliceAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->slice_data_container_name.createChildPath(m_InputValues->slice_attribute_matrix_name));
+  resizeResult = sliceAM.resizeTuples({sliceTriangleResult.number_of_slices});
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
 
-  DataPath edgeAmPath = m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->EdgeAttributeMatrixName);
-  auto& sliceId = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->SliceIdArrayName));
+  DataPath edgeAmPath = m_InputValues->slice_data_container_name.createChildPath(m_InputValues->edge_attribute_matrix_name);
+  auto& sliceId = m_DataStructure.getDataRefAs<Int32ArrayType>(edgeAmPath.createChildPath(m_InputValues->slice_id_array_name));
   sliceId.fill(0);
-  Int32Array* triRegionIdsPtr = nullptr;
-  if(m_InputValues->HaveRegionIds)
+  Int32ArrayType* triRegionIdsPtr = nullptr;
+  if(m_InputValues->have_region_ids)
   {
-    triRegionIdsPtr = m_DataStructure.getDataAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->RegionIdArrayPath.getTargetName()));
+    triRegionIdsPtr = m_DataStructure.getDataAs<Int32ArrayType>(edgeAmPath.createChildPath(m_InputValues->region_id_array_path.getTargetName()));
     triRegionIdsPtr->fill(0);
   }
 
@@ -100,20 +100,20 @@ Result<> SliceTriangleGeometry::operator()()
   {
     edges[2 * i] = 2 * i;
     edges[2 * i + 1] = 2 * i + 1;
-    verts[3 * (2 * i)] = sliceTriangleResult.SliceVerts[3 * (2 * i)];
-    verts[3 * (2 * i) + 1] = sliceTriangleResult.SliceVerts[3 * (2 * i) + 1];
-    verts[3 * (2 * i) + 2] = sliceTriangleResult.SliceVerts[3 * (2 * i) + 2];
-    verts[3 * (2 * i + 1)] = sliceTriangleResult.SliceVerts[3 * (2 * i + 1)];
-    verts[3 * (2 * i + 1) + 1] = sliceTriangleResult.SliceVerts[3 * (2 * i + 1) + 1];
-    verts[3 * (2 * i + 1) + 2] = sliceTriangleResult.SliceVerts[3 * (2 * i + 1) + 2];
-    sliceId[i] = sliceTriangleResult.SliceIds[i];
-    if(m_InputValues->HaveRegionIds)
+    verts[3 * (2 * i)] = sliceTriangleResult.slice_verts[3 * (2 * i)];
+    verts[3 * (2 * i) + 1] = sliceTriangleResult.slice_verts[3 * (2 * i) + 1];
+    verts[3 * (2 * i) + 2] = sliceTriangleResult.slice_verts[3 * (2 * i) + 2];
+    verts[3 * (2 * i + 1)] = sliceTriangleResult.slice_verts[3 * (2 * i + 1)];
+    verts[3 * (2 * i + 1) + 1] = sliceTriangleResult.slice_verts[3 * (2 * i + 1) + 1];
+    verts[3 * (2 * i + 1) + 2] = sliceTriangleResult.slice_verts[3 * (2 * i + 1) + 2];
+    sliceId[i] = sliceTriangleResult.slice_ids[i];
+    if(m_InputValues->have_region_ids)
     {
-      (*triRegionIdsPtr)[i] = sliceTriangleResult.RegionIds[i];
+      (*triRegionIdsPtr)[i] = sliceTriangleResult.region_ids[i];
     }
   }
 
-  Result<> result = GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);
+  Result<> result = geometry_utilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);
   if(result.invalid())
   {
     return result;
@@ -133,7 +133,7 @@ Result<> SliceTriangleGeometry::operator()()
       edges[currentEdgeListSize * 2] = edges[edgeIdx * 2];
       edges[currentEdgeListSize * 2 + 1] = edges[edgeIdx * 2 + 1];
       sliceId[currentEdgeListSize] = sliceId[edgeIdx];
-      if(m_InputValues->HaveRegionIds)
+      if(m_InputValues->have_region_ids)
       {
         (*triRegionIdsPtr)[currentEdgeListSize] = (*triRegionIdsPtr)[edgeIdx];
       }

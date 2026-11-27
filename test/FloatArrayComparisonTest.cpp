@@ -155,9 +155,9 @@ struct FloatComparisonFixture
    * @param checkNans Selects the NaN-position policy.
    * @return Actual evaluator result, including any setup or read error.
    */
-  Result<UnitTest::FloatArrayComparisonDetail::FloatArrayComparison<T>> evaluate(T epsilon, bool checkNans)
+  Result<unit_test::float_array_comparison_detail::FloatArrayComparison<T>> evaluate(T epsilon, bool checkNans)
   {
-    auto result = UnitTest::FloatArrayComparisonDetail::EvaluateFloatArraysWithNans(*exemplary_array, *computed_array, epsilon, checkNans);
+    auto result = unit_test::float_array_comparison_detail::EvaluateFloatArraysWithNans(*exemplary_array, *computed_array, epsilon, checkNans);
     requireUnchanged();
     return result;
   }
@@ -169,7 +169,7 @@ struct FloatComparisonFixture
   {
     CheckPreservedValues(*exemplary_store, exemplary_values);
     CheckPreservedValues(*computed_store, computed_values);
-    UnitTest::CheckArraysInheritTupleDims(data_structure);
+    unit_test::CheckArraysInheritTupleDims(data_structure);
   }
 };
 } // namespace
@@ -181,10 +181,10 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: equal values and publi
   auto result = fixture.evaluate(TestType{0.5}, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.value().matches);
-  CHECK(result.value().maximumDifference == TestType{0});
-  CHECK(result.value().maximumDifferenceIndex == 0);
-  CHECK_FALSE(result.value().firstNanMismatchIndex.has_value());
-  UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
+  CHECK(result.value().maximum_difference == TestType{0});
+  CHECK(result.value().maximum_difference_index == 0);
+  CHECK_FALSE(result.value().first_nan_mismatch_index.has_value());
+  unit_test::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
   fixture.requireUnchanged();
 }
 
@@ -208,20 +208,20 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: NaN positions and full
   CHECK(result.value().matches == (!checkNans && !finiteMismatch));
   if(checkNans)
   {
-    REQUIRE(result.value().firstNanMismatchIndex == std::optional<usize>{1});
-    CHECK(std::isnan(result.value().exemplaryNanMismatchValue) == !reverseInputs);
-    CHECK(std::isnan(result.value().generatedNanMismatchValue) == reverseInputs);
-    CHECK((reverseInputs ? result.value().exemplaryNanMismatchValue : result.value().generatedNanMismatchValue) == TestType{2});
+    REQUIRE(result.value().first_nan_mismatch_index == std::optional<usize>{1});
+    CHECK(std::isnan(result.value().exemplary_nan_mismatch_value) == !reverseInputs);
+    CHECK(std::isnan(result.value().generated_nan_mismatch_value) == reverseInputs);
+    CHECK((reverseInputs ? result.value().exemplary_nan_mismatch_value : result.value().generated_nan_mismatch_value) == TestType{2});
   }
   else
   {
-    CHECK_FALSE(result.value().firstNanMismatchIndex.has_value());
+    CHECK_FALSE(result.value().first_nan_mismatch_index.has_value());
   }
-  CHECK(result.value().maximumDifference == (finiteMismatch ? TestType{3} : TestType{0}));
-  CHECK(result.value().maximumDifferenceIndex == (finiteMismatch ? 4 : 0));
+  CHECK(result.value().maximum_difference == (finiteMismatch ? TestType{3} : TestType{0}));
+  CHECK(result.value().maximum_difference_index == (finiteMismatch ? 4 : 0));
   if(!checkNans && !finiteMismatch)
   {
-    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath, TestType{0.5}, false);
+    unit_test::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath, TestType{0.5}, false);
     fixture.requireUnchanged();
   }
 }
@@ -233,9 +233,9 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: exclusive tolerance an
   auto result = fixture.evaluate(TestType{0.5}, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.value().matches == (difference < TestType{0.5}));
-  CHECK(result.value().maximumDifference == difference);
-  CHECK(result.value().maximumDifferenceIndex == 1);
-  CHECK_FALSE(result.value().firstNanMismatchIndex.has_value());
+  CHECK(result.value().maximum_difference == difference);
+  CHECK(result.value().maximum_difference_index == 1);
+  CHECK_FALSE(result.value().first_nan_mismatch_index.has_value());
 }
 
 TEST_CASE("UnitTest::CompareFloatArraysWithNans: double precision", "[UnitTest][FloatArrayComparison]")
@@ -246,8 +246,8 @@ TEST_CASE("UnitTest::CompareFloatArraysWithNans: double precision", "[UnitTest][
   auto result = fixture.evaluate(epsilon, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK_FALSE(result.value().matches);
-  CHECK(result.value().maximumDifference == difference);
-  CHECK(result.value().maximumDifferenceIndex == 0);
+  CHECK(result.value().maximum_difference == difference);
+  CHECK(result.value().maximum_difference_index == 0);
 }
 
 TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: infinity pairs", "[UnitTest][FloatArrayComparison]", float32, float64)
@@ -261,11 +261,11 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: infinity pairs", "[Uni
   auto result = fixture.evaluate(TestType{0.5}, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.value().matches == (pairIndex < 2));
-  CHECK(result.value().maximumDifference == (pairIndex < 2 ? TestType{0} : infinity));
-  CHECK_FALSE(result.value().firstNanMismatchIndex.has_value());
+  CHECK(result.value().maximum_difference == (pairIndex < 2 ? TestType{0} : infinity));
+  CHECK_FALSE(result.value().first_nan_mismatch_index.has_value());
   if(pairIndex < 2)
   {
-    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
+    unit_test::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
     fixture.requireUnchanged();
   }
 }
@@ -303,10 +303,10 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: bounded tail and read 
   {
     REQUIRE(result.valid());
     CHECK_FALSE(result.value().matches);
-    CHECK(result.value().firstNanMismatchIndex == std::optional<usize>{40000});
-    CHECK(std::isnan(result.value().exemplaryNanMismatchValue) == !reverseInputs);
-    CHECK(std::isnan(result.value().generatedNanMismatchValue) == reverseInputs);
-    CHECK(result.value().maximumDifference == TestType{0});
+    CHECK(result.value().first_nan_mismatch_index == std::optional<usize>{40000});
+    CHECK(std::isnan(result.value().exemplary_nan_mismatch_value) == !reverseInputs);
+    CHECK(std::isnan(result.value().generated_nan_mismatch_value) == reverseInputs);
+    CHECK(result.value().maximum_difference == TestType{0});
   }
   else
   {
@@ -355,7 +355,7 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: shape counts before re
     const std::vector<std::pair<usize, usize>> reads = {{0, 8}};
     CHECK(fixture.exemplary_store->reads == reads);
     CHECK(fixture.computed_store->reads == reads);
-    UnitTest::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
+    unit_test::CompareFloatArraysWithNans<TestType>(fixture.data_structure, k_ExemplarPath, k_ComputedPath);
     fixture.requireUnchanged();
   }
 }
@@ -371,8 +371,8 @@ TEMPLATE_TEST_CASE("UnitTest::CompareFloatArraysWithNans: empty arrays and unusu
   auto result = fixture.evaluate(epsilons[epsilonIndex], true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.value().matches == (epsilonIndex == 0 || epsilonIndex == 4));
-  CHECK(result.value().maximumDifference == TestType{0});
-  CHECK(result.value().maximumDifferenceIndex == 0);
+  CHECK(result.value().maximum_difference == TestType{0});
+  CHECK(result.value().maximum_difference_index == 0);
   if(emptyArrays)
   {
     CHECK(fixture.exemplary_store->reads.empty());

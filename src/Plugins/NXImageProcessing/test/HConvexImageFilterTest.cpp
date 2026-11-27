@@ -26,8 +26,8 @@ constexpr int32 k_NegativeHeight = -8556;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights", "[NXImageProcessing][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 9;
   constexpr usize k_Dy = 9;
@@ -66,8 +66,8 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights", "
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights (both algorithm paths)", "[NXImageProcessing][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   constexpr usize k_Dx = 9;
@@ -82,7 +82,7 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights (bo
   pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_TallBump;    // isolated regional maximum (all face-neighbors are background)
   pattern[rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)] = k_ShallowBump; // isolated regional maximum, separated from the tall bump by background
 
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
@@ -115,8 +115,8 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: hand-computed dome heights (bo
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: Height 0 yields an all-zero output", "[NXImageProcessing][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 12;
   constexpr usize k_Dy = 12;
@@ -144,8 +144,8 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Height 0 yields an all-zero ou
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: Height beyond dynamic range returns the input (uint8 saturation)", "[NXImageProcessing][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 12;
   constexpr usize k_Dy = 12;
@@ -175,13 +175,13 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Height beyond dynamic range re
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-component rejected)", "[NXImageProcessing][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath scalarPath = rt::BuildImageFromPattern<uint8>(dataStructure, 8, 8, 8, rt::MakeGradientNoisePattern<uint8>(8, 8, 8)); // creates the geometry + CellData
   const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-  auto vecStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
+  auto vecStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
   const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
   DataArray<uint8>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
 
@@ -193,8 +193,8 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-
   args.insertOrAssign(HConvexImageFilter::k_Height_Key, std::make_any<float64>(2.0));
   args.insertOrAssign(HConvexImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
   const auto result = filter.preflight(dataStructure, args);
-  REQUIRE(result.outputActions.invalid());
-  REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+  REQUIRE(result.output_actions.invalid());
+  REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
 }
 
 // -----------------------------------------------------------------------------
@@ -203,8 +203,8 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight scalar guard (multi-
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight non-finite Height guard", "[NXImageProcessing][HConvexImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   HConvexImageFilter filter;
 
@@ -224,28 +224,28 @@ TEST_CASE("NXImageProcessing::HConvexImageFilter: Preflight non-finite Height gu
   SECTION("finite Height preflights cleanly")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, 2.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("NaN Height is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteHeight);
   }
 
   SECTION("Inf Height is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteHeight);
   }
 
   SECTION("Negative Height is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, -1.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NegativeHeight);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NegativeHeight);
   }
 }
 

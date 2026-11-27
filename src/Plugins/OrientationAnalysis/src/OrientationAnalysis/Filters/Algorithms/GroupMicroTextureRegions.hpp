@@ -21,21 +21,21 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT GroupMicroTextureRegionsInputValues
 {
-  bool UseNonContiguousNeighbors{};
-  DataPath NonContiguousNeighborListArrayPath;
-  DataPath ContiguousNeighborListArrayPath;
-  bool UseRunningAverage{};
-  float32 CAxisTolerance{};
-  DataPath FeatureIdsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath VolumesArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath NewCellFeatureAttributeMatrixName;
-  DataPath CellParentIdsArrayName;
-  DataPath FeatureParentIdsArrayName;
-  bool RandomizeParentIds{};
-  uint64 SeedValue{};
+  bool use_non_contiguous_neighbors{};
+  DataPath non_contiguous_neighbor_list_array_path;
+  DataPath contiguous_neighbor_list_array_path;
+  bool use_running_average{};
+  float32 c_axis_tolerance{};
+  DataPath feature_ids_array_path;
+  DataPath feature_phases_array_path;
+  DataPath volumes_array_path;
+  DataPath avg_quats_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath new_cell_feature_attribute_matrix_name;
+  DataPath cell_parent_ids_array_name;
+  DataPath feature_parent_ids_array_name;
+  bool randomize_parent_ids{};
+  uint64 seed_value{};
 };
 
 /**
@@ -107,11 +107,11 @@ private:
   std::mt19937_64 m_Generator;
   std::uniform_real_distribution<float32> m_Distribution;
 
-  Int32Array& m_FeaturePhases;
-  Int32Array& m_FeatureParentIds;
-  UInt32Array& m_CrystalStructures;
-  Float32Array& m_AvgQuats;
-  Float32Array& m_Volumes;
+  Int32ArrayType& m_FeaturePhases;
+  Int32ArrayType& m_FeatureParentIds;
+  UInt32ArrayType& m_CrystalStructures;
+  Float32ArrayType& m_AvgQuats;
+  Float32ArrayType& m_Volumes;
 
   std::vector<int32> m_FeaturePhasesCache;
   std::vector<int32> m_FeatureParentIdsCache;

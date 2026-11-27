@@ -36,18 +36,18 @@ constexpr StringLiteralType k_NumTrianglesName = "NumTriangles";
 constexpr StringLiteralType k_RegionIdsName = "Region Ids";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
-const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
+const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
 const DataPath k_CellFeatureAMPath = k_TriangleGeomPath.createChildPath(k_CreatedAMName);
 const DataPath k_NumTrianglesPath = k_CellFeatureAMPath.createChildPath(k_NumTrianglesName);
 } // namespace
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test_v2.tar.gz", "label_triangle_geometry_test_v2", true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test_v2.tar.gz", "label_triangle_geometry_test_v2", true, true);
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(KBaseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(KBaseDataFilePath);
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -62,7 +62,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // This is in here because the exemplar face attribute matrix is not sized correctly. This will
     // correct that value allowing the test to proceed normally.
@@ -75,18 +75,18 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(KExemplarDataFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(KExemplarDataFilePath);
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_CellFeatureAMPath, ::k_TriangleGeomPath.toString());
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces), ::k_TriangleGeomPath.toString());
+  unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_CellFeatureAMPath, ::k_TriangleGeomPath.toString());
+  unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces), ::k_TriangleGeomPath.toString());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][LabelTriangleGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -128,7 +128,7 @@ namespace
 constexpr int32 k_InjectedError = -56991;
 const DataPath k_MeshGeomPath({"Triangles"});
 const DataPath k_MeshFacePath = k_MeshGeomPath.createChildPath("FaceData");
-using SupportListType = TriangleGeom::ElementDynamicList;
+using SupportListType = TriangleGeom::ElementDynamicListType;
 using SupportIndexType = IGeometry::MeshIndexType;
 
 // These stores inject ordinary Result failures only. They do not simulate OOC or allocation failure.
@@ -247,7 +247,7 @@ void CreateSupportData(DataStructure& dataStructure, bool neighbors, const std::
 template <typename T>
 DataArray<T>& CreateSupportFixtureArray(DataStructure& dataStructure, const DataPath& path, usize tuples, usize components, DataObject::IdType parent)
 {
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
   REQUIRE(store != nullptr);
   store->fill(T{});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), std::move(store), parent);
@@ -258,8 +258,8 @@ DataArray<T>& CreateSupportFixtureArray(DataStructure& dataStructure, const Data
 void ApplySupportFixtureActions(DataStructure& dataStructure, const IFilter& filter, const Arguments& args)
 {
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto applied = preflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  const auto applied = preflight.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
 }
 
@@ -352,14 +352,14 @@ Arguments CreateLabelFixture(DataStructure& dataStructure, bool incidence, bool 
 
 Result<> RunLabel(DataStructure& dataStructure, bool cancelled)
 {
-  LabelTriangleGeometryInputValues inputs{.TriangleGeomPath = k_MeshGeomPath, .RegionIdsPath = k_RegionIdsPath, .TriangleAMPath = k_MeshFeaturePath, .NumTrianglesPath = k_TriangleCountPath};
+  LabelTriangleGeometryInputValues inputs{.triangle_geom_path = k_MeshGeomPath, .region_ids_path = k_RegionIdsPath, .triangle_am_path = k_MeshFeaturePath, .num_triangles_path = k_TriangleCountPath};
   const std::atomic_bool cancel = cancelled;
   return LabelTriangleGeometry(dataStructure, {}, cancel, &inputs)();
 }
 
 void CheckLabelInputs(const DataStructure& dataStructure)
 {
-  const auto* verticesPtr = dataStructure.getDataAs<Float32Array>(k_MeshGeomPath.createChildPath("Vertices"));
+  const auto* verticesPtr = dataStructure.getDataAs<Float32ArrayType>(k_MeshGeomPath.createChildPath("Vertices"));
   const auto* facesPtr = dataStructure.getDataAs<DataArray<SupportIndexType>>(k_MeshGeomPath.createChildPath("Faces"));
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
@@ -382,8 +382,8 @@ void CheckLabelInputs(const DataStructure& dataStructure)
 
 void CheckLabelOutputs(const DataStructure& dataStructure)
 {
-  const auto* regionsPtr = dataStructure.getDataAs<Int32Array>(k_RegionIdsPath);
-  const auto* countsPtr = dataStructure.getDataAs<UInt64Array>(k_TriangleCountPath);
+  const auto* regionsPtr = dataStructure.getDataAs<Int32ArrayType>(k_RegionIdsPath);
+  const auto* countsPtr = dataStructure.getDataAs<UInt64ArrayType>(k_TriangleCountPath);
   REQUIRE(regionsPtr != nullptr);
   REQUIRE(countsPtr != nullptr);
   REQUIRE(regionsPtr->getNumberOfTuples() == 1);
@@ -414,7 +414,7 @@ void CheckLabelSave(DataStructure& dataStructure, const SupportSnapshot& inciden
   CheckLabelOutputs(read.value());
   RequireSupportSnapshot(read.value(), false, {});
   RequireSupportSnapshot(read.value(), true, {});
-  UnitTest::CheckArraysInheritTupleDims(read.value());
+  unit_test::CheckArraysInheritTupleDims(read.value());
 }
 
 void CheckLabelSuccess(bool incidence, bool neighbors, bool cancelled, bool save, bool ooc)
@@ -433,7 +433,7 @@ void CheckLabelSuccess(bool incidence, bool neighbors, bool cancelled, bool save
   else
   {
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   }
@@ -452,14 +452,14 @@ void CheckLabelSuccess(bool incidence, bool neighbors, bool cancelled, bool save
     RequireSupportSnapshot(dataStructure, false, incidenceBefore);
     RequireSupportSnapshot(dataStructure, true, neighborsBefore);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: support ownership", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   const bool cancelled = GENERATE(false, true);
@@ -470,7 +470,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: support ownership", "[Simpl
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: cleanup on resize failure", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   CAPTURE(incidence, neighbors);
@@ -481,27 +481,27 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: cleanup on resize failure",
   ApplySupportFixtureActions(dataStructure, LabelTriangleGeometryFilter{}, args);
   auto store = std::make_shared<InjectedFailureStore<uint64>>(ShapeType{1}, ShapeType{1}, 73);
   store->reject_resize = true;
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(k_TriangleCountPath));
-  const auto replacement = dataStructure.getDataRefAs<UInt64Array>(k_TriangleCountPath).setDataStore(store);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64ArrayType>(k_TriangleCountPath));
+  const auto replacement = dataStructure.getDataRefAs<UInt64ArrayType>(k_TriangleCountPath).setDataStore(store);
   SIMPLNX_RESULT_REQUIRE_VALID(replacement);
   const auto result = RunLabel(dataStructure, false);
   RequireInjectedFailure(result, "AttributeMatrix 'Features' failed to resize child array 'Triangles/Features/NumTriangles' to shape [3]: injected resize failure");
   RequireSupportSnapshot(dataStructure, false, incidenceBefore);
   RequireSupportSnapshot(dataStructure, true, neighborsBefore);
   CheckLabelInputs(dataStructure);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RegionIdsPath));
-  CHECK(dataStructure.getDataRefAs<Int32Array>(k_RegionIdsPath)[0] == 1);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RegionIdsPath));
+  CHECK(dataStructure.getDataRefAs<Int32ArrayType>(k_RegionIdsPath)[0] == 1);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_MeshFeaturePath));
   CHECK(dataStructure.getDataRefAs<AttributeMatrix>(k_MeshFeaturePath).getShape() == ShapeType{3});
   CHECK(store->getTupleShape() == ShapeType{1});
   CHECK((*store)[0] == 73);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, {k_TriangleCountPath});
+  unit_test::CheckArraysInheritTupleDims(dataStructure, {k_TriangleCountPath});
 }
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: support creation failure", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   // 0: incidence count; 1: third read/orphan neighbor; 2: reused incidence/first neighbor read.
   const usize mode = GENERATE(0, 1, 2);
   CAPTURE(mode);
@@ -524,13 +524,13 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: support creation failure", 
   RequireSupportSnapshot(dataStructure, false, incidenceBefore);
   RequireSupportSnapshot(dataStructure, true, {});
   CheckLabelInputs(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: unassociated named child", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool neighbors = GENERATE(false, true);
   CAPTURE(neighbors);
   DataStructure dataStructure;
@@ -546,13 +546,13 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: unassociated named child", 
   RequireSupportSnapshot(dataStructure, false, incidenceBefore);
   RequireSupportSnapshot(dataStructure, true, neighborsBefore);
   CheckLabelInputs(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: retained support save compatibility", "[SimplnxCore][LabelTriangleGeometryFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   CAPTURE(incidence, neighbors);
@@ -563,7 +563,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: real store support ownershi
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
   REQUIRE(Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   CAPTURE(incidence, neighbors);

@@ -29,8 +29,8 @@ const std::atomic_bool& ComputeLargestCrossSections::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSections::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& largestCrossSections = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& largestCrossSections = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->largest_cross_sections_array_path);
   return DispatchAlgorithm<ComputeLargestCrossSectionsDirect, ComputeLargestCrossSectionsScanline>({&featureIds, &largestCrossSections}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
                                                                                                    m_InputValues);
 }

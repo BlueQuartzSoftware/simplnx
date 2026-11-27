@@ -103,8 +103,8 @@ static void GenerateParameterList()
 
 static std::string ParseScalarType(const std::string& paramType)
 {
-  std::string temp = nx::core::StringUtilities::replace(paramType, "simplnx.", "Scalar Value |");
-  temp = nx::core::StringUtilities::replace(temp, "Parameter", "");
+  std::string temp = nx::core::string_utilities::Replace(paramType, "simplnx.", "Scalar Value |");
+  temp = nx::core::string_utilities::Replace(temp, "Parameter", "");
   // temp = nx::core::StringUtilities::replace(temp, "Vector", " (Vector)");
   return temp;
 }
@@ -118,7 +118,7 @@ static std::string ParseScalarType(const std::string& paramType)
 //   return temp;
 // }
 
-static bool CheckScalarPrimitive(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckScalarPrimitive(std::ostream& rstStream, const nx::core::AnyParameterType& paramValue)
 {
 
   static const std::set<nx::core::Uuid> scalarPrimitives = {
@@ -136,7 +136,7 @@ static bool CheckScalarPrimitive(std::ostream& rstStream, const nx::core::AnyPar
   return false;
 }
 
-static bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyParameterType& paramValue)
 {
   static const std::set<nx::core::Uuid> vectorPrimitives = {
       nx::core::Uuid::FromString("9f5f9683-e492-4a79-8378-79d727b2356a").value(), nx::core::Uuid::FromString("bff78ff3-35ef-482a-b3b1-df8806e7f7ef").value(),
@@ -145,9 +145,9 @@ static bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyPar
       nx::core::Uuid::FromString("4ceaffc1-7326-4f65-a33a-eae263dc22d1").value(), nx::core::Uuid::FromString("17309744-c4e8-4d1e-807e-e7012387f1ec").value(),
       nx::core::Uuid::FromString("88f231a1-7956-41f5-98b7-4471705d2805").value(), nx::core::Uuid::FromString("57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96").value()};
 
-  std::string paramTypeName = nx::core::StringUtilities::replace(s_ParameterMap[paramValue->uuid()], "simplnx.", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Vector", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Parameter", "");
+  std::string paramTypeName = nx::core::string_utilities::Replace(s_ParameterMap[paramValue->uuid()], "simplnx.", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Vector", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Parameter", "");
 
   if(vectorPrimitives.find(paramValue->uuid()) != vectorPrimitives.end())
   {
@@ -178,14 +178,14 @@ static bool CheckVectorPrimitive(std::ostream& rstStream, const nx::core::AnyPar
  * @param paramValue
  * @return
  */
-static bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameterType& paramValue)
 {
   static const std::set<nx::core::Uuid> param = {nx::core::Uuid::FromString("ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b").value()};
 
   std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "simplnx.", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Parameter", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Selection", " Selection");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "simplnx.", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Parameter", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Selection", " Selection");
   const ArraySelectionParameter* paramPtr = dynamic_cast<const ArraySelectionParameter*>(paramValue.get());
   if(paramPtr != nullptr)
   {
@@ -217,14 +217,14 @@ static bool CheckArraySelectionParameter(std::ostream& rstStream, const nx::core
   return false;
 }
 
-static bool CheckGeometrySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static bool CheckGeometrySelectionParameter(std::ostream& rstStream, const nx::core::AnyParameterType& paramValue)
 {
   static const std::set<nx::core::Uuid> param = {nx::core::Uuid::FromString("d11e0bd8-f227-4fd1-b618-b6f16b259fc8").value()};
 
   std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "simplnx.", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Parameter", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Selection", " Selection");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "simplnx.", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Parameter", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Selection", " Selection");
   const GeometrySelectionParameter* paramPtr = dynamic_cast<const GeometrySelectionParameter*>(paramValue.get());
   if(paramPtr != nullptr)
   {
@@ -255,11 +255,11 @@ static bool CheckGeometrySelectionParameter(std::ostream& rstStream, const nx::c
  * @param rstStream
  * @param paramValue
  */
-static void CheckParameter(std::ostream& rstStream, const nx::core::AnyParameter& paramValue)
+static void CheckParameter(std::ostream& rstStream, const nx::core::AnyParameterType& paramValue)
 {
   std::string paramTypeName = s_ParameterMap[paramValue->uuid()];
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "simplnx.", "");
-  paramTypeName = nx::core::StringUtilities::replace(paramTypeName, "Parameter", " | ");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "simplnx.", "");
+  paramTypeName = nx::core::string_utilities::Replace(paramTypeName, "Parameter", " | ");
 
   rstStream << "| " << paramValue->humanName() << " | " << paramTypeName << " | " << paramValue->helpText() << " |\n";
 }
@@ -286,7 +286,7 @@ static std::vector<std::string> ReadFile(const std::filesystem::path& filePath, 
   {
     if(trimLine)
     {
-      line = nx::core::StringUtilities::trimmed(line);
+      line = nx::core::string_utilities::Trimmed(line);
     }
     lines.push_back(line);
   }
@@ -525,7 +525,7 @@ static std::string ExtractRstFilterSummary(const std::filesystem::path& docFileP
   int emptyLine = 0;
   for(const auto& line : mdLines)
   {
-    if(nx::core::StringUtilities::starts_with(line, "## Description"))
+    if(nx::core::string_utilities::StartsWith(line, "## Description"))
     {
       extractLines = true;
       continue;
@@ -535,7 +535,7 @@ static std::string ExtractRstFilterSummary(const std::filesystem::path& docFileP
       emptyLine++;
     }
 
-    if(nx::core::StringUtilities::starts_with(line, "##"))
+    if(nx::core::string_utilities::StartsWith(line, "##"))
     {
       extractLines = false;
     }
@@ -550,8 +550,8 @@ static std::string ExtractRstFilterSummary(const std::filesystem::path& docFileP
   }
 
   std::string rstDescription = MarkdownToRst(mdStream.str());
-  rstDescription = nx::core::StringUtilities::replace(rstDescription, "\n", "");
-  rstDescription = nx::core::StringUtilities::trimmed(rstDescription);
+  rstDescription = nx::core::string_utilities::Replace(rstDescription, "\n", "");
+  rstDescription = nx::core::string_utilities::Trimmed(rstDescription);
 
   return rstDescription;
 }
@@ -587,19 +587,19 @@ static std::vector<std::string> ConvertFilterDoc(const std::filesystem::path& do
   bool extractLines = true;
   for(const auto& line : mdLines)
   {
-    if(nx::core::StringUtilities::starts_with(line, "## Parameters"))
+    if(nx::core::string_utilities::StartsWith(line, "## Parameters"))
     {
       extractLines = false;
       continue;
     }
 
-    if(nx::core::StringUtilities::starts_with(line, "## Example Pipelines"))
+    if(nx::core::string_utilities::StartsWith(line, "## Example Pipelines"))
     {
       extractLines = true;
       outputLines.emplace_back("@PARAMETER_TABLE@");
     }
 
-    if(!extractLines && nx::core::StringUtilities::starts_with(line, "## License & Copyright"))
+    if(!extractLines && nx::core::string_utilities::StartsWith(line, "## License & Copyright"))
     {
       extractLines = true;
       outputLines.emplace_back("@PARAMETER_TABLE@");
@@ -768,9 +768,9 @@ static void GeneratePythonRstFiles()
     rstStream << "   This is the documentation for all filters included in the " << plugName << " module. These filters can"
               << " be used by importing the appropriate module. Each filter is contained in the module:\n\n"
               << ".. code:: python\n\n"
-              << "   import " << nx::core::StringUtilities::toLower(plugName) << "\n"
+              << "   import " << nx::core::string_utilities::ToLower(plugName) << "\n"
               << "   # Instantiate and execute a filter from the module\n"
-              << "   result = " << nx::core::StringUtilities::toLower(plugName) << ".SomeFilterName.execute(...)\n"
+              << "   result = " << nx::core::string_utilities::ToLower(plugName) << ".SomeFilterName.execute(...)\n"
               << "\n";
 
     rstStream << ".. py:module:: " << plugName << "\n\n";
@@ -844,8 +844,8 @@ static void GeneratePythonRstFiles()
 
         rstStream << parameterPair.first;
         std::string helpText = anyParameter->helpText();
-        helpText = EscapeRst(StringUtilities::replace(helpText, "\n", " "));
-        memberStream << "      :param nx." << nx::core::StringUtilities::replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": " << helpText << "\n";
+        helpText = EscapeRst(string_utilities::Replace(helpText, "\n", " "));
+        memberStream << "      :param nx." << nx::core::string_utilities::Replace(s_ParameterMap[anyParameter->uuid()], "simplnx.", "") << " " << anyParameter->name() << ": " << helpText << "\n";
       }
       rstStream << ")\n\n";
 
@@ -910,7 +910,7 @@ static void GeneratePythonSphinxIndex()
     pluginList << "   " << plugName << "\n";
   }
 
-  indexTemplate = nx::core::StringUtilities::replace(indexTemplate, "@PLUGIN_LIST@", pluginList.str());
+  indexTemplate = nx::core::string_utilities::Replace(indexTemplate, "@PLUGIN_LIST@", pluginList.str());
 
   const std::filesystem::path rstFilePath = fmt::format("{}/wrapping/python/docs/source/index.rst", SIMPLNX_BUILD_DIR);
   std::ofstream rstStream = std::ofstream(rstFilePath, std::ios_base::binary | std::ios_base::trunc);

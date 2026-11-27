@@ -102,7 +102,7 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions = std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   // The Float64 foreground/background are written into the uint32 output; that narrowing is UNDEFINED for a
@@ -110,12 +110,12 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
   Result<> fgGuard = ImageProcessing::ValidateScalarValueForType(DataType::uint32, foregroundValue, "Foreground Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(fgGuard.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(fgGuard), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(fgGuard), OutputActions{})};
   }
   Result<> bgGuard = ImageProcessing::ValidateScalarValueForType(DataType::uint32, backgroundValue, "Background Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(bgGuard.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(bgGuard), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(bgGuard), OutputActions{})};
   }
   for(Warning& warning : fgGuard.warnings())
   {
@@ -125,7 +125,7 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 Result<> RegionalMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
@@ -163,8 +163,8 @@ Result<Arguments> RegionalMinimaImageFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FlatIsMinimaKey, k_FlatIsMinima_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));

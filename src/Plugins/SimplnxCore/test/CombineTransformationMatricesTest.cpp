@@ -82,7 +82,7 @@ void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& ge
   auto amDims = std::vector<usize>(dimsVec.rbegin(), dimsVec.rend());
   AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, amDims, geomPtr->getId());
   geomPtr->setCellData(*amPtr);
-  UInt32Array* testArrayPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_CellArrayName, amDims, cDims, amPtr->getId());
+  UInt32ArrayType* testArrayPtr = UInt32ArrayType::CreateWithStore<UInt32DataStoreType>(dataStructure, k_CellArrayName, amDims, cDims, amPtr->getId());
 
   usize numComps = std::accumulate(cDims.begin(), cDims.end(), 1ULL, std::multiplies<>());
   std::generate(testArrayPtr->begin(), testArrayPtr->end(), [n = 0, numComps]() mutable { return static_cast<uint32>(1 + (n++ / numComps)); });
@@ -91,12 +91,12 @@ void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& ge
 void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& geomName)
 {
   VertexGeom* geomPtr = VertexGeom::Create(dataStructure, geomName);
-  Float32Array* verticesPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, VertexGeom::k_SharedVertexListName, {16}, {3}, geomPtr->getId());
+  Float32ArrayType* verticesPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, VertexGeom::k_SharedVertexListName, {16}, {3}, geomPtr->getId());
   std::iota(verticesPtr->begin(), verticesPtr->end(), 0.0f);
   geomPtr->setVertices(*verticesPtr);
   AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, VertexGeom::k_VertexAttributeMatrixName, {16}, geomPtr->getId());
   geomPtr->setVertexAttributeMatrix(*amPtr);
-  Int64Array* testArrayPtr = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, k_CellArrayName, {16}, {2}, amPtr->getId());
+  Int64ArrayType* testArrayPtr = Int64ArrayType::CreateWithStore<Int64DataStoreType>(dataStructure, k_CellArrayName, {16}, {2}, amPtr->getId());
   std::iota(testArrayPtr->begin(), testArrayPtr->end(), static_cast<int64_t>(0));
 }
 
@@ -104,7 +104,7 @@ void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemp
 {
   const auto* exemplaryGeomPtr = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
   const auto* resultGeomPtr = dataStructure.getDataAs<ImageGeom>(resultGeomPath);
-  UnitTest::CompareImageGeometry(exemplaryGeomPtr, resultGeomPtr, UnitTest::EPSILON);
+  unit_test::CompareImageGeometry(exemplaryGeomPtr, resultGeomPtr, unit_test::k_Epsilon);
 
   REQUIRE_NOTHROW(exemplaryGeomPtr->getCellDataRef());
   REQUIRE_NOTHROW(resultGeomPtr->getCellDataRef());
@@ -114,23 +114,23 @@ void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemp
 
   auto exemplaryCellArrayPath = exemplaryGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
   auto resultCellArrayPath = resultGeomPath.createChildPath(k_CellAttrMatrixName).createChildPath(k_CellArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath));
-  const auto& exemplaryCellArray = dataStructure.getDataRefAs<UInt32Array>(exemplaryCellArrayPath);
-  const auto& resultCellArray = dataStructure.getDataRefAs<UInt32Array>(resultCellArrayPath);
-  UnitTest::CompareDataArrays<uint32>(exemplaryCellArray, resultCellArray);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(exemplaryCellArrayPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(resultCellArrayPath));
+  const auto& exemplaryCellArray = dataStructure.getDataRefAs<UInt32ArrayType>(exemplaryCellArrayPath);
+  const auto& resultCellArray = dataStructure.getDataRefAs<UInt32ArrayType>(resultCellArrayPath);
+  unit_test::CompareDataArrays<uint32>(exemplaryCellArray, resultCellArray);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - Scaling & Translating", "[SimplnxCore][CombineTransformationMatricesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   CreateTestImageGeometry(dataStructure, k_StepByStepGeomName, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
   CreateTestImageGeometry(dataStructure, k_CombinedGeomName, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
@@ -164,7 +164,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -191,7 +191,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
   auto* stepByStepGeomPtr = dataStructure.getDataAs<ImageGeom>(k_StepByStepGeomPath);
   auto* combinedGeomPtr = dataStructure.getDataAs<ImageGeom>(k_CombinedGeomPath);
-  UnitTest::CompareImageGeometry(stepByStepGeomPtr, combinedGeomPtr);
+  unit_test::CompareImageGeometry(stepByStepGeomPtr, combinedGeomPtr);
 
   REQUIRE_NOTHROW(stepByStepGeomPtr->getCellDataRef());
   REQUIRE_NOTHROW(combinedGeomPtr->getCellDataRef());
@@ -199,24 +199,24 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   auto combinedAM = combinedGeomPtr->getCellDataRef();
   REQUIRE(stepByStepAM.getShape() == combinedAM.getShape());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_StepByStepCellArrayPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CombinedCellArrayPath));
-  auto stepByStepCellArray = dataStructure.getDataRefAs<UInt32Array>(k_StepByStepCellArrayPath);
-  auto combinedCellArray = dataStructure.getDataRefAs<UInt32Array>(k_CombinedCellArrayPath);
-  UnitTest::CompareDataArrays<uint32>(stepByStepCellArray, combinedCellArray);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_StepByStepCellArrayPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_CombinedCellArrayPath));
+  auto stepByStepCellArray = dataStructure.getDataRefAs<UInt32ArrayType>(k_StepByStepCellArrayPath);
+  auto combinedCellArray = dataStructure.getDataRefAs<UInt32ArrayType>(k_CombinedCellArrayPath);
+  unit_test::CompareDataArrays<uint32>(stepByStepCellArray, combinedCellArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - Rotating & Freestyle", "[SimplnxCore][CombineTransformationMatricesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   CreateTestImageGeometry(dataStructure, k_CombinedGeomName, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
   CreateTestImageGeometry(dataStructure, k_CombinedGeom2Name, {10, 15, 20}, {20, -10, 5}, {1, 2, 1}, {3});
@@ -234,7 +234,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -268,7 +268,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -302,7 +302,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -336,7 +336,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -364,20 +364,20 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
   CompareGeometries(dataStructure, k_ExemplaryGeom3Path, k_CombinedGeom3Path);
   CompareGeometries(dataStructure, k_ExemplaryGeom4Path, k_CombinedGeom4Path);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries", "[SimplnxCore][CombineTransformationMatricesFilter]")
 {
   // This test case only tests vertex geometries because the transformations only affect the vertices, NOT the topology.
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   CreateTestVertexGeometry(dataStructure, k_StepByStepGeomName);
   CreateTestVertexGeometry(dataStructure, k_CombinedGeomName);
@@ -411,7 +411,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -448,13 +448,13 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
   REQUIRE_NOTHROW(combinedGeomPtr->getVerticesRef());
   auto stepByStepVertices = stepByStepGeomPtr->getVerticesRef();
   auto combinedVertices = combinedGeomPtr->getVerticesRef();
-  UnitTest::CompareDataArrays<float32>(stepByStepVertices, combinedVertices);
+  unit_test::CompareDataArrays<float32>(stepByStepVertices, combinedVertices);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(k_StepByStepGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName)));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(k_CombinedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName)));
-  auto stepByStepCellArray = dataStructure.getDataRefAs<Int64Array>(k_StepByStepGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName));
-  auto combinedCellArray = dataStructure.getDataRefAs<Int64Array>(k_CombinedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName));
-  UnitTest::CompareDataArrays<int64>(stepByStepCellArray, combinedCellArray);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64ArrayType>(k_StepByStepGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64ArrayType>(k_CombinedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName)));
+  auto stepByStepCellArray = dataStructure.getDataRefAs<Int64ArrayType>(k_StepByStepGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName));
+  auto combinedCellArray = dataStructure.getDataRefAs<Int64ArrayType>(k_CombinedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(k_CellArrayName));
+  unit_test::CompareDataArrays<int64>(stepByStepCellArray, combinedCellArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

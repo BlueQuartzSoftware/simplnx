@@ -33,13 +33,13 @@ namespace nx::core::ImageProcessing
 {
 namespace detail
 {
-using ProgressCallback = std::function<void(usize)>;
-using BeginProgressPhaseCallback = std::function<void(std::string_view, usize)>;
+using ProgressCallbackType = std::function<void(usize)>;
+using BeginProgressPhaseCallbackType = std::function<void(std::string_view, usize)>;
 
 inline constexpr usize k_ConnectedComponentResolutionBlockSize = 65'536;
 
 template <class T>
-Result<> ValidateConnectedComponentVolume(const AbstractDataStore<T>& inStore, const SizeVec3& dims, usize& sliceValues, usize& volumeValues)
+Result<> ValidateConnectedComponentVolume(const AbstractDataStore<T>& inStore, const SizeVec3Type& dims, usize& sliceValues, usize& volumeValues)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -79,17 +79,17 @@ struct CcRun
   int64 length;
   uint32 label;
 };
-using CcLine = std::vector<CcRun>;
+using CcLineType = std::vector<CcRun>;
 
 inline constexpr usize k_ConnectedComponent2DTargetBytes = 64ULL * 1024ULL * 1024ULL;
 
 struct ConnectedComponent2DPlan
 {
-  bool useTiles = false;
-  usize coreRows = 0;
-  usize coreColumns = 0;
-  usize maximumRunsPerLine = 0;
-  usize residentBytes = 0;
+  bool use_tiles = false;
+  usize core_rows = 0;
+  usize core_columns = 0;
+  usize maximum_runs_per_line = 0;
+  usize resident_bytes = 0;
 };
 
 inline bool ConnectedComponentCheckedAdd(usize left, usize right, usize& sum)
@@ -115,20 +115,20 @@ inline bool ConnectedComponentCheckedMultiply(usize left, usize right, usize& pr
 struct ConnectedComponentResidentProvisionalAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseConnectedComponentResidentProvisional(const SizeVec3& dims)
+inline bool ShouldUseConnectedComponentResidentProvisional(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
-inline Result<usize> CalculateConnectedComponentResidentProvisionalBytes(const SizeVec3& dims)
+inline Result<usize> CalculateConnectedComponentResidentProvisionalBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -146,7 +146,7 @@ inline Result<usize> CalculateConnectedComponentResidentProvisionalBytes(const S
   return {requiredBytes};
 }
 
-inline Result<ConnectedComponentResidentProvisionalAllocation> ReserveConnectedComponentResidentProvisional(const SizeVec3& dims)
+inline Result<ConnectedComponentResidentProvisionalAllocation> ReserveConnectedComponentResidentProvisional(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateConnectedComponentResidentProvisionalBytes(dims);
   if(requiredResult.invalid())
@@ -154,22 +154,22 @@ inline Result<ConnectedComponentResidentProvisionalAllocation> ReserveConnectedC
     return ConvertInvalidResult<ConnectedComponentResidentProvisionalAllocation>(std::move(requiredResult));
   }
   auto reservation = ReserveWorkingMemory(requiredResult.value(), requiredResult.value());
-  return {ConnectedComponentResidentProvisionalAllocation{.reservation = std::move(reservation), .requiredBytes = requiredResult.value()}};
+  return {ConnectedComponentResidentProvisionalAllocation{.reservation = std::move(reservation), .required_bytes = requiredResult.value()}};
 }
 
 struct ConnectedComponentResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
 template <class T>
-Result<usize> CalculateConnectedComponentResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateConnectedComponentResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -213,7 +213,7 @@ Result<usize> CalculateConnectedComponentResidentWorkingMemoryBytes(const SizeVe
 }
 
 template <class T>
-Result<ConnectedComponentResidentMemoryAllocation> ReserveConnectedComponentResidentWorkingMemory(const SizeVec3& dims)
+Result<ConnectedComponentResidentMemoryAllocation> ReserveConnectedComponentResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateConnectedComponentResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -228,16 +228,16 @@ struct ConnectedComponentProvisionalSelection
 {
   // Declaration order is intentional: destruction runs in reverse, so the datastore releases its memory before
   // the reservation returns that headroom to the shared cache budget.
-  std::optional<ConnectedComponentResidentProvisionalAllocation> residentAllocation;
-  std::shared_ptr<AbstractDataStore<uint32>> dataStore;
+  std::optional<ConnectedComponentResidentProvisionalAllocation> resident_allocation;
+  std::shared_ptr<AbstractDataStore<uint32>> data_store;
 
   [[nodiscard]] bool holdsResidentState() const noexcept
   {
-    return dataStore != nullptr && residentAllocation.has_value() && residentAllocation->holdsCompleteState();
+    return data_store != nullptr && resident_allocation.has_value() && resident_allocation->holdsCompleteState();
   }
 };
 
-inline Result<ConnectedComponentProvisionalSelection> TryCreateConnectedComponentResidentProvisionalSelection(const SizeVec3& dims, bool usesOutOfCoreEndpoint)
+inline Result<ConnectedComponentProvisionalSelection> TryCreateConnectedComponentResidentProvisionalSelection(const SizeVec3Type& dims, bool usesOutOfCoreEndpoint)
 {
   ConnectedComponentProvisionalSelection selection;
   if(usesOutOfCoreEndpoint && ShouldUseConnectedComponentResidentProvisional(dims))
@@ -253,8 +253,8 @@ inline Result<ConnectedComponentProvisionalSelection> TryCreateConnectedComponen
       try
       {
         auto residentDataStore = std::make_shared<DataStore<uint32>>(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, std::nullopt);
-        selection.residentAllocation.emplace(std::move(allocation));
-        selection.dataStore = std::move(residentDataStore);
+        selection.resident_allocation.emplace(std::move(allocation));
+        selection.data_store = std::move(residentDataStore);
         return {std::move(selection)};
       } catch(const std::bad_alloc&)
       {
@@ -266,7 +266,7 @@ inline Result<ConnectedComponentProvisionalSelection> TryCreateConnectedComponen
   return {std::move(selection)};
 }
 
-inline Result<ConnectedComponentProvisionalSelection> CreateConnectedComponentProvisionalSelection(const SizeVec3& dims, bool usesOutOfCoreEndpoint, const std::string& dataFormat)
+inline Result<ConnectedComponentProvisionalSelection> CreateConnectedComponentProvisionalSelection(const SizeVec3Type& dims, bool usesOutOfCoreEndpoint, const std::string& dataFormat)
 {
   auto residentResult = TryCreateConnectedComponentResidentProvisionalSelection(dims, usesOutOfCoreEndpoint);
   if(residentResult.invalid())
@@ -279,7 +279,7 @@ inline Result<ConnectedComponentProvisionalSelection> CreateConnectedComponentPr
     return {std::move(selection)};
   }
 
-  selection.dataStore = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(dataFormat, ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1});
+  selection.data_store = data_store_utilities::CreateDataStoreWithFormat<uint32>(dataFormat, ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1});
   return {std::move(selection)};
 }
 
@@ -307,13 +307,13 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
   }
 
   ConnectedComponent2DPlan plan;
-  plan.maximumRunsPerLine = dimX / 2 + dimX % 2;
+  plan.maximum_runs_per_line = dimX / 2 + dimX % 2;
 
   usize oneLineCapacityBytes = 0;
   usize runPayloadBytes = 0;
   usize rowValueBytes = 0;
   const usize valuesPerPixel = sizeof(T) + (writesProvisional ? sizeof(uint32) : 0);
-  if(!ConnectedComponentCheckedMultiply(plan.maximumRunsPerLine, sizeof(CcRun), oneLineCapacityBytes) || !ConnectedComponentCheckedMultiply(oneLineCapacityBytes, 2, runPayloadBytes) ||
+  if(!ConnectedComponentCheckedMultiply(plan.maximum_runs_per_line, sizeof(CcRun), oneLineCapacityBytes) || !ConnectedComponentCheckedMultiply(oneLineCapacityBytes, 2, runPayloadBytes) ||
      !ConnectedComponentCheckedMultiply(dimX, valuesPerPixel, rowValueBytes))
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(-8374,
@@ -322,10 +322,10 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
 
   if(runPayloadBytes <= targetBytes && rowValueBytes <= targetBytes - runPayloadBytes)
   {
-    plan.coreRows = std::min(dimY, (targetBytes - runPayloadBytes) / rowValueBytes);
-    plan.coreColumns = dimX;
+    plan.core_rows = std::min(dimY, (targetBytes - runPayloadBytes) / rowValueBytes);
+    plan.core_columns = dimX;
     usize blockBytes = 0;
-    if(plan.coreRows == 0 || !ConnectedComponentCheckedMultiply(plan.coreRows, rowValueBytes, blockBytes) || !ConnectedComponentCheckedAdd(runPayloadBytes, blockBytes, plan.residentBytes))
+    if(plan.core_rows == 0 || !ConnectedComponentCheckedMultiply(plan.core_rows, rowValueBytes, blockBytes) || !ConnectedComponentCheckedAdd(runPayloadBytes, blockBytes, plan.resident_bytes))
     {
       return MakeErrorResult<ConnectedComponent2DPlan>(-8374,
                                                        fmt::format("Connected-component true-2-D full-width plan could not fit one row for dimensions {} x {} in {} bytes.", dimX, dimY, targetBytes));
@@ -333,8 +333,8 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
     return {plan};
   }
 
-  plan.useTiles = true;
-  plan.coreRows = 1;
+  plan.use_tiles = true;
+  plan.core_rows = 1;
   constexpr usize k_HaloBytes = 2 * sizeof(uint32);
   const usize bytesPerColumn = sizeof(T) + 2 * sizeof(uint32);
   if(k_HaloBytes > targetBytes || bytesPerColumn > targetBytes - k_HaloBytes)
@@ -342,9 +342,9 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
     return MakeErrorResult<ConnectedComponent2DPlan>(
         -8374, fmt::format("Connected-component true-2-D tiled plan cannot fit one input/provisional column and previous-row halos for dimensions {} x {} in {} bytes.", dimX, dimY, targetBytes));
   }
-  plan.coreColumns = std::min(dimX, (targetBytes - k_HaloBytes) / bytesPerColumn);
+  plan.core_columns = std::min(dimX, (targetBytes - k_HaloBytes) / bytesPerColumn);
   usize tileColumnBytes = 0;
-  if(plan.coreColumns == 0 || !ConnectedComponentCheckedMultiply(plan.coreColumns, bytesPerColumn, tileColumnBytes) || !ConnectedComponentCheckedAdd(k_HaloBytes, tileColumnBytes, plan.residentBytes))
+  if(plan.core_columns == 0 || !ConnectedComponentCheckedMultiply(plan.core_columns, bytesPerColumn, tileColumnBytes) || !ConnectedComponentCheckedAdd(k_HaloBytes, tileColumnBytes, plan.resident_bytes))
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(-8374, fmt::format("Connected-component true-2-D tiled plan overflowed for dimensions {} x {} and {}-byte input values.", dimX, dimY, sizeof(T)));
   }
@@ -471,7 +471,7 @@ struct CcUnionFind
   }
   // CreateConsecutive follows ITK's ascending root traversal: roots (parent[i]==i) get consecutive labels 1,2,...; bg=0.
   // Returns {consecutive[], numberOfObjects}.
-  std::pair<std::vector<uint32>, uint32> createConsecutive(const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress) const
+  std::pair<std::vector<uint32>, uint32> createConsecutive(const std::atomic_bool& shouldCancel, const ProgressCallbackType& reportProgress) const
   {
     const usize n = parent.size();
     std::vector<uint32> consecutive(n, 0u);
@@ -505,7 +505,7 @@ struct CcUnionFind
 // Encode one gathered x-row into unlabeled foreground runs. `Pred` is a compile-time predicate functor so the
 // per-voxel foreground test on the hot path is a direct call.
 template <class T, class Pred>
-inline void EncodeLineGeometryInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcLine& line)
+inline void EncodeLineGeometryInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcLineType& line)
 {
   line.clear();
   int64 x = 0;
@@ -529,7 +529,7 @@ inline void EncodeLineGeometryInto(nonstd::span<const T> row, int64 nX, const Pr
 
 // Encode one gathered x-row and assign each run a fresh provisional label.
 template <class T, class Pred>
-inline void EncodeLineInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcUnionFind& uf, CcLine& line)
+inline void EncodeLineInto(nonstd::span<const T> row, int64 nX, const Pred& pred, CcUnionFind& uf, CcLineType& line)
 {
   EncodeLineGeometryInto(row, nX, pred, line);
   for(CcRun& run : line)
@@ -541,7 +541,7 @@ inline void EncodeLineInto(nonstd::span<const T> row, int64 nX, const Pred& pred
 // CompareLines: union overlapping runs between the current line and an already-scanned neighbor line. `offset` = 0 for
 // face connectivity, 1 for the fully-connected in-x diagonal (ITK ScanlineFilterCommon::CompareLines: extend the
 // neighbor run to [nStart-offset, nLast+offset] and test intersection with the current run [cStart,cLast]).
-inline void CompareLines(const CcLine& current, const CcLine& neighbor, int64 offset, CcUnionFind& uf)
+inline void CompareLines(const CcLineType& current, const CcLineType& neighbor, int64 offset, CcUnionFind& uf)
 {
   usize neighborIndex = 0;
   for(const CcRun& c : current)
@@ -605,8 +605,8 @@ inline void CompareLines(const CcLine& current, const CcLine& neighbor, int64 of
  * @return A valid result or an input or provisional-store transfer error.
  */
 template <class T, class Pred>
-Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                               const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ProgressCallback& reportProgress)
+Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
+                               const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ProgressCallbackType& reportProgress)
 {
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 ny = static_cast<int64>(dims[1]);
@@ -646,8 +646,8 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
     bandReservation.shrinkTo(0);
   }
 
-  std::vector<CcLine> prevPlane(nYu); // previous z-plane's line encodings (empty vector = no plane yet)
-  std::vector<CcLine> curPlane(nYu);  // current z-plane's line encodings, built up row by row
+  std::vector<CcLineType> prevPlane(nYu); // previous z-plane's line encodings (empty vector = no plane yet)
+  std::vector<CcLineType> curPlane(nYu);  // current z-plane's line encodings, built up row by row
   std::vector<T> planeBand(planesPerBand * sliceValues);
   std::vector<uint32> provPlane;
   if(provisional != nullptr)
@@ -707,7 +707,7 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
     for(int64 y = 0; y < ny; ++y)
     {
       const usize rowOffset = static_cast<usize>(y) * static_cast<usize>(nX);
-      CcLine& line = curPlane[static_cast<usize>(y)];
+      CcLineType& line = curPlane[static_cast<usize>(y)];
       for(CcRun& run : line)
       {
         run.label = uf.makeLabel();
@@ -791,8 +791,8 @@ Result<> Pass1ThreeDimensional(const AbstractDataStore<T>& inStore, ConnectedCom
  * @return A valid result or an input or output transfer error.
  */
 template <class T, class Pred>
-Result<> ReplayThreeDimensionalLabels(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, const std::vector<uint32>& finalLabel,
-                                      const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress = {})
+Result<> ReplayThreeDimensionalLabels(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims, const Pred& pred, const std::vector<uint32>& finalLabel,
+                                      const std::atomic_bool& shouldCancel, const ProgressCallbackType& reportProgress = {})
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -937,8 +937,8 @@ Result<> ReplayThreeDimensionalLabels(const AbstractDataStore<T>& inStore, Abstr
  * @return A valid result or a planning, input, or output transfer error.
  */
 template <class T, class Pred>
-Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, const std::vector<uint32>& finalLabel,
-                                    const std::atomic_bool& shouldCancel, usize targetBytes, const ProgressCallback& reportProgress)
+Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims, const Pred& pred, const std::vector<uint32>& finalLabel,
+                                    const std::atomic_bool& shouldCancel, usize targetBytes, const ProgressCallbackType& reportProgress)
 {
   auto planResult = CreateConnectedComponent2DPlan<T>(dims[0], dims[1], /*writesProvisional=*/true, targetBytes);
   if(planResult.invalid())
@@ -950,9 +950,9 @@ Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, Abstrac
   const usize dimY = dims[1];
   uint32 provisionalLabel = 0;
 
-  if(!plan.useTiles)
+  if(!plan.use_tiles)
   {
-    const usize blockRows = AlignConnectedComponent2DRows(plan.coreRows, dimX, inStore.getChunkShape(), outStore.getChunkShape());
+    const usize blockRows = AlignConnectedComponent2DRows(plan.core_rows, dimX, inStore.getChunkShape(), outStore.getChunkShape());
     const usize maximumBlockValues = blockRows * dimX;
     std::vector<T> inputBlock(maximumBlockValues);
     std::vector<uint32> outputBlock(maximumBlockValues);
@@ -1002,19 +1002,19 @@ Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, Abstrac
     return {};
   }
 
-  std::vector<T> inputTile(plan.coreColumns);
-  std::vector<uint32> outputTile(plan.coreColumns);
+  std::vector<T> inputTile(plan.core_columns);
+  std::vector<uint32> outputTile(plan.core_columns);
   for(usize y = 0; y < dimY; ++y)
   {
     bool isInsideRun = false;
     uint32 outputLabel = 0;
-    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.coreColumns)
+    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.core_columns)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize columnCount = std::min(plan.coreColumns, dimX - xBegin);
+      const usize columnCount = std::min(plan.core_columns, dimX - xBegin);
       const usize tileOffset = y * dimX + xBegin;
       if(Result<> result = inStore.copyIntoBuffer(tileOffset, nonstd::span<T>(inputTile.data(), columnCount)); result.invalid())
       {
@@ -1046,14 +1046,14 @@ Result<> ReplayTwoDimensionalLabels(const AbstractDataStore<T>& inStore, Abstrac
 }
 
 template <class T, class Pred>
-Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
+Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
                                    const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan,
-                                   const ProgressCallback& reportProgress)
+                                   const ProgressCallbackType& reportProgress)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
   const int64 signedDimX = static_cast<int64>(dimX);
-  const usize blockRows = provisional == nullptr ? plan.coreRows : AlignConnectedComponent2DRows(plan.coreRows, dimX, provisional->getChunkShape(), std::nullopt);
+  const usize blockRows = provisional == nullptr ? plan.core_rows : AlignConnectedComponent2DRows(plan.core_rows, dimX, provisional->getChunkShape(), std::nullopt);
   const usize maximumBlockValues = blockRows * dimX;
   std::vector<T> inputBlock(maximumBlockValues);
   std::vector<uint32> provisionalBlock;
@@ -1061,10 +1061,10 @@ Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, Connecte
   {
     provisionalBlock.resize(maximumBlockValues);
   }
-  CcLine previousLine;
-  CcLine currentLine;
-  previousLine.reserve(plan.maximumRunsPerLine);
-  currentLine.reserve(plan.maximumRunsPerLine);
+  CcLineType previousLine;
+  CcLineType currentLine;
+  previousLine.reserve(plan.maximum_runs_per_line);
+  currentLine.reserve(plan.maximum_runs_per_line);
   const int64 lineOffset = fullyConnected ? 1 : 0;
 
   for(usize rowBegin = 0; rowBegin < dimY;)
@@ -1134,14 +1134,14 @@ Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, Connecte
 }
 
 template <class T, class Pred>
-Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore& provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                                  const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan, const ProgressCallback& reportProgress)
+Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore& provisional, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
+                                  const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan, const ProgressCallbackType& reportProgress)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
-  std::vector<T> inputTile(plan.coreColumns);
-  std::vector<uint32> currentLabels(plan.coreColumns);
-  std::vector<uint32> previousLabels(plan.coreColumns + 2);
+  std::vector<T> inputTile(plan.core_columns);
+  std::vector<uint32> currentLabels(plan.core_columns);
+  std::vector<uint32> previousLabels(plan.core_columns + 2);
 
   for(usize y = 0; y < dimY; ++y)
   {
@@ -1153,7 +1153,7 @@ Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, Connected
       {
         return {};
       }
-      const usize columnCount = std::min(plan.coreColumns, dimX - xBegin);
+      const usize columnCount = std::min(plan.core_columns, dimX - xBegin);
       if(Result<> result = inStore.copyIntoBuffer(y * dimX + xBegin, nonstd::span<T>(inputTile.data(), columnCount)); result.invalid())
       {
         return result;
@@ -1232,8 +1232,8 @@ Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, Connected
 }
 
 template <class T, class Pred>
-Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                             const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, usize target2DBytes, const ProgressCallback& reportProgress)
+Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore* provisional, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
+                             const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, usize target2DBytes, const ProgressCallbackType& reportProgress)
 {
   auto planResult = CreateConnectedComponent2DPlan<T>(dims[0], dims[1], provisional != nullptr, target2DBytes);
   if(planResult.invalid())
@@ -1241,7 +1241,7 @@ Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedCompo
     return ConvertResult(std::move(planResult));
   }
   const ConnectedComponent2DPlan plan = planResult.value();
-  if(plan.useTiles)
+  if(plan.use_tiles)
   {
     std::shared_ptr<AbstractDataStore<uint32>> tileProvisionalOwner;
     std::unique_ptr<SweepTemporaryStore<uint32>> tileFixedRecords;
@@ -1249,7 +1249,7 @@ Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedCompo
     ConnectedComponentProvisionalStore* tileProvisionalPtr = provisional;
     if(tileProvisionalPtr == nullptr)
     {
-      if(inStore.getStoreType() == IDataStore::StoreType::OutOfCore && DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+      if(inStore.getStoreType() == IDataStore::StoreType::OutOfCore && data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
       {
         auto storeResult = CreateSweepTemporaryStore<uint32>(dims[0] * dims[1], std::max<usize>(1, target2DBytes / sizeof(uint32)), shouldCancel, "Connected-component tiled count");
         if(storeResult.invalid())
@@ -1261,7 +1261,7 @@ Result<> Pass1TwoDimensional(const AbstractDataStore<T>& inStore, ConnectedCompo
       }
       else
       {
-        tileProvisionalOwner = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(inStore.getDataFormat(), std::vector<usize>{1, dims[1], dims[0]}, std::vector<usize>{1});
+        tileProvisionalOwner = data_store_utilities::CreateDataStoreWithFormat<uint32>(inStore.getDataFormat(), std::vector<usize>{1, dims[1], dims[0]}, std::vector<usize>{1});
         if(tileProvisionalOwner != nullptr)
         {
           tileAdapter = std::make_unique<ConnectedComponentProvisionalStore>(*tileProvisionalOwner);
@@ -1285,9 +1285,9 @@ namespace detail
 // input after union resolution, so they do not store a complete provisional-label volume. An extreme 2D tile route can
 // use temporary records for previous-row labels. Raster-order label creation and union operations remain byte-exact.
 template <class T, class Pred>
-Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
-                                      const std::atomic_bool& shouldCancel, usize target2DBytes, const BeginProgressPhaseCallback& beginProgressPhase, const ProgressCallback& reportCount,
-                                      const ProgressCallback& reportPercent)
+Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
+                                      const std::atomic_bool& shouldCancel, usize target2DBytes, const BeginProgressPhaseCallbackType& beginProgressPhase, const ProgressCallbackType& reportCount,
+                                      const ProgressCallbackType& reportPercent)
 {
   usize sliceValues = 0;
   usize vol = 0;
@@ -1356,13 +1356,13 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
   if(residentSelectionResult.value().holdsResidentState())
   {
     provisionalSelection.emplace(std::move(residentSelectionResult.value()));
-    provisionalDataStore = provisionalSelection->dataStore;
+    provisionalDataStore = provisionalSelection->data_store;
     provisional = std::make_unique<detail::ConnectedComponentProvisionalStore>(*provisionalDataStore);
   }
   if(provisional == nullptr && !usesOutOfCoreEndpoint)
   {
     const std::string provisionalDataFormat = detail::SelectConnectedComponentProvisionalDataFormat(inStore, outStore);
-    provisionalDataStore = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(provisionalDataFormat, ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1});
+    provisionalDataStore = data_store_utilities::CreateDataStoreWithFormat<uint32>(provisionalDataFormat, ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1});
     if(provisionalDataStore == nullptr)
     {
       return MakeErrorResult(-8375, fmt::format("Connected-component labeling failed to create its {}-value provisional-label scratch store.", vol));
@@ -1484,7 +1484,7 @@ Result<> LabelConnectedComponentsImpl(const AbstractDataStore<T>& inStore, Abstr
 } // namespace detail
 
 template <class T, class Pred>
-Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected,
+Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
                                   const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
@@ -1509,7 +1509,7 @@ Result<> LabelConnectedComponents(const AbstractDataStore<T>& inStore, AbstractD
 // Returns Result<uint32> (rather than a bare uint32) so a Pass1 I/O failure is distinguishable from a legitimate
 // "0 components" count.
 template <class T, class Pred>
-Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, const SizeVec3& dims, const Pred& pred, bool fullyConnected, uint64 minSize, const std::atomic_bool& shouldCancel,
+Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected, uint64 minSize, const std::atomic_bool& shouldCancel,
                                         usize target2DBytes = detail::k_ConnectedComponent2DTargetBytes)
 {
   usize sliceValues = 0;
@@ -1524,8 +1524,8 @@ Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, con
   }
   detail::CcUnionFind uf;
   std::vector<uint64> sizeByLabel; // sizeByLabel[provisional label] = total run length for that (pre-union) label
-  Result<> pass1Result = dims[2] == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallback{}) :
-                                        detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallback{});
+  Result<> pass1Result = dims[2] == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallbackType{}) :
+                                        detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallbackType{});
   if(pass1Result.invalid())
   {
     return ConvertResultTo<uint32>(std::move(pass1Result), uint32{0});

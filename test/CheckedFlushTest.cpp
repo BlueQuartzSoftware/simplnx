@@ -279,7 +279,7 @@ TEST_CASE("CheckedFlush resident defaults succeed", "[simplnx][CheckedFlush]")
   CHECK(result.warnings().empty());
   CHECK(numericStore->getValue(0) == 7);
   CHECK(listStore->getList(0) == std::vector<int32>{11, 13});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CheckedFlush adapts legacy numeric exceptions", "[simplnx][CheckedFlush]")
@@ -336,7 +336,7 @@ TEST_CASE("CheckedFlush adapts legacy object exceptions", "[simplnx][CheckedFlus
       CHECK(result.errors()[0].message.find(detail) != std::string::npos);
       CHECK(result.errors()[0].message.find("LegacyObject") != std::string::npos);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -385,7 +385,7 @@ TEST_CASE("CheckedFlush forwards numeric and list diagnostics once", "[simplnx][
       CHECK(result.errors()[1].code == -272);
       CHECK(result.errors()[1].message.find("memory allocation failed during cleanup") != std::string::npos);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -448,7 +448,7 @@ TEST_CASE("CheckedFlush stops at the first failed object and keeps all of its pa
   CHECK(result.warnings()[1].message.find("first warning") != std::string::npos);
   CHECK(result.warnings()[2].code == 19102);
   CHECK(result.warnings()[2].message.find("second warning") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CheckedFlush forwarders preserve invalid results with no errors", "[simplnx][CheckedFlush]")
@@ -464,7 +464,7 @@ TEST_CASE("CheckedFlush forwarders preserve invalid results with no errors", "[s
     REQUIRE(arrayPtr != nullptr);
     REQUIRE(listPtr != nullptr);
     Result<> emptyFailure;
-    emptyFailure.expected = nonstd::make_unexpected(ErrorCollection{});
+    emptyFailure.expected = nonstd::make_unexpected(ErrorCollectionType{});
     emptyFailure.warnings().push_back({19501, "backing.h5:/values: retained warning"});
     REQUIRE(emptyFailure.invalid());
     REQUIRE(emptyFailure.errors().empty());
@@ -483,7 +483,7 @@ TEST_CASE("CheckedFlush forwarders preserve invalid results with no errors", "[s
     CHECK(numericStore->checked_calls == (useList ? 0 : 1));
     CHECK(listStore->checked_calls == (useList ? 1 : 0));
     CHECK(numericStore->legacy_calls == 0);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -491,7 +491,7 @@ TEST_CASE("CheckedFlush traversal preserves invalid custom objects with no error
 {
   DataStructure dataStructure;
   auto object = std::make_shared<ThrowingCheckedFlushGroup>(dataStructure, "EmptyFailure");
-  object->flush_result.expected = nonstd::make_unexpected(ErrorCollection{});
+  object->flush_result.expected = nonstd::make_unexpected(ErrorCollectionType{});
   object->flush_result.warnings().push_back({19601, "empty failure warning"});
   REQUIRE(object->flush_result.invalid());
   REQUIRE(object->flush_result.errors().empty());
@@ -513,7 +513,7 @@ TEST_CASE("CheckedFlush traversal preserves invalid custom objects with no error
   CHECK(result.warnings()[0].message.find("empty failure warning") != std::string::npos);
   CHECK(object->checked_calls == 1);
   CHECK(laterStore->checked_calls == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CheckedFlush calls a shared store once for each distinct object", "[simplnx][CheckedFlush]")
@@ -532,7 +532,7 @@ TEST_CASE("CheckedFlush calls a shared store once for each distinct object", "[s
   CHECK(result.warnings()[1].code == 19201);
   CHECK(result.warnings()[0].message.find("shared backing warning") != std::string::npos);
   CHECK(result.warnings()[1].message.find("shared backing warning") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CheckedFlush stops at the first failed object before custom checked exceptions", "[simplnx][CheckedFlush]")
@@ -585,7 +585,7 @@ TEST_CASE("CheckedFlush stops at the first failed object before custom checked e
     CHECK(result.errors()[0].message.find(std::to_string(throwingObject->getId())) != std::string::npos);
     REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings()[0].code == 19303);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -619,7 +619,7 @@ TEST_CASE("CheckedFlush reports a moved-from numeric store without changing obje
   CHECK(sourceStore->getValue(0) == 7);
 
   REQUIRE(sourcePtr->setDataStore(sourceStore).valid());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CheckedFlush reports a missing list store from the public setter", "[simplnx][CheckedFlush]")
@@ -640,7 +640,7 @@ TEST_CASE("CheckedFlush reports a missing list store from the public setter", "[
   CHECK(result.errors()[0].message.find("Neighbors") != std::string::npos);
 
   listPtr->setStore(store);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CheckedFlush preserves legacy void failure behavior", "[simplnx][CheckedFlush]")
@@ -672,7 +672,7 @@ TEST_CASE("CheckedFlush preserves legacy void failure behavior", "[simplnx][Chec
     CHECK(firstStore->flush_calls == 1);
     CHECK(laterStore->legacy_calls == 0);
     CHECK(laterStore->checked_calls == 0);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -689,5 +689,5 @@ TEST_CASE("CheckedFlush leaves legacy success separate from checked overrides", 
   CHECK(numericStore->legacy_calls == 1);
   CHECK(numericStore->checked_calls == 0);
   CHECK(listStore->checked_calls == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

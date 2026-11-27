@@ -11,14 +11,14 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT SharedFeatureFaceInputValues
 {
-  DataPath TriangleGeometryPath;
+  DataPath triangle_geometry_path;
 
-  DataPath FaceLabelsArrayPath;
-  DataPath FeatureFaceIdsArrayPath;
-  DataPath GrainBoundaryAttributeMatrixPath;
-  DataPath FeatureFaceLabelsArrayPath;
-  DataPath FeatureFaceNumTrianglesArrayPath;
-  bool ShouldRandomizeFeatureIds{};
+  DataPath face_labels_array_path;
+  DataPath feature_face_ids_array_path;
+  DataPath grain_boundary_attribute_matrix_path;
+  DataPath feature_face_labels_array_path;
+  DataPath feature_face_num_triangles_array_path;
+  bool should_randomize_feature_ids{};
 };
 
 /**

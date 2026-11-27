@@ -42,8 +42,8 @@ struct RecursiveGaussianPassOptions
   static constexpr uint32 k_AdaptiveStagingNumerator = 1;
   static constexpr uint32 k_AdaptiveStagingDenominator = 8;
   static constexpr usize k_Default2DResidentLimit = 64ULL * 1024ULL * 1024ULL;
-  usize stagingByteBudget = k_FallbackStagingBytes;
-  bool useInMemoryFastPath = true;
+  usize staging_byte_budget = k_FallbackStagingBytes;
+  bool use_in_memory_fast_path = true;
 };
 
 struct RecursiveGaussianPlaneAxis
@@ -52,7 +52,7 @@ struct RecursiveGaussianPlaneAxis
   double sigma = 1.0;
   double spacing = 1.0;
   int order = 0;
-  bool normalizeAcrossScale = false;
+  bool normalize_across_scale = false;
 };
 
 namespace detail
@@ -87,16 +87,16 @@ DataStore<T>* GetRecursiveGaussianDataStore(AbstractDataStore<T>& store)
 
 struct RecursiveGaussianStoragePlan
 {
-  bool useTemporaryRecordStore = false;
-  std::string workingDataFormat;
+  bool use_temporary_record_store = false;
+  std::string working_data_format;
 };
 
 struct RecursiveGaussian2DBufferPlan
 {
-  usize blockRows = 0;
-  usize coreCols = 0;
-  usize blockCount = 0;
-  usize residentBytes = 0;
+  usize block_rows = 0;
+  usize core_cols = 0;
+  usize block_count = 0;
+  usize resident_bytes = 0;
   bool valid = false;
   bool overflow = false;
 };
@@ -118,13 +118,13 @@ inline RecursiveGaussianStoragePlan SelectRecursiveGaussianStoragePlan(IDataStor
 {
   if(inputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {.useTemporaryRecordStore = true, .workingDataFormat = std::move(inputDataFormat)};
+    return {.use_temporary_record_store = true, .working_data_format = std::move(inputDataFormat)};
   }
   if(outputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {.useTemporaryRecordStore = true, .workingDataFormat = std::move(outputDataFormat)};
+    return {.use_temporary_record_store = true, .working_data_format = std::move(outputDataFormat)};
   }
-  return {.useTemporaryRecordStore = false, .workingDataFormat = std::move(inputDataFormat)};
+  return {.use_temporary_record_store = false, .working_data_format = std::move(inputDataFormat)};
 }
 
 /**
@@ -134,11 +134,11 @@ inline RecursiveGaussianStoragePlan SelectRecursiveGaussianStoragePlan(IDataStor
  */
 inline std::string SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType inputStoreType, std::string inputDataFormat, IDataStore::StoreType outputStoreType, std::string outputDataFormat)
 {
-  return SelectRecursiveGaussianStoragePlan(inputStoreType, std::move(inputDataFormat), outputStoreType, std::move(outputDataFormat)).workingDataFormat;
+  return SelectRecursiveGaussianStoragePlan(inputStoreType, std::move(inputDataFormat), outputStoreType, std::move(outputDataFormat)).working_data_format;
 }
 
 template <class SrcT>
-usize ComputeRecursiveGaussianZBatchRowCount(const SizeVec3& dims, usize stagingByteBudget)
+usize ComputeRecursiveGaussianZBatchRowCount(const SizeVec3Type& dims, usize stagingByteBudget)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -501,21 +501,21 @@ inline bool RecursiveGaussianCheckedAdd(usize left, usize right, usize& sum) noe
 struct LaplacianRecursiveGaussianResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseLaplacianRecursiveGaussianResidentState(const SizeVec3& dims)
+inline bool ShouldUseLaplacianRecursiveGaussianResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -530,13 +530,13 @@ Result<usize> CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes(cons
      !RecursiveGaussianCheckedAdd(sizeof(T), 2 * sizeof(float32), bytesPerValue) || !RecursiveGaussianCheckedMultiply(volumeValues, bytesPerValue, requiredBytes))
   {
     return MakeErrorResult<usize>(-8768, fmt::format("Laplacian recursive Gaussian dimensions ({}) and {}-byte input values overflow while sizing the resident input, accumulator, and work images.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<LaplacianRecursiveGaussianResidentMemoryAllocation> ReserveLaplacianRecursiveGaussianResidentWorkingMemory(const SizeVec3& dims)
+Result<LaplacianRecursiveGaussianResidentMemoryAllocation> ReserveLaplacianRecursiveGaussianResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -589,12 +589,12 @@ inline RecursiveGaussian2DBufferPlan BuildRecursiveGaussian2DBufferPlan(usize di
       plan.overflow = true;
       return plan;
     }
-    plan.blockRows = std::min(dimY, (residentLimit - fixedAndState) / bytesPerRow);
-    if(plan.blockRows < minimumRows)
+    plan.block_rows = std::min(dimY, (residentLimit - fixedAndState) / bytesPerRow);
+    if(plan.block_rows < minimumRows)
     {
       return {};
     }
-    plan.coreCols = dimX;
+    plan.core_cols = dimX;
   }
   else
   {
@@ -605,25 +605,25 @@ inline RecursiveGaussian2DBufferPlan BuildRecursiveGaussian2DBufferPlan(usize di
       plan.overflow = true;
       return plan;
     }
-    plan.blockRows = minimumRows;
-    plan.coreCols = std::min(dimX, (residentLimit - k_FixedBytes) / bytesPerColumn);
-    if(plan.coreCols == 0)
+    plan.block_rows = minimumRows;
+    plan.core_cols = std::min(dimX, (residentLimit - k_FixedBytes) / bytesPerColumn);
+    if(plan.core_cols == 0)
     {
       return {};
     }
   }
 
-  while(plan.blockRows > 4)
+  while(plan.block_rows > 4)
   {
-    const usize remainder = dimY % plan.blockRows;
+    const usize remainder = dimY % plan.block_rows;
     if(remainder == 0 || remainder >= 4)
     {
       break;
     }
-    --plan.blockRows;
+    --plan.block_rows;
   }
-  plan.blockCount = 1 + (dimY - 1) / plan.blockRows;
-  if(dimY - (plan.blockCount - 1) * plan.blockRows < 4)
+  plan.block_count = 1 + (dimY - 1) / plan.block_rows;
+  if(dimY - (plan.block_count - 1) * plan.block_rows < 4)
   {
     return {};
   }
@@ -631,36 +631,36 @@ inline RecursiveGaussian2DBufferPlan BuildRecursiveGaussian2DBufferPlan(usize di
   usize residentBlockValues = 0;
   usize residentBlockBytes = 0;
   usize residentRowsWithHalo = 0;
-  if(!RecursiveGaussianCheckedAdd(plan.blockRows, k_BackwardHaloRows, residentRowsWithHalo) || !RecursiveGaussianCheckedMultiply(plan.coreCols, k_StateBytesPerColumn, residentColumnsBytes) ||
-     !RecursiveGaussianCheckedMultiply(plan.coreCols, residentRowsWithHalo, residentBlockValues) || !RecursiveGaussianCheckedMultiply(residentBlockValues, blockBytesPerValue, residentBlockBytes) ||
-     !RecursiveGaussianCheckedAdd(k_FixedBytes, residentColumnsBytes, plan.residentBytes) ||
-     (plan.coreCols == dimX && !RecursiveGaussianCheckedAdd(plan.residentBytes, workerScratchBytes, plan.residentBytes)) ||
-     !RecursiveGaussianCheckedAdd(plan.residentBytes, residentBlockBytes, plan.residentBytes))
+  if(!RecursiveGaussianCheckedAdd(plan.block_rows, k_BackwardHaloRows, residentRowsWithHalo) || !RecursiveGaussianCheckedMultiply(plan.core_cols, k_StateBytesPerColumn, residentColumnsBytes) ||
+     !RecursiveGaussianCheckedMultiply(plan.core_cols, residentRowsWithHalo, residentBlockValues) || !RecursiveGaussianCheckedMultiply(residentBlockValues, blockBytesPerValue, residentBlockBytes) ||
+     !RecursiveGaussianCheckedAdd(k_FixedBytes, residentColumnsBytes, plan.resident_bytes) ||
+     (plan.core_cols == dimX && !RecursiveGaussianCheckedAdd(plan.resident_bytes, workerScratchBytes, plan.resident_bytes)) ||
+     !RecursiveGaussianCheckedAdd(plan.resident_bytes, residentBlockBytes, plan.resident_bytes))
   {
     plan = {};
     plan.overflow = true;
     return plan;
   }
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 
 inline RecursiveGaussian2DBufferPlan AlignRecursiveGaussian2DBufferPlanToChunks(RecursiveGaussian2DBufferPlan plan, usize dimX, usize dimY, const std::optional<ShapeType>& chunkShape)
 {
-  if(!plan.valid || plan.coreCols != dimX || !chunkShape.has_value() || chunkShape->size() < 3 || (*chunkShape)[0] != 1 || (*chunkShape)[1] == 0 || (*chunkShape)[1] > plan.blockRows ||
+  if(!plan.valid || plan.core_cols != dimX || !chunkShape.has_value() || chunkShape->size() < 3 || (*chunkShape)[0] != 1 || (*chunkShape)[1] == 0 || (*chunkShape)[1] > plan.block_rows ||
      (*chunkShape)[2] != dimX)
   {
     return plan;
   }
   const usize chunkRows = (*chunkShape)[1];
-  usize alignedRows = (plan.blockRows / chunkRows) * chunkRows;
+  usize alignedRows = (plan.block_rows / chunkRows) * chunkRows;
   while(alignedRows >= chunkRows && alignedRows >= 4)
   {
     const usize remainder = dimY % alignedRows;
     if(remainder == 0 || remainder >= 4)
     {
-      plan.blockRows = alignedRows;
-      plan.blockCount = 1 + (dimY - 1) / plan.blockRows;
+      plan.block_rows = alignedRows;
+      plan.block_count = 1 + (dimY - 1) / plan.block_rows;
       return plan;
     }
     alignedRows -= chunkRows;
@@ -670,12 +670,12 @@ inline RecursiveGaussian2DBufferPlan AlignRecursiveGaussian2DBufferPlanToChunks(
 
 inline usize RecursiveGaussian2DBlockBegin(usize blockIndex, const RecursiveGaussian2DBufferPlan& plan)
 {
-  return blockIndex * plan.blockRows;
+  return blockIndex * plan.block_rows;
 }
 
 inline usize RecursiveGaussian2DBlockRows(usize blockIndex, const RecursiveGaussian2DBufferPlan& plan, usize dimY)
 {
-  return std::min(plan.blockRows, dimY - RecursiveGaussian2DBlockBegin(blockIndex, plan));
+  return std::min(plan.block_rows, dimY - RecursiveGaussian2DBlockBegin(blockIndex, plan));
 }
 
 inline usize RecursiveGaussian2DXBlockValues(usize dimX, usize coreCols)
@@ -925,7 +925,7 @@ void ComputeFourRecursiveGaussianAntiCausalBlocks(nonstd::span<const SrcT> sourc
 }
 
 template <class SrcT>
-void FilterRecursiveGaussianXYPlane(nonstd::span<const SrcT> srcPlane, nonstd::span<float32> dstPlane, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass,
+void FilterRecursiveGaussianXYPlane(nonstd::span<const SrcT> srcPlane, nonstd::span<float32> dstPlane, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& pass,
                                     const RecursiveGaussianCoefficients& coefficients, const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
@@ -1062,19 +1062,19 @@ void FilterFourRecursiveGaussianXRows(nonstd::span<const SrcT> source, nonstd::s
  * each column tile.
  */
 template <class SrcT, class SrcStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass, const detail::RecursiveGaussian2DBufferPlan& plan,
+Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& pass, const detail::RecursiveGaussian2DBufferPlan& plan,
                                         CheckpointStoreT& checkpointStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
-  if(pass.axis != 1 || dims[2] != 1 || dims[0] == 0 || dims[1] < 4 || !plan.valid || plan.coreCols == 0 || plan.blockRows < 4 || plan.blockCount == 0)
+  if(pass.axis != 1 || dims[2] != 1 || dims[0] == 0 || dims[1] < 4 || !plan.valid || plan.core_cols == 0 || plan.block_rows < 4 || plan.block_count == 0)
   {
     return MakeErrorResult(-23613,
-                           fmt::format("Recursive Gaussian bounded 2D Y pass received an invalid axis, dimension, or buffer plan for dimensions ({}).", StringUtilities::formatDimensions3D(dims)));
+                           fmt::format("Recursive Gaussian bounded 2D Y pass received an invalid axis, dimension, or buffer plan for dimensions ({}).", string_utilities::FormatDimensions3D(dims)));
   }
   usize totalValues = 0;
   usize checkpointValues = 0;
-  if(!detail::RecursiveGaussianCheckedMultiply(dims[0], dims[1], totalValues) || !detail::RecursiveGaussianCheckedMultiply(plan.blockCount, plan.coreCols, checkpointValues))
+  if(!detail::RecursiveGaussianCheckedMultiply(dims[0], dims[1], totalValues) || !detail::RecursiveGaussianCheckedMultiply(plan.block_count, plan.core_cols, checkpointValues))
   {
-    return MakeErrorResult(-23614, fmt::format("Recursive Gaussian bounded 2D Y pass dimensions ({}) overflow addressable storage.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult(-23614, fmt::format("Recursive Gaussian bounded 2D Y pass dimensions ({}) overflow addressable storage.", string_utilities::FormatDimensions3D(dims)));
   }
   if(sourceStore.getSize() != totalValues || checkpointStore.getSize() < checkpointValues)
   {
@@ -1082,7 +1082,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
                                                checkpointValues, sourceStore.getSize(), checkpointStore.getSize()));
   }
 
-  const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalizeAcrossScale);
+  const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalize_across_scale);
   std::vector<SrcT> source;
   std::vector<double> causal;
   std::vector<float32> filtered;
@@ -1090,15 +1090,15 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
   std::vector<std::array<double, 4>> antiCausalStates;
 
   ThrottledMessageHandler progressThrottle(messageHandler);
-  progressThrottle.reset((plan.blockCount * 2) * (1 + (dims[0] - 1) / plan.coreCols), "Recursive Gaussian: bounded 2D Y pass");
+  progressThrottle.reset((plan.block_count * 2) * (1 + (dims[0] - 1) / plan.core_cols), "Recursive Gaussian: bounded 2D Y pass");
 
-  for(usize xBegin = 0; xBegin < dims[0]; xBegin += plan.coreCols)
+  for(usize xBegin = 0; xBegin < dims[0]; xBegin += plan.core_cols)
   {
-    const usize columnCount = std::min(plan.coreCols, dims[0] - xBegin);
+    const usize columnCount = std::min(plan.core_cols, dims[0] - xBegin);
     causalStates.assign(columnCount, {});
 
     // Forward recurrence: retain only the state immediately before every non-first block.
-    for(usize blockIndex = 0; blockIndex < plan.blockCount; ++blockIndex)
+    for(usize blockIndex = 0; blockIndex < plan.block_count; ++blockIndex)
     {
       if(shouldCancel)
       {
@@ -1106,7 +1106,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       }
       if(blockIndex > 0)
       {
-        if(Result<> result = checkpointStore.copyFromBuffer(blockIndex * plan.coreCols, nonstd::span<const detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)); result.invalid())
+        if(Result<> result = checkpointStore.copyFromBuffer(blockIndex * plan.core_cols, nonstd::span<const detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)); result.invalid())
         {
           return result;
         }
@@ -1149,7 +1149,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
     }
 
     antiCausalStates.assign(columnCount, {});
-    for(usize reverseIndex = plan.blockCount; reverseIndex > 0; --reverseIndex)
+    for(usize reverseIndex = plan.block_count; reverseIndex > 0; --reverseIndex)
     {
       if(shouldCancel)
       {
@@ -1181,7 +1181,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
       {
         std::fill(causalStates.begin(), causalStates.end(), detail::RecursiveGaussian2DCheckpoint{});
       }
-      else if(Result<> result = checkpointStore.copyIntoBuffer(blockIndex * plan.coreCols, nonstd::span<detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)); result.invalid())
+      else if(Result<> result = checkpointStore.copyIntoBuffer(blockIndex * plan.core_cols, nonstd::span<detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), columnCount)); result.invalid())
       {
         return result;
       }
@@ -1197,7 +1197,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
                                                                    nonstd::span<detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), causalStates.size()),
                                                                    nonstd::span<double>(causal.data(), causal.size()));
             detail::ComputeFourRecursiveGaussianAntiCausalBlocks<SrcT>(
-                nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount, columnCount, firstColumn, blockIndex + 1 == plan.blockCount,
+                nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount, columnCount, firstColumn, blockIndex + 1 == plan.block_count,
                 coefficients, nonstd::span<std::array<double, 4>>(antiCausalStates.data(), antiCausalStates.size()), nonstd::span<float32>(filtered.data(), filtered.size()));
           }
           else
@@ -1208,7 +1208,7 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
               detail::ComputeRecursiveGaussianCausalBlock<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), rowCount, columnCount, column, blockIndex == 0, coefficients,
                                                                 causalStates[column], nonstd::span<double>(causal.data(), causal.size()));
               detail::ComputeRecursiveGaussianAntiCausalBlock<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount,
-                                                                    columnCount, column, blockIndex + 1 == plan.blockCount, coefficients, antiCausalStates[column],
+                                                                    columnCount, column, blockIndex + 1 == plan.block_count, coefficients, antiCausalStates[column],
                                                                     nonstd::span<float32>(filtered.data(), filtered.size()));
             }
           }
@@ -1249,18 +1249,18 @@ Result<> WriteRecursiveGaussian2DBlock(StoreT& store, usize dimX, usize yBegin, 
 }
 
 template <class SrcT, class SrcStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, CheckpointStoreT& checkpointStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass,
+Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& pass,
                                              const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel, SinkT&& sink)
 {
-  const usize blockValues = detail::RecursiveGaussian2DXBlockValues(dims[0], plan.coreCols);
-  const usize blockCount = detail::RecursiveGaussian2DXBlockCount(dims[0], plan.coreCols);
+  const usize blockValues = detail::RecursiveGaussian2DXBlockValues(dims[0], plan.core_cols);
+  const usize blockCount = detail::RecursiveGaussian2DXBlockCount(dims[0], plan.core_cols);
   if(dims[0] - (blockCount - 1) * blockValues < 4 || checkpointStore.getSize() < blockCount)
   {
     return MakeErrorResult(
         -23623, fmt::format("Recursive Gaussian bounded 2D X tiles cannot represent a four-value recurrence block for width {} with {} checkpoint records.", dims[0], checkpointStore.getSize()));
   }
 
-  const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalizeAcrossScale);
+  const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalize_across_scale);
   std::vector<SrcT> source;
   std::vector<double> causal;
   std::vector<float32> filtered;
@@ -1332,26 +1332,26 @@ Result<> RecursiveGaussian2DTiledXAxisToSink(const SrcStoreT& sourceStore, Check
 }
 
 template <class SrcT, class SrcStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& pass, const detail::RecursiveGaussian2DBufferPlan& plan,
+Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& pass, const detail::RecursiveGaussian2DBufferPlan& plan,
                                         CheckpointStoreT& checkpointStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
-  if(pass.axis != 0 || dims[2] != 1 || dims[0] < 4 || dims[1] == 0 || !plan.valid || plan.blockRows == 0)
+  if(pass.axis != 0 || dims[2] != 1 || dims[0] < 4 || dims[1] == 0 || !plan.valid || plan.block_rows == 0)
   {
     return MakeErrorResult(-23616,
-                           fmt::format("Recursive Gaussian bounded 2D X pass received an invalid axis, dimension, or buffer plan for dimensions ({}).", StringUtilities::formatDimensions3D(dims)));
+                           fmt::format("Recursive Gaussian bounded 2D X pass received an invalid axis, dimension, or buffer plan for dimensions ({}).", string_utilities::FormatDimensions3D(dims)));
   }
   usize totalValues = 0;
   if(!detail::RecursiveGaussianCheckedMultiply(dims[0], dims[1], totalValues) || sourceStore.getSize() != totalValues)
   {
-    return MakeErrorResult(-23617, fmt::format("Recursive Gaussian bounded 2D X pass expected {} values for dimensions ({}), but received {}.", totalValues, StringUtilities::formatDimensions3D(dims),
+    return MakeErrorResult(-23617, fmt::format("Recursive Gaussian bounded 2D X pass expected {} values for dimensions ({}), but received {}.", totalValues, string_utilities::FormatDimensions3D(dims),
                                                sourceStore.getSize()));
   }
-  if(plan.coreCols != dims[0])
+  if(plan.core_cols != dims[0])
   {
     return RecursiveGaussian2DTiledXAxisToSink<SrcT>(sourceStore, checkpointStore, dims, pass, plan, shouldCancel, std::forward<SinkT>(sink));
   }
 
-  usize rowsPerBlock = plan.blockRows;
+  usize rowsPerBlock = plan.block_rows;
   const std::optional<ShapeType> sourceChunkShape = sourceStore.getChunkShape();
   if(sourceChunkShape.has_value() && sourceChunkShape->size() >= 3 && (*sourceChunkShape)[0] == 1 && (*sourceChunkShape)[1] > 0 && (*sourceChunkShape)[1] <= rowsPerBlock &&
      (*sourceChunkShape)[2] == dims[0])
@@ -1360,7 +1360,7 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
   }
   std::vector<SrcT> source;
   std::vector<float32> filtered;
-  const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalizeAcrossScale);
+  const detail::RecursiveGaussianCoefficients coefficients = detail::ComputeRecursiveGaussianCoefficients(pass.sigma, pass.spacing, pass.order, pass.normalize_across_scale);
 
   ThrottledMessageHandler progressThrottle(messageHandler);
   progressThrottle.reset(1 + (dims[1] - 1) / rowsPerBlock, "Recursive Gaussian: bounded 2D X pass");
@@ -1378,7 +1378,7 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
     {
       return result;
     }
-    const SizeVec3 blockDims{dims[0], rowCount, 1};
+    const SizeVec3Type blockDims{dims[0], rowCount, 1};
     detail::FilterFourRecursiveGaussianXRows<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<float32>(filtered.data(), filtered.size()), blockDims[0], blockDims[1],
                                                    coefficients, shouldCancel);
     if(shouldCancel)
@@ -1395,7 +1395,7 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
 }
 
 template <class SrcT, class SrcStoreT, class WorkStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DXYCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& firstPass,
+Result<> RecursiveGaussian2DXYCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& firstPass,
                                             const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel,
                                             const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
@@ -1414,7 +1414,7 @@ Result<> RecursiveGaussian2DXYCascadeToSink(const SrcStoreT& sourceStore, WorkSt
 }
 
 template <class SrcT, class SrcStoreT, class WorkStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& firstPass,
+Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& firstPass,
                                             const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel,
                                             const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
@@ -1422,7 +1422,7 @@ Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkSt
   {
     return MakeErrorResult(-23619, fmt::format("Recursive Gaussian bounded 2D YX cascade requires axes 1 then 0, but received axes {} then {}.", firstPass.axis, secondPass.axis));
   }
-  if(plan.coreCols != dims[0])
+  if(plan.core_cols != dims[0])
   {
     auto workSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> values) {
       return WriteRecursiveGaussian2DBlock<float32>(workStore, dims[0], yBegin, xBegin, rowCount, columnCount, nonstd::span<const float32>(values.data(), values.size()));
@@ -1439,11 +1439,11 @@ Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkSt
     return RecursiveGaussian2DXAxisToSink<float32>(workStore, dims, secondPass, plan, checkpointStore, shouldCancel, messageHandler, terminalSink);
   }
   const detail::RecursiveGaussianCoefficients secondCoefficients =
-      detail::ComputeRecursiveGaussianCoefficients(secondPass.sigma, secondPass.spacing, secondPass.order, secondPass.normalizeAcrossScale);
+      detail::ComputeRecursiveGaussianCoefficients(secondPass.sigma, secondPass.spacing, secondPass.order, secondPass.normalize_across_scale);
   std::vector<float32> secondOutput;
   auto firstSink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> firstOutput) -> Result<> {
     secondOutput.resize(firstOutput.size());
-    const SizeVec3 blockDims{dims[0], rowCount, 1};
+    const SizeVec3Type blockDims{dims[0], rowCount, 1};
     detail::FilterFourRecursiveGaussianXRows<float32>(nonstd::span<const float32>(firstOutput.data(), firstOutput.size()), nonstd::span<float32>(secondOutput.data(), secondOutput.size()),
                                                       blockDims[0], blockDims[1], secondCoefficients, shouldCancel);
     if(shouldCancel)
@@ -1466,7 +1466,7 @@ Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkSt
  * cancellation check has succeeded, so cancellation never exposes a partially computed plane.
  */
 template <class SrcT, class SrcStoreT, class SinkT>
-Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& firstPass, const RecursiveGaussianPlaneAxis& secondPass,
+Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& firstPass, const RecursiveGaussianPlaneAxis& secondPass,
                                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
   if(firstPass.axis > 1 || secondPass.axis > 1 || firstPass.axis == secondPass.axis)
@@ -1480,29 +1480,29 @@ Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeV
   {
     return MakeErrorResult(-23603,
                            fmt::format("Recursive Gaussian XY plane cascade requires at least 4 pixels along each filtered axis. Dimensions are ({}); axis {} has {} pixels and axis {} has {} pixels.",
-                                       StringUtilities::formatDimensions3D(dims), firstPass.axis, firstLineLength, secondPass.axis, secondLineLength));
+                                       string_utilities::FormatDimensions3D(dims), firstPass.axis, firstLineLength, secondPass.axis, secondLineLength));
   }
 
   usize planeValues = 0;
   usize totalValues = 0;
   if(!detail::RecursiveGaussianCheckedMultiply(dims[0], dims[1], planeValues) || !detail::RecursiveGaussianCheckedMultiply(planeValues, dims[2], totalValues))
   {
-    return MakeErrorResult(-23601, fmt::format("Recursive Gaussian XY plane cascade dimensions ({}) overflow the addressable value count.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult(-23601, fmt::format("Recursive Gaussian XY plane cascade dimensions ({}) overflow the addressable value count.", string_utilities::FormatDimensions3D(dims)));
   }
   if(planeValues == 0 || dims[2] == 0 || src.getSize() != totalValues)
   {
     return MakeErrorResult(-23602,
                            fmt::format("Recursive Gaussian XY plane cascade expected {} scalar values for dimensions ({}), but the source store contains {}. Ensure the source is a single-component "
                                        "array whose tuple shape matches the Image Geometry.",
-                                       totalValues, StringUtilities::formatDimensions3D(dims), src.getSize()));
+                                       totalValues, string_utilities::FormatDimensions3D(dims), src.getSize()));
   }
 
   std::vector<SrcT> srcPlane(planeValues);
   std::vector<float32> firstPlane(planeValues);
   std::vector<float32> secondPlane(planeValues);
-  const detail::RecursiveGaussianCoefficients firstCoefficients = detail::ComputeRecursiveGaussianCoefficients(firstPass.sigma, firstPass.spacing, firstPass.order, firstPass.normalizeAcrossScale);
+  const detail::RecursiveGaussianCoefficients firstCoefficients = detail::ComputeRecursiveGaussianCoefficients(firstPass.sigma, firstPass.spacing, firstPass.order, firstPass.normalize_across_scale);
   const detail::RecursiveGaussianCoefficients secondCoefficients =
-      detail::ComputeRecursiveGaussianCoefficients(secondPass.sigma, secondPass.spacing, secondPass.order, secondPass.normalizeAcrossScale);
+      detail::ComputeRecursiveGaussianCoefficients(secondPass.sigma, secondPass.spacing, secondPass.order, secondPass.normalize_across_scale);
 
   ThrottledMessageHandler progressThrottle(messageHandler);
   progressThrottle.reset(dims[2], "Recursive Gaussian: filtering XY planes");
@@ -1545,7 +1545,7 @@ Result<> RecursiveGaussianXYPlaneCascadeToSink(const SrcStoreT& src, const SizeV
 // intermediate). `src` may alias `dst` (both float32) for in-place later passes — each line/plane/slab is fully read
 // before it is written. The filtered axis must have >= 4 pixels (caller-validated).
 template <class SrcT, class SrcStoreT, class DstStoreT>
-Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3& dims, uint32 axis, double sigma, double spacing, int order, bool normalizeAcrossScale,
+Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3Type& dims, uint32 axis, double sigma, double spacing, int order, bool normalizeAcrossScale,
                                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const RecursiveGaussianPassOptions& options = {})
 {
   const int64 nX = static_cast<int64>(dims[0]);
@@ -1570,7 +1570,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   };
   const auto* inMemorySrcPtr = detail::GetRecursiveGaussianDataStore<SrcT>(src);
   auto* inMemoryDstPtr = detail::GetRecursiveGaussianDataStore<float32>(dst);
-  if(options.useInMemoryFastPath && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr && axis == 0)
+  if(options.use_in_memory_fast_path && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr && axis == 0)
   {
     if(shouldCancel)
     {
@@ -1582,7 +1582,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
     detail::FilterFourRecursiveGaussianXRows(srcValues, dstValues, static_cast<usize>(nX), static_cast<usize>(ny * nz), coeffs, shouldCancel, sendThreadSafeProgress);
     return {};
   }
-  if(options.useInMemoryFastPath && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr && axis != 0)
+  if(options.use_in_memory_fast_path && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr && axis != 0)
   {
     if(shouldCancel)
     {
@@ -1787,7 +1787,7 @@ Result<> RecursiveGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const S
   // Z pass (3D only): stage consecutive Y rows across every Z plane. A batch converts many small per-row HDF5
   // operations into one contiguous read and write per Z plane while retaining a fixed memory budget. The one-row
   // minimum is an indivisible XZ staging unit and may exceed the requested budget for exceptionally wide/deep data.
-  usize stagingByteBudget = options.stagingByteBudget;
+  usize stagingByteBudget = options.staging_byte_budget;
   CacheMemoryBudgetManager::WorkingMemoryReservation stagingReservation;
   if(stagingByteBudget == RecursiveGaussianPassOptions::k_FallbackStagingBytes)
   {
@@ -2015,7 +2015,7 @@ inline Result<> SetSquaredOverSpacing(AbstractDataStore<float32>& dst, const Abs
   }
   const auto* inMemorySrcPtr = dynamic_cast<const DataStore<float32>*>(&src);
   auto* inMemoryDstPtr = dynamic_cast<DataStore<float32>*>(&dst);
-  if(!options.forceBuffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
+  if(!options.force_buffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
   {
     const nonstd::span<const float32> srcValues = inMemorySrcPtr->createSpan();
     nonstd::span<float32> dstValues = inMemoryDstPtr->createSpan();
@@ -2031,18 +2031,18 @@ inline Result<> SetSquaredOverSpacing(AbstractDataStore<float32>& dst, const Abs
     return {};
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
-      total, sizeof(float32), options.targetScratchBytes,
-      {{.storeType = src.getStoreType(), .tupleShape = src.getTupleShape(), .numComponents = src.getNumberOfComponents(), .name = "squared-derivative input"},
-       {.storeType = dst.getStoreType(),
-        .tupleShape = dst.getTupleShape(),
-        .numComponents = dst.getNumberOfComponents(),
+      total, sizeof(float32), options.target_scratch_bytes,
+      {{.store_type = src.getStoreType(), .tuple_shape = src.getTupleShape(), .num_components = src.getNumberOfComponents(), .name = "squared-derivative input"},
+       {.store_type = dst.getStoreType(),
+        .tuple_shape = dst.getTupleShape(),
+        .num_components = dst.getNumberOfComponents(),
         .name = "squared-derivative output",
         .access = detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
-  const usize batchValues = planResult.value().batchValues;
+  const usize batchValues = planResult.value().batch_values;
   std::vector<float32> buf(std::min(batchValues, total));
   for(usize start = 0; start < total;)
   {
@@ -2082,7 +2082,7 @@ inline Result<> AccumulateSquaredOverSpacing(AbstractDataStore<float32>& acc, co
   }
   auto* inMemoryAccPtr = dynamic_cast<DataStore<float32>*>(&acc);
   const auto* inMemoryDerivPtr = dynamic_cast<const DataStore<float32>*>(&deriv);
-  if(!options.forceBuffered && inMemoryAccPtr != nullptr && inMemoryDerivPtr != nullptr)
+  if(!options.force_buffered && inMemoryAccPtr != nullptr && inMemoryDerivPtr != nullptr)
   {
     nonstd::span<float32> accValues = inMemoryAccPtr->createSpan();
     const nonstd::span<const float32> derivValues = inMemoryDerivPtr->createSpan();
@@ -2098,18 +2098,18 @@ inline Result<> AccumulateSquaredOverSpacing(AbstractDataStore<float32>& acc, co
     return {};
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
-      total, sizeof(float32) * 2, options.targetScratchBytes,
-      {{.storeType = acc.getStoreType(),
-        .tupleShape = acc.getTupleShape(),
-        .numComponents = acc.getNumberOfComponents(),
+      total, sizeof(float32) * 2, options.target_scratch_bytes,
+      {{.store_type = acc.getStoreType(),
+        .tuple_shape = acc.getTupleShape(),
+        .num_components = acc.getNumberOfComponents(),
         .name = "gradient accumulator",
         .access = detail::PointwiseEndpointLayout::Access::Write},
-       {.storeType = deriv.getStoreType(), .tupleShape = deriv.getTupleShape(), .numComponents = deriv.getNumberOfComponents(), .name = "gradient derivative"}});
+       {.store_type = deriv.getStoreType(), .tuple_shape = deriv.getTupleShape(), .num_components = deriv.getNumberOfComponents(), .name = "gradient derivative"}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
-  const usize batchValues = planResult.value().batchValues;
+  const usize batchValues = planResult.value().batch_values;
   std::vector<float32> a(std::min(batchValues, total));
   std::vector<float32> b(std::min(batchValues, total));
   for(usize start = 0; start < total;)
@@ -2157,7 +2157,7 @@ inline Result<> SetScaledDerivative(AbstractDataStore<float32>& dst, const Abstr
   }
   const auto* inMemorySrcPtr = dynamic_cast<const DataStore<float32>*>(&src);
   auto* inMemoryDstPtr = dynamic_cast<DataStore<float32>*>(&dst);
-  if(!options.forceBuffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
+  if(!options.force_buffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
   {
     const nonstd::span<const float32> srcValues = inMemorySrcPtr->createSpan();
     nonstd::span<float32> dstValues = inMemoryDstPtr->createSpan();
@@ -2184,18 +2184,18 @@ inline Result<> SetScaledDerivative(AbstractDataStore<float32>& dst, const Abstr
     return {};
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
-      total, sizeof(float32), options.targetScratchBytes,
-      {{.storeType = src.getStoreType(), .tupleShape = src.getTupleShape(), .numComponents = src.getNumberOfComponents(), .name = "scaled-derivative input"},
-       {.storeType = dst.getStoreType(),
-        .tupleShape = dst.getTupleShape(),
-        .numComponents = dst.getNumberOfComponents(),
+      total, sizeof(float32), options.target_scratch_bytes,
+      {{.store_type = src.getStoreType(), .tuple_shape = src.getTupleShape(), .num_components = src.getNumberOfComponents(), .name = "scaled-derivative input"},
+       {.store_type = dst.getStoreType(),
+        .tuple_shape = dst.getTupleShape(),
+        .num_components = dst.getNumberOfComponents(),
         .name = "scaled-derivative output",
         .access = detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
-  const usize batchValues = planResult.value().batchValues;
+  const usize batchValues = planResult.value().batch_values;
   std::vector<float32> buf(std::min(batchValues, total));
   for(usize start = 0; start < total;)
   {
@@ -2232,7 +2232,7 @@ inline Result<> AccumulateScaledDerivative(AbstractDataStore<float32>& acc, cons
   }
   auto* inMemoryAccPtr = dynamic_cast<DataStore<float32>*>(&acc);
   const auto* inMemoryDerivPtr = dynamic_cast<const DataStore<float32>*>(&deriv);
-  if(!options.forceBuffered && inMemoryAccPtr != nullptr && inMemoryDerivPtr != nullptr)
+  if(!options.force_buffered && inMemoryAccPtr != nullptr && inMemoryDerivPtr != nullptr)
   {
     nonstd::span<float32> accValues = inMemoryAccPtr->createSpan();
     const nonstd::span<const float32> derivValues = inMemoryDerivPtr->createSpan();
@@ -2259,18 +2259,18 @@ inline Result<> AccumulateScaledDerivative(AbstractDataStore<float32>& acc, cons
     return {};
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
-      total, sizeof(float32) * 2, options.targetScratchBytes,
-      {{.storeType = acc.getStoreType(),
-        .tupleShape = acc.getTupleShape(),
-        .numComponents = acc.getNumberOfComponents(),
+      total, sizeof(float32) * 2, options.target_scratch_bytes,
+      {{.store_type = acc.getStoreType(),
+        .tuple_shape = acc.getTupleShape(),
+        .num_components = acc.getNumberOfComponents(),
         .name = "Laplacian accumulator",
         .access = detail::PointwiseEndpointLayout::Access::Write},
-       {.storeType = deriv.getStoreType(), .tupleShape = deriv.getTupleShape(), .numComponents = deriv.getNumberOfComponents(), .name = "Laplacian derivative"}});
+       {.store_type = deriv.getStoreType(), .tuple_shape = deriv.getTupleShape(), .num_components = deriv.getNumberOfComponents(), .name = "Laplacian derivative"}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
-  const usize batchValues = planResult.value().batchValues;
+  const usize batchValues = planResult.value().batch_values;
   std::vector<float32> a(std::min(batchValues, total));
   std::vector<float32> b(std::min(batchValues, total));
   for(usize start = 0; start < total;)
@@ -2355,7 +2355,7 @@ Result<> MaterializeGaussianTemporaryStore(DstStoreT& destination, const detail:
 inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::atomic_bool& shouldCancel, const detail::PointwiseExecutionOptions& options = {})
 {
   const usize total = store.getSize();
-  if(auto* inMemoryStorePtr = dynamic_cast<DataStore<float32>*>(&store); !options.forceBuffered && inMemoryStorePtr != nullptr)
+  if(auto* inMemoryStorePtr = dynamic_cast<DataStore<float32>*>(&store); !options.force_buffered && inMemoryStorePtr != nullptr)
   {
     nonstd::span<float32> values = inMemoryStorePtr->createSpan();
     ParallelDataAlgorithm parallelAlgorithm;
@@ -2368,17 +2368,17 @@ inline Result<> SqrtStoreInPlace(AbstractDataStore<float32>& store, const std::a
     });
     return {};
   }
-  Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(total, sizeof(float32), options.targetScratchBytes,
-                                                                                                  {{.storeType = store.getStoreType(),
-                                                                                                    .tupleShape = store.getTupleShape(),
-                                                                                                    .numComponents = store.getNumberOfComponents(),
+  Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(total, sizeof(float32), options.target_scratch_bytes,
+                                                                                                  {{.store_type = store.getStoreType(),
+                                                                                                    .tuple_shape = store.getTupleShape(),
+                                                                                                    .num_components = store.getNumberOfComponents(),
                                                                                                     .name = "gradient square-root output",
                                                                                                     .access = detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
-  const usize batchValues = planResult.value().batchValues;
+  const usize batchValues = planResult.value().batch_values;
   std::vector<float32> buf(std::min(batchValues, total));
   for(usize start = 0; start < total;)
   {
@@ -2415,7 +2415,7 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
   }
   const auto* inMemorySrcPtr = dynamic_cast<const DataStore<float32>*>(&src);
   auto* inMemoryDstPtr = dynamic_cast<DataStore<T>*>(&dst);
-  if(!options.forceBuffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
+  if(!options.force_buffered && inMemorySrcPtr != nullptr && inMemoryDstPtr != nullptr)
   {
     const nonstd::span<const float32> srcValues = inMemorySrcPtr->createSpan();
     nonstd::span<T> dstValues = inMemoryDstPtr->createSpan();
@@ -2430,14 +2430,14 @@ Result<> CastFloat32StoreTo(const AbstractDataStore<float32>& src, AbstractDataS
     return {};
   }
   Result<detail::PointwiseBatchPlan> planResult = detail::MakeRecursiveGaussianPostprocessingPlan(
-      total, sizeof(float32) + sizeof(T), options.targetScratchBytes,
+      total, sizeof(float32) + sizeof(T), options.target_scratch_bytes,
       {{src.getStoreType(), src.getTupleShape(), src.getNumberOfComponents(), "smoothing cast input"},
        {dst.getStoreType(), dst.getTupleShape(), dst.getNumberOfComponents(), "smoothing cast output", detail::PointwiseEndpointLayout::Access::Write}});
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
-  const usize batchValues = planResult.value().batchValues;
+  const usize batchValues = planResult.value().batch_values;
   std::vector<float32> s(std::min(batchValues, total));
   std::vector<T> d(std::min(batchValues, total));
   for(usize start = 0; start < total;)

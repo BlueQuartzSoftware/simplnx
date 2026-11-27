@@ -17,7 +17,7 @@ namespace detail
 {
 static inline constexpr StringLiteralType k_DilateString = "Dilate";
 static inline constexpr StringLiteralType k_ErodeString = "Erode";
-static inline const ChoicesParameter::Choices k_OperationChoices = {k_DilateString, k_ErodeString};
+static inline const ChoicesParameter::ChoicesType k_OperationChoices = {k_DilateString, k_ErodeString};
 
 static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
@@ -29,14 +29,14 @@ static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
  */
 struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 {
-  ChoicesParameter::ValueType Operation{};
-  int32 NumIterations{};
-  bool XDirOn{};
-  bool YDirOn{};
-  bool ZDirOn{};
-  DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-  DataPath InputImageGeometry;
+  ChoicesParameter::ValueType operation{};
+  int32 num_iterations{};
+  bool x_dir_on{};
+  bool y_dir_on{};
+  bool z_dir_on{};
+  DataPath feature_ids_array_path;
+  MultiArraySelectionParameter::ValueType ignored_data_array_paths;
+  DataPath input_image_geometry;
 };
 
 /**

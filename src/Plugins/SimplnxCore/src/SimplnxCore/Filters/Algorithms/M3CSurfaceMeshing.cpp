@@ -70,10 +70,10 @@ public:
     }
 
     TemporaryRecordStoreConfig config;
-    config.recordSize = sizeof(T);
-    config.maxRecordsPerBatch = recordsPerPage;
-    config.initialRecordCount = recordCount;
-    auto storeResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+    config.record_size = sizeof(T);
+    config.max_records_per_batch = recordsPerPage;
+    config.initial_record_count = recordCount;
+    auto storeResult = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
 
     std::unique_ptr<ITemporaryRecordStore> store;
     if(storeResult.valid())
@@ -2838,7 +2838,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // internal representation that is one negative ghost label paired with maxGrainId, which
   // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
   // means the output TriangleGeom is sized from the surviving count and never over-allocated.
-  if(inputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
+  if(inputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     messageHandler.sendInfoMessage("Omitting bounding box skin faces...");
 
@@ -2948,7 +2948,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // triangles (see sharpenBoundingBoxEdges). Runs on the scratch vectors, so the output TriangleGeom is
   // sized from the surviving count exactly as for the skin prune above.
   SharpEdgeResult sharpEdges;
-  if(inputValues->SharpBoundingBoxEdges)
+  if(inputValues->sharp_bounding_box_edges)
   {
     messageHandler.sendInfoMessage("Sharpening bounding box edges...");
     sharpEdges = SharpenBoundingBoxEdges(triangles, mCubeID, nodeType, 7 * numSites, nodeCoords, dims);
@@ -3002,7 +3002,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     return r;
   };
 
-  auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(inputValues->TriangleGeometryPath);
+  auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(inputValues->triangle_geometry_path);
   Result<> resizeResult = triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
   if(resizeResult.invalid())
   {
@@ -3026,8 +3026,8 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
   auto& triStore = triangleGeom.getFaces()->getDataStoreRef();
-  auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(inputValues->FaceLabelsDataPath).getDataStoreRef();
-  auto& nodeTypesOut = dataStructure.getDataRefAs<Int8Array>(inputValues->NodeTypesDataPath).getDataStoreRef();
+  auto& faceLabels = dataStructure.getDataRefAs<Int32ArrayType>(inputValues->face_labels_data_path).getDataStoreRef();
+  auto& nodeTypesOut = dataStructure.getDataRefAs<Int8ArrayType>(inputValues->node_types_data_path).getDataStoreRef();
   resizeResult = faceLabels.resizeTuples({static_cast<usize>(nTriangleFinal)});
   if(resizeResult.invalid())
   {
@@ -3076,18 +3076,18 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   // Transfer selected arrays to both face sides. Each side uses a source cell
   // whose working label matches that side. TupleTransfer skips exterior sides.
-  if(!inputValues->SelectedCellDataArrayPaths.empty() || !inputValues->SelectedFeatureDataArrayPaths.empty())
+  if(!inputValues->selected_cell_data_array_paths.empty() || !inputValues->selected_feature_data_array_paths.empty())
   {
     messageHandler.sendInfoMessage("Transferring attribute arrays to the mesh faces...");
     std::vector<std::shared_ptr<AbstractTupleTransfer>> transfers;
-    for(usize i = 0; i < inputValues->SelectedCellDataArrayPaths.size(); i++)
+    for(usize i = 0; i < inputValues->selected_cell_data_array_paths.size(); i++)
     {
-      AddTupleTransferInstance(dataStructure, inputValues->SelectedCellDataArrayPaths[i], inputValues->CreatedDataArrayPaths[i], transfers);
+      AddTupleTransferInstance(dataStructure, inputValues->selected_cell_data_array_paths[i], inputValues->created_data_array_paths[i], transfers);
     }
-    const usize numCellArrays = inputValues->SelectedCellDataArrayPaths.size();
-    for(usize i = 0; i < inputValues->SelectedFeatureDataArrayPaths.size(); i++)
+    const usize numCellArrays = inputValues->selected_cell_data_array_paths.size();
+    for(usize i = 0; i < inputValues->selected_feature_data_array_paths.size(); i++)
     {
-      AddFeatureTupleTransferInstance(dataStructure, inputValues->SelectedFeatureDataArrayPaths[i], inputValues->CreatedDataArrayPaths[numCellArrays + i], inputValues->FeatureIdsArrayPath, transfers);
+      AddFeatureTupleTransferInstance(dataStructure, inputValues->selected_feature_data_array_paths[i], inputValues->created_data_array_paths[numCellArrays + i], inputValues->feature_ids_array_path, transfers);
     }
 
     for(int64 i = 0; i < nTriangleFinal; i++)
@@ -3117,17 +3117,17 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   // M3C does not guarantee globally consistent normals. Optional repair uses
   // triangle connectivity to make winding consistent with FaceLabels.
-  if(inputValues->RepairTriangleWinding)
+  if(inputValues->repair_triangle_winding)
   {
     messageHandler.sendInfoMessage("Generating connectivity and triangle neighbors...");
     triangleGeom.findElementNeighbors(true);
     const auto optionalId = triangleGeom.getElementNeighborsId();
     if(optionalId.has_value())
     {
-      const auto& connectivity = dataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+      const auto& connectivity = dataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
       messageHandler.sendInfoMessage("Repairing windings...");
-      Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                                       dataStructure.getDataAs<Int32Array>(inputValues->FaceLabelsDataPath)->getDataStoreRef(), shouldCancel, messageHandler);
+      Result<> windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                                       dataStructure.getDataAs<Int32ArrayType>(inputValues->face_labels_data_path)->getDataStoreRef(), shouldCancel, messageHandler);
       dataStructure.removeData(triangleGeom.getElementContainingVertId().value());
       dataStructure.removeData(triangleGeom.getElementNeighborsId().value());
       if(windingResult.invalid())
@@ -3137,7 +3137,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  if(inputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
+  if(inputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
     // legitimately produces an empty mesh. Report it rather than returning silently. nNodes is
@@ -3145,14 +3145,14 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     // passed through so the warning stays honest if that ever changes.
     if(nTriangleFinal == 0)
     {
-      return MeshingUtilities::MakeEmptyMeshWarning(inputValues->TriangleGeometryPath, dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+      return meshing_utilities::MakeEmptyMeshWarning(inputValues->triangle_geometry_path, dataStructure.getDataRefAs<Int32ArrayType>(inputValues->feature_ids_array_path).getNumberOfTuples(),
                                                     static_cast<usize>(nNodes));
     }
     // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
     // the user otherwise gets byte-identical output with no feedback that the option had no effect.
     if(numFacesPruned == 0)
     {
-      return MeshingUtilities::MakeNoFacesPrunedWarning(inputValues->TriangleGeometryPath);
+      return meshing_utilities::MakeNoFacesPrunedWarning(inputValues->triangle_geometry_path);
     }
   }
 
@@ -3181,18 +3181,18 @@ Result<> M3CSurfaceMeshing::operator()()
       dispatchTargets.push_back(arrayPtr);
     }
   };
-  appendArray(m_InputValues->FeatureIdsArrayPath);
-  appendArray(m_InputValues->NodeTypesDataPath);
-  appendArray(m_InputValues->FaceLabelsDataPath);
-  for(const auto& path : m_InputValues->SelectedCellDataArrayPaths)
+  appendArray(m_InputValues->feature_ids_array_path);
+  appendArray(m_InputValues->node_types_data_path);
+  appendArray(m_InputValues->face_labels_data_path);
+  for(const auto& path : m_InputValues->selected_cell_data_array_paths)
   {
     appendArray(path);
   }
-  for(const auto& path : m_InputValues->CreatedDataArrayPaths)
+  for(const auto& path : m_InputValues->created_data_array_paths)
   {
     appendArray(path);
   }
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
   dispatchTargets.push_back(triangleGeom.getVertices());
   dispatchTargets.push_back(triangleGeom.getFaces());
 
@@ -3200,8 +3200,8 @@ Result<> M3CSurfaceMeshing::operator()()
   const bool useOutOfCorePath = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCorePath ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
 
-  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, true, m_ShouldCancel, m_MessageHandler);
+  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  Result<> sentinelCheck = meshing_utilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->feature_ids_array_path, true, m_ShouldCancel, m_MessageHandler);
   if(sentinelCheck.invalid())
   {
     return sentinelCheck;
@@ -3242,10 +3242,10 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return MakeErrorResult(-90544, "M3C out-of-core dispatch did not receive any dynamic storage targets.");
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->grid_geom_data_path);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
-  const SizeVec3 gridDims = imageGeom.getDimensions();
+  const SizeVec3Type gridDims = imageGeom.getDimensions();
   const usize dims[3] = {gridDims[0], gridDims[1], gridDims[2]};
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0 || dims[0] > std::numeric_limits<usize>::max() / dims[1] || dims[0] * dims[1] > std::numeric_limits<usize>::max() / dims[2])
   {
@@ -3347,8 +3347,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
   };
 
   const NeighborAccessor neighbors{.ns = numSites, .nsp = numSitesPerPlane, .x_dim = static_cast<int>(fileDim[0])};
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
   const SiteCoords siteCoords{
       .file_dim0 = fileDim[0], .file_dim1 = fileDim[1], .file_nsp = fileDim[0] * fileDim[1], .res = {spacing[0], spacing[1], spacing[2]}, .origin = {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
@@ -3687,7 +3687,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       maximumTrianglesPerCube = std::max(maximumTrianglesPerCube, static_cast<uint64>(count));
 
-      if((m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly || (m_InputValues->SharpBoundingBoxEdges && cubeTouchesBoxEdge(cube))) && count > 0)
+      if((m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly || (m_InputValues->sharp_bounding_box_edges && cubeTouchesBoxEdge(cube))) && count > 0)
       {
         std::vector<Triangle> countTriangles(static_cast<usize>(count));
         std::vector<SiteIdType> countCubes(static_cast<usize>(count));
@@ -3720,7 +3720,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         int64 survivingCount = 0;
         for(const Triangle& triangle : countTriangles)
         {
-          const bool dropTriangle = m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && skipBackgroundSkinFace(triangle);
+          const bool dropTriangle = m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && skipBackgroundSkinFace(triangle);
           const uint8 referenceFlag = dropTriangle ? uint8{1} : uint8{2};
           for(const SiteIdType nodeId : triangle.node_id)
           {
@@ -3744,7 +3744,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
           else
           {
             survivingCount++;
-            if(m_InputValues->SharpBoundingBoxEdges && touchesBoxEdge(triangle))
+            if(m_InputValues->sharp_bounding_box_edges && touchesBoxEdge(triangle))
             {
               edgeTriangles.push_back(triangle);
               edgeCubes.push_back(cube);
@@ -3761,7 +3761,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     }
   }
   SharpEdgeResult sharpEdges;
-  if(m_InputValues->SharpBoundingBoxEdges && !edgeTriangles.empty())
+  if(m_InputValues->sharp_bounding_box_edges && !edgeTriangles.empty())
   {
     // Only edge-adjacent triangles remain resident. Their count grows with the sum of the three dimensions, not the volume.
     std::unordered_map<SiteIdType, int8> edgeNodeTypes;
@@ -3893,7 +3893,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     }
     auto node = nodeResult.value();
     bool nodeChanged = false;
-    if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && node.prune_references == uint8{1} && node.type > 0)
+    if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && node.prune_references == uint8{1} && node.type > 0)
     {
       node.type = m3_c_node_type::k_Unused;
       nodeChanged = true;
@@ -3922,7 +3922,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return compactFlushResult;
   }
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
   Result<> resizeResult = triangleGeom.resizeVertexList(static_cast<usize>(nodeTotal));
   if(resizeResult.invalid())
   {
@@ -3944,8 +3944,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     return resizeResult;
   }
   auto& faceStore = triangleGeom.getFaces()->getDataStoreRef();
-  auto& faceLabelsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath).getDataStoreRef();
-  auto& nodeTypesStore = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath).getDataStoreRef();
+  auto& faceLabelsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_data_path).getDataStoreRef();
+  auto& nodeTypesStore = m_DataStructure.getDataRefAs<Int8ArrayType>(m_InputValues->node_types_data_path).getDataStoreRef();
   resizeResult = faceLabelsStore.resizeTuples({static_cast<usize>(triangleTotal)});
   if(resizeResult.invalid())
   {
@@ -3958,15 +3958,15 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
   }
 
   std::vector<std::shared_ptr<AbstractTupleTransfer>> transfers;
-  for(usize index = 0; index < m_InputValues->SelectedCellDataArrayPaths.size(); index++)
+  for(usize index = 0; index < m_InputValues->selected_cell_data_array_paths.size(); index++)
   {
-    AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[index], m_InputValues->CreatedDataArrayPaths[index], transfers);
+    AddTupleTransferInstance(m_DataStructure, m_InputValues->selected_cell_data_array_paths[index], m_InputValues->created_data_array_paths[index], transfers);
   }
-  const usize cellArrayCount = m_InputValues->SelectedCellDataArrayPaths.size();
-  for(usize index = 0; index < m_InputValues->SelectedFeatureDataArrayPaths.size(); index++)
+  const usize cellArrayCount = m_InputValues->selected_cell_data_array_paths.size();
+  for(usize index = 0; index < m_InputValues->selected_feature_data_array_paths.size(); index++)
   {
-    AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[index], m_InputValues->CreatedDataArrayPaths[cellArrayCount + index],
-                                    m_InputValues->FeatureIdsArrayPath, transfers);
+    AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->selected_feature_data_array_paths[index], m_InputValues->created_data_array_paths[cellArrayCount + index],
+                                    m_InputValues->feature_ids_array_path, transfers);
   }
   const auto outputLabel = [maxGrainId](int spin) { return spin < 0 ? int32{-1} : (spin == maxGrainId ? int32{0} : static_cast<int32>(spin)); };
   const auto sourceCell = [&](int label, SiteIdType cube) -> Result<usize> {
@@ -4064,7 +4064,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       generated = static_cast<usize>(end);
     }
-    if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
+    if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
     {
       usize survivingCount = 0;
       for(usize index = 0; index < generated; index++)
@@ -4078,7 +4078,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       generated = survivingCount;
     }
-    if(m_InputValues->SharpBoundingBoxEdges)
+    if(m_InputValues->sharp_bounding_box_edges)
     {
       usize survivingCount = 0;
       for(usize index = 0; index < generated; index++)
@@ -4144,7 +4144,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
           return first.invalid() ? ConvertResult(std::move(first)) : ConvertResult(std::move(second));
         }
         transferValues[local] = {
-            .face_index = destination + start + local, .firstcIndex = first.value(), .secondcIndex = second.value(), .faceLabel0 = labelValues[local * 2], .faceLabel1 = labelValues[local * 2 + 1]};
+            .face_index = destination + start + local, .firstc_index = first.value(), .secondc_index = second.value(), .face_label0 = labelValues[local * 2], .face_label1 = labelValues[local * 2 + 1]};
       }
       auto faceWrite = faceStore.copyFromBuffer((destination + start) * 3, nonstd::span<const IGeometry::MeshIndexType>(faceValues.data(), count * 3));
       auto labelWrite = faceLabelsStore.copyFromBuffer((destination + start) * 2, nonstd::span<const int32>(labelValues.data(), count * 2));
@@ -4214,12 +4214,12 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     }
     candidate = end;
   }
-  if(m_InputValues->RepairTriangleWinding)
+  if(m_InputValues->repair_triangle_winding)
   {
-    auto& ioCollection = DataStoreUtilities::GetIOCollection();
+    auto& ioCollection = data_store_utilities::GetIOCollection();
     if(ioCollection.hasExternalSortCapability() && ioCollection.hasTemporaryRecordStoreCapability())
     {
-      auto result = MeshingUtilities::RepairTriangleWindingExternal(faceStore, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+      auto result = meshing_utilities::RepairTriangleWindingExternal(faceStore, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
       if(result.invalid())
       {
         return result;
@@ -4235,8 +4235,8 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       const auto optionalId = triangleGeom.getElementNeighborsId();
       if(optionalId.has_value())
       {
-        const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
-        auto result = MeshingUtilities::RepairTriangleWinding(faceStore, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
+        const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
+        auto result = meshing_utilities::RepairTriangleWinding(faceStore, connectivity, faceLabelsStore, m_ShouldCancel, m_MessageHandler);
         m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
         m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
         if(result.invalid())
@@ -4246,15 +4246,15 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
     }
   }
-  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     if(triangleTotal == 0)
     {
-      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, featureIds.getNumberOfTuples(), static_cast<usize>(nodeTotal));
+      return meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, featureIds.getNumberOfTuples(), static_cast<usize>(nodeTotal));
     }
     if(numFacesPruned == 0)
     {
-      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+      return meshing_utilities::MakeNoFacesPrunedWarning(m_InputValues->triangle_geometry_path);
     }
   }
   return {};
@@ -4263,14 +4263,14 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
 Result<> M3CSurfaceMeshing::runEntireVolume()
 {
   // M3C node coordinates require the uniform spacing of ImageGeom.
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->grid_geom_data_path);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
 
-  SizeVec3 gridDims = imageGeom.getDimensions();
+  SizeVec3Type gridDims = imageGeom.getDimensions();
   usize dims[3] = {gridDims[0], gridDims[1], gridDims[2]};
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 imgOrigin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type imgOrigin = imageGeom.getOrigin();
   const float res[3] = {spacing[0], spacing[1], spacing[2]};
   const float origin[3] = {imgOrigin[0], imgOrigin[1], imgOrigin[2]};
 
@@ -4339,14 +4339,14 @@ Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 {
   // The sliding window keeps marching-square scratch to two Z slices. Serial
   // execution matches runEntireVolume. Parallel execution can change triangulation.
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->grid_geom_data_path);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
 
-  SizeVec3 gridDims = imageGeom.getDimensions();
+  SizeVec3Type gridDims = imageGeom.getDimensions();
   usize dims[3] = {gridDims[0], gridDims[1], gridDims[2]};
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 imgOrigin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type imgOrigin = imageGeom.getOrigin();
   const float res[3] = {spacing[0], spacing[1], spacing[2]};
   const float origin[3] = {imgOrigin[0], imgOrigin[1], imgOrigin[2]};
 

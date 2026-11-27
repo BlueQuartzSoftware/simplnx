@@ -62,10 +62,10 @@ Parameters ConvertOrientationsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "Specifies the incoming orientation representation enumeration index", 0,
-                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Orientation Type",
                                                    "Specifies to which orientation representation to convert the incoming data. Specified as an enumeration index", 1,
-                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "The name of the data array with the converted orientation representation", ""));
@@ -94,7 +94,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(inputType == outputType)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
+    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
                                                             fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
@@ -104,7 +104,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 
   if(inputCompShape.size() > 1)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
+    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
                                                             fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
@@ -116,7 +116,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<size_t>(inputType)] << " should have "
             << representationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
-    return {.outputActions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
+    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
@@ -137,10 +137,10 @@ Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, co
 {
   ConvertOrientationsInputValues inputValues;
   // Replace the keys below with the variables from the header.
-  inputValues.InputOrientationArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
-  inputValues.InputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
-  inputValues.OutputOrientationArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputOrientationArrayName_Key);
-  inputValues.OutputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
+  inputValues.input_orientation_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
+  inputValues.input_type = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
+  inputValues.output_orientation_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputOrientationArrayName_Key);
+  inputValues.output_type = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
   return ConvertOrientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

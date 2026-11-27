@@ -209,7 +209,7 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
   SECTION("getTypeFromId")
   {
     hdf5::Type type = hdf5::Type::unknown;
-    REQUIRE(BlocksOnApiLock([&]() { type = hdf5::getTypeFromId(typeId); }));
+    REQUIRE(BlocksOnApiLock([&]() { type = hdf5::GetTypeFromId(typeId); }));
     REQUIRE(type == hdf5::Type::int32);
   }
 
@@ -249,8 +249,8 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
 
   SECTION("ProbeHdf5Dataset")
   {
-    std::optional<UnitTest::DatasetProbeInfo> probe;
-    REQUIRE(BlocksOnApiLock([&]() { probe = UnitTest::ProbeHdf5Dataset(tmp, "/g/d"); }));
+    std::optional<unit_test::DatasetProbeInfo> probe;
+    REQUIRE(BlocksOnApiLock([&]() { probe = unit_test::ProbeHdf5Dataset(tmp, "/g/d"); }));
     REQUIRE(probe.has_value());
   }
 
@@ -285,24 +285,24 @@ TEST_CASE("HDF5 chunk helpers self-lock their C API calls", "[simplnx][HDF5][con
     {
       std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
       const hsize_t dims = 4;
-      chunkInfo.dataspaceId = H5Screate_simple(1, &dims, nullptr);
+      chunkInfo.dataspace_id = H5Screate_simple(1, &dims, nullptr);
     }
-    REQUIRE(chunkInfo.dataspaceId > 0);
+    REQUIRE(chunkInfo.dataspace_id > 0);
     Result<> closeResult;
-    REQUIRE(BlocksOnApiLock([&]() { closeResult = dataset.closeChunkedDataset(chunkInfo); }));
+    REQUIRE(BlocksOnApiLock([&]() { closeResult = dataset.CloseChunkedDataset(chunkInfo); }));
     REQUIRE(closeResult.valid());
   }
 
   SECTION("readChunk")
   {
     hdf5::ChunkedDataInfo chunkInfo;
-    chunkInfo.dataType = H5T_NATIVE_INT32;
-    chunkInfo.datasetId = dataset.getId();
+    chunkInfo.data_type = H5T_NATIVE_INT32;
+    chunkInfo.dataset_id = dataset.getId();
     {
       std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
-      chunkInfo.dataspaceId = H5Dget_space(chunkInfo.datasetId);
+      chunkInfo.dataspace_id = H5Dget_space(chunkInfo.dataset_id);
     }
-    REQUIRE(chunkInfo.dataspaceId > 0);
+    REQUIRE(chunkInfo.dataspace_id > 0);
 
     std::vector<int32> values(4);
     Result<> readResult;
@@ -312,7 +312,7 @@ TEST_CASE("HDF5 chunk helpers self-lock their C API calls", "[simplnx][HDF5][con
     REQUIRE(values == std::vector<int32>{0, 1, 2, 3});
 
     std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
-    REQUIRE(H5Sclose(chunkInfo.dataspaceId) >= 0);
+    REQUIRE(H5Sclose(chunkInfo.dataspace_id) >= 0);
   }
 }
 

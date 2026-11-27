@@ -29,13 +29,13 @@ struct ComputeKernelAvgMisorientationsInputValues;
  */
 struct ComputeKernelAvgMisorientationsWorkingSet
 {
-  uint64 CapBytes = 0;
-  usize SliceTuples = 0;
-  usize WindowSlices = 0;
-  uint64 RollingBytes = 0;
-  bool UseRollingWindow = false;
-  usize BlockTuples = 1;
-  usize CacheSlots = 1;
+  uint64 cap_bytes = 0;
+  usize slice_tuples = 0;
+  usize window_slices = 0;
+  uint64 rolling_bytes = 0;
+  bool use_rolling_window = false;
+  usize block_tuples = 1;
+  usize cache_slots = 1;
 };
 
 /**
@@ -53,7 +53,7 @@ struct ComputeKernelAvgMisorientationsWorkingSet
  * full rolling window does not fit. The one-tuple fallback can exceed the
  * policy cap when one tuple does not fit.
  */
-ORIENTATIONANALYSIS_EXPORT Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3& dimensions,
+ORIENTATIONANALYSIS_EXPORT Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3Type& dimensions,
                                                                                                                              const VectorInt32ParameterType::ValueType& kernelSize, uint64 cacheBudgetBytes,
                                                                                                                              uint64 cacheUsedBytes, const DataPath& imageGeometryPath);
 

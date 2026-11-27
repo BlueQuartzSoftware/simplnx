@@ -45,7 +45,7 @@ struct StringMaker<Warning>
 TEST_CASE("CoreFilterTest:Create Core Filter")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
   REQUIRE(filterListPtr != nullptr);
 
@@ -68,7 +68,7 @@ TEST_CASE("CoreFilterTest:Create Core Filter")
 
 TEST_CASE("CoreFilterTest:RunCoreFilter")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static const fs::path kFileName = fmt::format("{}/ascii_data.txt", nx::core::unit_test::k_BinaryTestOutputDir);
   static constexpr uint64 k_NLines = 25;
@@ -131,13 +131,13 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
       REQUIRE(dataArray[index + 2] == i + 2);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   CreateDataGroupFilter filter;
@@ -152,13 +152,13 @@ TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
   REQUIRE(groupPtr != nullptr);
   REQUIRE(dataStructure.getSize() == path.getLength());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateDataGroupFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateDataGroupFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

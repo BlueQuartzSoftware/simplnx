@@ -17,11 +17,11 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT WriteGBCDTriangleDataInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath SurfaceMeshFaceNormalsArrayPath;
-  DataPath SurfaceMeshFaceAreasArrayPath;
-  DataPath FeatureEulerAnglesArrayPath;
+  FileSystemPathParameter::ValueType output_file;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath surface_mesh_face_normals_array_path;
+  DataPath surface_mesh_face_areas_array_path;
+  DataPath feature_euler_angles_array_path;
 };
 
 /**

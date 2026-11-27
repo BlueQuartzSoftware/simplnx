@@ -31,8 +31,8 @@ constexpr std::array<uint32, 6> k_XIndexes = {604, 648, 650, 695, 698, 741};
 const std::string k_ClusterData = "ClusterData";
 const std::string k_ClusterDataNX = k_ClusterData + "NX";
 
-const DataPath k_QuadGeomPath = DataPath({Constants::k_DataContainer});
-const DataPath k_CellPath = k_QuadGeomPath.createChildPath(Constants::k_CellData);
+const DataPath k_QuadGeomPath = DataPath({constants::k_DataContainer});
+const DataPath k_CellPath = k_QuadGeomPath.createChildPath(constants::k_CellData);
 const DataPath k_ClusterDataPathNX = k_QuadGeomPath.createChildPath(k_ClusterDataNX);
 
 const std::string k_ClusterIdsName = "ClusterIds";
@@ -57,7 +57,7 @@ const DataPath k_ParityMedoidsPath = k_ParityFeaturePath.createChildPath("Medoid
  * @param metric Distance metric for the returned algorithm input.
  * @return Input values that reference the created arrays.
  */
-KMedoidsInputValues BuildParityData(DataStructure& dataStructure, int32 maskKind, ClusterUtilities::DistanceMetric metric)
+KMedoidsInputValues BuildParityData(DataStructure& dataStructure, int32 maskKind, cluster_utilities::DistanceMetric metric)
 {
   const ShapeType tupleShape = {8, 1, 1};
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "KMedoids Parity ImageGeom");
@@ -67,16 +67,16 @@ KMedoidsInputValues BuildParityData(DataStructure& dataStructure, int32 maskKind
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
   auto inputStore = std::make_shared<DataStore<float64>>(tupleShape, ShapeType{2}, std::optional<float64>{});
-  REQUIRE(Float64Array::Create(dataStructure, "Input", inputStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Float64ArrayType::Create(dataStructure, "Input", inputStore, cellDataPtr->getId()) != nullptr);
   const std::array<float64, 16> inputValues = {1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 8.0, 8.0, 8.0, 9.0, 9.0, 8.0, 9.0, 9.0};
   auto inputStoreWriteResult = inputStore->copyFromBuffer(0, nonstd::span<const float64>(inputValues.data(), inputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(inputStoreWriteResult);
   auto idStore = std::make_shared<DataStore<int32>>(tupleShape, ShapeType{1}, std::optional<int32>{});
-  REQUIRE(Int32Array::Create(dataStructure, "Ids", idStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Ids", idStore, cellDataPtr->getId()) != nullptr);
   idStore->fill(97);
   if(maskKind == 1)
   {
-    auto* maskPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", tupleShape, ShapeType{1}, cellDataPtr->getId());
+    auto* maskPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "Mask", tupleShape, ShapeType{1}, cellDataPtr->getId());
     REQUIRE(maskPtr != nullptr);
     const std::array<bool, 8> maskValues = {true, true, false, true, true, true, false, true};
     auto maskWriteResult = maskPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const bool>(maskValues.data(), maskValues.size()));
@@ -85,7 +85,7 @@ KMedoidsInputValues BuildParityData(DataStructure& dataStructure, int32 maskKind
   else if(maskKind == 2)
   {
     auto maskStore = std::make_shared<DataStore<uint8>>(tupleShape, ShapeType{1}, std::optional<uint8>{});
-    REQUIRE(UInt8Array::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(UInt8ArrayType::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId()) != nullptr);
     const std::array<uint8, 8> maskValues = {1, 1, 0, 1, 1, 1, 0, 1};
     auto maskStoreWriteResult = maskStore->copyFromBuffer(0, nonstd::span<const uint8>(maskValues.data(), maskValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(maskStoreWriteResult);
@@ -93,16 +93,16 @@ KMedoidsInputValues BuildParityData(DataStructure& dataStructure, int32 maskKind
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
   auto medoidStore = std::make_shared<DataStore<float64>>(ShapeType{3}, ShapeType{2}, std::optional<float64>{});
-  REQUIRE(Float64Array::Create(dataStructure, "Medoids", medoidStore, featureDataPtr->getId()) != nullptr);
+  REQUIRE(Float64ArrayType::Create(dataStructure, "Medoids", medoidStore, featureDataPtr->getId()) != nullptr);
   medoidStore->fill(-1.0);
-  return {.InitClusters = 2,
-          .DistanceMetric = metric,
-          .UseMask = maskKind != 0,
-          .ClusteringArrayPath = k_ParityInputPath,
-          .MaskArrayPath = k_ParityMaskPath,
-          .FeatureIdsArrayPath = k_ParityIdsPath,
-          .MedoidsArrayPath = k_ParityMedoidsPath,
-          .Seed = 5489};
+  return {.init_clusters = 2,
+          .distance_metric = metric,
+          .use_mask = maskKind != 0,
+          .clustering_array_path = k_ParityInputPath,
+          .mask_array_path = k_ParityMaskPath,
+          .feature_ids_array_path = k_ParityIdsPath,
+          .medoids_array_path = k_ParityMedoidsPath,
+          .seed = 5489};
 }
 
 /**
@@ -119,19 +119,19 @@ KMedoidsInputValues BuildEmptyData(DataStructure& dataStructure)
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Input", tupleShape, ShapeType{2}, cellDataPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Ids", tupleShape, ShapeType{1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Float64ArrayType::CreateWithStore<Float64DataStoreType>(dataStructure, "Input", tupleShape, ShapeType{2}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Ids", tupleShape, ShapeType{1}, cellDataPtr->getId()) != nullptr);
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{2}, imageGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
-  REQUIRE(Float64Array::CreateWithStore<Float64DataStore>(dataStructure, "Medoids", ShapeType{2}, ShapeType{2}, featureDataPtr->getId()) != nullptr);
-  return {.InitClusters = 1,
-          .DistanceMetric = ClusterUtilities::Euclidean,
-          .UseMask = false,
-          .ClusteringArrayPath = k_ParityInputPath,
-          .MaskArrayPath = {},
-          .FeatureIdsArrayPath = k_ParityIdsPath,
-          .MedoidsArrayPath = k_ParityMedoidsPath,
-          .Seed = 5489};
+  REQUIRE(Float64ArrayType::CreateWithStore<Float64DataStoreType>(dataStructure, "Medoids", ShapeType{2}, ShapeType{2}, featureDataPtr->getId()) != nullptr);
+  return {.init_clusters = 1,
+          .distance_metric = cluster_utilities::Euclidean,
+          .use_mask = false,
+          .clustering_array_path = k_ParityInputPath,
+          .mask_array_path = {},
+          .feature_ids_array_path = k_ParityIdsPath,
+          .medoids_array_path = k_ParityMedoidsPath,
+          .seed = 5489};
 }
 } // namespace
 
@@ -140,9 +140,9 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Scanline rejects zero tuples", "[Simpln
   DataStructure dataStructure;
   auto inputValues = BuildEmptyData(dataStructure);
   const std::atomic_bool shouldCancel = false;
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto result = scope.execute([&] { return ComputeKMedoids(dataStructure, {}, shouldCancel, &inputValues)(); });
   REQUIRE(result.invalid());
   REQUIRE(result.errors().front().code == -54071);
@@ -150,18 +150,18 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Scanline rejects zero tuples", "[Simpln
 
 TEST_CASE("SimplnxCore::ComputeKMedoids: cancellation leaves outputs unchanged", "[SimplnxCore][ComputeKMedoids]")
 {
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
   for(const auto scenario : scenarios)
   {
     CAPTURE(scenario);
     {
       DataStructure dataStructure;
-      auto inputValues = BuildParityData(dataStructure, 0, ClusterUtilities::Euclidean);
+      auto inputValues = BuildParityData(dataStructure, 0, cluster_utilities::Euclidean);
       std::atomic_bool shouldCancel = true;
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ParityIdsPath));
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath));
-      const auto& ids = dataStructure.getDataRefAs<Int32Array>(k_ParityIdsPath);
-      const auto& medoids = dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_ParityIdsPath));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(k_ParityMedoidsPath));
+      const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(k_ParityIdsPath);
+      const auto& medoids = dataStructure.getDataRefAs<Float64ArrayType>(k_ParityMedoidsPath);
       std::array<int32, 8> idsBefore = {};
       std::array<int32, 8> idsAfter = {};
       std::array<float64, 6> medoidsBefore = {};
@@ -170,7 +170,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: cancellation leaves outputs unchanged",
       SIMPLNX_RESULT_REQUIRE_VALID(idsBeforeReadResult);
       auto medoidsBeforeReadResult = medoids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(medoidsBefore.data(), medoidsBefore.size()));
       SIMPLNX_RESULT_REQUIRE_VALID(medoidsBeforeReadResult);
-      UnitTest::AlgorithmTestScope scope(scenario);
+      unit_test::AlgorithmTestScope scope(scenario);
       auto scopeExecutionResult = scope.execute([&] { return ComputeKMedoids(dataStructure, {}, shouldCancel, &inputValues)(); });
       SIMPLNX_RESULT_REQUIRE_VALID(scopeExecutionResult);
       auto idsAfterReadResult = ids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(idsAfter.data(), idsAfter.size()));
@@ -187,7 +187,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Direct and Scanline seeded metric parit
 {
   const auto maskKind = GENERATE(0, 1, 2);
   for(const auto metric :
-      {ClusterUtilities::Euclidean, ClusterUtilities::SquaredEuclidean, ClusterUtilities::Manhattan, ClusterUtilities::Cosine, ClusterUtilities::Pearson, ClusterUtilities::SquaredPearson})
+      {cluster_utilities::Euclidean, cluster_utilities::SquaredEuclidean, cluster_utilities::Manhattan, cluster_utilities::Cosine, cluster_utilities::Pearson, cluster_utilities::SquaredPearson})
   {
     DYNAMIC_SECTION(fmt::format("mask {} metric {}", maskKind, static_cast<int32>(metric)))
     {
@@ -195,21 +195,21 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Direct and Scanline seeded metric parit
       std::array<int32, 8> expectedIds = {};
       std::array<float64, 6> expectedMedoids = {};
       bool hasExpectedValues = false;
-      const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+      const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
       for(const auto scenario : scenarios)
       {
         CAPTURE(scenario);
         DataStructure dataStructure;
         auto values = BuildParityData(dataStructure, maskKind, metric);
-        UnitTest::AlgorithmTestScope scope(scenario);
+        unit_test::AlgorithmTestScope scope(scenario);
         auto executeResult2 = scope.execute([&] { return ComputeKMedoids(dataStructure, {}, shouldCancel, &values)(); });
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult2);
-        REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ParityIdsPath));
-        REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath));
+        REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_ParityIdsPath));
+        REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(k_ParityMedoidsPath));
         std::array<int32, 8> ids = {};
         std::array<float64, 6> medoids = {};
-        const auto& idStore = dataStructure.getDataRefAs<Int32Array>(k_ParityIdsPath).getDataStoreRef();
-        const auto& medoidStore = dataStructure.getDataRefAs<Float64Array>(k_ParityMedoidsPath).getDataStoreRef();
+        const auto& idStore = dataStructure.getDataRefAs<Int32ArrayType>(k_ParityIdsPath).getDataStoreRef();
+        const auto& medoidStore = dataStructure.getDataRefAs<Float64ArrayType>(k_ParityMedoidsPath).getDataStoreRef();
         auto copyIntoBufferResult = idStore.copyIntoBuffer(0, nonstd::span<int32>(ids.data(), ids.size()));
         SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
         auto copyIntoBufferResult2 = medoidStore.copyIntoBuffer(0, nonstd::span<float64>(medoids.data(), medoids.size()));
@@ -231,21 +231,21 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Direct and Scanline seeded metric parit
           const float64 dy = left[1] - right[1];
           switch(metric)
           {
-          case ClusterUtilities::Euclidean:
+          case cluster_utilities::Euclidean:
             return std::hypot(dx, dy);
-          case ClusterUtilities::SquaredEuclidean:
+          case cluster_utilities::SquaredEuclidean:
             return dx * dx + dy * dy;
-          case ClusterUtilities::Manhattan:
+          case cluster_utilities::Manhattan:
             return std::abs(dx) + std::abs(dy);
-          case ClusterUtilities::Cosine:
+          case cluster_utilities::Cosine:
             return 1.0 - (left[0] * right[0] + left[1] * right[1]) / (std::hypot(left[0], left[1]) * std::hypot(right[0], right[1]));
-          case ClusterUtilities::Pearson:
-          case ClusterUtilities::SquaredPearson:
+          case cluster_utilities::Pearson:
+          case cluster_utilities::SquaredPearson:
             if(left[0] == left[1] || right[0] == right[1])
             {
               return 1.0;
             }
-            return metric == ClusterUtilities::SquaredPearson || ((left[0] < left[1]) == (right[0] < right[1])) ? 0.0 : 2.0;
+            return metric == cluster_utilities::SquaredPearson || ((left[0] < left[1]) == (right[0] < right[1])) ? 0.0 : 2.0;
           }
           FAIL("Unexpected metric in the analytical reference");
           return 0.0;
@@ -312,9 +312,9 @@ TEST_CASE("SimplnxCore::ComputeKMedoids: Direct and Scanline seeded metric parit
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: No-mask preflight does not create a cell-sized temporary mask", "[SimplnxCore][ComputeKMedoidsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   ComputeKMedoidsFilter filter;
   Arguments args;
@@ -328,17 +328,17 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: No-mask preflight does not create
   args.insertOrAssign(ComputeKMedoidsFilter::k_MedoidsArrayName_Key, std::make_any<std::string>(k_MedoidsNameNX));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  auto assertionResult = preflightResult.outputActions;
+  auto assertionResult = preflightResult.output_actions;
   SIMPLNX_RESULT_REQUIRE_VALID(assertionResult);
-  CHECK(preflightResult.outputActions.value().actions.size() == 4);
-  CHECK(preflightResult.outputActions.value().deferredActions.empty());
+  CHECK(preflightResult.output_actions.value().actions.size() == 4);
+  CHECK(preflightResult.output_actions.value().deferred_actions.empty());
 }
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Rejects unrepresentable clusters and an empty eligible mask", "[SimplnxCore][ComputeKMedoidsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   ComputeKMedoidsFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -352,32 +352,32 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Rejects unrepresentable clusters 
 
   args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(static_cast<uint64>(std::numeric_limits<int32>::max())));
   auto overflowPreflight = filter.preflight(dataStructure, args);
-  REQUIRE(overflowPreflight.outputActions.invalid());
+  REQUIRE(overflowPreflight.output_actions.invalid());
 
   args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(3));
   const DataPath maskPath = k_CellPath.createChildPath("AllFalseMask");
   const auto& input = dataStructure.getDataRefAs<IDataArray>(k_CellPath.createChildPath("DAMAGE"));
-  auto* maskPtr = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "AllFalseMask", input.getTupleShape(), ShapeType{1}, dataStructure.getDataRefAs<AttributeMatrix>(k_CellPath).getId());
+  auto* maskPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "AllFalseMask", input.getTupleShape(), ShapeType{1}, dataStructure.getDataRefAs<AttributeMatrix>(k_CellPath).getId());
   REQUIRE(maskPtr != nullptr);
   args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   REQUIRE(executeResult.result.invalid());
 }
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[SimplnxCore][ComputeKMedoidsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
     ComputeKMedoidsFilter filter;
@@ -394,7 +394,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[Simpln
     args.insertOrAssign(ComputeKMedoidsFilter::k_MedoidsArrayName_Key, std::make_any<std::string>(k_MedoidsNameNX));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    auto assertionResult2 = preflightResult.outputActions;
+    auto assertionResult2 = preflightResult.output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult2);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -413,7 +413,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[Simpln
    * Those three values must differ before they define the remaining expected positions.
    */
 
-  auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX);
+  auto& clusterIds = dataStructure.getDataRefAs<Int32ArrayType>(k_ClusterIdsPathNX);
 
   int32 xVal = clusterIds[741];
   int32 cVal = clusterIds[742];
@@ -443,13 +443,13 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[Simpln
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_medoids_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeKMedoidsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -498,10 +498,10 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component",
   DataStructure dataStructure;
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
   REQUIRE(cellDataPtr != nullptr);
-  auto* inputPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellDataPtr->getId());
+  auto* inputPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellDataPtr->getId());
   (*inputPtr)[0] = 0.0F;
   (*inputPtr)[1] = 1.0F;
-  auto* maskPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellDataPtr->getId());
+  auto* maskPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellDataPtr->getId());
   (*maskPtr)[0] = 1;
   (*maskPtr)[1] = 0;
   (*maskPtr)[2] = 1;
@@ -516,9 +516,9 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires 1 component",
   args.insertOrAssign(ComputeKMedoidsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Cluster Data"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(std::any_of(preflightResult.output_actions.errors().begin(), preflightResult.output_actions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
@@ -528,8 +528,8 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
   auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
   REQUIRE(cellDataPtr != nullptr);
   REQUIRE(maskDataPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
-  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskDataPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
 
@@ -544,8 +544,8 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
   {
     args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    const auto& errors = preflightResult.outputActions.errors();
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    const auto& errors = preflightResult.output_actions.errors();
     const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7589; });
     REQUIRE(error != errors.end());
     CHECK(error->message.find(inputPath.toString()) != std::string::npos);
@@ -557,9 +557,9 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Mask Array requires matching tupl
   {
     args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(false));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMedoidsFilter][ComponentShape]")
@@ -569,7 +569,7 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in 
   auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
   REQUIRE(cellDataPtr != nullptr);
   REQUIRE(maskDataPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
@@ -583,13 +583,13 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Reject short StringArray mask in 
 
   args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  const auto& errors = preflightResult.outputActions.errors();
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  const auto& errors = preflightResult.output_actions.errors();
   const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7589; });
   REQUIRE(error != errors.end());
   CHECK(error->message.find(inputPath.toString()) != std::string::npos);
   CHECK(error->message.find(maskPath.toString()) != std::string::npos);
   CHECK(error->message.find("6 tuples") != std::string::npos);
   CHECK(error->message.find("4 tuples") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

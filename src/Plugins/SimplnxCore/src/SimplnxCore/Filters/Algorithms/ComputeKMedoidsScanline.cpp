@@ -87,7 +87,7 @@ class KMedoidsTemplate
 {
 public:
   KMedoidsTemplate(ComputeKMedoidsScanline* filter, const IDataArray* inputArray, IDataArray* medoidsArray, const IDataArray* maskArray, bool useMask, usize clusters,
-                   Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric metric, std::mt19937_64::result_type seed)
+                   Int32AbstractDataStoreType& featureIds, cluster_utilities::DistanceMetric metric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_Input(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_Medoids(medoidsArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -298,7 +298,7 @@ private:
         float64 minimum = std::numeric_limits<float64>::max();
         for(usize cluster = 0; cluster < m_Clusters; cluster++)
         {
-          const float64 distance = ClusterUtilities::GetDistance(input, local * dims, medoids, (cluster + 1) * dims, dims, m_Metric);
+          const float64 distance = cluster_utilities::GetDistance(input, local * dims, medoids, (cluster + 1) * dims, dims, m_Metric);
           if(distance < minimum)
           {
             minimum = distance;
@@ -372,7 +372,7 @@ private:
           {
             if(innerMask[innerLocal] != 0 && innerIds[innerLocal] == candidateIds[candidateLocal])
             {
-              candidateCosts[candidateLocal] += ClusterUtilities::GetDistance(candidate, candidateLocal * dims, inner, innerLocal * dims, dims, m_Metric);
+              candidateCosts[candidateLocal] += cluster_utilities::GetDistance(candidate, candidateLocal * dims, inner, innerLocal * dims, dims, m_Metric);
             }
           }
         }
@@ -465,8 +465,8 @@ private:
   AbstractDataStore<T>& m_Medoids;
   MaskReader m_Mask;
   usize m_Clusters = 0;
-  Int32AbstractDataStore& m_FeatureIds;
-  ClusterUtilities::DistanceMetric m_Metric;
+  Int32AbstractDataStoreType& m_FeatureIds;
+  cluster_utilities::DistanceMetric m_Metric;
   std::mt19937_64::result_type m_Seed;
 };
 } // namespace
@@ -492,14 +492,14 @@ const std::atomic_bool& ComputeKMedoidsScanline::getCancel()
 
 Result<> ComputeKMedoidsScanline::operator()()
 {
-  auto* clusteringPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* medoidsPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath);
-  auto* maskPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  if(m_InputValues->UseMask && (maskPtr == nullptr || (maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)))
+  auto* clusteringPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto* medoidsPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->medoids_array_path);
+  auto* maskPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
+  if(m_InputValues->use_mask && (maskPtr == nullptr || (maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)))
   {
     return MakeErrorResult(-54070, "Mask array must exist and have Bool or UInt8 data type.");
   }
-  return RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringPtr->getDataType(), this, clusteringPtr, medoidsPtr, maskPtr, m_InputValues->UseMask, m_InputValues->InitClusters,
-                                                                  m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric,
-                                                                  m_InputValues->Seed);
+  return RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringPtr->getDataType(), this, clusteringPtr, medoidsPtr, maskPtr, m_InputValues->use_mask, m_InputValues->init_clusters,
+                                                                  m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef(), m_InputValues->distance_metric,
+                                                                  m_InputValues->seed);
 }

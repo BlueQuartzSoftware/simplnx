@@ -19,19 +19,19 @@
  * @namespace nx::core::GeometryHelpers
  * @brief Provides geometry description, connectivity, and topology utilities.
  */
-namespace nx::core::GeometryHelpers
+namespace nx::core::geometry_helpers
 {
 /**
  * @typedef ErrorCode
  * @brief Defines integer status values for connectivity utilities.
  */
-using ErrorCode = int32;
+using ErrorCodeType = int32;
 
 /**
  * @namespace Description
  * @brief Provides user-readable geometry descriptions.
  */
-namespace Description
+namespace description
 {
 
 /**
@@ -42,7 +42,7 @@ namespace Description
  * @param units Specifies length units.
  * @return Geometry description.
  */
-SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, IGeometry::LengthUnit units);
+SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3Type& dims, const nx::core::FloatVec3Type& spacing, const nx::core::FloatVec3Type& origin, IGeometry::LengthUnit units);
 
 } // namespace Description
 
@@ -50,7 +50,7 @@ SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, 
  * @namespace Connectivity
  * @brief Provides mesh adjacency and boundary extraction utilities.
  */
-namespace Connectivity
+namespace connectivity
 {
 /**
  * @namespace detail
@@ -181,7 +181,7 @@ usize FastEdgeCount(const AbstractDataStore<T>& faceStore)
  * @param faceLabelsRef Provides two region labels per face.
  * @return Euler characteristic values indexed by region ID.
  */
-SIMPLNX_EXPORT std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32Array& faceLabelsRef);
+SIMPLNX_EXPORT std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32ArrayType& faceLabelsRef);
 
 /**
  * @brief Selects a unique-edge count implementation from vertex-index range.
@@ -1083,13 +1083,13 @@ template <typename T>
  * @namespace Topology
  * @brief Provides periodic-boundary and geometric-measure utilities.
  */
-namespace Topology
+namespace topology
 {
 /**
  * @typedef BoundingBoxFaces
  * @brief Defines a unique set of bounding-box faces.
  */
-using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
+using BoundingBoxFacesType = std::unordered_set<BoundingBox3DfType::faces_enum>;
 
 /**
  * @brief Finds bounding-box faces touched by selected vertices.
@@ -1100,7 +1100,7 @@ using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
  * @param vertexSet Specifies vertex indexes to test.
  * @return Unique touched faces.
  */
-BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
+BoundingBoxFacesType SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3DfType& boundingBox, const Float32AbstractDataStoreType& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
 
 /**
  * @brief Adjusts a feature's centroid for periodic (wrap-around) boundaries. For every axis on which the
@@ -1119,8 +1119,8 @@ BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& b
  * @return True when any centroid component was adjusted.
  * @pre Vertex and centroid coordinates use the bounding box's coordinate system.
  */
-bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices,
-                                                    const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
+bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3DfType& boundingBox, const BoundingBoxFacesType& faces, const Float32AbstractDataStoreType& vertices,
+                                                    const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStoreType& centroids, IGeometry::MeshIndexType featureId);
 
 /**
  * @brief Computes arithmetic vertex centroids for mesh elements.
@@ -1130,7 +1130,7 @@ bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundi
  * @param centroids Receives one XYZ tuple per element.
  */
 template <typename T>
-void FindElementCentroids(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* centroids)
+void FindElementCentroids(const DataArray<T>* elemList, const Float32ArrayType* vertices, Float32ArrayType* centroids)
 {
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
@@ -1163,7 +1163,7 @@ void FindElementCentroids(const DataArray<T>* elemList, const Float32Array* vert
  * @param volumes Receives one signed volume per tetrahedron.
  */
 template <typename T>
-void FindTetVolumes(const DataArray<T>* tetList, const Float32Array* vertices, Float32Array* volumes)
+void FindTetVolumes(const DataArray<T>* tetList, const Float32ArrayType* vertices, Float32ArrayType* volumes)
 {
   auto& tets = *tetList;
   const usize numTets = tetList->getNumberOfTuples();
@@ -1195,7 +1195,7 @@ void FindTetVolumes(const DataArray<T>* tetList, const Float32Array* vertices, F
  * @param volumes Receives one signed volume per hexahedron.
  */
 template <typename T>
-void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, Float32Array* volumes)
+void FindHexVolumes(const DataArray<T>* hexList, const Float32ArrayType* vertices, Float32ArrayType* volumes)
 {
   const usize numHexas = hexList->getNumberOfTuples();
   const usize numElementsPerHex = hexList->getNumberOfComponents();
@@ -1267,7 +1267,7 @@ void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, F
  * @param areas Receives one area per element.
  */
 template <typename T>
-void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* areas)
+void Find2DElementAreas(const DataArray<T>* elemList, const Float32ArrayType* vertices, Float32ArrayType* areas)
 {
 
   auto& elems = *elemList;
@@ -1278,7 +1278,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     return;
   }
   auto& elemAreas = *areas;
-  std::vector<FloatVec3> coords;
+  std::vector<FloatVec3Type> coords;
   coords.reserve(numVertsPerElem);
   std::vector<float32> coordinate(3 * numVertsPerElem, 0.0f);
 
@@ -1295,7 +1295,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
       coords.emplace_back(vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2));
     }
 
-    ZXZEuler normal = ZXZEuler(GeometryMath::FindPolygonNormal<float32>({coords.data(), coords.size()}).data());
+    ZxzEulerType normal = ZxzEulerType(geometry_math::FindPolygonNormal<float32>({coords.data(), coords.size()}).data());
     normal.normalize();
 
     float32 nx = (normal[0] > 0.0 ? normal[0] : -normal[0]);

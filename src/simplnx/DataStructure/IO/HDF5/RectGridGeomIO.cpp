@@ -40,7 +40,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
 
   auto groupReader = parentGroup.openGroup(objectName);
 
-  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(io_constants::k_H5Units); unitsAttr.valid())
   {
     auto value = unitsAttr.value();
     geometryPtr->setUnits(static_cast<IGeometry::LengthUnit>(value));
@@ -57,9 +57,9 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   geometryPtr->setDimensions(volumeDimensions);
 
   // A bounds array may be stored outside this group. Resolve and validate its values after the full map is loaded.
-  geometryPtr->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
-  geometryPtr->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
-  geometryPtr->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
+  geometryPtr->setXBoundsId(ReadDataId(groupReader, io_constants::k_XBoundsTag));
+  geometryPtr->setYBoundsId(ReadDataId(groupReader, io_constants::k_YBoundsTag));
+  geometryPtr->setZBoundsId(ReadDataId(groupReader, io_constants::k_ZBoundsTag));
 
   return result;
 }
@@ -81,7 +81,7 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
                                                  dataPath.toString(), dataPath.getTargetName(), dataStructureGroup.getObjectPath()));
     }
 
-    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(io_constants::k_H5Units); unitsAttr.valid())
     {
       auto value = unitsAttr.value();
       geomPtr->setUnits(static_cast<IGeometry::LengthUnit>(value));
@@ -173,7 +173,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     dimsVector[i] = dimensions[i];
   }
 
-  AppendWriteResult(result, groupWriter.writeVectorAttribute(IOConstants::k_DimensionsTag, dimsVector));
+  AppendWriteResult(result, groupWriter.writeVectorAttribute(io_constants::k_DimensionsTag, dimsVector));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write dimensions for RectGridGeom '{}'", geometry.getName()));
@@ -181,7 +181,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return errorResult;
   }
   // Write the bounds array identifiers.
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getXBoundsId(), io_constants::k_XBoundsTag));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write X bounds for RectGridGeom '{}'", geometry.getName()));
@@ -189,7 +189,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return errorResult;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getYBoundsId(), IOConstants::k_YBoundsTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getYBoundsId(), io_constants::k_YBoundsTag));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write Y bounds for RectGridGeom '{}'", geometry.getName()));
@@ -197,7 +197,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return errorResult;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getZBoundsId(), IOConstants::k_ZBoundsTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getZBoundsId(), io_constants::k_ZBoundsTag));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write Z bounds for RectGridGeom '{}'", geometry.getName()));
@@ -205,7 +205,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return errorResult;
   }
 
-  AppendWriteResult(result, groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits())));
+  AppendWriteResult(result, groupWriter.writeScalarAttribute(io_constants::k_H5Units, nx::core::to_underlying(geometry.getUnits())));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for RectGridGeom '{}'", geometry.getName()));

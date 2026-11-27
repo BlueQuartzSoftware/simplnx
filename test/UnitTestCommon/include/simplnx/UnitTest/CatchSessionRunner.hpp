@@ -11,7 +11,7 @@
 #include <iostream>
 #include <memory>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @struct CatchSessionResult
@@ -19,7 +19,7 @@ namespace nx::core::UnitTest
  */
 struct CatchSessionResult
 {
-  int exitCode = 1;
+  int exit_code = 1;
   bool successful = false;
 };
 
@@ -37,8 +37,8 @@ inline CatchSessionResult RunCatchSession(int argc, char* argv[])
   try
   {
     Catch::Session session;
-    result.exitCode = session.applyCommandLine(argc, argv);
-    if(result.exitCode == 0)
+    result.exit_code = session.applyCommandLine(argc, argv);
+    if(result.exit_code == 0)
     {
       const auto& data = session.configData();
       const bool listing = data.listTests || data.listTestNamesOnly || data.listTags || data.listReporters;
@@ -57,28 +57,28 @@ inline CatchSessionResult RunCatchSession(int argc, char* argv[])
         {
           Catch::applyFilenamesAsTags(*config);
         }
-        result.exitCode = static_cast<int>(*Catch::list(config));
+        result.exit_code = static_cast<int>(*Catch::list(config));
         if((data.waitForKeypress & Catch::WaitForKeypress::BeforeExit) != 0)
         {
-          Catch::cout() << "...waiting for enter/ return before exiting, with code: " << result.exitCode << '\n';
+          Catch::cout() << "...waiting for enter/ return before exiting, with code: " << result.exit_code << '\n';
           static_cast<void>(std::getchar());
         }
         result.successful = true;
       }
       else
       {
-        result.exitCode = session.run();
-        result.successful = result.exitCode == 0;
+        result.exit_code = session.run();
+        result.successful = result.exit_code == 0;
       }
     }
   } catch(const std::exception& exception)
   {
     std::fprintf(stderr, "Test runner failed: %s\n", exception.what());
-    result = {.exitCode = 255, .successful = false};
+    result = {.exit_code = 255, .successful = false};
   } catch(...)
   {
     std::fputs("Test runner failed with an unknown exception\n", stderr);
-    result = {.exitCode = 255, .successful = false};
+    result = {.exit_code = 255, .successful = false};
   }
   return result;
 }

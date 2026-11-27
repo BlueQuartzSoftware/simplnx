@@ -47,7 +47,7 @@ public:
    * @param pageIndex Identifies the requested page for the error message.
    * @return An error that directs the user to Read MHA/MetaImage File.
    */
-  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const override;
+  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallbackType& callback, usize pageIndex = 0) const override;
 
   /**
    * @brief Writes one compressed, attached MHA image.

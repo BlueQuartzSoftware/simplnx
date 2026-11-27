@@ -23,7 +23,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -62,7 +62,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -105,7 +105,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -144,7 +144,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: DataArrays Valid -
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -187,7 +187,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -222,7 +222,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -265,7 +265,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 {
   using T = TestType;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -313,7 +313,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: NeighborLists Vali
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -338,12 +338,12 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 1 Tuple
   REQUIRE(outputArray[0] == value1);
   REQUIRE(outputArray[1] == value2);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -372,12 +372,12 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 2 Tuple
   REQUIRE(outputArray[2] == value3);
   REQUIRE(outputArray[3] == value4);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuples", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -410,12 +410,12 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: StringArray Valid - 3 Tuple
   REQUIRE(outputArray[4] == value5);
   REQUIRE(outputArray[5] == value6);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[SimplnxCore][ConcatenateDataArraysFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ConcatenateDataArraysFilter filter;
   DataStructure dataStructure;
@@ -423,8 +423,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
   SECTION("Empty Input Arrays")
   {
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -436,8 +436,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
   }
   SECTION("One Input Array")
   {
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({k_TestArray1Name})}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -449,8 +449,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
   }
   SECTION("Mismatching Type Names 1")
   {
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{3});
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -463,7 +463,7 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
 
   SECTION("Mismatching Type Names 2")
   {
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3});
     StringArray::CreateWithValues(dataStructure, k_TestArray2Name, ShapeType{1}, {"Foo"});
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
@@ -476,8 +476,8 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
   }
   SECTION("Mismatching Component Dimensions")
   {
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3, 4});
-    Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{4, 3});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray1Name, std::vector<usize>{1}, std::vector<usize>{3, 4});
+    Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_TestArray2Name, std::vector<usize>{1}, std::vector<usize>{4, 3});
 
     args.insert(ConcatenateDataArraysFilter::k_InputArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_InputArrayPaths}));
     args.insert(ConcatenateDataArraysFilter::k_OutputArray_Key, std::make_any<DataPath>(k_OutputArrayPath));
@@ -488,5 +488,5 @@ TEST_CASE("SimplnxCore::ConcatenateDataArraysFilter: Invalid Parameters", "[Simp
     REQUIRE(result.result.errors()[0].code == to_underlying(ConcatenateDataArrays::ErrorCodes::ComponentShapeMismatch));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

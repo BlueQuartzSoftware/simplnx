@@ -39,17 +39,17 @@ void CreateSmallFixture(DataStructure& dataStructure)
   imagePtr->setDimensions({8, 8, 2});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellShape, imagePtr->getId());
   imagePtr->setCellData(*cellDataPtr);
-  auto* quatsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", cellShape, {4}, cellDataPtr->getId());
-  auto* phasesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", cellShape, {1}, cellDataPtr->getId());
-  auto* numericPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Numeric Sibling", cellShape, {2}, cellDataPtr->getId());
+  auto* quatsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", cellShape, {4}, cellDataPtr->getId());
+  auto* phasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", cellShape, {1}, cellDataPtr->getId());
+  auto* numericPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Numeric Sibling", cellShape, {2}, cellDataPtr->getId());
   auto maskStore = std::make_shared<DataStore<bool>>(cellShape, ShapeType{1}, std::optional<bool>{});
   auto boolStore = std::make_shared<DataStore<bool>>(cellShape, ShapeType{1}, std::optional<bool>{});
   REQUIRE(quatsPtr != nullptr);
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(numericPtr != nullptr);
-  REQUIRE(BoolArray::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId()) != nullptr);
-  REQUIRE(BoolArray::Create(dataStructure, "Bool Sibling", boolStore, cellDataPtr->getId()) != nullptr);
-  auto* crystalPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "Crystal Structures", {2}, {1});
+  REQUIRE(BoolArrayType::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(BoolArrayType::Create(dataStructure, "Bool Sibling", boolStore, cellDataPtr->getId()) != nullptr);
+  auto* crystalPtr = UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "Crystal Structures", {2}, {1});
   REQUIRE(crystalPtr != nullptr);
   std::vector<float32> quatValues(k_TupleCount * 4);
   std::vector<int32> phaseValues(k_TupleCount);
@@ -94,11 +94,11 @@ Arguments SmallArguments(const bool useMask)
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: small matrix with known shifted values", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool useMask = GENERATE(false, true);
   CAPTURE(scenario, useMask);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   CreateSmallFixture(dataStructure);
@@ -106,10 +106,10 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: small matrix with k
   auto executeFilterResult = scope.executeFilter(filter, dataStructure, SmallArguments(useMask)).result;
   SIMPLNX_RESULT_REQUIRE_VALID(executeFilterResult);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SmallNumericPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_SmallBoolPath));
-  const auto& numericStore = dataStructure.getDataRefAs<Float32Array>(k_SmallNumericPath).getDataStoreRef();
-  const auto& boolStore = dataStructure.getDataRefAs<BoolArray>(k_SmallBoolPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_SmallNumericPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(k_SmallBoolPath));
+  const auto& numericStore = dataStructure.getDataRefAs<Float32ArrayType>(k_SmallNumericPath).getDataStoreRef();
+  const auto& boolStore = dataStructure.getDataRefAs<BoolArrayType>(k_SmallBoolPath).getDataStoreRef();
 
   if(useMask)
   {
@@ -135,24 +135,24 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: small matrix with k
     REQUIRE_FALSE(boolStore[3]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: Phase Index Bounds", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool invalidReferenceSlice = GENERATE(false, true);
   const bool storeAlignmentShifts = GENERATE(false, true);
   CAPTURE(scenario, invalidReferenceSlice, storeAlignmentShifts);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_VoxelsPerSlice = 8 * 8;
   DataStructure dataStructure;
   CreateSmallFixture(dataStructure);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_SmallPhasesPath));
-  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(k_SmallPhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_SmallPhasesPath));
+  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(k_SmallPhasesPath);
   const usize invalidSliceStart = invalidReferenceSlice ? k_VoxelsPerSlice : 0;
   for(usize voxelIdx = invalidSliceStart; voxelIdx < invalidSliceStart + k_VoxelsPerSlice; ++voxelIdx)
   {
@@ -173,8 +173,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: Phase Index Bounds"
 
   SECTION("Masked Phase is ignored")
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_SmallMaskPath));
-    auto& maskArrayRef = dataStructure.getDataRefAs<BoolArray>(k_SmallMaskPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(k_SmallMaskPath));
+    auto& maskArrayRef = dataStructure.getDataRefAs<BoolArrayType>(k_SmallMaskPath);
     for(usize voxelIdx = invalidSliceStart; voxelIdx < invalidSliceStart + k_VoxelsPerSlice; ++voxelIdx)
     {
       maskArrayRef[voxelIdx] = false;
@@ -186,40 +186,40 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: Phase Index Bounds"
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult2);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
   const std::string kDataInputArchive2 = "align_sections.tar.gz";
   const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
 
   auto* filterListPtr = Application::Instance()->getFilterList();
 
   auto exemplarFilePath = fs::path(fmt::format("{}/align_sections_misorientation/6_6_align_sections_misorientation.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(constants::k_PhasesArrayPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(constants::k_PhasesArrayPath));
 
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
+  small_in100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
 
-  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
+  small_in100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
 
   {
     Arguments args;
@@ -228,17 +228,17 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     args.insertOrAssign(AlignSectionsMisorientationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
 
     args.insertOrAssign(AlignSectionsMisorientationFilter::k_UseMask_Key, std::make_any<bool>(true));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(constants::k_MaskArrayPath));
 
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(constants::k_QuatsArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(constants::k_PhasesArrayPath));
 
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(constants::k_CrystalStructuresArrayPath));
 
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    auto assertionResult3 = preflightResult.outputActions;
+    auto assertionResult3 = preflightResult.output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult3);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -246,39 +246,39 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult4);
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, Constants::k_CellAttributeMatrix, Constants::k_ExemplarDataContainer);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, constants::k_CellAttributeMatrix, constants::k_ExemplarDataContainer);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test", "[Reconstruction][AlignSectionsMisorientationFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
   auto* filterListPtr = Application::Instance()->getFilterList();
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(constants::k_PhasesArrayPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(constants::k_PhasesArrayPath));
 
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
+  small_in100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
 
-  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
+  small_in100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
 
   {
     Arguments args;
@@ -287,23 +287,23 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
     args.insertOrAssign(AlignSectionsMisorientationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
 
     args.insertOrAssign(AlignSectionsMisorientationFilter::k_UseMask_Key, std::make_any<bool>(true));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(constants::k_MaskArrayPath));
 
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(constants::k_QuatsArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(constants::k_PhasesArrayPath));
 
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(constants::k_CrystalStructuresArrayPath));
 
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
 
     args.insertOrAssign(AlignSectionsMisorientationFilter::k_StoreAlignmentShifts_Key, std::make_any<bool>(true));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_AlignmentAMName_Key, std::make_any<std::string>(Constants::k_AlignmentAMName));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SlicesArrayName_Key, std::make_any<std::string>(Constants::k_SlicesArrayName));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_RelativeShiftsArrayName_Key, std::make_any<std::string>(Constants::k_RelativeShiftsArrayName));
-    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>(Constants::k_CumulativeShiftsArrayName));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_AlignmentAMName_Key, std::make_any<std::string>(constants::k_AlignmentAMName));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SlicesArrayName_Key, std::make_any<std::string>(constants::k_SlicesArrayName));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_RelativeShiftsArrayName_Key, std::make_any<std::string>(constants::k_RelativeShiftsArrayName));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>(constants::k_CumulativeShiftsArrayName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    auto assertionResult5 = preflightResult.outputActions;
+    auto assertionResult5 = preflightResult.output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult5);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -312,30 +312,30 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
   }
 
   auto exemplarFilePath = fs::path(fmt::format("{}/align_sections_misorientation/output_align_sections_misorientation.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
-  const DataPath alignmentAMPath = Constants::k_DataContainerPath.createChildPath(Constants::k_AlignmentAMName);
+  const DataPath alignmentAMPath = constants::k_DataContainerPath.createChildPath(constants::k_AlignmentAMName);
 
-  const DataPath slicesPath = alignmentAMPath.createChildPath(Constants::k_SlicesArrayName);
+  const DataPath slicesPath = alignmentAMPath.createChildPath(constants::k_SlicesArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(slicesPath));
-  UnitTest::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath), dataStructure.getDataRefAs<IDataArray>(slicesPath));
+  unit_test::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath), dataStructure.getDataRefAs<IDataArray>(slicesPath));
 
-  const DataPath relativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_RelativeShiftsArrayName);
+  const DataPath relativeShiftsPath = alignmentAMPath.createChildPath(constants::k_RelativeShiftsArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
+  unit_test::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
 
-  const DataPath cumulativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_CumulativeShiftsArrayName);
+  const DataPath cumulativeShiftsPath = alignmentAMPath.createChildPath(constants::k_CumulativeShiftsArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
+  unit_test::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/output_align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Geometry cell tuple counts", "[OrientationAnalysis][AlignSectionsMisorientation][TupleCount]")
@@ -370,7 +370,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Geometry cell
   REQUIRE(inputAM2Ptr != nullptr);
   REQUIRE(DataArray<uint8>::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", {count2}, {1}, inputAM2Ptr->getId()) != nullptr);
   args.insertOrAssign(AlignSectionsMisorientationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "Mask"})));
-  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  REQUIRE(UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
   args.insertOrAssign(AlignSectionsMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
   // Disabled masks may be short or absent.
   args.insertOrAssign(AlignSectionsMisorientationFilter::k_UseMask_Key, std::make_any<bool>(testCase < 6));
@@ -383,13 +383,13 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: Geometry cell
   const auto result = filter.preflight(dataStructure, args);
   if(testCase == 2 || testCase >= 6)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     const std::vector<DataPath> inputPaths = {DataPath({"Input0", "Quats"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Mask"})};
     if(testCase >= 3)
     {

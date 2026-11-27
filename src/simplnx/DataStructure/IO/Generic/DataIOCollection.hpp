@@ -82,7 +82,7 @@ public:
    * The import path supplies a valid DataStructure and object path. The callback
    * returns its HDF5 load result to the finalizing manager.
    */
-  using EagerLoadFnc = std::function<Result<>(DataStructure& dataStructure, const DataPath& path)>;
+  using EagerLoadFncType = std::function<Result<>(DataStructure& dataStructure, const DataPath& path)>;
 
   /**
    * @brief Labels automatic format resolution.

@@ -18,12 +18,12 @@ TEST_CASE("UuidTest")
 
     REQUIRE(uuid->data == k_UuidBytes);
 
-    REQUIRE(uuid->time_low() == 0xb6936d18u);
-    REQUIRE(uuid->time_mid() == 0x7476u);
-    REQUIRE(uuid->time_hi_version() == 0x4855u);
-    REQUIRE(uuid->clock_seq_hi_and_res_clock_seq_low() == 0x9e13u);
-    REQUIRE(uuid->clock_seq_hi_variant() == 0x9eu);
-    REQUIRE(uuid->clock_seq_low() == 0x13u);
+    REQUIRE(uuid->timeLow() == 0xb6936d18u);
+    REQUIRE(uuid->timeMid() == 0x7476u);
+    REQUIRE(uuid->timeHiVersion() == 0x4855u);
+    REQUIRE(uuid->clockSeqHiAndResClockSeqLow() == 0x9e13u);
+    REQUIRE(uuid->clockSeqHiVariant() == 0x9eu);
+    REQUIRE(uuid->clockSeqLow() == 0x13u);
     REQUIRE(uuid->node() == 0xe795d717c50full);
 
     REQUIRE(uuid->str() == k_UuidString);
@@ -39,12 +39,12 @@ TEST_CASE("UuidTest")
 
     REQUIRE(uuid->data == k_UuidBytes);
 
-    REQUIRE(uuid->time_low() == 0x00ab00ffu);
-    REQUIRE(uuid->time_mid() == 0x00abu);
-    REQUIRE(uuid->time_hi_version() == 0x0abcu);
-    REQUIRE(uuid->clock_seq_hi_and_res_clock_seq_low() == 0x0508u);
-    REQUIRE(uuid->clock_seq_hi_variant() == 0x05u);
-    REQUIRE(uuid->clock_seq_low() == 0x08u);
+    REQUIRE(uuid->timeLow() == 0x00ab00ffu);
+    REQUIRE(uuid->timeMid() == 0x00abu);
+    REQUIRE(uuid->timeHiVersion() == 0x0abcu);
+    REQUIRE(uuid->clockSeqHiAndResClockSeqLow() == 0x0508u);
+    REQUIRE(uuid->clockSeqHiVariant() == 0x05u);
+    REQUIRE(uuid->clockSeqLow() == 0x08u);
     REQUIRE(uuid->node() == 0x00000ff00000ull);
 
     REQUIRE(uuid->str() == k_UuidString);

@@ -15,13 +15,13 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborCAxisMisalignmentsInputValues
 {
-  bool FindAvgMisals{};
-  DataPath NeighborListArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath CAxisMisalignmentListArrayName;
-  DataPath AvgCAxisMisalignmentsArrayName;
+  bool find_avg_misals{};
+  DataPath neighbor_list_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath c_axis_misalignment_list_array_name;
+  DataPath avg_c_axis_misalignments_array_name;
 };
 
 /**

@@ -9,8 +9,8 @@ using namespace nx::core;
 // values: output = 1 / (1 + x), forced to float64.
 TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXImageProcessing][BoundedReciprocalImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, 12, 0.0, 1.0); // value(i) = i, i in [0, 1727]
@@ -22,20 +22,20 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXIm
   args.insertOrAssign(BoundedReciprocalImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(outputPath)); // output is forced to float64
-  auto& outStore = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(outputPath)); // output is forced to float64
+  auto& outStore = dataStructure.getDataRefAs<Float64ArrayType>(outputPath).getDataStoreRef();
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     const double x = static_cast<double>(i);
     const double expected = 1.0 / (1.0 + x);
     REQUIRE(outStore.getValue(i) == Approx(expected).margin(1.0e-9));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -48,8 +48,8 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXIm
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][BoundedReciprocalImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -65,7 +65,7 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golde
   args.insertOrAssign(BoundedReciprocalImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   BoundedReciprocalImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -77,5 +77,5 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golde
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

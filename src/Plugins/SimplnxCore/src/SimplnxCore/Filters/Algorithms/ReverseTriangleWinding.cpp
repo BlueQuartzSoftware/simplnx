@@ -15,7 +15,7 @@ namespace
 class ReverseWindingImpl
 {
 public:
-  using TriStoreType = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
+  using TriStoreType = AbstractDataStore<TriangleGeom::SharedFaceListType::value_type>;
   explicit ReverseWindingImpl(TriStoreType& triangles)
   : m_Triangles(triangles)
   {
@@ -61,7 +61,7 @@ ReverseTriangleWinding::ReverseTriangleWinding(DataStructure& dataStructure, con
 // -----------------------------------------------------------------------------
 Result<> ReverseTriangleWinding::operator()()
 {
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->InputTriangleGeometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->input_triangle_geometry_path);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, triangleGeom.getNumberOfFaces());

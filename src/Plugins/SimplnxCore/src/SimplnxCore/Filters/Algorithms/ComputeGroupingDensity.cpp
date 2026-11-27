@@ -33,8 +33,8 @@ template <class FindDensitySpecializations = FindDensitySpecializations<true, tr
 class FindDensityGrouping
 {
 public:
-  FindDensityGrouping(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, const Int32Array& parentIds, const Float32Array& parentVolumes,
-                      const Float32Array& featureVolumes, const Int32NeighborList& contiguousNL, Float32Array& groupingDensities, const Int32NeighborList& nonContiguousNL, Int32Array& checkedFeatures)
+  FindDensityGrouping(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, const Int32ArrayType& parentIds, const Float32ArrayType& parentVolumes,
+                      const Float32ArrayType& featureVolumes, const Int32NeighborListType& contiguousNL, Float32ArrayType& groupingDensities, const Int32NeighborListType& nonContiguousNL, Int32ArrayType& checkedFeatures)
   : m_ShouldCancel(shouldCancel)
   , m_MessageHandler(mesgHandler)
   , m_ParentIds(parentIds)
@@ -174,13 +174,13 @@ public:
 private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  const Int32Array& m_ParentIds;
-  const Float32Array& m_ParentVolumes;
-  const Float32Array& m_FeatureVolumes;
-  const Int32NeighborList& m_ContiguousNL;
-  Float32Array& m_GroupingDensities;
-  const Int32NeighborList& m_NonContiguousNL;
-  Int32Array& m_CheckedFeatures;
+  const Int32ArrayType& m_ParentIds;
+  const Float32ArrayType& m_ParentVolumes;
+  const Float32ArrayType& m_FeatureVolumes;
+  const Int32NeighborListType& m_ContiguousNL;
+  Float32ArrayType& m_GroupingDensities;
+  const Int32NeighborListType& m_NonContiguousNL;
+  Int32ArrayType& m_CheckedFeatures;
 };
 } // namespace
 
@@ -203,21 +203,21 @@ const std::atomic_bool& ComputeGroupingDensity::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeGroupingDensity::operator()()
 {
-  const auto& parentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->ParentIdsPath);
-  const auto& parentVolumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ParentVolumesPath);
-  const auto& featureVolumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesPath);
-  const auto& contiguousNL = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNLPath);
-  auto& groupingDensities = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->GroupingDensitiesPath);
+  const auto& parentIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->parent_ids_path);
+  const auto& parentVolumes = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->parent_volumes_path);
+  const auto& featureVolumes = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->volumes_path);
+  const auto& contiguousNL = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->contiguous_nl_path);
+  auto& groupingDensities = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->grouping_densities_path);
 
   // These may or may not be empty depending on the parameters
   // The filter created some temporary hidden data array and neighbor list that may or may not
   // get used for this. This setup does ensure the next 2 lines will actually return something.
-  const auto& nonContiguousNL = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NonContiguousNLPath);
-  auto& checkedFeatures = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CheckedFeaturesPath);
+  const auto& nonContiguousNL = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->non_contiguous_nl_path);
+  auto& checkedFeatures = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->checked_features_path);
 
-  if(m_InputValues->UseNonContiguousNeighbors)
+  if(m_InputValues->use_non_contiguous_neighbors)
   {
-    if(m_InputValues->FindCheckedFeatures)
+    if(m_InputValues->find_checked_features)
     {
       return ::FindDensityGrouping<FindDensitySpecializations<true, true>>(getCancel(), m_MessageHandler, parentIds, parentVolumes, featureVolumes, contiguousNL, groupingDensities, nonContiguousNL,
                                                                            checkedFeatures)();
@@ -226,7 +226,7 @@ Result<> ComputeGroupingDensity::operator()()
                                                                           checkedFeatures)();
   }
 
-  if(m_InputValues->FindCheckedFeatures)
+  if(m_InputValues->find_checked_features)
   {
     return ::FindDensityGrouping<FindDensitySpecializations<false, true>>(getCancel(), m_MessageHandler, parentIds, parentVolumes, featureVolumes, contiguousNL, groupingDensities, nonContiguousNL,
                                                                           checkedFeatures)();

@@ -149,7 +149,7 @@ class CacheBudgetScope
 {
 public:
   explicit CacheBudgetScope(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -181,7 +181,7 @@ std::vector<T> RunBinaryContour(const std::vector<T>& input, usize dimX, usize d
 
   const std::vector<SEOffset> offsets = MakeContourNeighborOffsets(fullyConnected);
   const BinaryContourPredicate<T> predicate{fg, bg};
-  const Result<> result = ApplyContour<T>(inStore, outStore, SizeVec3{dimX, dimY, dimZ}, offsets, predicate, shouldCancel, messageHandler);
+  const Result<> result = ApplyContour<T>(inStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, offsets, predicate, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<T> out(input.size());
@@ -235,7 +235,7 @@ std::vector<T> RunLabelContour(const std::vector<T>& input, usize dimX, usize di
 
   const std::vector<SEOffset> offsets = MakeContourNeighborOffsets(fullyConnected);
   const LabelContourPredicate<T> predicate{bg};
-  const Result<> result = ApplyContour<T>(inStore, outStore, SizeVec3{dimX, dimY, dimZ}, offsets, predicate, shouldCancel, messageHandler);
+  const Result<> result = ApplyContour<T>(inStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, offsets, predicate, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<T> out(input.size());
@@ -285,7 +285,7 @@ void RequireBoundedContour(const std::vector<int32>& input, const std::vector<in
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  auto applyContourResult = ApplyContour<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, offsets, predicate, shouldCancel, messageHandler, targetBytes);
+  auto applyContourResult = ApplyContour<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, offsets, predicate, shouldCancel, messageHandler, targetBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(applyContourResult);
 
   std::vector<int32> actual(k_TotalValues);
@@ -306,7 +306,7 @@ TEST_CASE("NXImageProcessing::ContourEngine: resident state requires a complete 
   constexpr usize k_DimZ = 128;
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto uint8Result = ImageProcessing::detail::CalculateContourResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(uint8Result);
@@ -315,13 +315,13 @@ TEST_CASE("NXImageProcessing::ContourEngine: resident state requires a complete 
   auto int32Result = ImageProcessing::detail::CalculateContourResidentWorkingMemoryBytes<int32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(int32Result);
   REQUIRE(int32Result.value() == k_ValueCount * 2 * sizeof(int32));
-  auto calculateContourResidentWorkingMemoryBytesResult = ImageProcessing::detail::CalculateContourResidentWorkingMemoryBytes<int32>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  auto calculateContourResidentWorkingMemoryBytesResult = ImageProcessing::detail::CalculateContourResidentWorkingMemoryBytes<int32>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(calculateContourResidentWorkingMemoryBytesResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseContourResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseContourResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseContourResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(128 * k_MiB);
@@ -351,13 +351,13 @@ TEST_CASE("NXImageProcessing::ContourEngine: real-OOC selector uses resident sta
   constexpr usize k_DimZ = 7;
   constexpr uint64 k_PartialBudgetBytes = 1024;
   constexpr uint64 k_CompleteBudgetBytes = 4096;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<uint8> input = contour_test::MakeMultiLabelContourPattern<uint8>(k_DimX, k_DimY, k_DimZ);
   const std::vector<SEOffset> offsets = MakeContourNeighborOffsets(true);
   const LabelContourPredicate<uint8> predicate{/*background=*/0};
   const std::vector<uint8> expected = contour_test::ContourGatherOracle<uint8>(input, k_DimX, k_DimY, k_DimZ, offsets, predicate);
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
 
   auto run = [&](uint64 budgetBytes) {
@@ -409,30 +409,30 @@ TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D body omits unavailable b
   const std::vector<int32> expected = contour_test::ContourGatherOracle<int32>(input, k_DimX, k_DimY, k_DimZ, offsets, predicate);
 
   std::vector<int32> firstOutput(k_SliceValues, std::numeric_limits<int32>::lowest());
-  nx::core::ImageProcessing::detail::ContourRollingPlaneBody<int32, LabelContourPredicate<int32>>{.previousPlane = nullptr,
-                                                                                                  .currentPlane = input.data(),
-                                                                                                  .nextPlane = input.data() + k_SliceValues,
-                                                                                                  .outPlane = firstOutput.data(),
+  nx::core::ImageProcessing::detail::ContourRollingPlaneBody<int32, LabelContourPredicate<int32>>{.previous_plane = nullptr,
+                                                                                                  .current_plane = input.data(),
+                                                                                                  .next_plane = input.data() + k_SliceValues,
+                                                                                                  .out_plane = firstOutput.data(),
                                                                                                   .offsets = offsets.data(),
-                                                                                                  .numOffsets = offsets.size(),
-                                                                                                  .dimX = k_DimX,
-                                                                                                  .dimY = k_DimY,
-                                                                                                  .hasPrevious = false,
-                                                                                                  .hasNext = true,
+                                                                                                  .num_offsets = offsets.size(),
+                                                                                                  .dim_x = k_DimX,
+                                                                                                  .dim_y = k_DimY,
+                                                                                                  .has_previous = false,
+                                                                                                  .has_next = true,
                                                                                                   .predicate = predicate}(Range{0, k_SliceValues});
   REQUIRE(std::equal(firstOutput.cbegin(), firstOutput.cend(), expected.cbegin()));
 
   std::vector<int32> lastOutput(k_SliceValues, std::numeric_limits<int32>::lowest());
-  nx::core::ImageProcessing::detail::ContourRollingPlaneBody<int32, LabelContourPredicate<int32>>{.previousPlane = input.data() + k_SliceValues,
-                                                                                                  .currentPlane = input.data() + 2 * k_SliceValues,
-                                                                                                  .nextPlane = nullptr,
-                                                                                                  .outPlane = lastOutput.data(),
+  nx::core::ImageProcessing::detail::ContourRollingPlaneBody<int32, LabelContourPredicate<int32>>{.previous_plane = input.data() + k_SliceValues,
+                                                                                                  .current_plane = input.data() + 2 * k_SliceValues,
+                                                                                                  .next_plane = nullptr,
+                                                                                                  .out_plane = lastOutput.data(),
                                                                                                   .offsets = offsets.data(),
-                                                                                                  .numOffsets = offsets.size(),
-                                                                                                  .dimX = k_DimX,
-                                                                                                  .dimY = k_DimY,
-                                                                                                  .hasPrevious = true,
-                                                                                                  .hasNext = false,
+                                                                                                  .num_offsets = offsets.size(),
+                                                                                                  .dim_x = k_DimX,
+                                                                                                  .dim_y = k_DimY,
+                                                                                                  .has_previous = true,
+                                                                                                  .has_next = false,
                                                                                                   .predicate = predicate}(Range{0, k_SliceValues});
   REQUIRE(std::equal(lastOutput.cbegin(), lastOutput.cend(), expected.cbegin() + 2 * k_SliceValues));
 }
@@ -445,7 +445,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D path reads each
   constexpr usize k_DimY = 4;
   for(const usize dimZ : {usize{2}, usize{7}})
   {
-    const SizeVec3 dims{k_DimX, k_DimY, dimZ};
+    const SizeVec3Type dims{k_DimX, k_DimY, dimZ};
     const usize sliceValues = k_DimX * k_DimY;
     const std::vector<T> binary = contour_test::MakeContourPattern<T>(k_DimX, k_DimY, dimZ, T{1}, T{0});
     const std::vector<T> labels = contour_test::MakeMultiLabelContourPattern<T>(k_DimX, k_DimY, dimZ);
@@ -488,7 +488,7 @@ TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D cancellation after the f
   constexpr usize k_DimY = 4;
   constexpr usize k_DimZ = 7;
   constexpr int32 k_Poison = 73;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> input = contour_test::MakeMultiLabelContourPattern<int32>(k_DimX, k_DimY, k_DimZ);
   const std::vector<SEOffset> offsets = MakeContourNeighborOffsets(/*fullyConnected=*/true);
   const LabelContourPredicate<int32> predicate{/*background=*/0};
@@ -514,7 +514,7 @@ TEST_CASE("NXImageProcessing::ContourEngine: rolling 3D propagates an input read
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 4;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   FailingReadDataStore<int32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{});
   OutOfCoreTransferCountingDataStore<int32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int32{73});
   std::atomic_bool shouldCancel{false};
@@ -627,7 +627,7 @@ TEST_CASE("NXImageProcessing::ContourEngine: over-capacity neighbor offsets are 
 
   const std::vector<SEOffset> tooMany(k_MaxRadius1Neighbors + 1, SEOffset{.dx = 1, .dy = 0, .dz = 0});
   const BinaryContourPredicate<int32> predicate{.foreground = 1, .background = 0};
-  const Result<> result = ApplyContour<int32>(inStore, outStore, SizeVec3{2, 2, 2}, tooMany, predicate, shouldCancel, messageHandler);
+  const Result<> result = ApplyContour<int32>(inStore, outStore, SizeVec3Type{2, 2, 2}, tooMany, predicate, shouldCancel, messageHandler);
   REQUIRE(result.invalid());
 }
 
@@ -674,13 +674,13 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: planner bounds full-width and 
     const auto result = CreateRadiusOneStencil2DPlan(/*dimX=*/9, /*dimY=*/7, /*inputValueBytes=*/4, /*outputValueBytes=*/4, /*targetBytes=*/216, /*preferFixedInput=*/false);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     const auto& plan = result.value();
-    REQUIRE(plan.fullWidth);
-    REQUIRE_FALSE(plan.fixedInput);
-    REQUIRE(plan.coreRows == 2);
-    REQUIRE(plan.coreColumns == 9);
-    REQUIRE(plan.inputBufferValues == 36);
-    REQUIRE(plan.outputBufferValues == 18);
-    REQUIRE(plan.residentBytes == 216);
+    REQUIRE(plan.full_width);
+    REQUIRE_FALSE(plan.fixed_input);
+    REQUIRE(plan.core_rows == 2);
+    REQUIRE(plan.core_columns == 9);
+    REQUIRE(plan.input_buffer_values == 36);
+    REQUIRE(plan.output_buffer_values == 18);
+    REQUIRE(plan.resident_bytes == 216);
   }
 
   SECTION("overwide X tiles")
@@ -688,13 +688,13 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: planner bounds full-width and 
     const auto result = CreateRadiusOneStencil2DPlan(/*dimX=*/9, /*dimY=*/7, /*inputValueBytes=*/4, /*outputValueBytes=*/4, /*targetBytes=*/56, /*preferFixedInput=*/false);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     const auto& plan = result.value();
-    REQUIRE_FALSE(plan.fullWidth);
-    REQUIRE_FALSE(plan.fixedInput);
-    REQUIRE(plan.coreRows == 1);
-    REQUIRE(plan.coreColumns == 2);
-    REQUIRE(plan.inputBufferValues == 12);
-    REQUIRE(plan.outputBufferValues == 2);
-    REQUIRE(plan.residentBytes == 56);
+    REQUIRE_FALSE(plan.full_width);
+    REQUIRE_FALSE(plan.fixed_input);
+    REQUIRE(plan.core_rows == 1);
+    REQUIRE(plan.core_columns == 2);
+    REQUIRE(plan.input_buffer_values == 12);
+    REQUIRE(plan.output_buffer_values == 2);
+    REQUIRE(plan.resident_bytes == 56);
   }
 
   SECTION("fixed input capacity")
@@ -703,10 +703,10 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: planner bounds full-width and 
         CreateRadiusOneStencil2DPlan(/*dimX=*/9, /*dimY=*/7, /*inputValueBytes=*/4, /*outputValueBytes=*/4, ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes, /*preferFixedInput=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     const auto& plan = result.value();
-    REQUIRE(plan.fullWidth);
-    REQUIRE(plan.fixedInput);
-    REQUIRE(plan.inputBufferValues == ImageProcessing::detail::k_RadiusOneStencil2DFixedInputBytes / sizeof(int32));
-    REQUIRE(plan.residentBytes <= ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes);
+    REQUIRE(plan.full_width);
+    REQUIRE(plan.fixed_input);
+    REQUIRE(plan.input_buffer_values == ImageProcessing::detail::k_RadiusOneStencil2DFixedInputBytes / sizeof(int32));
+    REQUIRE(plan.resident_bytes <= ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes);
   }
 
   SECTION("fixed output plane")
@@ -715,11 +715,11 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: planner bounds full-width and 
                                                      /*preferFixedInput=*/false, /*preferFixedOutput=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     const auto& plan = result.value();
-    REQUIRE(plan.fullWidth);
-    REQUIRE_FALSE(plan.fixedInput);
-    REQUIRE(plan.fixedOutput);
-    REQUIRE(plan.outputBufferValues == ImageProcessing::detail::k_RadiusOneStencil2DFixedPlaneBytes / sizeof(int32));
-    REQUIRE(plan.residentBytes <= ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes);
+    REQUIRE(plan.full_width);
+    REQUIRE_FALSE(plan.fixed_input);
+    REQUIRE(plan.fixed_output);
+    REQUIRE(plan.output_buffer_values == ImageProcessing::detail::k_RadiusOneStencil2DFixedPlaneBytes / sizeof(int32));
+    REQUIRE(plan.resident_bytes <= ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes);
   }
 
   SECTION("invalid and overflowing layouts")
@@ -805,25 +805,25 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: fixed output preserves block o
       const auto planResult = ImageProcessing::detail::CreateRadiusOneStencil2DPlan(k_DimX, k_DimY, sizeof(int32), sizeof(int32), ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes,
                                                                                     /*preferFixedInput=*/false, /*preferFixedOutput=*/true, workerScratchBytes);
       SIMPLNX_RESULT_REQUIRE_VALID(planResult);
-      REQUIRE(planResult.value().fixedOutput);
-      REQUIRE(planResult.value().fullWidth == fixedOutputCase.full_width);
+      REQUIRE(planResult.value().fixed_output);
+      REQUIRE(planResult.value().full_width == fixedOutputCase.full_width);
 
       std::atomic_bool shouldCancel{false};
       const Result<> executionResult = ImageProcessing::detail::ExecuteRadiusOneStencil2D<int32, int32>(
-          inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, shouldCancel, ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes, workerScratchBytes, /*maximumWorkers=*/1,
+          inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, shouldCancel, ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes, workerScratchBytes, /*maximumWorkers=*/1,
           [&](const int32* blockInput, int32* blockOutput, usize inputXBegin, usize inputYBegin, usize inputWidth, usize outputXBegin, usize outputYBegin, usize outputWidth) {
             return ImageProcessing::detail::Contour2DBlockBody<int32, LabelContourPredicate<int32>>{.input = blockInput,
                                                                                                     .output = blockOutput,
                                                                                                     .offsets = offsets.data(),
-                                                                                                    .numOffsets = offsets.size(),
-                                                                                                    .dimX = k_DimX,
-                                                                                                    .dimY = k_DimY,
-                                                                                                    .inputXBegin = inputXBegin,
-                                                                                                    .inputYBegin = inputYBegin,
-                                                                                                    .inputWidth = inputWidth,
-                                                                                                    .outputXBegin = outputXBegin,
-                                                                                                    .outputYBegin = outputYBegin,
-                                                                                                    .outputWidth = outputWidth,
+                                                                                                    .num_offsets = offsets.size(),
+                                                                                                    .dim_x = k_DimX,
+                                                                                                    .dim_y = k_DimY,
+                                                                                                    .input_x_begin = inputXBegin,
+                                                                                                    .input_y_begin = inputYBegin,
+                                                                                                    .input_width = inputWidth,
+                                                                                                    .output_x_begin = outputXBegin,
+                                                                                                    .output_y_begin = outputYBegin,
+                                                                                                    .output_width = outputWidth,
                                                                                                     .predicate = predicate};
           });
       SIMPLNX_RESULT_REQUIRE_VALID(executionResult);
@@ -859,20 +859,20 @@ TEST_CASE("NXImageProcessing::RadiusOneStencil2D: cancellation before the fixed 
   constexpr usize k_InputAllowanceBytes = 216;
   constexpr usize k_WorkerScratchBytes = ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes - ImageProcessing::detail::k_RadiusOneStencil2DFixedPlaneBytes - k_InputAllowanceBytes;
   const Result<> executionResult = ImageProcessing::detail::ExecuteRadiusOneStencil2D<int32, int32>(
-      inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, shouldCancel, ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes, k_WorkerScratchBytes, /*maximumWorkers=*/1,
+      inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, shouldCancel, ImageProcessing::detail::k_RadiusOneStencil2DTargetBytes, k_WorkerScratchBytes, /*maximumWorkers=*/1,
       [&](const int32* blockInput, int32* blockOutput, usize inputXBegin, usize inputYBegin, usize inputWidth, usize outputXBegin, usize outputYBegin, usize outputWidth) {
         return ImageProcessing::detail::Contour2DBlockBody<int32, LabelContourPredicate<int32>>{.input = blockInput,
                                                                                                 .output = blockOutput,
                                                                                                 .offsets = offsets.data(),
-                                                                                                .numOffsets = offsets.size(),
-                                                                                                .dimX = k_DimX,
-                                                                                                .dimY = k_DimY,
-                                                                                                .inputXBegin = inputXBegin,
-                                                                                                .inputYBegin = inputYBegin,
-                                                                                                .inputWidth = inputWidth,
-                                                                                                .outputXBegin = outputXBegin,
-                                                                                                .outputYBegin = outputYBegin,
-                                                                                                .outputWidth = outputWidth,
+                                                                                                .num_offsets = offsets.size(),
+                                                                                                .dim_x = k_DimX,
+                                                                                                .dim_y = k_DimY,
+                                                                                                .input_x_begin = inputXBegin,
+                                                                                                .input_y_begin = inputYBegin,
+                                                                                                .input_width = inputWidth,
+                                                                                                .output_x_begin = outputXBegin,
+                                                                                                .output_y_begin = outputYBegin,
+                                                                                                .output_width = outputWidth,
                                                                                                 .predicate = predicate};
       });
   SIMPLNX_RESULT_REQUIRE_VALID(executionResult);

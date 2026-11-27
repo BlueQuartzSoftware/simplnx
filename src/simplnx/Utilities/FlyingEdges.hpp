@@ -57,7 +57,7 @@ Supporting Paper: https://www.researchgate.net/publication/308703724_Flying_edge
 
 namespace util
 {
-const nx::core::uint8 numTris[256] =
+const nx::core::uint8 k_NumTris[256] =
     {
         0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 2,
         1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 3,
@@ -77,7 +77,7 @@ const nx::core::uint8 numTris[256] =
         2, 3, 3, 2, 3, 4, 2, 1, 3, 2, 4, 1, 2, 1, 1, 0
 };
 
-const nx::core::uint8 isCut[256][12] =
+const nx::core::uint8 k_IsCut[256][12] =
 {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
@@ -337,7 +337,7 @@ const nx::core::uint8 isCut[256][12] =
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-const char caseTriangles[256][16]
+const char k_CaseTriangles[256][16]
     {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
         {0,  3,  8,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -597,7 +597,7 @@ const char caseTriangles[256][16]
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
     };
 
-const nx::core::uint8 edgeVertices[12][2] = { {0,1}, {1,2}, {3,2},
+const nx::core::uint8 k_EdgeVertices[12][2] = { {0,1}, {1,2}, {3,2},
                                    {0,3}, {4,5}, {5,6},
                                    {7,6}, {4,7}, {0,4},
                                    {1,5}, {3,7}, {2,6} };
@@ -632,7 +632,7 @@ public:
    *
    * All inputs and outputs remain caller-owned.
    */
-  FlyingEdgesAlgorithm(const ImageGeom& image, const AbstractDataStore<T>& dataStore, const T isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals)
+  FlyingEdgesAlgorithm(const ImageGeom& image, const AbstractDataStore<T>& dataStore, const T isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStoreType& normals)
   : m_Image(image)
   , m_DataStore(dataStore)
   , m_IsoVal(isoVal)
@@ -745,9 +745,9 @@ public:
             continue;
           }
 
-          curTriCounter += util::numTris[caseId];
+          curTriCounter += util::k_NumTris[caseId];
 
-          const uint8* isCutPtr = util::isCut[caseId]; // size 12
+          const uint8* isCutPtr = util::k_IsCut[caseId]; // size 12
 
           ge0.x_start += isCutPtr[0];
           ge0.y_start += isCutPtr[3];
@@ -941,7 +941,7 @@ public:
             continue;
           }
 
-          const uint8* isCutPtr = util::isCut[caseId]; // has 12 elements
+          const uint8* isCutPtr = util::k_IsCut[caseId]; // has 12 elements
 
           CubeType pointCube = getPosCube(i, j, k);
           TCubeType isoValCube = getValCube(i, j, k);
@@ -1080,7 +1080,7 @@ public:
           }
 
           // Write triangle connectivity from the case-table edge indexes.
-          const char* caseTriPtr = util::caseTriangles[caseId]; // size 16
+          const char* caseTriPtr = util::k_CaseTriangles[caseId]; // size 16
           for(int idx = 0; caseTriPtr[idx] != -1; idx += 3)
           {
             m_TrisStore[triIdx * 3] = globalIdxs[caseTriPtr[idx]];
@@ -1132,9 +1132,9 @@ private:
   std::vector<GridEdge> m_GridEdges;
   std::vector<usize> m_TriCounter;
 
-  AbstractDataStore<IGeometry::SharedVertexList::value_type>& m_PointsStore;
-  AbstractDataStore<IGeometry::SharedTriList::value_type>& m_TrisStore;
-  Float32AbstractDataStore& m_NormalsStore;
+  AbstractDataStore<IGeometry::SharedVertexListType::value_type>& m_PointsStore;
+  AbstractDataStore<IGeometry::SharedTriListType::value_type>& m_TrisStore;
+  Float32AbstractDataStoreType& m_NormalsStore;
 
   // Passes 1 and 2 need current and next Z slices. Pass 4 gradients can need
   // k-1 through k+2. Four modulo-addressed slots cover both access patterns.
@@ -1244,8 +1244,8 @@ private:
    */
   std::array<float32, 3> interpolateOnCube(CubeType const& pts, TCubeType const& isoVals, uint8 const& edge) const
   {
-    uint8 i0 = util::edgeVertices[edge][0];
-    uint8 i1 = util::edgeVertices[edge][1];
+    uint8 i0 = util::k_EdgeVertices[edge][0];
+    uint8 i1 = util::k_EdgeVertices[edge][1];
 
     T weight = (m_IsoVal - isoVals[i0]) / (isoVals[i1] - isoVals[i0]);
     return interpolate(pts[i0], pts[i1], weight);
@@ -1300,8 +1300,8 @@ private:
   [[nodiscard]] CubeType getPosCube(usize i, usize j, usize k) const
   {
     CubeType pos;
-    const FloatVec3 zeroPos = m_Image.getOrigin();
-    const FloatVec3 spacing = m_Image.getSpacing();
+    const FloatVec3Type zeroPos = m_Image.getOrigin();
+    const FloatVec3Type spacing = m_Image.getSpacing();
 
     float32 xPos = zeroPos[0] + i * spacing[0];
     float32 yPos = zeroPos[1] + j * spacing[1];
@@ -1417,7 +1417,7 @@ private:
   {
     std::array<std::array<float32, 2>, 3> x = {};
     std::array<float32, 3> run = {};
-    FloatVec3 spacing = m_Image.getSpacing();
+    FloatVec3Type spacing = m_Image.getSpacing();
 
     // planeIdx addresses the X-Y location in each fetched Z slice.
     const usize planeIdx = j * m_NX + i;

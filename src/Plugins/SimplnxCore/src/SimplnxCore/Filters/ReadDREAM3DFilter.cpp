@@ -85,38 +85,38 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto importData = filterArgs.value<Dream3dImportParameter::ImportData>(k_ImportFileData);
-  if(importData.FilePath.empty())
+  if(importData.file_path.empty())
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
 
   const bool useDefaultGeometryValues = filterArgs.value<bool>(k_UseDefaultGeometryValues_Key);
 
   // Neutral metadata avoids source-policy decisions before the destination action can plan selected arrays.
-  auto dataStructureResult = dream3d::Dream3dPreflightCache::Instance().fetchSelectableMetadata(importData.FilePath);
+  auto dataStructureResult = dream3d::Dream3dPreflightCache::Instance().fetchSelectableMetadata(importData.file_path);
 
   Result<OutputActions> result;
 
   if(dataStructureResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};
   }
   result.warnings() = std::move(dataStructureResult.warnings());
-  const auto& importedDataStructure = dataStructureResult.value().dataStructure;
+  const auto& importedDataStructure = dataStructureResult.value().data_structure;
 
   std::vector<DataPath> selectedPaths;
-  if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::IncludeList)
+  if(importData.import_policy == Dream3dImportParameter::PathImportPolicy::IncludeList)
   {
-    for(const auto& dataPath : importData.DataPaths)
+    for(const auto& dataPath : importData.data_paths)
     {
       if(!importedDataStructure.containsData(dataPath))
       {
         result.warnings().push_back(
-            Warning{.code = -12, .message = fmt::format("The Include List path '{}' does not exist in the input file '{}'.", dataPath.toString(), importData.FilePath.string())});
+            Warning{.code = -12, .message = fmt::format("The Include List path '{}' does not exist in the input file '{}'.", dataPath.toString(), importData.file_path.string())});
       }
     }
     auto allDataPaths = importedDataStructure.getAllDataPaths();
-    selectedPaths = dream3d::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+    selectedPaths = dream3d::ExpandSelectedPathsToDescendants(importData.data_paths, allDataPaths);
     selectedPaths = dream3d::ExpandSelectedPathsToAncestors(selectedPaths);
 
     if(selectedPaths.empty())
@@ -125,12 +125,12 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
           Warning{.code = -10, .message = "The import policy is set to 'Include List' and the file paths list is empty.  This will result in no data being imported.  Is this what you meant to do?"});
     }
   }
-  else if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::All)
+  else if(importData.import_policy == Dream3dImportParameter::PathImportPolicy::ExcludeList || importData.import_policy == Dream3dImportParameter::PathImportPolicy::All)
   {
     auto allDataPaths = importedDataStructure.getAllDataPaths();
-    if(importData.ImportPolicy == Dream3dImportParameter::PathImportPolicy::ExcludeList)
+    if(importData.import_policy == Dream3dImportParameter::PathImportPolicy::ExcludeList)
     {
-      if(importData.DataPaths.empty())
+      if(importData.data_paths.empty())
       {
         result.warnings().push_back(
             Warning{.code = -11,
@@ -140,7 +140,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
       }
       else
       {
-        auto expandedDataPaths = dream3d::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+        auto expandedDataPaths = dream3d::ExpandSelectedPathsToDescendants(importData.data_paths, allDataPaths);
 
         // Erase the expandedDataPaths from allPaths to create finalDataPaths
         std::vector<nx::core::DataPath> finalDataPaths = allDataPaths;
@@ -165,10 +165,10 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
   {
     auto failure = MakeErrorResult<OutputActions>(k_UnsupportedPathImportPolicyError, "The chosen PathImportPolicy is not supported by this filter.  Please contact the developers.");
     failure.warnings() = std::move(result.warnings());
-    return {.outputActions = std::move(failure)};
+    return {.output_actions = std::move(failure)};
   }
 
-  auto validation = dataStructureResult.value().applyImageMetadata(importData.FilePath, selectedPaths, useDefaultGeometryValues);
+  auto validation = dataStructureResult.value().applyImageMetadata(importData.file_path, selectedPaths, useDefaultGeometryValues);
   if(validation.invalid())
   {
     for(auto& error : validation.errors())
@@ -180,20 +180,20 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
     }
     auto failure = ConvertInvalidResult<OutputActions>(std::move(validation));
     failure.warnings() = std::move(result.warnings());
-    return {.outputActions = std::move(failure)};
+    return {.output_actions = std::move(failure)};
   }
 
-  auto boundsValidation = hdf5::RectGridGeomIO::ValidateImportedBounds(importedDataStructure, importData.FilePath, selectedPaths);
+  auto boundsValidation = hdf5::RectGridGeomIO::ValidateImportedBounds(importedDataStructure, importData.file_path, selectedPaths);
   if(boundsValidation.invalid())
   {
     auto failure = ConvertInvalidResult<OutputActions>(std::move(boundsValidation));
     failure.warnings() = std::move(result.warnings());
-    return {.outputActions = std::move(failure)};
+    return {.output_actions = std::move(failure)};
   }
 
   // The action reports each selected geometry's defaulted values when applied in either mode.
-  result.value().appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, selectedPaths, useDefaultGeometryValues));
-  return {.outputActions = std::move(result)};
+  result.value().appendAction(std::make_unique<ImportH5ObjectPathsAction>(importData.file_path, selectedPaths, useDefaultGeometryValues));
+  return {.output_actions = std::move(result)};
 }
 
 Result<> ReadDREAM3DFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,

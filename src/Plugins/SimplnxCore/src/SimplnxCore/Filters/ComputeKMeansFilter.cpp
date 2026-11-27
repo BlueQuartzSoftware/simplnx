@@ -73,14 +73,14 @@ Parameters ComputeKMeansFilter::parameters() const
 
   params.insert(std::make_unique<UInt64ParameterType>(k_InitClusters_Key, "Number of Clusters", "Number of clusters to create. The value must be greater than zero. The default is 1.", uint64{1}));
   params.insert(std::make_unique<ChoicesParameter>(
-      k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
-      ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // Choice order matches ClusterUtilities::DistanceMetric values.
+      k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(cluster_utilities::DistanceMetric::Euclidean),
+      ChoicesParameter::ChoicesType{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // Choice order matches ClusterUtilities::DistanceMetric values.
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array",
                                                           "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to cluster from", DataPath{}, nx::core::GetAllNumericTypes()));
@@ -168,7 +168,7 @@ IFilter::PreflightResult ComputeKMeansFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -182,19 +182,19 @@ Result<> ComputeKMeansFilter::executeImpl(DataStructure& dataStructure, const Ar
   }
 
   // The seed output records the value used for reproducible clustering.
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   ComputeKMeansInputValues inputValues;
 
-  inputValues.InitClusters = filterArgs.value<uint64>(k_InitClusters_Key);
-  inputValues.DistanceMetric = static_cast<ClusterUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.MeansArrayPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_MeansArrayName_Key));
-  inputValues.Seed = seed;
+  inputValues.init_clusters = filterArgs.value<uint64>(k_InitClusters_Key);
+  inputValues.distance_metric = static_cast<cluster_utilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.means_array_path = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_MeansArrayName_Key));
+  inputValues.seed = seed;
 
-  inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  inputValues.clustering_array_path = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  inputValues.feature_ids_array_path = inputValues.clustering_array_path.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
 
   return ComputeKMeans(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

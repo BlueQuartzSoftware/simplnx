@@ -63,22 +63,22 @@ public:
    */
   void convert(size_t zStart, size_t zEnd, size_t yStart, size_t yEnd, size_t xStart, size_t xEnd) const
   {
-    const auto& cellPhasesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+    const auto& cellPhasesArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
     const auto& cellPhases = cellPhasesArray.getDataStoreRef();
-    const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+    const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
     const auto& featureIds = featureIdsArray.getDataStoreRef();
-    const auto& quatsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+    const auto& quatsArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
     const auto& quats = quatsArray.getDataStoreRef();
-    const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+    const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
     const auto& crystalStructures = crystalStructuresArray.getDataStoreRef();
-    const auto kernelSize = m_InputValues->KernelSize;
-    const bool useFeatureIds = m_InputValues->UseFeatureIds;
+    const auto kernelSize = m_InputValues->kernel_size;
+    const bool useFeatureIds = m_InputValues->use_feature_ids;
 
-    auto& kernelAvgMisorientationsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->KernelAverageMisorientationsArrayName);
+    auto& kernelAvgMisorientationsArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->kernel_average_misorientations_array_name);
     auto& kernelAvgMisorientations = kernelAvgMisorientationsArray.getDataStoreRef();
 
-    const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-    SizeVec3 udims = imageGeom.getDimensions();
+    const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+    SizeVec3Type udims = imageGeom.getDimensions();
 
     ebsdlib::QuatD q1;
     ebsdlib::QuatD q2;
@@ -149,7 +149,7 @@ public:
                     q2[3] = quats[quatIndex + 3];
                     uint32_t laueClass = crystalStructures[cellPhases[point]];
                     ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
-                    totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiF);
+                    totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::constants::k_180OverPiF);
                     numVoxel++;
                   }
 
@@ -220,8 +220,8 @@ Result<> ComputeKernelAvgMisorientationsDirect::operator()()
     return validationResult;
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-  SizeVec3 udims = imageGeom.getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  SizeVec3Type udims = imageGeom.getDimensions();
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   ThrottledMessageHandler progressThrottle(messageHandler);
@@ -233,12 +233,12 @@ Result<> ComputeKernelAvgMisorientationsDirect::operator()()
 
   progressThrottle.reset(udims[2] * udims[1] * udims[0], "Finding Kernel Average Misorientations");
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CrystalStructuresArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->KernelAverageMisorientationsArrayName));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath));
+  typename IParallelAlgorithm::AlgorithmArraysType algArrays;
+  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_phases_array_path));
+  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->crystal_structures_array_path));
+  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path));
+  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->kernel_average_misorientations_array_name));
+  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->quats_array_path));
 
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));

@@ -21,19 +21,19 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string kDataInputArchive = "6_6_avizo_writers.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_avizo_writers";
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_avizo_writers/6_6_avizo_writers_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteAvizoRectilinearCoordinateFilter filter;
@@ -54,7 +54,7 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Exec
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -64,7 +64,7 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Exec
   args.insertOrAssign(WriteAvizoRectilinearCoordinateFilter::k_WriteBinaryFile_Key, std::make_any<bool>(true));
 
   preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -72,18 +72,18 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Exec
   std::vector<size_t> linesToSkip{8, 9}; // skip the author & DateTime lines
   std::ifstream computedFile(computedOutputPath);
   std::ifstream exemplarFile(exemplarOutputPath);
-  UnitTest::CompareAsciiFiles(computedFile, exemplarFile, linesToSkip);
+  unit_test::CompareAsciiFiles(computedFile, exemplarFile, linesToSkip);
   std::ifstream computedBinaryFile(computedBinaryOutputPath, std::ios::binary);
   std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath, std::ios::binary);
-  UnitTest::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
+  unit_test::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -124,7 +124,7 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: SIMPL Backwards C
 
 TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Geometry cell tuple count", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter][TupleCount]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FilterType = WriteAvizoRectilinearCoordinateFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -153,13 +153,13 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Geometry cell tup
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -5834);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;
@@ -171,13 +171,13 @@ TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Geometry cell tup
 
 TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Source read failure preserves destination", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool writeBinary = GENERATE(false, true);
   const bool existingDestination = GENERATE(false, true);
   const bool throwAllocation = GENERATE(false, true);
   DYNAMIC_SECTION("binary=" << writeBinary << ", existing destination=" << existingDestination << ", allocation failure=" << throwAllocation)
   {
-    auto store = std::make_shared<UnitTest::AvizoWriterFailure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
-    UnitTest::AvizoWriterFailure::CheckSecondBlockFailure<WriteAvizoRectilinearCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
+    auto store = std::make_shared<unit_test::avizo_writer_failure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
+    unit_test::avizo_writer_failure::CheckSecondBlockFailure<WriteAvizoRectilinearCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
   }
 }

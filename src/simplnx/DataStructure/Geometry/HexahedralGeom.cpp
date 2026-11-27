@@ -79,9 +79,9 @@ std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
 
     INodeGeometry3D::copyMembersInto(*copy, copyPath);
     copy->m_PolyhedronListId = deepCopyOwnedChild(copyPath, getPolyhedra());
-    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltsContainingVert);
-    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltNeighbors);
-    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32Array>(copyPath, k_EltCentroids);
+    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltsContainingVert);
+    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltNeighbors);
+    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32ArrayType>(copyPath, k_EltCentroids);
 
     return copy;
   }
@@ -106,7 +106,7 @@ usize HexahedralGeom::getNumberOfCells() const
 
 Result<> HexahedralGeom::findElementSizes(bool recalculate)
 {
-  auto* hexSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  auto* hexSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_ElementSizesId);
   if(hexSizesPtr != nullptr && !recalculate)
   {
     return {};
@@ -124,14 +124,14 @@ Result<> HexahedralGeom::findElementSizes(bool recalculate)
   }
 
   m_ElementSizesId = hexSizesPtr->getId();
-  GeometryHelpers::Topology::FindHexVolumes<uint64>(getPolyhedra(), getVertices(), hexSizesPtr);
+  geometry_helpers::topology::FindHexVolumes<uint64>(getPolyhedra(), getVertices(), hexSizesPtr);
 
   return {};
 }
 
 Result<> HexahedralGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* hexasControllingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* hexasControllingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellContainingVertDataArrayId);
   if(hexasControllingVertPtr != nullptr && !recalculate)
   {
     return {};
@@ -148,7 +148,7 @@ Result<> HexahedralGeom::findElementsContainingVert(bool recalculate)
   }
 
   m_CellContainingVertDataArrayId = hexasControllingVertPtr->getId();
-  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVertPtr, getNumberOfVertices());
+  auto findResult = geometry_helpers::connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVertPtr, getNumberOfVertices());
   if(findResult.invalid())
   {
     m_CellContainingVertDataArrayId.reset();
@@ -160,7 +160,7 @@ Result<> HexahedralGeom::findElementsContainingVert(bool recalculate)
 
 Result<> HexahedralGeom::findElementNeighbors(bool recalculate)
 {
-  auto* hexNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* hexNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellNeighborsDataArrayId);
   if(hexNeighborsPtr != nullptr && !recalculate)
   {
     return {};
@@ -184,7 +184,7 @@ Result<> HexahedralGeom::findElementNeighbors(bool recalculate)
 
   m_CellNeighborsDataArrayId = hexNeighborsPtr->getId();
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighborsPtr, Type::Hexahedral);
+  auto findResult = geometry_helpers::connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighborsPtr, Type::Hexahedral);
   if(findResult.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
@@ -196,7 +196,7 @@ Result<> HexahedralGeom::findElementNeighbors(bool recalculate)
 
 Result<> HexahedralGeom::findElementCentroids(bool recalculate)
 {
-  auto* hexCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* hexCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_CellCentroidsDataArrayId);
   if(hexCentroidsPtr != nullptr && !recalculate)
   {
     return {};
@@ -214,7 +214,7 @@ Result<> HexahedralGeom::findElementCentroids(bool recalculate)
   }
 
   m_CellCentroidsDataArrayId = hexCentroidsPtr->getId();
-  GeometryHelpers::Topology::FindElementCentroids<uint64>(getPolyhedra(), getVertices(), hexCentroidsPtr);
+  geometry_helpers::topology::FindElementCentroids<uint64>(getPolyhedra(), getVertices(), hexCentroidsPtr);
 
   return {};
 }
@@ -279,7 +279,7 @@ Result<> HexahedralGeom::findEdges(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindHexEdges<uint64>(getPolyhedra(), edgeListPtr);
+  auto findResult = geometry_helpers::connectivity::FindHexEdges<uint64>(getPolyhedra(), edgeListPtr);
   if(findResult.invalid())
   {
     m_EdgeDataArrayId.reset();
@@ -308,7 +308,7 @@ Result<> HexahedralGeom::findFaces(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindHexFaces<uint64>(getPolyhedra(), quadListPtr);
+  auto findResult = geometry_helpers::connectivity::FindHexFaces<uint64>(getPolyhedra(), quadListPtr);
   if(findResult.invalid())
   {
     m_FaceListId.reset();
@@ -338,7 +338,7 @@ Result<> HexahedralGeom::findUnsharedEdges(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64>(getPolyhedra(), unsharedEdgeListPtr);
+  auto findResult = geometry_helpers::connectivity::FindUnsharedHexEdges<uint64>(getPolyhedra(), unsharedEdgeListPtr);
   if(findResult.invalid())
   {
     m_UnsharedEdgeListId.reset();
@@ -368,7 +368,7 @@ Result<> HexahedralGeom::findUnsharedFaces(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64>(getPolyhedra(), unsharedQuadListPtr);
+  auto findResult = geometry_helpers::connectivity::FindUnsharedHexFaces<uint64>(getPolyhedra(), unsharedQuadListPtr);
   if(findResult.invalid())
   {
     m_UnsharedFaceListId.reset();

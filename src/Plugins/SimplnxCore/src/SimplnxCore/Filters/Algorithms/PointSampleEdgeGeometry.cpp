@@ -18,7 +18,7 @@ class CopyEdgeDataToVertexData
 public:
   using StoreType = AbstractDataStore<T>;
 
-  CopyEdgeDataToVertexData(const IDataArray* selectedEdgeArray, IDataArray* createdVertexArray, const UInt64AbstractDataStore& vertexEdgeIds, const std::atomic_bool& shouldCancel)
+  CopyEdgeDataToVertexData(const IDataArray* selectedEdgeArray, IDataArray* createdVertexArray, const UInt64AbstractDataStoreType& vertexEdgeIds, const std::atomic_bool& shouldCancel)
   : m_SelectedEdgeDataStore(selectedEdgeArray->template getIDataStoreRefAs<StoreType>())
   , m_CreatedVertexDataStore(createdVertexArray->template getIDataStoreRefAs<StoreType>())
   , m_VertexEdgeDataStore(vertexEdgeIds)
@@ -48,11 +48,11 @@ public:
 private:
   const StoreType& m_SelectedEdgeDataStore;
   StoreType& m_CreatedVertexDataStore;
-  const UInt64AbstractDataStore& m_VertexEdgeDataStore;
+  const UInt64AbstractDataStoreType& m_VertexEdgeDataStore;
   const std::atomic_bool& m_ShouldCancel;
 };
 
-Result<std::tuple<float32, float32, float32, float32>> ComputeEdgeVector(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex)
+Result<std::tuple<float32, float32, float32, float32>> ComputeEdgeVector(const Float32ArrayType& edgeVertices, const UInt64ArrayType& edges, int64 edgeIndex)
 {
   const usize endpoint1 = edges[2 * edgeIndex];
   const usize endpoint2 = edges[2 * edgeIndex + 1];
@@ -73,7 +73,7 @@ usize ComputeNumSamplePoints(float32 dist, float32 samplingRes)
   return static_cast<usize>(dist / samplingRes) + 1;
 }
 
-Result<usize> CountSamplesForEdge(const Float32Array& edgeVertices, const UInt64Array& edges, int64 edgeIndex, float32 samplingRes)
+Result<usize> CountSamplesForEdge(const Float32ArrayType& edgeVertices, const UInt64ArrayType& edges, int64 edgeIndex, float32 samplingRes)
 {
   auto result = ComputeEdgeVector(edgeVertices, edges, edgeIndex);
   if(result.invalid())
@@ -84,8 +84,8 @@ Result<usize> CountSamplesForEdge(const Float32Array& edgeVertices, const UInt64
   return {ComputeNumSamplePoints(dist, samplingRes)};
 }
 
-[[nodiscard]] Result<> SampleEdge(int64 edgeIndex, const Float32Array& edgeVertices, UInt64Array& edges, float32 samplingRes, Float32Array& vertices, UInt64Array* pointEdgeIdsArrayPtr,
-                                  Float32Array* cumulativeSampleDistArrayPtr, int64& vertCount)
+[[nodiscard]] Result<> SampleEdge(int64 edgeIndex, const Float32ArrayType& edgeVertices, UInt64ArrayType& edges, float32 samplingRes, Float32ArrayType& vertices, UInt64ArrayType* pointEdgeIdsArrayPtr,
+                                  Float32ArrayType* cumulativeSampleDistArrayPtr, int64& vertCount)
 {
   auto result = ComputeEdgeVector(edgeVertices, edges, edgeIndex);
   if(result.invalid())
@@ -144,21 +144,21 @@ PointSampleEdgeGeometry::PointSampleEdgeGeometry(DataStructure& dataStructure, P
 // -----------------------------------------------------------------------------
 Result<> PointSampleEdgeGeometry::operator()()
 {
-  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->ScanVectorGeometryPath);
+  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->scan_vector_geometry_path);
   auto numEdges = edgeGeom.getNumberOfEdges();
 
-  auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->SampledVertexGeometryPath);
+  auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->sampled_vertex_geometry_path);
 
-  DataPath vertexEdgeIdsDataPath = m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->EdgeIdsArrayName);
-  auto* vertexEdgeIdsDataArrayPtr = m_DataStructure.getDataAs<UInt64Array>(vertexEdgeIdsDataPath);
+  DataPath vertexEdgeIdsDataPath = m_InputValues->sampled_vertex_geometry_path.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->edge_ids_array_name);
+  auto* vertexEdgeIdsDataArrayPtr = m_DataStructure.getDataAs<UInt64ArrayType>(vertexEdgeIdsDataPath);
 
   auto& vertexEdgeIdsDataStore = vertexEdgeIdsDataArrayPtr->getDataStoreRef();
 
-  Float32Array* cumulativeSampleDistArrayPtr = nullptr;
-  if(m_InputValues->CalculateCumulativeSampleDistance)
+  Float32ArrayType* cumulativeSampleDistArrayPtr = nullptr;
+  if(m_InputValues->calculate_cumulative_sample_distance)
   {
-    cumulativeSampleDistArrayPtr = m_DataStructure.getDataAs<Float32Array>(
-        m_InputValues->SampledVertexGeometryPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->CumulativeSampleDistanceArrayName));
+    cumulativeSampleDistArrayPtr = m_DataStructure.getDataAs<Float32ArrayType>(
+        m_InputValues->sampled_vertex_geometry_path.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(m_InputValues->cumulative_sample_distance_array_name));
   }
 
   // --- Step 1: Count how many total sample points to generate ---
@@ -174,7 +174,7 @@ Result<> PointSampleEdgeGeometry::operator()()
     {
       return {};
     }
-    auto result = CountSamplesForEdge(edgeVertices, edges, i, m_InputValues->ScanVectorSamplingRes);
+    auto result = CountSamplesForEdge(edgeVertices, edges, i, m_InputValues->scan_vector_sampling_res);
     if(result.invalid())
     {
       return ConvertResult(std::move(result));
@@ -207,7 +207,7 @@ Result<> PointSampleEdgeGeometry::operator()()
     {
       return {};
     }
-    Result<> sampleResult = SampleEdge(i, edgeVertices, edges, m_InputValues->ScanVectorSamplingRes, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
+    Result<> sampleResult = SampleEdge(i, edgeVertices, edges, m_InputValues->scan_vector_sampling_res, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
     if(sampleResult.invalid())
     {
       return sampleResult;
@@ -218,7 +218,7 @@ Result<> PointSampleEdgeGeometry::operator()()
 
   m_MessageHandler.sendInfoMessage("Copying Edge Data to Vertex Geometry...");
   const DataPath vertexAttrMatPath = vertexGeom.getVertexAttributeMatrixDataPath();
-  for(const auto& selectedArrayPath : m_InputValues->pSelectedDataArrayPaths)
+  for(const auto& selectedArrayPath : m_InputValues->p_selected_data_array_paths)
   {
     DataPath createdArrayPath = vertexAttrMatPath.createChildPath(selectedArrayPath.getTargetName());
     const auto* selectedEdgeArrayPtr = m_DataStructure.getDataAs<IDataArray>(selectedArrayPath);

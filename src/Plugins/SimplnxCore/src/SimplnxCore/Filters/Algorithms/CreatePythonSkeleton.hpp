@@ -14,12 +14,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CreatePythonSkeletonInputValues
 {
-  bool useExistingPlugin{};
-  std::filesystem::path pluginInputDir;
-  std::filesystem::path pluginOutputDir;
-  std::string pluginName;
-  std::string pluginHumanName;
-  std::string filterNames;
+  bool use_existing_plugin{};
+  std::filesystem::path plugin_input_dir;
+  std::filesystem::path plugin_output_dir;
+  std::string plugin_name;
+  std::string plugin_human_name;
+  std::string filter_names;
 };
 
 /**

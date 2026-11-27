@@ -47,7 +47,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
     {
       auto fixedPlanResult = detail::CreateSweep2DPlan(dimX, dimY, m_Fixed2DBufferValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
       if(m_Fixed2DWorkValues > 0 && m_Fixed2DBufferValues > 0 && m_Mask.getStoreType() == IDataStore::StoreType::OutOfCore && vol <= m_Fixed2DWorkValues && fixedPlanResult.valid() &&
-         fixedPlanResult.value().fullWidth)
+         fixedPlanResult.value().full_width)
       {
         auto fixedStoreResult = detail::BoundedMemorySweepStore<T>::Create(vol, m_Fixed2DWorkValues);
         if(fixedStoreResult.invalid())
@@ -65,7 +65,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
         }
         return copyStore(*fixedStore, m_Out, vol, std::min(vol, m_MaxSlabValues));
       }
-      if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+      if(!data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
       {
         return run2D<Dilation>(m_Out, m_Mask, dimX, dimY, vol, max2DBufferValues);
       }
@@ -244,15 +244,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
             // lambda itself always runs single-threaded over its own disjoint block.
             auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
               bool blockChanged = false;
-              const usize rowSpan = block.rowEnd - block.rowBegin;
-              const usize colSpan = block.colEnd - block.colBegin;
+              const usize rowSpan = block.row_end - block.row_begin;
+              const usize colSpan = block.col_end - block.col_begin;
               for(usize localRow = 0; localRow < rowSpan; ++localRow)
               {
-                const usize rowIndex = forward ? block.rowBegin + localRow : block.rowEnd - 1 - localRow;
+                const usize rowIndex = forward ? block.row_begin + localRow : block.row_end - 1 - localRow;
                 const int64 y = static_cast<int64>(rowIndex);
                 for(usize localCol = 0; localCol < colSpan; ++localCol)
                 {
-                  const usize colIndex = forward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
+                  const usize colIndex = forward ? block.col_begin + localCol : block.col_end - 1 - localCol;
                   const int64 x = static_cast<int64>(colIndex);
                   const usize p2d = flat2d(x, y);
                   const usize p = planeOffset + p2d;
@@ -266,38 +266,38 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
                     {
                       if(localZ > 0)
                       {
-                        v = TraitsType::fold(v, workSlab[p - sliceValues]);
+                        v = TraitsType::Fold(v, workSlab[p - sliceValues]);
                       }
                       else if(haveAdjacent)
                       {
-                        v = TraitsType::fold(v, adjacent[p2d]);
+                        v = TraitsType::Fold(v, adjacent[p2d]);
                       }
                       if(y > 0)
                       {
-                        v = TraitsType::fold(v, workSlab[p - dimX]);
+                        v = TraitsType::Fold(v, workSlab[p - dimX]);
                       }
                       if(x > 0)
                       {
-                        v = TraitsType::fold(v, workSlab[p - 1]);
+                        v = TraitsType::Fold(v, workSlab[p - 1]);
                       }
                     }
                     else
                     {
                       if(x + 1 < nX)
                       {
-                        v = TraitsType::fold(v, workSlab[p + 1]);
+                        v = TraitsType::Fold(v, workSlab[p + 1]);
                       }
                       if(y + 1 < nY)
                       {
-                        v = TraitsType::fold(v, workSlab[p + dimX]);
+                        v = TraitsType::Fold(v, workSlab[p + dimX]);
                       }
                       if(localZ + 1 < currentSlabPlanes)
                       {
-                        v = TraitsType::fold(v, workSlab[p + sliceValues]);
+                        v = TraitsType::Fold(v, workSlab[p + sliceValues]);
                       }
                       else if(haveAdjacent)
                       {
-                        v = TraitsType::fold(v, adjacent[p2d]);
+                        v = TraitsType::Fold(v, adjacent[p2d]);
                       }
                     }
                   }
@@ -314,7 +314,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
                       const usize neighbor2d = flat2d(nx, ny);
                       if(o.dz == 0)
                       {
-                        v = TraitsType::fold(v, workSlab[planeOffset + neighbor2d]);
+                        v = TraitsType::Fold(v, workSlab[planeOffset + neighbor2d]);
                       }
                       else
                       {
@@ -322,16 +322,16 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
                         if(neighborInsideSlab)
                         {
                           const usize neighborPlaneOffset = forward ? (planeOffset - sliceValues) : (planeOffset + sliceValues);
-                          v = TraitsType::fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
+                          v = TraitsType::Fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
                         }
                         else if(haveAdjacent)
                         {
-                          v = TraitsType::fold(v, adjacent[neighbor2d]);
+                          v = TraitsType::Fold(v, adjacent[neighbor2d]);
                         }
                       }
                     }
                   }
-                  const T newVal = TraitsType::clampToMask(v, maskSlab[p]);
+                  const T newVal = TraitsType::ClampToMask(v, maskSlab[p]);
                   if(newVal != workSlab[p])
                   {
                     workSlab[p] = newVal;
@@ -432,8 +432,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
     }
     const detail::ReconstructionPersistentPrefixPlan persistentPlan = persistentPlanResult.value();
     const bool isBorderMarker = m_MarkerOptions.source == ReconstructionMarkerSource::MaskWithMinimumInterior || m_MarkerOptions.source == ReconstructionMarkerSource::MaskWithMaximumInterior;
-    const bool usePersistentPrefix = isBorderMarker && persistentPlan.residentPlanes > 0;
-    if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+    const bool usePersistentPrefix = isBorderMarker && persistentPlan.resident_planes > 0;
+    if(!data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
     {
       if(usePersistentPrefix)
       {
@@ -505,7 +505,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runImpl()
     }
     if(usedPersistentPrefix)
     {
-      return copyStoreRange(*workStore, m_Out, persistentPlan.residentValues, vol - persistentPlan.residentValues, maxBatchValues);
+      return copyStoreRange(*workStore, m_Out, persistentPlan.resident_values, vol - persistentPlan.resident_values, maxBatchValues);
     }
     return copyStore(*workStore, m_Out);
   }
@@ -596,14 +596,14 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
       // lambda itself always runs single-threaded over its own disjoint block.
       auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
         bool blockChanged = false;
-        const usize rowSpan = block.rowEnd - block.rowBegin;
-        const usize colSpan = block.colEnd - block.colBegin;
+        const usize rowSpan = block.row_end - block.row_begin;
+        const usize colSpan = block.col_end - block.col_begin;
         for(usize localRow = 0; localRow < rowSpan; ++localRow)
         {
-          const usize y = forward ? block.rowBegin + localRow : block.rowEnd - 1 - localRow;
+          const usize y = forward ? block.row_begin + localRow : block.row_end - 1 - localRow;
           for(usize localCol = 0; localCol < colSpan; ++localCol)
           {
-            const usize x = forward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
+            const usize x = forward ? block.col_begin + localCol : block.col_end - 1 - localCol;
             const usize position = flat(x, y, z);
             T value = work[position];
             if(!m_FullyConnected)
@@ -612,30 +612,30 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
               {
                 if(z > 0)
                 {
-                  value = TraitsType::fold(value, work[position - sliceValues]);
+                  value = TraitsType::Fold(value, work[position - sliceValues]);
                 }
                 if(y > 0)
                 {
-                  value = TraitsType::fold(value, work[position - dimX]);
+                  value = TraitsType::Fold(value, work[position - dimX]);
                 }
                 if(x > 0)
                 {
-                  value = TraitsType::fold(value, work[position - 1]);
+                  value = TraitsType::Fold(value, work[position - 1]);
                 }
               }
               else
               {
                 if(x + 1 < dimX)
                 {
-                  value = TraitsType::fold(value, work[position + 1]);
+                  value = TraitsType::Fold(value, work[position + 1]);
                 }
                 if(y + 1 < dimY)
                 {
-                  value = TraitsType::fold(value, work[position + dimX]);
+                  value = TraitsType::Fold(value, work[position + dimX]);
                 }
                 if(z + 1 < dimZ)
                 {
-                  value = TraitsType::fold(value, work[position + sliceValues]);
+                  value = TraitsType::Fold(value, work[position + sliceValues]);
                 }
               }
             }
@@ -648,11 +648,11 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3DWavefront(usize dim
                 const int64 neighborZ = static_cast<int64>(z) + offset.dz;
                 if(inBounds(neighborX, neighborY, neighborZ))
                 {
-                  value = TraitsType::fold(value, work[flat(static_cast<usize>(neighborX), static_cast<usize>(neighborY), static_cast<usize>(neighborZ))]);
+                  value = TraitsType::Fold(value, work[flat(static_cast<usize>(neighborX), static_cast<usize>(neighborY), static_cast<usize>(neighborZ))]);
                 }
               }
             }
-            const T newValue = TraitsType::clampToMask(value, mask[position]);
+            const T newValue = TraitsType::ClampToMask(value, mask[position]);
             if(newValue != work[position])
             {
               work[position] = newValue;
@@ -790,15 +790,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
         // lambda itself always runs single-threaded over its own disjoint block.
         auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
           bool blockChanged = false;
-          const usize rowSpan = block.rowEnd - block.rowBegin;
-          const usize colSpan = block.colEnd - block.colBegin;
+          const usize rowSpan = block.row_end - block.row_begin;
+          const usize colSpan = block.col_end - block.col_begin;
           for(usize localRow = 0; localRow < rowSpan; ++localRow)
           {
-            const usize rowIndex = forward ? block.rowBegin + localRow : block.rowEnd - 1 - localRow;
+            const usize rowIndex = forward ? block.row_begin + localRow : block.row_end - 1 - localRow;
             const int64 y = static_cast<int64>(rowIndex);
             for(usize localCol = 0; localCol < colSpan; ++localCol)
             {
-              const usize colIndex = forward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
+              const usize colIndex = forward ? block.col_begin + localCol : block.col_end - 1 - localCol;
               const int64 x = static_cast<int64>(colIndex);
               const usize p2d = flat2d(x, y);
               const usize p = planeOffset + p2d;
@@ -812,38 +812,38 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
                 {
                   if(localZ > 0)
                   {
-                    v = TraitsType::fold(v, workSlab[p - sliceValues]);
+                    v = TraitsType::Fold(v, workSlab[p - sliceValues]);
                   }
                   else if(haveAdjacent)
                   {
-                    v = TraitsType::fold(v, adjacent[p2d]);
+                    v = TraitsType::Fold(v, adjacent[p2d]);
                   }
                   if(y > 0)
                   {
-                    v = TraitsType::fold(v, workSlab[p - dimX]);
+                    v = TraitsType::Fold(v, workSlab[p - dimX]);
                   }
                   if(x > 0)
                   {
-                    v = TraitsType::fold(v, workSlab[p - 1]);
+                    v = TraitsType::Fold(v, workSlab[p - 1]);
                   }
                 }
                 else
                 {
                   if(x + 1 < nX)
                   {
-                    v = TraitsType::fold(v, workSlab[p + 1]);
+                    v = TraitsType::Fold(v, workSlab[p + 1]);
                   }
                   if(y + 1 < nY)
                   {
-                    v = TraitsType::fold(v, workSlab[p + dimX]);
+                    v = TraitsType::Fold(v, workSlab[p + dimX]);
                   }
                   if(localZ + 1 < currentSlabPlanes)
                   {
-                    v = TraitsType::fold(v, workSlab[p + sliceValues]);
+                    v = TraitsType::Fold(v, workSlab[p + sliceValues]);
                   }
                   else if(haveAdjacent)
                   {
-                    v = TraitsType::fold(v, adjacent[p2d]);
+                    v = TraitsType::Fold(v, adjacent[p2d]);
                   }
                 }
               }
@@ -860,7 +860,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
                   const usize neighbor2d = flat2d(nx, ny);
                   if(o.dz == 0)
                   {
-                    v = TraitsType::fold(v, workSlab[planeOffset + neighbor2d]);
+                    v = TraitsType::Fold(v, workSlab[planeOffset + neighbor2d]);
                   }
                   else
                   {
@@ -868,16 +868,16 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirectWavefront(usize dimX, u
                     if(neighborInsideSlab)
                     {
                       const usize neighborPlaneOffset = forward ? (planeOffset - sliceValues) : (planeOffset + sliceValues);
-                      v = TraitsType::fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
+                      v = TraitsType::Fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
                     }
                     else if(haveAdjacent)
                     {
-                      v = TraitsType::fold(v, adjacent[neighbor2d]);
+                      v = TraitsType::Fold(v, adjacent[neighbor2d]);
                     }
                   }
                 }
               }
-              const T newVal = TraitsType::clampToMask(v, maskSlab[p]);
+              const T newVal = TraitsType::ClampToMask(v, maskSlab[p]);
               if(newVal != workSlab[p])
               {
                 workSlab[p] = newVal;
@@ -953,8 +953,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
   std::string forwardProgressLabel;
   std::string reverseProgressLabel;
   using TraitsType = detail::ReconTraits<T, Dilation>;
-  const usize residentPlanes = plan.residentPlanes;
-  const usize residentValues = plan.residentValues;
+  const usize residentPlanes = plan.resident_planes;
+  const usize residentValues = plan.resident_values;
   const usize tailPlanes = dimZ - residentPlanes;
   const int64 nX = static_cast<int64>(dimX);
   const int64 ny = static_cast<int64>(dimY);
@@ -1015,15 +1015,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
     // between forward and reverse when row and column traversal reverse together.
     auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
       bool blockChanged = false;
-      const usize rowSpan = block.rowEnd - block.rowBegin;
-      const usize colSpan = block.colEnd - block.colBegin;
+      const usize rowSpan = block.row_end - block.row_begin;
+      const usize colSpan = block.col_end - block.col_begin;
       for(usize localRow = 0; localRow < rowSpan; ++localRow)
       {
-        const usize rowIndex = yForward ? block.rowBegin + localRow : block.rowEnd - 1 - localRow;
+        const usize rowIndex = yForward ? block.row_begin + localRow : block.row_end - 1 - localRow;
         const int64 y = static_cast<int64>(rowIndex);
         for(usize localCol = 0; localCol < colSpan; ++localCol)
         {
-          const usize columnIndex = xForward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
+          const usize columnIndex = xForward ? block.col_begin + localCol : block.col_end - 1 - localCol;
           const int64 x = static_cast<int64>(columnIndex);
           const usize position2d = flat2d(x, y);
           const usize position = planeOffset + position2d;
@@ -1034,38 +1034,38 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
             {
               if(z > 0)
               {
-                value = TraitsType::fold(value, residentWork[position - sliceValues]);
+                value = TraitsType::Fold(value, residentWork[position - sliceValues]);
               }
             }
             else if(z + 1 < residentPlanes)
             {
-              value = TraitsType::fold(value, residentWork[position + sliceValues]);
+              value = TraitsType::Fold(value, residentWork[position + sliceValues]);
             }
             else if(outsideAdjacent != nullptr)
             {
-              value = TraitsType::fold(value, outsideAdjacent[position2d]);
+              value = TraitsType::Fold(value, outsideAdjacent[position2d]);
             }
             if(yForward)
             {
               if(y > 0)
               {
-                value = TraitsType::fold(value, residentWork[position - dimX]);
+                value = TraitsType::Fold(value, residentWork[position - dimX]);
               }
             }
             else if(y + 1 < ny)
             {
-              value = TraitsType::fold(value, residentWork[position + dimX]);
+              value = TraitsType::Fold(value, residentWork[position + dimX]);
             }
             if(xForward)
             {
               if(x > 0)
               {
-                value = TraitsType::fold(value, residentWork[position - 1]);
+                value = TraitsType::Fold(value, residentWork[position - 1]);
               }
             }
             else if(x + 1 < nX)
             {
-              value = TraitsType::fold(value, residentWork[position + 1]);
+              value = TraitsType::Fold(value, residentWork[position + 1]);
             }
           }
           else
@@ -1086,15 +1086,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
               const usize neighbor2d = flat2d(neighborX, neighborY);
               if(neighborZ < static_cast<int64>(residentPlanes))
               {
-                value = TraitsType::fold(value, residentWork[static_cast<usize>(neighborZ) * sliceValues + neighbor2d]);
+                value = TraitsType::Fold(value, residentWork[static_cast<usize>(neighborZ) * sliceValues + neighbor2d]);
               }
               else if(outsideAdjacent != nullptr)
               {
-                value = TraitsType::fold(value, outsideAdjacent[neighbor2d]);
+                value = TraitsType::Fold(value, outsideAdjacent[neighbor2d]);
               }
             }
           }
-          const T newValue = TraitsType::clampToMask(value, currentMask[position2d]);
+          const T newValue = TraitsType::ClampToMask(value, currentMask[position2d]);
           if(newValue != residentWork[position])
           {
             residentWork[position] = newValue;
@@ -1114,15 +1114,15 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
     // Both call sites below always pass xForward == yForward, matching scanResidentPlane's assumption above.
     auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
       bool blockChanged = false;
-      const usize rowSpan = block.rowEnd - block.rowBegin;
-      const usize colSpan = block.colEnd - block.colBegin;
+      const usize rowSpan = block.row_end - block.row_begin;
+      const usize colSpan = block.col_end - block.col_begin;
       for(usize localRow = 0; localRow < rowSpan; ++localRow)
       {
-        const usize rowIndex = yForward ? block.rowBegin + localRow : block.rowEnd - 1 - localRow;
+        const usize rowIndex = yForward ? block.row_begin + localRow : block.row_end - 1 - localRow;
         const int64 y = static_cast<int64>(rowIndex);
         for(usize localCol = 0; localCol < colSpan; ++localCol)
         {
-          const usize columnIndex = xForward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
+          const usize columnIndex = xForward ? block.col_begin + localCol : block.col_end - 1 - localCol;
           const int64 x = static_cast<int64>(columnIndex);
           const usize position = flat2d(x, y);
           T value = workPlanePtr[position];
@@ -1132,34 +1132,34 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
             {
               if(z > 0 && adjacent != nullptr)
               {
-                value = TraitsType::fold(value, adjacent[position]);
+                value = TraitsType::Fold(value, adjacent[position]);
               }
             }
             else if(z + 1 < dimZ && adjacent != nullptr)
             {
-              value = TraitsType::fold(value, adjacent[position]);
+              value = TraitsType::Fold(value, adjacent[position]);
             }
             if(yForward)
             {
               if(y > 0)
               {
-                value = TraitsType::fold(value, workPlanePtr[position - dimX]);
+                value = TraitsType::Fold(value, workPlanePtr[position - dimX]);
               }
             }
             else if(y + 1 < ny)
             {
-              value = TraitsType::fold(value, workPlanePtr[position + dimX]);
+              value = TraitsType::Fold(value, workPlanePtr[position + dimX]);
             }
             if(xForward)
             {
               if(x > 0)
               {
-                value = TraitsType::fold(value, workPlanePtr[position - 1]);
+                value = TraitsType::Fold(value, workPlanePtr[position - 1]);
               }
             }
             else if(x + 1 < nX)
             {
-              value = TraitsType::fold(value, workPlanePtr[position + 1]);
+              value = TraitsType::Fold(value, workPlanePtr[position + 1]);
             }
           }
           else
@@ -1178,10 +1178,10 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::reconstructPersistentPrefix(Work
                 continue;
               }
               const usize neighbor2d = flat2d(neighborX, neighborY);
-              value = TraitsType::fold(value, offset.dz == 0 ? workPlanePtr[neighbor2d] : adjacent[neighbor2d]);
+              value = TraitsType::Fold(value, offset.dz == 0 ? workPlanePtr[neighbor2d] : adjacent[neighbor2d]);
             }
           }
-          const T newValue = TraitsType::clampToMask(value, maskPlanePtr[position]);
+          const T newValue = TraitsType::ClampToMask(value, maskPlanePtr[position]);
           if(newValue != workPlanePtr[position])
           {
             workPlanePtr[position] = newValue;
@@ -1441,31 +1441,31 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
     return ConvertInvalidResult<void>(std::move(planResult));
   }
   detail::Sweep2DPlan plan = planResult.value();
-  if(plan.fullWidth)
+  if(plan.full_width)
   {
     const std::optional<ShapeType> chunkShape = workStore.getChunkShape();
-    if(chunkShape.has_value() && chunkShape->size() >= 3 && (*chunkShape)[0] == 1 && (*chunkShape)[1] > 0 && (*chunkShape)[1] <= plan.coreRows && (*chunkShape)[2] == dimX)
+    if(chunkShape.has_value() && chunkShape->size() >= 3 && (*chunkShape)[0] == 1 && (*chunkShape)[1] > 0 && (*chunkShape)[1] <= plan.core_rows && (*chunkShape)[2] == dimX)
     {
-      plan.coreRows = (plan.coreRows / (*chunkShape)[1]) * (*chunkShape)[1];
+      plan.core_rows = (plan.core_rows / (*chunkShape)[1]) * (*chunkShape)[1];
     }
   }
   progressThrottle.reset(dimY, "Initializing Reconstruction Rows");
   const detail::ReconOffsets offsets = detail::MakeReconstructionOffsets(m_FullyConnected);
 
-  if(plan.fullWidth)
+  if(plan.full_width)
   {
-    const usize maximumReadRows = std::min(dimY, plan.coreRows + 1);
+    const usize maximumReadRows = std::min(dimY, plan.core_rows + 1);
     const usize maximumReadValues = maximumReadRows * dimX;
     auto workBuffer = std::make_unique<T[]>(maximumReadValues);
-    auto maskBuffer = std::make_unique<T[]>(plan.coreRows * dimX);
+    auto maskBuffer = std::make_unique<T[]>(plan.core_rows * dimX);
 
-    for(usize coreBegin = 0; coreBegin < dimY; coreBegin += plan.coreRows)
+    for(usize coreBegin = 0; coreBegin < dimY; coreBegin += plan.core_rows)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize coreRows = std::min(plan.coreRows, dimY - coreBegin);
+      const usize coreRows = std::min(plan.core_rows, dimY - coreBegin);
       const usize coreValues = coreRows * dimX;
       const usize coreStart = coreBegin * dimX;
       if(Result<> r = loadMarker(coreStart, nonstd::span<T>(workBuffer.get(), coreValues)); r.invalid())
@@ -1480,7 +1480,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
       progressThrottle.updateCount(coreBegin + coreRows);
     }
 
-    const usize blockCount = (dimY - 1) / plan.coreRows + 1;
+    const usize blockCount = (dimY - 1) / plan.core_rows + 1;
     bool cacheValid = false;
     usize cachedCoreBegin = 0;
     usize cachedCoreRows = 0;
@@ -1496,8 +1496,8 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
           return {};
         }
         const usize blockIndex = forward ? blockIteration : blockCount - 1 - blockIteration;
-        const usize coreBegin = blockIndex * plan.coreRows;
-        const usize coreRows = std::min(plan.coreRows, dimY - coreBegin);
+        const usize coreBegin = blockIndex * plan.core_rows;
+        const usize coreRows = std::min(plan.core_rows, dimY - coreBegin);
         const usize coreEnd = coreBegin + coreRows;
         const usize requiredReadBegin = forward && coreBegin > 0 ? coreBegin - 1 : coreBegin;
         const usize requiredReadEnd = !forward && coreEnd < dimY ? coreEnd + 1 : coreEnd;
@@ -1536,22 +1536,22 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
               {
                 if(y > 0)
                 {
-                  value = TraitsType::fold(value, workBuffer[position - dimX]);
+                  value = TraitsType::Fold(value, workBuffer[position - dimX]);
                 }
                 if(x > 0)
                 {
-                  value = TraitsType::fold(value, workBuffer[position - 1]);
+                  value = TraitsType::Fold(value, workBuffer[position - 1]);
                 }
               }
               else
               {
                 if(x + 1 < dimX)
                 {
-                  value = TraitsType::fold(value, workBuffer[position + 1]);
+                  value = TraitsType::Fold(value, workBuffer[position + 1]);
                 }
                 if(y + 1 < dimY)
                 {
-                  value = TraitsType::fold(value, workBuffer[position + dimX]);
+                  value = TraitsType::Fold(value, workBuffer[position + dimX]);
                 }
               }
             }
@@ -1570,10 +1570,10 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
                   continue;
                 }
                 const usize neighbor = (static_cast<usize>(neighborY) - readBegin) * dimX + static_cast<usize>(neighborX);
-                value = TraitsType::fold(value, workBuffer[neighbor]);
+                value = TraitsType::Fold(value, workBuffer[neighbor]);
               }
             }
-            const T newValue = TraitsType::clampToMask(value, maskBuffer[maskRowOffset + x]);
+            const T newValue = TraitsType::ClampToMask(value, maskBuffer[maskRowOffset + x]);
             if(newValue != workBuffer[position])
             {
               workBuffer[position] = newValue;
@@ -1626,18 +1626,18 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
     return {};
   }
 
-  auto currentBuffer = std::make_unique<T[]>(plan.coreColumns);
-  auto maskBuffer = std::make_unique<T[]>(plan.coreColumns);
-  auto adjacentBuffer = std::make_unique<T[]>(plan.coreColumns + 2);
+  auto currentBuffer = std::make_unique<T[]>(plan.core_columns);
+  auto maskBuffer = std::make_unique<T[]>(plan.core_columns);
+  auto adjacentBuffer = std::make_unique<T[]>(plan.core_columns + 2);
   for(usize y = 0; y < dimY; ++y)
   {
-    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.coreColumns)
+    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.core_columns)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize coreColumns = std::min(plan.coreColumns, dimX - xBegin);
+      const usize coreColumns = std::min(plan.core_columns, dimX - xBegin);
       const usize start = y * dimX + xBegin;
       if(Result<> r = loadMarker(start, nonstd::span<T>(currentBuffer.get(), coreColumns)); r.invalid())
       {
@@ -1664,9 +1664,9 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
       const usize y = forward ? rowIndex : dimY - 1 - rowIndex;
       bool haveHorizontalCarry = false;
       T horizontalCarry{};
-      for(usize processedColumns = 0; processedColumns < dimX; processedColumns += plan.coreColumns)
+      for(usize processedColumns = 0; processedColumns < dimX; processedColumns += plan.core_columns)
       {
-        const usize coreColumns = std::min(plan.coreColumns, dimX - processedColumns);
+        const usize coreColumns = std::min(plan.core_columns, dimX - processedColumns);
         const usize xBegin = forward ? processedColumns : dimX - processedColumns - coreColumns;
         const usize start = y * dimX + xBegin;
         if(Result<> r = workStore.copyIntoBuffer(start, nonstd::span<T>(currentBuffer.get(), coreColumns)); r.invalid())
@@ -1704,28 +1704,28 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
             {
               if(haveAdjacentRow)
               {
-                value = TraitsType::fold(value, adjacentBuffer[x - adjacentBegin]);
+                value = TraitsType::Fold(value, adjacentBuffer[x - adjacentBegin]);
               }
               if(localX > 0)
               {
-                value = TraitsType::fold(value, currentBuffer[localX - 1]);
+                value = TraitsType::Fold(value, currentBuffer[localX - 1]);
               }
               else if(haveHorizontalCarry)
               {
-                value = TraitsType::fold(value, horizontalCarry);
+                value = TraitsType::Fold(value, horizontalCarry);
               }
             }
             else if(localX + 1 < coreColumns)
             {
-              value = TraitsType::fold(value, currentBuffer[localX + 1]);
+              value = TraitsType::Fold(value, currentBuffer[localX + 1]);
             }
             else if(haveHorizontalCarry)
             {
-              value = TraitsType::fold(value, horizontalCarry);
+              value = TraitsType::Fold(value, horizontalCarry);
             }
             if(!forward && haveAdjacentRow)
             {
-              value = TraitsType::fold(value, adjacentBuffer[x - adjacentBegin]);
+              value = TraitsType::Fold(value, adjacentBuffer[x - adjacentBegin]);
             }
           }
           else
@@ -1744,19 +1744,19 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::run2D(WorkStore& workStore, cons
               }
               if(offset.dy != 0)
               {
-                value = TraitsType::fold(value, adjacentBuffer[static_cast<usize>(neighborX) - adjacentBegin]);
+                value = TraitsType::Fold(value, adjacentBuffer[static_cast<usize>(neighborX) - adjacentBegin]);
               }
               else if(neighborX >= static_cast<int64>(xBegin) && neighborX < static_cast<int64>(xBegin + coreColumns))
               {
-                value = TraitsType::fold(value, currentBuffer[static_cast<usize>(neighborX) - xBegin]);
+                value = TraitsType::Fold(value, currentBuffer[static_cast<usize>(neighborX) - xBegin]);
               }
               else if(haveHorizontalCarry)
               {
-                value = TraitsType::fold(value, horizontalCarry);
+                value = TraitsType::Fold(value, horizontalCarry);
               }
             }
           }
-          const T newValue = TraitsType::clampToMask(value, maskBuffer[localX]);
+          const T newValue = TraitsType::ClampToMask(value, maskBuffer[localX]);
           if(newValue != currentBuffer[localX])
           {
             currentBuffer[localX] = newValue;

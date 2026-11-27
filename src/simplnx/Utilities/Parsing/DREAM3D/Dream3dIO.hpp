@@ -31,7 +31,7 @@ namespace dream3d
  * @typedef FileData
  * @brief Defines a Pipeline and DataStructure pair.
  */
-using FileData = std::pair<Pipeline, DataStructure>;
+using FileDataType = std::pair<Pipeline, DataStructure>;
 /**
  * @typedef FileVersionType
  * @brief Defines the stored file-version text type.
@@ -93,7 +93,7 @@ SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::hdf5::File
  * @param preflight Creates placeholder array stores when true.
  * @return Imported pair or read error.
  */
-SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::hdf5::FileIO& fileReader, bool preflight = false);
+SIMPLNX_EXPORT Result<FileDataType> ReadFile(const nx::core::hdf5::FileIO& fileReader, bool preflight = false);
 
 /**
  * @brief Imports a Pipeline and DataStructure from a DREAM3D path.
@@ -102,7 +102,7 @@ SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::hdf5::FileIO& fileReade
  * @param path Identifies the file.
  * @return Imported pair or read error.
  */
-SIMPLNX_EXPORT Result<FileData> ReadFile(const std::filesystem::path& path);
+SIMPLNX_EXPORT Result<FileDataType> ReadFile(const std::filesystem::path& path);
 
 /**
  * @brief Loads a complete DataStructure with materialized array stores.
@@ -179,7 +179,7 @@ SIMPLNX_EXPORT Result<DataStructure> LoadDataStructureArraysMetadata(const std::
  * @param fileData Provides Pipeline and DataStructure data.
  * @return First HDF5 write error, or success.
  */
-SIMPLNX_EXPORT Result<> WriteFile(nx::core::hdf5::FileIO& fileWriter, const FileData& fileData);
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::hdf5::FileIO& fileWriter, const FileDataType& fileData);
 
 /**
  * @brief Writes a Pipeline and DataStructure to an open DREAM3D file.

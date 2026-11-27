@@ -101,7 +101,7 @@ std::vector<TOut> RunProjection(const std::vector<TIn>& input, usize projDim, Re
   DataStore<TOut> outStore(ShapeType{slots}, ShapeType{1}, static_cast<TOut>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  Result<> result = ApplyAxisProjection<TIn, TOut>(inStore, outStore, SizeVec3{k_X, k_Y, k_Z}, projDim, reduce, shouldCancel, messageHandler);
+  Result<> result = ApplyAxisProjection<TIn, TOut>(inStore, outStore, SizeVec3Type{k_X, k_Y, k_Z}, projDim, reduce, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<TOut> out(slots);
@@ -307,7 +307,7 @@ public:
   {
   }
 
-  Result<> append(uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& progressCallback) override
+  Result<> append(uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& shouldCancel, const ExternalSortProgressCallbackType& progressCallback) override
   {
     if(shouldCancel)
     {
@@ -317,15 +317,15 @@ public:
     {
       return MakeErrorResult(-9911, "Injected external sort append failure");
     }
-    if(recordCount > m_Config.maxRecordsPerBatch || records.size() != recordCount * m_Config.recordSize)
+    if(recordCount > m_Config.max_records_per_batch || records.size() != recordCount * m_Config.record_size)
     {
       return MakeErrorResult(-9912, "Fake external sort received an invalid append batch");
     }
     m_Control->max_append_records = std::max(m_Control->max_append_records, static_cast<usize>(recordCount));
     for(uint64 recordIndex = 0; recordIndex < recordCount; ++recordIndex)
     {
-      const std::byte* recordStartPtr = records.data() + recordIndex * m_Config.recordSize;
-      m_Records.emplace_back(recordStartPtr, recordStartPtr + m_Config.recordSize);
+      const std::byte* recordStartPtr = records.data() + recordIndex * m_Config.record_size;
+      m_Records.emplace_back(recordStartPtr, recordStartPtr + m_Config.record_size);
     }
     if(progressCallback)
     {
@@ -334,7 +334,7 @@ public:
     return {};
   }
 
-  Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& progressCallback) override
+  Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallbackType& progressCallback) override
   {
     if(shouldCancel)
     {
@@ -365,7 +365,7 @@ public:
     {
       return MakeErrorResult<uint64>(-9916, "Injected external sort read failure");
     }
-    if(!m_Finished || recordOffset >= m_Records.size() || recordCount > m_Config.maxRecordsPerBatch || records.size() != recordCount * m_Config.recordSize)
+    if(!m_Finished || recordOffset >= m_Records.size() || recordCount > m_Config.max_records_per_batch || records.size() != recordCount * m_Config.record_size)
     {
       return MakeErrorResult<uint64>(-9917, "Fake external sort received an invalid read");
     }
@@ -376,7 +376,7 @@ public:
     const uint64 available = std::min<uint64>(recordCount, m_Records.size() - recordOffset);
     for(uint64 recordIndex = 0; recordIndex < available; ++recordIndex)
     {
-      std::memcpy(records.data() + recordIndex * m_Config.recordSize, m_Records[recordOffset + recordIndex].data(), m_Config.recordSize);
+      std::memcpy(records.data() + recordIndex * m_Config.record_size, m_Records[recordOffset + recordIndex].data(), m_Config.record_size);
     }
     return {available};
   }
@@ -396,7 +396,7 @@ private:
 projection_detail::AxisProjection2DServices<int32> MakeFakeProjectionServices(const std::shared_ptr<FakeExternalSortControl>& control, std::shared_ptr<ProjectionTransferStore<int32>>& transposeStore)
 {
   projection_detail::AxisProjection2DServices<int32> services;
-  services.createExternalSort = [control](const ExternalSortConfig& config) -> Result<std::unique_ptr<IExternalSort>> {
+  services.create_external_sort = [control](const ExternalSortConfig& config) -> Result<std::unique_ptr<IExternalSort>> {
     if(control->fail_create)
     {
       return MakeErrorResult<std::unique_ptr<IExternalSort>>(-9920, "Injected external sort creation failure");
@@ -405,7 +405,7 @@ projection_detail::AxisProjection2DServices<int32> MakeFakeProjectionServices(co
     std::unique_ptr<IExternalSort> sorter = std::make_unique<FakeExternalSort>(config, control);
     return {std::move(sorter)};
   };
-  services.createTransposeStore = [control, &transposeStore](usize valueCount, usize) -> Result<std::unique_ptr<projection_detail::AxisProjectionWorkStore<int32>>> {
+  services.create_transpose_store = [control, &transposeStore](usize valueCount, usize) -> Result<std::unique_ptr<projection_detail::AxisProjectionWorkStore<int32>>> {
     if(control->fail_transpose_create)
     {
       return MakeErrorResult<std::unique_ptr<projection_detail::AxisProjectionWorkStore<int32>>>(-9921, "Injected transpose-store creation failure");
@@ -426,7 +426,7 @@ projection_detail::AxisProjection2DServices<int32> MakeFakeProjectionServices(co
 }
 
 template <class TIn, class TOut, class ReduceFn>
-void RequireBoundedAssociativeMatchesResident(const SizeVec3& dims, usize projDim, ReduceFn reduce, usize targetBytes, projection_detail::AxisProjection2DRoute expectedRoute)
+void RequireBoundedAssociativeMatchesResident(const SizeVec3Type& dims, usize projDim, ReduceFn reduce, usize targetBytes, projection_detail::AxisProjection2DRoute expectedRoute)
 {
   const usize volume = dims[0] * dims[1] * dims[2];
   const usize outputValues = volume / dims[projDim];
@@ -468,13 +468,13 @@ void RequireBoundedAssociativeMatchesResident(const SizeVec3& dims, usize projDi
   REQUIRE(boundedOutput.copyIntoBuffer(0, nonstd::span<TOut>(actual.data(), actual.size())).valid());
   REQUIRE(residentOutput.copyIntoBuffer(0, nonstd::span<TOut>(expected.data(), expected.size())).valid());
   REQUIRE(actual == expected);
-  REQUIRE(inputStore.maxReadValues() <= plan.inputValues);
-  REQUIRE(boundedOutput.maxWriteValues() <= plan.outputValues);
+  REQUIRE(inputStore.maxReadValues() <= plan.input_values);
+  REQUIRE(boundedOutput.maxWriteValues() <= plan.output_values);
   REQUIRE(boundedOutput.writtenValues() == outputValues);
-  REQUIRE(plan.residentBytes <= targetBytes);
+  REQUIRE(plan.resident_bytes <= targetBytes);
 }
 
-void RequireBoundedMedianMatchesResident(const SizeVec3& dims, usize projDim, usize targetBytes, projection_detail::AxisProjection2DRoute expectedRoute,
+void RequireBoundedMedianMatchesResident(const SizeVec3Type& dims, usize projDim, usize targetBytes, projection_detail::AxisProjection2DRoute expectedRoute,
                                          const projection_detail::AxisProjection2DServices<int32>* services = nullptr)
 {
   const usize volume = dims[0] * dims[1] * dims[2];
@@ -530,24 +530,24 @@ void RequireBoundedMedianMatchesResident(const SizeVec3& dims, usize projDim, us
     REQUIRE(boundedOutput.getValue(slot) == expected);
     REQUIRE(boundedOutput.getValue(slot) == residentOutput.getValue(slot));
   }
-  REQUIRE(inputStore.maxReadValues() <= plan.inputValues);
-  REQUIRE(boundedOutput.maxWriteValues() <= plan.outputValues);
+  REQUIRE(inputStore.maxReadValues() <= plan.input_values);
+  REQUIRE(boundedOutput.maxWriteValues() <= plan.output_values);
   REQUIRE(boundedOutput.writtenValues() == outputValues);
-  REQUIRE(plan.residentBytes <= targetBytes);
+  REQUIRE(plan.resident_bytes <= targetBytes);
   if(expectedRoute == projection_detail::AxisProjection2DRoute::MedianYTiles)
   {
-    REQUIRE(plan.stateSlots > 0);
-    REQUIRE(plan.stateSlots <= 8);
-    REQUIRE(plan.pencilValues == plan.stateSlots * dims[1]);
+    REQUIRE(plan.state_slots > 0);
+    REQUIRE(plan.state_slots <= 8);
+    REQUIRE(plan.pencil_values == plan.state_slots * dims[1]);
     REQUIRE(inputStore.flatReadCount() == 0);
-    REQUIRE(inputStore.extentReadCount() == (dims[0] + plan.tileColumns - 1) / plan.tileColumns);
+    REQUIRE(inputStore.extentReadCount() == (dims[0] + plan.tile_columns - 1) / plan.tile_columns);
     REQUIRE(inputStore.extentFamilyReadCount() == 0);
   }
 }
 
 Result<> RunExternalMedianWithServices(usize projDim, const projection_detail::AxisProjection2DServices<int32>* services)
 {
-  const SizeVec3 dims = projDim == 0 ? SizeVec3{17, 3, 1} : SizeVec3{5, 17, 1};
+  const SizeVec3Type dims = projDim == 0 ? SizeVec3Type{17, 3, 1} : SizeVec3Type{5, 17, 1};
   const usize volume = dims[0] * dims[1];
   const usize outputValues = volume / dims[projDim];
   ProjectionTransferStore<int32> inputStore(ShapeType{1, dims[1], dims[0]}, int32{});
@@ -711,7 +711,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: InCore direct path avoids bu
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
 
-    REQUIRE(ApplyAxisProjection<int32, TOut>(inputStore, outputStore, SizeVec3{k_X, k_Y, k_Z}, projDim, reduce, shouldCancel, messageHandler).valid());
+    REQUIRE(ApplyAxisProjection<int32, TOut>(inputStore, outputStore, SizeVec3Type{k_X, k_Y, k_Z}, projDim, reduce, shouldCancel, messageHandler).valid());
     REQUIRE(inputStore.flatReadCount() == 0);
     REQUIRE(outputStore.writtenValues() == NumSlots(projDim));
   };
@@ -747,7 +747,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: pre-cancelled projection lea
     std::atomic_bool shouldCancel{true};
     IFilter::MessageHandler messageHandler{};
 
-    const Result<> result = ApplyAxisProjection<int32, int32>(inStore, outStore, SizeVec3{k_X, k_Y, k_Z}, projDim, reduce, shouldCancel, messageHandler);
+    const Result<> result = ApplyAxisProjection<int32, int32>(inStore, outStore, SizeVec3Type{k_X, k_Y, k_Z}, projDim, reduce, shouldCancel, messageHandler);
     REQUIRE(result.valid());
     for(usize i = 0; i < outStore.getSize(); ++i)
     {
@@ -765,7 +765,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: pre-cancelled projection lea
   }
   SECTION("associative binary")
   {
-    requirePreserved(BinaryReduce{.foregroundValue = 1.0, .backgroundValue = 0.0});
+    requirePreserved(BinaryReduce{.foreground_value = 1.0, .background_value = 0.0});
   }
 }
 
@@ -783,7 +783,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: rejects out-of-range projDim
 
   // projDim == 3 is out of range; the engine must fail cleanly rather than perform an unchecked
   // Vec3 OOB read.
-  const Result<> result = ApplyAxisProjection<int32, int32>(inStore, outStore, SizeVec3{k_X, k_Y, k_Z}, /*projDim=*/3, MaxReduce{}, shouldCancel, messageHandler);
+  const Result<> result = ApplyAxisProjection<int32, int32>(inStore, outStore, SizeVec3Type{k_X, k_Y, k_Z}, /*projDim=*/3, MaxReduce{}, shouldCancel, messageHandler);
   REQUIRE(result.invalid());
 }
 
@@ -797,7 +797,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: median pencil rejects a non-
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ApplyAxisProjection<int32, int32>(inStore, outStore, SizeVec3{k_X, k_Y, k_Z}, /*projDim=*/2, MedianReduce{}, shouldCancel, messageHandler);
+  const Result<> result = ApplyAxisProjection<int32, int32>(inStore, outStore, SizeVec3Type{k_X, k_Y, k_Z}, /*projDim=*/2, MedianReduce{}, shouldCancel, messageHandler);
   REQUIRE(result.invalid());
 }
 
@@ -808,81 +808,81 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: checked true-2-D plans", "[N
 
   SECTION("associative X rows and overwide chunks")
   {
-    const auto rows = projection_detail::CreateAxisProjection2DPlan<float32, float64, MeanReduce>(SizeVec3{4097, 17, 1}, 0, k_MiB);
+    const auto rows = projection_detail::CreateAxisProjection2DPlan<float32, float64, MeanReduce>(SizeVec3Type{4097, 17, 1}, 0, k_MiB);
     REQUIRE(rows.valid());
     REQUIRE(rows.value().route == projection_detail::AxisProjection2DRoute::AssociativeXRows);
-    REQUIRE(rows.value().blockRows > 1);
-    REQUIRE(rows.value().residentBytes <= k_MiB);
+    REQUIRE(rows.value().block_rows > 1);
+    REQUIRE(rows.value().resident_bytes <= k_MiB);
 
-    const auto chunks = projection_detail::CreateAxisProjection2DPlan<float32, float64, MeanReduce>(SizeVec3{100000, 3, 1}, 0, k_SmallTarget);
+    const auto chunks = projection_detail::CreateAxisProjection2DPlan<float32, float64, MeanReduce>(SizeVec3Type{100000, 3, 1}, 0, k_SmallTarget);
     REQUIRE(chunks.valid());
     REQUIRE(chunks.value().route == projection_detail::AxisProjection2DRoute::AssociativeXChunks);
-    REQUIRE(chunks.value().inputValues < 100000);
-    REQUIRE(chunks.value().residentBytes <= k_SmallTarget);
+    REQUIRE(chunks.value().input_values < 100000);
+    REQUIRE(chunks.value().resident_bytes <= k_SmallTarget);
   }
 
   SECTION("associative Y rows and X tiles")
   {
-    const auto rows = projection_detail::CreateAxisProjection2DPlan<float32, float64, StdDevReduce>(SizeVec3{257, 4097, 1}, 1, k_MiB);
+    const auto rows = projection_detail::CreateAxisProjection2DPlan<float32, float64, StdDevReduce>(SizeVec3Type{257, 4097, 1}, 1, k_MiB);
     REQUIRE(rows.valid());
     REQUIRE(rows.value().route == projection_detail::AxisProjection2DRoute::AssociativeYRows);
-    REQUIRE(rows.value().blockRows > 1);
-    REQUIRE(rows.value().residentBytes <= k_MiB);
+    REQUIRE(rows.value().block_rows > 1);
+    REQUIRE(rows.value().resident_bytes <= k_MiB);
 
-    const auto tiles = projection_detail::CreateAxisProjection2DPlan<float32, float64, StdDevReduce>(SizeVec3{4097, 4097, 1}, 1, k_SmallTarget);
+    const auto tiles = projection_detail::CreateAxisProjection2DPlan<float32, float64, StdDevReduce>(SizeVec3Type{4097, 4097, 1}, 1, k_SmallTarget);
     REQUIRE(tiles.valid());
     REQUIRE(tiles.value().route == projection_detail::AxisProjection2DRoute::AssociativeYTiles);
-    REQUIRE(tiles.value().tileColumns > 0);
-    REQUIRE(tiles.value().tileColumns < 4097);
-    REQUIRE(tiles.value().residentBytes <= k_SmallTarget);
+    REQUIRE(tiles.value().tile_columns > 0);
+    REQUIRE(tiles.value().tile_columns < 4097);
+    REQUIRE(tiles.value().resident_bytes <= k_SmallTarget);
   }
 
   SECTION("fitting and external Median pencils")
   {
-    const auto xRows = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3{19, 17, 1}, 0, k_MiB);
+    const auto xRows = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3Type{19, 17, 1}, 0, k_MiB);
     REQUIRE(xRows.valid());
     REQUIRE(xRows.value().route == projection_detail::AxisProjection2DRoute::MedianXRows);
-    REQUIRE(xRows.value().blockRows == 17);
+    REQUIRE(xRows.value().block_rows == 17);
 
-    const auto yTiles = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3{17, 19, 1}, 1, k_MiB);
+    const auto yTiles = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3Type{17, 19, 1}, 1, k_MiB);
     REQUIRE(yTiles.valid());
     REQUIRE(yTiles.value().route == projection_detail::AxisProjection2DRoute::MedianYTiles);
-    REQUIRE(yTiles.value().tileColumns == 17);
+    REQUIRE(yTiles.value().tile_columns == 17);
 
-    const auto xExternal = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3{262145, 3, 1}, 0, k_MiB);
+    const auto xExternal = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3Type{262145, 3, 1}, 0, k_MiB);
     REQUIRE(xExternal.valid());
     REQUIRE(xExternal.value().route == projection_detail::AxisProjection2DRoute::MedianXExternal);
-    REQUIRE(xExternal.value().sortBatchValues > 0);
-    REQUIRE(xExternal.value().residentBytes <= k_MiB);
+    REQUIRE(xExternal.value().sort_batch_values > 0);
+    REQUIRE(xExternal.value().resident_bytes <= k_MiB);
 
-    const auto yExternal = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3{17, 262145, 1}, 1, k_MiB);
+    const auto yExternal = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3Type{17, 262145, 1}, 1, k_MiB);
     REQUIRE(yExternal.valid());
     REQUIRE(yExternal.value().route == projection_detail::AxisProjection2DRoute::MedianYExternal);
-    REQUIRE(yExternal.value().sortBatchValues > 0);
-    REQUIRE(yExternal.value().blockRows > 0);
-    REQUIRE(yExternal.value().tileColumns > 0);
-    REQUIRE(yExternal.value().residentBytes <= k_MiB);
+    REQUIRE(yExternal.value().sort_batch_values > 0);
+    REQUIRE(yExternal.value().block_rows > 0);
+    REQUIRE(yExternal.value().tile_columns > 0);
+    REQUIRE(yExternal.value().resident_bytes <= k_MiB);
 
-    const usize sortAndOutputBytes = yExternal.value().sortBatchValues * (sizeof(float32) + sizeof(uint64)) + yExternal.value().outputValues * sizeof(float32);
+    const usize sortAndOutputBytes = yExternal.value().sort_batch_values * (sizeof(float32) + sizeof(uint64)) + yExternal.value().output_values * sizeof(float32);
     REQUIRE(sortAndOutputBytes + projection_detail::k_AxisProjection2DMetadataBytes <= k_MiB);
   }
 
   SECTION("singleton Z, empty image, and rejected plans")
   {
-    const auto singleton = projection_detail::CreateAxisProjection2DPlan<int16, float64, SumReduce>(SizeVec3{100000, 3, 1}, 2, k_SmallTarget);
+    const auto singleton = projection_detail::CreateAxisProjection2DPlan<int16, float64, SumReduce>(SizeVec3Type{100000, 3, 1}, 2, k_SmallTarget);
     REQUIRE(singleton.valid());
     REQUIRE(singleton.value().route == projection_detail::AxisProjection2DRoute::SingletonZ);
-    REQUIRE(singleton.value().inputValues < 300000);
-    REQUIRE(singleton.value().residentBytes <= k_SmallTarget);
+    REQUIRE(singleton.value().input_values < 300000);
+    REQUIRE(singleton.value().resident_bytes <= k_SmallTarget);
 
-    const auto empty = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3{0, 7, 1}, 1, 1);
+    const auto empty = projection_detail::CreateAxisProjection2DPlan<float32, float32, MedianReduce>(SizeVec3Type{0, 7, 1}, 1, 1);
     REQUIRE(empty.valid());
-    REQUIRE(empty.value().residentBytes == 0);
+    REQUIRE(empty.value().resident_bytes == 0);
 
-    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3{7, 7, 1}, 3, k_MiB).invalid());
-    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3{7, 7, 2}, 1, k_MiB).invalid());
-    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3{7, 7, 1}, 1, projection_detail::k_AxisProjection2DMetadataBytes).invalid());
-    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3{std::numeric_limits<usize>::max(), 2, 1}, 1, k_MiB).invalid());
+    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3Type{7, 7, 1}, 3, k_MiB).invalid());
+    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3Type{7, 7, 2}, 1, k_MiB).invalid());
+    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3Type{7, 7, 1}, 1, projection_detail::k_AxisProjection2DMetadataBytes).invalid());
+    REQUIRE(projection_detail::CreateAxisProjection2DPlan<float32, float32, MaxReduce>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 1}, 1, k_MiB).invalid());
   }
 }
 
@@ -892,48 +892,48 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded true-2-D
   {
     constexpr usize k_RowBytes = 7 * sizeof(int32) + sizeof(MaxReduce::State<int32>) + sizeof(int32);
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 2 * k_RowBytes;
-    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3{7, 5, 1}, 0, MaxReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeXRows);
+    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3Type{7, 5, 1}, 0, MaxReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeXRows);
   }
 
   SECTION("X overwide chunks")
   {
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + sizeof(MinReduce::State<int32>) + sizeof(int32) + 3 * sizeof(int32);
-    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3{17, 3, 1}, 0, MinReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeXChunks);
+    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3Type{17, 3, 1}, 0, MinReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeXChunks);
   }
 
   SECTION("Y complete-row blocks")
   {
     constexpr usize k_FixedBytes = 5 * (sizeof(MeanReduce::State<float64>) + sizeof(float64));
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + k_FixedBytes + 2 * 5 * sizeof(int32);
-    RequireBoundedAssociativeMatchesResident<int32, float64>(SizeVec3{5, 7, 1}, 1, MeanReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeYRows);
+    RequireBoundedAssociativeMatchesResident<int32, float64>(SizeVec3Type{5, 7, 1}, 1, MeanReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeYRows);
   }
 
   SECTION("Y X tiles")
   {
     constexpr usize k_ValuesPerColumn = sizeof(StdDevReduce::State<float64>) + sizeof(int32) + sizeof(float64);
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 3 * k_ValuesPerColumn;
-    RequireBoundedAssociativeMatchesResident<int32, float64>(SizeVec3{7, 5, 1}, 1, StdDevReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeYTiles);
+    RequireBoundedAssociativeMatchesResident<int32, float64>(SizeVec3Type{7, 5, 1}, 1, StdDevReduce{}, k_Target, projection_detail::AxisProjection2DRoute::AssociativeYTiles);
   }
 
   SECTION("Binary Y X tiles")
   {
     constexpr usize k_ValuesPerColumn = sizeof(BinaryReduce::State<int32>) + sizeof(int32) + sizeof(int32);
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 3 * k_ValuesPerColumn;
-    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3{7, 5, 1}, 1, BinaryReduce{.foregroundValue = 1.0, .backgroundValue = -4.0}, k_Target,
+    RequireBoundedAssociativeMatchesResident<int32, int32>(SizeVec3Type{7, 5, 1}, 1, BinaryReduce{.foreground_value = 1.0, .background_value = -4.0}, k_Target,
                                                            projection_detail::AxisProjection2DRoute::AssociativeYTiles);
   }
 
   SECTION("singleton Z chunks")
   {
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 4 * (sizeof(int32) + sizeof(float64));
-    RequireBoundedAssociativeMatchesResident<int32, float64>(SizeVec3{17, 3, 1}, 2, SumReduce{}, k_Target, projection_detail::AxisProjection2DRoute::SingletonZ);
+    RequireBoundedAssociativeMatchesResident<int32, float64>(SizeVec3Type{17, 3, 1}, 2, SumReduce{}, k_Target, projection_detail::AxisProjection2DRoute::SingletonZ);
   }
 
   SECTION("Y row blocks preserve Kahan input order")
   {
     constexpr usize k_DimX = 5;
     constexpr usize k_DimY = 4;
-    const SizeVec3 dims{k_DimX, k_DimY, 1};
+    const SizeVec3Type dims{k_DimX, k_DimY, 1};
     constexpr std::array<float64, k_DimY> k_Sequence = {1.0e16, 1.0, -1.0e16, 3.0};
     ProjectionTransferStore<float64> inputStore(ShapeType{1, k_DimY, k_DimX}, 0.0);
     DataStore<float64> residentInput(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0.0);
@@ -952,7 +952,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded true-2-D
     const auto plan = projection_detail::CreateAxisProjection2DPlan<float64, float64, SumReduce>(dims, 1, k_Target);
     REQUIRE(plan.valid());
     REQUIRE(plan.value().route == projection_detail::AxisProjection2DRoute::AssociativeYRows);
-    REQUIRE(plan.value().blockRows == 2);
+    REQUIRE(plan.value().block_rows == 2);
 
     const auto residentShape = projection_detail::ValidateAxisProjection(residentInput, residentOutput, dims, 1);
     const auto boundedShape = projection_detail::ValidateAxisProjection(inputStore, boundedOutput, dims, 1);
@@ -974,7 +974,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: associative bounded cancella
 {
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 7;
-  const SizeVec3 kDims{k_DimX, k_DimY, 1};
+  const SizeVec3Type kDims{k_DimX, k_DimY, 1};
   constexpr usize k_OutputValues = k_DimX;
   constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + k_DimX * (sizeof(MeanReduce::State<float64>) + sizeof(float64)) + 2 * k_DimX * sizeof(int32);
 
@@ -1057,34 +1057,34 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: fitting Median bounded true-
   {
     constexpr usize k_RowBytes = 4 * sizeof(int32) + sizeof(int32);
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 2 * k_RowBytes;
-    RequireBoundedMedianMatchesResident(SizeVec3{4, 5, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXRows);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{4, 5, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXRows);
   }
 
   SECTION("odd X pencils in multiple row batches")
   {
     constexpr usize k_RowBytes = 5 * sizeof(int32) + sizeof(int32);
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 2 * k_RowBytes;
-    RequireBoundedMedianMatchesResident(SizeVec3{5, 5, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXRows);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{5, 5, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXRows);
   }
 
   SECTION("even Y pencils in column tiles with a short tail")
   {
     const usize workerCount = projection_detail::AxisProjectionMedianWorkerCount(7);
     const usize kTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * 4 * sizeof(int32) + 2 * (4 * sizeof(int32) + sizeof(int32));
-    RequireBoundedMedianMatchesResident(SizeVec3{7, 4, 1}, 1, kTarget, projection_detail::AxisProjection2DRoute::MedianYTiles);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{7, 4, 1}, 1, kTarget, projection_detail::AxisProjection2DRoute::MedianYTiles);
   }
 
   SECTION("odd Y pencils in column tiles with a short tail")
   {
     const usize workerCount = projection_detail::AxisProjectionMedianWorkerCount(7);
     const usize kTarget = projection_detail::k_AxisProjection2DMetadataBytes + workerCount * 5 * sizeof(int32) + 2 * (5 * sizeof(int32) + sizeof(int32));
-    RequireBoundedMedianMatchesResident(SizeVec3{7, 5, 1}, 1, kTarget, projection_detail::AxisProjection2DRoute::MedianYTiles);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{7, 5, 1}, 1, kTarget, projection_detail::AxisProjection2DRoute::MedianYTiles);
   }
 
   SECTION("singleton Z chunks")
   {
     constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 3 * (sizeof(int32) + sizeof(int32));
-    RequireBoundedMedianMatchesResident(SizeVec3{7, 5, 1}, 2, k_Target, projection_detail::AxisProjection2DRoute::SingletonZ);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{7, 5, 1}, 2, k_Target, projection_detail::AxisProjection2DRoute::SingletonZ);
   }
 }
 
@@ -1097,11 +1097,11 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median long X and Y
     auto control = std::make_shared<FakeExternalSortControl>();
     std::shared_ptr<ProjectionTransferStore<int32>> transposeStore;
     const auto services = MakeFakeProjectionServices(control, transposeStore);
-    RequireBoundedMedianMatchesResident(SizeVec3{17, 3, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXExternal, &services);
-    const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(SizeVec3{17, 3, 1}, 0, k_Target);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{17, 3, 1}, 0, k_Target, projection_detail::AxisProjection2DRoute::MedianXExternal, &services);
+    const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(SizeVec3Type{17, 3, 1}, 0, k_Target);
     REQUIRE(plan.valid());
     REQUIRE(control->create_count == 3);
-    REQUIRE(control->max_append_records <= plan.value().sortBatchValues);
+    REQUIRE(control->max_append_records <= plan.value().sort_batch_values);
     REQUIRE(transposeStore == nullptr);
   }
 
@@ -1110,11 +1110,11 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median long X and Y
     auto control = std::make_shared<FakeExternalSortControl>();
     std::shared_ptr<ProjectionTransferStore<int32>> transposeStore;
     const auto services = MakeFakeProjectionServices(control, transposeStore);
-    RequireBoundedMedianMatchesResident(SizeVec3{5, 17, 1}, 1, k_Target, projection_detail::AxisProjection2DRoute::MedianYExternal, &services);
-    const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(SizeVec3{5, 17, 1}, 1, k_Target);
+    RequireBoundedMedianMatchesResident(SizeVec3Type{5, 17, 1}, 1, k_Target, projection_detail::AxisProjection2DRoute::MedianYExternal, &services);
+    const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(SizeVec3Type{5, 17, 1}, 1, k_Target);
     REQUIRE(plan.valid());
     REQUIRE(control->create_count == 5);
-    REQUIRE(control->max_append_records <= plan.value().sortBatchValues);
+    REQUIRE(control->max_append_records <= plan.value().sort_batch_values);
     REQUIRE(transposeStore != nullptr);
     REQUIRE(transposeStore->getSize() == 5 * 17);
     for(usize x = 0; x < 5; ++x)
@@ -1137,7 +1137,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median provider fai
 
   SECTION("missing external-sort factory")
   {
-    services.createExternalSort = {};
+    services.create_external_sort = {};
     const Result<> result = RunExternalMedianWithServices(0, &services);
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8746);
@@ -1237,7 +1237,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: external record comparator i
 
 TEST_CASE("NXImageProcessing::AxisProjectionEngine: external Median cancellation preserves output", "[NXImageProcessing][AxisProjectionEngine]")
 {
-  const SizeVec3 kDims{17, 3, 1};
+  const SizeVec3Type kDims{17, 3, 1};
   constexpr usize k_OutputValues = 3;
   constexpr usize k_Target = projection_detail::k_AxisProjection2DMetadataBytes + 60;
   ProjectionTransferStore<int32> inputStore(ShapeType{1, 3, 17}, int32{});
@@ -1271,7 +1271,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware true-2-D sele
   CAPTURE(inputOutOfCore, outputOutOfCore);
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
-  const SizeVec3 dims{k_DimX, k_DimY, 1};
+  const SizeVec3Type dims{k_DimX, k_DimY, 1};
   ProjectionTransferStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, int32{}, inputOutOfCore);
   ProjectionTransferStore<float64> outputStore(ShapeType{k_DimX}, -12345.0, outputOutOfCore);
   for(usize index = 0; index < k_DimX * k_DimY; ++index)
@@ -1289,7 +1289,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware true-2-D sele
   {
     const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, float64, MeanReduce>(dims, 1, k_Target);
     REQUIRE(plan.valid());
-    REQUIRE(inputStore.maxReadValues() <= plan.value().inputValues);
+    REQUIRE(inputStore.maxReadValues() <= plan.value().input_values);
     REQUIRE(inputStore.maxReadValues() < k_DimX * k_DimY);
   }
   else
@@ -1307,7 +1307,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware fitting Media
 {
   constexpr usize k_DimX = 7;
   constexpr usize k_DimY = 5;
-  const SizeVec3 dims{k_DimX, k_DimY, 1};
+  const SizeVec3Type dims{k_DimX, k_DimY, 1};
   ProjectionTransferStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, int32{});
   ProjectionTransferStore<int32> outputStore(ShapeType{k_DimX}, -12345);
   std::vector<std::vector<int32>> pencils(k_DimX);
@@ -1328,7 +1328,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: endpoint-aware fitting Media
   REQUIRE(ApplyAxisProjection(inputStore, outputStore, dims, 1, MedianReduce{}, shouldCancel, messageHandler, kTarget).valid());
   const auto plan = projection_detail::CreateAxisProjection2DPlan<int32, int32, MedianReduce>(dims, 1, kTarget);
   REQUIRE(plan.valid());
-  REQUIRE(inputStore.maxReadValues() <= plan.value().inputValues);
+  REQUIRE(inputStore.maxReadValues() <= plan.value().input_values);
   REQUIRE(inputStore.maxReadValues() < k_DimX * k_DimY);
   for(usize x = 0; x < k_DimX; ++x)
   {
@@ -1343,7 +1343,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: OOC-backed Z-greater-than-on
   constexpr usize k_DimY = 5;
   constexpr usize k_DimZ = 2;
   constexpr usize k_TestVolume = k_DimX * k_DimY * k_DimZ;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   ProjectionTransferStore<int32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, int32{});
   ProjectionTransferStore<int32> outputStore(ShapeType{k_DimX * k_DimZ}, -12345);
   for(usize index = 0; index < k_TestVolume; ++index)

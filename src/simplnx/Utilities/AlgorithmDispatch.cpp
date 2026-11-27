@@ -48,23 +48,23 @@ void ResetAlgorithmPathExecutionCounts()
 
 void SetAlgorithmPathExecutionCounts(const AlgorithmPathExecutionCounts& counts)
 {
-  GInCoreExecutionCount.store(counts.InCore, std::memory_order_relaxed);
-  GOutOfCoreExecutionCount.store(counts.OutOfCore, std::memory_order_relaxed);
-  GInCoreOnInMemoryStoreExecutionCount.store(counts.InCoreOnInMemoryStore, std::memory_order_relaxed);
-  GInCoreOnOutOfCoreStoreExecutionCount.store(counts.InCoreOnOutOfCoreStore, std::memory_order_relaxed);
-  GOutOfCoreOnInMemoryStoreExecutionCount.store(counts.OutOfCoreOnInMemoryStore, std::memory_order_relaxed);
-  GOutOfCoreOnOutOfCoreStoreExecutionCount.store(counts.OutOfCoreOnOutOfCoreStore, std::memory_order_relaxed);
+  GInCoreExecutionCount.store(counts.in_core, std::memory_order_relaxed);
+  GOutOfCoreExecutionCount.store(counts.out_of_core, std::memory_order_relaxed);
+  GInCoreOnInMemoryStoreExecutionCount.store(counts.in_core_on_in_memory_store, std::memory_order_relaxed);
+  GInCoreOnOutOfCoreStoreExecutionCount.store(counts.in_core_on_out_of_core_store, std::memory_order_relaxed);
+  GOutOfCoreOnInMemoryStoreExecutionCount.store(counts.out_of_core_on_in_memory_store, std::memory_order_relaxed);
+  GOutOfCoreOnOutOfCoreStoreExecutionCount.store(counts.out_of_core_on_out_of_core_store, std::memory_order_relaxed);
 }
 
 AlgorithmPathExecutionCounts GetAlgorithmPathExecutionCounts()
 {
   return {
-      .InCore = GInCoreExecutionCount.load(std::memory_order_relaxed),
-      .OutOfCore = GOutOfCoreExecutionCount.load(std::memory_order_relaxed),
-      .InCoreOnInMemoryStore = GInCoreOnInMemoryStoreExecutionCount.load(std::memory_order_relaxed),
-      .InCoreOnOutOfCoreStore = GInCoreOnOutOfCoreStoreExecutionCount.load(std::memory_order_relaxed),
-      .OutOfCoreOnInMemoryStore = GOutOfCoreOnInMemoryStoreExecutionCount.load(std::memory_order_relaxed),
-      .OutOfCoreOnOutOfCoreStore = GOutOfCoreOnOutOfCoreStoreExecutionCount.load(std::memory_order_relaxed),
+      .in_core = GInCoreExecutionCount.load(std::memory_order_relaxed),
+      .out_of_core = GOutOfCoreExecutionCount.load(std::memory_order_relaxed),
+      .in_core_on_in_memory_store = GInCoreOnInMemoryStoreExecutionCount.load(std::memory_order_relaxed),
+      .in_core_on_out_of_core_store = GInCoreOnOutOfCoreStoreExecutionCount.load(std::memory_order_relaxed),
+      .out_of_core_on_in_memory_store = GOutOfCoreOnInMemoryStoreExecutionCount.load(std::memory_order_relaxed),
+      .out_of_core_on_out_of_core_store = GOutOfCoreOnOutOfCoreStoreExecutionCount.load(std::memory_order_relaxed),
   };
 }
 } // namespace nx::core

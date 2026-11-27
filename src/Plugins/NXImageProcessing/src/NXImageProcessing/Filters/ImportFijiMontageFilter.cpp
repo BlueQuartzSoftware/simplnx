@@ -93,7 +93,7 @@ struct TilePaths
 };
 TilePaths MakeTilePaths(const fiji::FijiTile& tile, bool parentGroup, const std::string& groupName, const std::string& cellAmName, const std::string& arrayName)
 {
-  const DataPath geomPath = parentGroup ? DataPath({groupName, tile.imageName}) : DataPath({tile.imageName});
+  const DataPath geomPath = parentGroup ? DataPath({groupName, tile.image_name}) : DataPath({tile.image_name});
   return {.geom_path = geomPath, .array_path = geomPath.createChildPath(cellAmName).createChildPath(arrayName)};
 }
 } // namespace
@@ -141,13 +141,13 @@ Parameters ImportFijiMontageFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into every created image geometry.",
                                                    to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Rebase the montage so its minimum corner sits at a user-defined origin.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The new origin of the montage's minimum corner.", std::vector<float32>(3), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The new origin of the montage's minimum corner.", std::vector<float32>(3), std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "Convert each imported RGB tile to a single-channel grayscale image.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "The luminosity weights used for the grayscale conversion.",
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_ColorWeights_Key, "Color Weighting", "The luminosity weights used for the grayscale conversion.",
                                                          std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>{"R", "G", "B"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Cast every imported tile array to a chosen data type.", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric type of the created image arrays.", 0ULL,
-                                                   ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
+                                                   ChoicesParameter::ChoicesType{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_ParentDataGroup_Key, "Parent Imported Images Under a DataGroup", "Create one parent DataGroup that holds all imported tile geometries.", true));
 
@@ -184,7 +184,7 @@ Result<std::vector<fiji::FijiTile>> ImportFijiMontageFilter::loadTiles(const fs:
   // run, so the cache holds ONLY the file-I/O-bound results (the parse + the per-tile metadata).
   std::error_code ec;
   const fs::file_time_type currentTimeStamp = fs::last_write_time(inputFile, ec);
-  const bool cacheHit = m_Cache.tilesValid && !ec && m_Cache.inputFile == inputFile && m_Cache.timeStamp == currentTimeStamp;
+  const bool cacheHit = m_Cache.tiles_valid && !ec && m_Cache.input_file == inputFile && m_Cache.time_stamp == currentTimeStamp;
 
   if(!cacheHit)
   {
@@ -194,26 +194,26 @@ Result<std::vector<fiji::FijiTile>> ImportFijiMontageFilter::loadTiles(const fs:
       m_Cache = MetadataCache{}; // never serve a half-populated cache after a failed refresh
       return parseResult;        // propagate the parser's own error (-35900/-35901/-35903)
     }
-    m_Cache.rawTiles = std::move(parseResult.value());
+    m_Cache.raw_tiles = std::move(parseResult.value());
     m_Cache.metadata.clear();
-    m_Cache.metadataValid = false;
-    m_Cache.inputFile = inputFile;
-    m_Cache.timeStamp = currentTimeStamp;
-    m_Cache.tilesValid = true;
+    m_Cache.metadata_valid = false;
+    m_Cache.input_file = inputFile;
+    m_Cache.time_stamp = currentTimeStamp;
+    m_Cache.tiles_valid = true;
   }
 
-  if(needMetadata && !m_Cache.metadataValid)
+  if(needMetadata && !m_Cache.metadata_valid)
   {
     std::vector<ImageMetadata> metadata;
-    metadata.reserve(m_Cache.rawTiles.size());
-    for(const auto& tile : m_Cache.rawTiles)
+    metadata.reserve(m_Cache.raw_tiles.size());
+    for(const auto& tile : m_Cache.raw_tiles)
     {
-      auto ioResult = CreateImageIO(tile.filePath);
+      auto ioResult = CreateImageIO(tile.file_path);
       if(ioResult.invalid())
       {
         return ConvertResultTo<std::vector<fiji::FijiTile>>(ConvertResult(std::move(ioResult)), {}); // propagate the ImageIO factory's error (unknown/unsupported format)
       }
-      auto metadataResult = ioResult.value()->readMetadata(tile.filePath);
+      auto metadataResult = ioResult.value()->readMetadata(tile.file_path);
       if(metadataResult.invalid())
       {
         return ConvertResultTo<std::vector<fiji::FijiTile>>(ConvertResult(std::move(metadataResult)), {}); // propagate the reader's metadata error
@@ -221,10 +221,10 @@ Result<std::vector<fiji::FijiTile>> ImportFijiMontageFilter::loadTiles(const fs:
       metadata.push_back(std::move(metadataResult.value()));
     }
     m_Cache.metadata = std::move(metadata);
-    m_Cache.metadataValid = true;
+    m_Cache.metadata_valid = true;
   }
 
-  std::vector<fiji::FijiTile> tiles = m_Cache.rawTiles; // copy: names (and, in preflight, origins) are per-run
+  std::vector<fiji::FijiTile> tiles = m_Cache.raw_tiles; // copy: names (and, in preflight, origins) are per-run
   fiji::AssignTileNames(tiles, prefix);
   return {std::move(tiles)};
 }
@@ -237,7 +237,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   auto parentDataGroup = filterArgs.value<bool>(k_ParentDataGroup_Key);
   auto dataGroupName = filterArgs.value<StringParameter::ValueType>(k_DataGroupName_Key);
   auto changeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
-  auto originValues = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto originValues = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
   auto convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto imagePrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
   auto cellAmName = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
@@ -266,7 +266,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   auto tilesResult = loadTiles(inputFile, imagePrefix, /*needMetadata=*/true);
   if(tilesResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(tilesResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(tilesResult)), {})};
   }
   std::vector<fiji::FijiTile> tiles = std::move(tilesResult.value());
 
@@ -278,7 +278,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
     {
       return MakePreflightErrorResult(-35925, fmt::format("'Change Origin' is enabled but the Origin vector has {} value(s); exactly 3 (X, Y, Z) are required.", originValues.size()));
     }
-    fiji::RebaseOrigins(tiles, FloatVec3{originValues[0], originValues[1], originValues[2]});
+    fiji::RebaseOrigins(tiles, FloatVec3Type{originValues[0], originValues[1], originValues[2]});
   }
 
   // Invariant guaranteed by loadTiles(needMetadata=true); a defensive check keeps the index-based
@@ -299,28 +299,28 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   {
     const fiji::FijiTile& tile = tiles[i];
     const ImageMetadata& md = m_Cache.metadata[i];
-    if(convertToGrayScale && md.numComponents != 1 && md.numComponents != 3 && md.numComponents != 4)
+    if(convertToGrayScale && md.num_components != 1 && md.num_components != 3 && md.num_components != 4)
     {
       return MakePreflightErrorResult(
           -35927,
           fmt::format("Tile '{}' has {} components. Grayscale conversion supports images with 1, 3, or 4 components. Turn off 'Convert To GrayScale' or convert the tile to grayscale, RGB, or RGBA.",
-                      tile.filePath.string(), md.numComponents));
+                      tile.file_path.string(), md.num_components));
     }
 
     const TilePaths paths = MakeTilePaths(tile, parentDataGroup, dataGroupName, cellAmName, imageArrayName);
 
     const std::vector<usize> geomDims = {md.width, md.height, 1};       // X, Y, Z
     const std::vector<usize> arrayTupleDims = {1, md.height, md.width}; // Z, Y, X
-    const std::vector<usize> componentDims = {md.numComponents};
+    const std::vector<usize> componentDims = {md.num_components};
     const std::vector<float32> originVec = {tile.origin[0], tile.origin[1], tile.origin[2]};
     const std::vector<float32> spacingVec = {1.0f, 1.0f, 1.0f};
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(paths.geom_path, geomDims, originVec, spacingVec, cellAmName, lengthUnit));
 
-    const DataType arrayType = changeDataType ? destType : md.dataType;
-    if(convertToGrayScale && IsGrayscaleConvertible(arrayType, md.numComponents))
+    const DataType arrayType = changeDataType ? destType : md.data_type;
+    if(convertToGrayScale && IsGrayscaleConvertible(arrayType, md.num_components))
     {
-      resultOutputActions.value().appendAction(std::make_unique<CreateMontageGrayscaleArrayAction>(arrayTupleDims, md.numComponents, paths.array_path));
+      resultOutputActions.value().appendAction(std::make_unique<CreateMontageGrayscaleArrayAction>(arrayTupleDims, md.num_components, paths.array_path));
     }
     else
     {
@@ -337,7 +337,7 @@ IFilter::PreflightResult ImportFijiMontageFilter::preflightImpl(const DataStruct
   }
 
   preflightUpdatedValues.push_back({"Import Information", fmt::format("Imported Image Count: {}", tiles.size())});
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -348,7 +348,7 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
   auto parentDataGroup = filterArgs.value<bool>(k_ParentDataGroup_Key);
   auto dataGroupName = filterArgs.value<StringParameter::ValueType>(k_DataGroupName_Key);
   auto convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
-  auto colorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
+  auto colorWeights = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_ColorWeights_Key);
   auto imagePrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
   auto cellAmName = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
   auto imageArrayName = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
@@ -380,29 +380,29 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
     {
       return {};
     }
-    messageHandler.sendInfoMessage(fmt::format("Importing {}", tile.filePath.filename().string()));
+    messageHandler.sendInfoMessage(fmt::format("Importing {}", tile.file_path.filename().string()));
 
     const TilePaths paths = MakeTilePaths(tile, parentDataGroup, dataGroupName, cellAmName, imageArrayName);
 
     ReadImageInputValues iv;
-    iv.inputFilePath = tile.filePath;
-    iv.imageGeometryPath = paths.geom_path;
-    iv.imageDataArrayPath = paths.array_path;
-    iv.cellDataName = cellAmName;
-    iv.changeOrigin = false; // origin already set by CreateImageGeometryAction; do not let ReadImage move it
-    iv.changeSpacing = false;
-    iv.changeDataType = changeDataType;
-    iv.imageDataType = changeDataType ? ChoiceToImageDataType(dataTypeChoice) : DataType::uint8;
-    iv.croppingOptions.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
+    iv.input_file_path = tile.file_path;
+    iv.image_geometry_path = paths.geom_path;
+    iv.image_data_array_path = paths.array_path;
+    iv.cell_data_name = cellAmName;
+    iv.change_origin = false; // origin already set by CreateImageGeometryAction; do not let ReadImage move it
+    iv.change_spacing = false;
+    iv.change_data_type = changeDataType;
+    iv.image_data_type = changeDataType ? ChoiceToImageDataType(dataTypeChoice) : DataType::uint8;
+    iv.cropping_options.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
 
     auto readResult = ReadImage(dataStructure, messageHandler, shouldCancel, iv)();
     if(readResult.invalid())
     {
       for(const auto& error : readResult.errors())
       {
-        messageHandler.sendWarningMessage(fmt::format("|-- Error reading tile ({}): code {} - {}", tile.filePath.filename().string(), error.code, error.message));
+        messageHandler.sendWarningMessage(fmt::format("|-- Error reading tile ({}): code {} - {}", tile.file_path.filename().string(), error.code, error.message));
       }
-      result.warnings().emplace_back(Warning{.code = -35940, .message = fmt::format("Tile '{}' could not be read and was skipped.", tile.filePath.filename().string())});
+      result.warnings().emplace_back(Warning{.code = -35940, .message = fmt::format("Tile '{}' could not be read and was skipped.", tile.file_path.filename().string())});
       const auto& failedArray = dataStructure.getDataRefAs<IDataArray>(paths.array_path);
       if(convertToGrayScale && IsGrayscaleConvertible(failedArray.getDataType(), failedArray.getNumberOfComponents()))
       {
@@ -440,18 +440,18 @@ Result<> ImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, cons
       }
 
       ConvertColorToGrayScaleInputValues grayscaleInputValues;
-      grayscaleInputValues.ConversionAlgorithm = 0;
-      grayscaleInputValues.ColorWeights = colorWeights;
-      grayscaleInputValues.ColorChannel = 0;
-      grayscaleInputValues.InputDataArrayPaths = {paths.array_path};
-      grayscaleInputValues.OutputArrayPrefix = "gray";
+      grayscaleInputValues.conversion_algorithm = 0;
+      grayscaleInputValues.color_weights = colorWeights;
+      grayscaleInputValues.color_channel = 0;
+      grayscaleInputValues.input_data_array_paths = {paths.array_path};
+      grayscaleInputValues.output_array_prefix = "gray";
 
       auto grayscalePreflight = PreflightColorToGrayScale(dataStructure, grayscaleInputValues);
-      if(grayscalePreflight.outputActions.invalid())
+      if(grayscalePreflight.output_actions.invalid())
       {
-        return ConvertResult(std::move(grayscalePreflight.outputActions));
+        return ConvertResult(std::move(grayscalePreflight.output_actions));
       }
-      Result<> actionResult = grayscalePreflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+      Result<> actionResult = grayscalePreflight.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
       if(actionResult.invalid())
       {
         return actionResult;

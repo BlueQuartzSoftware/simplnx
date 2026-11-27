@@ -64,7 +64,7 @@ template <typename MaskArrayType>
 class GenerateFZQuatsAbstractImpl
 {
 public:
-  GenerateFZQuatsAbstractImpl(Float32Array& quats, Int32Array& phases, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases, MaskArrayType* goodVoxels, Float32Array& fzQuats,
+  GenerateFZQuatsAbstractImpl(Float32ArrayType& quats, Int32ArrayType& phases, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases, MaskArrayType* goodVoxels, Float32ArrayType& fzQuats,
                               const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount, const std::function<void(usize)>& reportProgress)
   : m_Quats(quats)
   , m_CellPhases(phases)
@@ -130,12 +130,12 @@ public:
   }
 
 private:
-  Float32Array& m_Quats;
-  Int32Array& m_CellPhases;
+  Float32ArrayType& m_Quats;
+  Int32ArrayType& m_CellPhases;
   const std::vector<ebsdlib::LaueOps::Pointer>& m_PhaseOps;
   int32 m_NumPhases = 0;
   MaskArrayType* m_GoodVoxels = nullptr;
-  Float32Array& m_FZQuats;
+  Float32ArrayType& m_FZQuats;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_int32_t& m_WarningCount;
   std::function<void(usize)> m_ReportProgress;
@@ -238,11 +238,11 @@ public:
 
   Result<> operator()()
   {
-    auto& phaseArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-    auto& quatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath);
-    auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-    IDataArray* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-    auto& fzQuatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath.replaceName(m_InputValues->OutputFzQuatsArrayName));
+    auto& phaseArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+    auto& quatArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_quats_array_path);
+    auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+    IDataArray* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
+    auto& fzQuatArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_quats_array_path.replaceName(m_InputValues->output_fz_quats_array_name));
 
     std::atomic_int32_t warningCount = 0;
     const int32 numPhases = static_cast<int32>(crystalStructuresArray.getNumberOfTuples());
@@ -257,8 +257,8 @@ public:
       }
     }
 
-    IParallelAlgorithm::AlgorithmArrays algorithmArrays = {&phaseArray, &quatArray, &crystalStructuresArray, &fzQuatArray};
-    if(m_InputValues->UseMask)
+    IParallelAlgorithm::AlgorithmArraysType algorithmArrays = {&phaseArray, &quatArray, &crystalStructuresArray, &fzQuatArray};
+    if(m_InputValues->use_mask)
     {
       algorithmArrays.push_back(maskArrayPtr);
     }
@@ -267,11 +267,11 @@ public:
     dataAlgorithm.setRange(0ULL, quatArray.getNumberOfTuples());
     dataAlgorithm.requireArraysInMemory(algorithmArrays);
 
-    if(m_InputValues->UseMask)
+    if(m_InputValues->use_mask)
     {
       if(maskArrayPtr->getDataType() == DataType::boolean)
       {
-        auto* goodVoxelsArrayPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
+        auto* goodVoxelsArrayPtr = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->mask_array_path);
         if(Result<> result = executeWithMaskType(dataAlgorithm, quatArray, phaseArray, phaseOps, numPhases, goodVoxelsArrayPtr, fzQuatArray, warningCount); result.invalid())
         {
           return result;
@@ -279,7 +279,7 @@ public:
       }
       else if(maskArrayPtr->getDataType() == DataType::uint8)
       {
-        auto* goodVoxelsArrayPtr = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->MaskArrayPath);
+        auto* goodVoxelsArrayPtr = m_DataStructure.getDataAs<UInt8ArrayType>(m_InputValues->mask_array_path);
         if(Result<> result = executeWithMaskType(dataAlgorithm, quatArray, phaseArray, phaseOps, numPhases, goodVoxelsArrayPtr, fzQuatArray, warningCount); result.invalid())
         {
           return result;
@@ -287,7 +287,7 @@ public:
       }
       else if(maskArrayPtr->getDataType() == DataType::int8)
       {
-        auto* goodVoxelsArrayPtr = m_DataStructure.getDataAs<Int8Array>(m_InputValues->MaskArrayPath);
+        auto* goodVoxelsArrayPtr = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->mask_array_path);
         if(Result<> result = executeWithMaskType(dataAlgorithm, quatArray, phaseArray, phaseOps, numPhases, goodVoxelsArrayPtr, fzQuatArray, warningCount); result.invalid())
         {
           return result;
@@ -307,8 +307,8 @@ public:
 
 private:
   template <typename MaskType>
-  Result<> executeWithMaskType(ParallelDataAlgorithm& dataAlgorithm, Float32Array& quatArray, Int32Array& phaseArray, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases,
-                               DataArray<MaskType>* maskArray, Float32Array& fzQuatArray, std::atomic_int32_t& warningCount) const
+  Result<> executeWithMaskType(ParallelDataAlgorithm& dataAlgorithm, Float32ArrayType& quatArray, Int32ArrayType& phaseArray, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases,
+                               DataArray<MaskType>* maskArray, Float32ArrayType& fzQuatArray, std::atomic_int32_t& warningCount) const
   {
     const auto& cellPhasesStoreRef = phaseArray.getDataStoreRef();
     const auto* maskStoreRefPtr = maskArray == nullptr ? nullptr : &maskArray->getDataStoreRef();
@@ -330,7 +330,7 @@ private:
       const int32 currentPhaseIdx = cellPhasesStoreRef[tupleIdx];
       if(generateFzQuat && currentPhaseIdx < 0)
       {
-        return MakeErrorResult(-49009, fmt::format("Cell Phases array '{}' has value {} at tuple index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->CellPhasesArrayPath.toString(),
+        return MakeErrorResult(-49009, fmt::format("Cell Phases array '{}' has value {} at tuple index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->cell_phases_array_path.toString(),
                                                    currentPhaseIdx, tupleIdx, numPhases));
       }
     }
@@ -387,9 +387,9 @@ public:
 
   Result<> operator()()
   {
-    if(m_InputValues->UseMask)
+    if(m_InputValues->use_mask)
     {
-      const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+      const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
       if(maskArray.getDataType() == DataType::boolean)
       {
         return executeWithMaskType<bool>();
@@ -414,10 +414,10 @@ private:
   template <typename MaskType>
   Result<> executeWithMaskType()
   {
-    const auto& phaseArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-    const auto& quatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath);
-    const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-    auto& fzQuatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath.replaceName(m_InputValues->OutputFzQuatsArrayName));
+    const auto& phaseArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+    const auto& quatArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_quats_array_path);
+    const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+    auto& fzQuatArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_quats_array_path.replaceName(m_InputValues->output_fz_quats_array_name));
 
     const usize totalTuples = quatArray.getNumberOfTuples();
     const int32 numPhases = static_cast<int32>(crystalStructuresArray.getNumberOfTuples());
@@ -433,9 +433,9 @@ private:
     auto& fzQuatStore = fzQuatArray.getDataStoreRef();
 
     const AbstractDataStore<MaskType>* maskStorePtr = nullptr;
-    if(m_InputValues->UseMask)
+    if(m_InputValues->use_mask)
     {
-      const auto& maskArray = m_DataStructure.getDataRefAs<DataArray<MaskType>>(m_InputValues->MaskArrayPath);
+      const auto& maskArray = m_DataStructure.getDataRefAs<DataArray<MaskType>>(m_InputValues->mask_array_path);
       maskStorePtr = &maskArray.getDataStoreRef();
     }
 
@@ -490,7 +490,7 @@ private:
         if(generateFZQuat && phase < 0)
         {
           return MakeErrorResult(-49009, fmt::format("Cell Phases array '{}' has value {} at tuple index {}. Valid enabled Phase indices are in [0, {}).",
-                                                     m_InputValues->CellPhasesArrayPath.toString(), phase, offset + tupleIndex, numPhases));
+                                                     m_InputValues->cell_phases_array_path.toString(), phase, offset + tupleIndex, numPhases));
         }
         if(phase >= numPhases)
         {
@@ -536,14 +536,14 @@ ComputeFZQuaternions::ComputeFZQuaternions(DataStructure& dataStructure, const I
 
 Result<> ComputeFZQuaternions::operator()()
 {
-  const auto& phaseArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& quatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath);
-  const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto& fzQuatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath.replaceName(m_InputValues->OutputFzQuatsArrayName));
+  const auto& phaseArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& quatArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_quats_array_path);
+  const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  const auto& fzQuatArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_quats_array_path.replaceName(m_InputValues->output_fz_quats_array_name));
 
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
-    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     return DispatchAlgorithm<ComputeFZQuaternionsDirect, ComputeFZQuaternionsScanline>({&phaseArray, &quatArray, &crystalStructuresArray, &maskArray, &fzQuatArray}, m_DataStructure, m_MessageHandler,
                                                                                        m_ShouldCancel, m_InputValues);
   }

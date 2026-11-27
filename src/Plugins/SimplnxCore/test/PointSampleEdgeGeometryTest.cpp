@@ -45,7 +45,7 @@ const DataPath k_ExemplarySampledVertexGeomPath = DataPath({"Exemplary Sampled V
 template <typename T>
 DataArray<T>& CreateFixtureArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId)
 {
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
   REQUIRE((store != nullptr));
   auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), store, parentId);
   REQUIRE((arrayPtr != nullptr));
@@ -62,7 +62,7 @@ void RequireArrayStorage(const IDataArray& array, bool outOfCore)
   }
 }
 
-void RequireEndpointDistances(const EdgeGeom& inputGeom, const VertexGeom& outputGeom, const UInt64Array& edgeIds, const Float32Array& distances)
+void RequireEndpointDistances(const EdgeGeom& inputGeom, const VertexGeom& outputGeom, const UInt64ArrayType& edgeIds, const Float32ArrayType& distances)
 {
   const auto& inputVertices = inputGeom.getVerticesRef();
   const auto& edges = inputGeom.getEdgesRef();
@@ -135,17 +135,17 @@ void RequireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   args.insertOrAssign(PointSampleEdgeGeometryFilter::k_SampledVertexGeometryPath_Key, std::make_any<DataPath>(k_SampledVertexGeomPath));
   args.insertOrAssign(PointSampleEdgeGeometryFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({attributePath}));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids")));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_SampledVertexAMPath.createChildPath("Attributes")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64ArrayType>(k_SampledVertexAMPath.createChildPath("Edge Ids")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_SampledVertexAMPath.createChildPath("Attributes")));
   const auto& outputGeom = dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath);
   const auto& vertices = outputGeom.getVerticesRef();
-  const auto& edgeIds = dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids"));
-  const auto& attributes = dataStructure.getDataRefAs<Int32Array>(k_SampledVertexAMPath.createChildPath("Attributes"));
+  const auto& edgeIds = dataStructure.getDataRefAs<UInt64ArrayType>(k_SampledVertexAMPath.createChildPath("Edge Ids"));
+  const auto& attributes = dataStructure.getDataRefAs<Int32ArrayType>(k_SampledVertexAMPath.createChildPath("Attributes"));
   RequireArrayStorage(vertices, outOfCore);
   RequireArrayStorage(edgeIds, outOfCore);
   RequireArrayStorage(attributes, outOfCore);
@@ -185,8 +185,8 @@ void RequireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   const DataPath distancePath = k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance");
   if(calculateDistance)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(distancePath));
-    const auto& distances = dataStructure.getDataRefAs<Float32Array>(distancePath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(distancePath));
+    const auto& distances = dataStructure.getDataRefAs<Float32ArrayType>(distancePath);
     RequireArrayStorage(distances, outOfCore);
     RequireEndpointDistances(*geomPtr, outputGeom, edgeIds, distances);
   }
@@ -194,7 +194,7 @@ void RequireEndpointDistanceFixture(bool outOfCore, bool calculateDistance, cons
   {
     REQUIRE((dataStructure.getDataAs<IDataArray>(distancePath) == nullptr));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 void RequireEndpointDistanceVariants(bool outOfCore)
@@ -214,23 +214,23 @@ void RequireEndpointDistanceVariants(bool outOfCore)
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Distance from endpoint", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
 {
   REQUIRE((Application::GetOrCreateInstance() != nullptr));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   RequireEndpointDistanceVariants(false);
 }
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: real-store distance from endpoint", "[SimplnxCore][PointSampleEdgeGeometryFilter][.OocStoreContract]")
 {
   REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   RequireEndpointDistanceVariants(true);
 }
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz", "point_sample_edge_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz", "point_sample_edge_geometry");
 
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
 
   // Instantiate the filter and an Arguments Object
   PointSampleEdgeGeometryFilter filter;
@@ -247,7 +247,7 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -255,23 +255,23 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", 
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_ScanVectorGeometryPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids")));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64ArrayType>(k_SampledVertexAMPath.createChildPath("Edge Ids")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance")));
   RequireEndpointDistances(dataStructure.getDataRefAs<EdgeGeom>(k_ScanVectorGeometryPath), dataStructure.getDataRefAs<VertexGeom>(k_SampledVertexGeomPath),
-                           dataStructure.getDataRefAs<UInt64Array>(k_SampledVertexAMPath.createChildPath("Edge Ids")),
-                           dataStructure.getDataRefAs<Float32Array>(k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance")));
+                           dataStructure.getDataRefAs<UInt64ArrayType>(k_SampledVertexAMPath.createChildPath("Edge Ids")),
+                           dataStructure.getDataRefAs<Float32ArrayType>(k_SampledVertexAMPath.createChildPath("Cumulative Sample Distance")));
   // The archive's distance array uses a different origin. Compare all other arrays with the unchanged archive.
   REQUIRE((exemplarDataStructure.removeData(k_ExemplarySampledVertexGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath("Cumulative Sample Distance"))));
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_SampledVertexAMPath, k_ExemplarySampledVertexGeomPath.getTargetName());
+  unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_SampledVertexAMPath, k_ExemplarySampledVertexGeomPath.getTargetName());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Invalid Filter Execution", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz", "point_sample_edge_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz", "point_sample_edge_geometry");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   PointSampleEdgeGeometryFilter filter;
@@ -288,7 +288,7 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Invalid Filter Execution"
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

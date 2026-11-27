@@ -36,7 +36,7 @@ Uuid EnsembleInfoParameter::uuid() const
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes EnsembleInfoParameter::acceptedTypes() const
+IParameter::AcceptedTypesType EnsembleInfoParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -71,7 +71,7 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
 
   if(!json.is_array() && !json.is_null())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data entry for key '{}' is not an array.", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}The JSON data entry for key '{}' is not an array.", k_Prefix.view(), name()));
   }
 
   usize numRows = 0;
@@ -87,13 +87,13 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& rowJson = json[i];
     if(!rowJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}Row {} json is not an array", k_Prefix.view(), i));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}Row {} json is not an array", k_Prefix.view(), i));
     }
 
     usize numCols = rowJson.size();
     if(numCols != 3)
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry,
                                        fmt::format("{}Row {} json array is not the correct size. Found {} values but expecting 3.", k_Prefix.view(), i, numCols));
     }
     RowType row;
@@ -102,7 +102,7 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
       const auto& value = rowJson[j];
       if(!value.is_string())
       {
-        return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}Element ({}, {}) is not a string", k_Prefix.view(), i, j));
+        return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}Element ({}, {}) is not a string", k_Prefix.view(), i, j));
       }
 
       row[j] = value.get<std::string>();
@@ -136,7 +136,7 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
   usize numRows = table.size();
   if(numRows == 0)
   {
-    return MakeErrorResult<>(FilterParameter::Constants::k_Validate_TupleShapeValue, "You must add at least one row (ensemble phase)");
+    return MakeErrorResult<>(filter_parameter::constants::k_ValidateTupleShapeValue, "You must add at least one row (ensemble phase)");
   }
   usize lastNumCols = table.front().size();
   for(usize i = 1; i < numRows; i++)
@@ -145,7 +145,7 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
     usize numCols = row.size();
     if(numCols != lastNumCols)
     {
-      return MakeErrorResult<>(FilterParameter::Constants::k_Validate_TupleShapeValue,
+      return MakeErrorResult<>(filter_parameter::constants::k_ValidateTupleShapeValue,
                                fmt::format("{}Row {} does not have the correct number of elements. Found {} values but expecting {}.", prefix, i, numCols, lastNumCols));
     }
   }

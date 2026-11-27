@@ -23,8 +23,8 @@ ComputeBoundingBoxStats::ComputeBoundingBoxStats(DataStructure& dataStructure, c
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStats::operator()()
 {
-  auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputPath);
-  auto& unifiedBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedPath);
+  auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_path);
+  auto& unifiedBounds = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->unified_path);
   if(inputArray.getDataType() == DataType::boolean)
   {
     return MakeErrorResult(-98500, "Boolean arrays cannot be used as inputs to this filter.");

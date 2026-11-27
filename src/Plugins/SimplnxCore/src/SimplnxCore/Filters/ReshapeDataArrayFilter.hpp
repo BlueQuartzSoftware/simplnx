@@ -21,7 +21,7 @@ public:
   ReshapeDataArrayFilter& operator=(ReshapeDataArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteralType k_Input_Array_Key = "input_array_path";
+  static constexpr StringLiteralType k_InputArrayKey = "input_array_path";
   static constexpr StringLiteralType k_TupleDims_Key = "tuple_dims";
 
   /**

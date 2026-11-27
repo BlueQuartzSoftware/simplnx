@@ -18,7 +18,7 @@ using namespace nx::core;
 
 namespace
 {
-const ChoicesParameter::Choices k_Choices = {"To Scalar Vector ( w, [x, y, z] )", "To Vector Scalar ( [x, y, z], w )"};
+const ChoicesParameter::ChoicesType k_Choices = {"To Scalar Vector ( w, [x, y, z] )", "To Vector Scalar ( [x, y, z], w )"};
 } // namespace
 
 namespace nx::core
@@ -66,7 +66,7 @@ Parameters ConvertQuaternionFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Input Quaternions", "Specifies the quaternions to convert", DataPath({"Cell Data", "Quats"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Output Quaternions", "The DataPath to the converted quaternions", "Quaternions [Converted]"));
 
@@ -110,7 +110,7 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -119,10 +119,10 @@ Result<> ConvertQuaternionFilter::executeImpl(DataStructure& dataStructure, cons
 {
   ConvertQuaternionInputValues inputValues;
 
-  inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
-  inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
-  inputValues.ConversionType = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
+  inputValues.quaternion_data_array_path = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
+  inputValues.output_data_array_path = inputValues.quaternion_data_array_path.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.delete_original_data = filterArgs.value<bool>(k_DeleteOriginalData_Key);
+  inputValues.conversion_type = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
 
   return ConvertQuaternion(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -27,13 +27,13 @@ class SmoothingBudgetScope
 {
 public:
   SmoothingBudgetScope()
-  : m_OriginalBudget(CacheMemoryBudgetManager::instance().budgetBytes())
+  : m_OriginalBudget(CacheMemoryBudgetManager::Instance().budgetBytes())
   {
-    CacheMemoryBudgetManager::instance().setBudgetBytes(1 << 20);
+    CacheMemoryBudgetManager::Instance().setBudgetBytes(1 << 20);
   }
   ~SmoothingBudgetScope()
   {
-    CacheMemoryBudgetManager::instance().setBudgetBytes(m_OriginalBudget);
+    CacheMemoryBudgetManager::Instance().setBudgetBytes(m_OriginalBudget);
   }
   SmoothingBudgetScope(const SmoothingBudgetScope&) = delete;
   SmoothingBudgetScope(SmoothingBudgetScope&&) = delete;
@@ -88,20 +88,20 @@ struct NodeTypeCase
 // For K4, a uniform pass scales each displacement from the centroid by 1 - 4*lambda/3.
 // These explicit coordinates use that closed form, not the production edge traversal.
 constexpr std::array<NodeTypeCase, 7> k_NodeTypeCases{{
-    {.name = "Unused", .node_type = node_type::Unused, .expected = k_InputCoordinates},
+    {.name = "Unused", .node_type = node_type::k_Unused, .expected = k_InputCoordinates},
     {.name = "Default",
-     .node_type = node_type::Default,
+     .node_type = node_type::k_Default,
      .expected = {1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F}},
     {.name = "TriplePoint",
-     .node_type = node_type::TriplePoint,
+     .node_type = node_type::k_TriplePoint,
      .expected = {1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F}},
-    {.name = "QuadPoint", .node_type = node_type::QuadPoint, .expected = {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
+    {.name = "QuadPoint", .node_type = node_type::k_QuadPoint, .expected = {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
     {.name = "SurfaceDefault",
-     .node_type = node_type::SurfaceDefault,
+     .node_type = node_type::k_SurfaceDefault,
      .expected = {1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F}},
-    {.name = "SurfaceTriplePoint", .node_type = node_type::SurfaceTriplePoint, .expected = {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
+    {.name = "SurfaceTriplePoint", .node_type = node_type::k_SurfaceTriplePoint, .expected = {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
     {.name = "SurfaceQuadPoint",
-     .node_type = node_type::SurfaceQuadPoint,
+     .node_type = node_type::k_SurfaceQuadPoint,
      .expected = {5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F}},
 }};
 
@@ -147,7 +147,7 @@ template <typename T, usize N>
 DataArray<T>* CreateInputArray(DataStructure& dataStructure, const DataPath& path, DataObject::IdType parentId, usize tuples, usize components, const std::array<T, N>& values)
 {
   REQUIRE(values.size() == tuples * components);
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
   REQUIRE(store != nullptr);
   auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), store, parentId);
   REQUIRE(arrayPtr != nullptr);
@@ -217,7 +217,7 @@ void RequireResidentInputs(const DataStructure& dataStructure)
  * @param iterations Supplies the number of smoothing iterations.
  * @param useTaubin Enables the second pass with mu factor -1.
  */
-void ExecuteSmoothing(UnitTest::AlgorithmTestScope& scope, DataStructure& dataStructure, int32 iterations, bool useTaubin)
+void ExecuteSmoothing(unit_test::AlgorithmTestScope& scope, DataStructure& dataStructure, int32 iterations, bool useTaubin)
 {
   LaplacianSmoothingFilter filter;
   Arguments args;
@@ -233,7 +233,7 @@ void ExecuteSmoothing(UnitTest::AlgorithmTestScope& scope, DataStructure& dataSt
   args.insertOrAssign(LaplacianSmoothingFilter::k_SurfaceMeshNodeTypeArrayPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
   args.insertOrAssign(LaplacianSmoothingFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(k_GeometryPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -249,10 +249,10 @@ void ExecuteSmoothing(UnitTest::AlgorithmTestScope& scope, DataStructure& dataSt
 void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const NodeTypesType& nodeTypes, const CoordinatesType& expected, bool exact = false)
 {
   RequireResidentInputs(dataStructure);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_VerticesPath));
-  const auto& vertices = dataStructure.getDataRefAs<Float32Array>(k_VerticesPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath));
-  const auto& nodes = dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_VerticesPath));
+  const auto& vertices = dataStructure.getDataRefAs<Float32ArrayType>(k_VerticesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_NodeTypesPath));
+  const auto& nodes = dataStructure.getDataRefAs<Int8ArrayType>(k_NodeTypesPath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_ConnectivityPath));
   const auto& connectivity = dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_ConnectivityPath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<INodeGeometry1D>(k_GeometryPath));
@@ -306,17 +306,17 @@ void CheckResult(const DataStructure& dataStructure, GeometryKind kind, const No
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: every node type uses its analytic lambda", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianNumerical]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(Catch::Generators::from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(Catch::Generators::from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   const auto testCase = GENERATE(Catch::Generators::from_range(k_NodeTypeCases));
   const auto kind = GENERATE(GeometryKind::Triangle, GeometryKind::Edge);
   DYNAMIC_SECTION(testCase.name << " on " << (kind == GeometryKind::Triangle ? "TriangleGeom" : "EdgeGeom"))
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     const SmoothingBudgetScope budget;
     // Keep the original one-byte large-data threshold and force resident storage.
-    const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+    const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
     NodeTypesType nodeTypes;
     nodeTypes.fill(testCase.node_type);
@@ -324,52 +324,52 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: every node type uses its analytic la
     RequireResidentInputs(dataStructure);
     ExecuteSmoothing(scope, dataStructure, 1, false);
     CheckResult(dataStructure, kind, nodeTypes, testCase.expected);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: iterations and Taubin match analytic coordinates", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianNumerical]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(Catch::Generators::from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(Catch::Generators::from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   const auto testCase = GENERATE(Catch::Generators::from_range(k_IterationCases));
   const auto kind = GENERATE(GeometryKind::Triangle, GeometryKind::Edge);
   DYNAMIC_SECTION(testCase.name << " on " << (kind == GeometryKind::Triangle ? "TriangleGeom" : "EdgeGeom"))
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     const SmoothingBudgetScope budget;
     // Keep the original one-byte large-data threshold and force resident storage.
-    const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+    const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    const NodeTypesType nodeTypes{node_type::Default, node_type::Default, node_type::Default, node_type::Default};
+    const NodeTypesType nodeTypes{node_type::k_Default, node_type::k_Default, node_type::k_Default, node_type::k_Default};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
     ExecuteSmoothing(scope, dataStructure, testCase.iterations, testCase.use_taubin);
     CheckResult(dataStructure, kind, nodeTypes, testCase.expected, testCase.iterations == 0);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: mixed node classes use input-pass coordinates", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianNumerical]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(Catch::Generators::from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(Catch::Generators::from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   const auto kind = GENERATE(GeometryKind::Triangle, GeometryKind::Edge);
   DYNAMIC_SECTION((kind == GeometryKind::Triangle ? "TriangleGeom" : "EdgeGeom"))
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     const SmoothingBudgetScope budget;
     // Keep the original one-byte large-data threshold and force resident storage.
-    const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+    const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    const NodeTypesType nodeTypes{node_type::Unused, node_type::Default, node_type::TriplePoint, node_type::Unused};
+    const NodeTypesType nodeTypes{node_type::k_Unused, node_type::k_Default, node_type::k_TriplePoint, node_type::k_Unused};
     const CoordinatesType expected{0.0F, 0.0F, 0.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 0.0F, 0.0F, 2.0F};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
     ExecuteSmoothing(scope, dataStructure, 1, false);
     CheckResult(dataStructure, kind, nodeTypes, expected);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }

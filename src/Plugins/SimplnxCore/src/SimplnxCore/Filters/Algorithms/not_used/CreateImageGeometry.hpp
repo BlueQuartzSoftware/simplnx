@@ -28,9 +28,9 @@ struct SIMPLNXCORE_EXPORT CreateImageGeometryInputValues
 {
   DataObjectNameParameter::ValueType CellDataName;
   VectorUInt64ParameterType::ValueType Dimensions;
-  VectorFloat32Parameter::ValueType Origin;
+  VectorFloat32ParameterType::ValueType Origin;
   DataGroupCreationParameter::ValueType OutputImageGeometryPath;
-  VectorFloat32Parameter::ValueType Spacing;
+  VectorFloat32ParameterType::ValueType Spacing;
 };
 
 /**

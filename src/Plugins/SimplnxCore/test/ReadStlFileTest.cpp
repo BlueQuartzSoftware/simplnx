@@ -23,7 +23,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -52,16 +52,16 @@ void WriteBinaryStlFile(const fs::path& path, const std::string& headerText, int
   std::ofstream outputFile(path, std::ios::binary | std::ios::trunc);
   REQUIRE(outputFile.is_open());
 
-  std::string header(StlConstants::k_STL_HEADER_LENGTH, '\0');
-  const size_t copyLength = std::min(headerText.size(), StlConstants::k_STL_HEADER_LENGTH);
+  std::string header(stl_constants::k_StlHeaderLength, '\0');
+  const size_t copyLength = std::min(headerText.size(), stl_constants::k_StlHeaderLength);
   std::copy_n(headerText.begin(), copyLength, header.begin());
-  outputFile.write(header.data(), static_cast<std::streamsize>(StlConstants::k_STL_HEADER_LENGTH));
+  outputFile.write(header.data(), static_cast<std::streamsize>(stl_constants::k_StlHeaderLength));
   outputFile.write(reinterpret_cast<const char*>(&declaredTriangleCount), sizeof(int32_t));
 
   for(size_t t = 0; t < triangleSpecs.size(); t++)
   {
     const float base = static_cast<float>(t) * 10.0F;
-    const std::array<float, StlConstants::k_StlElementCount> values = {
+    const std::array<float, stl_constants::k_StlElementCount> values = {
         0.0F,        0.0F, 1.0F, // facet normal
         base,        0.0F, 0.0F, // vertex 0
         base + 1.0F, 0.0F, 0.0F, // vertex 1
@@ -90,7 +90,7 @@ IFilter::ExecuteResult RunReadStlFileFilter(DataStructure& dataStructure, const 
   args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   return filter.execute(dataStructure, args);
 }
@@ -128,9 +128,9 @@ void CheckSyntheticTriangleGeometry(const TriangleGeom& triangleGeom, size_t exp
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
@@ -147,7 +147,7 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFil
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -162,7 +162,7 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFil
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:CorruptTriangleCount", "[SimplnxCore][ReadStlFileFilter]")
@@ -183,20 +183,20 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:CorruptTriangleCount", "[SimplnxCore][
 
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == StlConstants::k_StlFileLengthError);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == stl_constants::k_StlFileLengthError);
 
   IFilter::ExecuteResult executeResult;
   REQUIRE_NOTHROW(executeResult = filter.execute(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors().front().code == StlConstants::k_StlFileLengthError);
+  REQUIRE(executeResult.result.errors().front().code == stl_constants::k_StlFileLengthError);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:STLParseError", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
@@ -213,23 +213,23 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:STLParseError", "[SimplnxCore][ReadStl
 
   // Reject the truncated file before allocating output arrays
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == StlConstants::k_StlFileLengthError);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == stl_constants::k_StlFileLengthError);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
-  REQUIRE(executeResult.result.errors().front().code == StlConstants::k_StlFileLengthError);
+  REQUIRE(executeResult.result.errors().front().code == stl_constants::k_StlFileLengthError);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:TriangleParseError", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
@@ -246,23 +246,23 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:TriangleParseError", "[SimplnxCore][Re
 
   // Reject the truncated file before allocating output arrays
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == StlConstants::k_StlFileLengthError);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == stl_constants::k_StlFileLengthError);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
-  REQUIRE(executeResult.result.errors().front().code == StlConstants::k_StlFileLengthError);
+  REQUIRE(executeResult.result.errors().front().code == stl_constants::k_StlFileLengthError);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:AttributeParseError", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadSTLFileTest.tar.gz", "ReadSTLFileTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
@@ -279,21 +279,21 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:AttributeParseError", "[SimplnxCore][R
 
   // Reject the truncated file before allocating output arrays
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == StlConstants::k_StlFileLengthError);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == stl_constants::k_StlFileLengthError);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
-  REQUIRE(executeResult.result.errors().front().code == StlConstants::k_StlFileLengthError);
+  REQUIRE(executeResult.result.errors().front().code == stl_constants::k_StlFileLengthError);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:NonConformingAttributeByteCount", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const size_t kTriangleCount = 8;
   const DataPath triangleGeomDataPath({"[Triangle Geometry]"});
@@ -319,13 +319,13 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:NonConformingAttributeByteCount", "[Si
   {
     const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStlFileTest" / "non_conforming_attribute_byte_count.stl";
     WriteBinaryStlFile(inputFile, headerText, static_cast<int32_t>(kTriangleCount), triangleSpecs);
-    REQUIRE(fs::file_size(inputFile) == StlConstants::k_StlFixedHeaderBytes + (kTriangleCount * StlConstants::k_StlTriangleBytes));
+    REQUIRE(fs::file_size(inputFile) == stl_constants::k_StlFixedHeaderBytes + (kTriangleCount * stl_constants::k_StlTriangleBytes));
 
     // The file size proves there is no payload, so no seeking may happen regardless of vendor.
-    const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
+    const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
     REQUIRE(stlFileCheck.error == 0);
-    REQUIRE(stlFileCheck.numTriangles == static_cast<int32_t>(kTriangleCount));
-    REQUIRE(stlFileCheck.attributePayloadPresent == false);
+    REQUIRE(stlFileCheck.num_triangles == static_cast<int32_t>(kTriangleCount));
+    REQUIRE(stlFileCheck.attribute_payload_present == false);
 
     DataStructure dataStructure;
     auto executeResult = RunReadStlFileFilter(dataStructure, inputFile, triangleGeomDataPath);
@@ -335,13 +335,13 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:NonConformingAttributeByteCount", "[Si
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     CheckSyntheticTriangleGeometry(triangleGeom, kTriangleCount);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:ConformingAttributePayload", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const size_t kTriangleCount = 8;
   const uint16_t kPayloadBytes = 6;
@@ -358,12 +358,12 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:ConformingAttributePayload", "[Simplnx
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStlFileTest" / "conforming_attribute_payload.stl";
   WriteBinaryStlFile(inputFile, "A well behaved binary STL writer", static_cast<int32_t>(kTriangleCount), triangleSpecs);
-  REQUIRE(fs::file_size(inputFile) == StlConstants::k_StlFixedHeaderBytes + (kTriangleCount * (StlConstants::k_StlTriangleBytes + kPayloadBytes)));
+  REQUIRE(fs::file_size(inputFile) == stl_constants::k_StlFixedHeaderBytes + (kTriangleCount * (stl_constants::k_StlTriangleBytes + kPayloadBytes)));
 
-  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
+  const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
   REQUIRE(stlFileCheck.error == 0);
-  REQUIRE(stlFileCheck.numTriangles == static_cast<int32_t>(kTriangleCount));
-  REQUIRE(stlFileCheck.attributePayloadPresent == true);
+  REQUIRE(stlFileCheck.num_triangles == static_cast<int32_t>(kTriangleCount));
+  REQUIRE(stlFileCheck.attribute_payload_present == true);
 
   DataStructure dataStructure;
   auto executeResult = RunReadStlFileFilter(dataStructure, inputFile, triangleGeomDataPath);
@@ -373,12 +373,12 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:ConformingAttributePayload", "[Simplnx
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
   CheckSyntheticTriangleGeometry(triangleGeom, kTriangleCount);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter:ShortFileWithAttributePayload", "[SimplnxCore][ReadStlFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const int32_t kDeclaredTriangleCount = 10;
   const size_t kActualTriangleCount = 5;
@@ -400,18 +400,18 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:ShortFileWithAttributePayload", "[Simp
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStlFileTest" / "short_file_with_attribute_payload.stl";
   WriteBinaryStlFile(inputFile, "Header over-declares the triangle count", kDeclaredTriangleCount, triangleSpecs);
 
-  const uintmax_t expectedFileSize = StlConstants::k_StlFixedHeaderBytes + (kActualTriangleCount * (StlConstants::k_StlTriangleBytes + kPayloadBytes));
+  const uintmax_t expectedFileSize = stl_constants::k_StlFixedHeaderBytes + (kActualTriangleCount * (stl_constants::k_StlTriangleBytes + kPayloadBytes));
   REQUIRE(fs::file_size(inputFile) == expectedFileSize);
 
   // There are spare bytes beyond the declared records, so the attribute counts are honored.
-  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
+  const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
   REQUIRE(stlFileCheck.error == 0);
-  REQUIRE(stlFileCheck.attributePayloadPresent == true);
+  REQUIRE(stlFileCheck.attribute_payload_present == true);
 
   DataStructure dataStructure;
   auto executeResult = RunReadStlFileFilter(dataStructure, inputFile, triangleGeomDataPath);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
-  REQUIRE(executeResult.result.errors().front().code == StlConstants::k_StlFileLengthError);
+  REQUIRE(executeResult.result.errors().front().code == stl_constants::k_StlFileLengthError);
 
   // The reported position must be the real end of the data, which is only reachable when the
   // payload bytes are included in the running offset.
@@ -432,7 +432,7 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:TruncatedRecordAfterPayload", "[Simpln
   triangleSpecs[0].attribute_byte_count = kPayloadBytes;
   triangleSpecs[0].payload_bytes = kPayloadBytes;
 
-  auto [trailingBytes, expectedError] = GENERATE(table<size_t, int32_t>({{44, StlConstants::k_TriangleParseError}, {48, StlConstants::k_AttributeParseError}}));
+  auto [trailingBytes, expectedError] = GENERATE(table<size_t, int32_t>({{44, stl_constants::k_TriangleParseError}, {48, stl_constants::k_AttributeParseError}}));
 
   DYNAMIC_SECTION("Trailing bytes: " << trailingBytes)
   {
@@ -446,10 +446,10 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:TruncatedRecordAfterPayload", "[Simpln
     }
     REQUIRE(fs::file_size(inputFile) == 144 + trailingBytes);
 
-    const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
+    const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
     REQUIRE(stlFileCheck.error == 0);
-    REQUIRE(stlFileCheck.numTriangles == 2);
-    REQUIRE(stlFileCheck.attributePayloadPresent == true);
+    REQUIRE(stlFileCheck.num_triangles == 2);
+    REQUIRE(stlFileCheck.attribute_payload_present == true);
 
     DataStructure dataStructure;
     auto executeResult = RunReadStlFileFilter(dataStructure, inputFile, triangleGeomDataPath);
@@ -468,11 +468,11 @@ TEST_CASE("SimplnxCore::StlUtilities:SanityCheckFile", "[SimplnxCore][ReadStlFil
     const fs::path inputFile = testDir / "this_file_does_not_exist.stl";
     fs::remove(inputFile);
 
-    StlConstants::StlFileCheck stlFileCheck;
-    REQUIRE_NOTHROW(stlFileCheck = StlUtilities::SanityCheckFile(inputFile));
-    REQUIRE(stlFileCheck.error == StlConstants::k_ErrorOpeningFile);
+    stl_constants::StlFileCheck stlFileCheck;
+    REQUIRE_NOTHROW(stlFileCheck = stl_utilities::SanityCheckFile(inputFile));
+    REQUIRE(stlFileCheck.error == stl_constants::k_ErrorOpeningFile);
     // The message has to name the file the user actually chose.
-    REQUIRE(stlFileCheck.errorMessage.find(inputFile.string()) != std::string::npos);
+    REQUIRE(stlFileCheck.error_message.find(inputFile.string()) != std::string::npos);
   }
 
   SECTION("File too short to hold an 80 byte header")
@@ -483,21 +483,21 @@ TEST_CASE("SimplnxCore::StlUtilities:SanityCheckFile", "[SimplnxCore][ReadStlFil
     outputFile.write(shortHeader.data(), static_cast<std::streamsize>(shortHeader.size()));
     outputFile.close();
 
-    const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
-    REQUIRE(stlFileCheck.error == StlConstants::k_StlHeaderParseError);
-    REQUIRE(stlFileCheck.errorMessage.find(inputFile.string()) != std::string::npos);
+    const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
+    REQUIRE(stlFileCheck.error == stl_constants::k_StlHeaderParseError);
+    REQUIRE(stlFileCheck.error_message.find(inputFile.string()) != std::string::npos);
   }
 
   SECTION("File with a header but no triangle count")
   {
     const fs::path inputFile = testDir / "missing_triangle_count.stl";
     std::ofstream outputFile(inputFile, std::ios::binary | std::ios::trunc);
-    const std::vector<char> header(StlConstants::k_STL_HEADER_LENGTH, 'x');
+    const std::vector<char> header(stl_constants::k_StlHeaderLength, 'x');
     outputFile.write(header.data(), static_cast<std::streamsize>(header.size()));
     outputFile.close();
 
-    const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
-    REQUIRE(stlFileCheck.error == StlConstants::k_TriangleCountParseError);
+    const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
+    REQUIRE(stlFileCheck.error == stl_constants::k_TriangleCountParseError);
   }
 
   SECTION("Header declaring a triangle count with the high bit set is rejected")
@@ -507,9 +507,9 @@ TEST_CASE("SimplnxCore::StlUtilities:SanityCheckFile", "[SimplnxCore][ReadStlFil
     const fs::path inputFile = testDir / "negative_triangle_count.stl";
     WriteBinaryStlFile(inputFile, "Corrupt triangle count", -1, std::vector<StlTriangleSpec>(1));
 
-    const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
-    REQUIRE(stlFileCheck.error == StlConstants::k_TriangleCountParseError);
-    REQUIRE(stlFileCheck.numTriangles == 0);
+    const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
+    REQUIRE(stlFileCheck.error == stl_constants::k_TriangleCountParseError);
+    REQUIRE(stlFileCheck.num_triangles == 0);
   }
 
   SECTION("Truncated triangle data is rejected before allocating mesh arrays")
@@ -518,17 +518,17 @@ TEST_CASE("SimplnxCore::StlUtilities:SanityCheckFile", "[SimplnxCore][ReadStlFil
     const fs::path inputFile = testDir / "truncated_triangle_data.stl";
     WriteBinaryStlFile(inputFile, "Header count is too large", 100, std::vector<StlTriangleSpec>(4));
 
-    const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(inputFile);
-    REQUIRE(stlFileCheck.error == StlConstants::k_StlFileLengthError);
-    REQUIRE(stlFileCheck.numTriangles == 0);
-    REQUIRE(stlFileCheck.attributePayloadPresent == false);
+    const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(inputFile);
+    REQUIRE(stlFileCheck.error == stl_constants::k_StlFileLengthError);
+    REQUIRE(stlFileCheck.num_triangles == 0);
+    REQUIRE(stlFileCheck.attribute_payload_present == false);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadStlFileFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadStlFileFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

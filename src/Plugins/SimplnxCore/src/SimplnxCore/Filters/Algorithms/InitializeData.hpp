@@ -90,16 +90,16 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
  */
 struct SIMPLNXCORE_EXPORT InitializeDataInputValues
 {
-  DataPath InputArrayPath;
-  InitializeType initType;
-  StepType stepType;
-  std::vector<std::string> stringValues;
-  std::vector<std::string> startValues;
-  std::vector<std::string> stepValues;
+  DataPath input_array_path;
+  InitializeType init_type;
+  StepType step_type;
+  std::vector<std::string> string_values;
+  std::vector<std::string> start_values;
+  std::vector<std::string> step_values;
   uint64 seed{};
-  std::vector<std::string> randBegin;
-  std::vector<std::string> randEnd;
-  bool standardizeSeed{};
+  std::vector<std::string> rand_begin;
+  std::vector<std::string> rand_end;
+  bool standardize_seed{};
 };
 
 /**
@@ -119,7 +119,7 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
   template <typename T>
   IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr, const usize singleCompSize = 0)
   {
-    std::vector<std::string> splitVals = StringUtilities::Split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
+    std::vector<std::string> splitVals = string_utilities::Split(string_utilities::Trimmed(unfilteredStr), k_DelimiterChar);
 
     if(splitVals.empty())
     {
@@ -133,7 +133,7 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
         return IFilter::MakePreflightErrorResult(-11611, fmt::format("Empty value found after '{}' components were converted. Check for duplicate '{}' next to one another.", comp, k_DelimiterChar));
       }
 
-      Result<T> result = StringInterpretationUtilities::Convert<T>(splitVals[comp]);
+      Result<T> result = string_interpretation_utilities::Convert<T>(splitVals[comp]);
       if(result.invalid())
       {
         return IFilter::MakePreflightErrorResult(-11612, fmt::format("Unable to process '{}' into a {} value.", splitVals[comp], DataTypeToString(GetDataType<T>())));
@@ -181,13 +181,13 @@ struct SIMPLNXCORE_EXPORT ValidateRangeOrderFunctor
   template <typename T>
   IFilter::PreflightResult operator()(usize numComponents, const std::string& startRange, const std::string& endRange)
   {
-    const auto startValues = StringUtilities::Split(StringUtilities::trimmed(startRange), k_DelimiterChar);
-    const auto endValues = StringUtilities::Split(StringUtilities::trimmed(endRange), k_DelimiterChar);
+    const auto startValues = string_utilities::Split(string_utilities::Trimmed(startRange), k_DelimiterChar);
+    const auto endValues = string_utilities::Split(string_utilities::Trimmed(endRange), k_DelimiterChar);
     for(usize compIdx = 0; compIdx < numComponents; compIdx++)
     {
       const auto& start = startValues[startValues.size() == 1 ? 0 : compIdx];
       const auto& end = endValues[endValues.size() == 1 ? 0 : compIdx];
-      if(StringInterpretationUtilities::Convert<T>(start).value() > StringInterpretationUtilities::Convert<T>(end).value())
+      if(string_interpretation_utilities::Convert<T>(start).value() > string_interpretation_utilities::Convert<T>(end).value())
       {
         return IFilter::MakePreflightErrorResult(-11615, fmt::format("Component {}: start range value '{}' is greater than end range value '{}'.", compIdx, start, end));
       }

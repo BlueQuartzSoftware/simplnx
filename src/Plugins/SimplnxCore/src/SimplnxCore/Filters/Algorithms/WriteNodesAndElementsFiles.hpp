@@ -17,15 +17,15 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT WriteNodesAndElementsFilesInputValues
 {
-  DataPath SelectedGeometryPath;
-  bool WriteNodeFile{};
-  bool NumberNodes{};
-  bool IncludeNodeFileHeader{};
-  fs::path NodeFilePath;
-  bool WriteElementFile{};
-  bool NumberElements{};
-  bool IncludeElementFileHeader{};
-  fs::path ElementFilePath;
+  DataPath selected_geometry_path;
+  bool write_node_file{};
+  bool number_nodes{};
+  bool include_node_file_header{};
+  fs::path node_file_path;
+  bool write_element_file{};
+  bool number_elements{};
+  bool include_element_file_header{};
+  fs::path element_file_path;
 };
 
 /**

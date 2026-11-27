@@ -21,8 +21,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 // =============================================================================
 // V&V Class 1 analytical and Class 4 invariant oracle support.
@@ -59,7 +59,7 @@ const std::string k_FeatureEuclideanCentersOutName = "Feature Euclidean Centers"
 // Returned as a 4-component vector in (x, y, z, w) layout matching the simplnx convention.
 inline std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
 {
-  const float32 halfAngleRad = (phi1Deg * 0.5f) * nx::core::numbers::pi_v<float> / 180.0f;
+  const float32 halfAngleRad = (phi1Deg * 0.5f) * nx::core::numbers::k_PiV<float> / 180.0f;
   return {0.0f, 0.0f, std::sin(halfAngleRad), std::cos(halfAngleRad)};
 }
 
@@ -73,12 +73,12 @@ struct FixtureData
   AttributeMatrix* cell_data_am = nullptr;
   AttributeMatrix* cell_feature_data_am = nullptr;
   AttributeMatrix* cell_ensemble_am = nullptr;
-  Int32Array* feature_ids = nullptr;
-  Int32Array* cell_phases = nullptr;
-  Float32Array* quats = nullptr;
-  Float32Array* avg_quats = nullptr;              // sized for numFeatures; populated only for Mode 0
-  Float32Array* gb_euclidean_distances = nullptr; // only populated for Mode 1
-  UInt32Array* crystal_structures = nullptr;
+  Int32ArrayType* feature_ids = nullptr;
+  Int32ArrayType* cell_phases = nullptr;
+  Float32ArrayType* quats = nullptr;
+  Float32ArrayType* avg_quats = nullptr;              // sized for numFeatures; populated only for Mode 0
+  Float32ArrayType* gb_euclidean_distances = nullptr; // only populated for Mode 1
+  UInt32ArrayType* crystal_structures = nullptr;
 };
 
 inline FixtureData CreateScaffold(const usize dimX, const usize dimY, const usize dimZ, const usize numFeatures)
@@ -97,19 +97,19 @@ inline FixtureData CreateScaffold(const usize dimX, const usize dimY, const usiz
   td.cell_feature_data_am = AttributeMatrix::Create(td.ds, k_CellFeatureData, ShapeType{numFeatures}, td.image_geom->getId());
   td.cell_ensemble_am = AttributeMatrix::Create(td.ds, k_CellEnsembleData, ShapeType{2}, td.image_geom->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
-  td.feature_ids = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_data_am->getId());
-  auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_PhasesName), cellTupleShape, {1});
-  td.cell_phases = Int32Array::Create(td.ds, k_PhasesName, cellPhasesStore, td.cell_data_am->getId());
-  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_QuatsName), cellTupleShape, {4});
-  td.quats = Float32Array::Create(td.ds, k_QuatsName, quatsStore, td.cell_data_am->getId());
-  auto gbEuclideanDistancesStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_GBEuclideanName), cellTupleShape, {1});
-  td.gb_euclidean_distances = Float32Array::Create(td.ds, k_GBEuclideanName, gbEuclideanDistancesStore, td.cell_data_am->getId());
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_CellFeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
-  td.avg_quats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.cell_feature_data_am->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
+  td.feature_ids = Int32ArrayType::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_data_am->getId());
+  auto cellPhasesStore = data_store_utilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_PhasesName), cellTupleShape, {1});
+  td.cell_phases = Int32ArrayType::Create(td.ds, k_PhasesName, cellPhasesStore, td.cell_data_am->getId());
+  auto quatsStore = data_store_utilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_QuatsName), cellTupleShape, {4});
+  td.quats = Float32ArrayType::Create(td.ds, k_QuatsName, quatsStore, td.cell_data_am->getId());
+  auto gbEuclideanDistancesStore = data_store_utilities::CreateDataStore<float32>(td.ds, k_CellDataPath.createChildPath(k_GBEuclideanName), cellTupleShape, {1});
+  td.gb_euclidean_distances = Float32ArrayType::Create(td.ds, k_GBEuclideanName, gbEuclideanDistancesStore, td.cell_data_am->getId());
+  auto avgQuatsStore = data_store_utilities::CreateDataStore<float32>(td.ds, k_CellFeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
+  td.avg_quats = Float32ArrayType::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.cell_feature_data_am->getId());
 
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_CellEnsembleDataPath.createChildPath(k_CrystalStructuresName), {2}, {1});
-  td.crystal_structures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.cell_ensemble_am->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(td.ds, k_CellEnsembleDataPath.createChildPath(k_CrystalStructuresName), {2}, {1});
+  td.crystal_structures = UInt32ArrayType::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.cell_ensemble_am->getId());
   (*td.crystal_structures)[0] = 999u; // UnknownCrystalStructure sentinel
   (*td.crystal_structures)[1] = 1u;   // Cubic_High (EbsdLib LaueOps index 1)
 
@@ -156,8 +156,8 @@ inline Arguments BuildArgs(int32 referenceOrientation)
 // Helper: assert per-voxel FRM matches expected value within tolerance.
 inline void RequireFRMClose(const DataStructure& dataStructure, usize voxelIdx, float32 expectedDeg, float32 tolDeg = 1e-3f)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
-  const auto& frm = dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
+  const auto& frm = dataStructure.getDataRefAs<Float32ArrayType>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
   const float32 actual = frm[voxelIdx];
   const float32 diff = std::abs(actual - expectedDeg);
   if(diff > tolDeg)
@@ -172,11 +172,11 @@ inline void RequireFRMClose(const DataStructure& dataStructure, usize voxelIdx, 
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const int32 referenceOrientation = GENERATE(0, 1);
   CAPTURE(referenceOrientation);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(/*dimX=*/2, /*dimY=*/1, /*dimZ=*/1, /*numFeatures=*/2);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
@@ -216,15 +216,15 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Ph
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 inline void RequireAvgClose(const DataStructure& dataStructure, usize featureIdx, float32 expectedDeg, float32 tolDeg = 1e-3f, bool isMode1 = false)
 {
   const std::string& avgName = k_FeatureAvgMisorientationsOutName;
   const auto avgPath = k_CellFeatureDataPath.createChildPath(avgName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgPath));
-  const auto& avg = dataStructure.getDataRefAs<Float32Array>(avgPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(avgPath));
+  const auto& avg = dataStructure.getDataRefAs<Float32ArrayType>(avgPath);
   const float32 actual = avg[featureIdx];
   const float32 diff = std::abs(actual - expectedDeg);
   if(diff > tolDeg)
@@ -240,14 +240,14 @@ inline void RequireAvgClose(const DataStructure& dataStructure, usize featureIdx
 // Class 4 invariant predicates — assert every invariant on the filter's output.
 inline void AssertClass4Invariants(const DataStructure& dataStructure, bool isMode1)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_FeatureIdsName));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName)));
-  const auto& cellPhases = dataStructure.getDataRefAs<Int32Array>(k_CellDataPath.createChildPath(k_PhasesName));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
-  const auto& frm = dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName)));
-  const auto& avg = dataStructure.getDataRefAs<Float32Array>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_CellDataPath.createChildPath(k_FeatureIdsName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_CellDataPath.createChildPath(k_PhasesName)));
+  const auto& cellPhases = dataStructure.getDataRefAs<Int32ArrayType>(k_CellDataPath.createChildPath(k_PhasesName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName)));
+  const auto& frm = dataStructure.getDataRefAs<Float32ArrayType>(k_CellDataPath.createChildPath(k_CellMisorientationsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName)));
+  const auto& avg = dataStructure.getDataRefAs<Float32ArrayType>(k_CellFeatureDataPath.createChildPath(k_FeatureAvgMisorientationsOutName));
 
   const usize totalVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = avg.getNumberOfTuples();
@@ -307,7 +307,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: SI
           "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -358,11 +358,11 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: SI
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: genuine HDF5 65536-block tail oracle",
           "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const int32 referenceMode = GENERATE(0, 1);
   CAPTURE(referenceMode);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BlockTuples = 65536;
   auto fixture = analytical_fixtures::CreateScaffold(k_BlockTuples + 1, 1, 1, 2);
 
@@ -393,10 +393,10 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: ge
 
   const auto cellOutputPath = analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_CellMisorientationsOutName);
   const auto averageOutputPath = analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureAvgMisorientationsOutName);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(cellOutputPath));
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(averageOutputPath));
-  const auto& cellOutput = fixture.ds.getDataRefAs<Float32Array>(cellOutputPath);
-  const auto& averageOutput = fixture.ds.getDataRefAs<Float32Array>(averageOutputPath);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(cellOutputPath));
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(averageOutputPath));
+  const auto& cellOutput = fixture.ds.getDataRefAs<Float32ArrayType>(cellOutputPath);
+  const auto& averageOutput = fixture.ds.getDataRefAs<Float32ArrayType>(averageOutputPath);
   REQUIRE(cellOutput.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(averageOutput.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(cellOutput[k_BlockTuples - 1] == Approx(15.0F).margin(1.0E-3F));
@@ -408,21 +408,21 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: ge
   {
     // Equal maximum distances straddle the block boundary; the later cell wins.
     const auto centersPath = analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName);
-    REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(centersPath));
-    const auto& centers = fixture.ds.getDataRefAs<Float32Array>(centersPath);
+    REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(centersPath));
+    const auto& centers = fixture.ds.getDataRefAs<Float32ArrayType>(centersPath);
     REQUIRE(centers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
     REQUIRE(centers[3] == 65536.5F);
     REQUIRE(centers[4] == 0.5F);
     REQUIRE(centers[5] == 0.5F);
   }
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 // Fixture A: Mode 0, single 2x2x2 grain, all identity quats. Expected: FRM = 0, avg = 0.
 // Covers code paths: 1 (Mode 0), 4 (compute branch), 8 (avg finalize, non-zero count).
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 0 SingleGrainIdentity", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(2, 2, 2, 2);
 
   // 8 voxels, all featureId=1, all phase=1, all quats = identity (already initialized).
@@ -436,7 +436,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   ComputeFeatureReferenceMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(0);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -453,7 +453,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 // Covers paths: 1, 4, 8 (verifies magnitude with known non-zero misorientation).
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 0 KnownAngle5deg", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(2, 2, 2, 2);
 
   const auto qVoxel = analytical_fixtures::QuatFromPhi1Deg(5.0f);
@@ -471,7 +471,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   ComputeFeatureReferenceMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(0);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -490,7 +490,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 //  - Feature with all un-phased voxels (count == 0) -> avg = 0 (path 7)
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 0 MultiGrain EdgeCases", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(4, 3, 1, 5);
 
   const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
@@ -564,7 +564,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   ComputeFeatureReferenceMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(0);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -598,7 +598,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 // Covers paths: 2 (Mode 1 Pass 1 centers), 3 (Mode 1 Pass 2 coords), 4, 8.
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 KnownCenter", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 1, 2);
 
   const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
@@ -633,7 +633,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   ComputeFeatureReferenceMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(1);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -648,8 +648,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   analytical_fixtures::RequireAvgClose(td.ds, 1, 40.0f / 9.0f);
 
   // EuclideanCenters[1] should be coords of voxel 4 = (1.5, 1.5, 0.5) with spacing 1 and origin 0.
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
-  const auto& centers = td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
+  const auto& centers = td.ds.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
   REQUIRE(centers[1 * 3 + 0] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 1] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 2] == Approx(0.5f).margin(1e-5f));
@@ -661,7 +661,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 // Each Feature selects its center independently, and tied distances select the later voxel.
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 MultiGrain CenterIsolation", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(2, 3, 1, 3);
 
   // The 2x3x1 layout has six row-major voxels in the z=0 plane.
@@ -711,7 +711,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   ComputeFeatureReferenceMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(1);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -729,8 +729,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   // Per-feature EuclideanCenters: feature 1 = voxel 1 coords; feature 2 = voxel 5 coords.
   // Voxel 1 in a 2x3x1 grid is at (x=1, y=0, z=0); voxel 5 is at (x=1, y=2, z=0). With spacing 1 and
   // origin 0, getCoordsf returns center-of-cell coordinates: voxel 1 -> (1.5, 0.5, 0.5); voxel 5 -> (1.5, 2.5, 0.5).
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
-  const auto& centers = td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
+  const auto& centers = td.ds.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
   REQUIRE(centers[1 * 3 + 0] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 1] == Approx(0.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 2] == Approx(0.5f).margin(1e-5f));
@@ -747,7 +747,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 // middle of layer 1: voxelIdx = 1*9 + 1*3 + 1 = 13.
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 1 - Mode 1 3D Volume", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(3, 3, 2, 2);
 
   const auto qIdentity = analytical_fixtures::QuatFromPhi1Deg(0.0f);
@@ -775,7 +775,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
   ComputeFeatureReferenceMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(1);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -791,8 +791,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 
   // EuclideanCenters[1] should be coords of voxel 13. Spacing=1, origin=0, getCoordsf returns
   // cell-center coords: voxel 13 is at (x=1, y=1, z=1) -> center coords (1.5, 1.5, 1.5).
-  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
-  const auto& centers = td.ds.getDataRefAs<Float32Array>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
+  REQUIRE_NOTHROW(td.ds.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName)));
+  const auto& centers = td.ds.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_CellFeatureDataPath.createChildPath(analytical_fixtures::k_FeatureEuclideanCentersOutName));
   REQUIRE(centers[1 * 3 + 0] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 1] == Approx(1.5f).margin(1e-5f));
   REQUIRE(centers[1 * 3 + 2] == Approx(1.5f).margin(1e-5f));
@@ -804,7 +804,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
 // Class 1 fixtures retain exact-value sensitivity, while this sweep tolerates legitimate value-preserving refactors.
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Class 4 - Invariants Sweep", "[OrientationAnalysis][ComputeFeatureReferenceMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Sweep 1 uses a 3x3x1 Mode 0 grid with valid, background, and unphased voxels across three Features.
   {
@@ -835,7 +835,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
     ComputeFeatureReferenceMisorientationsFilter filter;
     Arguments args = analytical_fixtures::BuildArgs(0);
     auto preflightResult = filter.preflight(td.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/false);
@@ -868,7 +868,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter: Cl
     ComputeFeatureReferenceMisorientationsFilter filter;
     Arguments args = analytical_fixtures::BuildArgs(1);
     auto preflightResult = filter.preflight(td.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     analytical_fixtures::AssertClass4Invariants(td.ds, /*isMode1=*/true);

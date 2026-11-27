@@ -38,7 +38,7 @@ void RunDG(IFilter& filter, DataStructure& dataStructure, const DataPath& inputP
   args.insertOrAssign(DgFilterType::k_MaximumError_Key, std::make_any<std::vector<float64>>(maxError));
   args.insertOrAssign(DgFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -69,15 +69,15 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[NXImageProcessing][DiscreteGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -91,8 +91,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: preflight guards", "[
     args.insertOrAssign(DgFilterType::k_MaximumError_Key, std::make_any<std::vector<float64>>(std::vector<float64>{0.01, 0.01, 0.01}));
     args.insertOrAssign(DgFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input creates a SameAsInput output")
   {
@@ -140,10 +140,10 @@ namespace
 // ITKDiscreteGaussianImageTest.cpp: read the ITK input through OUR reader, run OUR filter, then --
 //   (A) DURABLE golden: compare our output to ITK's committed baseline at the ITK case's tolerance.
 // Pinned ForceInCore.
-void RunDiscreteGaussianBaselineGolden(const std::string& inputFile, const std::string& baselineFile, float64 tolerance, const rt::ExtraParamSetter& setExtraParams = rt::NoExtraParams())
+void RunDiscreteGaussianBaselineGolden(const std::string& inputFile, const std::string& baselineFile, float64 tolerance, const rt::ExtraParamSetterType& setExtraParams = rt::NoExtraParams())
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -164,7 +164,7 @@ void RunDiscreteGaussianBaselineGolden(const std::string& inputFile, const std::
   setExtraParams(args);
   DiscreteGaussianImageFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -176,7 +176,7 @@ void RunDiscreteGaussianBaselineGolden(const std::string& inputFile, const std::
   const Result<> compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

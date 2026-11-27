@@ -69,17 +69,17 @@ Parameters WriteASCIIDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputStyle_Key, "Output File Generation",
                                                                     "Whether to output a folder of files or a single file with all the data in column form", to_underlying(OutputStyle::SingleFile),
-                                                                    ChoicesParameter::Choices{"Multiple Files", "Single File"})); // sequence dependent DO NOT REORDER
+                                                                    ChoicesParameter::ChoicesType{"Multiple Files", "Single File"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputFile, true));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Output Directory", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file(s)", ".csv"));
   params.insert(std::make_unique<Int32ParameterType>(k_MaxTuplePerLine_Key, "Maximum Tuples Per Line", "Number of tuples to print on each line. Does not apply to string arrays", 1));
-  params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "The delimiter separating the data", to_underlying(OStreamUtilities::Delimiter::Comma),
-                                                   ChoicesParameter::Choices{"Space", "Semicolon", "Comma", "Colon", "Tab"})); // sequence dependent DO NOT REORDER
+  params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "The delimiter separating the data", to_underlying(o_stream_utilities::Delimiter::Comma),
+                                                   ChoicesParameter::ChoicesType{"Space", "Semicolon", "Comma", "Colon", "Tab"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<ChoicesParameter>(k_Includes_Key, "Header and Index Options", "Default Include is Headers only", to_underlying(Includes::Headers),
-                                                   ChoicesParameter::Choices{"Neither", "Headers", "Index", "Both"})); // sequence dependent DO NOT REORDER
+                                                   ChoicesParameter::ChoicesType{"Neither", "Headers", "Index", "Both"})); // sequence dependent DO NOT REORDER
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk",
                                                                MultiArraySelectionParameter::ValueType{},
@@ -139,7 +139,7 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
     for(const auto& arrayPath : selectedDataArrayPaths)
     {
       // Some file systems treat names that differ only by case as the same file.
-      const auto [iter, inserted] = outputNames.emplace(StringUtilities::toLower(arrayPath.getTargetName()), arrayPath);
+      const auto [iter, inserted] = outputNames.emplace(string_utilities::ToLower(arrayPath.getTargetName()), arrayPath);
       if(!inserted)
       {
         return MakePreflightErrorResult(k_DuplicateOutputName,
@@ -157,14 +157,14 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteASCIIDataInputValues inputValues;
-  inputValues.OutputStyleIndex = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.OutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
-  inputValues.FileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
-  inputValues.MaxValPerLine = filterArgs.value<Int32ParameterType::ValueType>(k_MaxTuplePerLine_Key);
-  inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
-  inputValues.HeaderOptionIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key);
-  inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.output_style_index = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.output_dir = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
+  inputValues.file_extension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
+  inputValues.max_val_per_line = filterArgs.value<Int32ParameterType::ValueType>(k_MaxTuplePerLine_Key);
+  inputValues.delimiter_index = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
+  inputValues.header_option_index = filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key);
+  inputValues.input_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   return WriteASCIIData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

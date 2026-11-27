@@ -76,7 +76,7 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
       return MakeErrorResult(-8, fmt::format("File System Path '{}' exists AND is a directory. The Parameter is set to save a file.", path.string()));
     }
 
-    auto result = FileUtilities::ValidateDirectoryWritePermission(path, true);
+    auto result = file_utilities::ValidateDirectoryWritePermission(path, true);
     if(result.invalid())
     {
       return result;
@@ -98,7 +98,7 @@ Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
   try
   {
-    auto result = FileUtilities::ValidateDirectoryWritePermission(path, false);
+    auto result = file_utilities::ValidateDirectoryWritePermission(path, false);
     if(result.invalid())
     {
       return result;
@@ -135,11 +135,11 @@ FileSystemPathParameter::FileSystemPathParameter(const std::string& name, const 
     }
     if(ext.at(0) != '.')
     {
-      validatedExtensions.insert('.' + nx::core::StringUtilities::toLower(ext));
+      validatedExtensions.insert('.' + nx::core::string_utilities::ToLower(ext));
     }
     else
     {
-      validatedExtensions.insert(nx::core::StringUtilities::toLower(ext));
+      validatedExtensions.insert(nx::core::string_utilities::ToLower(ext));
     }
   }
   m_AvailableExtensions = validatedExtensions;
@@ -152,7 +152,7 @@ Uuid FileSystemPathParameter::uuid() const
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes FileSystemPathParameter::acceptedTypes() const
+IParameter::AcceptedTypesType FileSystemPathParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -235,7 +235,7 @@ std::optional<std::string> FileSystemPathParameter::MatchExtension(std::string_v
     return std::nullopt;
   }
 
-  const std::string lowerName = nx::core::StringUtilities::toLower(std::string(filename));
+  const std::string lowerName = nx::core::string_utilities::ToLower(std::string(filename));
 
   std::optional<std::string> best;
   usize bestLen = 0;
@@ -245,7 +245,7 @@ std::optional<std::string> FileSystemPathParameter::MatchExtension(std::string_v
     {
       continue;
     }
-    const std::string lowerExt = nx::core::StringUtilities::toLower(ext);
+    const std::string lowerExt = nx::core::string_utilities::ToLower(ext);
     const auto offset = lowerName.size() - lowerExt.size();
     if(lowerName.compare(offset, lowerExt.size(), lowerExt) == 0 && ext.size() > bestLen)
     {

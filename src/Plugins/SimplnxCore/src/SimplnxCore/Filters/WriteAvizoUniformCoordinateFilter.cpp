@@ -64,7 +64,7 @@ Parameters WriteAvizoUniformCoordinateFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Image Geometry", "The path to the input image geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<StringParameter>(k_Units_Key, "Units", "The units of the data", "microns"));
 
   return params;
@@ -91,7 +91,7 @@ IFilter::PreflightResult WriteAvizoUniformCoordinateFilter::preflightImpl(const 
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -5835); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   return {};
@@ -110,11 +110,11 @@ Result<> WriteAvizoUniformCoordinateFilter::executeImpl(DataStructure& dataStruc
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  inputValues.GeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.Units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.write_binary_file = filterArgs.value<bool>(k_WriteBinaryFile_Key);
+  inputValues.geometry_path = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
   auto result = WriteAvizoUniformCoordinate(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

@@ -133,7 +133,7 @@ public:
 };
 
 template <class T>
-std::vector<float32> GradientMagnitude2DOracle(const std::vector<T>& field, usize dimX, usize dimY, bool useSpacing, FloatVec3 spacing)
+std::vector<float32> GradientMagnitude2DOracle(const std::vector<T>& field, usize dimX, usize dimY, bool useSpacing, FloatVec3Type spacing)
 {
   const double invSpacingX = useSpacing ? 1.0 / static_cast<double>(spacing[0]) : 1.0;
   const double invSpacingY = useSpacing ? 1.0 / static_cast<double>(spacing[1]) : 1.0;
@@ -155,7 +155,7 @@ std::vector<float32> GradientMagnitude2DOracle(const std::vector<T>& field, usiz
 }
 
 template <class T>
-std::vector<float32> RunGradMag(const std::vector<T>& field, usize dx, usize dy, usize dz, bool useSpacing, FloatVec3 spacing, UnitTest::AlgorithmTestScope* algorithmTestScope = nullptr)
+std::vector<float32> RunGradMag(const std::vector<T>& field, usize dx, usize dy, usize dz, bool useSpacing, FloatVec3Type spacing, unit_test::AlgorithmTestScope* algorithmTestScope = nullptr)
 {
   DataStore<T> inStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   for(usize i = 0; i < field.size(); ++i)
@@ -165,7 +165,7 @@ std::vector<float32> RunGradMag(const std::vector<T>& field, usize dx, usize dy,
   DataStore<float32> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  auto executeEngine = [&]() { return ApplyGradientMagnitude<T>(inStore, outStore, SizeVec3{dx, dy, dz}, useSpacing, spacing, shouldCancel, messageHandler); };
+  auto executeEngine = [&]() { return ApplyGradientMagnitude<T>(inStore, outStore, SizeVec3Type{dx, dy, dz}, useSpacing, spacing, shouldCancel, messageHandler); };
   const Result<> r = algorithmTestScope == nullptr ? executeEngine() : algorithmTestScope->execute(executeEngine);
   REQUIRE(r.valid());
   std::vector<float32> out(field.size());
@@ -252,9 +252,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: deterministic + tall-Z st
 
 TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: 2D X ramp — interior slope and edge-clamped boundary", "[NXImageProcessing][GradientMagnitudeEngine]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   const usize dx = 10;
   const usize dy = 6;
   const usize dz = 1;
@@ -303,7 +303,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: validates stores and canc
   {
     DataStore<float32> inputStore(ShapeType{1}, ShapeType{1}, 0.0f);
     DataStore<float32> outputStore(ShapeType{1}, ShapeType{1}, 0.0f);
-    const Result<> result = ApplyGradientMagnitude<float32>(inputStore, outputStore, SizeVec3{0, 1, 1}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    const Result<> result = ApplyGradientMagnitude<float32>(inputStore, outputStore, SizeVec3Type{0, 1, 1}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8356);
   }
@@ -312,11 +312,11 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: validates stores and canc
   {
     DataStore<float32> shortStore(ShapeType{63}, ShapeType{1}, 0.0f);
     DataStore<float32> fullStore(ShapeType{64}, ShapeType{1}, 0.0f);
-    Result<> result = ApplyGradientMagnitude<float32>(shortStore, fullStore, SizeVec3{4, 4, 4}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    Result<> result = ApplyGradientMagnitude<float32>(shortStore, fullStore, SizeVec3Type{4, 4, 4}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8358);
 
-    result = ApplyGradientMagnitude<float32>(fullStore, shortStore, SizeVec3{4, 4, 4}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    result = ApplyGradientMagnitude<float32>(fullStore, shortStore, SizeVec3Type{4, 4, 4}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8359);
   }
@@ -325,7 +325,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: validates stores and canc
   {
     DataStore<float32> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, 1.0f);
     DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, 0.0f);
-    const Result<> result = ApplyGradientMagnitude<float32>(inputStore, outputStore, SizeVec3{4, 4, 4}, true, {1.0f, 0.0f, 1.0f}, shouldCancel, messageHandler);
+    const Result<> result = ApplyGradientMagnitude<float32>(inputStore, outputStore, SizeVec3Type{4, 4, 4}, true, {1.0f, 0.0f, 1.0f}, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == k_GradientMagnitudeZeroSpacing);
   }
@@ -336,7 +336,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: validates stores and canc
     DataStore<float32> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, 1.0f);
     DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_Poison);
     shouldCancel = true;
-    const Result<> result = ApplyGradientMagnitude<float32>(inputStore, outputStore, SizeVec3{4, 4, 4}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    const Result<> result = ApplyGradientMagnitude<float32>(inputStore, outputStore, SizeVec3Type{4, 4, 4}, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     REQUIRE(result.valid());
     for(const float32 value : outputStore)
     {
@@ -351,43 +351,43 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: checked true-2-D plans st
 
   SECTION("full-width row blocks")
   {
-    const SizeVec3 dims = {4097, 61, 1};
+    const SizeVec3Type dims = {4097, 61, 1};
     const auto planResult = gradient_detail::CreateGradientMagnitude2DPlan<float32>(dims, k_TargetBytes);
     REQUIRE(planResult.valid());
     const auto& plan = planResult.value();
     REQUIRE(plan.route == gradient_detail::GradientMagnitude2DRoute::Rows);
-    REQUIRE(plan.blockRows > 0);
-    REQUIRE(plan.blockRows < dims[1]);
-    REQUIRE(plan.tileColumns == dims[0]);
-    REQUIRE(plan.inputValues < dims[0] * dims[1]);
-    REQUIRE(plan.residentBytes <= k_TargetBytes);
+    REQUIRE(plan.block_rows > 0);
+    REQUIRE(plan.block_rows < dims[1]);
+    REQUIRE(plan.tile_columns == dims[0]);
+    REQUIRE(plan.input_values < dims[0] * dims[1]);
+    REQUIRE(plan.resident_bytes <= k_TargetBytes);
   }
 
   SECTION("overwide X tiles")
   {
-    const SizeVec3 dims = {100000, 3, 1};
+    const SizeVec3Type dims = {100000, 3, 1};
     const auto planResult = gradient_detail::CreateGradientMagnitude2DPlan<float64>(dims, k_TargetBytes);
     REQUIRE(planResult.valid());
     const auto& plan = planResult.value();
     REQUIRE(plan.route == gradient_detail::GradientMagnitude2DRoute::Tiles);
-    REQUIRE(plan.blockRows == 1);
-    REQUIRE(plan.tileColumns > 0);
-    REQUIRE(plan.tileColumns < dims[0]);
-    REQUIRE(plan.inputValues < dims[0] * dims[1]);
-    REQUIRE(plan.residentBytes <= k_TargetBytes);
+    REQUIRE(plan.block_rows == 1);
+    REQUIRE(plan.tile_columns > 0);
+    REQUIRE(plan.tile_columns < dims[0]);
+    REQUIRE(plan.input_values < dims[0] * dims[1]);
+    REQUIRE(plan.resident_bytes <= k_TargetBytes);
   }
 
   SECTION("invalid plans report distinct errors")
   {
-    const auto zeroPlan = gradient_detail::CreateGradientMagnitude2DPlan<float32>(SizeVec3{0, 4, 1}, k_TargetBytes);
+    const auto zeroPlan = gradient_detail::CreateGradientMagnitude2DPlan<float32>(SizeVec3Type{0, 4, 1}, k_TargetBytes);
     REQUIRE(zeroPlan.invalid());
     REQUIRE(zeroPlan.errors().front().code == -8754);
 
-    const auto overflowPlan = gradient_detail::CreateGradientMagnitude2DPlan<float64>(SizeVec3{std::numeric_limits<usize>::max(), 4, 1}, k_TargetBytes);
+    const auto overflowPlan = gradient_detail::CreateGradientMagnitude2DPlan<float64>(SizeVec3Type{std::numeric_limits<usize>::max(), 4, 1}, k_TargetBytes);
     REQUIRE(overflowPlan.invalid());
     REQUIRE(overflowPlan.errors().front().code == -8755);
 
-    const auto smallTargetPlan = gradient_detail::CreateGradientMagnitude2DPlan<float32>(SizeVec3{4, 4, 1}, gradient_detail::k_GradientMagnitude2DMetadataBytes);
+    const auto smallTargetPlan = gradient_detail::CreateGradientMagnitude2DPlan<float32>(SizeVec3Type{4, 4, 1}, gradient_detail::k_GradientMagnitude2DMetadataBytes);
     REQUIRE(smallTargetPlan.invalid());
     REQUIRE(smallTargetPlan.errors().front().code == -8756);
   }
@@ -401,20 +401,20 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: resident state requires a
   constexpr usize k_SliceValues = k_DimX * k_DimY;
   constexpr usize k_ValueCount = k_SliceValues * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == k_ValueCount * (sizeof(float32) + sizeof(float32)) + k_SliceValues * (3 * sizeof(float32) + sizeof(float32)));
   REQUIRE(requiredResult.value() == 68 * k_MiB);
-  const auto overflowResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  const auto overflowResult = gradient_detail::CalculateGradientMagnitudeResidentWorkingMemoryBytes<float64>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(gradient_detail::ShouldUseGradientMagnitudeResidentState(dims));
-  REQUIRE_FALSE(gradient_detail::ShouldUseGradientMagnitudeResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(gradient_detail::ShouldUseGradientMagnitudeResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   REQUIRE_FALSE(manager.setBudgetBytes(256 * k_MiB));
@@ -444,7 +444,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: real-OOC selector uses re
   constexpr usize k_DimZ = 7;
   constexpr uint64 k_PartialBudgetBytes = 4096;
   constexpr uint64 k_CompleteBudgetBytes = 16384;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   std::vector<float32> field(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < field.size(); ++index)
   {
@@ -452,7 +452,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: real-OOC selector uses re
   }
   const std::vector<float32> expected = RunGradMag<float32>(field, k_DimX, k_DimY, k_DimZ, true, {0.5f, 1.5f, 2.0f});
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
 
   auto run = [&](uint64 budgetBytes) {
@@ -497,7 +497,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
   {
     constexpr usize k_DimX = 31;
     constexpr usize k_DimY = 257;
-    const SizeVec3 dims = {k_DimX, k_DimY, 1};
+    const SizeVec3Type dims = {k_DimX, k_DimY, 1};
     std::vector<int16> field(k_DimX * k_DimY);
     TransferCountingDataStore<int16> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, int16{});
     for(usize index = 0; index < field.size(); ++index)
@@ -511,17 +511,17 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
     REQUIRE(planResult.valid());
     const auto& plan = planResult.value();
     REQUIRE(plan.route == gradient_detail::GradientMagnitude2DRoute::Rows);
-    REQUIRE(plan.blockRows < k_DimY);
+    REQUIRE(plan.block_rows < k_DimY);
 
-    const Result<> result = gradient_detail::ApplyGradientMagnitude2D(inputStore, outputStore, dims, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, k_TargetBytes);
+    const Result<> result = gradient_detail::ApplyGradientMagnitude2D(inputStore, outputStore, dims, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, k_TargetBytes);
     REQUIRE(result.valid());
     const std::vector<float32> expected = GradientMagnitude2DOracle(field, k_DimX, k_DimY, false, {1.0f, 1.0f, 1.0f});
     for(usize index = 0; index < expected.size(); ++index)
     {
       REQUIRE(outputStore.getValue(index) == expected[index]);
     }
-    REQUIRE(inputStore.maxReadValues() <= plan.inputValues);
-    REQUIRE(outputStore.maxWriteValues() <= plan.outputValues);
+    REQUIRE(inputStore.maxReadValues() <= plan.input_values);
+    REQUIRE(outputStore.maxWriteValues() <= plan.output_values);
     REQUIRE(outputStore.writtenValues() == expected.size());
   }
 
@@ -529,7 +529,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
   {
     constexpr usize k_DimX = 10000;
     constexpr usize k_DimY = 3;
-    const SizeVec3 dims = {k_DimX, k_DimY, 1};
+    const SizeVec3Type dims = {k_DimX, k_DimY, 1};
     std::vector<int64> field(k_DimX * k_DimY);
     TransferCountingDataStore<int64> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, int64{});
     for(usize index = 0; index < field.size(); ++index)
@@ -538,13 +538,13 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
       inputStore.setValue(index, field[index]);
     }
     TransferCountingDataStore<float32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, -12345.0f);
-    const FloatVec3 spacing = {2.0f, 0.5f, 1.0f};
+    const FloatVec3Type spacing = {2.0f, 0.5f, 1.0f};
 
     const auto planResult = gradient_detail::CreateGradientMagnitude2DPlan<int64>(dims, k_TargetBytes);
     REQUIRE(planResult.valid());
     const auto& plan = planResult.value();
     REQUIRE(plan.route == gradient_detail::GradientMagnitude2DRoute::Tiles);
-    REQUIRE(plan.tileColumns < k_DimX);
+    REQUIRE(plan.tile_columns < k_DimX);
 
     const Result<> result = gradient_detail::ApplyGradientMagnitude2D(inputStore, outputStore, dims, true, spacing, shouldCancel, k_TargetBytes);
     REQUIRE(result.valid());
@@ -553,15 +553,15 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
     {
       REQUIRE(outputStore.getValue(index) == expected[index]);
     }
-    REQUIRE(inputStore.maxReadValues() <= plan.tileColumns + 2);
+    REQUIRE(inputStore.maxReadValues() <= plan.tile_columns + 2);
     REQUIRE(inputStore.readCount() > k_DimY);
-    REQUIRE(outputStore.maxWriteValues() <= plan.outputValues);
+    REQUIRE(outputStore.maxWriteValues() <= plan.output_values);
     REQUIRE(outputStore.writtenValues() == expected.size());
   }
 
   SECTION("one-cell-wide and one-cell-tall images preserve clamped boundaries")
   {
-    for(const SizeVec3& dims : {SizeVec3{1, 17, 1}, SizeVec3{19, 1, 1}})
+    for(const SizeVec3Type& dims : {SizeVec3Type{1, 17, 1}, SizeVec3Type{19, 1, 1}})
     {
       const usize valueCount = dims[0] * dims[1];
       std::vector<float64> field(valueCount);
@@ -572,7 +572,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D row and 
         inputStore.setValue(index, field[index]);
       }
       TransferCountingDataStore<float32> outputStore(ShapeType{1, dims[1], dims[0]}, ShapeType{1}, -12345.0f);
-      const FloatVec3 spacing = {0.5f, 2.0f, 1.0f};
+      const FloatVec3Type spacing = {0.5f, 2.0f, 1.0f};
       REQUIRE(gradient_detail::ApplyGradientMagnitude2D(inputStore, outputStore, dims, true, spacing, shouldCancel, k_TargetBytes).valid());
       const std::vector<float32> expected = GradientMagnitude2DOracle(field, dims[0], dims[1], true, spacing);
       for(usize index = 0; index < expected.size(); ++index)
@@ -589,7 +589,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: bounded true-2-D cancella
   constexpr usize k_DimY = 257;
   constexpr usize k_TargetBytes = 70ULL * 1024ULL;
   constexpr float32 k_Poison = -12345.0f;
-  const SizeVec3 dims = {k_DimX, k_DimY, 1};
+  const SizeVec3Type dims = {k_DimX, k_DimY, 1};
 
   SECTION("cancellation after the input read leaves output unchanged")
   {
@@ -633,7 +633,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: either OOC endpoint selec
   constexpr usize k_DimX = 31;
   constexpr usize k_DimY = 257;
   constexpr usize k_TargetBytes = 70ULL * 1024ULL;
-  const SizeVec3 dims = {k_DimX, k_DimY, 1};
+  const SizeVec3Type dims = {k_DimX, k_DimY, 1};
   std::vector<int32> field(k_DimX * k_DimY);
   for(usize index = 0; index < field.size(); ++index)
   {
@@ -657,9 +657,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: either OOC endpoint selec
     ResetAlgorithmPathExecutionCounts();
     REQUIRE(ApplyGradientMagnitude(inputStore, outputStore, dims, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler, k_TargetBytes).valid());
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    REQUIRE(counts.OutOfCoreOnOutOfCoreStore == 1);
-    REQUIRE(counts.InCore == 0);
-    REQUIRE(inputStore.maxReadValues() <= plan.inputValues);
+    REQUIRE(counts.out_of_core_on_out_of_core_store == 1);
+    REQUIRE(counts.in_core == 0);
+    REQUIRE(inputStore.maxReadValues() <= plan.input_values);
     for(usize index = 0; index < expected.size(); ++index)
     {
       REQUIRE(outputStore.getValue(index) == expected[index]);
@@ -677,9 +677,9 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeEngine: either OOC endpoint selec
     ResetAlgorithmPathExecutionCounts();
     REQUIRE(ApplyGradientMagnitude(inputStore, outputStore, dims, false, {1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler, k_TargetBytes).valid());
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    REQUIRE(counts.OutOfCoreOnOutOfCoreStore == 1);
-    REQUIRE(counts.InCore == 0);
-    REQUIRE(outputStore.maxWriteValues() <= plan.outputValues);
+    REQUIRE(counts.out_of_core_on_out_of_core_store == 1);
+    REQUIRE(counts.in_core == 0);
+    REQUIRE(outputStore.maxWriteValues() <= plan.output_values);
     for(usize index = 0; index < expected.size(); ++index)
     {
       REQUIRE(outputStore.getValue(index) == expected[index]);

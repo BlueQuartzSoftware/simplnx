@@ -18,14 +18,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RequireMinNumNeighborsInputValues
 {
-  bool ApplyToSinglePhase{};
-  DataPath FeaturePhasesPath;
-  uint64 PhaseNumber{};
-  uint64 MinNumNeighbors{};
-  DataPath ImageGeomPath;
-  DataPath FeatureIdsPath;
-  DataPath NumNeighborsPath;
-  MultiArraySelectionParameter::ValueType IgnoredVoxelArrayPaths;
+  bool apply_to_single_phase{};
+  DataPath feature_phases_path;
+  uint64 phase_number{};
+  uint64 min_num_neighbors{};
+  DataPath image_geom_path;
+  DataPath feature_ids_path;
+  DataPath num_neighbors_path;
+  MultiArraySelectionParameter::ValueType ignored_voxel_array_paths;
 };
 
 /**
@@ -91,7 +91,7 @@ private:
    * A range or storage error can occur after prior chunks changed. The shared
    * renumber mapping must match feature-array compaction.
    */
-  Result<std::vector<bool>> removeFeaturesUnderNeighborThreshold(Int32AbstractDataStore& featureIds, const Int32AbstractDataStore& numNeighbors, usize totalPoints, Error& errorReturn);
+  Result<std::vector<bool>> removeFeaturesUnderNeighborThreshold(Int32AbstractDataStoreType& featureIds, const Int32AbstractDataStoreType& numNeighbors, usize totalPoints, Error& errorReturn);
 
   /**
    * @brief Fills negative Feature IDs from face-neighbor majority votes.
@@ -101,7 +101,7 @@ private:
    *
    * Nonignored sibling arrays update sequentially. Feature IDs update last.
    */
-  Result<> assignBadVoxels(const SizeVec3& dimensions, usize totalFeatures);
+  Result<> assignBadVoxels(const SizeVec3Type& dimensions, usize totalFeatures);
 
   DataStructure& m_DataStructure;
   const RequireMinNumNeighborsInputValues* m_InputValues = nullptr;

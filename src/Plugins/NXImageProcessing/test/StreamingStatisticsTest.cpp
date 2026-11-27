@@ -90,7 +90,7 @@ class StatisticsCacheBudgetScope
 {
 public:
   explicit StatisticsCacheBudgetScope(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -118,7 +118,7 @@ void RequireStatisticsExactlyEqual(const ImageProcessing::ArrayStatistics<T>& ac
   REQUIRE(actual.min == expected.min);
   REQUIRE(actual.max == expected.max);
   REQUIRE(actual.sum == expected.sum);
-  REQUIRE(actual.sumOfSquares == expected.sumOfSquares);
+  REQUIRE(actual.sum_of_squares == expected.sum_of_squares);
   REQUIRE(actual.mean == expected.mean);
   REQUIRE(actual.variance == expected.variance);
   REQUIRE(actual.sigma == expected.sigma);
@@ -162,7 +162,7 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC default scan reservation 
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   constexpr usize k_ValueCount = 384ULL * k_MiB / sizeof(int16);
   OocStatisticsStore<int16> store(1);
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(384 * k_MiB);
@@ -170,7 +170,7 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC default scan reservation 
     auto planResult = ImageProcessing::detail::CreateStreamingScanBufferPlan(store, k_ValueCount);
     SIMPLNX_RESULT_REQUIRE_VALID(planResult);
     REQUIRE(planResult.value().reservation.sizeBytes() == 96 * k_MiB);
-    REQUIRE(planResult.value().batchValues == (96 * k_MiB) / sizeof(int16));
+    REQUIRE(planResult.value().batch_values == (96 * k_MiB) / sizeof(int16));
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
   manager.setBudgetBytes(previousBudget);
@@ -186,7 +186,7 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC scan rejects a grant smal
   REQUIRE(planResult.errors()[0].code == -8790);
   REQUIRE(planResult.errors()[0].message.find("1-byte") != std::string::npos);
   REQUIRE(planResult.errors()[0].message.find("4-byte") != std::string::npos);
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
 }
 
 TEST_CASE("NXImageProcessing::StreamingStatistics: OOC normalize blocks match in-memory statistics exactly with serial bounded reads", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
@@ -347,9 +347,9 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: exact integral sum plan is bo
   constexpr usize k_TwoBlockPayload = 2 * k_BlockValues * k_ValueBytes + 2 * sizeof(int64);
   const auto plan = ImageProcessing::detail::CreateExactIntegralSumBatchPlan(/*totalValues=*/2 * k_BlockValues + 17, k_ValueBytes, k_TwoBlockPayload, /*workerCount=*/8);
   REQUIRE(plan.has_value());
-  REQUIRE(plan->batchValues == 2 * k_BlockValues);
-  REQUIRE(plan->blockCapacity == 2);
-  REQUIRE(plan->residentBytes == k_TwoBlockPayload);
+  REQUIRE(plan->batch_values == 2 * k_BlockValues);
+  REQUIRE(plan->block_capacity == 2);
+  REQUIRE(plan->resident_bytes == k_TwoBlockPayload);
 
   REQUIRE_FALSE(ImageProcessing::detail::CreateExactIntegralSumBatchPlan(/*totalValues=*/k_BlockValues, k_ValueBytes,
                                                                          /*availableBytes=*/k_BlockValues * k_ValueBytes, /*workerCount=*/8)
@@ -391,12 +391,12 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: exact integral OOC sum uses p
   SIMPLNX_RESULT_REQUIRE_VALID(expected);
   SIMPLNX_RESULT_REQUIRE_VALID(actual);
   REQUIRE(actual.value() == expected.value().sum);
-  REQUIRE(execution.usedExactIntegralParallel);
-  REQUIRE(execution.blockCapacity == 2);
-  REQUIRE(execution.residentBytes == k_GrantedBytes);
+  REQUIRE(execution.used_exact_integral_parallel);
+  REQUIRE(execution.block_capacity == 2);
+  REQUIRE(execution.resident_bytes == k_GrantedBytes);
   REQUIRE(oocStore.readBatchValues() == std::vector<usize>{2 * k_BlockValues, 17});
   REQUIRE(oocStore.maxConcurrentReads() == 1);
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
 }
 
 TEMPLATE_TEST_CASE("NXImageProcessing::StreamingStatistics: unsafe integral and floating sums keep serial Kahan", "[NXImageProcessing][StreamingStatistics]", uint64, float64)
@@ -415,7 +415,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::StreamingStatistics: unsafe integral and 
   SIMPLNX_RESULT_REQUIRE_VALID(expected);
   SIMPLNX_RESULT_REQUIRE_VALID(actual);
   REQUIRE(actual.value() == expected.value().sum);
-  REQUIRE_FALSE(execution.usedExactIntegralParallel);
+  REQUIRE_FALSE(execution.used_exact_integral_parallel);
 }
 
 TEST_CASE("NXImageProcessing::StreamingStatistics: cancelled integral sum does not merge a partial batch", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
@@ -437,9 +437,9 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: cancelled integral sum does n
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(shouldCancel.load());
   REQUIRE(result.value() == 0.0);
-  REQUIRE(execution.usedExactIntegralParallel);
+  REQUIRE(execution.used_exact_integral_parallel);
   REQUIRE(oocStore.readBatchValues() == std::vector<usize>{k_BlockValues});
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
 }
 
 // Regression for the sqrt-of-negative NaN in ComputeArrayStatistics: the one-pass (SumSq - Sum^2/N) variance
@@ -553,10 +553,10 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max prese
     {
       const auto planResult = ImageProcessing::detail::CreateArrayMinMaxBatchPlan<float32>(oocStore);
       SIMPLNX_RESULT_REQUIRE_VALID(planResult);
-      batchValues = planResult.value().batchValues;
-      blockCapacity = planResult.value().blockCapacity;
+      batchValues = planResult.value().batch_values;
+      blockCapacity = planResult.value().block_capacity;
       REQUIRE(blockCapacity >= 2);
-      REQUIRE(planResult.value().residentBytes <= k_GrantedBytes);
+      REQUIRE(planResult.value().resident_bytes <= k_GrantedBytes);
     }
 
     std::atomic_bool shouldCancel{false};
@@ -569,10 +569,10 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max prese
     REQUIRE(reads.size() >= 2);
     REQUIRE(reads.back() < batchValues);
     REQUIRE(oocStore.maxConcurrentReads() == 1);
-    REQUIRE(execution.usedFixedBlockParallel);
-    REQUIRE(execution.blockCapacity == blockCapacity);
-    REQUIRE(execution.residentBytes == batchValues * sizeof(float32) + blockCapacity * sizeof(ImageProcessing::detail::ArrayMinMaxBlock<float32>));
-    REQUIRE(execution.residentBytes <= k_GrantedBytes);
+    REQUIRE(execution.used_fixed_block_parallel);
+    REQUIRE(execution.block_capacity == blockCapacity);
+    REQUIRE(execution.resident_bytes == batchValues * sizeof(float32) + blockCapacity * sizeof(ImageProcessing::detail::ArrayMinMaxBlock<float32>));
+    REQUIRE(execution.resident_bytes <= k_GrantedBytes);
   };
 
   SECTION("later NaNs do not replace the first signed zero")
@@ -625,7 +625,7 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max cance
   REQUIRE(result.value().min == 0.0F);
   REQUIRE(result.value().max == 0.0F);
   REQUIRE(oocStore.readBatchValues().size() == 1);
-  REQUIRE(execution.usedFixedBlockParallel);
+  REQUIRE(execution.used_fixed_block_parallel);
 }
 
 TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max does not return a completed batch after cancellation", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
@@ -661,7 +661,7 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max handl
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   REQUIRE(result.value().count == 0);
   REQUIRE(oocStore.readBatchValues().empty());
-  REQUIRE_FALSE(execution.usedFixedBlockParallel);
+  REQUIRE_FALSE(execution.used_fixed_block_parallel);
 }
 
 TEST_CASE("NXImageProcessing::StreamingStatistics: parallel normalize statistics match streaming", "[NXImageProcessing][StreamingStatistics]")

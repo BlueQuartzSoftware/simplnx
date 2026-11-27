@@ -103,7 +103,7 @@ IFilter::PreflightResult WriteVtkStructuredPointsFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-2071, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -133,10 +133,10 @@ Result<> WriteVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructur
 
   WriteVtkStructuredPointsInputValues inputValues;
 
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.write_binary_file = filterArgs.value<bool>(k_WriteBinaryFile_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   auto result = WriteVtkStructuredPoints(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

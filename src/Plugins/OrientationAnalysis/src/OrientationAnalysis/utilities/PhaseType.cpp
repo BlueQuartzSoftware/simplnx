@@ -9,7 +9,7 @@ PhaseType::PhaseType() = default;
 PhaseType::~PhaseType() = default;
 
 // -----------------------------------------------------------------------------
-std::vector<PhaseType::EnumType> PhaseType::ToVector(Types& types)
+std::vector<PhaseType::EnumType> PhaseType::ToVector(TypesType& types)
 {
   std::vector<PhaseType::EnumType> vec(types.size());
   for(int i = 0; i < types.size(); i++)
@@ -20,9 +20,9 @@ std::vector<PhaseType::EnumType> PhaseType::ToVector(Types& types)
 }
 
 // -----------------------------------------------------------------------------
-PhaseType::Types PhaseType::FromVector(std::vector<PhaseType::EnumType>& vec)
+PhaseType::TypesType PhaseType::FromVector(std::vector<PhaseType::EnumType>& vec)
 {
-  PhaseType::Types types(vec.size());
+  PhaseType::TypesType types(vec.size());
   for(int i = 0; i < vec.size(); i++)
   {
     types[i] = static_cast<PhaseType::Type>(vec[i]);
@@ -67,7 +67,7 @@ std::string PhaseType::UnknownStr()
 }
 
 // -----------------------------------------------------------------------------
-std::string PhaseType::getPhaseTypeString(Type phaseType)
+std::string PhaseType::GetPhaseTypeString(Type phaseType)
 {
   switch(phaseType)
   {
@@ -90,7 +90,7 @@ std::string PhaseType::getPhaseTypeString(Type phaseType)
 }
 
 // -----------------------------------------------------------------------------
-PhaseType::Type PhaseType::getPhaseType(const char* str)
+PhaseType::Type PhaseType::GetPhaseType(const char* str)
 {
   if(PrimaryStr() == str)
   {
@@ -116,7 +116,7 @@ PhaseType::Type PhaseType::getPhaseType(const char* str)
 }
 
 // -----------------------------------------------------------------------------
-void PhaseType::getPhaseTypeStrings(std::vector<std::string>& strings)
+void PhaseType::GetPhaseTypeStrings(std::vector<std::string>& strings)
 {
   strings.clear();
   strings.push_back(PrimaryStr());
@@ -128,7 +128,7 @@ void PhaseType::getPhaseTypeStrings(std::vector<std::string>& strings)
 }
 
 // -----------------------------------------------------------------------------
-void PhaseType::getPhaseTypeEnums(std::vector<Type>& types)
+void PhaseType::GetPhaseTypeEnums(std::vector<Type>& types)
 {
   types.clear();
   types.push_back(Type::Primary);
@@ -140,7 +140,7 @@ void PhaseType::getPhaseTypeEnums(std::vector<Type>& types)
 }
 
 // -----------------------------------------------------------------------------
-void PhaseType::getPhaseTypeMap(std::map<Type, std::string>& phaseMap)
+void PhaseType::GetPhaseTypeMap(std::map<Type, std::string>& phaseMap)
 {
   phaseMap.clear();
   phaseMap[Type::Primary] = PrimaryStr();

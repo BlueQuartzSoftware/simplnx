@@ -19,16 +19,16 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT ReadBinaryCTNorthstarInputValues
 {
-  FileSystemPathParameter::ValueType InputHeaderFile;
-  DataPath ImageGeometryPath;
-  DataPath DensityArrayPath;
-  std::vector<std::pair<fs::path, usize>> DataFilePaths;
-  SizeVec3 OriginalGeometryDims;
-  SizeVec3 ImportedGeometryDims;
-  bool ImportSubvolume{};
-  IntVec3 StartVoxelCoord;
-  IntVec3 EndVoxelCoord;
-  ChoicesParameter::ValueType LengthUnit{};
+  FileSystemPathParameter::ValueType input_header_file;
+  DataPath image_geometry_path;
+  DataPath density_array_path;
+  std::vector<std::pair<fs::path, usize>> data_file_paths;
+  SizeVec3Type original_geometry_dims;
+  SizeVec3Type imported_geometry_dims;
+  bool import_subvolume{};
+  IntVec3Type start_voxel_coord;
+  IntVec3Type end_voxel_coord;
+  ChoicesParameter::ValueType length_unit{};
 };
 
 /**

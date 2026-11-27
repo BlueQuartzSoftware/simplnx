@@ -105,7 +105,7 @@ Result<> ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::strin
   values.reserve(numComponents);
   for(const auto& stringValue : stringValues)
   {
-    values.push_back(StringInterpretationUtilities::Convert<T>(stringValue).value());
+    values.push_back(string_interpretation_utilities::Convert<T>(stringValue).value());
   }
   return WriteGeneratedValues<T>(dataStore, [&values](usize, usize component) { return values[component]; }, shouldCancel);
 }
@@ -132,8 +132,8 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
 
   for(usize component = 0; component < numComponents; component++)
   {
-    values[component] = StringInterpretationUtilities::Convert<T>(startValues[component]).value();
-    steps[component] = StringInterpretationUtilities::Convert<T>(stepValues[component]).value();
+    values[component] = string_interpretation_utilities::Convert<T>(startValues[component]).value();
+    steps[component] = string_interpretation_utilities::Convert<T>(stepValues[component]).value();
   }
 
   if constexpr(std::is_same_v<T, bool>)
@@ -329,13 +329,13 @@ struct FillArrayFunctor
     auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numComp = dataStore.getNumberOfComponents();
 
-    switch(inputValues.initType)
+    switch(inputValues.init_type)
     {
     case InitializeType::FillValue: {
-      return ::ValueFill<T>(dataStore, StandardizeMultiComponent(numComp, inputValues.stringValues), shouldCancel);
+      return ::ValueFill<T>(dataStore, StandardizeMultiComponent(numComp, inputValues.string_values), shouldCancel);
     }
     case InitializeType::Incremental: {
-      return ::FillIncForwarder<T>(inputValues.stepType, dataStore, StandardizeMultiComponent(numComp, inputValues.startValues), StandardizeMultiComponent(numComp, inputValues.stepValues),
+      return ::FillIncForwarder<T>(inputValues.step_type, dataStore, StandardizeMultiComponent(numComp, inputValues.start_values), StandardizeMultiComponent(numComp, inputValues.step_values),
                                    shouldCancel);
     }
     case InitializeType::Random: {
@@ -356,21 +356,21 @@ struct FillArrayFunctor
           range.push_back(true);
         }
       }
-      return ::FillRandomForwarder<T, false>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed, shouldCancel);
+      return ::FillRandomForwarder<T, false>(range, numComp, dataStore, inputValues.seed, inputValues.standardize_seed, shouldCancel);
     }
     case InitializeType::RangedRandom: {
-      auto randBegin = StandardizeMultiComponent(numComp, inputValues.randBegin);
-      auto randEnd = StandardizeMultiComponent(numComp, inputValues.randEnd);
+      auto randBegin = StandardizeMultiComponent(numComp, inputValues.rand_begin);
+      auto randEnd = StandardizeMultiComponent(numComp, inputValues.rand_end);
 
       std::vector<T> range;
       for(usize comp = 0; comp < numComp; comp++)
       {
-        Result<T> result = StringInterpretationUtilities::Convert<T>(randBegin[comp]);
+        Result<T> result = string_interpretation_utilities::Convert<T>(randBegin[comp]);
         range.push_back(result.value());
-        result = StringInterpretationUtilities::Convert<T>(randEnd[comp]);
+        result = string_interpretation_utilities::Convert<T>(randEnd[comp]);
         range.push_back(result.value());
       }
-      return ::FillRandomForwarder<T, true>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed, shouldCancel);
+      return ::FillRandomForwarder<T, true>(range, numComp, dataStore, inputValues.seed, inputValues.standardize_seed, shouldCancel);
     }
     }
     return MakeErrorResult(-11621, "InitializeData received an invalid initialization type.");
@@ -384,7 +384,7 @@ struct FillArrayFunctor
  */
 float64 CreateCompValFromStr(const std::string& s)
 {
-  const std::string lower = StringUtilities::toLower(StringUtilities::trimmed(s));
+  const std::string lower = string_utilities::ToLower(string_utilities::Trimmed(s));
   if(lower == "true")
   {
     return 1.0;
@@ -393,7 +393,7 @@ float64 CreateCompValFromStr(const std::string& s)
   {
     return 0.0;
   }
-  Result<float64> result = StringInterpretationUtilities::Convert<float64>(s);
+  Result<float64> result = string_interpretation_utilities::Convert<float64>(s);
   return result.valid() ? result.value() : 0.0;
 }
 
@@ -463,7 +463,7 @@ void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps
 
   std::stringstream updatedValStrm;
 
-  auto initFillTokens = StringUtilities::Split(initFillValueStr, std::vector<char>{';'}, false);
+  auto initFillTokens = string_utilities::Split(initFillValueStr, std::vector<char>{';'}, false);
   if(initFillTokens.size() == 1)
   {
     updatedValStrm << "Each tuple will contain the same values for all components: ";
@@ -483,8 +483,8 @@ void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize s
 {
   std::stringstream ss;
 
-  auto initFillTokens = StringUtilities::Split(initFillValueStr, std::vector<char>{';'}, false);
-  auto stepValueTokens = StringUtilities::Split(stepValueStr, ";", false);
+  auto initFillTokens = string_utilities::Split(initFillValueStr, std::vector<char>{';'}, false);
+  auto stepValueTokens = string_utilities::Split(stepValueStr, ";", false);
 
   if(numComps > 1)
   {
@@ -566,8 +566,8 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
     }
     else if(initType == InitializeType::RangedRandom)
     {
-      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, StringUtilities::trimmed(initStartRange),
-                        StringUtilities::trimmed(initEndRange));
+      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, string_utilities::Trimmed(initStartRange),
+                        string_utilities::Trimmed(initEndRange));
     }
 
     if(standardizeSeed)
@@ -584,10 +584,10 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
     else if(initType == InitializeType::RangedRandom)
     {
       ss << fmt::format("All {} components in each of the {} tuples will be filled with random values ranging from these starting values:", numComps, numTuples);
-      auto startRangeTokens = StringUtilities::Split(initStartRange, ";", false);
+      auto startRangeTokens = string_utilities::Split(initStartRange, ";", false);
       ss << "\n" << CreateCompValsStr(startRangeTokens, numComps);
       ss << "\nto these ending values:";
-      auto endRangeTokens = StringUtilities::Split(initEndRange, ";", false);
+      auto endRangeTokens = string_utilities::Split(initEndRange, ";", false);
       ss << "\n" << CreateCompValsStr(endRangeTokens, numComps);
     }
 
@@ -622,7 +622,7 @@ const std::atomic_bool& InitializeData::getCancel()
 
 Result<> InitializeData::operator()()
 {
-  auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_array_path);
   const AlgorithmArrayTargets targets({&iDataArray});
   const bool usesOutOfCoreStore = AnyOutOfCore(targets);
   const bool useOutOfCorePath = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());

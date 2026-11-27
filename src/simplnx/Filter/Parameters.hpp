@@ -14,10 +14,10 @@ namespace nx::core
 {
 namespace detail
 {
-using IsActiveFunc = bool (*)(const IParameter&, const std::any&, const std::any&);
+using IsActiveFuncType = bool (*)(const IParameter&, const std::any&, const std::any&);
 
 template <class ParamT>
-IsActiveFunc CreateIsActiveFunc()
+IsActiveFuncType CreateIsActiveFunc()
 {
   return [](const IParameter& param, const std::any& value, const std::any& associatedValue) { return dynamic_cast<const ParamT&>(param).checkActive(value, associatedValue); };
 }
@@ -45,11 +45,11 @@ public:
     std::string key;
   };
 
-  using LayoutObject = std::variant<ParameterKey, Separator>;
-  using LayoutVector = std::vector<LayoutObject>;
-  using GroupList = std::vector<std::pair<std::string, std::any>>;
+  using LayoutObjectType = std::variant<ParameterKey, Separator>;
+  using LayoutVectorType = std::vector<LayoutObjectType>;
+  using GroupListType = std::vector<std::pair<std::string, std::any>>;
 
-  using IsActiveFunc = detail::IsActiveFunc;
+  using IsActiveFuncType = detail::IsActiveFuncType;
 
   Parameters() = default;
   ~Parameters() noexcept = default;
@@ -102,14 +102,14 @@ public:
    * @param key The parameter key
    * @return AnyParameter& Reference to the parameter
    */
-  AnyParameter& at(std::string_view key);
+  AnyParameterType& at(std::string_view key);
 
   /**
    * @brief Returns the parameter with the given key. Throws if not found.
    * @param key The parameter key
    * @return const AnyParameter& Const reference to the parameter
    */
-  const AnyParameter& at(std::string_view key) const;
+  const AnyParameterType& at(std::string_view key) const;
 
   /**
    * @brief Inserts the given parameter and makes it available as a group for other parameters.
@@ -131,7 +131,7 @@ public:
    * @param parameter The parameter to insert
    * @param func Function to determine if the group is active
    */
-  void insertLinkableParameter(IParameter::UniquePointerType parameter, IsActiveFunc func);
+  void insertLinkableParameter(IParameter::UniquePointerType parameter, IsActiveFuncType func);
 
   /**
    * @brief Adds child parameter to an existing group with the value that indicates it's active.
@@ -161,7 +161,7 @@ public:
    * @param key The parameter key
    * @return const GroupList& Reference to the list of groups
    */
-  const GroupList& getLinkedGroups(std::string_view key) const;
+  const GroupListType& getLinkedGroups(std::string_view key) const;
 
   /**
    * @brief Returns true if a group with the given key exists.
@@ -193,7 +193,7 @@ public:
    * @brief Returns the layout of stored parameters (e.g. for display in a GUI). Each element can be a parameter or a separator.
    * @return const LayoutVector& Reference to the layout vector
    */
-  const LayoutVector& getLayout() const;
+  const LayoutVectorType& getLayout() const;
 
   /**
    * @brief Returns an iterator to the beginning of the parameters map.
@@ -232,9 +232,9 @@ public:
   }
 
 private:
-  std::map<std::string, AnyParameter, std::less<>> m_Params;
-  std::vector<LayoutObject> m_LayoutVector;
-  std::map<std::string, GroupList, std::less<>> m_ParamGroups;
-  std::map<std::string, IsActiveFunc, std::less<>> m_Groups;
+  std::map<std::string, AnyParameterType, std::less<>> m_Params;
+  std::vector<LayoutObjectType> m_LayoutVector;
+  std::map<std::string, GroupListType, std::less<>> m_ParamGroups;
+  std::map<std::string, IsActiveFuncType, std::less<>> m_Groups;
 };
 } // namespace nx::core

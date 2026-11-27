@@ -50,14 +50,14 @@ inline constexpr usize k_BoxNeighborhood2DTargetBytes = 64ULL * 1024ULL * 1024UL
 
 struct BoxNeighborhood2DPlan
 {
-  bool fullWidth = false;
-  usize coreRows = 0;
-  usize coreColumns = 0;
-  usize maximumInputRows = 0;
-  usize maximumInputColumns = 0;
-  usize inputBufferValues = 0;
-  usize outputBufferValues = 0;
-  usize residentBytes = 0;
+  bool full_width = false;
+  usize core_rows = 0;
+  usize core_columns = 0;
+  usize maximum_input_rows = 0;
+  usize maximum_input_columns = 0;
+  usize input_buffer_values = 0;
+  usize output_buffer_values = 0;
+  usize resident_bytes = 0;
 };
 
 inline usize BoxNeighborhood2DWorkerCount()
@@ -142,9 +142,9 @@ inline Result<BoxNeighborhood2DPlan> CreateBoxNeighborhood2DPlan(usize dimX, usi
         upper = midpoint - 1;
       }
     }
-    plan.fullWidth = true;
-    plan.coreRows = lower;
-    plan.coreColumns = dimX;
+    plan.full_width = true;
+    plan.core_rows = lower;
+    plan.core_columns = dimX;
   }
   else
   {
@@ -177,15 +177,15 @@ inline Result<BoxNeighborhood2DPlan> CreateBoxNeighborhood2DPlan(usize dimX, usi
         upper = midpoint - 1;
       }
     }
-    plan.fullWidth = false;
-    plan.coreRows = 1;
-    plan.coreColumns = lower;
+    plan.full_width = false;
+    plan.core_rows = 1;
+    plan.core_columns = lower;
   }
 
-  plan.maximumInputRows = plan.fullWidth ? maximumInputExtent(plan.coreRows, haloY, dimY) : maximumInputExtent(1, haloY, dimY);
-  plan.maximumInputColumns = plan.fullWidth ? dimX : maximumInputExtent(plan.coreColumns, haloX, dimX);
-  if(!TryComputeBoxNeighborhood2DLayout(plan.maximumInputRows, plan.maximumInputColumns, plan.coreRows, plan.coreColumns, valueBytes, workerScratchBytes, plan.inputBufferValues,
-                                        plan.outputBufferValues, plan.residentBytes))
+  plan.maximum_input_rows = plan.full_width ? maximumInputExtent(plan.core_rows, haloY, dimY) : maximumInputExtent(1, haloY, dimY);
+  plan.maximum_input_columns = plan.full_width ? dimX : maximumInputExtent(plan.core_columns, haloX, dimX);
+  if(!TryComputeBoxNeighborhood2DLayout(plan.maximum_input_rows, plan.maximum_input_columns, plan.core_rows, plan.core_columns, valueBytes, workerScratchBytes, plan.input_buffer_values,
+                                        plan.output_buffer_values, plan.resident_bytes))
   {
     return MakeErrorResult<BoxNeighborhood2DPlan>(
         -8615, fmt::format("Box-neighborhood 2D buffer layout overflows for dimensions {} x {}, radius {} x {}, and value size {} bytes.", dimX, dimY, radiusX, radiusY, valueBytes));
@@ -197,44 +197,44 @@ template <class T, class ReduceFnT>
 struct BoxPlaneBody
 {
   const T* slab; // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* outPlane;   // output plane, sizeX*sizeY
-  usize dimX;
-  usize dimY;
-  usize dimZ;
+  T* out_plane;   // output plane, sizeX*sizeY
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
   usize rx;
   usize ry;
   usize rz;
-  usize zLo; // slab's first Z index
+  usize z_lo; // slab's first Z index
   usize z;   // output plane's Z index
-  usize neighborhoodSize;
-  const ReduceFnT& reduceFn;
+  usize neighborhood_size;
+  const ReduceFnT& reduce_fn;
 
   void operator()(const Range& range) const
   {
-    const usize sliceValues = dimX * dimY;
-    std::vector<T> scratch(neighborhoodSize); // one per worker invocation, reused across tuples
+    const usize sliceValues = dim_x * dim_y;
+    std::vector<T> scratch(neighborhood_size); // one per worker invocation, reused across tuples
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize x = tuple % dimX;
-      const usize y = tuple / dimX;
+      const usize x = tuple % dim_x;
+      const usize y = tuple / dim_x;
       usize idx = 0;
       for(usize dz = 0; dz <= 2 * rz; ++dz)
       {
-        const usize nz = ClampCoord(static_cast<int64>(z) - static_cast<int64>(rz) + static_cast<int64>(dz), dimZ);
-        const usize slabZ = nz - zLo; // nz is guaranteed within [zLo, zHi] because zLo/zHi are the clamped extremes
+        const usize nz = ClampCoord(static_cast<int64>(z) - static_cast<int64>(rz) + static_cast<int64>(dz), dim_z);
+        const usize slabZ = nz - z_lo; // nz is guaranteed within [zLo, zHi] because zLo/zHi are the clamped extremes
         const usize slabZBase = slabZ * sliceValues;
         for(usize dy = 0; dy <= 2 * ry; ++dy)
         {
-          const usize ny = ClampCoord(static_cast<int64>(y) - static_cast<int64>(ry) + static_cast<int64>(dy), dimY);
-          const usize rowBase = slabZBase + ny * dimX;
+          const usize ny = ClampCoord(static_cast<int64>(y) - static_cast<int64>(ry) + static_cast<int64>(dy), dim_y);
+          const usize rowBase = slabZBase + ny * dim_x;
           for(usize dx = 0; dx <= 2 * rx; ++dx)
           {
-            const usize nx = ClampCoord(static_cast<int64>(x) - static_cast<int64>(rx) + static_cast<int64>(dx), dimX);
+            const usize nx = ClampCoord(static_cast<int64>(x) - static_cast<int64>(rx) + static_cast<int64>(dx), dim_x);
             scratch[idx++] = slab[rowBase + nx];
           }
         }
       }
-      outPlane[tuple] = reduceFn(nonstd::span<T>(scratch.data(), scratch.size()));
+      out_plane[tuple] = reduce_fn(nonstd::span<T>(scratch.data(), scratch.size()));
     }
   }
 };
@@ -244,64 +244,64 @@ struct Box2DBlockBody
 {
   const T* input;
   T* output;
-  usize dimX;
-  usize dimY;
-  usize radiusX;
-  usize radiusY;
-  usize radiusZ;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
-  usize neighborhoodSize;
-  const ReduceFnT& reduceFn;
-  const std::atomic_bool& shouldCancel;
+  usize dim_x;
+  usize dim_y;
+  usize radius_x;
+  usize radius_y;
+  usize radius_z;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
+  usize neighborhood_size;
+  const ReduceFnT& reduce_fn;
+  const std::atomic_bool& should_cancel;
 
   void operator()(const Range& range) const
   {
-    std::vector<T> scratch(neighborhoodSize);
+    std::vector<T> scratch(neighborhood_size);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+      if(((tuple - range.min()) & 4095ULL) == 0 && should_cancel)
       {
         return;
       }
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
       usize index = 0;
-      for(usize dz = 0; dz <= 2 * radiusZ; ++dz)
+      for(usize dz = 0; dz <= 2 * radius_z; ++dz)
       {
         static_cast<void>(dz);
-        for(usize dy = 0; dy <= 2 * radiusY; ++dy)
+        for(usize dy = 0; dy <= 2 * radius_y; ++dy)
         {
-          const usize neighborY = ClampCoord(static_cast<int64>(y) - static_cast<int64>(radiusY) + static_cast<int64>(dy), dimY);
-          const usize inputRow = (neighborY - inputYBegin) * inputWidth;
-          for(usize dx = 0; dx <= 2 * radiusX; ++dx)
+          const usize neighborY = ClampCoord(static_cast<int64>(y) - static_cast<int64>(radius_y) + static_cast<int64>(dy), dim_y);
+          const usize inputRow = (neighborY - input_y_begin) * input_width;
+          for(usize dx = 0; dx <= 2 * radius_x; ++dx)
           {
-            const usize neighborX = ClampCoord(static_cast<int64>(x) - static_cast<int64>(radiusX) + static_cast<int64>(dx), dimX);
-            scratch[index++] = input[inputRow + neighborX - inputXBegin];
+            const usize neighborX = ClampCoord(static_cast<int64>(x) - static_cast<int64>(radius_x) + static_cast<int64>(dx), dim_x);
+            scratch[index++] = input[inputRow + neighborX - input_x_begin];
           }
         }
       }
-      output[tuple] = reduceFn(nonstd::span<T>(scratch.data(), scratch.size()));
+      output[tuple] = reduce_fn(nonstd::span<T>(scratch.data(), scratch.size()));
     }
   }
 };
 
 template <class T, class ReduceFnT>
-Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3& dims, const std::array<usize, 3>& radius, usize neighborhoodSize,
+Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3Type& dims, const std::array<usize, 3>& radius, usize neighborhoodSize,
                                   const BoxNeighborhood2DPlan& plan, ReduceFnT& reduceFn, const std::atomic_bool& shouldCancel, usize maximumWorkers, ThrottledMessageHandler& progressThrottle)
 {
-  auto inputBuffer = std::make_unique<T[]>(plan.inputBufferValues);
-  auto outputBuffer = std::make_unique<T[]>(plan.outputBufferValues);
+  auto inputBuffer = std::make_unique<T[]>(plan.input_buffer_values);
+  auto outputBuffer = std::make_unique<T[]>(plan.output_buffer_values);
   const usize dimX = dims[0];
   const usize dimY = dims[1];
-  const usize yStep = plan.fullWidth ? plan.coreRows : 1;
-  const usize xStep = plan.fullWidth ? dimX : plan.coreColumns;
+  const usize yStep = plan.full_width ? plan.core_rows : 1;
+  const usize xStep = plan.full_width ? dimX : plan.core_columns;
   progressThrottle.reset(dimX * dimY, "Applying 2D neighborhood filter");
   for(usize outputYBegin = 0; outputYBegin < dimY; outputYBegin += yStep)
   {
@@ -320,7 +320,7 @@ Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, Abstra
       const usize inputYBegin = outputYBegin > radius[1] ? outputYBegin - radius[1] : 0;
       const usize inputYEnd = outputYEnd + std::min(radius[1], dimY - outputYEnd);
       const usize inputWidth = inputXEnd - inputXBegin;
-      if(plan.fullWidth)
+      if(plan.full_width)
       {
         const usize inputValues = (inputYEnd - inputYBegin) * dimX;
         if(Result<> result = inputStore.copyIntoBuffer(inputYBegin * dimX, nonstd::span<T>(inputBuffer.get(), inputValues)); result.invalid())
@@ -351,20 +351,20 @@ Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, Abstra
       parallelAlgorithm.setRange(0, outputRows * outputColumns);
       const auto body = Box2DBlockBody<T, ReduceFnT>{.input = inputBuffer.get(),
                                                      .output = outputBuffer.get(),
-                                                     .dimX = dimX,
-                                                     .dimY = dimY,
-                                                     .radiusX = radius[0],
-                                                     .radiusY = radius[1],
-                                                     .radiusZ = radius[2],
-                                                     .inputXBegin = inputXBegin,
-                                                     .inputYBegin = inputYBegin,
-                                                     .inputWidth = inputWidth,
-                                                     .outputXBegin = outputXBegin,
-                                                     .outputYBegin = outputYBegin,
-                                                     .outputWidth = outputColumns,
-                                                     .neighborhoodSize = neighborhoodSize,
-                                                     .reduceFn = reduceFn,
-                                                     .shouldCancel = shouldCancel};
+                                                     .dim_x = dimX,
+                                                     .dim_y = dimY,
+                                                     .radius_x = radius[0],
+                                                     .radius_y = radius[1],
+                                                     .radius_z = radius[2],
+                                                     .input_x_begin = inputXBegin,
+                                                     .input_y_begin = inputYBegin,
+                                                     .input_width = inputWidth,
+                                                     .output_x_begin = outputXBegin,
+                                                     .output_y_begin = outputYBegin,
+                                                     .output_width = outputColumns,
+                                                     .neighborhood_size = neighborhoodSize,
+                                                     .reduce_fn = reduceFn,
+                                                     .should_cancel = shouldCancel};
 #ifdef SIMPLNX_ENABLE_MULTICORE
       const usize boundedWorkers = std::min(maximumWorkers, static_cast<usize>(std::numeric_limits<int>::max()));
       tbb::task_arena arena(static_cast<int>(boundedWorkers));
@@ -378,7 +378,7 @@ Result<> ExecuteBoxNeighborhood2D(const AbstractDataStore<T>& inputStore, Abstra
       }
 
       const usize outputStart = outputYBegin * dimX + outputXBegin;
-      const usize outputValues = plan.fullWidth ? outputRows * dimX : outputColumns;
+      const usize outputValues = plan.full_width ? outputRows * dimX : outputColumns;
       if(Result<> result = outputStore.copyFromBuffer(outputStart, nonstd::span<const T>(outputBuffer.get(), outputValues)); result.invalid())
       {
         return result;
@@ -394,59 +394,59 @@ struct BoxVolumeBody
 {
   const T* input;
   T* output;
-  usize dimX;
-  usize dimY;
-  usize dimZ;
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
   usize rx;
   usize ry;
   usize rz;
-  usize neighborhoodSize;
-  const ReduceFnT& reduceFn;
-  const std::atomic_bool& shouldCancel;
-  const std::function<void(usize)>& reportProgress;
+  usize neighborhood_size;
+  const ReduceFnT& reduce_fn;
+  const std::atomic_bool& should_cancel;
+  const std::function<void(usize)>& report_progress;
 
   void operator()(const Range& range) const
   {
-    const usize sliceValues = dimX * dimY;
-    std::vector<T> scratch(neighborhoodSize);
+    const usize sliceValues = dim_x * dim_y;
+    std::vector<T> scratch(neighborhood_size);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
       if(((tuple - range.min()) & 4095ULL) == 0)
       {
-        if(shouldCancel)
+        if(should_cancel)
         {
           return;
         }
         if(tuple != range.min())
         {
-          reportProgress(4096);
+          report_progress(4096);
         }
       }
       const usize z = tuple / sliceValues;
       const usize planeIndex = tuple - z * sliceValues;
-      const usize y = planeIndex / dimX;
-      const usize x = planeIndex - y * dimX;
+      const usize y = planeIndex / dim_x;
+      const usize x = planeIndex - y * dim_x;
       usize index = 0;
       for(usize dz = 0; dz <= 2 * rz; ++dz)
       {
-        const usize neighborZ = ClampCoord(static_cast<int64>(z) - static_cast<int64>(rz) + static_cast<int64>(dz), dimZ);
+        const usize neighborZ = ClampCoord(static_cast<int64>(z) - static_cast<int64>(rz) + static_cast<int64>(dz), dim_z);
         const usize planeBase = neighborZ * sliceValues;
         for(usize dy = 0; dy <= 2 * ry; ++dy)
         {
-          const usize neighborY = ClampCoord(static_cast<int64>(y) - static_cast<int64>(ry) + static_cast<int64>(dy), dimY);
-          const usize rowBase = planeBase + neighborY * dimX;
+          const usize neighborY = ClampCoord(static_cast<int64>(y) - static_cast<int64>(ry) + static_cast<int64>(dy), dim_y);
+          const usize rowBase = planeBase + neighborY * dim_x;
           for(usize dx = 0; dx <= 2 * rx; ++dx)
           {
-            const usize neighborX = ClampCoord(static_cast<int64>(x) - static_cast<int64>(rx) + static_cast<int64>(dx), dimX);
+            const usize neighborX = ClampCoord(static_cast<int64>(x) - static_cast<int64>(rx) + static_cast<int64>(dx), dim_x);
             scratch[index++] = input[rowBase + neighborX];
           }
         }
       }
-      output[tuple] = reduceFn(nonstd::span<T>(scratch.data(), scratch.size()));
+      output[tuple] = reduce_fn(nonstd::span<T>(scratch.data(), scratch.size()));
     }
-    if(!shouldCancel && !range.empty())
+    if(!should_cancel && !range.empty())
     {
-      reportProgress((range.size() - 1) % 4096 + 1);
+      report_progress((range.size() - 1) % 4096 + 1);
     }
   }
 };
@@ -465,7 +465,7 @@ struct BoxVolumeBody
  * @tparam ReduceFnT  `T reduceFn(nonstd::span<T> scratch) const` (may mutate scratch, e.g. nth_element).
  */
 template <class T, class ReduceFnT>
-Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3& dims, const std::array<usize, 3>& radius, ReduceFnT reduceFn,
+Result<> ApplyBoxNeighborhood(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3Type& dims, const std::array<usize, 3>& radius, ReduceFnT reduceFn,
                               const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_BoxNeighborhood2DTargetBytes)
 {
   const usize dimX = dims[0];

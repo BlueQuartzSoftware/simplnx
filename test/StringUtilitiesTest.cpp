@@ -30,7 +30,7 @@ TEST_CASE("StringInterpretationUtilities::Convert handles fractional Boolean tex
       {"not numeric", true},
   }));
   CAPTURE(input);
-  const auto result = StringInterpretationUtilities::Convert<bool>(input);
+  const auto result = string_interpretation_utilities::Convert<bool>(input);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.value() == expected);
 }
@@ -44,56 +44,56 @@ TEST_CASE("Simplnx::StringUtilities::Split Test", "[Simplnx][StringUtilities]")
   std::array<char, 1> kDelimiter = {'|'};
 
   // Case 1
-  result = StringUtilities::Split(emptyInput, kDelimiter[0]);
+  result = string_utilities::Split(emptyInput, kDelimiter[0]);
 
   REQUIRE(result.empty());
 
-  result = StringUtilities::Split(noDelimiterInput, kDelimiter[0]);
+  result = string_utilities::Split(noDelimiterInput, kDelimiter[0]);
 
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 
   // Case 2
-  result = StringUtilities::Split(emptyInput, kDelimiter, true);
+  result = string_utilities::Split(emptyInput, kDelimiter, true);
 
   REQUIRE(result.empty());
 
-  result = StringUtilities::Split(noDelimiterInput, kDelimiter, true);
+  result = string_utilities::Split(noDelimiterInput, kDelimiter, true);
 
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 
   // Case 4
-  result = StringUtilities::specific_split(emptyInput, kDelimiter, StringUtilities::SplitType::OnlyConsecutive);
+  result = string_utilities::SpecificSplit(emptyInput, kDelimiter, string_utilities::SplitType::OnlyConsecutive);
 
   REQUIRE(result.empty());
 
-  result = StringUtilities::specific_split(noDelimiterInput, kDelimiter, StringUtilities::SplitType::OnlyConsecutive);
+  result = string_utilities::SpecificSplit(noDelimiterInput, kDelimiter, string_utilities::SplitType::OnlyConsecutive);
 
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 
   // Case 5
-  result = StringUtilities::specific_split(emptyInput, kDelimiter, StringUtilities::SplitType::NoStripIgnoreConsecutive);
+  result = string_utilities::SpecificSplit(emptyInput, kDelimiter, string_utilities::SplitType::NoStripIgnoreConsecutive);
 
   REQUIRE(result.empty());
 
-  result = StringUtilities::specific_split(noDelimiterInput, kDelimiter, StringUtilities::SplitType::NoStripIgnoreConsecutive);
+  result = string_utilities::SpecificSplit(noDelimiterInput, kDelimiter, string_utilities::SplitType::NoStripIgnoreConsecutive);
 
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 
   // Case 6
-  result = StringUtilities::specific_split(emptyInput, kDelimiter, StringUtilities::SplitType::AllowEmptyLeftAnalyze);
+  result = string_utilities::SpecificSplit(emptyInput, kDelimiter, string_utilities::SplitType::AllowEmptyLeftAnalyze);
 
   REQUIRE(result.empty());
 
-  result = StringUtilities::specific_split(noDelimiterInput, kDelimiter, StringUtilities::SplitType::AllowEmptyLeftAnalyze);
+  result = string_utilities::SpecificSplit(noDelimiterInput, kDelimiter, string_utilities::SplitType::AllowEmptyLeftAnalyze);
 
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 
   // Case 7
-  result = StringUtilities::specific_split(emptyInput, kDelimiter, StringUtilities::SplitType::AllowEmptyRightAnalyze);
+  result = string_utilities::SpecificSplit(emptyInput, kDelimiter, string_utilities::SplitType::AllowEmptyRightAnalyze);
 
   REQUIRE(result.empty());
 
-  result = StringUtilities::specific_split(noDelimiterInput, kDelimiter, StringUtilities::SplitType::AllowEmptyRightAnalyze);
+  result = string_utilities::SpecificSplit(noDelimiterInput, kDelimiter, string_utilities::SplitType::AllowEmptyRightAnalyze);
 
   REQUIRE(result == std::vector<std::string>{noDelimiterInput});
 }
@@ -103,21 +103,21 @@ TEST_CASE("Simplnx::StringUtilities Utility Function Test1", "[Simplnx][StringUt
   // Case 1
   std::string inputStr = "This|Is|A|Baseline|Test";
 
-  std::vector<std::string> result = StringUtilities::Split(inputStr, '|');
+  std::vector<std::string> result = string_utilities::Split(inputStr, '|');
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 2
   inputStr = "|This|Is|A|Baseline|Test|";
 
-  result = StringUtilities::Split(inputStr, '|');
+  result = string_utilities::Split(inputStr, '|');
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 3
   inputStr = "||This|Is||A||Baseline|Test||";
 
-  result = StringUtilities::Split(inputStr, '|');
+  result = string_utilities::Split(inputStr, '|');
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 }
@@ -128,42 +128,42 @@ TEST_CASE("Simplnx::StringUtilities Utility Function Test2", "[Simplnx][StringUt
   // Case 1
   std::string inputStr = "This|Is|A|Baseline|Test";
 
-  std::vector<std::string> result = StringUtilities::Split(inputStr, kDelimiter, false);
+  std::vector<std::string> result = string_utilities::Split(inputStr, kDelimiter, false);
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 2
   inputStr = "|This|Is|A|Baseline|Test|";
 
-  result = StringUtilities::Split(inputStr, kDelimiter, false);
+  result = string_utilities::Split(inputStr, kDelimiter, false);
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 3
   inputStr = "||This|Is||A||Baseline|Test||";
 
-  result = StringUtilities::Split(inputStr, kDelimiter, false);
+  result = string_utilities::Split(inputStr, kDelimiter, false);
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 4
   inputStr = "This|Is|A|Baseline|Test";
 
-  result = StringUtilities::Split(inputStr, kDelimiter, true);
+  result = string_utilities::Split(inputStr, kDelimiter, true);
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 5
   inputStr = "|This|Is|A|Baseline|Test|";
 
-  result = StringUtilities::Split(inputStr, kDelimiter, true);
+  result = string_utilities::Split(inputStr, kDelimiter, true);
 
   REQUIRE(result == std::vector<std::string>{"", "This", "Is", "A", "Baseline", "Test", ""});
 
   // Case 6
   inputStr = "||This|Is||A||Baseline|Test||";
 
-  result = StringUtilities::Split(inputStr, kDelimiter, true);
+  result = string_utilities::Split(inputStr, kDelimiter, true);
 
   REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 }
@@ -175,32 +175,32 @@ TEST_CASE("Simplnx::StringUtilities Utility Function Test3", "[Simplnx][StringUt
   std::vector<std::string> result;
 
   // Case 1
-  result = StringUtilities::specific_split(inputStr, kDelimiter, StringUtilities::SplitType::AllowAll);
+  result = string_utilities::SpecificSplit(inputStr, kDelimiter, string_utilities::SplitType::AllowAll);
 
   REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 
   // Case 2
-  result = StringUtilities::specific_split(inputStr, kDelimiter, StringUtilities::SplitType::IgnoreEmpty);
+  result = string_utilities::SpecificSplit(inputStr, kDelimiter, string_utilities::SplitType::IgnoreEmpty);
 
   REQUIRE(result == std::vector<std::string>{"This", "Is", "A", "Baseline", "Test"});
 
   // Case 3
-  result = StringUtilities::specific_split(inputStr, kDelimiter, StringUtilities::SplitType::NoStripIgnoreConsecutive);
+  result = string_utilities::SpecificSplit(inputStr, kDelimiter, string_utilities::SplitType::NoStripIgnoreConsecutive);
 
   REQUIRE(result == std::vector<std::string>{"", "This", "Is", "A", "Baseline", "Test", ""});
 
   // Case 4
-  result = StringUtilities::specific_split(inputStr, kDelimiter, StringUtilities::SplitType::OnlyConsecutive);
+  result = string_utilities::SpecificSplit(inputStr, kDelimiter, string_utilities::SplitType::OnlyConsecutive);
 
   REQUIRE(result == std::vector<std::string>{"", "This", "Is", "", "A", "", "Baseline", "Test", ""});
 
   // Case 5
-  result = StringUtilities::specific_split(inputStr, kDelimiter, StringUtilities::SplitType::AllowEmptyLeftAnalyze);
+  result = string_utilities::SpecificSplit(inputStr, kDelimiter, string_utilities::SplitType::AllowEmptyLeftAnalyze);
 
   REQUIRE(result == std::vector<std::string>{"", "", "This", "Is", "", "A", "", "Baseline", "Test", ""});
 
   // Case 5
-  result = StringUtilities::specific_split(inputStr, kDelimiter, StringUtilities::SplitType::AllowEmptyRightAnalyze);
+  result = string_utilities::SpecificSplit(inputStr, kDelimiter, string_utilities::SplitType::AllowEmptyRightAnalyze);
 
   REQUIRE(result == std::vector<std::string>{"", "This", "Is", "", "A", "", "Baseline", "Test", "", ""});
 }
@@ -208,6 +208,6 @@ TEST_CASE("Simplnx::StringUtilities Utility Function Test3", "[Simplnx][StringUt
 TEST_CASE("Simplnx::StringUtilities::Split preserves keep-empty contract", "[Simplnx][StringUtilities]")
 {
   const std::array<char, 1> delimiters = {' '};
-  REQUIRE(StringUtilities::Split("1  2   3", delimiters, true) == std::vector<std::string>{"1", "", "2", "", "", "3"});
-  REQUIRE(StringUtilities::Split("1  2   3", delimiters, false) == std::vector<std::string>{"1", "2", "3"});
+  REQUIRE(string_utilities::Split("1  2   3", delimiters, true) == std::vector<std::string>{"1", "", "2", "", "", "3"});
+  REQUIRE(string_utilities::Split("1  2   3", delimiters, false) == std::vector<std::string>{"1", "2", "3"});
 }

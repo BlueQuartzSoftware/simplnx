@@ -23,10 +23,10 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 
 Result<> ReadHDF5Dataset::operator()()
 {
-  auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;
-  auto inputFile = m_InputValues->ImportHdf5Object.inputFile;
+  auto pSelectedAttributeMatrixValue = m_InputValues->import_hdf5_object.parent;
+  auto inputFile = m_InputValues->import_hdf5_object.input_file;
   fs::path inputFilePath(inputFile);
-  auto datasetImportInfoList = m_InputValues->ImportHdf5Object.datasets;
+  auto datasetImportInfoList = m_InputValues->import_hdf5_object.datasets;
 
   auto h5FileReader = nx::core::hdf5::FileIO::ReadFile(inputFilePath);
   if(!h5FileReader.isValid())
@@ -42,7 +42,7 @@ Result<> ReadHDF5Dataset::operator()()
       return {};
     }
 
-    std::string datasetPath = datasetImportInfo.dataSetPath;
+    std::string datasetPath = datasetImportInfo.data_set_path;
     auto datasetReader = h5FileReader.openDataset(datasetPath);
 
     std::string objectName = datasetReader.getName();

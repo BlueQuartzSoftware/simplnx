@@ -12,7 +12,7 @@
 #include <catch2/catch.hpp>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace compute_triangle_geom_centroids_filter_test
 {
@@ -32,9 +32,9 @@ using namespace compute_triangle_geom_centroids_filter_test;
 
 TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids", "[SimplnxCore][ComputeTriangleGeomCentroids]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_TestFilesDir));
@@ -54,7 +54,7 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids", "[SimplnxCore][ComputeTri
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -77,7 +77,7 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids", "[SimplnxCore][ComputeTri
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_triangle_geom_centroids.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -112,9 +112,9 @@ DataStructure BuildPeriodicToyMesh()
   triangleGeom.setFaceAttributeMatrix(*faceAttrMatPtr);
 
   auto vertexStore = std::make_unique<DataStore<float32>>(std::vector<usize>{numVertices}, std::vector<usize>{3}, 0.0F);
-  auto* vertexListPtr = IGeometry::SharedVertexList::Create(dataStructure, "Vertices", std::move(vertexStore), vertexAttrMatPtr->getId());
+  auto* vertexListPtr = IGeometry::SharedVertexListType::Create(dataStructure, "Vertices", std::move(vertexStore), vertexAttrMatPtr->getId());
   auto faceStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{numFaces}, std::vector<usize>{3}, 0);
-  auto* faceListPtr = IGeometry::SharedFaceList::Create(dataStructure, "SharedTriList", std::move(faceStore), faceAttrMatPtr->getId());
+  auto* faceListPtr = IGeometry::SharedFaceListType::Create(dataStructure, "SharedTriList", std::move(faceStore), faceAttrMatPtr->getId());
 
   auto vertexStoreRef = vertexListPtr->getDataStorePtr().lock();
   for(usize i = 0; i < vertices.size(); i++)
@@ -133,7 +133,7 @@ DataStructure BuildPeriodicToyMesh()
   const std::vector<int32> faceLabels = {1, 0, 2, 0, 2, 0, 3, 0, 3, 0, 4, 0, 4, 0, 4, 0};
   auto* faceDataAttrMatPtr = AttributeMatrix::Create(dataStructure, k_FaceAttributeMatrixName, {numFaces}, triangleGeom.getId());
   auto faceLabelStore = std::make_unique<DataStore<int32>>(std::vector<usize>{numFaces}, std::vector<usize>{2}, 0);
-  auto* faceLabelArrayPtr = Int32Array::Create(dataStructure, k_FaceLabelsName, std::move(faceLabelStore), faceDataAttrMatPtr->getId());
+  auto* faceLabelArrayPtr = Int32ArrayType::Create(dataStructure, k_FaceLabelsName, std::move(faceLabelStore), faceDataAttrMatPtr->getId());
   auto faceLabelStoreRef = faceLabelArrayPtr->getDataStorePtr().lock();
   for(usize i = 0; i < faceLabels.size(); i++)
   {
@@ -149,7 +149,7 @@ DataStructure BuildPeriodicToyMesh()
 
 TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Oracle", "[SimplnxCore][ComputeTriangleGeomCentroids]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const DataPath centroidsPath = k_FeatureAttributeMatrixPath.createChildPath(k_CentroidsArrayName);
   constexpr float32 k_Tol = 1.0e-4F;
@@ -185,13 +185,13 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Ora
     args.insertOrAssign(ComputeTriangleGeomCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(centroidsPath));
-    const auto& centroids = dataStructure.getDataRefAs<Float32Array>(centroidsPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(centroidsPath));
+    const auto& centroids = dataStructure.getDataRefAs<Float32ArrayType>(centroidsPath);
 
     const auto& boundingBox = dataStructure.getDataRefAs<TriangleGeom>(k_GeometryPath).getBoundingBox();
 
@@ -216,6 +216,6 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Ora
       }
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }

@@ -29,12 +29,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CropVertexGeometryInputValues
 {
-  GeometrySelectionParameter::ValueType InputVertexGeometryPath;
-  VectorFloat32Parameter::ValueType MaxPos;
-  VectorFloat32Parameter::ValueType MinPos;
-  DataGroupCreationParameter::ValueType OutputVertexGeometryPath;
-  MultiArraySelectionParameter::ValueType TargetArrayPaths;
-  DataObjectNameParameter::ValueType VertexAttributeMatrixName;
+  GeometrySelectionParameter::ValueType input_vertex_geometry_path;
+  VectorFloat32ParameterType::ValueType max_pos;
+  VectorFloat32ParameterType::ValueType min_pos;
+  DataGroupCreationParameter::ValueType output_vertex_geometry_path;
+  MultiArraySelectionParameter::ValueType target_array_paths;
+  DataObjectNameParameter::ValueType vertex_attribute_matrix_name;
 };
 
 /**

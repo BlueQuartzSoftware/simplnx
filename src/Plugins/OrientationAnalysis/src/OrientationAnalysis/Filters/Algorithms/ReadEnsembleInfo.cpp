@@ -75,13 +75,13 @@ Result<> ReadEnsembleInfo::operator()()
 // -----------------------------------------------------------------------------
 Result<> ReadEnsembleInfo::readFile()
 {
-  auto& cellEnsembleAttributeMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellEnsembleAttributeMatrixName);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayName);
-  auto& phaseTypes = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->PhaseTypesArrayName);
+  auto& cellEnsembleAttributeMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cell_ensemble_attribute_matrix_name);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_name);
+  auto& phaseTypes = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->phase_types_array_name);
 
   int32 numPhases = 0;
   ini::IniFile inputIni;
-  inputIni.load(m_InputValues->InputFile);
+  inputIni.load(m_InputValues->input_file);
   numPhases = inputIni[k_EnsembleInfo][k_NumberPhases].as<int32>(); // read number of phases from input file
 
   // Figure out if we are reading contiguous groups
@@ -92,20 +92,20 @@ Result<> ReadEnsembleInfo::readFile()
   phaseTypes.fill(static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown));
   for(int32 index = 1; index < numPhases + 1; index++)
   {
-    std::string group = StringUtilities::number(index);
+    std::string group = string_utilities::Number(index);
 
     // Check to make sure the user has something for each of the Crystal Structure and Phase Type
     if(inputIni.count(group) == 0)
     {
-      return MakeErrorResult(-13004, fmt::format("Could not find the group name {} from the input file '{}'", group, m_InputValues->InputFile));
+      return MakeErrorResult(-13004, fmt::format("Could not find the group name {} from the input file '{}'", group, m_InputValues->input_file));
     }
     if(inputIni[group].count(k_CrystalStructure) == 0)
     {
-      return MakeErrorResult(-13005, fmt::format("Could not find the key {} in phase group {} from the input file '{}'", group, k_CrystalStructure, m_InputValues->InputFile));
+      return MakeErrorResult(-13005, fmt::format("Could not find the key {} in phase group {} from the input file '{}'", group, k_CrystalStructure, m_InputValues->input_file));
     }
     if(inputIni[group].count(k_PhaseType) == 0)
     {
-      return MakeErrorResult(-13006, fmt::format("Could not find the key {} in phase group {} from the input file '{}'", group, k_PhaseType, m_InputValues->InputFile));
+      return MakeErrorResult(-13006, fmt::format("Could not find the key {} in phase group {} from the input file '{}'", group, k_PhaseType, m_InputValues->input_file));
     }
 
     auto crystalString = inputIni[group][k_CrystalStructure].as<std::string>();

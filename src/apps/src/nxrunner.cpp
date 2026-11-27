@@ -385,7 +385,7 @@ Result<> ExecutePipeline(Pipeline& pipeline)
     std::string ss = "Error executing pipeline";
     return nx::core::MakeErrorResult(k_ExecutePipelineError, ss);
   }
-  CliOut << timestamp() << " Finished executing pipeline";
+  CliOut << Timestamp() << " Finished executing pipeline";
   CliOut.endline();
   return {};
 }
@@ -420,11 +420,11 @@ Result<> ExecutePipeline(const Argument& arg)
     CliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
-  if(!loadPipelineResult.m_Warnings.empty())
+  if(!loadPipelineResult.m_warnings.empty())
   {
     CliOut << "Input Pipeline Warnings"
            << "\n";
-    for(const auto& warning : loadPipelineResult.m_Warnings)
+    for(const auto& warning : loadPipelineResult.m_warnings)
     {
       CliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
     }
@@ -465,11 +465,11 @@ Result<> PreflightPipeline(const Argument& arg)
     CliOut.endline();
     return nx::core::ConvertResult(std::move(loadPipelineResult));
   }
-  if(!loadPipelineResult.m_Warnings.empty())
+  if(!loadPipelineResult.m_warnings.empty())
   {
     CliOut << "Preflight Pipeline: Input Pipeline Warnings"
            << "\n";
-    for(const auto& warning : loadPipelineResult.m_Warnings)
+    for(const auto& warning : loadPipelineResult.m_warnings)
     {
       CliOut << fmt::format(" [{}] {}", warning.code, warning.message) << "\n";
     }
@@ -826,7 +826,7 @@ int main(int argc, char* argv[])
       // setBudgetBytes() clamps the request to the machine-safe maximum.
       // This call keeps headless OOC caches from using the manager's default budget.
       // The CLI stays silent when clamping because only the GUI reports that event.
-      nx::core::CacheMemoryBudgetManager::instance().setBudgetBytes(*overrideCacheMemoryBudgetBytes);
+      nx::core::CacheMemoryBudgetManager::Instance().setBudgetBytes(*overrideCacheMemoryBudgetBytes);
     }
   }
 

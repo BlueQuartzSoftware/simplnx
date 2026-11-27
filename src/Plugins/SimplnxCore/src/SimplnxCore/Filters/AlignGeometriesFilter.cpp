@@ -80,9 +80,9 @@ IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructur
 
   // Inform users that the moving geometry is going to be modified in place
   auto pMovingGeomPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pMovingGeomPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pMovingGeomPath, {});
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -90,9 +90,9 @@ Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const 
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignGeometriesInputValues inputValues;
-  inputValues.AlignmentTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_AlignmentType_Key);
-  inputValues.InputMovingGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_MovingGeometry_Key);
-  inputValues.InputTargetGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TargetGeometry_Key);
+  inputValues.alignment_type_index = filterArgs.value<ChoicesParameter::ValueType>(k_AlignmentType_Key);
+  inputValues.input_moving_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_MovingGeometry_Key);
+  inputValues.input_target_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TargetGeometry_Key);
 
   return AlignGeometries(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -62,14 +62,14 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Path to the DataArray Mask", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, std::make_any<bool>(true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeomPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPathKey, "Scalar Array to Segment", "Path to the DataArray to segment", DataPath(), nx::core::GetIntegerDataTypes(),
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsName_Key, "Cell Feature IDs", "Path to the created Feature IDs path", "FeatureIds"));
@@ -114,7 +114,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, gridGeomPath, cellArrayPaths, -654); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& gridGeometry = dataStructure.getDataRefAs<IGridGeometry>(gridGeomPath);
@@ -131,7 +131,7 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   resultOutputActions.value().appendAction(std::move(createActiveAction));
   resultOutputActions.value().appendAction(std::move(createFeatureIdsAction));
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 // -----------------------------------------------------------------------------
@@ -140,17 +140,17 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, 
 {
   ScalarSegmentFeaturesInputValues inputValues;
 
-  inputValues.InputDataPath = filterArgs.value<DataPath>(k_InputArrayPathKey);
-  inputValues.ScalarTolerance = filterArgs.value<int>(k_ScalarToleranceKey);
-  inputValues.RandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.FeatureIdsArrayPath = inputValues.InputDataPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsName_Key));
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GridGeomPath_Key);
-  inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureName_Key));
-  inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
-  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
-  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
+  inputValues.input_data_path = filterArgs.value<DataPath>(k_InputArrayPathKey);
+  inputValues.scalar_tolerance = filterArgs.value<int>(k_ScalarToleranceKey);
+  inputValues.randomize_feature_ids = filterArgs.value<bool>(k_RandomizeFeatures_Key);
+  inputValues.feature_ids_array_path = inputValues.input_data_path.replaceName(filterArgs.value<std::string>(k_FeatureIdsName_Key));
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_GridGeomPath_Key);
+  inputValues.cell_feature_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellFeatureName_Key));
+  inputValues.active_array_path = inputValues.cell_feature_attribute_matrix_path.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.is_periodic = filterArgs.value<bool>(k_IsPeriodic_Key);
+  inputValues.neighbor_scheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

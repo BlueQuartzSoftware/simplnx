@@ -18,18 +18,18 @@ namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT PadImageGeometryInputValues
 {
-  DataPath SelectedImageGeometryPath;
-  DataPath CreatedOutputPath;
-  VectorInt32ParameterType::ValueType XMinMax;
-  VectorInt32ParameterType::ValueType YMinMax;
-  VectorInt32ParameterType::ValueType ZMinMax;
-  bool PadInX{};
-  bool PadInY{};
-  bool PadInZ{};
-  int32 DefaultFillValue{};
-  bool UpdateOrigin{};
-  DataPath AttributeMatrixPath;
-  bool RemoveOriginalGeometry{};
+  DataPath selected_image_geometry_path;
+  DataPath created_output_path;
+  VectorInt32ParameterType::ValueType x_min_max;
+  VectorInt32ParameterType::ValueType y_min_max;
+  VectorInt32ParameterType::ValueType z_min_max;
+  bool pad_in_x{};
+  bool pad_in_y{};
+  bool pad_in_z{};
+  int32 default_fill_value{};
+  bool update_origin{};
+  DataPath attribute_matrix_path;
+  bool remove_original_geometry{};
 };
 
 /**

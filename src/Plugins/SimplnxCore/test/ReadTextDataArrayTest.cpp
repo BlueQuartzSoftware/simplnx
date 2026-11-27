@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 #include <limits>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -112,7 +112,7 @@ static void RunInvalidTest()
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -123,7 +123,7 @@ static void RunInvalidTest()
 
   // Max Overflow Test
   {
-    std::string maxValue = StringUtilities::number(std::numeric_limits<T>().max());
+    std::string maxValue = string_utilities::Number(std::numeric_limits<T>().max());
     maxValue = maxValue + '0';
     std::vector<std::string> inputMaxVector({maxValue});
     WriteInvalidFile<std::string>(inputFilePath, inputMaxVector, delimiter);
@@ -145,7 +145,7 @@ static void RunInvalidTest()
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -172,7 +172,7 @@ static void RunInvalidTest()
     {
       int64_t store = std::numeric_limits<T>().min();
       store = store - 1;
-      minValue = StringUtilities::number(store);
+      minValue = string_utilities::Number(store);
     }
 
     std::vector<std::string> inputMinVector({minValue});
@@ -195,7 +195,7 @@ static void RunInvalidTest()
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -233,7 +233,7 @@ static void RunTest(char sep, int delimiter)
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -252,12 +252,12 @@ static void RunTest(char sep, int delimiter)
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   RunTest<int8_t>(',', 0);
   RunTest<uint8_t>(',', 0);
@@ -317,7 +317,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[Simp
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Reading alphabetical/special characters, and min/max overflow
   RunInvalidTest<int8>();
@@ -351,7 +351,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -376,7 +376,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -387,7 +387,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadTextDataArrayFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -442,8 +442,8 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED fractional", "[SimplnxC
   args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
   args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79000);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79000);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED zero components", "[SimplnxCore][ReadTextDataArray][DimensionRed]")
@@ -462,8 +462,8 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED zero components", "[Sim
   args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1}}));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79003);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79003);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][ReadTextDataArray]")
@@ -486,10 +486,10 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inher
     args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78603 : -79000));
-    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
-    REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors()[0].code == (value == 0 ? -78603 : -79000));
+    REQUIRE(result.output_actions.errors()[0].message.find("index 0") != std::string::npos);
+    REQUIRE(result.output_actions.errors()[0].message.find("finite whole numbers") != std::string::npos);
   }
   SECTION("Invalid ignored table, including an inherited empty matrix")
   {
@@ -510,12 +510,12 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inher
     args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    auto applied = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
     REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -534,7 +534,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension tuple product overflow", "[
   args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79001);
-  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79001);
+  REQUIRE(result.output_actions.errors()[0].message.find("product") != std::string::npos);
 }

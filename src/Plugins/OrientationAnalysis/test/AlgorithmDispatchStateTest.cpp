@@ -178,12 +178,12 @@ private:
 void CheckDispatchCounts(const AlgorithmPathExecutionCounts& expected)
 {
   const auto actual = GetAlgorithmPathExecutionCounts();
-  CHECK(actual.InCore == expected.InCore);
-  CHECK(actual.OutOfCore == expected.OutOfCore);
-  CHECK(actual.InCoreOnInMemoryStore == expected.InCoreOnInMemoryStore);
-  CHECK(actual.InCoreOnOutOfCoreStore == expected.InCoreOnOutOfCoreStore);
-  CHECK(actual.OutOfCoreOnInMemoryStore == expected.OutOfCoreOnInMemoryStore);
-  CHECK(actual.OutOfCoreOnOutOfCoreStore == expected.OutOfCoreOnOutOfCoreStore);
+  CHECK(actual.in_core == expected.in_core);
+  CHECK(actual.out_of_core == expected.out_of_core);
+  CHECK(actual.in_core_on_in_memory_store == expected.in_core_on_in_memory_store);
+  CHECK(actual.in_core_on_out_of_core_store == expected.in_core_on_out_of_core_store);
+  CHECK(actual.out_of_core_on_in_memory_store == expected.out_of_core_on_in_memory_store);
+  CHECK(actual.out_of_core_on_out_of_core_store == expected.out_of_core_on_out_of_core_store);
 }
 } // namespace
 
@@ -201,7 +201,7 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
   REQUIRE(outOfCoreListPtr != nullptr);
   REQUIRE(stringArrayPtr != nullptr);
 
-  UnitTest::AlgorithmTestScope inMemoryScope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+  unit_test::AlgorithmTestScope inMemoryScope(unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
   inMemoryScope.requireExpectedStore(*inMemoryListPtr);
 
   bool usedDirect = false;
@@ -241,8 +241,8 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch recognizes list-store residenc
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin boundary", "[OrientationAnalysis][AlgorithmDispatch]")
 {
-  UnitTest::LoadPlugins();
-  using PathType = UnitTest::AlgorithmDispatchPath;
+  unit_test::LoadPlugins();
+  using PathType = unit_test::AlgorithmDispatchPath;
   struct SelectionCase
   {
     bool force_in_core = false;
@@ -254,19 +254,19 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin
       {.force_in_core = false,
        .force_ooc = false,
        .expected_path = PathType::Direct,
-       .expected_counts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+       .expected_counts = {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
       {.force_in_core = false,
        .force_ooc = true,
        .expected_path = PathType::Scanline,
-       .expected_counts = {.InCore = 0, .OutOfCore = 1, .InCoreOnInMemoryStore = 0, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 1, .OutOfCoreOnOutOfCoreStore = 0}},
+       .expected_counts = {.in_core = 0, .out_of_core = 1, .in_core_on_in_memory_store = 0, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 1, .out_of_core_on_out_of_core_store = 0}},
       {.force_in_core = true,
        .force_ooc = false,
        .expected_path = PathType::Direct,
-       .expected_counts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+       .expected_counts = {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
       {.force_in_core = true,
        .force_ooc = true,
        .expected_path = PathType::Direct,
-       .expected_counts = {.InCore = 1, .OutOfCore = 0, .InCoreOnInMemoryStore = 1, .InCoreOnOutOfCoreStore = 0, .OutOfCoreOnInMemoryStore = 0, .OutOfCoreOnOutOfCoreStore = 0}},
+       .expected_counts = {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
   }};
   const bool originalInCore = ForceInCoreAlgorithm();
   const bool originalOoc = ForceOocAlgorithm();
@@ -283,47 +283,47 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin
     ForceInCoreAlgorithm() = selection.force_in_core;
     ForceOocAlgorithm() = selection.force_ooc;
     ResetAlgorithmPathExecutionCounts();
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == selection.expected_path);
+    REQUIRE(unit_test::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == selection.expected_path);
     CheckDispatchCounts(selection.expected_counts);
   }
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmDispatch records the selected plugin path", "[OrientationAnalysis][AlgorithmDispatch]")
 {
-  using PathType = UnitTest::AlgorithmDispatchPath;
+  using PathType = unit_test::AlgorithmDispatchPath;
 
   ResetAlgorithmPathExecutionCounts();
   {
     const ForceInCoreAlgorithmGuard forceDirect;
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == PathType::Direct);
+    REQUIRE(unit_test::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == PathType::Direct);
   }
   const auto directCounts = GetAlgorithmPathExecutionCounts();
-  CHECK(directCounts.InCore == 1);
-  CHECK(directCounts.OutOfCore == 0);
-  CHECK(directCounts.InCoreOnInMemoryStore == 1);
-  CHECK(directCounts.InCoreOnOutOfCoreStore == 0);
-  CHECK(directCounts.OutOfCoreOnInMemoryStore == 0);
-  CHECK(directCounts.OutOfCoreOnOutOfCoreStore == 0);
+  CHECK(directCounts.in_core == 1);
+  CHECK(directCounts.out_of_core == 0);
+  CHECK(directCounts.in_core_on_in_memory_store == 1);
+  CHECK(directCounts.in_core_on_out_of_core_store == 0);
+  CHECK(directCounts.out_of_core_on_in_memory_store == 0);
+  CHECK(directCounts.out_of_core_on_out_of_core_store == 0);
 
   ResetAlgorithmPathExecutionCounts();
   {
     const ForceOocAlgorithmGuard forceScanline(true);
-    REQUIRE(UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == PathType::Scanline);
+    REQUIRE(unit_test::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin() == PathType::Scanline);
   }
   const auto scanlineCounts = GetAlgorithmPathExecutionCounts();
-  CHECK(scanlineCounts.InCore == 0);
-  CHECK(scanlineCounts.OutOfCore == 1);
-  CHECK(scanlineCounts.InCoreOnInMemoryStore == 0);
-  CHECK(scanlineCounts.InCoreOnOutOfCoreStore == 0);
-  CHECK(scanlineCounts.OutOfCoreOnInMemoryStore == 1);
-  CHECK(scanlineCounts.OutOfCoreOnOutOfCoreStore == 0);
+  CHECK(scanlineCounts.in_core == 0);
+  CHECK(scanlineCounts.out_of_core == 1);
+  CHECK(scanlineCounts.in_core_on_in_memory_store == 0);
+  CHECK(scanlineCounts.in_core_on_out_of_core_store == 0);
+  CHECK(scanlineCounts.out_of_core_on_in_memory_store == 1);
+  CHECK(scanlineCounts.out_of_core_on_out_of_core_store == 0);
 
   ResetAlgorithmPathExecutionCounts();
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScenario selects configured algorithm paths", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using ScenarioType = UnitTest::AlgorithmTestScenario;
+  using ScenarioType = unit_test::AlgorithmTestScenario;
 
   const std::vector allScenarios = {
       ScenarioType::InCoreAlgorithmOnInMemoryStore,
@@ -332,16 +332,16 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScenario selects configured algorit
   const std::vector oocScenarios = {ScenarioType::OutOfCoreAlgorithmOnInMemoryStore};
   const std::vector inCoreScenarios = {ScenarioType::InCoreAlgorithmOnInMemoryStore};
 
-  CHECK(UnitTest::SelectAlgorithmTestScenarios(allScenarios, 0) == allScenarios);
-  CHECK(UnitTest::SelectAlgorithmTestScenarios(allScenarios, 1) == oocScenarios);
-  CHECK(UnitTest::SelectAlgorithmTestScenarios(allScenarios, 2) == inCoreScenarios);
-  CHECK_THROWS_WITH(UnitTest::SelectAlgorithmTestScenarios(inCoreScenarios, 1), "SIMPLNX_TEST_ALGORITHM_PATH=1 excludes every explicitly requested algorithm test scenario");
-  CHECK_THROWS_WITH(UnitTest::SelectAlgorithmTestScenarios(allScenarios, 3), "Unsupported SIMPLNX_TEST_ALGORITHM_PATH value 3; expected 0 (Both), 1 (OocOnly), or 2 (InCoreOnly)");
+  CHECK(unit_test::SelectAlgorithmTestScenarios(allScenarios, 0) == allScenarios);
+  CHECK(unit_test::SelectAlgorithmTestScenarios(allScenarios, 1) == oocScenarios);
+  CHECK(unit_test::SelectAlgorithmTestScenarios(allScenarios, 2) == inCoreScenarios);
+  CHECK_THROWS_WITH(unit_test::SelectAlgorithmTestScenarios(inCoreScenarios, 1), "SIMPLNX_TEST_ALGORITHM_PATH=1 excludes every explicitly requested algorithm test scenario");
+  CHECK_THROWS_WITH(unit_test::SelectAlgorithmTestScenarios(allScenarios, 3), "Unsupported SIMPLNX_TEST_ALGORITHM_PATH value 3; expected 0 (Both), 1 (OocOnly), or 2 (InCoreOnly)");
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScenario helpers encode the supported test matrices", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using ScenarioType = UnitTest::AlgorithmTestScenario;
+  using ScenarioType = unit_test::AlgorithmTestScenario;
 
   const std::vector bothInMemoryScenarios = {
       ScenarioType::InCoreAlgorithmOnInMemoryStore,
@@ -350,63 +350,63 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScenario helpers encode the support
   const std::vector inCoreInMemoryScenario = {ScenarioType::InCoreAlgorithmOnInMemoryStore};
   const std::vector outOfCoreInMemoryScenario = {ScenarioType::OutOfCoreAlgorithmOnInMemoryStore};
 
-  CHECK(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores(0) == bothInMemoryScenarios);
-  CHECK(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores(1) == outOfCoreInMemoryScenario);
-  CHECK(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores(2) == inCoreInMemoryScenario);
+  CHECK(unit_test::SelectAlgorithmTestScenariosForInMemoryStores(0) == bothInMemoryScenarios);
+  CHECK(unit_test::SelectAlgorithmTestScenariosForInMemoryStores(1) == outOfCoreInMemoryScenario);
+  CHECK(unit_test::SelectAlgorithmTestScenariosForInMemoryStores(2) == inCoreInMemoryScenario);
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScope witnesses only the target execution and restores state", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using ScenarioType = UnitTest::AlgorithmTestScenario;
-  using PathType = UnitTest::AlgorithmDispatchPath;
+  using ScenarioType = unit_test::AlgorithmTestScenario;
+  using PathType = unit_test::AlgorithmDispatchPath;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ResetAlgorithmPathExecutionCounts();
   RecordAlgorithmPathExecution(AlgorithmPath::InCore, false);
 
   {
     const ForceOocAlgorithmGuard originalForceState(true);
-    UnitTest::AlgorithmTestScope scope(ScenarioType::InCoreAlgorithmOnInMemoryStore);
-    const auto selectedPath = scope.execute([] { return UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); });
+    unit_test::AlgorithmTestScope scope(ScenarioType::InCoreAlgorithmOnInMemoryStore);
+    const auto selectedPath = scope.execute([] { return unit_test::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); });
     CHECK(selectedPath == PathType::Direct);
     CHECK(ForceOocAlgorithm());
     CHECK_FALSE(ForceInCoreAlgorithm());
   }
 
   const auto restoredCounts = GetAlgorithmPathExecutionCounts();
-  CHECK(restoredCounts.InCore == 1);
-  CHECK(restoredCounts.OutOfCore == 0);
-  CHECK(restoredCounts.InCoreOnInMemoryStore == 1);
-  CHECK(restoredCounts.InCoreOnOutOfCoreStore == 0);
-  CHECK(restoredCounts.OutOfCoreOnInMemoryStore == 0);
-  CHECK(restoredCounts.OutOfCoreOnOutOfCoreStore == 0);
+  CHECK(restoredCounts.in_core == 1);
+  CHECK(restoredCounts.out_of_core == 0);
+  CHECK(restoredCounts.in_core_on_in_memory_store == 1);
+  CHECK(restoredCounts.in_core_on_out_of_core_store == 0);
+  CHECK(restoredCounts.out_of_core_on_in_memory_store == 0);
+  CHECK(restoredCounts.out_of_core_on_out_of_core_store == 0);
   ResetAlgorithmPathExecutionCounts();
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScope runs OOC algorithm on in-memory storage", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  using ScenarioType = UnitTest::AlgorithmTestScenario;
-  using PathType = UnitTest::AlgorithmDispatchPath;
+  using ScenarioType = unit_test::AlgorithmTestScenario;
+  using PathType = unit_test::AlgorithmDispatchPath;
 
-  UnitTest::LoadPlugins();
-  UnitTest::AlgorithmTestScope scope(ScenarioType::OutOfCoreAlgorithmOnInMemoryStore);
+  unit_test::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(ScenarioType::OutOfCoreAlgorithmOnInMemoryStore);
   DataStructure dataStructure;
   auto* valuesPtr = DataArray<int32>::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {1}, {1});
   REQUIRE(valuesPtr != nullptr);
   scope.requireExpectedStore(*valuesPtr);
-  CHECK(scope.execute([] { return UnitTest::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); }) == PathType::Scanline);
+  CHECK(scope.execute([] { return unit_test::GetAlgorithmDispatchPathFromOrientationAnalysisPlugin(); }) == PathType::Scanline);
 }
 
 TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the target throws", "[OrientationAnalysis][AlgorithmDispatch][AlgorithmTestScenario]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool hadMode = GENERATE(false, true);
   const bool hadThreshold = GENERATE(false, true);
   const bool originalForceInCore = GENERATE(false, true);
   const bool originalForceOutOfCore = GENERATE(false, true);
   CAPTURE(scenario, hadMode, hadThreshold, originalForceInCore, originalForceOutOfCore);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
   const AlgorithmScopeStateGuard restoreTestState(*preferencesPtr);
 
@@ -429,14 +429,14 @@ TEST_CASE("OrientationAnalysis::AlgorithmTestScope restores state when the targe
   const auto originalMode = preferencesPtr->value(Preferences::k_DataStorageMode_Key);
   const auto originalThreshold = preferencesPtr->value(Preferences::k_LargeDataSize_Key);
   const AlgorithmPathExecutionCounts originalCounts{
-      .InCore = 11, .OutOfCore = 13, .InCoreOnInMemoryStore = 17, .InCoreOnOutOfCoreStore = 19, .OutOfCoreOnInMemoryStore = 23, .OutOfCoreOnOutOfCoreStore = 29};
+      .in_core = 11, .out_of_core = 13, .in_core_on_in_memory_store = 17, .in_core_on_out_of_core_store = 19, .out_of_core_on_in_memory_store = 23, .out_of_core_on_out_of_core_store = 29};
   ForceInCoreAlgorithm() = originalForceInCore;
   ForceOocAlgorithm() = originalForceOutOfCore;
   SetAlgorithmPathExecutionCounts(originalCounts);
 
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
-    const bool expectsOutOfCore = scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
+    unit_test::AlgorithmTestScope scope(scenario);
+    const bool expectsOutOfCore = scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
     bool caughtExpectedException = false;
     // The outer handler keeps the original exception alive for the identity check.
     try

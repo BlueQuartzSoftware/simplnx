@@ -18,7 +18,7 @@ namespace
 const std::string k_SpacingMode("Spacing (0)");
 const std::string k_ScalingMode("Scaling (1)");
 const std::string k_ExactDimensions("Exact Dimensions (2)");
-const ChoicesParameter::Choices k_Choices = {k_SpacingMode, k_ScalingMode, k_ExactDimensions};
+const ChoicesParameter::ChoicesType k_Choices = {k_SpacingMode, k_ScalingMode, k_ExactDimensions};
 const ChoicesParameter::ValueType k_SpacingModeIndex = 0;
 const ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
@@ -67,12 +67,12 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Resampling Mode", "Mode can be [0] Spacing, [1] Scaling as Percent, [2] Exact Dimensions as voxels", k_SpacingModeIndex, ::k_Choices));
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing",
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "New Spacing",
                                                          "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
                                                          std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Scaling_Key, "Scale Factor (percentages)",
+      std::make_unique<VectorFloat32ParameterType>(k_Scaling_Key, "Scale Factor (percentages)",
                                                "The scale factor values (dx, dy, dz) to resample the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
                                                "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension. Percentages must be larger than 0.",
                                                std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
@@ -97,7 +97,7 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after resampling", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the resampled geometry", DataPath()));
@@ -131,18 +131,18 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   ResampleImageGeomInputValues inputValues;
-  inputValues.ResamplingMode = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.Scaling = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
-  inputValues.ExactDimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactDimensions_Key);
-  inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
-  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<bool>(k_RenumberFeatures_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.ReportUnclearedFeatureData = true;
+  inputValues.resampling_mode = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
+  inputValues.spacing = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  inputValues.scaling = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Scaling_Key);
+  inputValues.exact_dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactDimensions_Key);
+  inputValues.remove_original_image_geom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  inputValues.created_image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumber_features = inputValues.clear_feature_attribute_matrix && filterArgs.value<bool>(k_RenumberFeatures_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.cell_feature_attribute_matrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  inputValues.selected_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.report_uncleared_feature_data = true;
   return PreflightImageGeometryResample(dataStructure, inputValues);
 }
 
@@ -151,17 +151,17 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ResampleImageGeomInputValues inputValues;
-  inputValues.ResamplingMode = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.Scaling = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
-  inputValues.ExactDimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactDimensions_Key);
-  inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
-  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<bool>(k_RenumberFeatures_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.resampling_mode = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
+  inputValues.spacing = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  inputValues.scaling = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Scaling_Key);
+  inputValues.exact_dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactDimensions_Key);
+  inputValues.remove_original_image_geom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  inputValues.created_image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumber_features = inputValues.clear_feature_attribute_matrix && filterArgs.value<bool>(k_RenumberFeatures_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.cell_feature_attribute_matrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  inputValues.selected_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   return ResampleImageGeometry(dataStructure, inputValues, messageHandler, shouldCancel);
 }
 
@@ -189,7 +189,7 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(
       args, json, json.contains(simpl::k_ResolutionKey) ? simpl::k_ResolutionKey : simpl::k_SpacingKey, k_Spacing_Key));
   // Legacy renumbering also controls whether Feature data is cleared.
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_ClearFeatureAttributeMatrix_Key));

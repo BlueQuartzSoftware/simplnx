@@ -26,7 +26,7 @@ class DataGroup;
 class DataPath;
 class IDataStoreFormatResolver;
 
-namespace Constants
+namespace constants
 {
 
 inline const std::string k_ObjectTypeTag = "ObjectType";
@@ -113,14 +113,14 @@ public:
    * @return Shared owner that keeps the resolver alive after the default changes.
    * @pre Do not call while another thread changes the default resolver.
    */
-  static std::shared_ptr<const IDataStoreFormatResolver> getDefaultFormatResolver();
+  static std::shared_ptr<const IDataStoreFormatResolver> GetDefaultFormatResolver();
 
   /**
    * @brief Sets the process-wide storage-format resolver.
    * @param resolver Has no effect when null.
    * @pre Do not replace the resolver during concurrent resolver access.
    */
-  static void setDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver);
+  static void SetDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver);
 
   usize getSize() const;
 
@@ -756,7 +756,7 @@ public:
    * @return Independent object shell sharing only its value store.
    * @pre The caller excludes concurrent access to the source structure.
    */
-  [[nodiscard]] static std::shared_ptr<DataObject> makeImportPublicationCopy(DataObject& source);
+  [[nodiscard]] static std::shared_ptr<DataObject> MakeImportPublicationCopy(DataObject& source);
 
   /**
    * @brief Publishes selected prepared shells and rolls back exact placements on failure.
@@ -824,17 +824,17 @@ private:
    */
   struct ImportPublicationRecord
   {
-    std::shared_ptr<DataObject> Owner;
+    std::shared_ptr<DataObject> owner;
     std::shared_ptr<BaseGroup> Parent;
     DataObject::IdType Id = 0;
-    DataObject::IdType ParentId = 0;
+    DataObject::IdType parent_id = 0;
     DataPath Path;
-    std::shared_ptr<AbstractDataStructureMessage> RemovalMessage;
-    ImportInsertionStage Stage = ImportInsertionStage::None;
-    ImportCleanupStatus Cleanup = ImportCleanupStatus::Complete;
-    bool NotifyRemoval = false;
-    bool NotificationAttempted = false;
-    bool NotificationFailed = false;
+    std::shared_ptr<AbstractDataStructureMessage> removal_message;
+    ImportInsertionStage stage = ImportInsertionStage::None;
+    ImportCleanupStatus cleanup = ImportCleanupStatus::Complete;
+    bool notify_removal = false;
+    bool notification_attempted = false;
+    bool notification_failed = false;
   };
 
   /**

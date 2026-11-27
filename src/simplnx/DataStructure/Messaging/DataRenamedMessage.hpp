@@ -16,7 +16,7 @@ namespace nx::core
 class SIMPLNX_EXPORT DataRenamedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const MessageType MsgType = 3;
+  static const MessageType k_MsgType = 3;
 
   /**
    * @brief Constructs a DataRenamedMessage specifying which DataObject was

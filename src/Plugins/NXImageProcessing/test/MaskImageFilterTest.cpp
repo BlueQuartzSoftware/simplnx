@@ -70,7 +70,7 @@ class MaskCacheBudgetScope
 {
 public:
   explicit MaskCacheBudgetScope(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -188,8 +188,8 @@ TEST_CASE("NXImageProcessing::MaskEngine: cancellation before a chunk avoids all
 // engine reads the mask as a single-component scalar.
 TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value range + mask components)", "[NXImageProcessing][MaskImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   // Build an int8 input + a uint8 mask (with maskComponents components) under one geometry.
   auto buildInt8 = [](DataStructure& dataStructure, usize maskComponents) {
@@ -198,9 +198,9 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value r
     imageGeomPtr->setDimensions({2, 2, 2});
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto inStore = DataStoreUtilities::CreateDataStore<int8>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
+    auto inStore = data_store_utilities::CreateDataStore<int8>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
     DataArray<int8>::Create(dataStructure, "Input", inStore, cellAmPtr->getId());
-    auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, DataPath({"Image Geometry", "CellData", "Mask"}), cellShape, {maskComponents});
+    auto maskStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, DataPath({"Image Geometry", "CellData", "Mask"}), cellShape, {maskComponents});
     DataArray<uint8>::Create(dataStructure, "Mask", maskStore, cellAmPtr->getId());
   };
 
@@ -221,41 +221,41 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight guards (Outside Value r
     DataStructure dataStructure;
     buildInt8(dataStructure, 1);
     auto result = filter.preflight(dataStructure, makeArgs(300.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8103);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8103);
   }
   SECTION("Non-finite Outside Value -> error")
   {
     DataStructure dataStructure;
     buildInt8(dataStructure, 1);
     auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8102);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8102);
   }
   SECTION("Fractional Outside Value -> truncation warning, still valid")
   {
     DataStructure dataStructure;
     buildInt8(dataStructure, 1);
     auto result = filter.preflight(dataStructure, makeArgs(1.5));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE_FALSE(result.outputActions.warnings().empty());
-    REQUIRE(result.outputActions.warnings().front().code == -8104);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE_FALSE(result.output_actions.warnings().empty());
+    REQUIRE(result.output_actions.warnings().front().code == -8104);
   }
   SECTION("In-range Outside Value -> clean")
   {
     DataStructure dataStructure;
     buildInt8(dataStructure, 1);
     auto result = filter.preflight(dataStructure, makeArgs(5.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE(result.outputActions.warnings().empty());
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE(result.output_actions.warnings().empty());
   }
   SECTION("Multi-component mask -> error")
   {
     DataStructure dataStructure;
     buildInt8(dataStructure, 2);
     auto result = filter.preflight(dataStructure, makeArgs(0.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8105);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8105);
   }
 }
 
@@ -276,14 +276,14 @@ void BuildTypedMaskInputs(DataStructure& dataStructure, usize dim, MaskT nonzero
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const usize numTuples = dim * dim * dim;
-  auto inStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
+  auto inStore = data_store_utilities::CreateDataStore<float32>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
   auto* inArrayPtr = DataArray<float32>::Create(dataStructure, "Input", inStore, cellAmPtr->getId());
   auto& inRef = inArrayPtr->getDataStoreRef();
   for(usize i = 0; i < inRef.getSize(); ++i)
   {
     inRef.setValue(i, static_cast<float32>(i + 1));
   }
-  auto maskStore = DataStoreUtilities::CreateDataStore<MaskT>(dataStructure, DataPath({"Image Geometry", "CellData", "Mask"}), cellShape, {1});
+  auto maskStore = data_store_utilities::CreateDataStore<MaskT>(dataStructure, DataPath({"Image Geometry", "CellData", "Mask"}), cellShape, {1});
   auto* maskArrayPtr = DataArray<MaskT>::Create(dataStructure, "Mask", maskStore, cellAmPtr->getId());
   auto& maskRef = maskArrayPtr->getDataStoreRef();
   for(usize t = 0; t < numTuples; ++t)
@@ -297,8 +297,8 @@ void BuildTypedMaskInputs(DataStructure& dataStructure, usize dim, MaskT nonzero
 template <class MaskT>
 void RunMaskTypeKeepDiscard(MaskT nonzeroValue)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   constexpr usize k_Dim = 6;
   const float64 outsideValue = -7.0;
 
@@ -313,13 +313,13 @@ void RunMaskTypeKeepDiscard(MaskT nonzeroValue)
   args.insertOrAssign(MaskImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(MaskImageFilter::k_OutsideValue_Key, std::make_any<float64>(outsideValue));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& inStore = dataStructure.getDataRefAs<Float32Array>(DataPath({"Image Geometry", "CellData", "Input"})).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Image Geometry", "CellData", "Input"})).getDataStoreRef();
   const auto& maskStore = dataStructure.getDataRefAs<DataArray<MaskT>>(DataPath({"Image Geometry", "CellData", "Mask"})).getDataStoreRef();
-  const auto& outStore = dataStructure.getDataRefAs<Float32Array>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Image Geometry", "CellData", "Output"})).getDataStoreRef();
   REQUIRE(outStore.getSize() == inStore.getSize());
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
@@ -346,8 +346,8 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: uint32 mask keep/discard", "[NXIm
 // yet trips the filter's uint8/uint16/uint32-only guard.
 TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type (-8100) and tuple mismatch (-8101)", "[NXImageProcessing][MaskImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const auto makeArgs = []() {
     Arguments args;
@@ -369,16 +369,16 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type
     imageGeomPtr->setDimensions({2, 2, 2});
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto inStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
+    auto inStore = data_store_utilities::CreateDataStore<float32>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
     DataArray<float32>::Create(dataStructure, "Input", inStore, cellAmPtr->getId());
     // int32 mask with the SAME tuple count, so only the type guard fires (not the tuple guard).
     auto* maskAmPtr = AttributeMatrix::Create(dataStructure, "MaskData", cellShape, imageGeomPtr->getId());
-    auto maskStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"Image Geometry", "MaskData", "Mask"}), cellShape, {1});
+    auto maskStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"Image Geometry", "MaskData", "Mask"}), cellShape, {1});
     DataArray<int32>::Create(dataStructure, "Mask", maskStore, maskAmPtr->getId());
 
     auto result = filter.preflight(dataStructure, makeArgs());
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8100);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8100);
   }
 
   SECTION("mask/input tuple mismatch -> -8101")
@@ -389,17 +389,17 @@ TEST_CASE("NXImageProcessing::MaskImageFilter: Preflight rejects wrong mask type
     imageGeomPtr->setDimensions({2, 2, 2});
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto inStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
+    auto inStore = data_store_utilities::CreateDataStore<float32>(dataStructure, DataPath({"Image Geometry", "CellData", "Input"}), cellShape, {1});
     DataArray<float32>::Create(dataStructure, "Input", inStore, cellAmPtr->getId());
     // uint8 mask (valid type) but with a DIFFERENT tuple count (4 != 8), so the tuple guard fires.
     const ShapeType maskShape = {4};
     auto* maskAmPtr = AttributeMatrix::Create(dataStructure, "MaskData", maskShape, imageGeomPtr->getId());
-    auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, DataPath({"Image Geometry", "MaskData", "Mask"}), maskShape, {1});
+    auto maskStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, DataPath({"Image Geometry", "MaskData", "Mask"}), maskShape, {1});
     DataArray<uint8>::Create(dataStructure, "Mask", maskStore, maskAmPtr->getId());
 
     auto result = filter.preflight(dataStructure, makeArgs());
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == -8101);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == -8101);
   }
 }
 
@@ -414,8 +414,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunMaskItkGolden(const std::string& inputFile, const std::string& maskFile, const std::string& committedMd5)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -437,7 +437,7 @@ void RunMaskItkGolden(const std::string& inputFile, const std::string& maskFile,
   args.insertOrAssign(MaskImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   MaskImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -446,7 +446,7 @@ void RunMaskItkGolden(const std::string& inputFile, const std::string& maskFile,
   INFO(fmt::format("MaskImageFilter md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

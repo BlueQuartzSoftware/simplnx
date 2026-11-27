@@ -22,7 +22,7 @@ MultiThresholdObjects::MultiThresholdObjects(DataStructure& dataStructure, const
 
 Result<> MultiThresholdObjects::operator()()
 {
-  auto thresholdsObject = m_InputValues->ArrayThresholdsObject;
+  auto thresholdsObject = m_InputValues->array_thresholds_object;
   const auto& requiredPaths = thresholdsObject.getRequiredPaths();
   std::vector<const IArray*> targets;
   targets.reserve(requiredPaths.size() + 1);
@@ -30,7 +30,7 @@ Result<> MultiThresholdObjects::operator()()
   {
     targets.push_back(m_DataStructure.getDataAs<IDataArray>(path));
   }
-  const DataPath maskArrayPath = (*requiredPaths.begin()).replaceName(m_InputValues->OutputDataArrayName);
+  const DataPath maskArrayPath = (*requiredPaths.begin()).replaceName(m_InputValues->output_data_array_name);
   targets.push_back(m_DataStructure.getDataAs<IDataArray>(maskArrayPath));
   return DispatchAlgorithm<MultiThresholdObjectsDirect, MultiThresholdObjectsScanline>(AlgorithmArrayTargets(std::move(targets)), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

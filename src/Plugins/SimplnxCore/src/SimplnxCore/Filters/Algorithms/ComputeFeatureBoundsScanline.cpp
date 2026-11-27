@@ -81,7 +81,7 @@ void UpdateBounds(std::vector<float32>& bounds, int32 featureId, float32 xMin, f
  * connectivity reads remain direct element access.
  */
 template <GeometryType GeomT>
-Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureIds, std::vector<float32>& bounds, int32* featureIdBuffer, const std::atomic_bool& shouldCancel)
+Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStoreType& featureIds, std::vector<float32>& bounds, int32* featureIdBuffer, const std::atomic_bool& shouldCancel)
 {
   static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
 
@@ -91,8 +91,8 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
     const usize xPoints = geom.getNumXCells();
     const usize yPoints = geom.getNumYCells();
     const usize sliceSize = xPoints * yPoints;
-    const FloatVec3 spacing = geom.getSpacing();
-    const FloatVec3 origin = geom.getOrigin();
+    const FloatVec3Type spacing = geom.getSpacing();
+    const FloatVec3Type origin = geom.getOrigin();
 
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
     {
@@ -134,7 +134,7 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
   }
   if constexpr(std::is_same_v<VertexGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedVertexListType::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
 
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
     {
@@ -168,8 +168,8 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
   }
   if constexpr(std::is_same_v<EdgeGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
-    const IGeometry::SharedEdgeList::StoreType& edges = geom.getEdgesRef().getDataStoreRef();
+    const IGeometry::SharedVertexListType::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedEdgeListType::StoreType& edges = geom.getEdgesRef().getDataStoreRef();
 
     const usize numComp = edges.getNumberOfComponents();
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
@@ -197,7 +197,7 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
         const usize i = offset + chunkIndex;
         for(usize comp = 0; comp < numComp; comp++)
         {
-          const IGeometry::SharedFaceList::value_type activeVertIndex = edges[(i * numComp) + comp];
+          const IGeometry::SharedFaceListType::value_type activeVertIndex = edges[(i * numComp) + comp];
           const float32 xVal = verts[(activeVertIndex * 3) + 0];
           const float32 yVal = verts[(activeVertIndex * 3) + 1];
           const float32 zVal = verts[(activeVertIndex * 3) + 2];
@@ -208,8 +208,8 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
   }
   if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
-    const IGeometry::SharedFaceList::StoreType& faces = geom.getFacesRef().getDataStoreRef();
+    const IGeometry::SharedVertexListType::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedFaceListType::StoreType& faces = geom.getFacesRef().getDataStoreRef();
 
     const usize numComp = faces.getNumberOfComponents();
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
@@ -237,7 +237,7 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
         const usize i = offset + chunkIndex;
         for(usize comp = 0; comp < numComp; comp++)
         {
-          const IGeometry::SharedFaceList::value_type activeVertIndex = faces[(i * numComp) + comp];
+          const IGeometry::SharedFaceListType::value_type activeVertIndex = faces[(i * numComp) + comp];
           const float32 xVal = verts[(activeVertIndex * 3) + 0];
           const float32 yVal = verts[(activeVertIndex * 3) + 1];
           const float32 zVal = verts[(activeVertIndex * 3) + 2];
@@ -295,8 +295,8 @@ ComputeFeatureBoundsScanline::ComputeFeatureBoundsScanline(DataStructure& dataSt
 
 Result<> ComputeFeatureBoundsScanline::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  const auto& featureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAMPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  const auto& featureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->feature_am_path);
 
   const usize numFeatureIdValues = featureIds.getSize();
   auto featureIdBuffer = std::make_unique<int32[]>(k_ChunkTuples);
@@ -320,11 +320,11 @@ Result<> ComputeFeatureBoundsScanline::operator()()
   const int32 numFeatures = maxFeatureId + 1;
   if(numFeatures > featureAM.getNumberOfTuples())
   {
-    return MakeErrorResult(-89471, fmt::format("{} Attribute Matrix size ({}) doesn't align with number of features ({}) in {} array", m_InputValues->FeatureAMPath.getTargetName(),
-                                               featureAM.getNumberOfTuples(), numFeatures, m_InputValues->FeatureIdsArrayPath.getTargetName()));
+    return MakeErrorResult(-89471, fmt::format("{} Attribute Matrix size ({}) doesn't align with number of features ({}) in {} array", m_InputValues->feature_am_path.getTargetName(),
+                                               featureAM.getNumberOfTuples(), numFeatures, m_InputValues->feature_ids_array_path.getTargetName()));
   }
 
-  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
+  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->geometry_path);
 
   if(m_ShouldCancel)
   {
@@ -346,11 +346,11 @@ Result<> ComputeFeatureBoundsScanline::operator()()
     return {};
   }
 
-  switch(static_cast<ComputeFeatureBounds::OutputDataType>(m_InputValues->OutputType))
+  switch(static_cast<ComputeFeatureBounds::OutputDataType>(m_InputValues->output_type))
   {
   case ComputeFeatureBounds::OutputDataType::Split: {
-    auto& minBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MinArrayPath).getDataStoreRef();
-    auto& maxBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MaxArrayPath).getDataStoreRef();
+    auto& minBounds = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->min_array_path).getDataStoreRef();
+    auto& maxBounds = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->max_array_path).getDataStoreRef();
     for(usize i = 0; i < minBounds.getNumberOfTuples(); i++)
     {
       usize activeIndex = i * 6;
@@ -365,7 +365,7 @@ Result<> ComputeFeatureBoundsScanline::operator()()
     break;
   }
   case ComputeFeatureBounds::OutputDataType::Unified: {
-    auto& unifiedBounds = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedArrayPath).getDataStoreRef();
+    auto& unifiedBounds = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->unified_array_path).getDataStoreRef();
     for(usize i = 0; i < unifiedBounds.getNumberOfTuples(); i++)
     {
       usize activeIndex = i * 6;
@@ -381,7 +381,7 @@ Result<> ComputeFeatureBoundsScanline::operator()()
   }
   }
 
-  if(m_InputValues->CreateEdgeGeometry)
+  if(m_InputValues->create_edge_geometry)
   {
     /**
      * @brief Connects the eight bounding-box vertices into twelve edges.
@@ -393,7 +393,7 @@ Result<> ComputeFeatureBoundsScanline::operator()()
     usize numVerts = numFeatures * 8;
     usize numEdges = numFeatures * 12;
 
-    auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->EdgeGeometryDataPath);
+    auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->edge_geometry_data_path);
     Result<> resizeResult = edgeGeom.resizeVertexList(numVerts);
     if(resizeResult.invalid())
     {
@@ -415,8 +415,8 @@ Result<> ComputeFeatureBoundsScanline::operator()()
       return resizeResult;
     }
 
-    DataPath edgeAmPath = m_InputValues->EdgeGeometryDataPath.createChildPath(m_InputValues->EdgeAttributeMatrixName);
-    auto& edgeFeatureIds = m_DataStructure.getDataRefAs<Int32Array>(edgeAmPath.createChildPath(m_InputValues->FeatureIdsArrayName)).getDataStoreRef();
+    DataPath edgeAmPath = m_InputValues->edge_geometry_data_path.createChildPath(m_InputValues->edge_attribute_matrix_name);
+    auto& edgeFeatureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(edgeAmPath.createChildPath(m_InputValues->feature_ids_array_name)).getDataStoreRef();
     edgeFeatureIds.fill(-1);
     usize currentOffset = 0;
     for(usize idx = 0; idx < numFeatures; ++idx)

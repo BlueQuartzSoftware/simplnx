@@ -24,29 +24,29 @@ namespace
 {
 const DataPath k_TriangleGeomPath({"QuickMesh"});
 
-SurfaceMeshingTest::MeshResult RunQuickSurfaceMesh(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
+surface_meshing_test::MeshResult RunQuickSurfaceMesh(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
 {
-  return SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(flushWithBottom), k_TriangleGeomPath, boundingBoxSkinMode,
+  return surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(surface_meshing_test::CreateCylinderInBox(flushWithBottom), k_TriangleGeomPath, boundingBoxSkinMode,
                                                                [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Option off leaves the box skin over background in place")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_Off);
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    surface_meshing_test::MeshResult meshResult = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_Off);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 1);
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("Option on removes only the background skin and keeps the cylinder closed")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    surface_meshing_test::MeshResult meshResult = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
 
     // The artificial background skin is gone.
     REQUIRE(labelPairs.count({-1, 0}) == 0);
@@ -56,44 +56,44 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCor
     REQUIRE(labelPairs.count({0, 1}) == 1);
 
     // With the cap kept, the cylinder is a closed surface.
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("Option on is a no-op when nothing touches the wall except background")
   {
     // Inset cylinder: the whole box wall is background, so ALL skin is dropped and only
     // the cylinder surface remains -- which is closed on its own.
-    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(false, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    surface_meshing_test::MeshResult meshResult = RunQuickSurfaceMesh(false, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 0);
     REQUIRE(labelPairs.count({-1, 1}) == 0);
     REQUIRE(labelPairs.count({0, 1}) == 1);
 
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("Node Types of surviving nodes match the full mesh")
   {
-    SurfaceMeshingTest::MeshResult fullMesh = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_Off);
-    SurfaceMeshingTest::MeshResult prunedMesh = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    surface_meshing_test::MeshResult fullMesh = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_Off);
+    surface_meshing_test::MeshResult prunedMesh = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     const DataPath nodeTypesPath = k_TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-    REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-    const auto& fullVertsRef = fullMesh.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath).getVertices()->getDataStoreRef();
-    REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
-    const auto& fullTypesRef = fullMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
-    REQUIRE_NOTHROW(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-    const auto& prunedVertsRef = prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath).getVertices()->getDataStoreRef();
-    REQUIRE_NOTHROW(prunedMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
-    const auto& prunedTypesRef = prunedMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+    REQUIRE_NOTHROW(fullMesh.structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& fullVertsRef = fullMesh.structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath).getVertices()->getDataStoreRef();
+    REQUIRE_NOTHROW(fullMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    const auto& fullTypesRef = fullMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
+    REQUIRE_NOTHROW(prunedMesh.structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
+    const auto& prunedVertsRef = prunedMesh.structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath).getVertices()->getDataStoreRef();
+    REQUIRE_NOTHROW(prunedMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    const auto& prunedTypesRef = prunedMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
 
     // Map full-mesh vertex coordinate -> node type, then check every surviving vertex agrees.
     std::map<std::tuple<float32, float32, float32>, int8> fullTypeByCoord;
@@ -109,8 +109,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCor
       REQUIRE(fullTypeByCoord[coord] == prunedTypesRef[i]);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(fullMesh.Structure);
-    UnitTest::CheckArraysInheritTupleDims(prunedMesh.Structure);
+    unit_test::CheckArraysInheritTupleDims(fullMesh.structure);
+    unit_test::CheckArraysInheritTupleDims(prunedMesh.structure);
   }
 }
 
@@ -118,9 +118,9 @@ namespace
 {
 const DataPath k_SurfaceNetsTriangleGeomPath({"SurfaceNets"});
 
-SurfaceMeshingTest::MeshResult RunSurfaceNets(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
+surface_meshing_test::MeshResult RunSurfaceNets(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
 {
-  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(flushWithBottom), k_SurfaceNetsTriangleGeomPath, boundingBoxSkinMode, [](Arguments& args) {
+  return surface_meshing_test::RunMesher<SurfaceNetsFilter>(surface_meshing_test::CreateCylinderInBox(flushWithBottom), k_SurfaceNetsTriangleGeomPath, boundingBoxSkinMode, [](Arguments& args) {
     args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
@@ -131,35 +131,35 @@ SurfaceMeshingTest::MeshResult RunSurfaceNets(bool flushWithBottom, ChoicesParam
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Bounding Box Skin", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Option off leaves the box skin over background in place")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_Off);
-    REQUIRE(SurfaceMeshingTest::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    surface_meshing_test::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_Off);
+    REQUIRE(surface_meshing_test::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("Option on removes only the background skin and keeps the cylinder closed")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    surface_meshing_test::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 0);
     REQUIRE(labelPairs.count({-1, 1}) == 1);
     REQUIRE(labelPairs.count({0, 1}) == 1);
 
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("Option on leaves no orphan vertices")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
+    surface_meshing_test::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
     const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
 
     std::set<usize> referencedVertices;
@@ -169,12 +169,12 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Bounding Box Skin", "[SimplnxCore][Su
     }
     REQUIRE(referencedVertices.size() == triangleGeom.getNumberOfVertices());
 
-    const DataPath nodeTypesPath = meshResult.TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
-    const auto& nodeTypesRef = meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+    const DataPath nodeTypesPath = meshResult.triangle_geom_path.createChildPath("Vertex Data").createChildPath("NodeTypes");
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    const auto& nodeTypesRef = meshResult.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
     REQUIRE(nodeTypesRef.getNumberOfTuples() == triangleGeom.getNumberOfVertices());
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 }
 
@@ -182,36 +182,36 @@ namespace
 {
 const DataPath k_M3CTriangleGeomPath({"M3CMesh"});
 
-SurfaceMeshingTest::MeshResult RunM3C(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
+surface_meshing_test::MeshResult RunM3C(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
 {
-  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(flushWithBottom), k_M3CTriangleGeomPath, boundingBoxSkinMode, [](Arguments&) {});
+  return surface_meshing_test::RunMesher<M3CSurfaceMeshingFilter>(surface_meshing_test::CreateCylinderInBox(flushWithBottom), k_M3CTriangleGeomPath, boundingBoxSkinMode, [](Arguments&) {});
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Option off leaves the box skin over background in place")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, bounding_box_skin_mode::k_Off);
-    REQUIRE(SurfaceMeshingTest::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    surface_meshing_test::MeshResult meshResult = RunM3C(true, bounding_box_skin_mode::k_Off);
+    REQUIRE(surface_meshing_test::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("Option on removes only the background skin and keeps the cylinder closed")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    surface_meshing_test::MeshResult meshResult = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 0);
     REQUIRE(labelPairs.count({-1, 1}) == 1);
     REQUIRE(labelPairs.count({0, 1}) == 1);
 
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   // The option must never leave a vertex behind that only dropped faces referenced. Verified by
@@ -220,8 +220,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
   // at all (issue #1706 was resolved by the single ghost sentinel), no vertex is unreferenced in either.
   SECTION("Option on leaves no vertex newly orphaned by the prune")
   {
-    SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, bounding_box_skin_mode::k_Off);
-    SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+    surface_meshing_test::MeshResult fullMesh = RunM3C(true, bounding_box_skin_mode::k_Off);
+    surface_meshing_test::MeshResult prunedMesh = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     const auto isReferencedByCoord = [](const TriangleGeom& triangleGeom) {
       const auto& vertsRef = triangleGeom.getVertices()->getDataStoreRef();
@@ -242,10 +242,10 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
       return result;
     };
 
-    REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-    REQUIRE_NOTHROW(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-    const auto fullReferenced = isReferencedByCoord(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-    const auto prunedReferenced = isReferencedByCoord(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    REQUIRE_NOTHROW(fullMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    REQUIRE_NOTHROW(prunedMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    const auto fullReferenced = isReferencedByCoord(fullMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+    const auto prunedReferenced = isReferencedByCoord(prunedMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
 
     usize newlyOrphanedCount = 0;
     usize unreferencedCount = 0;
@@ -269,27 +269,27 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
     INFO("Unreferenced vertices in the pruned mesh (must be 0): " << unreferencedCount);
     REQUIRE(unreferencedCount == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(fullMesh.Structure);
-    UnitTest::CheckArraysInheritTupleDims(prunedMesh.Structure);
+    unit_test::CheckArraysInheritTupleDims(fullMesh.structure);
+    unit_test::CheckArraysInheritTupleDims(prunedMesh.structure);
   }
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Node Types after omitting skin", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, bounding_box_skin_mode::k_Off);
-  SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+  surface_meshing_test::MeshResult fullMesh = RunM3C(true, bounding_box_skin_mode::k_Off);
+  surface_meshing_test::MeshResult prunedMesh = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
   const DataPath nodeTypesPath = k_M3CTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-  REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-  const auto& fullVertsRef = fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath).getVertices()->getDataStoreRef();
-  REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
-  const auto& fullTypesRef = fullMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
-  REQUIRE_NOTHROW(prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
-  const auto& prunedVertsRef = prunedMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath).getVertices()->getDataStoreRef();
-  REQUIRE_NOTHROW(prunedMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
-  const auto& prunedTypesRef = prunedMesh.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+  REQUIRE_NOTHROW(fullMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+  const auto& fullVertsRef = fullMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath).getVertices()->getDataStoreRef();
+  REQUIRE_NOTHROW(fullMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+  const auto& fullTypesRef = fullMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
+  REQUIRE_NOTHROW(prunedMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
+  const auto& prunedVertsRef = prunedMesh.structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath).getVertices()->getDataStoreRef();
+  REQUIRE_NOTHROW(prunedMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+  const auto& prunedTypesRef = prunedMesh.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
 
   // Map full-mesh vertex coordinate -> node type, then check every surviving vertex against it.
   std::map<std::tuple<float32, float32, float32>, int8> fullTypeByCoord;
@@ -323,13 +323,13 @@ namespace
 // (e.g. warnings) instead of asserting validity and aborting.
 Result<> RunQuickSurfaceMeshRaw(DataStructure& dataStructure, ChoicesParameter::ValueType boundingBoxSkinMode, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<QuickSurfaceMeshFilter>(
+  return surface_meshing_test::RunMesherRaw<QuickSurfaceMeshFilter>(
       dataStructure, k_TriangleGeomPath, boundingBoxSkinMode, [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); }, repairWinding);
 }
 
 Result<> RunSurfaceNetsRaw(DataStructure& dataStructure, ChoicesParameter::ValueType boundingBoxSkinMode, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<SurfaceNetsFilter>(
+  return surface_meshing_test::RunMesherRaw<SurfaceNetsFilter>(
       dataStructure, k_SurfaceNetsTriangleGeomPath, boundingBoxSkinMode,
       [](Arguments& args) {
         args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
@@ -342,20 +342,20 @@ Result<> RunSurfaceNetsRaw(DataStructure& dataStructure, ChoicesParameter::Value
 
 Result<> RunM3CRaw(DataStructure& dataStructure, ChoicesParameter::ValueType boundingBoxSkinMode, bool repairWinding = false)
 {
-  return SurfaceMeshingTest::RunMesherRaw<M3CSurfaceMeshingFilter>(dataStructure, k_M3CTriangleGeomPath, boundingBoxSkinMode, [](Arguments&) {}, repairWinding);
+  return surface_meshing_test::RunMesherRaw<M3CSurfaceMeshingFilter>(dataStructure, k_M3CTriangleGeomPath, boundingBoxSkinMode, [](Arguments&) {}, repairWinding);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // A fully-indexed volume has no Feature Id 0, so no face can match {-1, 0} and the
   // option must change nothing -- every boundary Feature keeps its wall cap.
   SECTION("QuickSurfaceMesh")
   {
-    DataStructure offStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    DataStructure onStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure offStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    DataStructure onStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
     // Store each Result<> before handing it to SIMPLNX_RESULT_REQUIRE_VALID: that macro expands
     // its argument multiple times (once per accessor), so passing the RunXRaw(...) call directly
     // would run the filter more than once against the same DataStructure.
@@ -370,29 +370,29 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
     const auto& onGeom = onStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
     REQUIRE(onGeom.getNumberOfFaces() == offGeom.getNumberOfFaces());
     REQUIRE(onGeom.getNumberOfVertices() == offGeom.getNumberOfVertices());
-    UnitTest::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
-    UnitTest::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
+    unit_test::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
+    unit_test::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
 
     const DataPath faceLabelsPath = k_TriangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    unit_test::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath), onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
 
     // This is the only no-op test that checks all three meshers, so it is the natural place to cover
     // Node Types for all of them rather than just Face Labels/Faces/Vertices.
     const DataPath nodeTypesPath = k_TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-    UnitTest::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8Array>(nodeTypesPath), onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    unit_test::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath), onStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
 
-    UnitTest::CheckArraysInheritTupleDims(offStructure);
-    UnitTest::CheckArraysInheritTupleDims(onStructure);
+    unit_test::CheckArraysInheritTupleDims(offStructure);
+    unit_test::CheckArraysInheritTupleDims(onStructure);
   }
 
   SECTION("SurfaceNets")
   {
-    DataStructure offStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    DataStructure onStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure offStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    DataStructure onStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
     const Result<> offResult = RunSurfaceNetsRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
     const Result<> onResult = RunSurfaceNetsRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
@@ -404,27 +404,27 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
     const auto& onGeom = onStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
     REQUIRE(onGeom.getNumberOfFaces() == offGeom.getNumberOfFaces());
     REQUIRE(onGeom.getNumberOfVertices() == offGeom.getNumberOfVertices());
-    UnitTest::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
-    UnitTest::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
+    unit_test::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
+    unit_test::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
 
     const DataPath faceLabelsPath = k_SurfaceNetsTriangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    unit_test::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath), onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
 
     const DataPath nodeTypesPath = k_SurfaceNetsTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-    UnitTest::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8Array>(nodeTypesPath), onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    unit_test::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath), onStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
 
-    UnitTest::CheckArraysInheritTupleDims(offStructure);
-    UnitTest::CheckArraysInheritTupleDims(onStructure);
+    unit_test::CheckArraysInheritTupleDims(offStructure);
+    unit_test::CheckArraysInheritTupleDims(onStructure);
   }
 
   SECTION("M3CSurfaceMeshing")
   {
-    DataStructure offStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    DataStructure onStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure offStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    DataStructure onStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
     const Result<> offResult = RunM3CRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
     const Result<> onResult = RunM3CRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
@@ -436,30 +436,30 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
     const auto& onGeom = onStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(onGeom.getNumberOfFaces() == offGeom.getNumberOfFaces());
     REQUIRE(onGeom.getNumberOfVertices() == offGeom.getNumberOfVertices());
-    UnitTest::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
-    UnitTest::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
+    unit_test::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
+    unit_test::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
 
     const DataPath faceLabelsPath = k_M3CTriangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    unit_test::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath), onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
 
     // M3C's orphan-node clearing after the prune is the one code path in the whole feature that is
     // gated on whether the prune actually dropped anything, not on the option flag alone. This
     // fully-indexed input drops nothing, so Node Types must still match exactly here.
     const DataPath nodeTypesPath = k_M3CTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-    UnitTest::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8Array>(nodeTypesPath), onStructure.getDataRefAs<Int8Array>(nodeTypesPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+    unit_test::CompareDataArrays<int8>(offStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath), onStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
 
-    UnitTest::CheckArraysInheritTupleDims(offStructure);
-    UnitTest::CheckArraysInheritTupleDims(onStructure);
+    unit_test::CheckArraysInheritTupleDims(offStructure);
+    unit_test::CheckArraysInheritTupleDims(onStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin warns when nothing is pruned", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // A fully-indexed volume has no Feature Id 0, so the option suppresses zero faces. That is the
   // most common dataset shape in practice, and byte-identical output with no feedback is not
@@ -467,38 +467,38 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when nothing is pruned", "[Simpl
   // all-background case (which suppresses every face); the two warnings must never fire together.
   SECTION("QuickSurfaceMesh")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
     const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_NoFacesPrunedWarning);
   }
 
   SECTION("SurfaceNets")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
     const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_NoFacesPrunedWarning);
   }
 
   SECTION("M3CSurfaceMeshing")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
     const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_NoFacesPrunedWarning);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclosed", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // CreateEnclosedPorosity() is full of Feature Id 0 internally, but every wall voxel is Feature 1 --
   // the interior pocket never touches a bounding-box wall. k_NoFacesPrunedWarning's text says only
@@ -508,14 +508,14 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
   // exactly the same no-op contract as the fully-indexed case above, but for a different reason.
   SECTION("QuickSurfaceMesh")
   {
-    DataStructure offStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
-    DataStructure onStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
+    DataStructure offStructure = surface_meshing_test::CreateEnclosedPorosity();
+    DataStructure onStructure = surface_meshing_test::CreateEnclosedPorosity();
     const Result<> offResult = RunQuickSurfaceMeshRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
     const Result<> onResult = RunQuickSurfaceMeshRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
     REQUIRE(onResult.warnings().size() == 1);
-    REQUIRE(onResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+    REQUIRE(onResult.warnings()[0].code == meshing_utilities::k_NoFacesPrunedWarning);
 
     REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
     REQUIRE_NOTHROW(onStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
@@ -523,28 +523,28 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
     const auto& onGeom = onStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
     REQUIRE(onGeom.getNumberOfFaces() == offGeom.getNumberOfFaces());
     REQUIRE(onGeom.getNumberOfVertices() == offGeom.getNumberOfVertices());
-    UnitTest::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
-    UnitTest::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
+    unit_test::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
+    unit_test::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
 
     const DataPath faceLabelsPath = k_TriangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    unit_test::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath), onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
 
-    UnitTest::CheckArraysInheritTupleDims(offStructure);
-    UnitTest::CheckArraysInheritTupleDims(onStructure);
+    unit_test::CheckArraysInheritTupleDims(offStructure);
+    unit_test::CheckArraysInheritTupleDims(onStructure);
   }
 
   SECTION("SurfaceNets")
   {
-    DataStructure offStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
-    DataStructure onStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
+    DataStructure offStructure = surface_meshing_test::CreateEnclosedPorosity();
+    DataStructure onStructure = surface_meshing_test::CreateEnclosedPorosity();
     const Result<> offResult = RunSurfaceNetsRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
     const Result<> onResult = RunSurfaceNetsRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
     REQUIRE(onResult.warnings().size() == 1);
-    REQUIRE(onResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+    REQUIRE(onResult.warnings()[0].code == meshing_utilities::k_NoFacesPrunedWarning);
 
     REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
     REQUIRE_NOTHROW(onStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
@@ -552,28 +552,28 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
     const auto& onGeom = onStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
     REQUIRE(onGeom.getNumberOfFaces() == offGeom.getNumberOfFaces());
     REQUIRE(onGeom.getNumberOfVertices() == offGeom.getNumberOfVertices());
-    UnitTest::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
-    UnitTest::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
+    unit_test::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
+    unit_test::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
 
     const DataPath faceLabelsPath = k_SurfaceNetsTriangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    unit_test::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath), onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
 
-    UnitTest::CheckArraysInheritTupleDims(offStructure);
-    UnitTest::CheckArraysInheritTupleDims(onStructure);
+    unit_test::CheckArraysInheritTupleDims(offStructure);
+    unit_test::CheckArraysInheritTupleDims(onStructure);
   }
 
   SECTION("M3CSurfaceMeshing")
   {
-    DataStructure offStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
-    DataStructure onStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
+    DataStructure offStructure = surface_meshing_test::CreateEnclosedPorosity();
+    DataStructure onStructure = surface_meshing_test::CreateEnclosedPorosity();
     const Result<> offResult = RunM3CRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
     const Result<> onResult = RunM3CRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
     REQUIRE(onResult.warnings().size() == 1);
-    REQUIRE(onResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
+    REQUIRE(onResult.warnings()[0].code == meshing_utilities::k_NoFacesPrunedWarning);
 
     REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     REQUIRE_NOTHROW(onStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
@@ -581,32 +581,32 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
     const auto& onGeom = onStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(onGeom.getNumberOfFaces() == offGeom.getNumberOfFaces());
     REQUIRE(onGeom.getNumberOfVertices() == offGeom.getNumberOfVertices());
-    UnitTest::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
-    UnitTest::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
+    unit_test::CompareDataArrays<uint64>(*offGeom.getFaces(), *onGeom.getFaces());
+    unit_test::CompareDataArrays<float32>(*offGeom.getVertices(), *onGeom.getVertices());
 
     const DataPath faceLabelsPath = k_M3CTriangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
-    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-    UnitTest::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32Array>(faceLabelsPath), onStructure.getDataRefAs<Int32Array>(faceLabelsPath));
+    REQUIRE_NOTHROW(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    REQUIRE_NOTHROW(onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+    unit_test::CompareDataArrays<int32>(offStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath), onStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
 
-    UnitTest::CheckArraysInheritTupleDims(offStructure);
-    UnitTest::CheckArraysInheritTupleDims(onStructure);
+    unit_test::CheckArraysInheritTupleDims(offStructure);
+    unit_test::CheckArraysInheritTupleDims(onStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Repair Triangle Winding off")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
     const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     // Success with a warning, not an error: the data is legal, just entirely background.
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     // The geometry still exists, just empty.
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
@@ -614,7 +614,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume", "[
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
     REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // Repair Triangle Winding defaults to true on all three meshers, so this is the configuration
@@ -623,41 +623,41 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume", "[
   // geometry: the contract (success, one warning, zero faces, zero vertices) must still hold.
   SECTION("Repair Triangle Winding on (shipped default)")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
     const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
     REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (SurfaceNets)", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Repair Triangle Winding off")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
     const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
     REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // See the QuickSurfaceMesh test case above for why this configuration matters: Repair Triangle
@@ -665,25 +665,25 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (Sur
   // SurfaceNets.cpp).
   SECTION("Repair Triangle Winding on (shipped default)")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
     const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
     REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3CSurfaceMeshing)", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Like QuickSurfaceMesh/SurfaceNets, M3C must reach zero vertices here: pruning every face orphans
   // every node, and the option clears the nodes its prune orphans. (M3C once also carried orphan
@@ -691,19 +691,19 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
 
   SECTION("Repair Triangle Winding off")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
     const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
     REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // See the QuickSurfaceMesh test case above for why this configuration matters. M3C does not
@@ -711,113 +711,113 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
   // the same warning contract when Repair Triangle Winding is left at its shipped default of true.
   SECTION("Repair Triangle Winding on (shipped default)")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
     const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
-    REQUIRE(executeResult.warnings()[0].code == MeshingUtilities::k_EmptyMeshAfterSkinRemovalWarning);
+    REQUIRE(executeResult.warnings()[0].code == meshing_utilities::k_EmptyMeshAfterSkinRemovalWarning);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 0);
     REQUIRE(triangleGeom.getNumberOfVertices() == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentinel collisions", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // These validations are unconditional (not gated on the Bounding Box Skin mode), so each SECTION
   // below leaves the option off to prove that. This is a mitigation for the sentinel-collision
   // design described in simplnx#1705, not a fix for it.
   SECTION("QuickSurfaceMesh rejects a negative Feature Id")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
-    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = -7;
 
     const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
-    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    REQUIRE(executeResult.errors()[0].code == meshing_utilities::k_InvalidFeatureIdError);
     INFO(executeResult.errors()[0].message);
     REQUIRE(executeResult.errors()[0].message.find("-7") != std::string::npos);
-    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(surface_meshing_test::k_FeatureIdsPath.toString()) != std::string::npos);
   }
 
   SECTION("SurfaceNets rejects a negative Feature Id")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
-    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = -7;
 
     const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
-    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    REQUIRE(executeResult.errors()[0].code == meshing_utilities::k_InvalidFeatureIdError);
     INFO(executeResult.errors()[0].message);
     REQUIRE(executeResult.errors()[0].message.find("-7") != std::string::npos);
-    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(surface_meshing_test::k_FeatureIdsPath.toString()) != std::string::npos);
   }
 
   SECTION("SurfaceNets rejects a Feature Id of INT32_MAX")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
-    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = std::numeric_limits<int32>::max();
 
     const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
-    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    REQUIRE(executeResult.errors()[0].code == meshing_utilities::k_InvalidFeatureIdError);
     INFO(executeResult.errors()[0].message);
     REQUIRE(executeResult.errors()[0].message.find(std::to_string(std::numeric_limits<int32>::max())) != std::string::npos);
-    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(surface_meshing_test::k_FeatureIdsPath.toString()) != std::string::npos);
   }
 
   SECTION("M3CSurfaceMeshing rejects a negative Feature Id")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
-    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = -7;
 
     const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
-    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    REQUIRE(executeResult.errors()[0].code == meshing_utilities::k_InvalidFeatureIdError);
     INFO(executeResult.errors()[0].message);
     REQUIRE(executeResult.errors()[0].message.find("-7") != std::string::npos);
-    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(surface_meshing_test::k_FeatureIdsPath.toString()) != std::string::npos);
   }
 
   SECTION("M3CSurfaceMeshing rejects a Feature Id of INT32_MAX")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath));
-    auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath));
+    auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(surface_meshing_test::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = std::numeric_limits<int32>::max();
 
     const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
-    REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
+    REQUIRE(executeResult.errors()[0].code == meshing_utilities::k_InvalidFeatureIdError);
     INFO(executeResult.errors()[0].message);
     REQUIRE(executeResult.errors()[0].message.find(std::to_string(std::numeric_limits<int32>::max())) != std::string::npos);
-    REQUIRE(executeResult.errors()[0].message.find(SurfaceMeshingTest::k_FeatureIdsPath.toString()) != std::string::npos);
+    REQUIRE(executeResult.errors()[0].message.find(surface_meshing_test::k_FeatureIdsPath.toString()) != std::string::npos);
   }
 }
 
 TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label pairs", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // The three meshers legitimately produce different geometry -- different vertex counts,
   // triangle counts, and tessellations -- so those are NOT compared here. What must agree is the
@@ -839,13 +839,13 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label
   // all three suddenly dropping the {0, 1} interface), so each mode is also checked against the
   // absolute set of label pairs it must contain/omit, independent of what the other two meshers did.
   auto checkAgreement = [](ChoicesParameter::ValueType boundingBoxSkinMode) {
-    SurfaceMeshingTest::MeshResult qsmResult = RunQuickSurfaceMesh(true, boundingBoxSkinMode);
-    SurfaceMeshingTest::MeshResult snResult = RunSurfaceNets(true, boundingBoxSkinMode);
-    SurfaceMeshingTest::MeshResult m3cResult = RunM3C(true, boundingBoxSkinMode);
+    surface_meshing_test::MeshResult qsmResult = RunQuickSurfaceMesh(true, boundingBoxSkinMode);
+    surface_meshing_test::MeshResult snResult = RunSurfaceNets(true, boundingBoxSkinMode);
+    surface_meshing_test::MeshResult m3cResult = RunM3C(true, boundingBoxSkinMode);
 
-    const auto qsmLabelPairs = SurfaceMeshingTest::CollectLabelPairs(qsmResult);
-    const auto snLabelPairs = SurfaceMeshingTest::CollectLabelPairs(snResult);
-    const auto m3cLabelPairs = SurfaceMeshingTest::CollectLabelPairs(m3cResult);
+    const auto qsmLabelPairs = surface_meshing_test::CollectLabelPairs(qsmResult);
+    const auto snLabelPairs = surface_meshing_test::CollectLabelPairs(snResult);
+    const auto m3cLabelPairs = surface_meshing_test::CollectLabelPairs(m3cResult);
 
     CHECK(qsmLabelPairs == snLabelPairs);
     CHECK(qsmLabelPairs == m3cLabelPairs);
@@ -867,19 +867,19 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label
       CHECK(qsmLabelPairs.count({-1, 0}) == 1);
     }
 
-    REQUIRE_NOTHROW(qsmResult.Structure.getDataRefAs<TriangleGeom>(qsmResult.TriangleGeomPath));
-    REQUIRE_NOTHROW(snResult.Structure.getDataRefAs<TriangleGeom>(snResult.TriangleGeomPath));
-    REQUIRE_NOTHROW(m3cResult.Structure.getDataRefAs<TriangleGeom>(m3cResult.TriangleGeomPath));
+    REQUIRE_NOTHROW(qsmResult.structure.getDataRefAs<TriangleGeom>(qsmResult.triangle_geom_path));
+    REQUIRE_NOTHROW(snResult.structure.getDataRefAs<TriangleGeom>(snResult.triangle_geom_path));
+    REQUIRE_NOTHROW(m3cResult.structure.getDataRefAs<TriangleGeom>(m3cResult.triangle_geom_path));
     if(boundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
     {
-      CHECK(SurfaceMeshingTest::IsWatertight(qsmResult.Structure.getDataRefAs<TriangleGeom>(qsmResult.TriangleGeomPath)));
-      CHECK(SurfaceMeshingTest::IsWatertight(snResult.Structure.getDataRefAs<TriangleGeom>(snResult.TriangleGeomPath)));
-      CHECK(SurfaceMeshingTest::IsWatertight(m3cResult.Structure.getDataRefAs<TriangleGeom>(m3cResult.TriangleGeomPath)));
+      CHECK(surface_meshing_test::IsWatertight(qsmResult.structure.getDataRefAs<TriangleGeom>(qsmResult.triangle_geom_path)));
+      CHECK(surface_meshing_test::IsWatertight(snResult.structure.getDataRefAs<TriangleGeom>(snResult.triangle_geom_path)));
+      CHECK(surface_meshing_test::IsWatertight(m3cResult.structure.getDataRefAs<TriangleGeom>(m3cResult.triangle_geom_path)));
     }
 
-    UnitTest::CheckArraysInheritTupleDims(qsmResult.Structure);
-    UnitTest::CheckArraysInheritTupleDims(snResult.Structure);
-    UnitTest::CheckArraysInheritTupleDims(m3cResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(qsmResult.structure);
+    unit_test::CheckArraysInheritTupleDims(snResult.structure);
+    unit_test::CheckArraysInheritTupleDims(m3cResult.structure);
   };
 
   SECTION("Bounding Box Skin mode off")
@@ -905,14 +905,14 @@ DataStructure CreateCornerFeatureInBox()
   constexpr usize k_CornerExtent = 3;
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
-  const std::vector<usize> dims = {SurfaceMeshingTest::k_BoxDim, SurfaceMeshingTest::k_BoxDim, SurfaceMeshingTest::k_BoxDim};
+  const std::vector<usize> dims = {surface_meshing_test::k_BoxDim, surface_meshing_test::k_BoxDim, surface_meshing_test::k_BoxDim};
   imageGeomPtr->setDimensions(dims);
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
   featureIdsPtr->fill(0);
 
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
@@ -922,7 +922,7 @@ DataStructure CreateCornerFeatureInBox()
     {
       for(usize x = 0; x < k_CornerExtent; x++)
       {
-        featureIdsRef[(z * SurfaceMeshingTest::k_BoxDim * SurfaceMeshingTest::k_BoxDim) + (y * SurfaceMeshingTest::k_BoxDim) + x] = 1;
+        featureIdsRef[(z * surface_meshing_test::k_BoxDim * surface_meshing_test::k_BoxDim) + (y * surface_meshing_test::k_BoxDim) + x] = 1;
       }
     }
   }
@@ -933,7 +933,7 @@ DataStructure CreateCornerFeatureInBox()
 
 TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[SimplnxCore][QuickSurfaceMeshFilter][SurfaceNetsFilter][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // The feature's whole justification is that a Feature flush with the box stays closed. Every
   // other test in this file only exercises a single flush face (CreateCylinderInBox's floor). A
@@ -941,64 +941,64 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[S
   // right angle -- which only happens at a corner -- so this is the test that would catch it.
   SECTION("QuickSurfaceMesh")
   {
-    SurfaceMeshingTest::MeshResult meshResult =
-        SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(CreateCornerFeatureInBox(), k_TriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
+    surface_meshing_test::MeshResult meshResult =
+        surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(CreateCornerFeatureInBox(), k_TriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
                                                               [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     CHECK(labelPairs.count({-1, 1}) == 1);
     CHECK(labelPairs.count({0, 1}) == 1);
     CHECK(labelPairs.count({-1, 0}) == 0);
 
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    const auto counts = SurfaceMeshingTest::CountEdgeUses(triangleGeom);
-    INFO("QuickSurfaceMesh corner-Feature edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
-                                                                      << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    const auto counts = surface_meshing_test::CountEdgeUses(triangleGeom);
+    INFO("QuickSurfaceMesh corner-Feature edge use counts -- Total: " << counts.total_edges << " UsedOnce: " << counts.edges_used_once << " UsedTwice: " << counts.edges_used_twice
+                                                                      << " UsedMoreThanTwice: " << counts.edges_used_more_than_twice);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("SurfaceNets")
   {
-    SurfaceMeshingTest::MeshResult meshResult =
-        SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(CreateCornerFeatureInBox(), k_SurfaceNetsTriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, [](Arguments& args) {
+    surface_meshing_test::MeshResult meshResult =
+        surface_meshing_test::RunMesher<SurfaceNetsFilter>(CreateCornerFeatureInBox(), k_SurfaceNetsTriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, [](Arguments& args) {
           args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
           args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
           args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
           args.insertOrAssign(SurfaceNetsFilter::k_RelaxationFactor_Key, std::make_any<float32>(0.5F));
         });
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     CHECK(labelPairs.count({-1, 1}) == 1);
     CHECK(labelPairs.count({0, 1}) == 1);
     CHECK(labelPairs.count({-1, 0}) == 0);
 
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    const auto counts = SurfaceMeshingTest::CountEdgeUses(triangleGeom);
-    INFO("SurfaceNets corner-Feature edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
-                                                                 << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    const auto counts = surface_meshing_test::CountEdgeUses(triangleGeom);
+    INFO("SurfaceNets corner-Feature edge use counts -- Total: " << counts.total_edges << " UsedOnce: " << counts.edges_used_once << " UsedTwice: " << counts.edges_used_twice
+                                                                 << " UsedMoreThanTwice: " << counts.edges_used_more_than_twice);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 
   SECTION("M3CSurfaceMeshing")
   {
-    SurfaceMeshingTest::MeshResult meshResult =
-        SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(CreateCornerFeatureInBox(), k_M3CTriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, [](Arguments&) {});
-    const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
+    surface_meshing_test::MeshResult meshResult =
+        surface_meshing_test::RunMesher<M3CSurfaceMeshingFilter>(CreateCornerFeatureInBox(), k_M3CTriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, [](Arguments&) {});
+    const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     CHECK(labelPairs.count({-1, 1}) == 1);
     CHECK(labelPairs.count({0, 1}) == 1);
     CHECK(labelPairs.count({-1, 0}) == 0);
 
-    REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
-    const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
-    const auto counts = SurfaceMeshingTest::CountEdgeUses(triangleGeom);
-    INFO("M3CSurfaceMeshing corner-Feature edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
-                                                                       << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
-    REQUIRE(SurfaceMeshingTest::IsWatertight(triangleGeom));
+    REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path));
+    const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(meshResult.triangle_geom_path);
+    const auto counts = surface_meshing_test::CountEdgeUses(triangleGeom);
+    INFO("M3CSurfaceMeshing corner-Feature edge use counts -- Total: " << counts.total_edges << " UsedOnce: " << counts.edges_used_once << " UsedTwice: " << counts.edges_used_twice
+                                                                       << " UsedMoreThanTwice: " << counts.edges_used_more_than_twice);
+    REQUIRE(surface_meshing_test::IsWatertight(triangleGeom));
 
-    UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+    unit_test::CheckArraysInheritTupleDims(meshResult.structure);
   }
 }

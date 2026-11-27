@@ -71,11 +71,11 @@ Parameters ErodeDilateBadDataFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
 
   return params;
 }
@@ -104,13 +104,13 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -14605, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, pIgnoredDataArrayPathsValue, -14604, "Attribute Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
@@ -125,14 +125,14 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   if(!xDirOn && !yDirOn && !zDirOn)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NoDirectionsError, "ErodeDilateBadData requires at least one direction to operate over")};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NoDirectionsError, "ErodeDilateBadData requires at least one direction to operate over")};
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
   auto dims = imageGeom.getDimensions();
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NoGeometryDimensionsError, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NoGeometryDimensionsError, "ErodeDilateBadData requires that the ImageGeom have its dimensions set. No dimension may be 0.")};
   }
 
   std::string featureModificationWarning = "By modifying the cell level data, any feature data that was previously computed will most likely be invalid at this point. Filters that compute feature "
@@ -142,10 +142,10 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, pIgnoredDataArrayPathsValue);
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, cellDataPath, pIgnoredDataArrayPathsValue);
 
   // Return actions and updated preflight values.
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -153,19 +153,19 @@ Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, con
 {
   ErodeDilateBadDataInputValues inputValues;
 
-  inputValues.Operation = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
-  inputValues.NumIterations = filterArgs.value<int32>(k_NumIterations_Key);
-  inputValues.XDirOn = filterArgs.value<bool>(k_XDirOn_Key);
-  inputValues.YDirOn = filterArgs.value<bool>(k_YDirOn_Key);
-  inputValues.ZDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.operation = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
+  inputValues.num_iterations = filterArgs.value<int32>(k_NumIterations_Key);
+  inputValues.x_dir_on = filterArgs.value<bool>(k_XDirOn_Key);
+  inputValues.y_dir_on = filterArgs.value<bool>(k_YDirOn_Key);
+  inputValues.z_dir_on = filterArgs.value<bool>(k_ZDirOn_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.ignored_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
-  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.input_image_geometry).getCellDataPath();
+  inputValues.feature_ids_array_path = MapToGeometryCellDataPath(cellDataPath, inputValues.feature_ids_array_path);
+  inputValues.ignored_data_array_paths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignored_data_array_paths);
 
   return ErodeDilateBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

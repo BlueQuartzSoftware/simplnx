@@ -64,7 +64,7 @@ public:
    * @brief Retained as an alias so existing aggregate initializations keep compiling. Progress
    * information now lives on Message itself.
    */
-  using ProgressMessage = Message;
+  using ProgressMessageType = Message;
 
   /**
    * @brief Handler for processing filter messages during execution.
@@ -75,7 +75,7 @@ public:
    */
   struct SIMPLNX_EXPORT MessageHandler
   {
-    using Callback = std::function<void(const Message&)>;
+    using CallbackType = std::function<void(const Message&)>;
 
     /**
      * @brief Sends a message.
@@ -83,9 +83,9 @@ public:
      */
     void sendMessage(const Message& message) const
     {
-      if(m_Callback)
+      if(m_callback)
       {
-        m_Callback(message);
+        m_callback(message);
       }
     }
 
@@ -174,7 +174,7 @@ public:
      */
     void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2, std::string_view detail = {}) const;
 
-    Callback m_Callback;
+    CallbackType m_callback;
   };
 
   /**
@@ -191,8 +191,8 @@ public:
    */
   struct PreflightResult
   {
-    Result<OutputActions> outputActions;
-    std::vector<PreflightValue> outputValues;
+    Result<OutputActions> output_actions;
+    std::vector<PreflightValue> output_values;
   };
 
   /**

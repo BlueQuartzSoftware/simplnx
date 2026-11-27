@@ -76,7 +76,7 @@ OrientationAnalysisPlugin::~OrientationAnalysisPlugin() = default;
 
 AbstractPlugin::SIMPLMapType OrientationAnalysisPlugin::getSimplToSimplnxMap() const
 {
-  return nx::core::k_SIMPL_to_OrientationAnalysis;
+  return nx::core::k_SimplToOrientationAnalysis;
 }
 
 SIMPLNX_DEF_PLUGIN(OrientationAnalysisPlugin)

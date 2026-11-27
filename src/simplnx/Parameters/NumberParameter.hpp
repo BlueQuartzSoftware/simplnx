@@ -31,7 +31,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
@@ -143,7 +143,7 @@ extern template struct IntFilterParameterConverter<uint32>;
 extern template struct IntFilterParameterConverter<int64>;
 extern template struct IntFilterParameterConverter<uint64>;
 
-using UInt64FilterParameterConverter = IntFilterParameterConverter<uint64>;
+using UInt64FilterParameterConverterType = IntFilterParameterConverter<uint64>;
 
 template <typename T>
 struct StringToIntFilterParameterConverter
@@ -178,7 +178,7 @@ struct FloatFilterParameterConverter
 extern template struct FloatFilterParameterConverter<float32>;
 extern template struct FloatFilterParameterConverter<float64>;
 
-using DoubleFilterParameterConverter = FloatFilterParameterConverter<float64>;
+using DoubleFilterParameterConverterType = FloatFilterParameterConverter<float64>;
 } // namespace simpl_conversion
 } // namespace nx::core
 

@@ -35,7 +35,7 @@ public:
    * @param createdArray Receives cell tuples.
    * @param shouldCancel Stops later cells when true.
    */
-  CopyFeatureArrayToElementArrayImpl(const IDataArray& selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, IDataArray& createdArray, const std::atomic_bool& shouldCancel)
+  CopyFeatureArrayToElementArrayImpl(const IDataArray& selectedFeatureArray, const Int32AbstractDataStoreType& featureIdsStore, IDataArray& createdArray, const std::atomic_bool& shouldCancel)
   : m_SelectedFeatureStore(selectedFeatureArray.getIDataStoreRefAs<StoreType>())
   , m_FeatureIdsStore(featureIdsStore)
   , m_CreatedStore(createdArray.getIDataStoreRefAs<StoreType>())
@@ -90,7 +90,7 @@ public:
 
 private:
   const StoreType& m_SelectedFeatureStore;
-  const Int32AbstractDataStore& m_FeatureIdsStore;
+  const Int32AbstractDataStoreType& m_FeatureIdsStore;
   StoreType& m_CreatedStore;
   const std::atomic_bool& m_ShouldCancel;
   const T* m_SourcePtr = nullptr;
@@ -110,31 +110,31 @@ CopyFeatureArrayToElementArrayDirect::CopyFeatureArrayToElementArrayDirect(DataS
 
 Result<> CopyFeatureArrayToElementArrayDirect::operator()()
 {
-  if(m_InputValues->SelectedFeatureArrayPaths.empty())
+  if(m_InputValues->selected_feature_array_paths.empty())
   {
     return {};
   }
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_path);
 
-  auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->SelectedFeatureArrayPaths[0], featureIds, false, m_MessageHandler, &m_ShouldCancel);
+  auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->selected_feature_array_paths[0], featureIds, false, m_MessageHandler, &m_ShouldCancel);
   if(validateResult.invalid())
   {
     return validateResult;
   }
 
-  for(const auto& selectedFeatureArrayPath : m_InputValues->SelectedFeatureArrayPaths)
+  for(const auto& selectedFeatureArrayPath : m_InputValues->selected_feature_array_paths)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    DataPath createdArrayPath = m_InputValues->FeatureIdsPath.replaceName(selectedFeatureArrayPath.getTargetName() + m_InputValues->CreatedArraySuffix);
+    DataPath createdArrayPath = m_InputValues->feature_ids_path.replaceName(selectedFeatureArrayPath.getTargetName() + m_InputValues->created_array_suffix);
     const auto& selectedFeatureArray = m_DataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
     auto& createdArray = m_DataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
-    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::ProgressMessageType::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, featureIds.getNumberOfTuples());
     dataAlg.requireArraysInMemory({&featureIds, &selectedFeatureArray, &createdArray});

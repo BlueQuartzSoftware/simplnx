@@ -204,7 +204,7 @@ WriteStatus WriteElements(const fs::path& filePath, const ImageGeom& imageGeom, 
  * @return Source, sorter, open, or write error; success on completion or cancellation.
  * @pre grainData covers all IDs through the validated maximum.
  */
-Result<> WriteElementSets(const fs::path& filePath, const GrainData& grainData, const Int32AbstractDataStore& featureIdsRef, bool useOocAlgorithm, const std::atomic_bool& shouldCancel,
+Result<> WriteElementSets(const fs::path& filePath, const GrainData& grainData, const Int32AbstractDataStoreType& featureIdsRef, bool useOocAlgorithm, const std::atomic_bool& shouldCancel,
                           ThrottledMessageHandler& progressThrottle)
 {
   std::ofstream output(filePath, std::ios::binary);
@@ -213,7 +213,7 @@ Result<> WriteElementSets(const fs::path& filePath, const GrainData& grainData, 
     return MakeErrorResult(-12012, fmt::format("Could not open '{}' for writing.", filePath.string()));
   }
   output << fmt::format("{}**\n** The element sets\n*Elset, elset=cube, generate\n1, {}, 1\n**\n** Each Grain is made up of multiple elements\n**", k_SeparatorLine, featureIdsRef.getNumberOfTuples());
-  Result<> result = AbaqusElementSets::write(
+  Result<> result = abaqus_element_sets::Write(
       progressThrottle, output, [&grainData](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_Phase{}_set\n", grainId, grainData.phases[grainId]); }, featureIdsRef,
       static_cast<int32>(grainData.phases.size() - 1), useOocAlgorithm, shouldCancel);
   if(result.valid())
@@ -231,14 +231,14 @@ Result<> WriteElementSets(const fs::path& filePath, const GrainData& grainData, 
 std::vector<std::string> BuildUserMaterialConstants(usize grainId, int32 phaseId, const std::array<float32, 3>& orientation, const WriteAbaqusCrystalPlasticityInputValues& inputValues)
 {
   std::vector<std::string> values;
-  if(inputValues.IncludeGrainAndPhaseIds)
+  if(inputValues.include_grain_and_phase_ids)
   {
     values.push_back(fmt::format("{}", grainId));
     values.push_back(fmt::format("{}", phaseId));
   }
   // Preflight guarantees the start index lands inside or directly after the user constants.
-  const usize eulerInsertPosition = static_cast<usize>(inputValues.EulerAnglesStartIndex) - 1;
-  for(const auto& row : inputValues.MaterialConstants)
+  const usize eulerInsertPosition = static_cast<usize>(inputValues.euler_angles_start_index) - 1;
+  for(const auto& row : inputValues.material_constants)
   {
     if(values.size() == eulerInsertPosition)
     {
@@ -283,14 +283,14 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
 
   fmt::memory_buffer buffer;
   fmt::format_to(std::back_inserter(buffer), "*Heading\n");
-  fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.JobName);
-  fmt::format_to(std::back_inserter(buffer), "** Job name : {}\n", inputValues.JobName);
+  fmt::format_to(std::back_inserter(buffer), "{}\n", inputValues.job_name);
+  fmt::format_to(std::back_inserter(buffer), "** Job name : {}\n", inputValues.job_name);
   fmt::format_to(std::back_inserter(buffer), "*Preprint, echo = NO, model = NO, history = NO, contact = NO\n");
   fmt::format_to(std::back_inserter(buffer), "**\n** ----------------------------Geometry----------------------------\n**\n");
-  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_nodes.inp\n", inputValues.FilePrefix);
-  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_elems.inp\n", inputValues.FilePrefix);
-  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_elset.inp\n", inputValues.FilePrefix);
-  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_sects.inp\n", inputValues.FilePrefix);
+  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_nodes.inp\n", inputValues.file_prefix);
+  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_elems.inp\n", inputValues.file_prefix);
+  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_elset.inp\n", inputValues.file_prefix);
+  fmt::format_to(std::back_inserter(buffer), "*Include, Input = {}_sects.inp\n", inputValues.file_prefix);
   fmt::format_to(std::back_inserter(buffer), "**\n** ----------------------------Materials---------------------------\n**\n");
 
   const usize grainCount = grainData.phases.size() - 1;
@@ -306,13 +306,13 @@ WriteStatus WriteMaster(const fs::path& filePath, const WriteAbaqusCrystalPlasti
     const auto& orientation = grainData.orientations[grainId];
     const std::vector<std::string> constants = BuildUserMaterialConstants(grainId, phaseId, orientation, inputValues);
     fmt::format_to(std::back_inserter(buffer), "*Material, name=Grain{}_Phase{}_mat\n", grainId, phaseId);
-    fmt::format_to(std::back_inserter(buffer), "*Depvar\n{}\n", inputValues.NumDepvar);
-    fmt::format_to(std::back_inserter(buffer), "*User Material, constants={}{}\n", constants.size(), inputValues.UseUnsymmetricSolver ? ", unsymm" : "");
+    fmt::format_to(std::back_inserter(buffer), "*Depvar\n{}\n", inputValues.num_depvar);
+    fmt::format_to(std::back_inserter(buffer), "*User Material, constants={}{}\n", constants.size(), inputValues.use_unsymmetric_solver ? ", unsymm" : "");
     if(WriteDataLines(output, buffer, constants) == WriteStatus::WriteError)
     {
       return WriteStatus::WriteError;
     }
-    fmt::format_to(std::back_inserter(buffer), "*User Output Variables\n{}\n", inputValues.NumUserOutVar);
+    fmt::format_to(std::back_inserter(buffer), "*User Output Variables\n{}\n", inputValues.num_user_out_var);
 
     if(FlushBuffer(output, buffer) == WriteStatus::WriteError)
     {
@@ -395,17 +395,17 @@ WriteAbaqusCrystalPlasticity::WriteAbaqusCrystalPlasticity(DataStructure& dataSt
 
 Result<> WriteAbaqusCrystalPlasticity::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  const auto& cellPhasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
-  const auto& cellEulerAnglesRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath).getDataStoreRef();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  const auto& cellPhasesRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+  const auto& cellEulerAnglesRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path).getDataStoreRef();
 
   if(featureIdsRef.getNumberOfTuples() == 0)
   {
-    return MakeErrorResult(-12005, fmt::format("The feature IDs array '{}' is empty and has 0 tuples.", m_InputValues->FeatureIdsArrayPath.toString()));
+    return MakeErrorResult(-12005, fmt::format("The feature IDs array '{}' is empty and has 0 tuples.", m_InputValues->feature_ids_array_path.toString()));
   }
 
-  auto maximumResult = AbaqusElementSets::findMaximumGrainId(featureIdsRef, m_ShouldCancel);
+  auto maximumResult = abaqus_element_sets::FindMaximumGrainId(featureIdsRef, m_ShouldCancel);
   if(maximumResult.invalid())
   {
     return ConvertResult(std::move(maximumResult));
@@ -417,7 +417,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   const int32 maxGrainId = maximumResult.value();
   if(maxGrainId <= 0)
   {
-    return MakeErrorResult(-12011, fmt::format("The feature IDs array '{}' has no positive feature IDs. The Abaqus deck requires at least one grain.", m_InputValues->FeatureIdsArrayPath.toString()));
+    return MakeErrorResult(-12011, fmt::format("The feature IDs array '{}' has no positive feature IDs. The Abaqus deck requires at least one grain.", m_InputValues->feature_ids_array_path.toString()));
   }
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
@@ -431,9 +431,9 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   grainData.phases.resize(grainCount + 1, 0);
   grainData.orientations.resize(grainCount + 1, {0.0F, 0.0F, 0.0F});
   grainData.has_cells.resize(grainCount + 1, 0);
-  const float64 angleScale = m_InputValues->WriteEulerAnglesInDegrees ? 180.0 / std::numbers::pi : 1.0;
+  const float64 angleScale = m_InputValues->write_euler_angles_in_degrees ? 180.0 / std::numbers::pi : 1.0;
   const usize cellCount = featureIdsRef.getNumberOfTuples();
-  const usize chunkSize = std::min(AbaqusElementSets::k_ChunkSize, cellCount);
+  const usize chunkSize = std::min(abaqus_element_sets::k_ChunkSize, cellCount);
   std::vector<int32> featurePage(chunkSize);
   std::vector<int32> phasePage(chunkSize);
   std::vector<float32> eulerPage(chunkSize * 3);
@@ -481,9 +481,9 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   }
 
   const std::array<fs::path, 5> fileList = {
-      m_InputValues->OutputPath / fmt::format("{}_nodes.inp", m_InputValues->FilePrefix), m_InputValues->OutputPath / fmt::format("{}_elems.inp", m_InputValues->FilePrefix),
-      m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix), m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix),
-      m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)};
+      m_InputValues->output_path / fmt::format("{}_nodes.inp", m_InputValues->file_prefix), m_InputValues->output_path / fmt::format("{}_elems.inp", m_InputValues->file_prefix),
+      m_InputValues->output_path / fmt::format("{}_sects.inp", m_InputValues->file_prefix), m_InputValues->output_path / fmt::format("{}_elset.inp", m_InputValues->file_prefix),
+      m_InputValues->output_path / fmt::format("{}.inp", m_InputValues->file_prefix)};
 
   std::vector<Result<AtomicFile>> files;
   files.reserve(fileList.size());
@@ -533,7 +533,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   }
 
   writeResult = writeFile(FileIndex::Elems, "Writing Elements (File 2/5)...",
-                          [&](const fs::path& path) { return WriteElements(path, imageGeom, m_InputValues->UseReducedIntegration, m_ShouldCancel, progressThrottle); });
+                          [&](const fs::path& path) { return WriteElements(path, imageGeom, m_InputValues->use_reduced_integration, m_ShouldCancel, progressThrottle); });
   if(writeResult.invalid())
   {
     return writeResult;
@@ -559,7 +559,7 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   }
 
   writeResult = writeFile(FileIndex::Sects, "Writing Sections (File 5/5)...", [&](const fs::path& path) {
-    return WriteSections(path, grainData, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness, m_ShouldCancel, progressThrottle);
+    return WriteSections(path, grainData, m_InputValues->use_reduced_integration, m_InputValues->hourglass_stiffness, m_ShouldCancel, progressThrottle);
   });
   if(writeResult.invalid())
   {

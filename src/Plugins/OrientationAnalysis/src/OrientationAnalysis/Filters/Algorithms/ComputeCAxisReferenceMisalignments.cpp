@@ -158,32 +158,32 @@ Result<> ComputeCAxisReferenceMisalignments::ValidateReferenceDirection(const st
 // -----------------------------------------------------------------------------
 Result<> ComputeCAxisReferenceMisalignments::ValidateInputs(const DataStructure& dataStructure, const ComputeCAxisReferenceMisalignmentsInputValues& inputValues)
 {
-  if(auto result = ValidateReferenceDirection(inputValues.ReferenceDirection); result.invalid())
+  if(auto result = ValidateReferenceDirection(inputValues.reference_direction); result.invalid())
   {
     return result;
   }
 
-  const DataPath& quatsPathRef = inputValues.QuatsArrayPath;
-  if(auto result = ValidateArray<Float32Array>(dataStructure, quatsPathRef, "Input Quaternions", "'float32'", ShapeType{4}, k_InvalidQuatsArrayError, k_QuatsComponentShapeError); result.invalid())
+  const DataPath& quatsPathRef = inputValues.quats_array_path;
+  if(auto result = ValidateArray<Float32ArrayType>(dataStructure, quatsPathRef, "Input Quaternions", "'float32'", ShapeType{4}, k_InvalidQuatsArrayError, k_QuatsComponentShapeError); result.invalid())
   {
     return result;
   }
-  const usize quatsTupleCount = dataStructure.getDataRefAs<Float32Array>(quatsPathRef).getNumberOfTuples();
+  const usize quatsTupleCount = dataStructure.getDataRefAs<Float32ArrayType>(quatsPathRef).getNumberOfTuples();
 
-  const DataPath& phasesPathRef = inputValues.PhasesArrayPath;
-  if(auto result = ValidateArray<Int32Array>(dataStructure, phasesPathRef, "Phases", "'int32'", ShapeType{1}, k_InvalidPhasesArrayError, k_PhasesComponentShapeError); result.invalid())
+  const DataPath& phasesPathRef = inputValues.phases_array_path;
+  if(auto result = ValidateArray<Int32ArrayType>(dataStructure, phasesPathRef, "Phases", "'int32'", ShapeType{1}, k_InvalidPhasesArrayError, k_PhasesComponentShapeError); result.invalid())
   {
     return result;
   }
-  if(auto result = ValidateTupleCount(dataStructure, dataStructure.getDataRefAs<Int32Array>(phasesPathRef), phasesPathRef, "Phases", quatsPathRef, quatsTupleCount, k_TupleCountMismatchError);
+  if(auto result = ValidateTupleCount(dataStructure, dataStructure.getDataRefAs<Int32ArrayType>(phasesPathRef), phasesPathRef, "Phases", quatsPathRef, quatsTupleCount, k_TupleCountMismatchError);
      result.invalid())
   {
     return result;
   }
 
-  if(inputValues.UseMask)
+  if(inputValues.use_mask)
   {
-    const DataPath& maskPathRef = inputValues.MaskArrayPath;
+    const DataPath& maskPathRef = inputValues.mask_array_path;
     const auto* maskPtr = dataStructure.getDataAs<IDataArray>(maskPathRef);
     if(maskPtr == nullptr || (maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8))
     {
@@ -199,7 +199,7 @@ Result<> ComputeCAxisReferenceMisalignments::ValidateInputs(const DataStructure&
     }
   }
 
-  return ValidateArray<UInt32Array>(dataStructure, inputValues.CrystalStructuresArrayPath, "Crystal Structures", "'uint32'", ShapeType{1}, k_InvalidCrystalStructuresArrayError,
+  return ValidateArray<UInt32ArrayType>(dataStructure, inputValues.crystal_structures_array_path, "Crystal Structures", "'uint32'", ShapeType{1}, k_InvalidCrystalStructuresArrayError,
                                     k_CrystalStructuresComponentShapeError);
 }
 
@@ -210,22 +210,22 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
   {
     return validation;
   }
-  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
+  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path).getDataStoreRef();
   const usize total = quatsStoreRef.getNumberOfTuples();
-  if(auto validation = ValidateArray<Float32Array>(m_DataStructure, m_InputValues->OutputArrayPath, "Output", "'float32'", ShapeType{1}, k_InvalidOutputArrayError, k_OutputComponentShapeError);
+  if(auto validation = ValidateArray<Float32ArrayType>(m_DataStructure, m_InputValues->output_array_path, "Output", "'float32'", ShapeType{1}, k_InvalidOutputArrayError, k_OutputComponentShapeError);
      validation.invalid())
   {
     return validation;
   }
-  auto& outputStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputArrayPath).getDataStoreRef();
+  auto& outputStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->output_array_path).getDataStoreRef();
   if(outputStoreRef.getNumberOfTuples() != total)
   {
     return MakeErrorResult(k_OutputTupleCountMismatchError,
                            fmt::format("Output array '{}' has {} tuples, but Input Quaternions array '{}' has {} tuples. Create the output array with one tuple per quaternion.",
-                                       m_InputValues->OutputArrayPath.toString(), outputStoreRef.getNumberOfTuples(), m_InputValues->QuatsArrayPath.toString(), total));
+                                       m_InputValues->output_array_path.toString(), outputStoreRef.getNumberOfTuples(), m_InputValues->quats_array_path.toString(), total));
   }
 
-  const auto& referenceValuesRef = m_InputValues->ReferenceDirection;
+  const auto& referenceValuesRef = m_InputValues->reference_direction;
   Eigen::Vector3d referenceDirection(referenceValuesRef[0], referenceValuesRef[1], referenceValuesRef[2]);
   referenceDirection.normalize();
 
@@ -236,24 +236,24 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
   };
 
   // Cache only the small ensemble array. All tuple-level buffers have a fixed bound.
-  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path).getDataStoreRef();
   std::vector<uint32> crystalStructures(crystalStructuresStoreRef.getNumberOfTuples());
   if(!ioSucceeded(crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size()))))
   {
     return result;
   }
 
-  const auto& phasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PhasesArrayPath).getDataStoreRef();
+  const auto& phasesStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->phases_array_path).getDataStoreRef();
 
   // ValidateInputs guarantees that an enabled mask is exactly one of these types.
-  const BoolArray* boolMaskPtr = nullptr;
-  const UInt8Array* byteMaskPtr = nullptr;
-  if(m_InputValues->UseMask)
+  const BoolArrayType* boolMaskPtr = nullptr;
+  const UInt8ArrayType* byteMaskPtr = nullptr;
+  if(m_InputValues->use_mask)
   {
-    boolMaskPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
+    boolMaskPtr = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->mask_array_path);
     if(boolMaskPtr == nullptr)
     {
-      byteMaskPtr = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->MaskArrayPath);
+      byteMaskPtr = m_DataStructure.getDataAs<UInt8ArrayType>(m_InputValues->mask_array_path);
     }
   }
 
@@ -300,8 +300,8 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
         return MergeResults(std::move(result),
                             MakeErrorResult(k_PhaseOutOfRangeError, fmt::format("Phases array '{}' has value {} at tuple index {}, but Crystal Structures array '{}' has {} tuples. "
                                                                                 "Valid phase indices are in [0, {}). Correct this phase value or select the matching Crystal Structures array.",
-                                                                                m_InputValues->PhasesArrayPath.toString(), phase, offset + tupleIdx,
-                                                                                m_InputValues->CrystalStructuresArrayPath.toString(), crystalStructures.size(), crystalStructures.size())));
+                                                                                m_InputValues->phases_array_path.toString(), phase, offset + tupleIdx,
+                                                                                m_InputValues->crystal_structures_array_path.toString(), crystalStructures.size(), crystalStructures.size())));
       }
       const uint32 crystalStructure = crystalStructures[phase];
       if(crystalStructure != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructure != ebsdlib::CrystalStructure::Hexagonal_Low)
@@ -325,7 +325,7 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
       Eigen::Vector3d cAxis = oMatrix.transpose() * Eigen::Vector3d(0.0, 0.0, 1.0);
       cAxis.normalize();
       const float64 cosine = std::clamp(std::abs(cAxis.dot(referenceDirection)), 0.0, 1.0);
-      output[tupleIdx] = static_cast<float32>(std::acos(cosine) * (180.0 / numbers::pi));
+      output[tupleIdx] = static_cast<float32>(std::acos(cosine) * (180.0 / numbers::k_Pi));
     }
     if(!ioSucceeded(outputStoreRef.copyFromBuffer(offset, nonstd::span<const float32>(output.data(), count))))
     {
@@ -339,7 +339,7 @@ Result<> ComputeCAxisReferenceMisalignments::operator()()
   {
     result.warnings().push_back({k_NonHexagonalPhasesWarning, fmt::format("{} tuples in '{}' have non-hexagonal phases and received NaN. Only Hexagonal_High (6/mmm) and Hexagonal_Low (6/m) "
                                                                           "phases are supported. To suppress this warning, enable Use Mask Array with a mask that excludes the non-hexagonal tuples.",
-                                                                          nonHexagonalCount, m_InputValues->QuatsArrayPath.toString())});
+                                                                          nonHexagonalCount, m_InputValues->quats_array_path.toString())});
   }
   return result;
 }

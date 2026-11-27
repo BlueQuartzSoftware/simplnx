@@ -191,7 +191,7 @@ private:
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(m_DataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(m_DataStructure, args);
@@ -214,9 +214,9 @@ private:
 
 TEST_CASE("SimplnxCore::WriteASCIIData: Valid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
 
   DataStructure dataStructure;
 
@@ -227,12 +227,12 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Valid filter execution")
   RunASCIIDataTest<float32>(dataStructure).execute();
   RunASCIIDataTest<float64>(dataStructure).execute();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 } // end of test case
 
 TEST_CASE("SimplnxCore::WriteASCIIData: Reject duplicate output names", "[SimplnxCore][WriteASCIIDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string secondName = GENERATE("Data", "data");
   DYNAMIC_SECTION("/A/Data and /B/" << secondName)
@@ -244,10 +244,10 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Reject duplicate output names", "[Simpln
     REQUIRE(groupBPtr != nullptr);
     const DataPath firstPath({"A", "Data"});
     const DataPath secondPath({"B", secondName});
-    auto firstStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, firstPath, {1}, {1});
-    auto secondStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, secondPath, {1}, {1});
-    REQUIRE(Int32Array::Create(dataStructure, "Data", firstStore, groupAPtr->getId()) != nullptr);
-    REQUIRE(Int32Array::Create(dataStructure, secondName, secondStore, groupBPtr->getId()) != nullptr);
+    auto firstStore = data_store_utilities::CreateDataStore<int32>(dataStructure, firstPath, {1}, {1});
+    auto secondStore = data_store_utilities::CreateDataStore<int32>(dataStructure, secondPath, {1}, {1});
+    REQUIRE(Int32ArrayType::Create(dataStructure, "Data", firstStore, groupAPtr->getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(dataStructure, secondName, secondStore, groupBPtr->getId()) != nullptr);
 
     WriteASCIIDataFilter filter;
     Arguments args;
@@ -256,23 +256,23 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Reject duplicate output names", "[Simpln
     args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({firstPath, secondPath}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -51003);
-    REQUIRE(preflightResult.outputActions.errors()[0].message.find(firstPath.toString()) != std::string::npos);
-    REQUIRE(preflightResult.outputActions.errors()[0].message.find(secondPath.toString()) != std::string::npos);
+    REQUIRE(preflightResult.output_actions.invalid());
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -51003);
+    REQUIRE(preflightResult.output_actions.errors()[0].message.find(firstPath.toString()) != std::string::npos);
+    REQUIRE(preflightResult.output_actions.errors()[0].message.find(secondPath.toString()) != std::string::npos);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::WriteASCIIData: Reject negative maximum tuples per line", "[SimplnxCore][WriteASCIIDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath arrayPath({"Values"});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {1}, {1});
-  REQUIRE(Int32Array::Create(dataStructure, "Values", store) != nullptr);
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, arrayPath, {1}, {1});
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Values", store) != nullptr);
 
   WriteASCIIDataFilter filter;
   Arguments args;
@@ -282,15 +282,15 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Reject negative maximum tuples per line"
   args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>({arrayPath}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -51004);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -51004);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteASCIIData: Reject empty multiple file selection", "[SimplnxCore][WriteASCIIDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   WriteASCIIDataFilter filter;
   Arguments args;
@@ -299,19 +299,19 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Reject empty multiple file selection", "
   args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>());
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -51002);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -51002);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteASCIIData: Terminate partial final line", "[SimplnxCore][WriteASCIIDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath arrayPath({"Values"});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, arrayPath, {3}, {2});
-  auto* arrayPtr = Int32Array::Create(dataStructure, "Values", store);
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, arrayPath, {3}, {2});
+  auto* arrayPtr = Int32ArrayType::Create(dataStructure, "Values", store);
   REQUIRE(arrayPtr != nullptr);
   for(usize index = 0; index < 6; ++index)
   {
@@ -334,13 +334,13 @@ TEST_CASE("SimplnxCore::WriteASCIIData: Terminate partial final line", "[Simplnx
   REQUIRE(file.is_open());
   const std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
   REQUIRE(contents == "1,2,3,4\n5,6\n");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteASCIIDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteASCIIDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

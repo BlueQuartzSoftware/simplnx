@@ -25,7 +25,7 @@ public:
   // 1 (OBJ convention) rather than at 0 (C++ convention).
   struct OBJData
   {
-    std::vector<std::array<float, 3>> vertexPositions;
+    std::vector<std::array<float, 3>> vertex_positions;
     std::vector<std::array<int, 3>> triangles;
   };
 
@@ -38,12 +38,12 @@ private:
   MMSurfaceNet* m_SurfaceNet;
   std::vector<MMQuad> m_Quads;
 
-  struct vtxData
+  struct VtxData
   {
-    int vID;
+    int v_id;
     float position[3];
   };
-  static void GetQuadTriangleIDs(vtxData vData[4], bool isQuadFrontFacing, int triangleVtxIDs[6]);
+  static void GetQuadTriangleIDs(VtxData vData[4], bool isQuadFrontFacing, int triangleVtxIDs[6]);
 };
 
 #endif

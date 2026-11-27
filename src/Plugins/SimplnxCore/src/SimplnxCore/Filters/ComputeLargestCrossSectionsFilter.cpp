@@ -59,12 +59,12 @@ Parameters ComputeLargestCrossSectionsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane of Interest", "Specifies which plane to consider when determining the maximum cross-section for each Feature", 0,
-                                                   ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
+                                                   ChoicesParameter::ChoicesType{"XY", "XZ", "YZ"}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The complete path to the input image geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "The path to the cell feature attribute matrix", DataPath{}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_LargestCrossSectionsArrayName_Key, "Largest Cross Sections",
@@ -107,13 +107,13 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath);
-  SizeVec3 dims = imageGeom.getDimensions();
+  SizeVec3Type dims = imageGeom.getDimensions();
   if(dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1)
   {
-    return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), StringUtilities::formatDimensions3D(dims)));
+    return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), string_utilities::FormatDimensions3D(dims)));
   }
 
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   const usize numCells = imageGeom.getNumberOfCells();
   if(featureIds.getNumberOfTuples() != numCells)
   {
@@ -121,7 +121,7 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
                                                        pFeatureIdsArrayPathValue.toString(), featureIds.getNumberOfTuples(), pImageGeometryPath.toString(), numCells));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -130,10 +130,10 @@ Result<> ComputeLargestCrossSectionsFilter::executeImpl(DataStructure& dataStruc
 {
   ComputeLargestCrossSectionsInputValues inputValues;
 
-  inputValues.Plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.LargestCrossSectionsArrayPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key).createChildPath(filterArgs.value<std::string>(k_LargestCrossSectionsArrayName_Key));
+  inputValues.plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.largest_cross_sections_array_path = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key).createChildPath(filterArgs.value<std::string>(k_LargestCrossSectionsArrayName_Key));
 
   return ComputeLargestCrossSections(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

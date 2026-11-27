@@ -524,7 +524,7 @@ static Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure
   {
     result.expected = nonstd::make_unexpected(std::move(errors));
   }
-  result.m_Warnings = std::move(warnings);
+  result.m_warnings = std::move(warnings);
   return result;
 }
 
@@ -996,16 +996,16 @@ PYBIND11_MODULE(simplnx, mod)
   csvHeaderMode.value("Custom", ReadCSVData::HeaderMode::CUSTOM);
 
   readCSVData.def(py::init<>());
-  readCSVData.def_readwrite("input_file_path", &ReadCSVData::inputFilePath);
-  readCSVData.def_readwrite("custom_headers", &ReadCSVData::customHeaders);
-  readCSVData.def_readwrite("start_import_row", &ReadCSVData::startImportRow);
-  readCSVData.def_readwrite("column_data_types", &ReadCSVData::dataTypes);
-  readCSVData.def_readwrite("skipped_array_mask", &ReadCSVData::skippedArrayMask);
-  readCSVData.def_readwrite("headers_line", &ReadCSVData::headersLine);
-  readCSVData.def_readwrite("header_mode", &ReadCSVData::headerMode);
-  readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tupleDims);
+  readCSVData.def_readwrite("input_file_path", &ReadCSVData::input_file_path);
+  readCSVData.def_readwrite("custom_headers", &ReadCSVData::custom_headers);
+  readCSVData.def_readwrite("start_import_row", &ReadCSVData::start_import_row);
+  readCSVData.def_readwrite("column_data_types", &ReadCSVData::data_types);
+  readCSVData.def_readwrite("skipped_array_mask", &ReadCSVData::skipped_array_mask);
+  readCSVData.def_readwrite("headers_line", &ReadCSVData::headers_line);
+  readCSVData.def_readwrite("header_mode", &ReadCSVData::header_mode);
+  readCSVData.def_readwrite("tuple_dims", &ReadCSVData::tuple_dims);
   readCSVData.def_readwrite("delimiters", &ReadCSVData::delimiters);
-  readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
+  readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutive_delimiters);
   readCSVData.def("__repr__", [](const ReadCSVData& /*self*/) { return "ReadCSVDataParameter()"; });
 
   py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
@@ -1016,29 +1016,29 @@ PYBIND11_MODULE(simplnx, mod)
   iDataStore.def_property_readonly("tdims", &IDataStore::getTupleShape);
   iDataStore.def_property_readonly("cdims", &IDataStore::getComponentShape);
 
-  auto abstractDataStoreInt8 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int8AbstractDataStore, "Int8AbstractDataStore");
-  auto abstractDataStoreUInt8 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt8AbstractDataStore, "UInt8AbstractDataStore");
-  auto abstractDataStoreInt16 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int16AbstractDataStore, "Int16AbstractDataStore");
-  auto abstractDataStoreUInt16 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt16AbstractDataStore, "UInt16AbstractDataStore");
-  auto abstractDataStoreInt32 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int32AbstractDataStore, "Int32AbstractDataStore");
-  auto abstractDataStoreUInt32 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt32AbstractDataStore, "UInt32AbstractDataStore");
-  auto abstractDataStoreInt64 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int64AbstractDataStore, "Int64AbstractDataStore");
-  auto abstractDataStoreUInt64 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt64AbstractDataStore, "UInt64AbstractDataStore");
-  auto abstractDataStoreFloat32 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Float32AbstractDataStore, "Float32AbstractDataStore");
-  auto abstractDataStoreFloat64 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Float64AbstractDataStore, "Float64AbstractDataStore");
-  auto abstractDataStoreBool = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, BoolAbstractDataStore, "BoolAbstractDataStore");
+  auto abstractDataStoreInt8 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int8AbstractDataStoreType, "Int8AbstractDataStore");
+  auto abstractDataStoreUInt8 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt8AbstractDataStoreType, "UInt8AbstractDataStore");
+  auto abstractDataStoreInt16 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int16AbstractDataStoreType, "Int16AbstractDataStore");
+  auto abstractDataStoreUInt16 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt16AbstractDataStoreType, "UInt16AbstractDataStore");
+  auto abstractDataStoreInt32 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int32AbstractDataStoreType, "Int32AbstractDataStore");
+  auto abstractDataStoreUInt32 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt32AbstractDataStoreType, "UInt32AbstractDataStore");
+  auto abstractDataStoreInt64 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Int64AbstractDataStoreType, "Int64AbstractDataStore");
+  auto abstractDataStoreUInt64 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, UInt64AbstractDataStoreType, "UInt64AbstractDataStore");
+  auto abstractDataStoreFloat32 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Float32AbstractDataStoreType, "Float32AbstractDataStore");
+  auto abstractDataStoreFloat64 = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, Float64AbstractDataStoreType, "Float64AbstractDataStore");
+  auto abstractDataStoreBool = SIMPLNX_PY_BIND_ABSTRACT_DATA_STORE(mod, BoolAbstractDataStoreType, "BoolAbstractDataStore");
 
-  auto dataStoreInt8 = BindDataStore<Int8DataStore::value_type>(mod, "Int8DataStore");
-  auto dataStoreUInt8 = BindDataStore<UInt8DataStore::value_type>(mod, "UInt8DataStore");
-  auto dataStoreInt16 = BindDataStore<Int16DataStore::value_type>(mod, "Int16DataStore");
-  auto dataStoreUInt16 = BindDataStore<UInt16DataStore::value_type>(mod, "UInt16DataStore");
-  auto dataStoreInt32 = BindDataStore<Int32DataStore::value_type>(mod, "Int32DataStore");
-  auto dataStoreUInt32 = BindDataStore<UInt32DataStore::value_type>(mod, "UInt32DataStore");
-  auto dataStoreInt64 = BindDataStore<Int64DataStore::value_type>(mod, "Int64DataStore");
-  auto dataStoreUInt64 = BindDataStore<UInt64DataStore::value_type>(mod, "UInt64DataStore");
-  auto dataStoreFloat32 = BindDataStore<Float32DataStore::value_type>(mod, "Float32DataStore");
-  auto dataStoreFloat64 = BindDataStore<Float64DataStore::value_type>(mod, "Float64DataStore");
-  auto dataStoreBool = BindDataStore<BoolDataStore::value_type>(mod, "BoolDataStore");
+  auto dataStoreInt8 = BindDataStore<Int8DataStoreType::value_type>(mod, "Int8DataStore");
+  auto dataStoreUInt8 = BindDataStore<UInt8DataStoreType::value_type>(mod, "UInt8DataStore");
+  auto dataStoreInt16 = BindDataStore<Int16DataStoreType::value_type>(mod, "Int16DataStore");
+  auto dataStoreUInt16 = BindDataStore<UInt16DataStoreType::value_type>(mod, "UInt16DataStore");
+  auto dataStoreInt32 = BindDataStore<Int32DataStoreType::value_type>(mod, "Int32DataStore");
+  auto dataStoreUInt32 = BindDataStore<UInt32DataStoreType::value_type>(mod, "UInt32DataStore");
+  auto dataStoreInt64 = BindDataStore<Int64DataStoreType::value_type>(mod, "Int64DataStore");
+  auto dataStoreUInt64 = BindDataStore<UInt64DataStoreType::value_type>(mod, "UInt64DataStore");
+  auto dataStoreFloat32 = BindDataStore<Float32DataStoreType::value_type>(mod, "Float32DataStore");
+  auto dataStoreFloat64 = BindDataStore<Float64DataStoreType::value_type>(mod, "Float64DataStore");
+  auto dataStoreBool = BindDataStore<BoolDataStoreType::value_type>(mod, "BoolDataStore");
 
   py::class_<DataStructure> dataStructure(mod, "DataStructure");
   py::class_<DataObject, std::shared_ptr<DataObject>> dataObject(mod, "DataObject");
@@ -1360,28 +1360,28 @@ PYBIND11_MODULE(simplnx, mod)
 
   auto iNeighborList = py::class_<INeighborList, IArray, std::shared_ptr<INeighborList>>(mod, "INeighborList");
 
-  auto neighborListInt8 = BindNeighborList<Int8NeighborList::value_type>(mod, "Int8NeighborList");
-  auto neighborListUInt8 = BindNeighborList<UInt8NeighborList::value_type>(mod, "UInt8NeighborList");
-  auto neighborListInt16 = BindNeighborList<Int16NeighborList::value_type>(mod, "Int16NeighborList");
-  auto neighborListUInt16 = BindNeighborList<UInt16NeighborList::value_type>(mod, "UInt16NeighborList");
-  auto neighborListInt32 = BindNeighborList<Int32NeighborList::value_type>(mod, "Int32NeighborList");
-  auto neighborListUInt32 = BindNeighborList<UInt32NeighborList::value_type>(mod, "UInt32NeighborList");
-  auto neighborListInt64 = BindNeighborList<Int64NeighborList::value_type>(mod, "Int64NeighborList");
-  auto neighborListUInt64 = BindNeighborList<UInt64NeighborList::value_type>(mod, "UInt64NeighborList");
-  auto neighborListFloat32 = BindNeighborList<Float32NeighborList::value_type>(mod, "Float32NeighborList");
-  auto neighborListFloat64 = BindNeighborList<Float64NeighborList::value_type>(mod, "Float64NeighborList");
+  auto neighborListInt8 = BindNeighborList<Int8NeighborListType::value_type>(mod, "Int8NeighborList");
+  auto neighborListUInt8 = BindNeighborList<UInt8NeighborListType::value_type>(mod, "UInt8NeighborList");
+  auto neighborListInt16 = BindNeighborList<Int16NeighborListType::value_type>(mod, "Int16NeighborList");
+  auto neighborListUInt16 = BindNeighborList<UInt16NeighborListType::value_type>(mod, "UInt16NeighborList");
+  auto neighborListInt32 = BindNeighborList<Int32NeighborListType::value_type>(mod, "Int32NeighborList");
+  auto neighborListUInt32 = BindNeighborList<UInt32NeighborListType::value_type>(mod, "UInt32NeighborList");
+  auto neighborListInt64 = BindNeighborList<Int64NeighborListType::value_type>(mod, "Int64NeighborList");
+  auto neighborListUInt64 = BindNeighborList<UInt64NeighborListType::value_type>(mod, "UInt64NeighborList");
+  auto neighborListFloat32 = BindNeighborList<Float32NeighborListType::value_type>(mod, "Float32NeighborList");
+  auto neighborListFloat64 = BindNeighborList<Float64NeighborListType::value_type>(mod, "Float64NeighborList");
 
-  auto dataArrayInt8 = BindDataArray<Int8Array::value_type>(mod, "Int8Array");
-  auto dataArrayUInt8 = BindDataArray<UInt8Array::value_type>(mod, "UInt8Array");
-  auto dataArrayInt16 = BindDataArray<Int16Array::value_type>(mod, "Int16Array");
-  auto dataArrayUInt16 = BindDataArray<UInt16Array::value_type>(mod, "UInt16Array");
-  auto dataArrayInt32 = BindDataArray<Int32Array::value_type>(mod, "Int32Array");
-  auto dataArrayUInt32 = BindDataArray<UInt32Array::value_type>(mod, "UInt32Array");
-  auto dataArrayInt64 = BindDataArray<Int64Array::value_type>(mod, "Int64Array");
-  auto dataArrayUInt64 = BindDataArray<UInt64Array::value_type>(mod, "UInt64Array");
-  auto dataArrayFloat32 = BindDataArray<Float32Array::value_type>(mod, "Float32Array");
-  auto dataArrayFloat64 = BindDataArray<Float64Array::value_type>(mod, "Float64Array");
-  auto dataArrayBool = BindDataArray<BoolArray::value_type>(mod, "BoolArray");
+  auto dataArrayInt8 = BindDataArray<Int8ArrayType::value_type>(mod, "Int8Array");
+  auto dataArrayUInt8 = BindDataArray<UInt8ArrayType::value_type>(mod, "UInt8Array");
+  auto dataArrayInt16 = BindDataArray<Int16ArrayType::value_type>(mod, "Int16Array");
+  auto dataArrayUInt16 = BindDataArray<UInt16ArrayType::value_type>(mod, "UInt16Array");
+  auto dataArrayInt32 = BindDataArray<Int32ArrayType::value_type>(mod, "Int32Array");
+  auto dataArrayUInt32 = BindDataArray<UInt32ArrayType::value_type>(mod, "UInt32Array");
+  auto dataArrayInt64 = BindDataArray<Int64ArrayType::value_type>(mod, "Int64Array");
+  auto dataArrayUInt64 = BindDataArray<UInt64ArrayType::value_type>(mod, "UInt64Array");
+  auto dataArrayFloat32 = BindDataArray<Float32ArrayType::value_type>(mod, "Float32Array");
+  auto dataArrayFloat64 = BindDataArray<Float64ArrayType::value_type>(mod, "Float64Array");
+  auto dataArrayBool = BindDataArray<BoolArrayType::value_type>(mod, "BoolArray");
 
   rectGridGeom.def_property_readonly("x_bounds", py::overload_cast<>(&RectGridGeom::getXBoundsRef), py::return_value_policy::reference_internal);
   rectGridGeom.def_property_readonly("y_bounds", py::overload_cast<>(&RectGridGeom::getYBoundsRef), py::return_value_policy::reference_internal);
@@ -1431,17 +1431,17 @@ PYBIND11_MODULE(simplnx, mod)
   auto createDataGroupAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateDataGroupAction, "CreateDataGroupAction", IDataCreationAction);
   createDataGroupAction.def(py::init<const DataPath&>(), "path"_a);
 
-  auto createEdgeGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateEdgeGeometryAction, "CreateEdgeGeometryAction", IDataCreationAction);
+  auto createEdgeGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateEdgeGeometryActionType, "CreateEdgeGeometryAction", IDataCreationAction);
   createEdgeGeometryAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_edges"_a,
                                "num_vertices"_a, "vertex_attribute_matrix_name"_a, "edge_attribute_matrix_name"_a, "shared_vertices_name"_a, "shared_edges_name"_a);
   createEdgeGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
                                "input_vertices_array_path"_a, "input_edges_array_path"_a, "vertex_attribute_matrix_name"_a, "edge_attribute_matrix_name"_a, "array_type"_a);
 
-  auto createTriangleGeometryAction = BindCreateGeometry2DAction<CreateTriangleGeometryAction>(mod, "CreateTriangleGeometryAction");
-  auto createQuadGeometryAction = BindCreateGeometry2DAction<CreateQuadGeometryAction>(mod, "CreateQuadGeometryAction");
+  auto createTriangleGeometryAction = BindCreateGeometry2DAction<CreateTriangleGeometryActionType>(mod, "CreateTriangleGeometryAction");
+  auto createQuadGeometryAction = BindCreateGeometry2DAction<CreateQuadGeometryActionType>(mod, "CreateQuadGeometryAction");
 
-  auto createTetrahedralGeometryAction = BindCreateGeometry3DAction<CreateTetrahedralGeometryAction>(mod, "CreateTetrahedralGeometryAction");
-  auto createHexahedralGeometryAction = BindCreateGeometry3DAction<CreateHexahedralGeometryAction>(mod, "CreateHexahedralGeometryAction");
+  auto createTetrahedralGeometryAction = BindCreateGeometry3DAction<CreateTetrahedralGeometryActionType>(mod, "CreateTetrahedralGeometryAction");
+  auto createHexahedralGeometryAction = BindCreateGeometry3DAction<CreateHexahedralGeometryActionType>(mod, "CreateHexahedralGeometryAction");
 
   auto createImageGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateImageGeometryAction, "CreateImageGeometryAction", IDataCreationAction);
   createImageGeometryAction.def(
@@ -1483,7 +1483,7 @@ PYBIND11_MODULE(simplnx, mod)
   renameDataAction.def(py::init<const DataPath&, const std::string&>(), "path"_a, "new_name"_a);
 
   auto updateImageGeomAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, UpdateImageGeomAction, "UpdateImageGeomAction", IDataAction);
-  updateImageGeomAction.def(py::init<const std::optional<FloatVec3>&, const std::optional<FloatVec3>&, const DataPath&>(), "origin"_a, "spacing"_a, "path"_a);
+  updateImageGeomAction.def(py::init<const std::optional<FloatVec3Type>&, const std::optional<FloatVec3Type>&, const DataPath&>(), "origin"_a, "spacing"_a, "path"_a);
 
   auto outputActions = py::class_<OutputActions>(mod, "OutputActions");
   outputActions.def(py::init<>());
@@ -1536,37 +1536,37 @@ PYBIND11_MODULE(simplnx, mod)
   auto vectorUInt32Parameter = BindVectorParameter<VectorUInt32ParameterType>(mod, "VectorUInt32Parameter");
   auto vectorInt64Parameter = BindVectorParameter<VectorInt64ParameterType>(mod, "VectorInt64Parameter");
   auto vectorUInt64Parameter = BindVectorParameter<VectorUInt64ParameterType>(mod, "VectorUInt64Parameter");
-  auto vectorFloat32Parameter = BindVectorParameter<VectorFloat32Parameter>(mod, "VectorFloat32Parameter");
+  auto vectorFloat32Parameter = BindVectorParameter<VectorFloat32ParameterType>(mod, "VectorFloat32Parameter");
   auto vectorFloat64Parameter = BindVectorParameter<VectorFloat64ParameterType>(mod, "VectorFloat64Parameter");
 
   py::class_<ReadHDF5DatasetParameter::DatasetImportInfo> datasetImportInfo(importHDF5DatasetParameter, "DatasetImportInfo");
   datasetImportInfo.def(py::init<>());
-  datasetImportInfo.def_readwrite("dataset_path", &ReadHDF5DatasetParameter::DatasetImportInfo::dataSetPath);
-  datasetImportInfo.def_readwrite("component_dims", &ReadHDF5DatasetParameter::DatasetImportInfo::componentDimensions);
-  datasetImportInfo.def_readwrite("tuple_dims", &ReadHDF5DatasetParameter::DatasetImportInfo::tupleDimensions);
+  datasetImportInfo.def_readwrite("dataset_path", &ReadHDF5DatasetParameter::DatasetImportInfo::data_set_path);
+  datasetImportInfo.def_readwrite("component_dims", &ReadHDF5DatasetParameter::DatasetImportInfo::component_dimensions);
+  datasetImportInfo.def_readwrite("tuple_dims", &ReadHDF5DatasetParameter::DatasetImportInfo::tuple_dimensions);
 
   py::class_<ReadHDF5DatasetParameter::ValueType> importHdf5DatasetInfo(importHDF5DatasetParameter, "ValueType");
   importHdf5DatasetInfo.def(py::init<>());
   importHdf5DatasetInfo.def_readwrite("parent", &ReadHDF5DatasetParameter::ValueType::parent);
-  importHdf5DatasetInfo.def_readwrite("input_file", &ReadHDF5DatasetParameter::ValueType::inputFile);
+  importHdf5DatasetInfo.def_readwrite("input_file", &ReadHDF5DatasetParameter::ValueType::input_file);
   importHdf5DatasetInfo.def_readwrite("datasets", &ReadHDF5DatasetParameter::ValueType::datasets);
   importHdf5DatasetInfo.def("__repr__", [](const ReadHDF5DatasetParameter::ValueType& /*self*/) { return "ReadHDF5DatasetParameter.ValueType()"; });
 
-  py::enum_<GeneratedFileListParameter::Ordering> generatedFileListOrdering(generatedFileListParameter, "Ordering");
-  generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::Ordering::LowToHigh);
-  generatedFileListOrdering.value("HighToLow", GeneratedFileListParameter::Ordering::HighToLow);
+  py::enum_<GeneratedFileListParameter::OrderingType> generatedFileListOrdering(generatedFileListParameter, "Ordering");
+  generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::OrderingType::LowToHigh);
+  generatedFileListOrdering.value("HighToLow", GeneratedFileListParameter::OrderingType::HighToLow);
 
   py::class_<GeneratedFileListParameter::ValueType> generatedFileList(generatedFileListParameter, "ValueType");
   generatedFileList.def(py::init<>());
-  generatedFileList.def_readwrite("start_index", &GeneratedFileListParameter::ValueType::startIndex);
-  generatedFileList.def_readwrite("end_index", &GeneratedFileListParameter::ValueType::endIndex);
-  generatedFileList.def_readwrite("increment_index", &GeneratedFileListParameter::ValueType::incrementIndex);
-  generatedFileList.def_readwrite("padding_digits", &GeneratedFileListParameter::ValueType::paddingDigits);
+  generatedFileList.def_readwrite("start_index", &GeneratedFileListParameter::ValueType::start_index);
+  generatedFileList.def_readwrite("end_index", &GeneratedFileListParameter::ValueType::end_index);
+  generatedFileList.def_readwrite("increment_index", &GeneratedFileListParameter::ValueType::increment_index);
+  generatedFileList.def_readwrite("padding_digits", &GeneratedFileListParameter::ValueType::padding_digits);
   generatedFileList.def_readwrite("ordering", &GeneratedFileListParameter::ValueType::ordering);
-  generatedFileList.def_readwrite("input_path", &GeneratedFileListParameter::ValueType::inputPath);
-  generatedFileList.def_readwrite("file_prefix", &GeneratedFileListParameter::ValueType::filePrefix);
-  generatedFileList.def_readwrite("file_suffix", &GeneratedFileListParameter::ValueType::fileSuffix);
-  generatedFileList.def_readwrite("file_extension", &GeneratedFileListParameter::ValueType::fileExtension);
+  generatedFileList.def_readwrite("input_path", &GeneratedFileListParameter::ValueType::input_path);
+  generatedFileList.def_readwrite("file_prefix", &GeneratedFileListParameter::ValueType::file_prefix);
+  generatedFileList.def_readwrite("file_suffix", &GeneratedFileListParameter::ValueType::file_suffix);
+  generatedFileList.def_readwrite("file_extension", &GeneratedFileListParameter::ValueType::file_extension);
   generatedFileList.def("generate", &GeneratedFileListParameter::ValueType::generate);
   generatedFileList.def("generate_and_validate", &GeneratedFileListParameter::ValueType::generateAndValidate);
 
@@ -1577,9 +1577,9 @@ PYBIND11_MODULE(simplnx, mod)
   pathImportPolicy.value("ExcludeList", Dream3dImportParameter::PathImportPolicy::ExcludeList);
   dream3dImportData.def(py::init<std::filesystem::path, Dream3dImportParameter::PathImportPolicy, std::vector<nx::core::DataPath>>(), py::arg("file_path"),
                         py::arg("path_import_policy") = Dream3dImportParameter::PathImportPolicy::All, py::arg("data_paths") = std::vector<nx::core::DataPath>());
-  dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::FilePath);
-  dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
-  dream3dImportData.def_readwrite("path_import_policy", &Dream3dImportParameter::ImportData::ImportPolicy);
+  dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::file_path);
+  dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::data_paths);
+  dream3dImportData.def_readwrite("path_import_policy", &Dream3dImportParameter::ImportData::import_policy);
   dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData& /*self*/) { return "Dream3dImportParameter.ImportData()"; });
 
   auto arraySelectionParameterDataLocation = py::enum_<ArraySelectionParameter::DataLocation>(arraySelectionParameter, "DataLocation");
@@ -1622,9 +1622,9 @@ PYBIND11_MODULE(simplnx, mod)
 
   auto calculatorParameterValueType = py::class_<CalculatorParameter::ValueType>(calculatorParameter, "ValueType");
   calculatorParameterValueType.def(py::init<DataPath, std::string, CalculatorParameter::AngleUnits>());
-  calculatorParameterValueType.def_readwrite("selected_group", &CalculatorParameter::ValueType::m_SelectedGroup);
+  calculatorParameterValueType.def_readwrite("selected_group", &CalculatorParameter::ValueType::m_selected_group);
   calculatorParameterValueType.def_readwrite("equation", &CalculatorParameter::ValueType::equation);
-  calculatorParameterValueType.def_readwrite("units", &CalculatorParameter::ValueType::m_Units);
+  calculatorParameterValueType.def_readwrite("units", &CalculatorParameter::ValueType::m_units);
 
   auto calculatorParameterTypeEnum = py::enum_<CropGeometryParameter::CropValues::TypeEnum>(cropGeometryParameter, "TypeEnum");
   calculatorParameterTypeEnum.value("NoCropping", CropGeometryParameter::CropValues::TypeEnum::NoCropping);
@@ -1633,28 +1633,28 @@ PYBIND11_MODULE(simplnx, mod)
 
   auto cropGeometryParameterCropValues = py::class_<CropGeometryParameter::ValueType>(cropGeometryParameter, "ValueType");
   cropGeometryParameterCropValues.def(py::init<>());
-  cropGeometryParameterCropValues.def(py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, SizeVec2, SizeVec2, SizeVec2, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
+  cropGeometryParameterCropValues.def(py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, SizeVec2Type, SizeVec2Type, SizeVec2Type, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
   cropGeometryParameterCropValues.def_readwrite("is_2d", &CropGeometryParameter::ValueType::is_2d);
-  cropGeometryParameterCropValues.def_readwrite("crop_x", &CropGeometryParameter::ValueType::cropX);
-  cropGeometryParameterCropValues.def_readwrite("crop_y", &CropGeometryParameter::ValueType::cropY);
-  cropGeometryParameterCropValues.def_readwrite("crop_z", &CropGeometryParameter::ValueType::cropZ);
-  cropGeometryParameterCropValues.def_readwrite("x_bound_voxels", &CropGeometryParameter::ValueType::xBoundVoxels);
-  cropGeometryParameterCropValues.def_readwrite("y_bound_voxels", &CropGeometryParameter::ValueType::yBoundVoxels);
-  cropGeometryParameterCropValues.def_readwrite("z_bound_voxels", &CropGeometryParameter::ValueType::zBoundVoxels);
-  cropGeometryParameterCropValues.def_readwrite("x_bound_physical", &CropGeometryParameter::ValueType::xBoundPhysical);
-  cropGeometryParameterCropValues.def_readwrite("y_bound_physical", &CropGeometryParameter::ValueType::yBoundPhysical);
-  cropGeometryParameterCropValues.def_readwrite("z_bound_physical", &CropGeometryParameter::ValueType::zBoundPhysical);
+  cropGeometryParameterCropValues.def_readwrite("crop_x", &CropGeometryParameter::ValueType::crop_x);
+  cropGeometryParameterCropValues.def_readwrite("crop_y", &CropGeometryParameter::ValueType::crop_y);
+  cropGeometryParameterCropValues.def_readwrite("crop_z", &CropGeometryParameter::ValueType::crop_z);
+  cropGeometryParameterCropValues.def_readwrite("x_bound_voxels", &CropGeometryParameter::ValueType::x_bound_voxels);
+  cropGeometryParameterCropValues.def_readwrite("y_bound_voxels", &CropGeometryParameter::ValueType::y_bound_voxels);
+  cropGeometryParameterCropValues.def_readwrite("z_bound_voxels", &CropGeometryParameter::ValueType::z_bound_voxels);
+  cropGeometryParameterCropValues.def_readwrite("x_bound_physical", &CropGeometryParameter::ValueType::x_bound_physical);
+  cropGeometryParameterCropValues.def_readwrite("y_bound_physical", &CropGeometryParameter::ValueType::y_bound_physical);
+  cropGeometryParameterCropValues.def_readwrite("z_bound_physical", &CropGeometryParameter::ValueType::z_bound_physical);
   cropGeometryParameterCropValues.def_readwrite("type", &CropGeometryParameter::ValueType::type);
 
   BindParameterConstructor(arrayCreationParameter);
 
   arraySelectionParameter.def(py::init<const std::string&, const std::string&, const std::string&, const ArraySelectionParameter::ValueType&, const ArraySelectionParameter::AllowedTypeSetType&,
-                                       ArraySelectionParameter::AllowedComponentShapes, ArraySelectionParameter::DataLocation>(),
-                              "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "required_comps"_a = ArraySelectionParameter::AllowedComponentShapes{},
+                                       ArraySelectionParameter::AllowedComponentShapesType, ArraySelectionParameter::DataLocation>(),
+                              "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "required_comps"_a = ArraySelectionParameter::AllowedComponentShapesType{},
                               "location"_a = ArraySelectionParameter::DataLocation::Any);
 
-  arrayThresholdsParameter.def(py::init<const std::string&, const std::string&, const std::string&, const ArrayThresholdsParameter::ValueType&, ArrayThresholdsParameter::AllowedComponentShapes>(),
-                               "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "required_comps"_a = ArrayThresholdsParameter::AllowedComponentShapes{});
+  arrayThresholdsParameter.def(py::init<const std::string&, const std::string&, const std::string&, const ArrayThresholdsParameter::ValueType&, ArrayThresholdsParameter::AllowedComponentShapesType>(),
+                               "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "required_comps"_a = ArrayThresholdsParameter::AllowedComponentShapesType{});
 
   BindParameterConstructor(attributeMatrixSelectionParameter);
 
@@ -1662,7 +1662,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindParameterConstructor(calculatorParameter);
 
-  choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::Choices&>(), "name"_a, "human_name"_a, "help_text"_a,
+  choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::ChoicesType&>(), "name"_a, "human_name"_a, "help_text"_a,
                        "default_value"_a, "choices"_a);
 
   BindParameterConstructor(dataGroupCreationParameter);
@@ -1704,8 +1704,8 @@ PYBIND11_MODULE(simplnx, mod)
 
   multiArraySelectionParameter.def(
       py::init<const std::string&, const std::string&, const std::string&, const MultiArraySelectionParameter::ValueType&, const MultiArraySelectionParameter::AllowedTypeSetType&,
-               const MultiArraySelectionParameter::AllowedDataTypes&, MultiArraySelectionParameter::AllowedComponentShapes>(),
-      "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "allowed_data_types"_a, "required_comps"_a = MultiArraySelectionParameter::AllowedComponentShapes{});
+               const MultiArraySelectionParameter::AllowedDataTypesType&, MultiArraySelectionParameter::AllowedComponentShapesType>(),
+      "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a, "allowed_data_types"_a, "required_comps"_a = MultiArraySelectionParameter::AllowedComponentShapesType{});
 
   BindParameterConstructor(multiPathSelectionParameter);
 
@@ -1744,7 +1744,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<IFilter::MessageHandler> messageHandler(filter, "MessageHandler");
   messageHandler.def(py::init<>());
-  messageHandler.def_readwrite("callback", &IFilter::MessageHandler::m_Callback);
+  messageHandler.def_readwrite("callback", &IFilter::MessageHandler::m_callback);
   messageHandler.def("send_message", [](const IFilter::MessageHandler& self, const IFilter::Message& message) { self.sendMessage(message); }, "message"_a);
   messageHandler.def("send_info_message", [](const IFilter::MessageHandler& self, std::string message) { self.sendInfoMessage(std::move(message)); }, "message"_a);
   messageHandler.def("send_debug_message", [](const IFilter::MessageHandler& self, std::string message) { self.sendDebugMessage(std::move(message)); }, "message"_a);
@@ -1781,47 +1781,47 @@ PYBIND11_MODULE(simplnx, mod)
                         }
                         if(outputActions_.has_value())
                         {
-                          result_.outputActions = {std::move(*outputActions_)};
+                          result_.output_actions = {std::move(*outputActions_)};
                         }
                         if(errors.has_value())
                         {
-                          result_.outputActions = {nonstd::make_unexpected(std::move(*errors))};
+                          result_.output_actions = {nonstd::make_unexpected(std::move(*errors))};
                         }
                         if(warnings.has_value())
                         {
-                          result_.outputActions.warnings() = std::move(*warnings);
+                          result_.output_actions.warnings() = std::move(*warnings);
                         }
                         if(preflightValues.has_value())
                         {
-                          result_.outputValues = std::move(*preflightValues);
+                          result_.output_values = std::move(*preflightValues);
                         }
                         return result_;
                       }),
                       "output_actions"_a = py::none(), "errors"_a = py::none(), "warnings"_a = py::none(), "preflight_values"_a = py::none());
-  preflightResult.def("set_errors", [](IFilter::PreflightResult& self, std::vector<Error> errors) { self.outputActions.expected = nonstd::make_unexpected(std::move(errors)); });
+  preflightResult.def("set_errors", [](IFilter::PreflightResult& self, std::vector<Error> errors) { self.output_actions.expected = nonstd::make_unexpected(std::move(errors)); });
   // preflightResult.def_readwrite("output_actions", &IFilter::PreflightResult::outputActions);
   preflightResult.def("get_result", [](IFilter::PreflightResult& self) {
-    if(self.outputActions.valid())
+    if(self.output_actions.valid())
     {
       return std::vector<Error>{};
     }
-    return self.outputActions.errors();
+    return self.output_actions.errors();
   });
-  preflightResult.def_readwrite("output_values", &IFilter::PreflightResult::outputValues);
+  preflightResult.def_readwrite("output_values", &IFilter::PreflightResult::output_values);
 
   py::class_<IFilter::ExecuteResult> executeResult(filter, "ExecuteResult");
   executeResult.def(py::init<>());
   executeResult.def_property_readonly("errors", [](const IFilter::ExecuteResult& self) {
     if(self.result.valid())
     {
-      return ErrorCollection{};
+      return ErrorCollectionType{};
     }
     return self.result.errors();
   });
   executeResult.def_property_readonly("warnings", [](const IFilter::ExecuteResult& self) { return self.result.warnings(); });
   executeResult.def("__bool__", [](const IFilter::ExecuteResult& self) { return self.result.valid(); });
   executeResult.def("__repr__", [](const IFilter::ExecuteResult& self) {
-    return fmt::format("<simplnx.IFilter.ExecuteResult(errors=[{}], warnings=[{}])>", fmt::join(self.result.valid() ? ErrorCollection{} : self.result.errors(), ", "),
+    return fmt::format("<simplnx.IFilter.ExecuteResult(errors=[{}], warnings=[{}])>", fmt::join(self.result.valid() ? ErrorCollectionType{} : self.result.errors(), ", "),
                        fmt::join(self.result.warnings(), ", "));
   });
 
@@ -1923,7 +1923,7 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
   pipelineFilter.def("update_arg", [internalsPtr](PipelineFilter& self, const std::string& key, py::handle value) {
     Uuid paramUuid = self.getParameters().at(key)->uuid();
-    std::any convertedValue = internalsPtr->at(paramUuid).fromPyObjectFunc(value);
+    std::any convertedValue = internalsPtr->at(paramUuid).from_py_object_func(value);
     Arguments args = self.getArguments();
     args.insertOrAssign(key, std::move(convertedValue));
     self.setArguments(args);
@@ -1981,7 +1981,7 @@ PYBIND11_MODULE(simplnx, mod)
   internalsPtr->addConversion<VectorUInt32ParameterType>();
   internalsPtr->addConversion<VectorInt64ParameterType>();
   internalsPtr->addConversion<VectorUInt64ParameterType>();
-  internalsPtr->addConversion<VectorFloat32Parameter>();
+  internalsPtr->addConversion<VectorFloat32ParameterType>();
   internalsPtr->addConversion<VectorFloat64ParameterType>();
 
   SimplnxCore::BindFilters(mod, *internalsPtr);
@@ -2072,8 +2072,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_ImageGeometry));
         args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, std::make_any<DataPath>(geometryPath));
         args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(dims));
-        args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(origin));
-        args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(spacing));
+        args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(origin));
+        args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(spacing));
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
 
         // Return the filter Result so Python receives geometry metadata validation errors.

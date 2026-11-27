@@ -85,7 +85,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
 
   if(!useNewParent && suffix.empty())
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-27360, "Copied Object(s) have the same parent as original data but the suffix is empty."), .outputValues = {}};
+    return {.output_actions = MakeErrorResult<OutputActions>(-27360, "Copied Object(s) have the same parent as original data but the suffix is empty."), .output_values = {}};
   }
 
   Result<OutputActions> resultOutputActions;
@@ -138,7 +138,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

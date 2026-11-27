@@ -12,7 +12,7 @@
 #include <sstream>
 #include <string>
 
-namespace nx::core::StringInterpretationUtilities
+namespace nx::core::string_interpretation_utilities
 {
 namespace detail
 {

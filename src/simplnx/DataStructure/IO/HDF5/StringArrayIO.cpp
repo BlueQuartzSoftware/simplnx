@@ -35,7 +35,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   std::string dataArrayName = datasetReader.getName();
 
   // The importable attribute excludes values unavailable in this file.
-  auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
+  auto importableResult = datasetReader.readScalarAttribute<int32>(constants::k_ImportableTag);
   if(importableResult.invalid())
   {
     return ConvertResult(std::move(importableResult));

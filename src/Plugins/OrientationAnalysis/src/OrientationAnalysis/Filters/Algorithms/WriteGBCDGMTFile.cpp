@@ -44,15 +44,15 @@ bool GetSquareCoord(std::array<T, 3> crystalNormal, std::array<T, 2>& sqCoord)
   }
   if(fabs(crystalNormal[0]) >= fabs(crystalNormal[1]))
   {
-    sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
+    sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::constants::k_SqrtPiD / 2.0);
     sqCoord[1] =
-        (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
+        (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / nx::core::constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
   }
   else
   {
     sqCoord[0] =
-        (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
-    sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
+        (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / nx::core::constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
+    sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::constants::k_SqrtPiD / 2.0);
   }
   return nhCheck;
 }
@@ -73,20 +73,20 @@ const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 
 Result<> WriteGBCDGMTFile::operator()()
 {
-  auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& gbcd = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->gbcd_array_path);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
   // Create the destination directory before the file handle truncates the output.
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  const std::ofstream outStrm(m_InputValues->OutputFile, std::ios_base::out);
+  const std::ofstream outStrm(m_InputValues->output_file, std::ios_base::out);
   if(!outStrm.is_open())
   {
-    return MakeErrorResult(-11021, fmt::format("Error creating output file {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-11021, fmt::format("Error creating output file {}", m_InputValues->output_file.string()));
   }
 
   std::vector<double> gbcdDeltas(5, 0);
@@ -97,13 +97,13 @@ Result<> WriteGBCDGMTFile::operator()()
   gbcdLimits[0] = 0.0f;
   gbcdLimits[1] = 0.0f;
   gbcdLimits[2] = 0.0f;
-  gbcdLimits[3] = -sqrtf(Constants::k_PiOver2D);
-  gbcdLimits[4] = -sqrtf(Constants::k_PiOver2D);
-  gbcdLimits[5] = Constants::k_PiD / 2.0f;
+  gbcdLimits[3] = -sqrtf(constants::k_PiOver2D);
+  gbcdLimits[4] = -sqrtf(constants::k_PiOver2D);
+  gbcdLimits[5] = constants::k_PiD / 2.0f;
   gbcdLimits[6] = 1.0f;
-  gbcdLimits[7] = Constants::k_PiD / 2.0f;
-  gbcdLimits[8] = sqrtf(Constants::k_PiOver2D);
-  gbcdLimits[9] = sqrtf(Constants::k_PiOver2D);
+  gbcdLimits[7] = constants::k_PiD / 2.0f;
+  gbcdLimits[8] = sqrtf(constants::k_PiOver2D);
+  gbcdLimits[9] = sqrtf(constants::k_PiOver2D);
 
   ShapeType cDims = gbcd.getComponentShape();
 
@@ -125,8 +125,8 @@ Result<> WriteGBCDGMTFile::operator()()
   Matrix3X3Type dg;
 
   {
-    const float32 misAngle = m_InputValues->MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
-    nx::core::FloatVec3 normAxis = {m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]};
+    const float32 misAngle = m_InputValues->misorientation_rotation[0] * nx::core::constants::k_PiOver180F;
+    nx::core::FloatVec3Type normAxis = {m_InputValues->misorientation_rotation[1], m_InputValues->misorientation_rotation[2], m_InputValues->misorientation_rotation[3]};
     normAxis = normAxis.normalize();
     // Convert the normalized degree-axis input to a misorientation matrix.
     auto out = ebsdlib::AxisAngleDType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix();
@@ -137,11 +137,11 @@ Result<> WriteGBCDGMTFile::operator()()
 
   // Cache ensemble metadata and only the selected GBCD phase slice.
   const usize numCrystalStructures = crystalStructures.getSize();
-  if(m_InputValues->PhaseOfInterest < 0 || static_cast<usize>(m_InputValues->PhaseOfInterest) >= numCrystalStructures)
+  if(m_InputValues->phase_of_interest < 0 || static_cast<usize>(m_InputValues->phase_of_interest) >= numCrystalStructures)
   {
     return MakeErrorResult(k_PhaseOutsideCrystalStructures,
                            fmt::format("The selected phase index {} is outside Crystal Structures array '{}', which contains {} values. Select a phase index in [0, {}).",
-                                       m_InputValues->PhaseOfInterest, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures, numCrystalStructures));
+                                       m_InputValues->phase_of_interest, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
   }
   auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
   if(Result<> ioResult = crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures)); ioResult.invalid())
@@ -150,18 +150,18 @@ Result<> WriteGBCDGMTFile::operator()()
   }
 
   const auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-  const uint32 crystalStructure = crystalStructuresCache[m_InputValues->PhaseOfInterest];
+  const uint32 crystalStructure = crystalStructuresCache[m_InputValues->phase_of_interest];
   if(crystalStructure >= orientationOps.size())
   {
     return MakeErrorResult(
         k_UnsupportedCrystalStructure,
         fmt::format(
             "The selected phase index {} has unsupported crystal-structure value {} in Crystal Structures array '{}'. The valid range is 0-{}. Select a phase with a supported crystal structure.",
-            m_InputValues->PhaseOfInterest, crystalStructure, m_InputValues->CrystalStructuresArrayPath.toString(), orientationOps.size() - 1));
+            m_InputValues->phase_of_interest, crystalStructure, m_InputValues->crystal_structures_array_path.toString(), orientationOps.size() - 1));
   }
 
   const auto totalGBCDBins = (gbcdSizes[0] * gbcdSizes[1] * gbcdSizes[2] * gbcdSizes[3] * gbcdSizes[4] * 2);
-  const usize phaseOffset = static_cast<usize>(m_InputValues->PhaseOfInterest) * static_cast<usize>(totalGBCDBins);
+  const usize phaseOffset = static_cast<usize>(m_InputValues->phase_of_interest) * static_cast<usize>(totalGBCDBins);
   auto gbcdPhaseCache = std::make_unique<float64[]>(static_cast<usize>(totalGBCDBins));
   if(Result<> ioResult = gbcd.getDataStoreRef().copyIntoBuffer(phaseOffset, nonstd::span<float64>(gbcdPhaseCache.get(), static_cast<usize>(totalGBCDBins))); ioResult.invalid())
   {
@@ -176,7 +176,7 @@ Result<> WriteGBCDGMTFile::operator()()
   const usize phiPoints = 30;
   const float64 thetaRes = 360.0 / static_cast<float64>(thetaPoints);
   const float64 phiRes = 90.0f / static_cast<float64>(phiPoints);
-  const float64 degToRad = Constants::k_PiOver180D;
+  const float64 degToRad = constants::k_PiOver180D;
 
   const int32 shift1 = gbcdSizes[0];
   const int32 shift2 = gbcdSizes[0] * gbcdSizes[1];
@@ -223,7 +223,7 @@ Result<> WriteGBCDGMTFile::operator()()
           // Apply symmetry in the first crystal reference frame.
           Matrix3X3Type dg2 = sym1 * (dg * sym2.transpose());
           auto misEuler1 = ebsdlib::OrientationMatrixDType(dg2.data()).toEuler();
-          if(misEuler1[0] < Constants::k_PiOver2D && misEuler1[1] < Constants::k_PiOver2D && misEuler1[2] < Constants::k_PiOver2D)
+          if(misEuler1[0] < constants::k_PiOver2D && misEuler1[1] < constants::k_PiOver2D && misEuler1[2] < constants::k_PiOver2D)
           {
             misEuler1[1] = std::cos(misEuler1[1]);
             const auto location1 = static_cast<int32>((misEuler1[0] - gbcdLimits[0]) / gbcdDeltas[0]);
@@ -267,7 +267,7 @@ Result<> WriteGBCDGMTFile::operator()()
           // Apply reciprocal misorientation in the second crystal reference frame.
           dg2 = sym1 * (dgt * sym2);
           misEuler1 = ebsdlib::OrientationMatrixDType(dg2.data()).toEuler();
-          if(misEuler1[0] < Constants::k_PiOver2D && misEuler1[1] < Constants::k_PiOver2D && misEuler1[2] < Constants::k_PiOver2D)
+          if(misEuler1[0] < constants::k_PiOver2D && misEuler1[1] < constants::k_PiOver2D && misEuler1[2] < constants::k_PiOver2D)
           {
             misEuler1[1] = std::cos(misEuler1[1]);
             const auto location1 = static_cast<int32>((misEuler1[0] - gbcdLimits[0]) / gbcdDeltas[0]);
@@ -313,15 +313,15 @@ Result<> WriteGBCDGMTFile::operator()()
   }
 
   // The creation-check stream remains open while this C stream rewrites the same path.
-  FILE* gmtFilePtr = fopen(m_InputValues->OutputFile.string().c_str(), "wb");
+  FILE* gmtFilePtr = fopen(m_InputValues->output_file.string().c_str(), "wb");
   if(nullptr == gmtFilePtr)
   {
-    return MakeErrorResult(-11022, fmt::format("Error opening output file {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-11022, fmt::format("Error opening output file {}", m_InputValues->output_file.string()));
   }
 
   // The header stores axis components followed by the original angle in degrees.
-  fprintf(gmtFilePtr, "%.1f %.1f %.1f %.1f\n", m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3],
-          m_InputValues->MisorientationRotation[0]);
+  fprintf(gmtFilePtr, "%.1f %.1f %.1f %.1f\n", m_InputValues->misorientation_rotation[1], m_InputValues->misorientation_rotation[2], m_InputValues->misorientation_rotation[3],
+          m_InputValues->misorientation_rotation[0]);
   const usize size = gmtValues.size() / 3;
 
   for(usize i = 0; i < size; i++)

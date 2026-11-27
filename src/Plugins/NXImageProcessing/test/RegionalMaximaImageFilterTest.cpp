@@ -17,7 +17,7 @@ namespace
 constexpr int32 k_ValueOutOfRange = -8574; // kept in sync with RegionalMaximaImageFilter.cpp
 
 // Build a param-setter that fixes fg/bg + FlatIsMaxima and takes FullyConnected from the grid config.
-rt::ReconParamSetter MaximaSetter(float64 fg, float64 bg, bool flatIsMaxima)
+rt::ReconParamSetterType MaximaSetter(float64 fg, float64 bg, bool flatIsMaxima)
 {
   return [fg, bg, flatIsMaxima](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(RegionalMaximaImageFilter::k_ForegroundValue_Key, std::make_any<float64>(fg));
@@ -35,8 +35,8 @@ rt::ReconParamSetter MaximaSetter(float64 fg, float64 bg, bool flatIsMaxima)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: flat-image special case", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const bool flatIsMaxima = GENERATE(false, true);
   CAPTURE(flatIsMaxima);
 
@@ -65,8 +65,8 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: flat-image special case
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 5;
   constexpr usize k_Dy = 5;
@@ -98,8 +98,8 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak marked (both algorithm paths)", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   constexpr usize k_Dx = 5;
@@ -111,7 +111,7 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
   pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = 50;
   pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = 50;
 
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
@@ -141,8 +141,8 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: hand-computed peak mark
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: preflight fg/bg range guard", "[NXImageProcessing][RegionalMaximaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 8, 8, 8, rt::MakePlateauPattern<uint8>(8, 8, 8));
@@ -164,14 +164,14 @@ TEST_CASE("NXImageProcessing::RegionalMaximaImageFilter: preflight fg/bg range g
   SECTION("valid fg preflights cleanly")
   {
     auto result = filter.preflight(dataStructure, makeArgs(1.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("out-of-range fg (negative, invalid for the uint32 output) is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(-1.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_ValueOutOfRange);
   }
 }
 

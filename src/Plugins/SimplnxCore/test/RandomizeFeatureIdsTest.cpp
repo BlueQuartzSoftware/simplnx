@@ -48,15 +48,15 @@ void BuildPermutationFixture(DataStructure& dataStructure, usize totalFeatures)
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, featureShape);
   REQUIRE((featureAmPtr != nullptr));
 
-  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, {3 * totalFeatures}, {1});
-  auto scalarStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureArrayPath, featureShape, {1});
-  auto componentStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, k_ComponentFeatureArrayPath, featureShape, {3});
+  auto idsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, {3 * totalFeatures}, {1});
+  auto scalarStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureArrayPath, featureShape, {1});
+  auto componentStore = data_store_utilities::CreateDataStore<float64>(dataStructure, k_ComponentFeatureArrayPath, featureShape, {3});
   REQUIRE((idsStore != nullptr));
   REQUIRE((scalarStore != nullptr));
   REQUIRE((componentStore != nullptr));
-  auto* idsPtr = Int32Array::Create(dataStructure, k_FeatureIdsArrayName, idsStore);
-  auto* scalarsPtr = Int32Array::Create(dataStructure, k_FeatureArrayName, scalarStore, featureAmPtr->getId());
-  auto* componentsPtr = Float64Array::Create(dataStructure, k_ComponentFeatureArrayPath.getTargetName(), componentStore, featureAmPtr->getId());
+  auto* idsPtr = Int32ArrayType::Create(dataStructure, k_FeatureIdsArrayName, idsStore);
+  auto* scalarsPtr = Int32ArrayType::Create(dataStructure, k_FeatureArrayName, scalarStore, featureAmPtr->getId());
+  auto* componentsPtr = Float64ArrayType::Create(dataStructure, k_ComponentFeatureArrayPath.getTargetName(), componentStore, featureAmPtr->getId());
   REQUIRE((idsPtr != nullptr));
   REQUIRE((scalarsPtr != nullptr));
   REQUIRE((componentsPtr != nullptr));
@@ -83,12 +83,12 @@ void RequirePermutationAssociations(bool outOfCore)
     CAPTURE(totalFeatures, outOfCore);
     DataStructure dataStructure;
     BuildPermutationFixture(dataStructure, totalFeatures);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureArrayPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(k_ComponentFeatureArrayPath));
-    const auto& ids = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
-    const auto& scalars = dataStructure.getDataRefAs<Int32Array>(k_FeatureArrayPath);
-    const auto& components = dataStructure.getDataRefAs<Float64Array>(k_ComponentFeatureArrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureArrayPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(k_ComponentFeatureArrayPath));
+    const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
+    const auto& scalars = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureArrayPath);
+    const auto& components = dataStructure.getDataRefAs<Float64ArrayType>(k_ComponentFeatureArrayPath);
     const auto expectedStore = outOfCore ? IDataStore::StoreType::OutOfCore : IDataStore::StoreType::InMemory;
     REQUIRE((ids.getDataStoreRef().getStoreType() == expectedStore));
     REQUIRE((scalars.getDataStoreRef().getStoreType() == expectedStore));
@@ -105,7 +105,7 @@ void RequirePermutationAssociations(bool outOfCore)
     args.insertOrAssign(RandomizeFeatureIdsFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insertOrAssign(RandomizeFeatureIdsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
     auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -164,7 +164,7 @@ void RequirePermutationAssociations(bool outOfCore)
         REQUIRE((components[(3 * row) + component] == ComponentFeatureValue(row, component)));
       }
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
   REQUIRE((sawLongCycle));
   REQUIRE((sawMultipleCycles));
@@ -184,8 +184,8 @@ constexpr std::array<int32, 5> k_OriginalFeatureArray = {0, 1, 2, 3, 4};
 
 void ValidateOutput(const DataStructure& dataStructure)
 {
-  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
-  const auto& featureArray = dataStructure.getDataRefAs<Int32Array>(k_FeatureArrayPath);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
+  const auto& featureArray = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureArrayPath);
 
   // Check mapping is preserved
   for(usize i = 0; i < featureIdsArray.getNumberOfTuples(); i++)
@@ -211,14 +211,14 @@ void ValidateOutput(const DataStructure& dataStructure)
 TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: Long cycle attribute association", "[SimplnxCore][RandomizeFeatureIdsFilter]")
 {
   REQUIRE((Application::GetOrCreateInstance() != nullptr));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   RequirePermutationAssociations(false);
 }
 
 TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: real-store long cycle attribute association", "[SimplnxCore][RandomizeFeatureIdsFilter][.OocStoreContract]")
 {
   REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   RequirePermutationAssociations(true);
 }
 
@@ -226,7 +226,7 @@ TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: 5 Feature Test", "[SimplnxCor
 {
   DataStructure dataStructure;
   {
-    Int32Array* featureIdsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsArrayName, std::vector<usize>{15}, std::vector<usize>{1});
+    Int32ArrayType* featureIdsArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsArrayName, std::vector<usize>{15}, std::vector<usize>{1});
     (*featureIdsArrayPtr)[0] = k_OriginalFeatureIds[0];
     (*featureIdsArrayPtr)[1] = k_OriginalFeatureIds[1];
     (*featureIdsArrayPtr)[2] = k_OriginalFeatureIds[2];
@@ -245,7 +245,7 @@ TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: 5 Feature Test", "[SimplnxCor
 
     AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, std::vector<usize>{5});
 
-    Int32Array* featureArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureArrayName, featureAmPtr->getShape(), std::vector<usize>{1}, featureAmPtr->getId());
+    Int32ArrayType* featureArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureArrayName, featureAmPtr->getShape(), std::vector<usize>{1}, featureAmPtr->getId());
     (*featureArrayPtr)[0] = k_OriginalFeatureArray[0];
     (*featureArrayPtr)[1] = k_OriginalFeatureArray[1];
     (*featureArrayPtr)[2] = k_OriginalFeatureArray[2];
@@ -264,7 +264,7 @@ TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: 5 Feature Test", "[SimplnxCor
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -278,7 +278,7 @@ TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: 4 Feature Test", "[SimplnxCor
 {
   DataStructure dataStructure;
   {
-    Int32Array* featureIdsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsArrayName, std::vector<usize>{10}, std::vector<usize>{1});
+    Int32ArrayType* featureIdsArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsArrayName, std::vector<usize>{10}, std::vector<usize>{1});
     (*featureIdsArrayPtr)[0] = k_OriginalFeatureIds[0];
     (*featureIdsArrayPtr)[1] = k_OriginalFeatureIds[1];
     (*featureIdsArrayPtr)[2] = k_OriginalFeatureIds[2];
@@ -292,7 +292,7 @@ TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: 4 Feature Test", "[SimplnxCor
 
     AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, std::vector<usize>{4});
 
-    Int32Array* featureArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureArrayName, featureAmPtr->getShape(), std::vector<usize>{1}, featureAmPtr->getId());
+    Int32ArrayType* featureArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureArrayName, featureAmPtr->getShape(), std::vector<usize>{1}, featureAmPtr->getId());
     (*featureArrayPtr)[0] = k_OriginalFeatureArray[0];
     (*featureArrayPtr)[1] = k_OriginalFeatureArray[1];
     (*featureArrayPtr)[2] = k_OriginalFeatureArray[2];
@@ -310,7 +310,7 @@ TEST_CASE("SimplnxCore::RandomizeFeatureIdsFilter: 4 Feature Test", "[SimplnxCor
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);

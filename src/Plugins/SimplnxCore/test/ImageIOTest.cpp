@@ -110,11 +110,11 @@ TEST_CASE("SimplnxCore::TiffImageIO: single-page 2D uint8_t", "[SimplnxCore][Ima
   const auto metaResult = io.readMetadata(path);
   REQUIRE(metaResult.valid());
   const ImageMetadata& meta = metaResult.value();
-  REQUIRE(meta.numPages == 1);
+  REQUIRE(meta.num_pages == 1);
   REQUIRE(meta.width == k_Width);
   REQUIRE(meta.height == k_Height);
-  REQUIRE(meta.numComponents == 1);
-  REQUIRE(meta.dataType == DataType::uint8);
+  REQUIRE(meta.num_components == 1);
+  REQUIRE(meta.data_type == DataType::uint8);
 
   std::vector<uint8_t> buffer(static_cast<size_t>(k_Width) * k_Height);
   REQUIRE(io.readPixelData(path, buffer, 0).valid());
@@ -145,7 +145,7 @@ TEST_CASE("SimplnxCore::TiffImageIO: multi-page uint8_t Z-stack", "[SimplnxCore]
   const TiffImageIO io;
   const auto metaResult = io.readMetadata(path);
   REQUIRE(metaResult.valid());
-  REQUIRE(metaResult.value().numPages == 3);
+  REQUIRE(metaResult.value().num_pages == 3);
 
   for(usize p = 0; p < planeValues.size(); ++p)
   {
@@ -175,7 +175,7 @@ TEST_CASE("SimplnxCore::TiffImageIO: reduced-resolution subfile excluded from pa
   const TiffImageIO io;
   const auto metaResult = io.readMetadata(path);
   REQUIRE(metaResult.valid());
-  REQUIRE(metaResult.value().numPages == 1);
+  REQUIRE(metaResult.value().num_pages == 1);
   REQUIRE(metaResult.value().width == k_FullWidth);
   REQUIRE(metaResult.value().height == k_FullHeight);
 
@@ -201,8 +201,8 @@ TEST_CASE("SimplnxCore::StbImageIO: single-image formats reject non-zero page in
   ImageMetadata writeMeta;
   writeMeta.width = k_Width;
   writeMeta.height = k_Height;
-  writeMeta.numComponents = 1;
-  writeMeta.dataType = DataType::uint8;
+  writeMeta.num_components = 1;
+  writeMeta.data_type = DataType::uint8;
 
   const fs::path path = ImageIOOutputDir() / "single_image.png";
   const StbImageIO io;
@@ -210,7 +210,7 @@ TEST_CASE("SimplnxCore::StbImageIO: single-image formats reject non-zero page in
 
   const auto metaResult = io.readMetadata(path);
   REQUIRE(metaResult.valid());
-  REQUIRE(metaResult.value().numPages == 1);
+  REQUIRE(metaResult.value().num_pages == 1);
 
   // Page 0 round-trips the pixel data.
   std::vector<uint8_t> buffer(static_cast<size_t>(k_Width) * k_Height);

@@ -91,7 +91,7 @@ void IGridGeometry::setCellData(const AttributeMatrix& attributeMatrix)
   m_CellDataId = attributeMatrix.getId();
 }
 
-void IGridGeometry::setCellData(OptionalId id)
+void IGridGeometry::setCellData(OptionalIdType id)
 {
   m_CellDataId = id;
 }

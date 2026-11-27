@@ -396,7 +396,7 @@ void Preferences::setDefaultValues()
 
   {
     std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "simplnx";
-    m_DefaultValues[k_OoCTempDirectory_ID] = tempDir.string();
+    m_DefaultValues[k_OoCTempDirectoryId] = tempDir.string();
   }
 
   updateMemoryDefaults();
@@ -527,13 +527,13 @@ Result<> Preferences::saveToFile(const std::filesystem::path& filepath) const
 {
   if(!std::filesystem::exists(filepath.parent_path()) && !std::filesystem::create_directories(filepath.parent_path()))
   {
-    return MakeErrorResult(Preferences::k_FailedToCreateDirectory_Code, k_FailedToCreateDirectoryMessage);
+    return MakeErrorResult(Preferences::k_FailedToCreateDirectoryCode, k_FailedToCreateDirectoryMessage);
   }
 
   std::ofstream fileStream(filepath);
   if(!fileStream.is_open())
   {
-    return MakeErrorResult(Preferences::k_FileCouldNotOpen_Code, k_FileCouldNotOpenMessage);
+    return MakeErrorResult(Preferences::k_FileCouldNotOpenCode, k_FileCouldNotOpenMessage);
   }
 
   // The file stores the out-of-core size thresholds in GB. Memory keeps them in bytes.
@@ -557,19 +557,19 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 {
   if(!std::filesystem::exists(filepath))
   {
-    return MakeErrorResult(Preferences::k_FileDoesNotExist_Code, k_FileDoesNotExistMessage);
+    return MakeErrorResult(Preferences::k_FileDoesNotExistCode, k_FileDoesNotExistMessage);
   }
 
   std::ifstream fileStream(filepath);
   if(!fileStream.is_open())
   {
-    return MakeErrorResult(Preferences::k_FileCouldNotOpen_Code, k_FileCouldNotOpenMessage);
+    return MakeErrorResult(Preferences::k_FileCouldNotOpenCode, k_FileCouldNotOpenMessage);
   }
 
   nlohmann::json parsedResult = nlohmann::json::parse(fileStream, nullptr, false);
   if(parsedResult.is_discarded())
   {
-    return MakeErrorResult(Preferences::k_JsonParseError_Code, k_JsonParseErrorMessage);
+    return MakeErrorResult(Preferences::k_JsonParseErrorCode, k_JsonParseErrorMessage);
   }
 
   if(!parsedResult.is_object())
@@ -693,12 +693,12 @@ uint64 Preferences::largeDataStructureSize() const
 
 std::string Preferences::oocTempDirectory() const
 {
-  return value(k_OoCTempDirectory_ID).get<std::string>();
+  return value(k_OoCTempDirectoryId).get<std::string>();
 }
 
 void Preferences::setOocTempDirectory(const std::string& path)
 {
-  setValue(k_OoCTempDirectory_ID, path);
+  setValue(k_OoCTempDirectoryId, path);
   // Registered managers use this base directory for session backing files. In-core
   // builds have no out-of-core manager, so the collection update has no effect.
   Application::GetOrCreateInstance()->getIOCollection().setBaseDirectory(std::filesystem::path(path));
@@ -717,7 +717,7 @@ void Preferences::setAutoRangeComputation(bool enabled)
 uint64 Preferences::cacheMemoryBudgetBytes() const
 {
   // Read m_Values directly so the fallback uses the current system-RAM default.
-  return m_Values.value(k_CacheMemoryBudgetBytes_Key, CacheMemoryBudgetManager::defaultBudgetBytes());
+  return m_Values.value(k_CacheMemoryBudgetBytes_Key, CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 void Preferences::setCacheMemoryBudgetBytes(uint64 bytes)

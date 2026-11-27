@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace nx::core::ScaleBarRenderer
+namespace nx::core::scale_bar_renderer
 {
 /**
  * @brief Picks the physical length of a scale bar for an image: the largest

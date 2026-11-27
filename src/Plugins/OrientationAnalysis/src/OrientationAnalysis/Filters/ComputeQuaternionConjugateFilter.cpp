@@ -56,7 +56,7 @@ Parameters ComputeQuaternionConjugateFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Quaternions", "Specifies the quaternions to convert", DataPath({"Cell Data", "Quats"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Created Quaternion Conjugate", "The name of the generated quaternion conjugate array", "Quaternions [Conjugate]"));
@@ -86,7 +86,7 @@ IFilter::PreflightResult ComputeQuaternionConjugateFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuaternionDataArrayPathValue);
+  const auto& quats = dataStructure.getDataRefAs<Float32ArrayType>(pQuaternionDataArrayPathValue);
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);
@@ -101,7 +101,7 @@ IFilter::PreflightResult ComputeQuaternionConjugateFilter::preflightImpl(const D
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -110,9 +110,9 @@ Result<> ComputeQuaternionConjugateFilter::executeImpl(DataStructure& dataStruct
 {
   ComputeQuaternionConjugateInputValues inputValues;
 
-  inputValues.QuaternionDataArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.QuaternionDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
-  inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
+  inputValues.quaternion_data_array_path = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
+  inputValues.output_data_array_path = inputValues.quaternion_data_array_path.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.delete_original_data = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return ComputeQuaternionConjugate(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

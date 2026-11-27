@@ -56,7 +56,7 @@ Parameters ReadTextDataArrayFilter::parameters() const
   params.insert(std::make_unique<UInt64ParameterType>(k_NComp_Key, "Number of Components", "Number of columns", 1));
   params.insert(std::make_unique<UInt64ParameterType>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0,
-                                                   ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
+                                                   ChoicesParameter::ChoicesType{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayPath_Key, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
@@ -103,7 +103,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   if(nComp == 0)
   {
-    return MakePreflightErrorResult(DimensionConversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
+    return MakePreflightErrorResult(dimension_conversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
   }
 
   ShapeType tupleDims = {};
@@ -121,7 +121,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
     auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
     if(dimensions.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     tupleDims = std::move(dimensions.value());
   }
@@ -143,17 +143,17 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadTextDataArrayInputValues inputValues;
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.SkipLineCount = filterArgs.value<uint64>(k_NSkipLines_Key);
-  inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
-  inputValues.OutputDataArrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.skip_line_count = filterArgs.value<uint64>(k_NSkipLines_Key);
+  inputValues.delimiter_index = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
+  inputValues.output_data_array_path = filterArgs.value<DataPath>(k_DataArrayPath_Key);
 
   return ReadTextDataArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

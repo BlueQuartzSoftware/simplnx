@@ -12,11 +12,11 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[ComputeNeighborListStatisticsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, "TestData");
@@ -68,26 +68,26 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check resulting values
-  auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(lengthOutputPath);
+  auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(lengthOutputPath);
   REQUIRE(lengthArrayPtr != nullptr);
-  auto* minArrayPtr = dataStructure.getDataAs<Float32Array>(minimumOutputPath);
+  auto* minArrayPtr = dataStructure.getDataAs<Float32ArrayType>(minimumOutputPath);
   REQUIRE(minArrayPtr != nullptr);
-  auto* maxArrayPtr = dataStructure.getDataAs<Float32Array>(maximumOutputPath);
+  auto* maxArrayPtr = dataStructure.getDataAs<Float32ArrayType>(maximumOutputPath);
   REQUIRE(maxArrayPtr != nullptr);
-  auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(meanOutputPath);
+  auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(meanOutputPath);
   REQUIRE(meanArrayPtr != nullptr);
-  auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(medianOutputPath);
+  auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(medianOutputPath);
   REQUIRE(medianArrayPtr != nullptr);
-  auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(stdDevOutputPath);
+  auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(stdDevOutputPath);
   REQUIRE(stdArrayPtr != nullptr);
-  auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(summationOutputPath);
+  auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(summationOutputPath);
   REQUIRE(sumArrayPtr != nullptr);
 
   auto lengthVal1 = (*lengthArrayPtr)[0];
@@ -146,12 +146,12 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
   REQUIRE(sumVal2 == 24753.0f);
   REQUIRE(sumVal3 == 22391.0f);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array", "[ComputeNeighborListStatisticsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, "TestData");
@@ -198,19 +198,19 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.output_actions.invalid());
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeNeighborListStatisticsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

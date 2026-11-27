@@ -38,7 +38,7 @@ void RunLaplacian(IFilter& filter, DataStructure& dataStructure, const DataPath&
   args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(sigma));
   args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -71,7 +71,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: resident st
   constexpr usize k_DimZ = 32;
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto float32Result = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float32Result);
@@ -80,14 +80,14 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: resident st
   auto float64Result = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float64>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64Result);
   REQUIRE(float64Result.value() == 128 * k_MiB);
-  auto overflowResult = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  auto overflowResult = ImageProcessing::detail::CalculateLaplacianRecursiveGaussianResidentWorkingMemoryBytes<float64>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseLaplacianRecursiveGaussianResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   REQUIRE_FALSE(manager.setBudgetBytes(256 * k_MiB));
@@ -116,8 +116,8 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: resident st
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight rejections", "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("too-few-pixels rejected")
   {
@@ -133,8 +133,8 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   // The "too-few-pixels" arm above trips via X == 3. ValidateSeparableImageDims separately rejects a genuinely 3D image
   // (Z > 1) whose Z < 4 (`zIs2D || dims[2] >= 4`, zIs2D == (dims[2]==1)); a Z of 2 or 3 (NOT treated as 2D) hits that
@@ -152,8 +152,8 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("3D image with Z==3 rejected (too few Z pixels)")
   {
@@ -168,8 +168,8 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("Z==1 accepted as a 2D image")
   {
@@ -184,7 +184,7 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(1.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
   SECTION("non-positive sigma rejected")
   {
@@ -200,18 +200,18 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(LaplacianFilterType::k_Sigma_Key, std::make_any<float64>(0.0));
     args.insertOrAssign(LaplacianFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
   }
 }
 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane path matches direct path", "[NXImageProcessing][LaplacianRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(1ULL, 8ULL);
-  const FloatVec3 spacing{0.6f, 1.4f, 2.2f};
+  const FloatVec3Type spacing{0.6f, 1.4f, 2.2f};
   const std::vector<float64> field = MakeRamp<float64>(12, 11, dimZ);
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
 
@@ -224,8 +224,8 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane
     LaplacianFilterType filter;
     RunLaplacian(filter, directDs, directInput, 1.75, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    REQUIRE(counts.InCoreOnInMemoryStore == 1);
-    REQUIRE(counts.OutOfCore == 0);
+    REQUIRE(counts.in_core_on_in_memory_store == 1);
+    REQUIRE(counts.out_of_core == 0);
   }
 
   DataStructure fusedDs;
@@ -237,8 +237,8 @@ TEST_CASE("NXImageProcessing::LaplacianRecursiveGaussianImageFilter: fused plane
     LaplacianFilterType filter;
     RunLaplacian(filter, fusedDs, fusedInput, 1.75, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    REQUIRE(counts.OutOfCoreOnInMemoryStore == 1);
-    REQUIRE(counts.InCore == 0);
+    REQUIRE(counts.out_of_core_on_in_memory_store == 1);
+    REQUIRE(counts.in_core == 0);
   }
 
   rt::RequireExactFloat32(directDs.getDataRefAs<IDataArray>(outputPath), fusedDs.getDataRefAs<IDataArray>(outputPath));

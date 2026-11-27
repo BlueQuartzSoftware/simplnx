@@ -21,18 +21,18 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureClusteringInputValues
 {
-  DataPath ImageGeometryPath;
-  int32 NumberOfBins{};
-  int32 PhaseNumber{};
-  bool RemoveBiasedFeatures{};
-  uint64 SeedValue{}; ///< Seeds the deterministic random reference distribution.
-  DataPath FeaturePhasesArrayPath;
-  DataPath CentroidsArrayPath;
-  DataPath BiasedFeaturesArrayPath;
-  DataPath CellEnsembleAttributeMatrixName;
-  DataPath ClusteringListArrayName;
-  DataPath RDFArrayName;
-  DataPath MaxMinArrayName;
+  DataPath image_geometry_path;
+  int32 number_of_bins{};
+  int32 phase_number{};
+  bool remove_biased_features{};
+  uint64 seed_value{}; ///< Seeds the deterministic random reference distribution.
+  DataPath feature_phases_array_path;
+  DataPath centroids_array_path;
+  DataPath biased_features_array_path;
+  DataPath cell_ensemble_attribute_matrix_name;
+  DataPath clustering_list_array_name;
+  DataPath rdf_array_name;
+  DataPath max_min_array_name;
 };
 
 /**

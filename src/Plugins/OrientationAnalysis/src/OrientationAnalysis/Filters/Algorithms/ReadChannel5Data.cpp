@@ -71,13 +71,13 @@ ReadChannel5Data::ReadChannel5Data(DataStructure& dataStructure, const IFilter::
 Result<> ReadChannel5Data::operator()()
 {
   ebsdlib::CprReader reader;
-  if(m_InputValues->SpacingOverride.has_value())
+  if(m_InputValues->spacing_override.has_value())
   {
-    const auto& spacing = *m_InputValues->SpacingOverride;
-    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistX, spacing[0]));
-    static_cast<void>(EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistY, spacing[1]));
+    const auto& spacing = *m_InputValues->spacing_override;
+    static_cast<void>(ebsd_step_metadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistX, spacing[0]));
+    static_cast<void>(ebsd_step_metadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistY, spacing[1]));
   }
-  reader.setFileName(m_InputValues->InputFile.string());
+  reader.setFileName(m_InputValues->input_file.string());
   const int32_t err = reader.readFile();
   if(err < 0)
   {
@@ -110,13 +110,13 @@ std::pair<int32, std::string> ReadChannel5Data::loadMaterialInfo(ebsdlib::CprRea
     return {reader->getErrorCode(), reader->getErrorMessage()};
   }
 
-  const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
+  const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->data_container_name.createChildPath(m_InputValues->cell_ensemble_attribute_matrix_name);
 
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
 
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::MaterialName));
 
-  auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::LatticeConstants));
+  auto& latticeConstants = m_DataStructure.getDataRefAs<Float32ArrayType>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::LatticeConstants));
 
   const std::string invalidPhase = "Invalid Phase";
 
@@ -135,8 +135,8 @@ std::pair<int32, std::string> ReadChannel5Data::loadMaterialInfo(ebsdlib::CprRea
     const int32_t phaseID = phase->getPhaseIndex();
     crystalStructures[phaseID] = phase->determineOrientationOpsIndex();
     std::string materialName = phase->getMaterialName();
-    materialName = nx::core::StringUtilities::replace(materialName, "MaterialName", "");
-    materialName = nx::core::StringUtilities::trimmed(materialName);
+    materialName = nx::core::string_utilities::Replace(materialName, "MaterialName", "");
+    materialName = nx::core::string_utilities::Trimmed(materialName);
     materialNames[phaseID] = materialName;
 
     std::vector<float> lattConst = phase->getLatticeConstants();
@@ -152,11 +152,11 @@ std::pair<int32, std::string> ReadChannel5Data::loadMaterialInfo(ebsdlib::CprRea
 // -----------------------------------------------------------------------------
 Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
 {
-  const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
+  const DataPath cellAttributeMatrixPath = m_InputValues->data_container_name.createChildPath(m_InputValues->cell_attribute_matrix_name);
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->data_container_name);
   const usize totalCells = imageGeom.getNumberOfCells();
-  const std::vector<ebsdlib::CrcDataParser> fieldParsers = reader->createFieldParsers(m_InputValues->InputFile.string());
+  const std::vector<ebsdlib::CrcDataParser> fieldParsers = reader->createFieldParsers(m_InputValues->input_file.string());
 
   for(const auto& parser : fieldParsers)
   {
@@ -209,10 +209,10 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
   const auto* rawPhasePtr = reinterpret_cast<const uint8*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
   const auto* rawPhi2Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi2));
   std::vector<uint32> crystalStructures;
-  if(m_InputValues->EdaxHexagonalAlignment)
+  if(m_InputValues->edax_hexagonal_alignment)
   {
-    const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
-    const auto& crystalStructuresRef = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
+    const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->data_container_name.createChildPath(m_InputValues->cell_ensemble_attribute_matrix_name);
+    const auto& crystalStructuresRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
     crystalStructures.resize(crystalStructuresRef.getSize());
     if(Result<> ioResult = crystalStructuresRef.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size())); ioResult.invalid())
     {
@@ -221,17 +221,17 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
   }
 
   const auto alignedPhi2 = [this, &crystalStructures](uint8 phase, float32 phi2) -> float32 {
-    if(m_InputValues->EdaxHexagonalAlignment && phase < crystalStructures.size() && EbsdReaderUtilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
+    if(m_InputValues->edax_hexagonal_alignment && phase < crystalStructures.size() && ebsd_reader_utilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
     {
       // Channel 5 Euler angles are already in radians; retain the unwrapped result.
-      return static_cast<float32>(static_cast<float64>(phi2) + EbsdReaderUtilities::k_HexagonalAlignmentRadiansD);
+      return static_cast<float32>(static_cast<float64>(phi2) + ebsd_reader_utilities::k_HexagonalAlignmentRadiansD);
     }
     return phi2;
   };
 
-  if(m_InputValues->EdaxHexagonalAlignment)
+  if(m_InputValues->edax_hexagonal_alignment)
   {
-    auto& phi2StoreRef = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi2)).getDataStoreRef();
+    auto& phi2StoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi2)).getDataStoreRef();
     std::vector<float32> phi2Buffer(k_ChunkTuples);
 
     for(usize offset = 0; offset < totalCells; offset += k_ChunkTuples)
@@ -253,9 +253,9 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
     }
   }
 
-  if(m_InputValues->CreateCompatibleArrays)
+  if(m_InputValues->create_compatible_arrays)
   {
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32ArrayType>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
     auto& phaseStore = targetArray.getDataStoreRef();
     std::vector<int32> phaseBuffer(k_ChunkTuples);
 
@@ -278,12 +278,12 @@ Result<> ReadChannel5Data::copyRawEbsdData(ebsdlib::CprReader* reader) const
     }
   }
 
-  if(m_InputValues->CreateCompatibleArrays)
+  if(m_InputValues->create_compatible_arrays)
   {
     const auto* rawPhi1Ptr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::phi1));
     const auto* rawPhiPtr = reinterpret_cast<const float32*>(reader->getPointerByName(ebsdlib::Ctf::Phi));
 
-    auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
+    auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     auto& eulerStore = cellEulerAngles.getDataStoreRef();
     std::vector<float32> eulerBuffer(k_ChunkTuples * 3);
 

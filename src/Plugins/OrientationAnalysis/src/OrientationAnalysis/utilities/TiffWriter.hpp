@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-namespace TiffWriter
+namespace tiff_writer
 {
 /**
  * @brief WriteColorImage Writes an RGB or RGBA image to a tiff file.

@@ -50,29 +50,29 @@ public:
   void operator()(const Range& range) const
   {
     // Cell arrays must share the same tuple count.
-    Int32AbstractDataStore& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath).getDataStoreRef();
-    Int32AbstractDataStore& phasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
-    Float32AbstractDataStore& quatsRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath).getDataStoreRef();
-    UInt32AbstractDataStore& xtalRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath).getDataStoreRef();
+    Int32AbstractDataStoreType& featureIdsRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_feature_ids_array_path).getDataStoreRef();
+    Int32AbstractDataStoreType& phasesRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+    Float32AbstractDataStoreType& quatsRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_quats_array_path).getDataStoreRef();
+    UInt32AbstractDataStoreType& xtalRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path).getDataStoreRef();
 
-    Float32AbstractDataStore* vmfQuatPtr = nullptr;
-    Float32AbstractDataStore* vmfEulerPtr = nullptr;
-    Float32AbstractDataStore* vmfKappaPtr = nullptr;
-    if(m_InputValues->useVonMisesAverage)
+    Float32AbstractDataStoreType* vmfQuatPtr = nullptr;
+    Float32AbstractDataStoreType* vmfEulerPtr = nullptr;
+    Float32AbstractDataStoreType* vmfKappaPtr = nullptr;
+    if(m_InputValues->use_von_mises_average)
     {
-      vmfQuatPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFQuatsArrayPath).getDataStorePtr().lock().get();
-      vmfEulerPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFEulerAnglesArrayPath).getDataStorePtr().lock().get();
-      vmfKappaPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFKappaArrayPath).getDataStorePtr().lock().get();
+      vmfQuatPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_quats_array_path).getDataStorePtr().lock().get();
+      vmfEulerPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_euler_angles_array_path).getDataStorePtr().lock().get();
+      vmfKappaPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_kappa_array_path).getDataStorePtr().lock().get();
     }
 
-    Float32AbstractDataStore* watsonQuatPtr = nullptr;
-    Float32AbstractDataStore* watsonEulerPtr = nullptr;
-    Float32AbstractDataStore* watsonKappaPtr = nullptr;
-    if(m_InputValues->useWatsonAverage)
+    Float32AbstractDataStoreType* watsonQuatPtr = nullptr;
+    Float32AbstractDataStoreType* watsonEulerPtr = nullptr;
+    Float32AbstractDataStoreType* watsonKappaPtr = nullptr;
+    if(m_InputValues->use_watson_average)
     {
-      watsonQuatPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonQuatsArrayPath).getDataStorePtr().lock().get();
-      watsonEulerPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonEulerAnglesArrayPath).getDataStorePtr().lock().get();
-      watsonKappaPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonKappaArrayPath).getDataStorePtr().lock().get();
+      watsonQuatPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_quats_array_path).getDataStorePtr().lock().get();
+      watsonEulerPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_euler_angles_array_path).getDataStorePtr().lock().get();
+      watsonKappaPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_kappa_array_path).getDataStorePtr().lock().get();
     }
 
     const usize numVoxels = featureIdsRef.getNumberOfTuples();
@@ -118,9 +118,9 @@ public:
         }
       }
 
-      if(m_InputValues->useVonMisesAverage)
+      if(m_InputValues->use_von_mises_average)
       {
-        uint32_t seed = m_InputValues->RandomSeed;
+        uint32_t seed = m_InputValues->random_seed;
         ebsdlib::QuatD muhat = ebsdlib::QuatD::identity();
         double kappahat = 0.0;
 
@@ -131,8 +131,8 @@ public:
         else if(!fzQuats.empty())
         {
           ebsdlib::DirectionalStats directionalStats("VMF", op);
-          int numEmIterations = m_InputValues->NumEMIterations;
-          int numIterations = m_InputValues->NumIterations;
+          int numEmIterations = m_InputValues->num_em_iterations;
+          int numIterations = m_InputValues->num_iterations;
           directionalStats.setNumEM(numEmIterations);
           directionalStats.setNumIter(numIterations);
           directionalStats.setQuatArray(fzQuats);
@@ -153,9 +153,9 @@ public:
         vmfKappaPtr->setValue(featureId, kappahat);
       }
 
-      if(m_InputValues->useWatsonAverage)
+      if(m_InputValues->use_watson_average)
       {
-        uint32_t seed = m_InputValues->RandomSeed;
+        uint32_t seed = m_InputValues->random_seed;
         ebsdlib::QuatD muhat = ebsdlib::QuatD::identity();
         double kappahat = 0.0;
 
@@ -166,8 +166,8 @@ public:
         else if(!fzQuats.empty())
         {
           ebsdlib::DirectionalStats directionalStats("WAT", op);
-          int numEmIterations = m_InputValues->NumEMIterations;
-          int numIterations = m_InputValues->NumIterations;
+          int numEmIterations = m_InputValues->num_em_iterations;
+          int numIterations = m_InputValues->num_iterations;
           directionalStats.setNumEM(numEmIterations);
           directionalStats.setNumIter(numIterations);
           directionalStats.setQuatArray(fzQuats);
@@ -231,7 +231,7 @@ bool CheckedMultiply(usize lhs, usize rhs, usize& product)
  */
 Result<> ValidateFloatOutput(DataStructure& dataStructure, const DataPath& path, usize tupleCount, usize componentCount)
 {
-  const auto* arrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  const auto* arrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(arrayPtr == nullptr)
   {
     return MakeErrorResult(-54674, fmt::format("ComputeAvgOrientations: required Float32 output array '{}' does not exist.", path.toString()));
@@ -269,7 +269,7 @@ Result<> WriteFloatOutput(DataStructure& dataStructure, const DataPath& path, us
     return MakeErrorResult(
         -54676, fmt::format("ComputeAvgOrientations: output buffer for '{}' has {} values; expected {} tuples times {} components.", path.toString(), values.size(), tupleCount, componentCount));
   }
-  return dataStructure.getDataRefAs<Float32Array>(path).getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
+  return dataStructure.getDataRefAs<Float32ArrayType>(path).getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(values.data(), values.size()));
 }
 
 /**
@@ -361,10 +361,10 @@ Result<> ComputeDirectionalFeature(usize featureId, const ebsdlib::LaueOps::Poin
     }
     else if(!fzQuats.empty())
     {
-      uint32 seed = inputValues.RandomSeed;
+      uint32 seed = inputValues.random_seed;
       ebsdlib::DirectionalStats directionalStats(distribution, orientationOp);
-      directionalStats.setNumEM(inputValues.NumEMIterations);
-      directionalStats.setNumIter(inputValues.NumIterations);
+      directionalStats.setNumEM(inputValues.num_em_iterations);
+      directionalStats.setNumIter(inputValues.num_iterations);
       directionalStats.setQuatArray(fzQuats);
       directionalStats.EMforDS(seed, muhat, kappahat, false);
       muhat.positiveOrientation();
@@ -377,7 +377,7 @@ Result<> ComputeDirectionalFeature(usize featureId, const ebsdlib::LaueOps::Poin
     return {};
   };
 
-  if(inputValues.useVonMisesAverage)
+  if(inputValues.use_von_mises_average)
   {
     Result<> result = computeEstimate("VMF", outputs.vmf_quats, outputs.vmf_euler, outputs.vmf_kappa);
     if(result.invalid() || shouldCancel)
@@ -385,7 +385,7 @@ Result<> ComputeDirectionalFeature(usize featureId, const ebsdlib::LaueOps::Poin
       return result;
     }
   }
-  if(inputValues.useWatsonAverage)
+  if(inputValues.use_watson_average)
   {
     Result<> result = computeEstimate("WAT", outputs.watson_quats, outputs.watson_euler, outputs.watson_kappa);
     if(result.invalid() || shouldCancel)
@@ -536,26 +536,26 @@ Result<> ComputeAvgOrientations::operator()()
     }
   };
 
-  appendTarget(m_InputValues->cellFeatureIdsArrayPath);
-  appendTarget(m_InputValues->cellPhasesArrayPath);
-  appendTarget(m_InputValues->cellQuatsArrayPath);
-  appendTarget(m_InputValues->crystalStructuresArrayPath);
-  if(m_InputValues->useRodriguesAverage)
+  appendTarget(m_InputValues->cell_feature_ids_array_path);
+  appendTarget(m_InputValues->cell_phases_array_path);
+  appendTarget(m_InputValues->cell_quats_array_path);
+  appendTarget(m_InputValues->crystal_structures_array_path);
+  if(m_InputValues->use_rodrigues_average)
   {
-    appendTarget(m_InputValues->avgQuatsArrayPath);
-    appendTarget(m_InputValues->avgEulerAnglesArrayPath);
+    appendTarget(m_InputValues->avg_quats_array_path);
+    appendTarget(m_InputValues->avg_euler_angles_array_path);
   }
-  if(m_InputValues->useVonMisesAverage)
+  if(m_InputValues->use_von_mises_average)
   {
-    appendTarget(m_InputValues->VMFQuatsArrayPath);
-    appendTarget(m_InputValues->VMFEulerAnglesArrayPath);
-    appendTarget(m_InputValues->VMFKappaArrayPath);
+    appendTarget(m_InputValues->vmf_quats_array_path);
+    appendTarget(m_InputValues->vmf_euler_angles_array_path);
+    appendTarget(m_InputValues->vmf_kappa_array_path);
   }
-  if(m_InputValues->useWatsonAverage)
+  if(m_InputValues->use_watson_average)
   {
-    appendTarget(m_InputValues->WatsonQuatsArrayPath);
-    appendTarget(m_InputValues->WatsonEulerAnglesArrayPath);
-    appendTarget(m_InputValues->WatsonKappaArrayPath);
+    appendTarget(m_InputValues->watson_quats_array_path);
+    appendTarget(m_InputValues->watson_euler_angles_array_path);
+    appendTarget(m_InputValues->watson_kappa_array_path);
   }
 
   return DispatchAlgorithm<DirectAlgorithm, ScanlineAlgorithm>(AlgorithmArrayTargets(std::move(targets)), *this);
@@ -567,33 +567,33 @@ Result<> ComputeAvgOrientations::executeDirect()
   {
     return {};
   }
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  if(m_DataStructure.containsData(m_InputValues->avgEulerAnglesArrayPath))
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_feature_ids_array_path);
+  if(m_DataStructure.containsData(m_InputValues->avg_euler_angles_array_path))
   {
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->avgEulerAnglesArrayPath, featureIds, false, m_MessageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->avg_euler_angles_array_path, featureIds, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;
     }
-    m_NumberOfFeatures = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath).getNumberOfTuples();
+    m_NumberOfFeatures = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_euler_angles_array_path).getNumberOfTuples();
   }
-  else if(m_DataStructure.containsData(m_InputValues->VMFEulerAnglesArrayPath))
+  else if(m_DataStructure.containsData(m_InputValues->vmf_euler_angles_array_path))
   {
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->VMFEulerAnglesArrayPath, featureIds, false, m_MessageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->vmf_euler_angles_array_path, featureIds, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;
     }
-    m_NumberOfFeatures = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFEulerAnglesArrayPath).getNumberOfTuples();
+    m_NumberOfFeatures = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_euler_angles_array_path).getNumberOfTuples();
   }
-  else if(m_DataStructure.containsData(m_InputValues->WatsonEulerAnglesArrayPath))
+  else if(m_DataStructure.containsData(m_InputValues->watson_euler_angles_array_path))
   {
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->WatsonEulerAnglesArrayPath, featureIds, false, m_MessageHandler);
+    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->watson_euler_angles_array_path, featureIds, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;
     }
-    m_NumberOfFeatures = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonEulerAnglesArrayPath).getNumberOfTuples();
+    m_NumberOfFeatures = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_euler_angles_array_path).getNumberOfTuples();
   }
   else
   {
@@ -603,7 +603,7 @@ Result<> ComputeAvgOrientations::executeDirect()
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
   Result<> finalResult;
-  if(m_InputValues->useRodriguesAverage)
+  if(m_InputValues->use_rodrigues_average)
   {
     messageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
 
@@ -614,17 +614,17 @@ Result<> ComputeAvgOrientations::executeDirect()
     }
     finalResult = MergeResults(std::move(finalResult), std::move(result));
   }
-  if(m_InputValues->useVonMisesAverage || m_InputValues->useWatsonAverage)
+  if(m_InputValues->use_von_mises_average || m_InputValues->use_watson_average)
   {
-    if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
+    if(m_InputValues->use_von_mises_average && !m_InputValues->use_watson_average)
     {
       messageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
-    if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
+    if(!m_InputValues->use_von_mises_average && m_InputValues->use_watson_average)
     {
       messageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
-    if(m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
+    if(m_InputValues->use_von_mises_average && m_InputValues->use_watson_average)
     {
       messageHandler.sendInfoMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
@@ -646,15 +646,15 @@ Result<> ComputeAvgOrientations::executeScanline()
   {
     return {};
   }
-  if(!m_InputValues->useRodriguesAverage && !m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
+  if(!m_InputValues->use_rodrigues_average && !m_InputValues->use_von_mises_average && !m_InputValues->use_watson_average)
   {
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
   }
 
-  const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  const auto* phasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  const auto* quaternionsPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
-  const auto* crystalStructuresPtr = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_feature_ids_array_path);
+  const auto* phasesPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto* quaternionsPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->cell_quats_array_path);
+  const auto* crystalStructuresPtr = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   if(featureIdsPtr == nullptr || phasesPtr == nullptr || quaternionsPtr == nullptr || crystalStructuresPtr == nullptr)
   {
     return MakeErrorResult(-54674, "ComputeAvgOrientations: one or more required input arrays are missing or have the wrong scalar type.");
@@ -681,19 +681,19 @@ Result<> ComputeAvgOrientations::executeScanline()
   }
 
   const DataPath* featureCountPathPtr = nullptr;
-  if(m_InputValues->useRodriguesAverage)
+  if(m_InputValues->use_rodrigues_average)
   {
-    featureCountPathPtr = &m_InputValues->avgEulerAnglesArrayPath;
+    featureCountPathPtr = &m_InputValues->avg_euler_angles_array_path;
   }
-  else if(m_InputValues->useVonMisesAverage)
+  else if(m_InputValues->use_von_mises_average)
   {
-    featureCountPathPtr = &m_InputValues->VMFEulerAnglesArrayPath;
+    featureCountPathPtr = &m_InputValues->vmf_euler_angles_array_path;
   }
   else
   {
-    featureCountPathPtr = &m_InputValues->WatsonEulerAnglesArrayPath;
+    featureCountPathPtr = &m_InputValues->watson_euler_angles_array_path;
   }
-  const auto* featureCountArrayPtr = m_DataStructure.getDataAs<Float32Array>(*featureCountPathPtr);
+  const auto* featureCountArrayPtr = m_DataStructure.getDataAs<Float32ArrayType>(*featureCountPathPtr);
   if(featureCountArrayPtr == nullptr)
   {
     return MakeErrorResult(-54670, "A valid Feature level array that stores results was not found.");
@@ -717,17 +717,17 @@ Result<> ComputeAvgOrientations::executeScanline()
     }
     return ValidateFloatOutput(m_DataStructure, *kappaPath, m_NumberOfFeatures, 1);
   };
-  Result<> outputResult = validateOutputs(m_InputValues->useRodriguesAverage, m_InputValues->avgQuatsArrayPath, m_InputValues->avgEulerAnglesArrayPath, nullptr);
+  Result<> outputResult = validateOutputs(m_InputValues->use_rodrigues_average, m_InputValues->avg_quats_array_path, m_InputValues->avg_euler_angles_array_path, nullptr);
   if(outputResult.invalid())
   {
     return outputResult;
   }
-  outputResult = validateOutputs(m_InputValues->useVonMisesAverage, m_InputValues->VMFQuatsArrayPath, m_InputValues->VMFEulerAnglesArrayPath, &m_InputValues->VMFKappaArrayPath);
+  outputResult = validateOutputs(m_InputValues->use_von_mises_average, m_InputValues->vmf_quats_array_path, m_InputValues->vmf_euler_angles_array_path, &m_InputValues->vmf_kappa_array_path);
   if(outputResult.invalid())
   {
     return outputResult;
   }
-  outputResult = validateOutputs(m_InputValues->useWatsonAverage, m_InputValues->WatsonQuatsArrayPath, m_InputValues->WatsonEulerAnglesArrayPath, &m_InputValues->WatsonKappaArrayPath);
+  outputResult = validateOutputs(m_InputValues->use_watson_average, m_InputValues->watson_quats_array_path, m_InputValues->watson_euler_angles_array_path, &m_InputValues->watson_kappa_array_path);
   if(outputResult.invalid())
   {
     return outputResult;
@@ -772,7 +772,7 @@ Result<> ComputeAvgOrientations::executeScanline()
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   Result<> finalResult;
-  if(m_InputValues->useRodriguesAverage)
+  if(m_InputValues->use_rodrigues_average)
   {
     messageHandler.sendInfoMessage("Computing Rodrigues Average Orientations");
     Result<> result = computeRodriguesAverageScanline();
@@ -782,13 +782,13 @@ Result<> ComputeAvgOrientations::executeScanline()
     }
     finalResult = MergeResults(std::move(finalResult), std::move(result));
   }
-  if(m_InputValues->useVonMisesAverage || m_InputValues->useWatsonAverage)
+  if(m_InputValues->use_von_mises_average || m_InputValues->use_watson_average)
   {
-    if(m_InputValues->useVonMisesAverage && !m_InputValues->useWatsonAverage)
+    if(m_InputValues->use_von_mises_average && !m_InputValues->use_watson_average)
     {
       messageHandler.sendInfoMessage("Computing von-Mises Fisher Average Orientations");
     }
-    else if(!m_InputValues->useVonMisesAverage && m_InputValues->useWatsonAverage)
+    else if(!m_InputValues->use_von_mises_average && m_InputValues->use_watson_average)
     {
       messageHandler.sendInfoMessage("Computing Watson Average Orientations");
     }
@@ -809,9 +809,9 @@ Result<> ComputeAvgOrientations::executeScanline()
 Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
 {
   m_Throttle.reset(m_NumberOfFeatures, "Computing average orientations");
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_feature_ids_array_path);
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
   const size_t totalVoxels = featureIds.getNumberOfTuples();
   const usize numEnsembles = crystalStructures.getNumberOfTuples();
@@ -846,27 +846,27 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
     }
   }
 
-  Float32AbstractDataStore* vmfQuatPtr = nullptr;
-  Float32AbstractDataStore* vmfEulerPtr = nullptr;
-  Float32AbstractDataStore* vmfKappaPtr = nullptr;
-  if(m_InputValues->useVonMisesAverage)
+  Float32AbstractDataStoreType* vmfQuatPtr = nullptr;
+  Float32AbstractDataStoreType* vmfEulerPtr = nullptr;
+  Float32AbstractDataStoreType* vmfKappaPtr = nullptr;
+  if(m_InputValues->use_von_mises_average)
   {
-    vmfQuatPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFQuatsArrayPath).getDataStorePtr().lock().get();
-    vmfEulerPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFEulerAnglesArrayPath).getDataStorePtr().lock().get();
-    vmfKappaPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VMFKappaArrayPath).getDataStorePtr().lock().get();
+    vmfQuatPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_quats_array_path).getDataStorePtr().lock().get();
+    vmfEulerPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_euler_angles_array_path).getDataStorePtr().lock().get();
+    vmfKappaPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vmf_kappa_array_path).getDataStorePtr().lock().get();
     vmfQuatPtr->fill(std::numeric_limits<float>::quiet_NaN());
     vmfEulerPtr->fill(std::numeric_limits<float>::quiet_NaN());
     vmfKappaPtr->fill(std::numeric_limits<float>::quiet_NaN());
   }
 
-  Float32AbstractDataStore* watsonQuatPtr = nullptr;
-  Float32AbstractDataStore* watsonEulerPtr = nullptr;
-  Float32AbstractDataStore* watsonKappaPtr = nullptr;
-  if(m_InputValues->useWatsonAverage)
+  Float32AbstractDataStoreType* watsonQuatPtr = nullptr;
+  Float32AbstractDataStoreType* watsonEulerPtr = nullptr;
+  Float32AbstractDataStoreType* watsonKappaPtr = nullptr;
+  if(m_InputValues->use_watson_average)
   {
-    watsonQuatPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonQuatsArrayPath).getDataStorePtr().lock().get();
-    watsonEulerPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonEulerAnglesArrayPath).getDataStorePtr().lock().get();
-    watsonKappaPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->WatsonKappaArrayPath).getDataStorePtr().lock().get();
+    watsonQuatPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_quats_array_path).getDataStorePtr().lock().get();
+    watsonEulerPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_euler_angles_array_path).getDataStorePtr().lock().get();
+    watsonKappaPtr = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->watson_kappa_array_path).getDataStorePtr().lock().get();
     watsonQuatPtr->fill(std::numeric_limits<float>::quiet_NaN());
     watsonEulerPtr->fill(std::numeric_limits<float>::quiet_NaN());
     watsonKappaPtr->fill(std::numeric_limits<float>::quiet_NaN());
@@ -897,10 +897,10 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
 Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
 {
   m_Throttle.reset(m_NumberOfFeatures, "Computing average orientations");
-  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath).getDataStoreRef();
-  const auto& phasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
-  const auto& quaternionsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath).getDataStoreRef();
-  const auto& crystalStructuresStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath).getDataStoreRef();
+  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_feature_ids_array_path).getDataStoreRef();
+  const auto& phasesStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+  const auto& quaternionsStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_quats_array_path).getDataStoreRef();
+  const auto& crystalStructuresStore = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path).getDataStoreRef();
   const usize tupleCount = featureIdsStore.getNumberOfTuples();
   const usize ensembleCount = crystalStructuresStore.getNumberOfTuples();
   if(m_NumberOfFeatures > std::numeric_limits<usize>::max() / 4 || m_NumberOfFeatures > std::numeric_limits<usize>::max() / 3)
@@ -994,7 +994,7 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
     featureOps[feature] = orientationOps[laueClass];
   }
 
-  DirectionalOutputBuffers outputs(m_NumberOfFeatures, m_InputValues->useVonMisesAverage, m_InputValues->useWatsonAverage);
+  DirectionalOutputBuffers outputs(m_NumberOfFeatures, m_InputValues->use_von_mises_average, m_InputValues->use_watson_average);
   const auto processFeature = [&](usize feature, const std::vector<ebsdlib::QuatD>& fzQuaternions) -> Result<> {
     if(fzQuaternions.size() != featureCounts[feature])
     {
@@ -1009,13 +1009,13 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
     return result;
   };
 
-  if(DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
+  if(data_store_utilities::GetIOCollection().hasExternalSortCapability())
   {
     ExternalSortConfig config;
-    config.recordSize = k_OrientationRecordSize;
-    config.maxRecordsPerBatch = k_ChunkTuples;
+    config.record_size = k_OrientationRecordSize;
+    config.max_records_per_batch = k_ChunkTuples;
     config.compare = CompareOrientationRecords;
-    Result<std::unique_ptr<IExternalSort>> createResult = DataStoreUtilities::GetIOCollection().createExternalSort(config);
+    Result<std::unique_ptr<IExternalSort>> createResult = data_store_utilities::GetIOCollection().createExternalSort(config);
     if(createResult.invalid())
     {
       return ConvertResult(std::move(createResult));
@@ -1272,13 +1272,13 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
     return WriteFloatOutput(m_DataStructure, kappaPath, m_NumberOfFeatures, 1, kappas);
   };
 
-  Result<> writeResult = writeOutput(m_InputValues->useVonMisesAverage, m_InputValues->VMFQuatsArrayPath, m_InputValues->VMFEulerAnglesArrayPath, m_InputValues->VMFKappaArrayPath, outputs.vmf_quats,
+  Result<> writeResult = writeOutput(m_InputValues->use_von_mises_average, m_InputValues->vmf_quats_array_path, m_InputValues->vmf_euler_angles_array_path, m_InputValues->vmf_kappa_array_path, outputs.vmf_quats,
                                      outputs.vmf_euler, outputs.vmf_kappa);
   if(writeResult.invalid() || m_ShouldCancel)
   {
     return writeResult;
   }
-  writeResult = writeOutput(m_InputValues->useWatsonAverage, m_InputValues->WatsonQuatsArrayPath, m_InputValues->WatsonEulerAnglesArrayPath, m_InputValues->WatsonKappaArrayPath, outputs.watson_quats,
+  writeResult = writeOutput(m_InputValues->use_watson_average, m_InputValues->watson_quats_array_path, m_InputValues->watson_euler_angles_array_path, m_InputValues->watson_kappa_array_path, outputs.watson_quats,
                             outputs.watson_euler, outputs.watson_kappa);
   if(writeResult.invalid() || m_ShouldCancel)
   {
@@ -1304,14 +1304,14 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
 {
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_feature_ids_array_path);
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& quats = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_quats_array_path);
 
-  auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
-  auto& avgQuatsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath).getDataStoreRef();
-  auto& avgEulerStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath).getDataStoreRef();
+  auto& avgQuatsStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path).getDataStoreRef();
+  auto& avgEulerStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_euler_angles_array_path).getDataStoreRef();
 
   const usize totalPoints = featureIds.getNumberOfTuples();
   if(totalPoints > std::numeric_limits<usize>::max() / 4)

@@ -130,7 +130,7 @@ std::vector<T> RunEngine(const std::vector<T>& input, usize dimX, usize dimY, us
   DataStore<T> outStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = EngineT<T>{inStore, outStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler}();
+  const Result<> r = EngineT<T>{inStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler}();
   REQUIRE(r.valid());
   std::vector<T> out(input.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -147,7 +147,7 @@ std::vector<T> RunSweep(const std::vector<T>& input, usize dimX, usize dimY, usi
   DataStore<T> outStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> result = RegionalExtremaSweep<T>{inStore, outStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, maxSlabValues}();
+  const Result<> result = RegionalExtremaSweep<T>{inStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, maxSlabValues}();
   REQUIRE(result.valid());
   std::vector<T> output(input.size());
   for(usize i = 0; i < output.size(); ++i)
@@ -206,74 +206,74 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: total working-memory grants
   constexpr usize k_SmallerTargetBytes = 2 * 4 * k_PlaneValues * sizeof(int16);
   constexpr usize k_LargerTargetBytes = 2 * 6 * k_PlaneValues * sizeof(int16);
 
-  auto smallerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, k_SmallerTargetBytes);
+  auto smallerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_SmallerTargetBytes);
   REQUIRE(smallerResult.valid());
   const auto& smaller = smallerResult.value();
-  REQUIRE(smaller.maxSlabValues == 4 * k_PlaneValues);
-  REQUIRE(smaller.residentBytes <= k_SmallerTargetBytes);
+  REQUIRE(smaller.max_slab_values == 4 * k_PlaneValues);
+  REQUIRE(smaller.resident_bytes <= k_SmallerTargetBytes);
 
-  auto largerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, k_LargerTargetBytes);
+  auto largerResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_LargerTargetBytes);
   REQUIRE(largerResult.valid());
   const auto& larger = largerResult.value();
-  REQUIRE(larger.maxSlabValues == 6 * k_PlaneValues);
-  REQUIRE(larger.maxSlabValues > smaller.maxSlabValues);
-  REQUIRE(larger.residentBytes <= k_LargerTargetBytes);
+  REQUIRE(larger.max_slab_values == 6 * k_PlaneValues);
+  REQUIRE(larger.max_slab_values > smaller.max_slab_values);
+  REQUIRE(larger.resident_bytes <= k_LargerTargetBytes);
 
   constexpr usize k_NormalizedDimZ = 8;
   constexpr usize k_NormalizedTargetBytes = 2 * 7 * k_PlaneValues * sizeof(int16);
-  auto normalizedResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_NormalizedDimZ}, k_NormalizedTargetBytes);
+  auto normalizedResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_NormalizedDimZ}, k_NormalizedTargetBytes);
   REQUIRE(normalizedResult.valid());
-  REQUIRE(normalizedResult.value().maxSlabValues == 6 * k_PlaneValues);
+  REQUIRE(normalizedResult.value().max_slab_values == 6 * k_PlaneValues);
 
-  auto usefulResult = ImageProcessing::detail::CalculateRegionalExtremaUsefulWorkingMemoryBytes<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ});
+  auto usefulResult = ImageProcessing::detail::CalculateRegionalExtremaUsefulWorkingMemoryBytes<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ});
   REQUIRE(usefulResult.valid());
   REQUIRE(usefulResult.value() == 2 * k_DimX * k_DimY * k_DimZ * sizeof(int16));
-  auto minimumResult = ImageProcessing::detail::CalculateRegionalExtremaMinimumWorkingMemoryBytes<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ});
+  auto minimumResult = ImageProcessing::detail::CalculateRegionalExtremaMinimumWorkingMemoryBytes<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ});
   REQUIRE(minimumResult.valid());
   REQUIRE(minimumResult.value() == 2 * 3 * k_PlaneValues * sizeof(int16));
 
   const std::vector<int16> input = MakePlateauPattern<int16>(k_DimX, k_DimY, k_DimZ);
   const std::vector<int16> expected = RegionalExtremaOracle(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true);
-  REQUIRE(RunSweep(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true, smaller.maxSlabValues) == expected);
-  REQUIRE(RunSweep(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true, larger.maxSlabValues) == expected);
+  REQUIRE(RunSweep(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true, smaller.max_slab_values) == expected);
+  REQUIRE(RunSweep(input, k_DimX, k_DimY, k_DimZ, RegionalExtremaOp::Maxima, true, larger.max_slab_values) == expected);
 
   constexpr usize k_2DDimX = 7;
   constexpr usize k_2DDimY = 9;
   constexpr usize k_2DValues = k_2DDimX * k_2DDimY;
   constexpr usize k_2DTargetBytes = (k_2DValues + 2 * 4 * k_2DDimX) * sizeof(int16);
-  const SizeVec3 k2DDims{k_2DDimX, k_2DDimY, 1};
+  const SizeVec3Type k2DDims{k_2DDimX, k_2DDimY, 1};
   auto fixed2DResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(k2DDims, k_2DTargetBytes);
   REQUIRE(fixed2DResult.valid());
-  REQUIRE(fixed2DResult.value().fixedWorkValues == k_2DValues);
-  REQUIRE(fixed2DResult.value().fixedBufferValues >= 3 * k_2DDimX);
-  REQUIRE(fixed2DResult.value().residentBytes <= k_2DTargetBytes);
+  REQUIRE(fixed2DResult.value().fixed_work_values == k_2DValues);
+  REQUIRE(fixed2DResult.value().fixed_buffer_values >= 3 * k_2DDimX);
+  REQUIRE(fixed2DResult.value().resident_bytes <= k_2DTargetBytes);
 
   constexpr usize k_OverwideTargetBytes = 72;
-  auto overwideResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{31, 4, 1}, k_OverwideTargetBytes);
+  auto overwideResult = ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3Type{31, 4, 1}, k_OverwideTargetBytes);
   REQUIRE(overwideResult.valid());
   const auto& overwide = overwideResult.value();
-  REQUIRE(overwide.fixedWorkValues == 0);
-  auto overwideSweepResult = ImageProcessing::detail::CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, overwide.maxSlabValues, /*fullWidthHaloRows=*/2, /*tiledRows=*/3);
+  REQUIRE(overwide.fixed_work_values == 0);
+  auto overwideSweepResult = ImageProcessing::detail::CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, overwide.max_slab_values, /*fullWidthHaloRows=*/2, /*tiledRows=*/3);
   REQUIRE(overwideSweepResult.valid());
-  REQUIRE_FALSE(overwideSweepResult.value().fullWidth);
-  const usize actualTileBytes = 2 * 3 * (overwideSweepResult.value().coreColumns + 2) * sizeof(int16);
+  REQUIRE_FALSE(overwideSweepResult.value().full_width);
+  const usize actualTileBytes = 2 * 3 * (overwideSweepResult.value().core_columns + 2) * sizeof(int16);
   REQUIRE(actualTileBytes <= k_OverwideTargetBytes);
-  REQUIRE(overwide.residentBytes >= actualTileBytes);
+  REQUIRE(overwide.resident_bytes >= actualTileBytes);
 
-  REQUIRE(ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, /*targetBytes=*/1).invalid());
+  REQUIRE(ImageProcessing::detail::CreateRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, /*targetBytes=*/1).invalid());
 
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(256 * k_MiB);
   {
     ScopedWorkingMemoryTuningOverride override(128 * k_MiB);
-    auto allocationResult = ImageProcessing::detail::ReserveRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3{512, 512, 128});
+    auto allocationResult = ImageProcessing::detail::ReserveRegionalExtremaWorkingMemoryPlan<int16>(SizeVec3Type{512, 512, 128});
     REQUIRE(allocationResult.valid());
-    REQUIRE(allocationResult.value().reservation.sizeBytes() == allocationResult.value().plan.residentBytes);
-    REQUIRE(allocationResult.value().plan.residentBytes < 64 * k_MiB);
-    REQUIRE(manager.reservedWorkingMemoryBytes() == allocationResult.value().plan.residentBytes);
+    REQUIRE(allocationResult.value().reservation.sizeBytes() == allocationResult.value().plan.resident_bytes);
+    REQUIRE(allocationResult.value().plan.resident_bytes < 64 * k_MiB);
+    REQUIRE(manager.reservedWorkingMemoryBytes() == allocationResult.value().plan.resident_bytes);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
   manager.setBudgetBytes(previousBudget);
@@ -391,38 +391,38 @@ TEST_CASE("NXImageProcessing::RegionalExtremaEngine: sweep validates dimensions 
 
   SECTION("dimension exceeds the signed traversal range")
   {
-    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3{k_Int64Max + 1, 1, 1}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
+    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3Type{k_Int64Max + 1, 1, 1}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8660);
   }
   SECTION("XY product overflow")
   {
-    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3{k_Int64Max, 3, 1}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
+    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3Type{k_Int64Max, 3, 1}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8661);
   }
   SECTION("XYZ product overflow")
   {
-    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3{k_Int64Max, 1, 3}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
+    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3Type{k_Int64Max, 1, 3}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8662);
   }
   SECTION("store size mismatch")
   {
-    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3{2, 2, 2}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
+    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3Type{2, 2, 2}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8663);
   }
   SECTION("zero dimension is an explicit no-op")
   {
-    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3{0, 2, 3}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
+    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3Type{0, 2, 3}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
     REQUIRE(result.valid());
     REQUIRE(outputStore.getValue(0) == int8{42});
   }
   SECTION("pre-cancel leaves the output untouched")
   {
     shouldCancel = true;
-    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3{1, 1, 1}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
+    const Result<> result = RegionalExtremaSweep<int8>{inputStore, outputStore, SizeVec3Type{1, 1, 1}, RegionalExtremaOp::Maxima, false, shouldCancel, messageHandler}();
     REQUIRE(result.valid());
     REQUIRE(outputStore.getValue(0) == int8{42});
   }

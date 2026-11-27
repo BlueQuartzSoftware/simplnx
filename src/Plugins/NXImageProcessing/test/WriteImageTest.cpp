@@ -181,7 +181,7 @@ void ReadBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
   rArgs.insertOrAssign(ReadImageFilter::k_FileName_Key, std::make_any<fs::path>(imagePath));
   rArgs.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
   auto readerPreflight = reader.preflight(readDs, rArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.output_actions);
   auto readerExecute = reader.execute(readDs, rArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
 }
@@ -189,13 +189,13 @@ void ReadBackSingleImage(DataStructure& readDs, const fs::path& imagePath)
 // Writes one scalar slice through the color-table path.
 // The test compares the RGB result to an independent Create Color Map result.
 template <typename T>
-void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
+void RunColorRoundtripForType(unit_test::AlgorithmTestScenario scenario)
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::LoadPlugins();
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
-  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  const std::string presetName = color_table_utilities::GetDefaultRGBPresetName();
 
   // Build a small single-slice XY volume with a known scalar ramp of type T.
   DataStructure dataStructure;
@@ -203,7 +203,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
   imageGeomPtr->setDimensions({4, 4, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* scalarPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+  auto* scalarPtr = unit_test::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
   auto& scalarStore = scalarPtr->getDataStoreRef();
   for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
   {
@@ -241,7 +241,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
     args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -257,7 +257,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
     ccmArgs.insertOrAssign(CreateColorMapFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
     ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
     auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.output_actions);
     // Store the result because SIMPLNX_RESULT_REQUIRE_VALID evaluates its argument more than once.
     // Repeated execution fails because the RGB output already exists.
     auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
@@ -265,8 +265,8 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
   }
 
   const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("RGB");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
-  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(rgbPath));
+  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8ArrayType>(rgbPath).getDataStoreRef();
 
   // Read the inline-written slice back and compare pixel RGB to the Create Color Map result.
   DataStructure readDs;
@@ -275,7 +275,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
   // Locate the single RGB image-data array created by the reader and compare tuple-by-tuple.
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
   const auto& readCellAm = readGeom.getCellData();
-  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readCellAm->begin()->second.get());
+  const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readCellAm->begin()->second.get());
   REQUIRE(readArrayPtr != nullptr);
   const auto& readStore = readArrayPtr->getDataStoreRef();
 
@@ -292,7 +292,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Preflights a 4 x 4 x 1 image with the selected type and component count.
@@ -304,7 +304,7 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
   imageGeomPtr->setDimensions({4, 4, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {numComponents}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {numComponents}, cellAmPtr->getId());
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
@@ -319,7 +319,7 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
   args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
   args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(false));
-  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(color_table_utilities::GetDefaultRGBPresetName()));
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
@@ -332,10 +332,10 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   {
@@ -343,15 +343,15 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     Arguments args;
 
     GeneratedFileListParameter::ValueType fileListInfo;
-    fileListInfo.inputPath = k_ImageStackDir;
-    fileListInfo.startIndex = 11;
-    fileListInfo.endIndex = 13;
-    fileListInfo.incrementIndex = 1;
-    fileListInfo.fileExtension = ".tif";
-    fileListInfo.filePrefix = "slice_";
-    fileListInfo.fileSuffix = "";
-    fileListInfo.paddingDigits = 2;
-    fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+    fileListInfo.input_path = k_ImageStackDir;
+    fileListInfo.start_index = 11;
+    fileListInfo.end_index = 13;
+    fileListInfo.increment_index = 1;
+    fileListInfo.file_extension = ".tif";
+    fileListInfo.file_prefix = "slice_";
+    fileListInfo.file_suffix = "";
+    fileListInfo.padding_digits = 2;
+    fileListInfo.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
     std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
     std::vector<float32> spacing = {0.3f, 1.2f, 0.9f};
@@ -364,7 +364,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -387,13 +387,13 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-    SizeVec3 imageDims = imageGeomPtr->getDimensions();
+    SizeVec3Type imageDims = imageGeomPtr->getDimensions();
 
     ValidateOutputFiles(imageDims[2], offset, tempDir.name(), tempDir.path());
   }
@@ -415,13 +415,13 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-    SizeVec3 imageDims = imageGeomPtr->getDimensions();
+    SizeVec3Type imageDims = imageGeomPtr->getDimensions();
 
     ValidateOutputFiles(imageDims[1], offset, tempDir.name(), tempDir.path());
   }
@@ -443,34 +443,34 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-    SizeVec3 imageDims = imageGeomPtr->getDimensions();
+    SizeVec3Type imageDims = imageGeomPtr->getDimensions();
 
     ValidateOutputFiles(imageDims[0], offset, tempDir.name(), tempDir.path());
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Single-slice write omits the index suffix", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeomPtr->setDimensions({4, 4, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
@@ -486,11 +486,11 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Single-slice write omits the ind
   args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // The preflight example previews the exact single-slice file name (no index suffix).
   bool foundExample = false;
-  for(const auto& value : preflightResult.outputValues)
+  for(const auto& value : preflightResult.output_values)
   {
     if(value.name == "Example Output File")
     {
@@ -514,16 +514,16 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Single-slice write omits the ind
   REQUIRE(fileCount == 1);
   REQUIRE(fs::remove(outputPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scalar data and plane metadata", "[NXImageProcessing][WriteImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
                    uint64, float32, float64)
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -532,7 +532,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scala
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 2.0f, 4.0f}).valid());
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* imageDataPtr = UnitTest::CreateTestDataArray<TestType>(dataStructure, "ImageData", {2, 1, 3}, {1}, cellDataPtr->getId());
+  auto* imageDataPtr = unit_test::CreateTestDataArray<TestType>(dataStructure, "ImageData", {2, 1, 3}, {1}, cellDataPtr->getId());
   auto& imageStore = imageDataPtr->getDataStoreRef();
   const std::array<int32, 6> expectedValues = {0, 1, 2, 100, 101, 102};
   for(usize index = 0; index < expectedValues.size(); ++index)
@@ -550,7 +550,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scala
   writeArgs.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XZPlane));
 
   auto writePreflightResult = writer.preflight(dataStructure, writeArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(writePreflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(writePreflightResult.output_actions);
   auto writeResult = algorithmTestScope.executeFilter(writer, dataStructure, writeArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult.result);
 
@@ -564,14 +564,14 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scala
   readArgs.insertOrAssign(ReadMhaFileFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("ImageData"));
 
   auto readPreflightResult = reader.preflight(readDataStructure, readArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(readPreflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(readPreflightResult.output_actions);
   auto readExecuteResult = reader.execute(readDataStructure, readArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(readExecuteResult.result);
 
   const auto& readGeom = readDataStructure.getDataRefAs<ImageGeom>(readGeomPath);
-  CHECK(readGeom.getDimensions() == SizeVec3{3, 2, 1});
-  CHECK(readGeom.getOrigin() == FloatVec3{10.0f, 40.0f, 0.0f});
-  CHECK(readGeom.getSpacing() == FloatVec3{1.0f, 4.0f, 1.0f});
+  CHECK(readGeom.getDimensions() == SizeVec3Type{3, 2, 1});
+  CHECK(readGeom.getOrigin() == FloatVec3Type{10.0f, 40.0f, 0.0f});
+  CHECK(readGeom.getSpacing() == FloatVec3Type{1.0f, 4.0f, 1.0f});
 
   const DataPath readArrayPath = readGeomPath.createChildPath("CellData").createChildPath("ImageData");
   REQUIRE_NOTHROW(readDataStructure.getDataRefAs<DataArray<TestType>>(readArrayPath));
@@ -585,10 +585,10 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK scala
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plane", "[NXImageProcessing][WriteImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -597,14 +597,14 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 2.0f, 4.0f}).valid());
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2, 2, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 2, 3}, {1}, cellDataPtr->getId());
+  unit_test::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 2, 3}, {1}, cellDataPtr->getId());
 
   struct PlaneMetadata
   {
     ChoicesParameter::ValueType plane;
-    SizeVec3 dimensions;
-    FloatVec3 origin;
-    FloatVec3 spacing;
+    SizeVec3Type dimensions;
+    FloatVec3Type origin;
+    FloatVec3Type spacing;
   };
   const std::array<PlaneMetadata, 3> metadataCases = {PlaneMetadata{.plane = k_XYPlane, .dimensions = {3, 2, 1}, .origin = {10.0f, 20.0f, 0.0f}, .spacing = {1.0f, 2.0f, 1.0f}},
                                                       PlaneMetadata{.plane = k_XZPlane, .dimensions = {3, 2, 1}, .origin = {10.0f, 40.0f, 0.0f}, .spacing = {1.0f, 4.0f, 1.0f}},
@@ -623,7 +623,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
       writeArgs.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
       writeArgs.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(metadataCase.plane));
       auto writePreflightResult = writer.preflight(dataStructure, writeArgs);
-      SIMPLNX_RESULT_REQUIRE_VALID(writePreflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(writePreflightResult.output_actions);
       auto writeResult = algorithmTestScope.executeFilter(writer, dataStructure, writeArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(writeResult.result);
 
@@ -636,7 +636,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
       readArgs.insertOrAssign(ReadMhaFileFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("CellData"));
       readArgs.insertOrAssign(ReadMhaFileFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("ImageData"));
       auto readPreflightResult = reader.preflight(readDataStructure, readArgs);
-      SIMPLNX_RESULT_REQUIRE_VALID(readPreflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(readPreflightResult.output_actions);
       auto readExecuteResult = reader.execute(readDataStructure, readArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(readExecuteResult.result);
 
@@ -650,10 +650,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA maps metadata for every plan
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component counts", "[NXImageProcessing][WriteImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   for(const usize componentCount : std::array<usize, 6>{2, 3, 4, 10, 11, 36})
   {
@@ -664,7 +664,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component coun
       imageGeomPtr->setDimensions({2, 1, 1});
       auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 2}, imageGeomPtr->getId());
       imageGeomPtr->setCellData(*cellDataPtr);
-      auto* imageDataPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {1, 1, 2}, {componentCount}, cellDataPtr->getId());
+      auto* imageDataPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "ImageData", {1, 1, 2}, {componentCount}, cellDataPtr->getId());
       auto& imageStore = imageDataPtr->getDataStoreRef();
       for(usize index = 0; index < imageStore.getSize(); ++index)
       {
@@ -679,7 +679,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component coun
       writeArgs.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellData", "ImageData"})));
       writeArgs.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
       auto writePreflightResult = writer.preflight(dataStructure, writeArgs);
-      SIMPLNX_RESULT_REQUIRE_VALID(writePreflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(writePreflightResult.output_actions);
       auto writeResult = algorithmTestScope.executeFilter(writer, dataStructure, writeArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(writeResult.result);
 
@@ -692,12 +692,12 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: MHA preserves ITK component coun
       readArgs.insertOrAssign(ReadMhaFileFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("CellData"));
       readArgs.insertOrAssign(ReadMhaFileFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("ImageData"));
       auto readPreflightResult = reader.preflight(readDataStructure, readArgs);
-      SIMPLNX_RESULT_REQUIRE_VALID(readPreflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(readPreflightResult.output_actions);
       auto readExecuteResult = reader.execute(readDataStructure, readArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(readExecuteResult.result);
 
       const DataPath readArrayPath = readGeomPath.createChildPath("CellData").createChildPath("ImageData");
-      const auto& readArray = readDataStructure.getDataRefAs<UInt8Array>(readArrayPath);
+      const auto& readArray = readDataStructure.getDataRefAs<UInt8ArrayType>(readArrayPath);
       CHECK(readArray.getNumberOfComponents() == componentCount);
       const auto& readStore = readArray.getDataStoreRef();
       REQUIRE(readStore.getSize() == imageStore.getSize());
@@ -716,7 +716,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: validates fill characters and pr
   imageGeomPtr->setDimensions({2, 1, 2});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {2, 1, 2}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 1, 2}, {1}, cellDataPtr->getId());
+  unit_test::CreateTestDataArray<uint8>(dataStructure, "ImageData", {2, 1, 2}, {1}, cellDataPtr->getId());
 
   ScopedTempDir tempDir(k_BinaryTestOutputDir);
   WriteImageFilter filter;
@@ -727,20 +727,20 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: validates fill characters and pr
   args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(100));
 
   const auto previewResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(previewResult.outputActions);
-  REQUIRE(std::any_of(previewResult.outputValues.cbegin(), previewResult.outputValues.cend(),
+  SIMPLNX_RESULT_REQUIRE_VALID(previewResult.output_actions);
+  REQUIRE(std::any_of(previewResult.output_values.cbegin(), previewResult.output_values.cend(),
                       [](const IFilter::PreflightValue& value) { return value.name == "Example Output File" && value.value.ends_with("slice_100.tif"); }));
 
   args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<std::string>("/"));
   const auto invalidFillResult = filter.preflight(dataStructure, args);
-  REQUIRE(invalidFillResult.outputActions.invalid());
-  REQUIRE(invalidFillResult.outputActions.errors()[0].code == -27018);
+  REQUIRE(invalidFillResult.output_actions.invalid());
+  REQUIRE(invalidFillResult.output_actions.errors()[0].code == -27018);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Color table preflight validation", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -748,7 +748,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Color table preflight validation
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   // A 3-component array (invalid for color-table mode).
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "RGBInput", {1, 4, 4}, {3}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<uint8>(dataStructure, "RGBInput", {1, 4, 4}, {3}, cellAmPtr->getId());
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath arrayPath = geomPath.createChildPath("CellData").createChildPath("RGBInput");
@@ -763,26 +763,26 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Color table preflight validation
   args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
   args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(color_table_utilities::GetDefaultRGBPresetName()));
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   // A multi-component array in color-table mode must fail with the dedicated -27012 code.
-  const auto& ctErrors = preflightResult.outputActions.errors();
+  const auto& ctErrors = preflightResult.output_actions.errors();
   REQUIRE(ctErrors.size() == 1);
   REQUIRE(ctErrors[0].code == -27012);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table across numeric input types", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   DYNAMIC_SECTION("int8")
   {
@@ -829,12 +829,12 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table across numeri
 TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slice across planes", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
-  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  const std::string presetName = color_table_utilities::GetDefaultRGBPresetName();
 
   // Distinct dimensions give each plane a different slice count and shape.
   // This fixture covers all plane-index branches.
@@ -847,7 +847,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slic
   imageGeomPtr->setDimensions({dimX, dimY, dimZ});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {dimZ, dimY, dimX}, {1}, cellAmPtr->getId());
+  auto* scalarPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Scalar", {dimZ, dimY, dimX}, {1}, cellAmPtr->getId());
   auto& scalarStore = scalarPtr->getDataStoreRef();
   for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
   {
@@ -868,14 +868,14 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slic
     ccmArgs.insertOrAssign(CreateColorMapFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
     ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
     auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.output_actions);
     auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
     SIMPLNX_RESULT_REQUIRE_VALID(ccmExecute.result);
   }
 
   const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("RGB");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
-  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(rgbPath));
+  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8ArrayType>(rgbPath).getDataStoreRef();
 
   // Writes and reads all colorized slices for one plane.
   // The test uses an independent source-index calculation for the expected RGB values.
@@ -898,7 +898,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slic
       args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
@@ -908,27 +908,27 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slic
     {
       ReadImageStackFilter reader;
       GeneratedFileListParameter::ValueType fileList;
-      fileList.inputPath = planeDir.path().string();
-      fileList.startIndex = 0;
-      fileList.endIndex = static_cast<int32>(sliceCount - 1);
-      fileList.incrementIndex = 1;
-      fileList.fileExtension = ".tif";
-      fileList.filePrefix = "slice_";
-      fileList.fileSuffix = "";
-      fileList.paddingDigits = 3;
-      fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+      fileList.input_path = planeDir.path().string();
+      fileList.start_index = 0;
+      fileList.end_index = static_cast<int32>(sliceCount - 1);
+      fileList.increment_index = 1;
+      fileList.file_extension = ".tif";
+      fileList.file_prefix = "slice_";
+      fileList.file_suffix = "";
+      fileList.padding_digits = 3;
+      fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
       Arguments rArgs;
       rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
       rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
       auto readerPreflight = reader.preflight(readDs, rArgs);
-      SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.output_actions);
       auto readerExecute = reader.execute(readDs, rArgs);
       SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
     }
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-    const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
     REQUIRE(readArrayPtr != nullptr);
     const auto& readStore = readArrayPtr->getDataStoreRef();
     const usize readComps = readArrayPtr->getNumberOfComponents();
@@ -970,71 +970,71 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slic
   checkPlane(k_XZPlane, dimY, dimX, dimZ); // 4 slices of 3x5
   checkPlane(k_YZPlane, dimX, dimY, dimZ); // 3 slices of 4x5
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Format-aware write-type preflight", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // STB backend (.png/.jpg/.bmp) only writes uint8; TIFF backend writes uint8/uint16/float32.
   {
     auto result = RunFormatPreflightForType<float32>("fmt_f32.png");
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<uint16>("fmt_u16.png");
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<uint8>("fmt_u8.png");
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<float32>("fmt_f32.tif");
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<uint16>("fmt_u16.tif");
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<int32>("fmt_i32.tif");
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   // BMP/JPEG go through the stb backend (uint8 only).
   {
     auto result = RunFormatPreflightForType<uint8>("fmt_u8.bmp");
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<uint16>("fmt_u16.bmp");
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   {
     auto result = RunFormatPreflightForType<uint8>("fmt_u8.jpg");
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   // TIFF writes uint8/uint16/float32 but not float64.
   {
     auto result = RunFormatPreflightForType<float64>("fmt_f64.tif");
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
 
   // Component-count validation (non-color mode): stb PNG supports {1,3,4} components.
   {
     // A 2-component array is not a conforming write for any format -> -27014.
     auto result = RunFormatPreflightForType<uint8>("fmt_u8_2comp.png", 2);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    const auto& compErrors = result.outputActions.errors();
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    const auto& compErrors = result.output_actions.errors();
     REQUIRE(compErrors.size() == 1);
     REQUIRE(compErrors[0].code == -27014);
   }
   {
     // A 3-component (RGB) uint8 array writes directly with no color table.
     auto result = RunFormatPreflightForType<uint8>("fmt_u8_3comp.png", 3);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   DataStructure dataStructure;
@@ -1042,26 +1042,26 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Format-aware write-type prefligh
   imageGeomPtr->setDimensions({4, 4, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and constant-array handling", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
-  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  const std::string presetName = color_table_utilities::GetDefaultRGBPresetName();
   const DataPath geomPath({"ImageGeometry"});
 
   // Reads a single-slice color image back from a directory and returns the pointer to the RGB array.
-  auto readBackSlice = [&](const fs::path& dir, DataStructure& readDs) -> const UInt8Array* {
+  auto readBackSlice = [&](const fs::path& dir, DataStructure& readDs) -> const UInt8ArrayType* {
     ReadBackSingleImage(readDs, dir / "slice.tif");
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-    return dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    return dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
   };
 
   SECTION("Masked voxels read back as the masked color")
@@ -1078,7 +1078,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
       imageGeomPtr->setDimensions({4, 4, 1});
       auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
       imageGeomPtr->setCellData(*cellAmPtr);
-      auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+      auto* scalarPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
       auto& scalarStore = scalarPtr->getDataStoreRef();
       for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
       {
@@ -1087,7 +1087,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
       // Mark voxels 0 and 5 as bad, using either a bool mask or a uint8 (0/1) mask.
       if(useUint8Mask)
       {
-        auto* maskPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+        auto* maskPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
         auto& maskStore = maskPtr->getDataStoreRef();
         for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
         {
@@ -1098,7 +1098,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
       }
       else
       {
-        auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+        auto* maskPtr = unit_test::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
         auto& maskStore = maskPtr->getDataStoreRef();
         for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
         {
@@ -1129,13 +1129,13 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
         args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(maskedColor));
 
         auto preflightResult = filter.preflight(dataStructure, args);
-        SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+        SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
         auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
       }
 
       DataStructure readDs;
-      const UInt8Array* readArrayPtr = readBackSlice(maskDir.path(), readDs);
+      const UInt8ArrayType* readArrayPtr = readBackSlice(maskDir.path(), readDs);
       REQUIRE(readArrayPtr != nullptr);
       const auto& readStore = readArrayPtr->getDataStoreRef();
       const usize readComps = readArrayPtr->getNumberOfComponents();
@@ -1152,7 +1152,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
           readStore.getValue(1 * readComps + 0) != maskedColor[0] || readStore.getValue(1 * readComps + 1) != maskedColor[1] || readStore.getValue(1 * readComps + 2) != maskedColor[2];
       REQUIRE(goodDiffers);
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 
@@ -1163,7 +1163,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
     imageGeomPtr->setDimensions({4, 4, 1});
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto* scalarPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
     auto& scalarStore = scalarPtr->getDataStoreRef();
     for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
     {
@@ -1173,11 +1173,11 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
     const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
     // Expected color: normalized value of a constant array is 0.0 -> the first control color of the preset.
-    auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(presetName);
+    auto controlPointsResult = color_table_utilities::ExtractControlPoints(presetName);
     SIMPLNX_RESULT_REQUIRE_VALID(controlPointsResult);
     const std::vector<float32> controlPoints = controlPointsResult.value();
-    const std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
-    const std::array<uint8, 3> expectedColor = ColorTableUtilities::ComputeRgbFromControlPoints(0.0F, binPoints, controlPoints, controlPoints.size() / 4);
+    const std::vector<float32> binPoints = color_table_utilities::NormalizeBinPoints(controlPoints);
+    const std::array<uint8, 3> expectedColor = color_table_utilities::ComputeRgbFromControlPoints(0.0F, binPoints, controlPoints, controlPoints.size() / 4);
 
     ScopedTempDir constDir(k_BinaryTestOutputDir);
     {
@@ -1197,13 +1197,13 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
       args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
     DataStructure readDs;
-    const UInt8Array* readArrayPtr = readBackSlice(constDir.path(), readDs);
+    const UInt8ArrayType* readArrayPtr = readBackSlice(constDir.path(), readDs);
     REQUIRE(readArrayPtr != nullptr);
     const auto& readStore = readArrayPtr->getDataStoreRef();
     const usize readComps = readArrayPtr->getNumberOfComponents();
@@ -1216,17 +1216,17 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
       REQUIRE(readStore.getValue(p * readComps + 2) == expectedColor[2]);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y axis", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   // WriteImageFilter flip_mode ChoicesParameter index values.
   constexpr uint64 k_FlipNone = 0;
@@ -1244,7 +1244,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y a
     imageGeomPtr->setDimensions({dimX, dimY, 1});
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, dimY, dimX}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, dimY, dimX}, {1}, cellAmPtr->getId());
+    auto* scalarPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, dimY, dimX}, {1}, cellAmPtr->getId());
     auto& scalarStore = scalarPtr->getDataStoreRef();
     REQUIRE(pixelValues.size() == scalarStore.getNumberOfTuples());
     for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
@@ -1266,17 +1266,17 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y a
       args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(flipMode));
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
     ReadBackSingleImage(readDs, tempDir.path() / "slice.png");
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-    const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
     REQUIRE(readArrayPtr != nullptr);
     const auto& readStore = readArrayPtr->getDataStoreRef();
     const usize readComps = readArrayPtr->getNumberOfComponents();
@@ -1331,16 +1331,16 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y a
 TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the color-table path", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr uint64 k_FlipNone = 0;
   constexpr uint64 k_FlipAboutX = 1;
   constexpr uint64 k_FlipAboutY = 2;
 
-  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  const std::string presetName = color_table_utilities::GetDefaultRGBPresetName();
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
@@ -1352,7 +1352,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the co
     imageGeomPtr->setDimensions({4, 4, 1});
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto* scalarPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
     auto& scalarStore = scalarPtr->getDataStoreRef();
     for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
     {
@@ -1378,17 +1378,17 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the co
       args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(flipMode));
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
     ReadBackSingleImage(readDs, tempDir.path() / "slice.tif");
 
     const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-    const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
     REQUIRE(readArrayPtr != nullptr);
     const auto& readStore = readArrayPtr->getDataStoreRef();
     const usize readComps = readArrayPtr->getNumberOfComponents();
@@ -1445,14 +1445,14 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the co
 TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath cellPath = geomPath.createChildPath("CellData");
 
   // Builds a 200x100x1 ImageGeom with the requested cell array type/comps, spacing and units,
   // then preflights WriteImageFilter with the scale bar enabled.
-  auto preflightScaleBar = [&](DataType dataType, usize numComps, const FloatVec3& spacing, bool createColorTable) -> IFilter::PreflightResult {
+  auto preflightScaleBar = [&](DataType dataType, usize numComps, const FloatVec3Type& spacing, bool createColorTable) -> IFilter::PreflightResult {
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
     imageGeomPtr->setDimensions({200, 100, 1});
@@ -1464,10 +1464,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation",
     switch(dataType)
     {
     case DataType::uint8:
-      UnitTest::CreateTestDataArray<uint8>(dataStructure, "Data", {1, 100, 200}, {numComps}, cellAmPtr->getId());
+      unit_test::CreateTestDataArray<uint8>(dataStructure, "Data", {1, 100, 200}, {numComps}, cellAmPtr->getId());
       break;
     case DataType::uint16:
-      UnitTest::CreateTestDataArray<uint16>(dataStructure, "Data", {1, 100, 200}, {numComps}, cellAmPtr->getId());
+      unit_test::CreateTestDataArray<uint16>(dataStructure, "Data", {1, 100, 200}, {numComps}, cellAmPtr->getId());
       break;
     default:
       FAIL("unhandled test data type");
@@ -1487,10 +1487,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation",
   SECTION("uint8 single component passes and reports the padded size")
   {
     auto result = preflightScaleBar(DataType::uint8, 1, {0.5f, 0.5f, 1.0f}, false);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
     // band = max(24, llround(0.08*100)=8) = 24 -> 200 x 124
     bool foundSizeValue = false;
-    for(const auto& value : result.outputValues)
+    for(const auto& value : result.output_values)
     {
       if(value.name == "Output Image Size (with scale bar)")
       {
@@ -1504,29 +1504,29 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar preflight validation",
   SECTION("uint16 without color table fails with a color-table hint")
   {
     auto result = preflightScaleBar(DataType::uint16, 1, {0.5f, 0.5f, 1.0f}, false);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
 
   SECTION("uint8 with 2 components fails")
   {
     auto result = preflightScaleBar(DataType::uint8, 2, {0.5f, 0.5f, 1.0f}, false);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
 
   SECTION("uint16 with color table enabled passes")
   {
     auto result = preflightScaleBar(DataType::uint16, 1, {0.5f, 0.5f, 1.0f}, true);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 }
 
 TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image with a band", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
@@ -1543,7 +1543,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
     imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, k_DimY, k_DimX}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
+    auto* scalarPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
     auto& scalarStore = scalarPtr->getDataStoreRef();
     for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
     {
@@ -1562,11 +1562,11 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
       args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(createColorTable));
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
 
     ReadBackSingleImage(readDs, tempDir.path() / "slice.png");
   };
@@ -1587,11 +1587,11 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
 
   REQUIRE_NOTHROW(withBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = withBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-  SizeVec3 readDims = readGeom.getDimensions();
+  SizeVec3Type readDims = readGeom.getDimensions();
   REQUIRE(readDims[0] == k_DimX);
   REQUIRE(readDims[1] == k_DimY + k_BandHeight);
 
-  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
   REQUIRE(readArrayPtr != nullptr);
   const auto& readStore = readArrayPtr->getDataStoreRef();
   const usize readComps = readArrayPtr->getNumberOfComponents();
@@ -1599,7 +1599,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
 
   REQUIRE_NOTHROW(withoutBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& plainGeom = withoutBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-  const auto* plainArrayPtr = dynamic_cast<const UInt8Array*>(plainGeom.getCellData()->begin()->second.get());
+  const auto* plainArrayPtr = dynamic_cast<const UInt8ArrayType*>(plainGeom.getCellData()->begin()->second.get());
   REQUIRE(plainArrayPtr != nullptr);
   const auto& plainStore = plainArrayPtr->getDataStoreRef();
   const usize plainComps = plainArrayPtr->getNumberOfComponents();
@@ -1669,18 +1669,18 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
 
     REQUIRE_NOTHROW(colorBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
     const auto& colorBarGeom = colorBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-    SizeVec3 colorBarDims = colorBarGeom.getDimensions();
+    SizeVec3Type colorBarDims = colorBarGeom.getDimensions();
     REQUIRE(colorBarDims[0] == k_DimX);
     REQUIRE(colorBarDims[1] == k_DimY + k_BandHeight);
 
-    const auto* colorBarArrayPtr = dynamic_cast<const UInt8Array*>(colorBarGeom.getCellData()->begin()->second.get());
+    const auto* colorBarArrayPtr = dynamic_cast<const UInt8ArrayType*>(colorBarGeom.getCellData()->begin()->second.get());
     REQUIRE(colorBarArrayPtr != nullptr);
     const auto& colorBarStore = colorBarArrayPtr->getDataStoreRef();
     REQUIRE(colorBarArrayPtr->getNumberOfComponents() == 3);
 
     REQUIRE_NOTHROW(colorPlainDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
     const auto& colorPlainGeom = colorPlainDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-    const auto* colorPlainArrayPtr = dynamic_cast<const UInt8Array*>(colorPlainGeom.getCellData()->begin()->second.get());
+    const auto* colorPlainArrayPtr = dynamic_cast<const UInt8ArrayType*>(colorPlainGeom.getCellData()->begin()->second.get());
     REQUIRE(colorPlainArrayPtr != nullptr);
     const auto& colorPlainStore = colorPlainArrayPtr->getDataStoreRef();
     REQUIRE(colorPlainArrayPtr->getNumberOfComponents() == 3);
@@ -1695,10 +1695,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar pads the written image
 TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and RGB input", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr uint64 k_FlipAboutX = 1;
   const DataPath geomPath({"ImageGeometry"});
@@ -1712,7 +1712,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and
   imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 2, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* rgbPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Rgb", {1, 2, 3}, {3}, cellAmPtr->getId());
+  auto* rgbPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Rgb", {1, 2, 3}, {3}, cellAmPtr->getId());
   auto& rgbStore = rgbPtr->getDataStoreRef();
   // row y=0: (10,11,12) (20,21,22) (30,31,32) ; row y=1: (110,111,112) (120,121,122) (130,131,132)
   const std::vector<uint8> srcRgb = {10, 11, 12, 20, 21, 22, 30, 31, 32, 110, 111, 112, 120, 121, 122, 130, 131, 132};
@@ -1733,22 +1733,22 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and
     args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(true));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   DataStructure readDs;
   ReadBackSingleImage(readDs, tempDir.path() / "slice.png");
 
   REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-  SizeVec3 readDims = readGeom.getDimensions();
+  SizeVec3Type readDims = readGeom.getDimensions();
   REQUIRE(readDims[0] == 3);
   REQUIRE(readDims[1] == 2 + 24); // band = max(24, llround(0.08*2)=0) = 24
 
-  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
   REQUIRE(readArrayPtr != nullptr);
   const auto& readStore = readArrayPtr->getDataStoreRef();
   REQUIRE(readArrayPtr->getNumberOfComponents() == 3);
@@ -1766,10 +1766,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar composes with flip and
 TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices locks per-plane dims and horizontal spacing", "[NXImageProcessing][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
@@ -1787,7 +1787,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
   imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {k_DimZ, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
+  auto* scalarPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Scalar", {k_DimZ, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
   auto& scalarStore = scalarPtr->getDataStoreRef();
   for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
   {
@@ -1806,41 +1806,41 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
     args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(true));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   DataStructure readDs;
   ReadImageStackFilter reader;
   GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = tempDir.path().string();
-  fileList.startIndex = 0;
-  fileList.endIndex = 0;
-  fileList.incrementIndex = 1;
-  fileList.fileExtension = ".png";
-  fileList.filePrefix = "slice_";
-  fileList.fileSuffix = "";
-  fileList.paddingDigits = 3;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileList.input_path = tempDir.path().string();
+  fileList.start_index = 0;
+  fileList.end_index = 0;
+  fileList.increment_index = 1;
+  fileList.file_extension = ".png";
+  fileList.file_prefix = "slice_";
+  fileList.file_suffix = "";
+  fileList.padding_digits = 3;
+  fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
   Arguments rArgs;
   rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
   rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
   auto readerPreflight = reader.preflight(readDs, rArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.output_actions);
   auto readerExecute = reader.execute(readDs, rArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
 
   // XZ slice: W = dimX = 8, H = dimZ = 6; band = max(24, llround(0.08*6)=0) = 24 -> 8 x 30.
   REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
   const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-  SizeVec3 readDims = readGeom.getDimensions();
+  SizeVec3Type readDims = readGeom.getDimensions();
   REQUIRE(readDims[0] == k_DimX);
   REQUIRE(readDims[1] == k_DimZ + 24);
 
-  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  const auto* readArrayPtr = dynamic_cast<const UInt8ArrayType*>(readGeom.getCellData()->begin()->second.get());
   REQUIRE(readArrayPtr != nullptr);
   const auto& readStore = readArrayPtr->getDataStoreRef();
   REQUIRE(readArrayPtr->getNumberOfComponents() == 3);
@@ -1852,10 +1852,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Scale bar on XZ-plane slices loc
 TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-owned bounded extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr usize k_DimX = 8;
   constexpr usize k_DimY = 6;
@@ -1890,7 +1890,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-own
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   CAPTURE(countingStore->returnedExtentReadCount(), countingStore->callerProvidedExtentReadCount(), countingStore->maxCallerProvidedExtentValues());
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     REQUIRE(countingStore->returnedExtentReadCount() == k_DimX);
     REQUIRE(countingStore->callerProvidedExtentReadCount() == 0);
@@ -1914,10 +1914,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups YZ slices into caller-own
 TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices into caller-owned bounded extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr usize k_DimX = 8;
   constexpr usize k_DimY = 6;
@@ -1950,7 +1950,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices 
   args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.tif"));
   args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_YZPlane));
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(color_table_utilities::GetDefaultRGBPresetName()));
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{10, 20, 30}));
@@ -1961,7 +1961,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices 
 
   CAPTURE(scalarStore->returnedExtentReadCount(), scalarStore->callerProvidedExtentReadCount(), scalarStore->maxCallerProvidedExtentValues(), maskStore->returnedExtentReadCount(),
           maskStore->callerProvidedExtentReadCount(), maskStore->maxCallerProvidedExtentValues());
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     REQUIRE(scalarStore->returnedExtentReadCount() == k_DimX);
     REQUIRE(scalarStore->callerProvidedExtentReadCount() == 0);
@@ -1991,10 +1991,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: groups color and mask YZ slices 
 TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into separate caller-owned extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr usize k_DimX = 8;
   constexpr usize k_DimY = 6;
@@ -2022,7 +2022,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into sepa
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     REQUIRE(countingStore->returnedExtentReadCount() == k_DimZ);
     REQUIRE(countingStore->callerProvidedExtentReadCount() == 0);
@@ -2038,10 +2038,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads direct XY slices into sepa
 TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices into separate caller-owned extents", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr usize k_DimX = 8;
   constexpr usize k_DimY = 6;
@@ -2068,7 +2068,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices i
   args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.tif"));
   args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(color_table_utilities::GetDefaultRGBPresetName()));
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
 
@@ -2076,7 +2076,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices i
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     REQUIRE(scalarStore->returnedExtentReadCount() == k_DimZ);
     REQUIRE(maskStore->returnedExtentReadCount() == k_DimZ);
@@ -2095,10 +2095,10 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: reads color and mask XY slices i
 TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant smaller than one slice", "[NXImageProcessing][WriteImageFilter][OOC]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   constexpr usize k_DimX = 8;
   constexpr usize k_DimY = 6;
@@ -2111,7 +2111,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
   imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, scalarPath.getTargetName(), {k_DimZ, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<uint8>(dataStructure, scalarPath.getTargetName(), {k_DimZ, k_DimY, k_DimX}, {1}, cellAmPtr->getId());
 
   ScopedTempDir tempDir(k_BinaryTestOutputDir);
   WriteImageFilter filter;
@@ -2123,7 +2123,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: rejects a source-group grant sma
 
   ImageProcessing::ScopedWorkingMemoryTuningOverride workingMemoryOverride(1);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
-  if(scenario == UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore)
   {
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }

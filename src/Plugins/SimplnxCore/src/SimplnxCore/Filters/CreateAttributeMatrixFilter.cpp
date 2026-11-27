@@ -71,7 +71,7 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Allow);
   if(dimensions.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
   }
   ShapeType tupleDims = std::move(dimensions.value());
 

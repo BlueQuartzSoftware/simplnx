@@ -16,7 +16,7 @@ namespace
 using OpeningFilterType = BinaryMorphologicalOpeningImageFilter;
 
 // Kernel + Foreground/Background param setter for Binary Morphological Opening.
-morph_test::KernelParamSetter OpeningKernelParamSetter(float64 foreground, float64 background)
+morph_test::KernelParamSetterType OpeningKernelParamSetter(float64 foreground, float64 background)
 {
   return [foreground, background](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
@@ -66,8 +66,8 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // values in [0,199] -> NOT binary
@@ -83,7 +83,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non
   args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // fg/bg are in range -> preflight is clean
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // fg/bg are in range -> preflight is clean
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid()); // non-binary input rejected at execute
   REQUIRE_FALSE(executeResult.result.errors().empty());
@@ -99,11 +99,11 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 32;
   constexpr uint8 k_Fg = 1;
@@ -173,7 +173,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -183,8 +183,8 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // uint8 input, range [0, 255]
@@ -203,12 +203,12 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight r
 
   OpeningFilterType filter;
 
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).outputActions.valid());                                   // fg out of uint8 range
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).outputActions.valid());                                      // bg negative out of range
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid()); // NaN fg
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());  // Inf bg
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).output_actions.valid());                                   // fg out of uint8 range
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).output_actions.valid());                                      // bg negative out of range
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).output_actions.valid()); // NaN fg
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).output_actions.valid());  // Inf bg
   auto preflightResult = filter.preflight(dataStructure, makeArgs(5.0, 0.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // in-range integers preflight cleanly
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // in-range integers preflight cleanly
 }
 
 // -----------------------------------------------------------------------------

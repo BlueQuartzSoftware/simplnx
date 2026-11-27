@@ -16,7 +16,7 @@ INeighborList::~INeighborList() noexcept = default;
 
 std::string INeighborList::getTypeName() const
 {
-  return NeighborListConstants::k_TypeName;
+  return neighbor_list_constants::k_TypeName;
 }
 
 DataObject::Type INeighborList::getDataObjectType() const

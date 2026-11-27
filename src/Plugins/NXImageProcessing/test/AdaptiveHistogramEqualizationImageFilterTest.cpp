@@ -30,8 +30,8 @@ constexpr int32 k_NonScalarInput = -8540;
 //     with an observed count of 0. The case is therefore a plain ForceInCore in-memory correctness check.
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independent oracle (in-memory)", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_DimX = 24;
   constexpr usize k_DimY = 20;
@@ -57,15 +57,15 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independ
   const std::vector<uint8> input = aht::MakeAhePattern<uint8>(k_DimX, k_DimY, k_DimZ);
   const std::vector<uint8> expected = aht::AdaptiveHistogramEqualizationOracle<uint8>(input, k_DimX, k_DimY, k_DimZ, {1, 1, 1}, k_Alpha, k_Beta);
   aht::RequireAheClose<uint8>(actual, expected, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/0.005);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // (3) Preflight: multi-component input is rejected (scalar-only); a valid scalar input preflights cleanly and
 //     an unsupported (non-numeric) type is rejected by the shared type-membership guard.
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Preflight scalar/type guard", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   AdaptiveHistogramEqualizationImageFilter filter;
 
@@ -85,7 +85,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Prefligh
     DataStructure dataStructure;
     const DataPath inputPath = aht::BuildAheImage<uint8>(dataStructure, 8, 8, 8);
     auto result = filter.preflight(dataStructure, makeArgs(inputPath));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("multi-component input is rejected")
@@ -94,13 +94,13 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Prefligh
     DataStructure dataStructure;
     const DataPath scalarPath = aht::BuildAheImage<uint8>(dataStructure, 8, 8, 8); // creates the geometry + CellData
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
+    auto vecStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<uint8>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
 
     auto result = filter.preflight(dataStructure, makeArgs(vecPath));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonScalarInput);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonScalarInput);
   }
 }
 
@@ -166,13 +166,13 @@ DataPath RunColorToGrayScale(DataStructure& dataStructure, const DataPath& input
 
   Arguments args;
   args.insertOrAssign("conversion_algorithm_index", std::make_any<ChoicesParameter::ValueType>(0ULL));
-  args.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
+  args.insertOrAssign("color_weights", std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
   args.insertOrAssign("color_channel", std::make_any<Int32ParameterType::ValueType>(0));
   args.insertOrAssign("input_data_array_paths", std::make_any<MultiArraySelectionParameter::ValueType>({inputDataPath}));
   args.insertOrAssign("output_array_prefix", std::make_any<StringParameter::ValueType>("GrayScale_"));
 
   auto preflightResult = filter->preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -188,8 +188,8 @@ DataPath RunColorToGrayScale(DataStructure& dataStructure, const DataPath& input
 // ColorToGrayScale filter the ITK test uses. The whole case is ForceInCore.
 void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 beta, const std::vector<uint32>& radius, double aMaxDiffFraction)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -217,7 +217,7 @@ void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 bet
     AdaptiveHistogramEqualizationImageFilter filter;
     const Arguments args = makeArgs("Output");
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -234,7 +234,7 @@ void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 bet
   ReportDivergence(fmt::format("AHE (A) baseline='{}'", baselineFile), ourOut, baselineData, aMaxDiffFraction);
   aht::RequireAheClose<uint8>(ourOut, baselineData, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/aMaxDiffFraction);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -255,7 +255,7 @@ template <class T>
 void CheckHugeRadiusFilter(usize dimX, usize dimY, usize dimZ, const std::vector<uint32>& hugeRadius, const std::vector<uint32>& coveringRadius)
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 0);
   std::array<std::vector<T>, 2> outputs;
   const std::array<std::vector<uint32>, 2> radii = {coveringRadius, hugeRadius};
   for(usize run = 0; run < radii.size(); ++run)
@@ -271,7 +271,7 @@ void CheckHugeRadiusFilter(usize dimX, usize dimY, usize dimZ, const std::vector
     outputs[run].resize(outputStore.getSize());
     const Result<> copyResult = outputStore.copyIntoBuffer(0, nonstd::span<T>(outputs[run].data(), outputs[run].size()));
     SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
   REQUIRE(outputs[0] == outputs[1]);
 }

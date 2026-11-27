@@ -16,14 +16,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeMomentInvariants2DInputValues
 {
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath FeatureRectArrayPath;
-  bool NormalizeMomentInvariants{};
-  DataPath Omega1ArrayPath;
-  DataPath Omega2ArrayPath;
-  bool SaveCentralMoments{};
-  DataPath CentralMomentsArrayPath;
+  DataPath image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath feature_rect_array_path;
+  bool normalize_moment_invariants{};
+  DataPath omega1_array_path;
+  DataPath omega2_array_path;
+  bool save_central_moments{};
+  DataPath central_moments_array_path;
 };
 
 /**

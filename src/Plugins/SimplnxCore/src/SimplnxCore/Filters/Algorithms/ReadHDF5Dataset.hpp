@@ -16,7 +16,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ReadHDF5DatasetInputValues
 {
-  ReadHDF5DatasetParameter::ValueType ImportHdf5Object;
+  ReadHDF5DatasetParameter::ValueType import_hdf5_object;
 };
 
 /**

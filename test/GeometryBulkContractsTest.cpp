@@ -179,7 +179,7 @@ INodeGeometry1D* CreateMesh(DataStructure& dataStructure, const MeshCase& fixtur
     FAIL("Unsupported analytical mesh fixture");
   }
   REQUIRE(geometryPtr != nullptr);
-  auto* verticesPtr = Float32Array::Create(dataStructure, "Vertices", std::make_shared<DataStore<float32>>(ShapeType{fixture.vertex_count}, ShapeType{3}, 0.0F), geometryPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, "Vertices", std::make_shared<DataStore<float32>>(ShapeType{fixture.vertex_count}, ShapeType{3}, 0.0F), geometryPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   geometryPtr->setVertices(*verticesPtr);
 
@@ -192,7 +192,7 @@ INodeGeometry1D* CreateMesh(DataStructure& dataStructure, const MeshCase& fixtur
       connectivityStore->setValue(cellIndex * components + componentIndex, fixture.cells[cellIndex][componentIndex]);
     }
   }
-  auto* connectivityPtr = UInt64Array::Create(dataStructure, "Connectivity", connectivityStore, geometryPtr->getId());
+  auto* connectivityPtr = UInt64ArrayType::Create(dataStructure, "Connectivity", connectivityStore, geometryPtr->getId());
   REQUIRE(connectivityPtr != nullptr);
   if(auto* volumePtr = dynamic_cast<INodeGeometry3D*>(geometryPtr); volumePtr != nullptr)
   {
@@ -214,7 +214,7 @@ INodeGeometry1D* CreateMesh(DataStructure& dataStructure, const MeshCase& fixtur
  * @param listsPtr Actual incidence or neighbor lists.
  * @param expected Hand-derived element IDs in ascending order.
  */
-void RequireLists(const INodeGeometry1D::ElementDynamicList* listsPtr, const std::vector<std::vector<uint64>>& expected)
+void RequireLists(const INodeGeometry1D::ElementDynamicListType* listsPtr, const std::vector<std::vector<uint64>>& expected)
 {
   REQUIRE(listsPtr != nullptr);
   REQUIRE(listsPtr->size() == expected.size());
@@ -240,7 +240,7 @@ void RequireLists(const INodeGeometry1D::ElementDynamicList* listsPtr, const std
  * @param arrayPtr Extracted edge or face array.
  * @param expected Hand-derived canonical records.
  */
-void RequireTopology(const UInt64Array* arrayPtr, const std::set<std::vector<uint64>>& expected)
+void RequireTopology(const UInt64ArrayType* arrayPtr, const std::set<std::vector<uint64>>& expected)
 {
   REQUIRE(arrayPtr != nullptr);
   REQUIRE(arrayPtr->getNumberOfTuples() == expected.size());
@@ -273,14 +273,14 @@ RectGridGeom* CreateRectGrid(DataStructure& dataStructure)
   auto* geometryPtr = RectGridGeom::Create(dataStructure, "Grid");
   REQUIRE(geometryPtr != nullptr);
   geometryPtr->setDimensions({2, 2, 2});
-  std::array<Float32Array*, 3> bounds{};
+  std::array<Float32ArrayType*, 3> bounds{};
   const std::array<std::string, 3> names = {"X", "Y", "Z"};
   for(usize axisIndex = 0; axisIndex < bounds.size(); ++axisIndex)
   {
     auto store = std::make_shared<FailingResidentStore<float32>>(ShapeType{3}, ShapeType{1}, 0.0F);
     store->setValue(1, 1.0F);
     store->setValue(2, 3.0F);
-    bounds[axisIndex] = Float32Array::Create(dataStructure, names[axisIndex], store, geometryPtr->getId());
+    bounds[axisIndex] = Float32ArrayType::Create(dataStructure, names[axisIndex], store, geometryPtr->getId());
     REQUIRE(bounds[axisIndex] != nullptr);
   }
   REQUIRE(geometryPtr->setBounds(bounds[0], bounds[1], bounds[2]).valid());
@@ -304,7 +304,7 @@ TEST_CASE("Geometry list resize preserves resident failures and context", "[simp
   {
     auto store = std::make_shared<FailingResidentStore<float32>>(ShapeType{2}, ShapeType{3}, 13.0F);
     store->reject_resize = true;
-    auto* arrayPtr = Float32Array::Create(dataStructure, "Vertices", store, geometryPtr->getId());
+    auto* arrayPtr = Float32ArrayType::Create(dataStructure, "Vertices", store, geometryPtr->getId());
     REQUIRE(arrayPtr != nullptr);
     geometryPtr->setVertices(*arrayPtr);
     result = geometryPtr->resizeVertexList(k_TargetTuples);
@@ -320,7 +320,7 @@ TEST_CASE("Geometry list resize preserves resident failures and context", "[simp
     const usize components = listKind == 1 ? 2 : (listKind == 2 ? 4 : 8);
     auto store = std::make_shared<FailingResidentStore<uint64>>(ShapeType{2}, ShapeType{components}, uint64{13});
     store->reject_resize = true;
-    auto* arrayPtr = UInt64Array::Create(dataStructure, "Indices", store, geometryPtr->getId());
+    auto* arrayPtr = UInt64ArrayType::Create(dataStructure, "Indices", store, geometryPtr->getId());
     REQUIRE(arrayPtr != nullptr);
     if(listKind == 1)
     {
@@ -348,7 +348,7 @@ TEST_CASE("Geometry list resize preserves resident failures and context", "[simp
   CHECK(result.errors().front().message.find("Resize Geometry") != std::string::npos);
   CHECK(result.errors().front().message.find(listNames[listKind]) != std::string::npos);
   CHECK(result.errors().front().message.find("19") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry connectivity computes exact incidence and complete-boundary neighbors", "[simplnx][GeometryBulkContracts]")
@@ -363,7 +363,7 @@ TEST_CASE("Geometry connectivity computes exact incidence and complete-boundary 
   RequireLists(geometryPtr->getElementsContainingVert(), empty ? std::vector<std::vector<uint64>>(fixture.vertex_count) : fixture.incident_cells);
   REQUIRE(geometryPtr->findElementNeighbors(false).valid());
   RequireLists(geometryPtr->getElementNeighbors(), empty ? std::vector<std::vector<uint64>>{} : std::vector<std::vector<uint64>>{{1}, {0}, {}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry extraction computes exact unique and unshared topology", "[simplnx][GeometryBulkContracts]")
@@ -400,7 +400,7 @@ TEST_CASE("Geometry extraction computes exact unique and unshared topology", "[s
     }
     RequireTopology(volumePtr->getUnsharedFaces(), fixture.faces);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry incidence and neighbors clear cached IDs after bulk-read failures", "[simplnx][GeometryBulkContracts]")
@@ -413,8 +413,8 @@ TEST_CASE("Geometry incidence and neighbors clear cached IDs after bulk-read fai
   REQUIRE(geometryPtr->findElementNeighbors(false).valid());
   REQUIRE(geometryPtr->getElementContainingVertId().has_value());
   REQUIRE(geometryPtr->getElementNeighborsId().has_value());
-  UInt64Array* connectivityPtr = nullptr;
-  REQUIRE_NOTHROW(connectivityPtr = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"Mesh", "Connectivity"})));
+  UInt64ArrayType* connectivityPtr = nullptr;
+  REQUIRE_NOTHROW(connectivityPtr = &dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({"Mesh", "Connectivity"})));
   auto* storePtr = dynamic_cast<FailingResidentStore<uint64>*>(connectivityPtr->getDataStore());
   REQUIRE(storePtr != nullptr);
   storePtr->read_calls = 0;
@@ -429,7 +429,7 @@ TEST_CASE("Geometry incidence and neighbors clear cached IDs after bulk-read fai
   {
     CHECK(geometryPtr->getElementContainingVertId().has_value());
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", "[simplnx][GeometryBulkContracts]")
@@ -446,7 +446,7 @@ TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", 
     REQUIRE((unshared ? geometryPtr->findUnsharedEdges(false) : geometryPtr->findEdges(false)).valid());
     const auto* outputPtr = unshared ? geometryPtr->getUnsharedEdges() : geometryPtr->getEdges();
     REQUIRE(outputPtr != nullptr);
-    auto* mutableOutputPtr = dataStructure.getDataAs<UInt64Array>(outputPtr->getId());
+    auto* mutableOutputPtr = dataStructure.getDataAs<UInt64ArrayType>(outputPtr->getId());
     REQUIRE(mutableOutputPtr != nullptr);
     auto store = std::make_shared<FailingResidentStore<uint64>>(outputPtr->getTupleShape(), outputPtr->getComponentShape(), uint64{77});
     store->reject_resize = true;
@@ -467,7 +467,7 @@ TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", 
       REQUIRE((unshared ? volumePtr->findUnsharedFaces(false) : volumePtr->findFaces(false)).valid());
       const auto* outputPtr = unshared ? volumePtr->getUnsharedFaces() : volumePtr->getFaces();
       REQUIRE(outputPtr != nullptr);
-      auto* mutableOutputPtr = dataStructure.getDataAs<UInt64Array>(outputPtr->getId());
+      auto* mutableOutputPtr = dataStructure.getDataAs<UInt64ArrayType>(outputPtr->getId());
       REQUIRE(mutableOutputPtr != nullptr);
       auto store = std::make_shared<FailingResidentStore<uint64>>(outputPtr->getTupleShape(), outputPtr->getComponentShape(), uint64{77});
       store->reject_resize = true;
@@ -481,7 +481,7 @@ TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", 
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("RectGrid element sizes clear cached IDs after invalid bounds", "[simplnx][GeometryBulkContracts]")
@@ -490,7 +490,7 @@ TEST_CASE("RectGrid element sizes clear cached IDs after invalid bounds", "[simp
   CAPTURE(axisIndex);
   DataStructure dataStructure;
   auto* geometryPtr = CreateRectGrid(dataStructure);
-  const std::array<Float32Array*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
+  const std::array<Float32ArrayType*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
   auto* boundsPtr = bounds[axisIndex];
   REQUIRE(boundsPtr != nullptr);
   int32 expectedError = -1833;
@@ -514,7 +514,7 @@ TEST_CASE("RectGrid element sizes clear cached IDs after invalid bounds", "[simp
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors().front().code == expectedError);
   CHECK_FALSE(geometryPtr->getElementSizesId().has_value());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[simplnx][GeometryBulkContracts]")
@@ -525,7 +525,7 @@ TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[
   {
     const usize axisIndex = GENERATE(0, 1, 2);
     CAPTURE(axisIndex);
-    const std::array<Float32Array*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
+    const std::array<Float32ArrayType*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
     auto* storePtr = dynamic_cast<FailingResidentStore<float32>*>(bounds[axisIndex]->getDataStore());
     REQUIRE(storePtr != nullptr);
     storePtr->read_calls = 0;
@@ -536,7 +536,7 @@ TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[
   {
     const usize failingWrite = GENERATE(1, 2);
     CAPTURE(failingWrite);
-    auto* sizesPtr = dataStructure.getDataAs<Float32Array>(*geometryPtr->getElementSizesId());
+    auto* sizesPtr = dataStructure.getDataAs<Float32ArrayType>(*geometryPtr->getElementSizesId());
     REQUIRE(sizesPtr != nullptr);
     auto store = std::make_shared<FailingResidentStore<float32>>(sizesPtr->getTupleShape(), sizesPtr->getComponentShape(), -77.0F);
     store->failing_write_call = failingWrite;
@@ -550,17 +550,17 @@ TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[
     }
   }
   CHECK_FALSE(geometryPtr->getElementSizesId().has_value());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "[simplnx][GeometryBulkContracts][GeometryUtilities]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool preCancelled = GENERATE(false, true);
   CAPTURE(scenario, preCancelled);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const DataPath geometryPath({"NormalMesh"});
   const DataPath verticesPath = geometryPath.createChildPath("Vertices");
@@ -570,15 +570,15 @@ TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
   REQUIRE(triangleGeomPtr != nullptr);
 
-  auto verticesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {6}, {3});
-  auto facesStore = DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {4}, {3});
-  auto normalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, normalsPath, {4}, {3});
+  auto verticesStore = data_store_utilities::CreateDataStore<float32>(dataStructure, verticesPath, {6}, {3});
+  auto facesStore = data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {4}, {3});
+  auto normalsStore = data_store_utilities::CreateDataStore<float64>(dataStructure, normalsPath, {4}, {3});
   REQUIRE(verticesStore != nullptr);
   REQUIRE(facesStore != nullptr);
   REQUIRE(normalsStore != nullptr);
-  auto* verticesPtr = Float32Array::Create(dataStructure, verticesPath.getTargetName(), verticesStore, triangleGeomPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, verticesPath.getTargetName(), verticesStore, triangleGeomPtr->getId());
   auto* facesPtr = DataArray<IGeometry::MeshIndexType>::Create(dataStructure, facesPath.getTargetName(), facesStore, triangleGeomPtr->getId());
-  auto* normalsPtr = Float64Array::Create(dataStructure, normalsPath.getTargetName(), normalsStore, triangleGeomPtr->getId());
+  auto* normalsPtr = Float64ArrayType::Create(dataStructure, normalsPath.getTargetName(), normalsStore, triangleGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   REQUIRE(normalsPtr != nullptr);
@@ -599,7 +599,7 @@ TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "
   normalsStore->fill(k_OutputSentinel);
 
   const std::atomic_bool shouldCancel{preCancelled};
-  auto result = algorithmTestScope.execute([&] { return GeometryUtilities::ComputeTriangleNormals(triangleGeomPtr, *normalsStore, shouldCancel); });
+  auto result = algorithmTestScope.execute([&] { return geometry_utilities::ComputeTriangleNormals(triangleGeomPtr, *normalsStore, shouldCancel); });
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   REQUIRE(triangleGeomPtr->getVertices() == verticesPtr);
@@ -632,5 +632,5 @@ TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "
     CAPTURE(valueIndex);
     CHECK(actualNormals[valueIndex] == (preCancelled ? k_OutputSentinel : expectedNormals[valueIndex]));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

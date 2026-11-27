@@ -25,7 +25,7 @@ Uuid DataStoreFormatParameter::uuid() const
   return ParameterTraits<DataStoreFormatParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataStoreFormatParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataStoreFormatParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -64,7 +64,7 @@ typename DataStoreFormatParameter::ValueType DataStoreFormatParameter::defaultSt
   return m_DefaultValue;
 }
 
-typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues()
+typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::AvailableValues()
 {
   const auto displayNames = Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
   AvailableValuesType result;
@@ -76,7 +76,7 @@ typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter:
   return result;
 }
 
-std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames()
+std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::AvailableFormatsWithDisplayNames()
 {
   return Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
 }
@@ -89,7 +89,7 @@ Result<> DataStoreFormatParameter::validate(const std::any& value) const
   {
     return {};
   }
-  const auto formats = availableValues();
+  const auto formats = AvailableValues();
   if(std::find(formats.begin(), formats.end(), stringValue) == formats.end())
   {
     std::string ss = fmt::format("DataStore format not known: '{}'", stringValue);

@@ -117,7 +117,7 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -126,10 +126,10 @@ Result<> LabelTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
 {
   LabelTriangleGeometryInputValues inputValues;
 
-  inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
-  inputValues.RegionIdsPath = filterArgs.value<DataPath>(k_CreatedRegionIdsPath_Key);
-  inputValues.TriangleAMPath = inputValues.TriangleGeomPath.createChildPath(filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key));
-  inputValues.NumTrianglesPath = inputValues.TriangleAMPath.createChildPath(filterArgs.value<std::string>(k_NumTrianglesName_Key));
+  inputValues.triangle_geom_path = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
+  inputValues.region_ids_path = filterArgs.value<DataPath>(k_CreatedRegionIdsPath_Key);
+  inputValues.triangle_am_path = inputValues.triangle_geom_path.createChildPath(filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key));
+  inputValues.num_triangles_path = inputValues.triangle_am_path.createChildPath(filterArgs.value<std::string>(k_NumTrianglesName_Key));
 
   return LabelTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -55,10 +55,10 @@ inline usize ComputeReconstructionBlockEdge(usize dimX, usize dimY)
  */
 struct ReconstructionPlaneBlock
 {
-  usize rowBegin;
-  usize rowEnd;
-  usize colBegin;
-  usize colEnd;
+  usize row_begin;
+  usize row_end;
+  usize col_begin;
+  usize col_end;
 };
 
 /**
@@ -70,9 +70,9 @@ struct ReconstructionPlaneBlock
  */
 struct ReconstructionPlaneWavefrontSchedule
 {
-  usize blockEdge = 1;
-  usize blockRows = 1;
-  usize blockCols = 1;
+  usize block_edge = 1;
+  usize block_rows = 1;
+  usize block_cols = 1;
   std::vector<std::vector<ReconstructionPlaneBlock>> waves;
 };
 
@@ -83,20 +83,20 @@ inline ReconstructionPlaneWavefrontSchedule BuildReconstructionPlaneWavefrontSch
   {
     return schedule;
   }
-  schedule.blockEdge = ComputeReconstructionBlockEdge(dimX, dimY);
-  schedule.blockRows = (dimY + schedule.blockEdge - 1) / schedule.blockEdge;
-  schedule.blockCols = (dimX + schedule.blockEdge - 1) / schedule.blockEdge;
-  const usize waveCount = 2 * (schedule.blockRows - 1) + (schedule.blockCols - 1) + 1;
+  schedule.block_edge = ComputeReconstructionBlockEdge(dimX, dimY);
+  schedule.block_rows = (dimY + schedule.block_edge - 1) / schedule.block_edge;
+  schedule.block_cols = (dimX + schedule.block_edge - 1) / schedule.block_edge;
+  const usize waveCount = 2 * (schedule.block_rows - 1) + (schedule.block_cols - 1) + 1;
   schedule.waves.assign(waveCount, {});
-  for(usize blockRow = 0; blockRow < schedule.blockRows; ++blockRow)
+  for(usize blockRow = 0; blockRow < schedule.block_rows; ++blockRow)
   {
-    const usize rowBegin = blockRow * schedule.blockEdge;
-    const usize rowEnd = std::min(dimY, rowBegin + schedule.blockEdge);
-    for(usize blockCol = 0; blockCol < schedule.blockCols; ++blockCol)
+    const usize rowBegin = blockRow * schedule.block_edge;
+    const usize rowEnd = std::min(dimY, rowBegin + schedule.block_edge);
+    for(usize blockCol = 0; blockCol < schedule.block_cols; ++blockCol)
     {
-      const usize colBegin = blockCol * schedule.blockEdge;
-      const usize colEnd = std::min(dimX, colBegin + schedule.blockEdge);
-      schedule.waves[2 * blockRow + blockCol].push_back(ReconstructionPlaneBlock{.rowBegin = rowBegin, .rowEnd = rowEnd, .colBegin = colBegin, .colEnd = colEnd});
+      const usize colBegin = blockCol * schedule.block_edge;
+      const usize colEnd = std::min(dimX, colBegin + schedule.block_edge);
+      schedule.waves[2 * blockRow + blockCol].push_back(ReconstructionPlaneBlock{.row_begin = rowBegin, .row_end = rowEnd, .col_begin = colBegin, .col_end = colEnd});
     }
   }
   return schedule;

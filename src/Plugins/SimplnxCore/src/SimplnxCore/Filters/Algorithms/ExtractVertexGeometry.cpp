@@ -184,26 +184,26 @@ const std::atomic_bool& ExtractVertexGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractVertexGeometry::operator()()
 {
-  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);
-  auto& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeometryPath);
+  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->input_geometry_path);
+  auto& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->vertex_geometry_path);
 
-  SizeVec3 dims = inputGeometry.getDimensions();
+  SizeVec3Type dims = inputGeometry.getDimensions();
   const usize cellCount = std::accumulate(dims.begin(), dims.end(), static_cast<usize>(1), std::multiplies<>());
   usize totalCells = cellCount;
   usize vertexCount = cellCount;
   DataPath vertexAttributeMatrixDataPath = vertexGeometry.getVertexAttributeMatrixDataPath();
 
-  DataPath maskArrayPath = m_InputValues->MaskArrayPath;
+  DataPath maskArrayPath = m_InputValues->mask_array_path;
   // Resolve a mask that filter actions placed under the vertex AttributeMatrix.
-  if(m_InputValues->UseMask && !m_DataStructure.containsData(m_InputValues->MaskArrayPath))
+  if(m_InputValues->use_mask && !m_DataStructure.containsData(m_InputValues->mask_array_path))
   {
-    if(!m_InputValues->IncludedDataArrayPaths.empty() && m_InputValues->UseMask)
+    if(!m_InputValues->included_data_array_paths.empty() && m_InputValues->use_mask)
     {
-      for(const auto& dataPath : m_InputValues->IncludedDataArrayPaths)
+      for(const auto& dataPath : m_InputValues->included_data_array_paths)
       {
-        if(dataPath == m_InputValues->MaskArrayPath)
+        if(dataPath == m_InputValues->mask_array_path)
         {
-          maskArrayPath = vertexAttributeMatrixDataPath.createChildPath(m_InputValues->MaskArrayPath.getTargetName());
+          maskArrayPath = vertexAttributeMatrixDataPath.createChildPath(m_InputValues->mask_array_path.getTargetName());
         }
       }
     }
@@ -214,7 +214,7 @@ Result<> ExtractVertexGeometry::operator()()
   // Stream the mask for counting, coordinates, and each included array.
   // Repeated reads avoid a cell-sized keep bitmap.
   const IDataArray* maskIDataArrayPtr = nullptr;
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
     if(m_ShouldCancel)
     {
@@ -224,7 +224,7 @@ Result<> ExtractVertexGeometry::operator()()
     try
     {
       // Validate the mask path and type. Streaming does not use the returned adapter.
-      MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, maskArrayPath);
+      mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, maskArrayPath);
     } catch(const std::out_of_range&)
     {
       // Direct algorithm calls can bypass filter preflight.
@@ -273,9 +273,9 @@ Result<> ExtractVertexGeometry::operator()()
   // setTuple() writes follow selected source order. A mask requires another pass.
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
 
-  IGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
+  IGeometry::SharedVertexListType& vertices = vertexGeometry.getVerticesRef();
   auto& verticesDataStore = vertices.getDataStoreRef();
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
     const usize chunkTuples = std::min(totalCells, k_ChunkTuples);
     auto flagBuffer = std::make_unique<bool[]>(chunkTuples);
@@ -322,7 +322,7 @@ Result<> ExtractVertexGeometry::operator()()
     return resizeResult;
   }
 
-  for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
+  for(const auto& dataArrayPath : m_InputValues->included_data_array_paths)
   {
     if(m_ShouldCancel)
     {

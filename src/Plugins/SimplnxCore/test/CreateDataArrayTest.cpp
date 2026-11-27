@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 
 TEST_CASE("SimplnxCore::CreateDataArrayFilter(Instantiate)", "[SimplnxCore][CreateDataArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
@@ -40,12 +40,12 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Instantiate)", "[SimplnxCore][Crea
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCore][CreateDataArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
@@ -152,13 +152,13 @@ TEST_CASE("SimplnxCore::CreateDataArrayFilter(Invalid Parameters)", "[SimplnxCor
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateDataArrayFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -206,8 +206,8 @@ TEST_CASE("SimplnxCore::CreateDataArray: Dimension RED fractional", "[SimplnxCor
   args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
   args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79000);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79000);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArray: Dimension RED zero components", "[SimplnxCore][CreateDataArray][DimensionRed]")
@@ -221,8 +221,8 @@ TEST_CASE("SimplnxCore::CreateDataArray: Dimension RED zero components", "[Simpl
   args.insertOrAssign(CreateDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1}}));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79003);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79003);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArray: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][CreateDataArray]")
@@ -239,10 +239,10 @@ TEST_CASE("SimplnxCore::CreateDataArray: Dimension fixed-only tuples and inherit
     args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
     args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78603 : -79000));
-    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
-    REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors()[0].code == (value == 0 ? -78603 : -79000));
+    REQUIRE(result.output_actions.errors()[0].message.find("index 0") != std::string::npos);
+    REQUIRE(result.output_actions.errors()[0].message.find("finite whole numbers") != std::string::npos);
   }
   SECTION("Invalid ignored table, including an inherited empty matrix")
   {
@@ -257,12 +257,12 @@ TEST_CASE("SimplnxCore::CreateDataArray: Dimension fixed-only tuples and inherit
     args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    auto applied = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
     REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -276,7 +276,7 @@ TEST_CASE("SimplnxCore::CreateDataArray: Dimension tuple product overflow", "[Si
   args.insertOrAssign(CreateDataArrayFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(CreateDataArrayFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79001);
-  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79001);
+  REQUIRE(result.output_actions.errors()[0].message.find("product") != std::string::npos);
 }

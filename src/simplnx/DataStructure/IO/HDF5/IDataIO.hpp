@@ -72,7 +72,7 @@ protected:
    * @param tag The attribute tag name to read
    * @return DataObject::OptionalId The read ID or std::nullopt if not present
    */
-  static DataObject::OptionalId ReadDataId(const ObjectReaderType& groupReader, const std::string& tag);
+  static DataObject::OptionalIdType ReadDataId(const ObjectReaderType& groupReader, const std::string& tag);
 
   /**
    * @brief Writes a DataObject ID to an HDF5 group attribute.

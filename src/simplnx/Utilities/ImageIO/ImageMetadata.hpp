@@ -22,11 +22,11 @@ struct SIMPLNX_EXPORT ImageMetadata
 {
   usize width = 0;                     ///< X dimension in pixels
   usize height = 0;                    ///< Y dimension in pixels
-  usize numComponents = 0;             ///< 1=grayscale, 3=RGB, 4=RGBA
-  DataType dataType = DataType::uint8; ///< Pixel data type (uint8, uint16, or float32)
-  usize numPages = 1;                  ///< Number of pages (>1 for multi-page TIFF)
-  std::optional<FloatVec3> origin;     ///< Image origin if stored in file
-  std::optional<FloatVec3> spacing;    ///< Image spacing/resolution if stored in file
+  usize num_components = 0;             ///< 1=grayscale, 3=RGB, 4=RGBA
+  DataType data_type = DataType::uint8; ///< Pixel data type (uint8, uint16, or float32)
+  usize num_pages = 1;                  ///< Number of pages (>1 for multi-page TIFF)
+  std::optional<FloatVec3Type> origin;     ///< Image origin if stored in file
+  std::optional<FloatVec3Type> spacing;    ///< Image spacing/resolution if stored in file
 };
 
 } // namespace nx::core

@@ -17,8 +17,8 @@ using namespace nx::core;
 
 namespace
 {
-using TriStoreType = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-using VertsStoreType = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+using TriStoreType = AbstractDataStore<INodeGeometry2D::SharedFaceListType::value_type>;
+using VertsStoreType = AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>;
 
 // usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
 // {
@@ -66,10 +66,10 @@ std::vector<std::vector<usize>> BuildFacesByFeature(const AbstractDataStore<int3
 
 } // namespace
 
-namespace nx::core::ComputeShapesTriangleGeomDetail
+namespace nx::core::compute_shapes_triangle_geom_detail
 {
 AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>& orientationMatrix, const std::vector<usize>& featureFaces,
-                               const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
+                               const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexListType::value_type>& vertexStore,
                                const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel)
 {
   using T = float64;
@@ -99,19 +99,19 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
 
     // Extract tuple index of the first vertex and compute the index to the first x-value in the SharedVertexList
     const usize vertAIndex = triStore[threeCompIndex] * 3;
-    cache.pointA = PointTType{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
+    cache.point_a = PointTType{vertexStore[vertAIndex], vertexStore[vertAIndex + 1], vertexStore[vertAIndex + 2]};
 
     const usize vertBIndex = triStore[threeCompIndex + 1] * 3;
-    cache.pointB = PointTType{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
+    cache.point_b = PointTType{vertexStore[vertBIndex], vertexStore[vertBIndex + 1], vertexStore[vertBIndex + 2]};
 
     const usize vertCIndex = triStore[threeCompIndex + 2] * 3;
-    cache.pointC = PointTType{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
+    cache.point_c = PointTType{vertexStore[vertCIndex], vertexStore[vertCIndex + 1], vertexStore[vertCIndex + 2]};
 
-    cache.edge1 = cache.pointB - cache.pointA;
-    cache.edge2 = cache.pointC - cache.pointA;
+    cache.edge1 = cache.point_b - cache.point_a;
+    cache.edge2 = cache.point_c - cache.point_a;
 
-    cache.sDist = cache.origin - cache.pointA;
-    cache.sCrossE1 = cache.sDist.cross(cache.edge1);
+    cache.s_dist = cache.origin - cache.point_a;
+    cache.s_cross_e1 = cache.s_dist.cross(cache.edge1);
 
     for(usize axis = 0; axis < directions.size(); axis++)
     {
@@ -144,13 +144,13 @@ namespace
  * @param triangleList Provides triangle vertex indices.
  * @return The three face coordinates.
  */
-inline std::array<nx::core::FloatVec3, 3> GetFaceCoordinates(usize triangleId, const VertsStoreType& verts, const TriStoreType& triangleList)
+inline std::array<nx::core::FloatVec3Type, 3> GetFaceCoordinates(usize triangleId, const VertsStoreType& verts, const TriStoreType& triangleList)
 {
   const usize v0Idx = triangleList[triangleId * 3];
   const usize v1Idx = triangleList[(triangleId * 3) + 1];
   const usize v2Idx = triangleList[(triangleId * 3) + 2];
-  return {FloatVec3{verts[v0Idx * 3], verts[(v0Idx * 3) + 1], verts[(v0Idx * 3) + 2]}, FloatVec3{verts[v1Idx * 3], verts[(v1Idx * 3) + 1], verts[(v1Idx * 3) + 2]},
-          FloatVec3{verts[v2Idx * 3], verts[(v2Idx * 3) + 1], verts[(v2Idx * 3) + 2]}};
+  return {FloatVec3Type{verts[v0Idx * 3], verts[(v0Idx * 3) + 1], verts[(v0Idx * 3) + 2]}, FloatVec3Type{verts[v1Idx * 3], verts[(v1Idx * 3) + 1], verts[(v1Idx * 3) + 2]},
+          FloatVec3Type{verts[v2Idx * 3], verts[(v2Idx * 3) + 1], verts[(v2Idx * 3) + 2]}};
 }
 
 /**
@@ -263,7 +263,7 @@ public:
     const VertsStoreType& verts = m_TriangleGeom.getVerticesRef().getDataStoreRef();
 
     Matrix3x3Type cinertia;
-    nx::core::FloatVec3 centroid = {0.0F, 0.0F, 0.0F};
+    nx::core::FloatVec3Type centroid = {0.0F, 0.0F, 0.0F};
 
     // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
     // will be normalized using this value;
@@ -292,7 +292,7 @@ public:
     for(usize featureId = featureIdStart; featureId < featureIdEnd; featureId++)
     {
       ShapeResultValues currentResult{};
-      currentResult.featureId = featureId;
+      currentResult.feature_id = featureId;
       // ===== The following section calculates the moment of inertia tensor (Cinertia) and omega3s =======
       if(m_ShouldCancel)
       {
@@ -315,11 +315,11 @@ public:
       for(const usize i : featureFaces)
       {
         const usize compIndex = (m_FaceLabels[2 * i] == featureId ? 0 : 1);
-        std::array<nx::core::FloatVec3, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
+        std::array<nx::core::FloatVec3Type, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
 
-        const nx::core::FloatVec3& aVert = vertCoords[0] - centroid;
-        const nx::core::FloatVec3& bVert = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
-        const nx::core::FloatVec3& cVert = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
+        const nx::core::FloatVec3Type& aVert = vertCoords[0] - centroid;
+        const nx::core::FloatVec3Type& bVert = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
+        const nx::core::FloatVec3Type& cVert = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
 
         Matrix3x3Type aMat;
         aMat << aVert[0], bVert[0], cVert[0], aVert[1], bVert[1], cVert[1], aVert[2], bVert[2], cVert[2];
@@ -392,9 +392,9 @@ public:
 
       const auto euler = orientation_utilities::PrincipalAxisFrameToEuler(orientationMatrix);
 
-      currentResult.axisEulerAngles[0] = static_cast<float32>(euler[0]);
-      currentResult.axisEulerAngles[1] = static_cast<float32>(euler[1]);
-      currentResult.axisEulerAngles[2] = static_cast<float32>(euler[2]);
+      currentResult.axis_euler_angles[0] = static_cast<float32>(euler[0]);
+      currentResult.axis_euler_angles[1] = static_cast<float32>(euler[1]);
+      currentResult.axis_euler_angles[2] = static_cast<float32>(euler[2]);
 
       // ====================  The following section finds axes ==================
       if(m_ShouldCancel)
@@ -402,24 +402,24 @@ public:
         return;
       }
 
-      const auto lengths = ComputeShapesTriangleGeomDetail::FindIntersections(orientationMatrix, featureFaces, triangleList, verts, m_Centroids, featureId, m_ShouldCancel);
+      const auto lengths = compute_shapes_triangle_geom_detail::FindIntersections(orientationMatrix, featureFaces, triangleList, verts, m_Centroids, featureId, m_ShouldCancel);
 
       // Check for zeroes (zeroes = probably invalid)
-      if(lengths.xLength == 0.0 || lengths.yLength == 0.0 || lengths.zLength == 0.0)
+      if(lengths.x_length == 0.0 || lengths.y_length == 0.0 || lengths.z_length == 0.0)
       {
-        currentResult.axisLengths[0] = -1.0f;
-        currentResult.axisLengths[1] = -1.0f;
-        currentResult.axisLengths[2] = -1.0f;
-        currentResult.aspectRatios[0] = -1.0f;
-        currentResult.aspectRatios[1] = -1.0f;
+        currentResult.axis_lengths[0] = -1.0f;
+        currentResult.axis_lengths[1] = -1.0f;
+        currentResult.axis_lengths[2] = -1.0f;
+        currentResult.aspect_ratios[0] = -1.0f;
+        currentResult.aspect_ratios[1] = -1.0f;
       }
       else
       {
-        currentResult.axisLengths[0] = static_cast<float32>(lengths.xLength);
-        currentResult.axisLengths[1] = static_cast<float32>(lengths.yLength);
-        currentResult.axisLengths[2] = static_cast<float32>(lengths.zLength);
-        currentResult.aspectRatios[0] = static_cast<float32>(lengths.yLength / lengths.xLength);
-        currentResult.aspectRatios[1] = static_cast<float32>(lengths.zLength / lengths.xLength);
+        currentResult.axis_lengths[0] = static_cast<float32>(lengths.x_length);
+        currentResult.axis_lengths[1] = static_cast<float32>(lengths.y_length);
+        currentResult.axis_lengths[2] = static_cast<float32>(lengths.z_length);
+        currentResult.aspect_ratios[0] = static_cast<float32>(lengths.y_length / lengths.x_length);
+        currentResult.aspect_ratios[1] = static_cast<float32>(lengths.z_length / lengths.x_length);
       }
       results.push_back(currentResult);
     } // end
@@ -459,18 +459,18 @@ void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValue
 
   for(const auto& result : results)
   {
-    omega3sRef.setValue(result.featureId, result.omega3);
+    omega3sRef.setValue(result.feature_id, result.omega3);
 
-    axisEulerAnglesRef.setValue(3 * result.featureId, static_cast<float32>(result.axisEulerAngles[0]));
-    axisEulerAnglesRef.setValue((3 * result.featureId) + 1, static_cast<float32>(result.axisEulerAngles[1]));
-    axisEulerAnglesRef.setValue((3 * result.featureId) + 2, static_cast<float32>(result.axisEulerAngles[2]));
+    axisEulerAnglesRef.setValue(3 * result.feature_id, static_cast<float32>(result.axis_euler_angles[0]));
+    axisEulerAnglesRef.setValue((3 * result.feature_id) + 1, static_cast<float32>(result.axis_euler_angles[1]));
+    axisEulerAnglesRef.setValue((3 * result.feature_id) + 2, static_cast<float32>(result.axis_euler_angles[2]));
 
-    axisLengthsRef.setValue(3 * result.featureId, result.axisLengths[0]);
-    axisLengthsRef.setValue((3 * result.featureId) + 1, result.axisLengths[1]);
-    axisLengthsRef.setValue((3 * result.featureId) + 2, result.axisLengths[2]);
+    axisLengthsRef.setValue(3 * result.feature_id, result.axis_lengths[0]);
+    axisLengthsRef.setValue((3 * result.feature_id) + 1, result.axis_lengths[1]);
+    axisLengthsRef.setValue((3 * result.feature_id) + 2, result.axis_lengths[2]);
 
-    aspectRatiosRef.setValue(2 * result.featureId, result.aspectRatios[0]);
-    aspectRatiosRef.setValue((2 * result.featureId) + 1, result.aspectRatios[1]);
+    aspectRatiosRef.setValue(2 * result.feature_id, result.aspect_ratios[0]);
+    aspectRatiosRef.setValue((2 * result.feature_id) + 1, result.aspect_ratios[1]);
   }
   m_Throttle.incrementCount(results.size());
 }
@@ -478,24 +478,24 @@ void ComputeShapesTriangleGeom::updateResults(const std::vector<ShapeResultValue
 // -----------------------------------------------------------------------------
 Result<> ComputeShapesTriangleGeom::operator()()
 {
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  const auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath).getDataStoreRef();
-  const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath).getDataStoreRef();
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
+  const auto& faceLabels = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_array_path).getDataStoreRef();
+  const auto& centroids = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->centroids_array_path).getDataStoreRef();
 
   // Face labels must use contiguous positive feature IDs.
   {
     std::vector<int32> eulerCharacteristics =
-        nx::core::GeometryHelpers::Connectivity::FindEulerCharacteristicValues(triangleGeom, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsArrayPath));
+        nx::core::geometry_helpers::connectivity::FindEulerCharacteristicValues(triangleGeom, m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_array_path));
 
-    auto& eulerCharStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->EulerCharacteristicPath).getDataStoreRef();
+    auto& eulerCharStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->euler_characteristic_path).getDataStoreRef();
     std::copy(eulerCharacteristics.begin(), eulerCharacteristics.end(), eulerCharStoreRef.begin());
   }
 
   // Calculated Arrays
-  m_Omega3s = m_DataStructure.getDataAs<Float32Array>(m_InputValues->Omega3sArrayPath);
-  m_AxisEulerAngles = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AxisEulerAnglesArrayPath);
-  m_AxisLengths = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AxisLengthsArrayPath);
-  m_AspectRatios = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AspectRatiosArrayPath);
+  m_Omega3s = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->omega3s_array_path);
+  m_AxisEulerAngles = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->axis_euler_angles_array_path);
+  m_AxisLengths = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->axis_lengths_array_path);
+  m_AspectRatios = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->aspect_ratios_array_path);
 
   m_NumFeatures = centroids.getNumberOfTuples();
   m_MessageHandler.sendInfoMessage("Computing Feature Shapes");

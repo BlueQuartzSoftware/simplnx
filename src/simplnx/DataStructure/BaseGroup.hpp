@@ -342,12 +342,12 @@ public:
   /**
    * @brief Querys the DataMap for the object names in m_DataMap
    */
-  std::vector<std::string> GetChildrenNames();
+  std::vector<std::string> getChildrenNames();
 
   /**
    * @brief Querys the DataMap for the object ids in m_DataMap
    */
-  std::vector<DataObject::IdType> GetChildrenIds();
+  std::vector<DataObject::IdType> getChildrenIds();
 
 protected:
   /**

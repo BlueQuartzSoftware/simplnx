@@ -26,7 +26,7 @@ namespace
  */
 struct FeatureBoundingVolume
 {
-  BoundingBox3Df box;
+  BoundingBox3DfType box;
   float32 radius = 0.0f;
 };
 
@@ -44,8 +44,8 @@ template <typename OutputT, typename FaceLabelsT>
 class SliceSampleSurfaceMeshImpl
 {
 public:
-  SliceSampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
-                             const std::vector<FeatureBoundingVolume>& featureBounds, const std::vector<FloatVec3>& slicePoints, nonstd::span<OutputT> sliceOutput,
+  SliceSampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3DfType>& faceBBs,
+                             const std::vector<FeatureBoundingVolume>& featureBounds, const std::vector<FloatVec3Type>& slicePoints, nonstd::span<OutputT> sliceOutput,
                              const std::atomic_bool& shouldCancel, std::atomic_bool& overflowHit)
   : m_Faces(faces)
   , m_FaceLists(faceLists)
@@ -80,12 +80,12 @@ public:
         return;
       }
 
-      const FloatVec3 point = m_SlicePoints[i];
+      const FloatVec3Type point = m_SlicePoints[i];
       OutputT assignedFeature = 0;
       for(usize featureId = 0; featureId < numFeatures; featureId++)
       {
         const FeatureBoundingVolume& featureBounds = m_FeatureBounds[featureId];
-        char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceLists[featureId], m_FaceBBs, point, featureBounds.box, featureBounds.radius);
+        char code = geometry_math::IsPointInPolyhedron(m_Faces, m_FaceLists[featureId], m_FaceBBs, point, featureBounds.box, featureBounds.radius);
         if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
         {
           assignedFeature = static_cast<OutputT>(featureId);
@@ -99,9 +99,9 @@ public:
 private:
   const TriangleGeom& m_Faces;
   const std::vector<std::vector<FaceLabelsT>>& m_FaceLists;
-  const std::vector<BoundingBox3Df>& m_FaceBBs;
+  const std::vector<BoundingBox3DfType>& m_FaceBBs;
   const std::vector<FeatureBoundingVolume>& m_FeatureBounds;
-  const std::vector<FloatVec3>& m_SlicePoints;
+  const std::vector<FloatVec3Type>& m_SlicePoints;
   nonstd::span<OutputT> m_SliceOutput;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_bool& m_OverflowHit;
@@ -128,7 +128,7 @@ struct SampleSlicesFunctor
    * @return Valid result, bulk-write error, or feature-ID overflow error.
    */
   template <typename OutputT, typename FaceLabelsT>
-  Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
+  Result<> operator()(SampleSurfaceMesh* algorithm, const TriangleGeom& triangleGeom, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3DfType>& faceBBs,
                       const std::vector<FeatureBoundingVolume>& featureBounds, IDataArray& polyIds, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     const usize numFeatures = faceLists.size();
@@ -145,7 +145,7 @@ struct SampleSlicesFunctor
 
     auto& outputStore = polyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>();
 
-    const SizeVec3 gridDims = algorithm->getGridDimensions();
+    const SizeVec3Type gridDims = algorithm->getGridDimensions();
     const usize cellsPerSlice = gridDims.getX() * gridDims.getY();
     const usize numSlices = gridDims.getZ();
 
@@ -153,7 +153,7 @@ struct SampleSlicesFunctor
     algorithm->resetProgress(numSlices, "Sampling triangle geometry");
 
     // Reuse point and output buffers whose size is proportional to one XY slice.
-    std::vector<FloatVec3> slicePoints(cellsPerSlice);
+    std::vector<FloatVec3Type> slicePoints(cellsPerSlice);
     auto sliceOutput = std::make_unique<OutputT[]>(cellsPerSlice);
 
     for(usize zSlice = 0; zSlice < numSlices; zSlice++)
@@ -279,14 +279,14 @@ struct SampleSurfaceMeshFunctor
     // Track the next insertion position for each pre-sized face list.
     std::vector<int32> linkLoc(numFaces, 0);
 
-    std::vector<BoundingBox3Df> faceBBs;
+    std::vector<BoundingBox3DfType> faceBBs;
     {
       // Keep this GeometryStoreCache in the serial face traversal. It performs
       // per-element generic-store reads and does not make concurrent access safe.
-      const GeometryMath::detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
+      const geometry_math::detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
 
       // Reuse the vertex-index buffer for each triangle.
-      std::vector<usize> verts(cache.NumVertsPerFace);
+      std::vector<usize> verts(cache.num_verts_per_face);
 
       // Fill feature face lists and calculate one bounding box per triangle.
       for(int32 i = 0; i < numFaces; i++)
@@ -301,7 +301,7 @@ struct SampleSurfaceMeshFunctor
         {
           faceLists[g2][(linkLoc[g2])++] = i;
         }
-        faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(cache, triangleGeom, i, verts));
+        faceBBs.emplace_back(geometry_math::FindBoundingBoxOfFace(cache, triangleGeom, i, verts));
       }
     }
 
@@ -315,9 +315,9 @@ struct SampleSurfaceMeshFunctor
     featureBounds.reserve(numFeatures);
     for(usize featureId = 0; featureId < numFeatures; featureId++)
     {
-      BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(triangleGeom, faceLists[featureId]));
+      BoundingBox3DfType boundingBox(geometry_math::FindBoundingBoxOfFaces(triangleGeom, faceLists[featureId]));
       // The ray starts at the sample point, not the box center. Use the full diagonal with a margin.
-      float32 radius = GeometryMath::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) * 1.01F;
+      float32 radius = geometry_math::FindDistanceBetweenPoints(boundingBox.getMinPoint(), boundingBox.getMaxPoint()) * 1.01F;
       featureBounds.emplace_back(FeatureBoundingVolume{.box = boundingBox, .radius = radius});
     }
 
@@ -344,11 +344,11 @@ SampleSurfaceMesh::~SampleSurfaceMesh() noexcept = default;
 
 Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
 {
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(inputValues.TriangleGeometryPath);
-  const auto& iFaceLabels = m_DataStructure.getDataRefAs<IDataArray>(inputValues.SurfaceMeshFaceLabelsArrayPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(inputValues.triangle_geometry_path);
+  const auto& iFaceLabels = m_DataStructure.getDataRefAs<IDataArray>(inputValues.surface_mesh_face_labels_array_path);
 
   // Resolve the existing output that receives one feature ID per sample point.
-  auto& polyIds = m_DataStructure.getDataRefAs<IDataArray>(inputValues.FeatureIdsArrayPath);
+  auto& polyIds = m_DataStructure.getDataRefAs<IDataArray>(inputValues.feature_ids_array_path);
 
   // Parameter validation restricts face labels to integer types.
   return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHandler);

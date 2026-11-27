@@ -24,7 +24,7 @@ enum class endian : uint8
   native = SIMPLNX_BYTE_ORDER
 };
 
-inline endian checkEndian()
+inline endian CheckEndian()
 {
   constexpr uint32_t k_I = 0x01020304;
   const auto* u8Ptr = reinterpret_cast<const std::byte*>(&k_I);
@@ -32,24 +32,24 @@ inline endian checkEndian()
   return u8Ptr[0] == std::byte{0x01} ? endian::big : endian::little;
 }
 
-constexpr uint16 byteswap16(uint16 value) noexcept
+constexpr uint16 Byteswap16(uint16 value) noexcept
 {
   return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);
 }
 
-constexpr uint32 byteswap32(uint32 value) noexcept
+constexpr uint32 Byteswap32(uint32 value) noexcept
 {
   return ((value & 0x000000FFu) << 24) | ((value & 0x00FF0000u) >> 8) | ((value & 0x0000FF00u) << 8) | ((value & 0xFF000000u) >> 24);
 }
 
-constexpr uint64 byteswap64(uint64 value) noexcept
+constexpr uint64 Byteswap64(uint64 value) noexcept
 {
   return (((value & 0xFF00000000000000ull) >> 56) | ((value & 0x00FF000000000000ull) >> 40) | ((value & 0x0000FF0000000000ull) >> 24) | ((value & 0x000000FF00000000ull) >> 8) |
           ((value & 0x00000000FF000000ull) << 8) | ((value & 0x0000000000FF0000ull) << 24) | ((value & 0x000000000000FF00ull) << 40) | ((value & 0x00000000000000FFull) << 56));
 }
 
 template <class T, endian Endianness = endian::native, usize Size = sizeof(T)>
-constexpr T bit_cast_int(const std::byte* data) noexcept
+constexpr T BitCastInt(const std::byte* data) noexcept
 {
   static_assert(std::is_integral_v<T>);
   static_assert(Size <= sizeof(T));
@@ -70,7 +70,7 @@ constexpr T bit_cast_int(const std::byte* data) noexcept
 }
 
 template <class T>
-inline T bit_cast_ptr(const std::byte* data) noexcept
+inline T BitCastPtr(const std::byte* data) noexcept
 {
   static_assert(std::is_trivially_constructible_v<T>);
   static_assert(std::is_trivially_copyable_v<T>);
@@ -81,7 +81,7 @@ inline T bit_cast_ptr(const std::byte* data) noexcept
 }
 
 template <class To, class From>
-To bit_cast(const From& src) noexcept
+To BitCast(const From& src) noexcept
 {
   static_assert(sizeof(To) == sizeof(From));
   static_assert(std::is_trivially_constructible_v<To>);
@@ -94,7 +94,7 @@ To bit_cast(const From& src) noexcept
 }
 
 template <class T>
-constexpr T byteswap(T value) noexcept
+constexpr T Byteswap(T value) noexcept
 {
   static_assert(std::is_arithmetic_v<T>, "byteswap only works on arithmetic types");
   if constexpr(sizeof(T) == sizeof(uint8))
@@ -103,28 +103,28 @@ constexpr T byteswap(T value) noexcept
   }
   else if constexpr(sizeof(T) == sizeof(uint16))
   {
-    return byteswap16(value);
+    return Byteswap16(value);
   }
   else if constexpr(sizeof(T) == sizeof(uint32))
   {
     if constexpr(std::is_floating_point_v<T>)
     {
-      return bit_cast<T>(byteswap32(bit_cast<uint32>(value)));
+      return BitCast<T>(Byteswap32(BitCast<uint32>(value)));
     }
     else
     {
-      return byteswap32(value);
+      return Byteswap32(value);
     }
   }
   else if constexpr(sizeof(T) == sizeof(uint64))
   {
     if constexpr(std::is_floating_point_v<T>)
     {
-      return bit_cast<T>(byteswap64(bit_cast<uint64>(value)));
+      return BitCast<T>(Byteswap64(BitCast<uint64>(value)));
     }
     else
     {
-      return byteswap64(value);
+      return Byteswap64(value);
     }
   }
 }

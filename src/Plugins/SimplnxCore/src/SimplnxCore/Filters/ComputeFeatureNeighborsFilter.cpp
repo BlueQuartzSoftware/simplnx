@@ -63,7 +63,7 @@ Parameters ComputeFeatureNeighborsFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesPath_Key, "Feature Attribute Matrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"DataContainer", "Cell Feature Data"})));
@@ -118,7 +118,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, imageGeomPath, {featureIdsPath}, -24501);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
@@ -129,7 +129,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
 
   OutputActions actions;
 
-  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   ShapeType tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
 
   const ShapeType cDims{1};
@@ -171,19 +171,19 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
 {
   ComputeFeatureNeighborsInputValues inputValues;
 
-  inputValues.StoreBoundaryCells = filterArgs.value<BoolParameter::ValueType>(k_StoreBoundary_Key);
-  inputValues.StoreSurfaceFeatures = filterArgs.value<BoolParameter::ValueType>(k_StoreSurface_Key);
+  inputValues.store_boundary_cells = filterArgs.value<BoolParameter::ValueType>(k_StoreBoundary_Key);
+  inputValues.store_surface_features = filterArgs.value<BoolParameter::ValueType>(k_StoreSurface_Key);
 
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
+  inputValues.input_image_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
 
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
-  inputValues.BoundaryCellsPath = inputValues.FeatureIdsPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellsName_Key));
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
+  inputValues.boundary_cells_path = inputValues.feature_ids_path.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellsName_Key));
 
-  inputValues.CellFeatureArrayPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeaturesPath_Key);
-  inputValues.NumberOfNeighborsPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NumNeighborsName_Key));
-  inputValues.NeighborListPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NeighborListName_Key));
-  inputValues.SharedSurfaceAreaListPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedSurfaceAreaName_Key));
-  inputValues.SurfaceFeaturesPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceFeaturesName_Key));
+  inputValues.cell_feature_array_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeaturesPath_Key);
+  inputValues.number_of_neighbors_path = inputValues.cell_feature_array_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NumNeighborsName_Key));
+  inputValues.neighbor_list_path = inputValues.cell_feature_array_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NeighborListName_Key));
+  inputValues.shared_surface_area_list_path = inputValues.cell_feature_array_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedSurfaceAreaName_Key));
+  inputValues.surface_features_path = inputValues.cell_feature_array_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceFeaturesName_Key));
 
   return ComputeFeatureNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

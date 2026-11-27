@@ -253,7 +253,7 @@ inline DataPath BuildAheImage(DataStructure& dataStructure, usize dimX, usize di
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -281,7 +281,7 @@ inline std::vector<T> RunApplyAhe(const std::vector<T>& input, usize dimX, usize
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ImageProcessing::ApplyAdaptiveHistogramEqualization<T>(inStore, outStore, SizeVec3{dimX, dimY, dimZ}, radius, alpha, beta, shouldCancel, messageHandler);
+  const Result<> result = ImageProcessing::ApplyAdaptiveHistogramEqualization<T>(inStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, radius, alpha, beta, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<T> out(input.size());
@@ -308,7 +308,7 @@ inline void RunAheFilter(IFilter& filter, DataStructure& dataStructure, const Da
   args.insertOrAssign(NewFilterT::k_Alpha_Key, std::make_any<float32>(alpha));
   args.insertOrAssign(NewFilterT::k_Beta_Key, std::make_any<float32>(beta));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }

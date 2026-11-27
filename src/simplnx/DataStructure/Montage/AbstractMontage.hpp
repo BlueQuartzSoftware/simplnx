@@ -70,7 +70,7 @@ public:
    * @brief Returns a collection of LinkedPaths to geometries in the montage.
    * @return std::vector<LinkedPath>
    */
-  static std::vector<LinkedPath> getLinkedPaths();
+  static std::vector<LinkedPath> GetLinkedPaths();
 
   /**
    * @brief Returns a TooltipGenerator for the montage.

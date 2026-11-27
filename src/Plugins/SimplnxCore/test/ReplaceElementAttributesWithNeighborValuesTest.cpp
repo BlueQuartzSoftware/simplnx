@@ -36,8 +36,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -68,15 +68,15 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto confDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_ConfidencePath, cellTupleShape, {1});
+  auto confDataStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_ConfidencePath, cellTupleShape, {1});
   auto* confArrayPtr = DataArray<float32>::Create(dataStructure, "Confidence Index", confDataStore, cellAmPtr->getId());
   auto& confStore = confArrayPtr->getDataStoreRef();
 
-  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3});
+  auto eulerDataStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3});
   auto* eulerArrayPtr = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAmPtr->getId());
   auto& eulerStore = eulerArrayPtr->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellDataPath.createChildPath("Phases"), cellTupleShape, {1});
+  auto phasesDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_CellDataPath.createChildPath("Phases"), cellTupleShape, {1});
   auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAmPtr->getId());
   auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
@@ -115,17 +115,17 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
 void BuildTerminationData(DataStructure& dataStructure, const std::vector<float32>& comparisonValues)
 {
   BuildTestData(dataStructure, comparisonValues.size(), 1, 1);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath));
-  auto& confidenceRef = dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_ConfidencePath));
+  auto& confidenceRef = dataStructure.getDataRefAs<Float32ArrayType>(k_ConfidencePath).getDataStoreRef();
   const auto writeResult = confidenceRef.copyFromBuffer(0, nonstd::span<const float32>(comparisonValues.data(), comparisonValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
   const DataPath eulerPath = k_CellDataPath.createChildPath("EulerAngles");
   const DataPath phasesPath = k_CellDataPath.createChildPath("Phases");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
-  auto& eulersRef = dataStructure.getDataRefAs<Float32Array>(eulerPath).getDataStoreRef();
-  auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(phasesPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(eulerPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasesPath));
+  auto& eulersRef = dataStructure.getDataRefAs<Float32ArrayType>(eulerPath).getDataStoreRef();
+  auto& phasesRef = dataStructure.getDataRefAs<Int32ArrayType>(phasesPath).getDataStoreRef();
   for(usize tupleIdx = 0; tupleIdx < comparisonValues.size(); tupleIdx++)
   {
     phasesRef[tupleIdx] = static_cast<int32>(100 + tupleIdx);
@@ -165,14 +165,14 @@ DataPath AddCellArrayAlias(DataStructure& dataStructure, const DataPath& arrayPa
 void RequireTerminationData(const DataStructure& dataStructure, const std::vector<float32>& expectedComparison, const std::vector<usize>& expectedSources)
 {
   REQUIRE(expectedComparison.size() == expectedSources.size());
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath));
-  const auto& confidenceRef = dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_ConfidencePath));
+  const auto& confidenceRef = dataStructure.getDataRefAs<Float32ArrayType>(k_ConfidencePath);
   const DataPath eulerPath = k_CellDataPath.createChildPath("EulerAngles");
   const DataPath phasesPath = k_CellDataPath.createChildPath("Phases");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
-  const auto& eulersRef = dataStructure.getDataRefAs<Float32Array>(eulerPath);
-  const auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(phasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(eulerPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasesPath));
+  const auto& eulersRef = dataStructure.getDataRefAs<Float32ArrayType>(eulerPath);
+  const auto& phasesRef = dataStructure.getDataRefAs<Int32ArrayType>(phasesPath);
   for(usize tupleIdx = 0; tupleIdx < expectedComparison.size(); tupleIdx++)
   {
     if(std::isnan(expectedComparison[tupleIdx]))
@@ -189,7 +189,7 @@ void RequireTerminationData(const DataStructure& dataStructure, const std::vecto
       REQUIRE(eulersRef[(3 * tupleIdx) + compIdx] == static_cast<float32>((10 * expectedSources[tupleIdx]) + compIdx + 1));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 void RequireStallError(const Result<>& result, usize remaining)
@@ -211,7 +211,7 @@ void RequireDiskBackedCellArrays(const DataStructure& dataStructure)
   {
     const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(path);
     REQUIRE(arrayPtr != nullptr);
-    UnitTest::RequireDiskBackedStore(*arrayPtr);
+    unit_test::RequireDiskBackedStore(*arrayPtr);
   }
 }
 
@@ -226,7 +226,7 @@ void RequireDiskBackedCellArrays(const DataStructure& dataStructure)
  */
 usize CountVoxelsBelowThreshold(const DataStructure& dataStructure, float32 threshold, usize dimX, usize dimY, usize dimZ)
 {
-  const auto& conf = dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath).getDataStoreRef();
+  const auto& conf = dataStructure.getDataRefAs<Float32ArrayType>(k_ConfidencePath).getDataStoreRef();
   const usize sliceSize = dimX * dimY;
   std::vector<float32> buf(sliceSize);
   usize count = 0;
@@ -256,7 +256,7 @@ usize CountVoxelsBelowThreshold(const DataStructure& dataStructure, float32 thre
  */
 usize CountVoxelsAboveThreshold(const DataStructure& dataStructure, float32 threshold, usize dimX, usize dimY, usize dimZ)
 {
-  const auto& conf = dataStructure.getDataRefAs<Float32Array>(k_ConfidencePath).getDataStoreRef();
+  const auto& conf = dataStructure.getDataRefAs<Float32ArrayType>(k_ConfidencePath).getDataStoreRef();
   const usize sliceSize = dimX * dimY;
   std::vector<float32> buf(sliceSize);
   usize count = 0;
@@ -275,7 +275,7 @@ usize CountVoxelsAboveThreshold(const DataStructure& dataStructure, float32 thre
   return count;
 }
 
-const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Constants::k_ConfidenceIndexWithSpaces);
+const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(constants::k_ConfidenceIndexWithSpaces);
 const std::string k_ExemplarDataContainer2("DataContainer");
 
 const std::string k_SyntheticImageGeomName("Image3D");
@@ -304,8 +304,8 @@ DataStructure BuildSyntheticDataStructure(float32 goodValue, float32 badValue, c
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_SyntheticCellAMName, {3, 3, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* confArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_SyntheticConfName, {3, 3, 3}, {1}, cellAmPtr->getId());
-  auto* markerArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_SyntheticMarkerName, {3, 3, 3}, {1}, cellAmPtr->getId());
+  auto* confArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_SyntheticConfName, {3, 3, 3}, {1}, cellAmPtr->getId());
+  auto* markerArrayPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_SyntheticMarkerName, {3, 3, 3}, {1}, cellAmPtr->getId());
 
   auto& confStore = confArrayPtr->getDataStoreRef();
   auto& markerStore = markerArrayPtr->getDataStoreRef();
@@ -333,32 +333,32 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Genera
   {
     DataStructure buildDS;
     BuildTestData(buildDS, 20, 20, 20);
-    UnitTest::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
+    unit_test::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
   }
 
   // The large fixture exercises bounded OOC processing.
   {
     DataStructure buildDS;
     BuildTestData(buildDS, 200, 200, 200);
-    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
+    unit_test::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
   }
 }
 
 // The remaining cases verify exemplars, synthetic edge cases, and conversion.
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",
                                                               "6_6_replace_element_attributes_with_neighbor");
 
   // Load the exemplar and its related input fixture.
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = nx::core::UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = nx::core::unit_test::LoadDataStructure(exemplarFilePath);
 
   // Load the input fixture before executing the filter.
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   {
     // Configure the filter for the exemplar comparison.
@@ -374,20 +374,20 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter", "[Sim
 
     // Preflight must accept the complete cell-array selection.
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execution must reproduce the exemplar arrays.
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer2);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer2);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_replace_element_attributes_with_neighbor.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthetic neighbor replacement", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter]")
@@ -412,12 +412,12 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_SyntheticImageGeomName})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath));
-    const auto& confStore = dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath));
+    const auto& confStore = dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath).getDataStoreRef();
     // Every low-confidence cell must receive a value that meets the threshold.
     for(usize i = 0; i < confStore.getNumberOfTuples(); i++)
     {
@@ -429,8 +429,8 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
     }
     // Tuple replacement also copies the marker array from the selected neighbor.
     // Thus, the center marker must differ from its original linear index.
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_SyntheticMarkerPath));
-    const auto& markerStore = dataStructure.getDataRefAs<Int32Array>(k_SyntheticMarkerPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_SyntheticMarkerPath));
+    const auto& markerStore = dataStructure.getDataRefAs<Int32ArrayType>(k_SyntheticMarkerPath).getDataStoreRef();
     REQUIRE(markerStore[13] != 13);
   }
 
@@ -449,12 +449,12 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_SyntheticImageGeomName})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath));
-    const auto& confStore = dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath));
+    const auto& confStore = dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath).getDataStoreRef();
     for(usize i = 0; i < confStore.getNumberOfTuples(); i++)
     {
       REQUIRE(confStore[i] <= k_Threshold);
@@ -480,15 +480,15 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_SyntheticImageGeomName})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath));
-    const auto& confStore = dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath));
+    const auto& confStore = dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath).getDataStoreRef();
     // One pass fills the isolated interior cell because all face neighbors are good.
     REQUIRE(confStore[13] == Approx(k_Good));
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("bad voxel surrounded only by bad neighbors is not replaced (compare1=false skip)")
@@ -510,12 +510,12 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
     args.insertOrAssign(ReplaceElementAttributesWithNeighborValuesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_SyntheticImageGeomName})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath));
-    const auto& confStore = dataStructure.getDataRefAs<Float32Array>(k_SyntheticConfPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath));
+    const auto& confStore = dataStructure.getDataRefAs<Float32ArrayType>(k_SyntheticConfPath).getDataStoreRef();
 
     // The center has no selected source, so its value must remain unchanged.
     REQUIRE(confStore[13] == Approx(k_Bad));
@@ -526,14 +526,14 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Synthe
       REQUIRE(confStore[idx] == Approx(k_Good));
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -605,7 +605,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
   REQUIRE(labelsPtr != nullptr);
   const bool useRootArray = GENERATE(false, true);
   CAPTURE(useRootArray);
-  DataObject::OptionalId parentId;
+  DataObject::OptionalIdType parentId;
   DataPath inputPath({"External Comparison"});
   if(!useRootArray)
   {
@@ -618,9 +618,9 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
   auto comparisonStore = std::make_shared<DataStore<float32>>(ShapeType{4}, ShapeType{1}, 0.0F);
   const auto writeResult = comparisonStore->copyFromBuffer(0, nonstd::span<const float32>(comparisonValues.data(), comparisonValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-  const auto* externalPtr = Float32Array::Create(dataStructure, inputPath.getTargetName(), comparisonStore, parentId);
+  const auto* externalPtr = Float32ArrayType::Create(dataStructure, inputPath.getTargetName(), comparisonStore, parentId);
   REQUIRE(externalPtr != nullptr);
-  REQUIRE(externalPtr != dataStructure.getDataAs<Float32Array>(k_ConfidencePath));
+  REQUIRE(externalPtr != dataStructure.getDataAs<Float32ArrayType>(k_ConfidencePath));
 
   const FilterType filter;
   SECTION("Loop mode rejects an external comparison array before copying")
@@ -628,9 +628,9 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
     auto args = TerminationArguments(0, true);
     args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(inputPath));
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-    REQUIRE(preflight.outputActions.errors().size() == 1);
-    const auto& errorRef = preflight.outputActions.errors().front();
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+    REQUIRE(preflight.output_actions.errors().size() == 1);
+    const auto& errorRef = preflight.output_actions.errors().front();
     CHECK(errorRef.code == -15003);
     CHECK(errorRef.message.find(inputPath.toString()) != std::string::npos);
     CHECK(errorRef.message.find(k_CellDataPath.toString()) != std::string::npos);
@@ -646,13 +646,13 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
     auto args = TerminationArguments(0, false);
     args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(inputPath));
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const std::vector<DataPath> expectedModifications = {k_ConfidencePath, k_CellDataPath.createChildPath("EulerAngles"), k_CellDataPath.createChildPath("Phases")};
     std::vector<DataPath> actualModifications;
-    for(const auto& modification : preflight.outputActions.value().modifiedActions)
+    for(const auto& modification : preflight.output_actions.value().modified_actions)
     {
-      CHECK(modification.modifiedType == DataObjectModification::ModifiedType::Modified);
-      actualModifications.push_back(modification.modifiedPath);
+      CHECK(modification.modified_type == DataObjectModification::ModifiedType::Modified);
+      actualModifications.push_back(modification.modified_path);
     }
     CHECK(std::ranges::is_permutation(actualModifications, expectedModifications));
     const auto execution = filter.execute(dataStructure, args);
@@ -692,9 +692,9 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Compar
     args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(AddCellArrayAlias(dataStructure, labelsPath)));
 
     const auto preflight = FilterType().preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-    REQUIRE(preflight.outputActions.errors().size() == 1);
-    CHECK(preflight.outputActions.errors().front().code == -15003);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+    REQUIRE(preflight.output_actions.errors().size() == 1);
+    CHECK(preflight.output_actions.errors().front().code == -15003);
   }
 }
 
@@ -707,9 +707,9 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Missin
   const bool loop = GENERATE(false, true);
   CAPTURE(loop);
   const auto preflight = ReplaceElementAttributesWithNeighborValuesFilter().preflight(dataStructure, TerminationArguments(0, loop));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  REQUIRE(preflight.outputActions.errors().size() == 1);
-  const auto& errorRef = preflight.outputActions.errors().front();
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+  REQUIRE(preflight.output_actions.errors().size() == 1);
+  const auto& errorRef = preflight.output_actions.errors().front();
   CHECK(errorRef.code == -15003);
   CHECK(errorRef.message.find("requires a Cell Attribute Matrix") != std::string::npos);
 }
@@ -779,7 +779,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: real-s
           "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][.OocStoreContract]")
 {
   REQUIRE((Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   const auto comparison = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const bool hasDonor = GENERATE(false, true);
   CAPTURE(comparison, hasDonor);
@@ -811,7 +811,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: real-s
 
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Geometry cell tuple count", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][TupleCount]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FilterType = ReplaceElementAttributesWithNeighborValuesFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -839,13 +839,13 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Geomet
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -15001);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;

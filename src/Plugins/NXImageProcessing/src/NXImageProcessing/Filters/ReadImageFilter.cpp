@@ -45,17 +45,17 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
                                            bool removeOriginalGeometry)
 {
   ImageGeometryCropOptions options;
-  options.inputImageGeometryPath = inputGeometryPath;
-  options.outputImageGeometryPath = outputGeometryPath;
-  options.usePhysicalBounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  options.cropX = croppingOptions.cropX;
-  options.cropY = croppingOptions.cropY;
-  options.cropZ = cropZ;
-  options.removeOriginalGeometry = removeOriginalGeometry;
-  options.minVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]), static_cast<uint64>(croppingOptions.zBoundVoxels[0])};
-  options.maxVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]), static_cast<uint64>(croppingOptions.zBoundVoxels[1])};
-  options.minCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]), static_cast<float64>(croppingOptions.zBoundPhysical[0])};
-  options.maxCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]), static_cast<float64>(croppingOptions.zBoundPhysical[1])};
+  options.input_image_geometry_path = inputGeometryPath;
+  options.output_image_geometry_path = outputGeometryPath;
+  options.use_physical_bounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  options.crop_x = croppingOptions.crop_x;
+  options.crop_y = croppingOptions.crop_y;
+  options.crop_z = cropZ;
+  options.remove_original_geometry = removeOriginalGeometry;
+  options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
+  options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]), static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]), static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 
@@ -64,32 +64,32 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
 // geometry for NRRD volumes: header parse -> dims/origin/spacing -> optional crop delegation -> the create-actions and
 // and the non-axis-aligned ('space directions') warning (code -35750).
 IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const DataPath& imageGeomPath, const std::string& cellAttrMatName, const std::string& imageDataArrayName,
-                                       const CropGeometryParameter::ValueType& croppingOptions, const ImageIO::GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin)
+                                       const CropGeometryParameter::ValueType& croppingOptions, const image_io::GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin)
 {
   Result<OutputActions> resultOutputActions;
   std::vector<IFilter::PreflightValue> preflightUpdatedValues;
 
   if(!fs::exists(inputFilePath))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-35720, fmt::format("Input NRRD file does not exist: '{}'", inputFilePath.string()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-35720, fmt::format("Input NRRD file does not exist: '{}'", inputFilePath.string()))};
   }
 
   auto metadataResult = nrrd::ReadNrrdHeader(inputFilePath);
   if(metadataResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const nrrd::NrrdMetadata md = std::move(metadataResult).value();
 
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
-  FloatVec3 origin{md.origin[0], md.origin[1], md.origin[2]};
-  FloatVec3 spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
-  if(auto result = ImageIO::ResolveCropGeometry(inputFilePath, overrides, processing, centerOrigin, dims, origin, spacing); result.invalid())
+  FloatVec3Type origin{md.origin[0], md.origin[1], md.origin[2]};
+  FloatVec3Type spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
+  if(auto result = image_io::ResolveCropGeometry(inputFilePath, overrides, processing, centerOrigin, dims, origin, spacing); result.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
-  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
   if(croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
   {
@@ -102,21 +102,21 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(tmpActionsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
     }
 
     const DataPath croppedGeomPath({imageGeomPath.getTargetName() + "_cropped"});
-    const ImageGeometryCropOptions cropOptions = CreateCropOptions(imageGeomPath, croppedGeomPath, croppingOptions, croppingOptions.cropZ, false);
+    const ImageGeometryCropOptions cropOptions = CreateCropOptions(imageGeomPath, croppedGeomPath, croppingOptions, croppingOptions.crop_z, false);
     ImageGeometryCropBounds cropBounds;
     IFilter::PreflightResult cropImageResult = PreflightImageGeometryCrop(tmpDs, cropOptions, cropBounds);
-    if(cropImageResult.outputActions.invalid())
+    if(cropImageResult.output_actions.invalid())
     {
       return cropImageResult;
     }
-    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    Result<> actionsResult = cropImageResult.output_actions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
@@ -127,9 +127,9 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
 
   if(processing == OriginSpacingProcessing::Postprocessed)
   {
-    if(auto result = ImageIO::ApplyPostprocessedGeometry(inputFilePath, overrides, centerOrigin, dims, origin, spacing); result.invalid())
+    if(auto result = image_io::ApplyPostprocessedGeometry(inputFilePath, overrides, centerOrigin, dims, origin, spacing); result.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
     }
   }
 
@@ -139,27 +139,27 @@ IFilter::PreflightResult NrrdPreflight(const fs::path& inputFilePath, const Data
   }
 
   const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
-  const std::vector<usize> componentDims = {md.componentCount};
+  const std::vector<usize> componentDims = {md.component_count};
   const DataPath dataArrayPath = imageGeomPath.createChildPath(cellAttrMatName).createChildPath(imageDataArrayName);
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(md.dataType, tupleDims, componentDims, dataArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(md.data_type, tupleDims, componentDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
-  preflightUpdatedValues.push_back({"NRRD Header", fmt::format("type: {}  |  components: {}  |  encoding: {}  |  byte-swap: {}", md.typeString, md.componentCount,
-                                                               (md.encoding == nrrd::Encoding::Gzip ? "gzip" : "raw"), md.byteSwapRequired ? "yes" : "no")});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"NRRD Header", fmt::format("type: {}  |  components: {}  |  encoding: {}  |  byte-swap: {}", md.type_string, md.component_count,
+                                                               (md.encoding == nrrd::Encoding::Gzip ? "gzip" : "raw"), md.byte_swap_required ? "yes" : "no")});
 
-  if(md.affineHasRotation)
+  if(md.affine_has_rotation)
   {
     resultOutputActions.warnings().push_back(Warning{
         .code = -35750,
         .message = fmt::format("NRRD file '{}' has non-axis-aligned 'space directions'. The ImageGeom in simplnx is axis-aligned; the rotation/permutation component has been dropped and only the "
                                "per-axis spacing (column magnitudes) and origin were extracted. Voxels are loaded in their stored order.",
-                               md.filePath)});
+                               md.file_path)});
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 } // namespace
 
@@ -211,20 +211,20 @@ Parameters ReadImageFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
-                                                   ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
+                                                   ChoicesParameter::ChoicesType{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
   params.insert(std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Center Geometry on (0, 0, 0)",
                                                 "When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). The Origin value is not used.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0F, 0.0F, 0.0F},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0F, 0.0F, 0.0F},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0F, 1.0F, 1.0F},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0F, 1.0F, 1.0F},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_OriginSpacingProcessing_Key, "Origin & Spacing Processing", "Whether the origin & spacing should be preprocessed or postprocessed.", 1,
-                                                   ChoicesParameter::Choices{"Preprocessed", "Postprocessed"}));
+                                                   ChoicesParameter::ChoicesType{"Preprocessed", "Postprocessed"}));
 
   params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
 
@@ -278,7 +278,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
-  const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  const auto overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
   auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
@@ -299,34 +299,34 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
   auto imageIOResult = CreateImageIO(fileName);
   if(imageIOResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
   }
   auto& imageIO = imageIOResult.value();
 
   auto metadataResult = imageIO->readMetadata(fileName);
   if(metadataResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const auto& metadata = metadataResult.value();
 
   // Z is the number of real (non-pyramid/non-mask) pages the metadata reports. A single-page hint
   // (set programmatically by ReadImageStack) forces Z == 1 so each stacked file yields one slice.
-  const usize resolvedDepth = m_ReadSinglePageOnly ? usize{1} : metadata.numPages;
+  const usize resolvedDepth = m_ReadSinglePageOnly ? usize{1} : metadata.num_pages;
   std::vector<usize> dims = {metadata.width, metadata.height, resolvedDepth};
-  FloatVec3 origin = metadata.origin.value_or(FloatVec3{0.0f, 0.0f, 0.0f});
-  FloatVec3 spacing = metadata.spacing.value_or(FloatVec3{1.0f, 1.0f, 1.0f});
+  FloatVec3Type origin = metadata.origin.value_or(FloatVec3Type{0.0f, 0.0f, 0.0f});
+  FloatVec3Type spacing = metadata.spacing.value_or(FloatVec3Type{1.0f, 1.0f, 1.0f});
 
-  if(auto result = ImageIO::ResolveCropGeometry(fileName, overrides, originSpacingProcessing, shouldCenterOrigin, dims, origin, spacing); result.invalid())
+  if(auto result = image_io::ResolveCropGeometry(fileName, overrides, originSpacingProcessing, shouldCenterOrigin, dims, origin, spacing); result.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   // Cropping uses the shared planner on a temporary Image Geometry.
   // Z cropping applies only to a volume with more than one page.
   bool cropImage = croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping;
-  const bool zCropActive = cropImage && croppingOptions.cropZ && dims[2] > 1;
-  bool cropAnyDim = cropImage && (croppingOptions.cropX || croppingOptions.cropY || zCropActive);
+  const bool zCropActive = cropImage && croppingOptions.crop_z && dims[2] > 1;
+  bool cropAnyDim = cropImage && (croppingOptions.crop_x || croppingOptions.crop_y || zCropActive);
   if(cropAnyDim)
   {
     DataStructure tmpDs;
@@ -337,27 +337,27 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
     tmpGeomPtr->setDimensions(dims);
     if(auto result = tmpGeomPtr->setOrigin(origin); result.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
     }
     if(auto result = tmpGeomPtr->setSpacing(spacing); result.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
     }
 
     const ImageGeometryCropOptions cropOptions = CreateCropOptions(tmpGeomPath, {}, croppingOptions, zCropActive, true);
     ImageGeometryCropBounds cropBounds;
     IFilter::PreflightResult cropImageResult = PreflightImageGeometryCrop(tmpDs, cropOptions, cropBounds);
-    if(cropImageResult.outputActions.invalid())
+    if(cropImageResult.output_actions.invalid())
     {
       return cropImageResult;
     }
-    const auto& cropWarnings = cropImageResult.outputActions.warnings();
+    const auto& cropWarnings = cropImageResult.output_actions.warnings();
     resultOutputActions.warnings().insert(resultOutputActions.warnings().end(), cropWarnings.begin(), cropWarnings.end());
 
-    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    Result<> actionsResult = cropImageResult.output_actions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(tmpGeomPath);
@@ -369,13 +369,13 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
   // The stack applies its postprocessed settings after combining the slices.
   if(originSpacingProcessing == OriginSpacingProcessing::Postprocessed && !m_ReadSinglePageOnly)
   {
-    if(auto result = ImageIO::ApplyPostprocessedGeometry(fileName, overrides, shouldCenterOrigin, dims, origin, spacing); result.invalid())
+    if(auto result = image_io::ApplyPostprocessedGeometry(fileName, overrides, shouldCenterOrigin, dims, origin, spacing); result.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
     }
   }
 
-  DataType dataType = metadata.dataType;
+  DataType dataType = metadata.data_type;
   if(changeDataType)
   {
     dataType = ChoiceToImageDataType(imageDataTypeChoice);
@@ -385,7 +385,7 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
 
   // DataArray dimensions are stored slowest-to-fastest (Z, Y, X); ImageGeometry stores fastest-to-slowest (X, Y, Z).
   std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
-  std::vector<usize> componentDims = {metadata.numComponents};
+  std::vector<usize> componentDims = {metadata.num_components};
 
   {
     auto originVec = std::vector<float32>{origin[0], origin[1], origin[2]};
@@ -404,12 +404,12 @@ IFilter::PreflightResult ReadImageFilter::preflightImpl(const DataStructure& /*d
                                     "Output Data Type: {}\n"
                                     "Origin: [{}, {}, {}]\n"
                                     "Spacing: [{}, {}, {}]",
-                                    metadata.width, metadata.height, resolvedDepth, metadata.numPages, metadata.numComponents, DataTypeToString(metadata.dataType), DataTypeToString(dataType),
+                                    metadata.width, metadata.height, resolvedDepth, metadata.num_pages, metadata.num_components, DataTypeToString(metadata.data_type), DataTypeToString(dataType),
                                     origin[0], origin[1], origin[2], spacing[0], spacing[1], spacing[2]);
 
   preflightUpdatedValues.push_back({"Image Information", summary});
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -422,22 +422,22 @@ Result<> ReadImageFilter::executeImpl(DataStructure& dataStructure, const Argume
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
 
-  inputValues.inputFilePath = filterArgs.value<fs::path>(k_FileName_Key);
-  inputValues.imageGeometryPath = imageGeomPath;
-  inputValues.imageDataArrayPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
-  inputValues.cellDataName = cellDataName;
-  inputValues.changeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
-  inputValues.centerOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
-  auto originValues = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  inputValues.origin = FloatVec3{originValues[0], originValues[1], originValues[2]};
-  inputValues.changeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
-  auto spacingValues = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.spacing = FloatVec3{spacingValues[0], spacingValues[1], spacingValues[2]};
-  inputValues.originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
-  inputValues.changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
-  inputValues.imageDataType = ChoiceToImageDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
-  inputValues.croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
-  inputValues.readSinglePageOnly = m_ReadSinglePageOnly;
+  inputValues.input_file_path = filterArgs.value<fs::path>(k_FileName_Key);
+  inputValues.image_geometry_path = imageGeomPath;
+  inputValues.image_data_array_path = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
+  inputValues.cell_data_name = cellDataName;
+  inputValues.change_origin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  inputValues.center_origin = filterArgs.value<bool>(k_CenterOrigin_Key);
+  auto originValues = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+  inputValues.origin = FloatVec3Type{originValues[0], originValues[1], originValues[2]};
+  inputValues.change_spacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
+  auto spacingValues = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  inputValues.spacing = FloatVec3Type{spacingValues[0], spacingValues[1], spacingValues[2]};
+  inputValues.origin_spacing_processing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
+  inputValues.change_data_type = filterArgs.value<bool>(k_ChangeDataType_Key);
+  inputValues.image_data_type = ChoiceToImageDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
+  inputValues.cropping_options = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
+  inputValues.read_single_page_only = m_ReadSinglePageOnly;
 
   return ReadImage(dataStructure, messageHandler, shouldCancel, inputValues)();
 }

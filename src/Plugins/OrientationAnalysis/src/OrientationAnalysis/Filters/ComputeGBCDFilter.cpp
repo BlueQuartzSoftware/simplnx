@@ -59,23 +59,23 @@ Parameters ComputeGBCDFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "Path to the triangle geometry for which to calculate the GBCD", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Array specifying the normal of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Array specifying the area of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles",
                                                           "Array specifying three angles defining the orientation of the Feature in Bunge convention (Z-X-Z)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath({"Cell Feature Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceEnsembleAttributeMatrixName_Key, "Face Ensemble Attribute Matrix", "The name of the created face ensemble attribute matrix",
@@ -120,7 +120,7 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Use the size of the crystal structures to size the face AttributeMatrix
-  const auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
+  const auto& crystalStructures = dataStructure.getDataRefAs<UInt32ArrayType>(pCrystalStructuresArrayPathValue);
 
   ShapeType tupleShape(1, crystalStructures.getNumberOfTuples());
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(faceEnsembleAttributeMatrixPath, tupleShape);
@@ -129,17 +129,17 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
   // call the sizeGBCD function to get the GBCD ranges, dimensions, etc.  Note that the input parameters do not affect the size and can be dummy values here;
   SizeGBCD sizeGbcd(0, 0, pGBCDResValue);
   ShapeType componentShape(6);
-  componentShape[0] = sizeGbcd.m_GbcdSizes[0];
-  componentShape[1] = sizeGbcd.m_GbcdSizes[1];
-  componentShape[2] = sizeGbcd.m_GbcdSizes[2];
-  componentShape[3] = sizeGbcd.m_GbcdSizes[3];
-  componentShape[4] = sizeGbcd.m_GbcdSizes[4];
+  componentShape[0] = sizeGbcd.m_gbcd_sizes[0];
+  componentShape[1] = sizeGbcd.m_gbcd_sizes[1];
+  componentShape[2] = sizeGbcd.m_gbcd_sizes[2];
+  componentShape[3] = sizeGbcd.m_gbcd_sizes[3];
+  componentShape[4] = sizeGbcd.m_gbcd_sizes[4];
   componentShape[5] = 2;
 
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tupleShape, componentShape, faceEnsembleAttributeMatrixPath.createChildPath(pGBCDArrayNameValue));
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -147,16 +147,16 @@ Result<> ComputeGBCDFilter::executeImpl(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeGBCDInputValues inputValues;
-  inputValues.GBCDRes = filterArgs.value<float32>(k_GBCDRes_Key);
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.SurfaceMeshFaceNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
-  inputValues.SurfaceMeshFaceAreasArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
-  inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FaceEnsembleAttributeMatrixName = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_FaceEnsembleAttributeMatrixName_Key));
-  inputValues.GBCDArrayName = inputValues.FaceEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_GBCDArrayName_Key));
+  inputValues.gbcd_res = filterArgs.value<float32>(k_GBCDRes_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.surface_mesh_face_normals_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
+  inputValues.surface_mesh_face_areas_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
+  inputValues.feature_euler_angles_array_path = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.face_ensemble_attribute_matrix_name = inputValues.triangle_geometry_path.createChildPath(filterArgs.value<std::string>(k_FaceEnsembleAttributeMatrixName_Key));
+  inputValues.gbcd_array_name = inputValues.face_ensemble_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_GBCDArrayName_Key));
 
   return ComputeGBCD(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

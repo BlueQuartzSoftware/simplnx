@@ -5,8 +5,8 @@ using namespace nx::core;
 
 TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Correctness", "[NXImageProcessing][NormalizeToConstantImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   constexpr usize k_Dim = 12;
   const double constant = 100.0;
 
@@ -25,19 +25,19 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Correctness", "[NX
   const double sum = static_cast<double>(n) * (1.0 + static_cast<double>(n)) / 2.0; // sum of 1..n
   const double factor = constant / sum;
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outStore = dataStructure.getDataRefAs<Float64Array>(outputPath).getDataStoreRef();
+  auto& outStore = dataStructure.getDataRefAs<Float64ArrayType>(outputPath).getDataStoreRef();
   for(usize i = 0; i < n; ++i)
   {
     const double x = 1.0 + static_cast<double>(i);
     REQUIRE(outStore.getValue(i) == Approx(x * factor).margin(1.0e-12));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Zero-sum error", "[NXImageProcessing][NormalizeToConstantImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, 8, 0.0, 0.0); // all zeros -> sum == 0
   NormalizeToConstantImageFilter filter;
@@ -61,8 +61,8 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Zero-sum error", "
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][NormalizeToConstantImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -78,7 +78,7 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: ITK real-image gol
   args.insertOrAssign(NormalizeToConstantImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   NormalizeToConstantImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -90,5 +90,5 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: ITK real-image gol
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -17,12 +17,12 @@ namespace nx::core
  */
 struct SIMPLNX_EXPORT ImageGeometryCropBounds
 {
-  uint64 xMin = 0;
-  uint64 xMax = 0;
-  uint64 yMin = 0;
-  uint64 yMax = 0;
-  uint64 zMin = 0;
-  uint64 zMax = 0;
+  uint64 x_min = 0;
+  uint64 x_max = 0;
+  uint64 y_min = 0;
+  uint64 y_max = 0;
+  uint64 z_min = 0;
+  uint64 z_max = 0;
 };
 
 /**
@@ -31,24 +31,24 @@ struct SIMPLNX_EXPORT ImageGeometryCropBounds
  */
 struct SIMPLNX_EXPORT ImageGeometryCropOptions
 {
-  DataPath inputImageGeometryPath;
-  DataPath outputImageGeometryPath;
-  DataPath featureIdsPath;
-  DataPath cellFeatureAttributeMatrixPath;
-  std::vector<uint64> minVoxel = {0, 0, 0};
-  std::vector<uint64> maxVoxel = {0, 0, 0};
-  std::vector<float64> minCoordinate = {0.0, 0.0, 0.0};
-  std::vector<float64> maxCoordinate = {0.0, 0.0, 0.0};
+  DataPath input_image_geometry_path;
+  DataPath output_image_geometry_path;
+  DataPath feature_ids_path;
+  DataPath cell_feature_attribute_matrix_path;
+  std::vector<uint64> min_voxel = {0, 0, 0};
+  std::vector<uint64> max_voxel = {0, 0, 0};
+  std::vector<float64> min_coordinate = {0.0, 0.0, 0.0};
+  std::vector<float64> max_coordinate = {0.0, 0.0, 0.0};
   // Recreate the Feature AM with no arrays; required for renumberFeatures.
-  bool clearFeatureAttributeMatrix = false;
+  bool clear_feature_attribute_matrix = false;
   // Report unchanged Feature data only for callers that request this information.
-  bool reportUnclearedFeatureData = false;
-  bool renumberFeatures = false;
-  bool removeOriginalGeometry = false;
-  bool usePhysicalBounds = false;
-  bool cropX = true;
-  bool cropY = true;
-  bool cropZ = true;
+  bool report_uncleared_feature_data = false;
+  bool renumber_features = false;
+  bool remove_original_geometry = false;
+  bool use_physical_bounds = false;
+  bool crop_x = true;
+  bool crop_y = true;
+  bool crop_z = true;
 };
 
 /**

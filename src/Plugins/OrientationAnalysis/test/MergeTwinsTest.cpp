@@ -15,17 +15,17 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Valid Execution", "[OrientationAnalysis][MergeTwinsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz", "6_5_MergeTwins/6_5_MergeTwins.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz", "6_5_MergeTwins/6_5_MergeTwins.dream3d");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_5_MergeTwins/6_5_MergeTwins.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   const DataPath kCellDataPath({k_DataContainer, k_CellData});
   const DataPath kFeatureIdsPath = kCellDataPath.createChildPath(k_FeatureIds);
@@ -62,7 +62,7 @@ TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Valid Execution", "[Orientatio
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -75,37 +75,37 @@ TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Valid Execution", "[Orientatio
   }
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(kCellDataPath.createChildPath("6_5_ParentIds"));
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(kCellDataPath.createChildPath(kCellParentIdsArrayName));
-    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32ArrayType>(kCellDataPath.createChildPath("6_5_ParentIds"));
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32ArrayType>(kCellDataPath.createChildPath(kCellParentIdsArrayName));
+    unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(k_DataContainerPath.createChildPath(k_FeatureData).createChildPath("6_5_ParentIds"));
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32Array>(k_DataContainerPath.createChildPath(k_FeatureData).createChildPath(kCellParentIdsArrayName));
-    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<Int32ArrayType>(k_DataContainerPath.createChildPath(k_FeatureData).createChildPath("6_5_ParentIds"));
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<Int32ArrayType>(k_DataContainerPath.createChildPath(k_FeatureData).createChildPath(kCellParentIdsArrayName));
+    unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 
   AttributeMatrix* newAMPtr = dataStructure.getDataAs<AttributeMatrix>(k_DataContainerPath.createChildPath(kNewFeatureAttributeMatrixName));
   REQUIRE(newAMPtr != nullptr);
 
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<BoolArray>(k_DataContainerPath.createChildPath("6_5_NewGrain Data").createChildPath("Active"));
-    const auto& exemplarDataArray = dataStructure.getDataRefAs<BoolArray>(k_DataContainerPath.createChildPath(kNewFeatureAttributeMatrixName).createChildPath(kActiveArrayName));
-    UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+    const auto& generatedDataArray = dataStructure.getDataRefAs<BoolArrayType>(k_DataContainerPath.createChildPath("6_5_NewGrain Data").createChildPath("Active"));
+    const auto& exemplarDataArray = dataStructure.getDataRefAs<BoolArrayType>(k_DataContainerPath.createChildPath(kNewFeatureAttributeMatrixName).createChildPath(kActiveArrayName));
+    unit_test::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Phase Index Bounds", "[OrientationAnalysis][MergeTwinsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz", "6_5_MergeTwins/6_5_MergeTwins.dream3d");
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz", "6_5_MergeTwins/6_5_MergeTwins.dream3d");
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "6_5_MergeTwins" / "6_5_MergeTwins.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
   const DataPath featureDataPath = k_DataContainerPath.createChildPath(k_FeatureData);
   const DataPath featurePhasesPath = featureDataPath.createChildPath(k_Phases);
@@ -113,10 +113,10 @@ TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Phase Index Bounds", "[Orienta
   const DataPath contiguousNeighborPath = featureDataPath.createChildPath("NeighborList2");
   const DataPath featureIdsPath = k_DataContainerPath.createChildPath(k_CellData).createChildPath(k_FeatureIds);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featurePhasesPath));
-  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath));
-  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featurePhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(featurePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresArrayPath));
+  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresArrayPath);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
     REQUIRE(featurePhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -163,13 +163,13 @@ TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Phase Index Bounds", "[Orienta
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::MergeTwinsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][MergeTwinsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

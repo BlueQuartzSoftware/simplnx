@@ -28,7 +28,7 @@ class MaurerSentinelBudgetScope
 {
 public:
   explicit MaurerSentinelBudgetScope(uint64 budget)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -54,7 +54,7 @@ private:
 // Sets the geometry, input, and output keys plus the four Maurer parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
 void RunMaurer(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool insideIsPositive, bool squaredDistance, bool useImageSpacing, float64 backgroundValue,
-               UnitTest::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
+               unit_test::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -66,7 +66,7 @@ void RunMaurer(IFilter& filter, DataStructure& dataStructure, const DataPath& in
   args.insertOrAssign(MaurerFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
   args.insertOrAssign(MaurerFilterType::k_BackgroundValue_Key, std::make_any<float64>(backgroundValue));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -74,7 +74,7 @@ void RunMaurer(IFilter& filter, DataStructure& dataStructure, const DataPath& in
 
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm paths agree on in-memory stores", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
@@ -92,7 +92,7 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm path
         CAPTURE(inputCase, insideIsPositive, squaredDistance);
         std::vector<float32> reference(k_ValueCount);
         {
-          const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+          const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
           DataStructure referenceDataStructure;
           const DataPath referenceInput = rt::BuildImageFromPattern<uint8>(referenceDataStructure, k_DimX, k_DimY, k_DimZ, pattern);
           MaurerFilterType referenceFilter;
@@ -103,12 +103,12 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm path
           SIMPLNX_RESULT_REQUIRE_VALID(referenceCopyResult);
         }
 
-        for(const auto scenario : UnitTest::SelectAlgorithmTestScenariosForInMemoryStores())
+        for(const auto scenario : unit_test::SelectAlgorithmTestScenariosForInMemoryStores())
         {
           DYNAMIC_SECTION(inputCase << ", insideIsPositive=" << insideIsPositive << ", squaredDistance=" << squaredDistance << ", scenario=" << scenario)
           {
-            UnitTest::AlgorithmTestScope scope(scenario);
-            auto& budgetManager = CacheMemoryBudgetManager::instance();
+            unit_test::AlgorithmTestScope scope(scenario);
+            auto& budgetManager = CacheMemoryBudgetManager::Instance();
             const uint64 previousBudget = budgetManager.budgetBytes();
             struct BudgetRestorer
             {
@@ -146,7 +146,7 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm path
               CAPTURE(index);
               REQUIRE(std::bit_cast<uint32>(actual[index]) == std::bit_cast<uint32>(reference[index]));
             }
-            UnitTest::CheckArraysInheritTupleDims(dataStructure);
+            unit_test::CheckArraysInheritTupleDims(dataStructure);
           }
         }
       }
@@ -160,8 +160,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: algorithm path
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed single seed", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 5;
   constexpr usize k_Dy = 5;
@@ -170,9 +170,9 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = 1;
 
   DataStructure dataStructure;
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
   MaurerFilterType filter;
@@ -194,11 +194,11 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed single seed (both algorithm paths)", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_Dx = 5;
   constexpr usize k_Dy = 5;
@@ -230,7 +230,7 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
   REQUIRE(out.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == 0.0f); // the seed pixel
   REQUIRE(out.getValue(rt::FlatIndex(0, 2, 0, k_Dx, k_Dy)) == 4.0f); // dx=2
   REQUIRE(out.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == 8.0f); // dx=2,dy=2
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -238,8 +238,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: hand-computed 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight adds a bounded 3D chunk hint", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  auto& budgetManager = CacheMemoryBudgetManager::instance();
+  unit_test::LoadPlugins();
+  auto& budgetManager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = budgetManager.budgetBytes();
   budgetManager.clear();
   budgetManager.setBudgetBytes(64ULL * 1024ULL * 1024ULL);
@@ -259,19 +259,19 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight adds
     args.insertOrAssign(MaurerFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
     args.insertOrAssign(MaurerFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-    const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.value().actions.size() == 1);
+    const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.output_actions.value().actions.front().get());
     REQUIRE(actionPtr != nullptr);
     if(!expectHint)
     {
       REQUIRE_FALSE(actionPtr->chunkShapeHint().has_value());
       return;
     }
-    const SizeVec3 dims{k_DimX, k_DimY, dimZ};
+    const SizeVec3Type dims{k_DimX, k_DimY, dimZ};
     auto planResult = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, 16ULL * 1024ULL * 1024ULL);
     SIMPLNX_RESULT_REQUIRE_VALID(planResult);
-    REQUIRE(actionPtr->chunkShapeHint() == ShapeType{1, planResult.value().maxYRows, k_DimX});
+    REQUIRE(actionPtr->chunkShapeHint() == ShapeType{1, planResult.value().max_y_rows, k_DimX});
   };
 
   check(128, true);
@@ -284,8 +284,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight adds
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-integer input", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -304,12 +304,12 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   args.insertOrAssign(MaurerFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
   args.insertOrAssign(MaurerFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
   auto result = filter.preflight(dataStructure, args);
-  REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+  REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -328,11 +328,11 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   SECTION("non-scalar")
   {
     const DataPath path({"Image Geometry", "CellData", "Vec"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
     DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
     const auto result = filter.preflight(dataStructure, makeArgs(path));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8550);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8550);
   }
   SECTION("tuple mismatch")
   {
@@ -340,11 +340,11 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
     auto* wrongCellDataPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, imageGeom.getId());
     REQUIRE(wrongCellDataPtr != nullptr);
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
     DataArray<int32>::Create(dataStructure, "Short", store, wrongCellDataPtr->getId());
     const auto result = filter.preflight(dataStructure, makeArgs(path));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8001);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8001);
   }
 }
 
@@ -355,8 +355,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight validates BackgroundValue range", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -380,19 +380,19 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight vali
 
   SECTION("in-range integer background accepted")
   {
-    REQUIRE(filter.preflight(dataStructure, makeArgs(0.0)).outputActions.valid());
-    REQUIRE(filter.preflight(dataStructure, makeArgs(255.0)).outputActions.valid());
+    REQUIRE(filter.preflight(dataStructure, makeArgs(0.0)).output_actions.valid());
+    REQUIRE(filter.preflight(dataStructure, makeArgs(255.0)).output_actions.valid());
   }
   SECTION("out-of-range background rejected")
   {
-    REQUIRE(filter.preflight(dataStructure, makeArgs(300.0)).outputActions.invalid()); // > uint8 max
-    REQUIRE(filter.preflight(dataStructure, makeArgs(-1.0)).outputActions.invalid());  // < uint8 min
+    REQUIRE(filter.preflight(dataStructure, makeArgs(300.0)).output_actions.invalid()); // > uint8 max
+    REQUIRE(filter.preflight(dataStructure, makeArgs(-1.0)).output_actions.invalid());  // < uint8 min
   }
   SECTION("fractional background accepted with a truncation warning")
   {
     auto result = filter.preflight(dataStructure, makeArgs(2.5));
-    REQUIRE(result.outputActions.valid());
-    REQUIRE_FALSE(result.outputActions.warnings().empty());
+    REQUIRE(result.output_actions.valid());
+    REQUIRE_FALSE(result.output_actions.warnings().empty());
   }
 }
 
@@ -429,8 +429,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: FromSIMPLJson"
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight rejects non-finite BackgroundValue", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -456,20 +456,20 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
   SECTION("positive infinity rejected")
   {
     const auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::infinity()));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8560);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8560);
   }
   SECTION("negative infinity rejected")
   {
     const auto result = filter.preflight(dataStructure, makeArgs(-std::numeric_limits<float64>::infinity()));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8560);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8560);
   }
   SECTION("NaN rejected")
   {
     const auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN()));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8560);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8560);
   }
 }
 
@@ -482,8 +482,8 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight reje
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight BackgroundValue int64 range bound", "[NXImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 4;
   constexpr usize k_Dy = 4;
@@ -508,12 +508,12 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight Back
   SECTION("value above 2^63 rejected as out-of-range")
   {
     const auto result = filter.preflight(dataStructure, makeArgs(9.3e18)); // > 2^63 == 9.2233...e18
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8561); // k_BackgroundValueOutOfRange (filter-local)
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8561); // k_BackgroundValueOutOfRange (filter-local)
   }
   SECTION("value below 2^63 accepted")
   {
-    REQUIRE(filter.preflight(dataStructure, makeArgs(9.2e18)).outputActions.valid()); // < 2^63 and within int64 max 9.223e18
+    REQUIRE(filter.preflight(dataStructure, makeArgs(9.2e18)).output_actions.valid()); // < 2^63 and within int64 max 9.223e18
   }
 }
 
@@ -524,15 +524,15 @@ TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: preflight Back
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedMaurerDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][SignedMaurerDistanceMapImageFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   rt::RunDistanceMapItkGoldenBaseline<SignedMaurerDistanceMapImageFilter>("2th_cthead1.png", "BasicFilters_SignedMaurerDistanceMapImageFilter_default.nrrd", 0.01, rt::NoExtraParams(), &scope);
 }
 
 TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free sentinel matches ITK sign rules", "[ImageProcessing][SignedMaurerDistanceMapImageFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   const usize shapeIndex = GENERATE(0, 1, 2, 3);
   const bool foreground = GENERATE(false, true);
   const bool insideIsPositive = GENERATE(false, true);
@@ -540,8 +540,8 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free se
   const uint64 budget = GENERATE(uint64{1024}, uint64{1048576});
   CAPTURE(scenario, shapeIndex, foreground, insideIsPositive, squared, budget);
   const MaurerSentinelBudgetScope budgetScope(budget);
-  const std::array<SizeVec3, 4> shapes = {SizeVec3{1, 1, 1}, SizeVec3{2, 3, 4}, SizeVec3{2, 3, 1}, SizeVec3{5, 6, 7}};
-  const SizeVec3& dims = shapes[shapeIndex];
+  const std::array<SizeVec3Type, 4> shapes = {SizeVec3Type{1, 1, 1}, SizeVec3Type{2, 3, 4}, SizeVec3Type{2, 3, 1}, SizeVec3Type{5, 6, 7}};
+  const SizeVec3Type& dims = shapes[shapeIndex];
   const usize count = dims[0] * dims[1] * dims[2];
   DataStructure dataStructure;
   const std::vector<uint8> input(count, foreground ? uint8{1} : uint8{0});
@@ -555,8 +555,8 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free se
   MaurerFilterType filter;
   RunMaurer(filter, dataStructure, inputPath, insideIsPositive, squared, true, 0.0, &scope);
   const DataPath outputPath = inputPath.replaceName("Output");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-  const auto& output = dataStructure.getDataRefAs<Float32Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Float32ArrayType>(outputPath);
   scope.requireExpectedStore(output);
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   const float32 root = static_cast<float32>(std::sqrt(static_cast<float64>(k_Max)));
@@ -569,6 +569,6 @@ TEST_CASE("ImageProcessing::SignedMaurerDistanceMapImageFilter: Boundary-free se
     CAPTURE(i);
     REQUIRE(std::bit_cast<uint32>(output[i]) == std::bit_cast<uint32>(expected));
   }
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

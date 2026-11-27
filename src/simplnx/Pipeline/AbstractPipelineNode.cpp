@@ -139,7 +139,7 @@ Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
   {
     result.errors().push_back({.code = -6071, .message = fmt::format("Node '{}' checked flush failed without an error diagnostic.", getName())});
   }
-  ErrorCollection snapshotErrors;
+  ErrorCollectionType snapshotErrors;
   try
   {
     setDataStructure(dataStructure);
@@ -262,7 +262,7 @@ AbstractPipelineNode::FilterFaultDetailSignalType& AbstractPipelineNode::getFilt
 {
   return m_FilterFaultDetailSignal;
 }
-void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors)
+void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollectionType& warnings, const ErrorCollectionType& errors)
 {
   m_FilterFaultDetailSignal(this, filterIndex, warnings, errors);
 }

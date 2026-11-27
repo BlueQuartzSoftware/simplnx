@@ -10,7 +10,7 @@
  */
 TEST_CASE("Filter List Instantiation")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = nx::core::Application::Instance()->getFilterList();
   REQUIRE(filterListPtr != nullptr);
 
@@ -38,8 +38,8 @@ TEST_CASE("Filter List Instantiation")
     REQUIRE(!filter->defaultTags().empty());
 
     auto preflightResult = filter->preflight(dataStructure, args);
-    REQUIRE((preflightResult.outputActions.valid() || preflightResult.outputActions.invalid())); // Preflight exists
+    REQUIRE((preflightResult.output_actions.valid() || preflightResult.output_actions.invalid())); // Preflight exists
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

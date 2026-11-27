@@ -245,11 +245,11 @@ public:
 
   Result<> operator()() const
   {
-    const bool removingComponents = m_InputValues->RemoveComponentsFromArray || !m_InputValues->MoveComponentsToNewArray;
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->TempArrayPath : m_InputValues->BaseArrayPath);
-    auto* extractedArrayPtr = m_InputValues->MoveComponentsToNewArray ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath) : nullptr;
-    auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath) : nullptr;
-    const usize componentIndex = static_cast<usize>(abs(m_InputValues->CompNumber));
+    const bool removingComponents = m_InputValues->remove_components_from_array || !m_InputValues->move_components_to_new_array;
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->temp_array_path : m_InputValues->base_array_path);
+    auto* extractedArrayPtr = m_InputValues->move_components_to_new_array ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->new_array_path) : nullptr;
+    auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->base_array_path) : nullptr;
+    const usize componentIndex = static_cast<usize>(abs(m_InputValues->comp_number));
     return ExecuteDataFunction(TransferComponentsDirectFunctor{}, inputArray.getDataType(), inputArray, extractedArrayPtr, reducedArrayPtr, componentIndex, m_ShouldCancel);
   }
 
@@ -275,11 +275,11 @@ public:
 
   Result<> operator()() const
   {
-    const bool removingComponents = m_InputValues->RemoveComponentsFromArray || !m_InputValues->MoveComponentsToNewArray;
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->TempArrayPath : m_InputValues->BaseArrayPath);
-    auto* extractedArrayPtr = m_InputValues->MoveComponentsToNewArray ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath) : nullptr;
-    auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath) : nullptr;
-    const usize componentIndex = static_cast<usize>(abs(m_InputValues->CompNumber));
+    const bool removingComponents = m_InputValues->remove_components_from_array || !m_InputValues->move_components_to_new_array;
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->temp_array_path : m_InputValues->base_array_path);
+    auto* extractedArrayPtr = m_InputValues->move_components_to_new_array ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->new_array_path) : nullptr;
+    auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->base_array_path) : nullptr;
+    const usize componentIndex = static_cast<usize>(abs(m_InputValues->comp_number));
     return ExecuteDataFunction(TransferComponentsScanlineFunctor{}, inputArray.getDataType(), inputArray, extractedArrayPtr, reducedArrayPtr, componentIndex, m_ShouldCancel);
   }
 
@@ -311,9 +311,9 @@ const std::atomic_bool& ExtractComponentAsArray::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractComponentAsArray::operator()()
 {
-  const bool removingComponents = m_InputValues->RemoveComponentsFromArray || !m_InputValues->MoveComponentsToNewArray;
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->TempArrayPath : m_InputValues->BaseArrayPath);
-  const auto* extractedArrayPtr = m_InputValues->MoveComponentsToNewArray ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath) : nullptr;
-  const auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath) : nullptr;
+  const bool removingComponents = m_InputValues->remove_components_from_array || !m_InputValues->move_components_to_new_array;
+  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->temp_array_path : m_InputValues->base_array_path);
+  const auto* extractedArrayPtr = m_InputValues->move_components_to_new_array ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->new_array_path) : nullptr;
+  const auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->base_array_path) : nullptr;
   return DispatchAlgorithm<ExtractComponentAsArrayDirect, ExtractComponentAsArrayScanline>({&inputArray, extractedArrayPtr, reducedArrayPtr}, m_DataStructure, m_ShouldCancel, m_InputValues);
 }

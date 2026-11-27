@@ -111,8 +111,8 @@ public:
 private:
   usize m_XCells = 0;
   usize m_YCells = 0;
-  FloatVec3 m_Spacing;
-  FloatVec3 m_Origin;
+  FloatVec3Type m_Spacing;
+  FloatVec3Type m_Origin;
   float32* m_Coordinates = nullptr;
   int32* m_Indices = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -134,7 +134,7 @@ public:
    * @pre At least one output pointer is not null.
    * @pre All arguments outlive the generator execution.
    */
-  ComputeCoordinatesImageGeomScanline(const ImageGeom& imageGeom, Float32Array* coordinates, Int32Array* indices, const std::atomic_bool& shouldCancel)
+  ComputeCoordinatesImageGeomScanline(const ImageGeom& imageGeom, Float32ArrayType* coordinates, Int32ArrayType* indices, const std::atomic_bool& shouldCancel)
   : m_ImageGeom(imageGeom)
   , m_Coordinates(coordinates)
   , m_Indices(indices)
@@ -181,8 +181,8 @@ private:
     const usize yCells = m_ImageGeom.getNumYCells();
     const usize sliceTuples = xCells * yCells;
     const usize totalTuples = m_ImageGeom.getNumberOfCells();
-    const FloatVec3 spacing = m_ImageGeom.getSpacing();
-    const FloatVec3 origin = m_ImageGeom.getOrigin();
+    const FloatVec3Type spacing = m_ImageGeom.getSpacing();
+    const FloatVec3Type origin = m_ImageGeom.getOrigin();
 
     std::unique_ptr<float32[]> coordinatesBuffer;
     std::unique_ptr<int32[]> indicesBuffer;
@@ -261,8 +261,8 @@ private:
   }
 
   const ImageGeom& m_ImageGeom;
-  Float32Array* m_Coordinates = nullptr;
-  Int32Array* m_Indices = nullptr;
+  Float32ArrayType* m_Coordinates = nullptr;
+  Int32ArrayType* m_Indices = nullptr;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -282,7 +282,7 @@ public:
    * @pre At least one output pointer is not null.
    * @pre All arguments outlive the generator execution.
    */
-  ComputeCoordinatesImageGeomDirect(const ImageGeom& imageGeom, Float32Array* coordinates, Int32Array* indices, const std::atomic_bool& shouldCancel)
+  ComputeCoordinatesImageGeomDirect(const ImageGeom& imageGeom, Float32ArrayType* coordinates, Int32ArrayType* indices, const std::atomic_bool& shouldCancel)
   : m_ImageGeom(imageGeom)
   , m_Coordinates(coordinates)
   , m_Indices(indices)
@@ -299,8 +299,8 @@ public:
    */
   Result<> operator()() const
   {
-    auto* coordinatesStorePtr = m_Coordinates == nullptr ? nullptr : dynamic_cast<Float32DataStore*>(&m_Coordinates->getDataStoreRef());
-    auto* indicesStorePtr = m_Indices == nullptr ? nullptr : dynamic_cast<Int32DataStore*>(&m_Indices->getDataStoreRef());
+    auto* coordinatesStorePtr = m_Coordinates == nullptr ? nullptr : dynamic_cast<Float32DataStoreType*>(&m_Coordinates->getDataStoreRef());
+    auto* indicesStorePtr = m_Indices == nullptr ? nullptr : dynamic_cast<Int32DataStoreType*>(&m_Indices->getDataStoreRef());
     if((m_Coordinates != nullptr && coordinatesStorePtr == nullptr) || (m_Indices != nullptr && indicesStorePtr == nullptr))
     {
       // A forced direct path delegates to scanline execution for noncontiguous stores.
@@ -328,8 +328,8 @@ public:
 
 private:
   const ImageGeom& m_ImageGeom;
-  Float32Array* m_Coordinates = nullptr;
-  Int32Array* m_Indices = nullptr;
+  Float32ArrayType* m_Coordinates = nullptr;
+  Int32ArrayType* m_Indices = nullptr;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -345,19 +345,19 @@ ComputeCoordinatesImageGeom::ComputeCoordinatesImageGeom(DataStructure& dataStru
 
 Result<> ComputeCoordinatesImageGeom::operator()()
 {
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  const bool writeCoordinates = m_InputValues->CoordinateOption != to_underlying(OutputType::Index);
-  const bool writeIndices = m_InputValues->CoordinateOption != to_underlying(OutputType::Physical);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
+  const bool writeCoordinates = m_InputValues->coordinate_option != to_underlying(OutputType::Index);
+  const bool writeIndices = m_InputValues->coordinate_option != to_underlying(OutputType::Physical);
 
-  Float32Array* coordinatesPtr = nullptr;
-  Int32Array* indicesPtr = nullptr;
+  Float32ArrayType* coordinatesPtr = nullptr;
+  Int32ArrayType* indicesPtr = nullptr;
   if(writeCoordinates)
   {
-    coordinatesPtr = &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CoordArrayPath);
+    coordinatesPtr = &m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->coord_array_path);
   }
   if(writeIndices)
   {
-    indicesPtr = &m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->IndexArrayPath);
+    indicesPtr = &m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->index_array_path);
   }
 
   return DispatchAlgorithm<ComputeCoordinatesImageGeomDirect, ComputeCoordinatesImageGeomScanline>({coordinatesPtr, indicesPtr}, imageGeom, coordinatesPtr, indicesPtr, m_ShouldCancel);

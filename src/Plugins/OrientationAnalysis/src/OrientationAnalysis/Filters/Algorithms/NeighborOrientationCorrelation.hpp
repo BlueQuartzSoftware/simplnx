@@ -20,15 +20,15 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelationInputValues
 {
-  DataPath ImageGeomPath;
-  float32 MinConfidence = 0.0f;
-  float32 MisorientationTolerance = 0.0f;
-  int32 Level = 0;
-  DataPath ConfidenceIndexArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath QuatsArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
+  DataPath image_geom_path;
+  float32 min_confidence = 0.0f;
+  float32 misorientation_tolerance = 0.0f;
+  int32 level = 0;
+  DataPath confidence_index_array_path;
+  DataPath cell_phases_array_path;
+  DataPath quats_array_path;
+  DataPath crystal_structures_array_path;
+  MultiArraySelectionParameter::ValueType ignored_data_array_paths;
 };
 
 /**

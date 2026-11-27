@@ -27,7 +27,7 @@ const FilterHandle k_Test2FilterHandle(k_Test2FilterId, k_TestTwoPluginId);
 TEST_CASE("Test Loading Plugins")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto* filterListPtr = Application::Instance()->getFilterList();
   const auto& filterHandles = filterListPtr->getFilterHandles();
@@ -67,13 +67,13 @@ TEST_CASE("Test Loading Plugins")
     SIMPLNX_RESULT_REQUIRE_VALID(filter2ExecutionResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Test Singleton")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   REQUIRE(app != nullptr);
 
@@ -120,5 +120,5 @@ TEST_CASE("Test Singleton")
   Application::DeleteInstance();
   REQUIRE(Application::Instance() == nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

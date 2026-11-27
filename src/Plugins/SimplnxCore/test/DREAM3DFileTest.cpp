@@ -137,7 +137,7 @@ constexpr StringLiteralType k_Float32 = "Float 32";
 constexpr StringLiteralType k_Float64 = "Float 64";
 constexpr int64 k_ScalarValue = 3;
 const ShapeType k_TupleShape{3, 2, 1};
-const SizeVec3 k_ImageShape{1, 2, 3};
+const SizeVec3Type k_ImageShape{1, 2, 3};
 constexpr int16 k_ListCount = 6;
 } // namespace constants
 
@@ -313,8 +313,8 @@ fs::path GetReMultiExportDataPath()
  * @return T*
  */
 template <typename T>
-T* Create2DGeom(DataStructure& dataStructure, const std::string& name, const IGeometry::SharedVertexList& vertexArray, const IGeometry::SharedEdgeList& edgeList,
-                const IGeometry::SharedFaceList& faceList)
+T* Create2DGeom(DataStructure& dataStructure, const std::string& name, const IGeometry::SharedVertexListType& vertexArray, const IGeometry::SharedEdgeListType& edgeList,
+                const IGeometry::SharedFaceListType& faceList)
 {
   auto* geomPtr = T::Create(dataStructure, name);
   geomPtr->setVertices(vertexArray);
@@ -334,8 +334,8 @@ T* Create2DGeom(DataStructure& dataStructure, const std::string& name, const IGe
  * @return T*
  */
 template <typename T>
-T* Create3DGeom(DataStructure& dataStructure, const std::string& name, const IGeometry::SharedVertexList& vertexArray, const IGeometry::SharedEdgeList& edgeList,
-                const IGeometry::SharedFaceList& faceList, const IGeometry::SharedHexList& polyArray)
+T* Create3DGeom(DataStructure& dataStructure, const std::string& name, const IGeometry::SharedVertexListType& vertexArray, const IGeometry::SharedEdgeListType& edgeList,
+                const IGeometry::SharedFaceListType& faceList, const IGeometry::SharedHexListType& polyArray)
 {
   auto* geomPtr = T::Create(dataStructure, name);
   geomPtr->setVertices(vertexArray);
@@ -437,43 +437,43 @@ void CheckTestDataStructure(const DataStructure& dataStructure)
   DataPath dataGroupPath({constants::k_DataContainer});
   REQUIRE(dataStructure.getDataAs<DataGroup>(dataGroupPath) != nullptr);
 
-  const auto* neighborListPtr = dataStructure.getDataAs<Int16NeighborList>(dataGroupPath.createChildPath(constants::k_NeighborList));
+  const auto* neighborListPtr = dataStructure.getDataAs<Int16NeighborListType>(dataGroupPath.createChildPath(constants::k_NeighborList));
   REQUIRE(neighborListPtr != nullptr);
   const auto storePtr = neighborListPtr->getStore();
   REQUIRE(storePtr != nullptr);
   CheckNeighborListStore(*storePtr);
 
-  const auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(dataGroupPath.createChildPath(constants::k_VertexList));
+  const auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(dataGroupPath.createChildPath(constants::k_VertexList));
   REQUIRE(vertexArrayPtr != nullptr);
   const auto& vertices = vertexArrayPtr->getDataStoreRef();
   CheckDataStore<float32>(vertices, 3);
 
-  const auto* edgeArrayPtr = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(constants::k_Edges));
+  const auto* edgeArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(dataGroupPath.createChildPath(constants::k_Edges));
   REQUIRE(edgeArrayPtr != nullptr);
   const auto& edges = edgeArrayPtr->getDataStoreRef();
   CheckDataStore<uint64>(edges, 2);
 
-  const auto* faceArrayPtr = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(constants::k_Faces));
+  const auto* faceArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(dataGroupPath.createChildPath(constants::k_Faces));
   REQUIRE(faceArrayPtr != nullptr);
   const auto& faces = faceArrayPtr->getDataStoreRef();
   CheckDataStore<uint64>(faces, 3);
 
-  const auto* quadArrayPtr = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(constants::k_QuadArray));
+  const auto* quadArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(dataGroupPath.createChildPath(constants::k_QuadArray));
   REQUIRE(quadArrayPtr != nullptr);
   const auto& quads = quadArrayPtr->getDataStoreRef();
   CheckDataStore<uint64>(quads, 4);
 
-  const auto* hexaArrayPtr = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(constants::k_HexaArray));
+  const auto* hexaArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(dataGroupPath.createChildPath(constants::k_HexaArray));
   REQUIRE(hexaArrayPtr != nullptr);
   const auto& hexa = hexaArrayPtr->getDataStoreRef();
   CheckDataStore<uint64>(hexa, 8);
 
-  const auto* tetraArrayPtr = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(constants::k_TetraArray));
+  const auto* tetraArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(dataGroupPath.createChildPath(constants::k_TetraArray));
   REQUIRE(tetraArrayPtr != nullptr);
   const auto& tetra = tetraArrayPtr->getDataStoreRef();
   CheckDataStore<uint64>(tetra, 4);
 
-  const auto* polyArrayPtr = dataStructure.getDataAs<UInt64Array>(dataGroupPath.createChildPath(constants::k_Polyhedra));
+  const auto* polyArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(dataGroupPath.createChildPath(constants::k_Polyhedra));
   REQUIRE(polyArrayPtr != nullptr);
   const auto& polyhedra = polyArrayPtr->getDataStoreRef();
   CheckDataStore<uint64>(polyhedra, 4);
@@ -516,7 +516,7 @@ void CheckTestDataStructure(const DataStructure& dataStructure)
   const auto* triVertexMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(vertexDataPath);
   REQUIRE(triVertexMatrixPtr != nullptr);
   REQUIRE(triGeomPtr->getVertexAttributeMatrixId() == triVertexMatrixPtr->getId());
-  const auto* vertexValuesArrayPtr = dataStructure.getDataAs<Float32Array>(vertexDataPath.createChildPath(constants::k_VertexValues));
+  const auto* vertexValuesArrayPtr = dataStructure.getDataAs<Float32ArrayType>(vertexDataPath.createChildPath(constants::k_VertexValues));
   REQUIRE(vertexValuesArrayPtr != nullptr);
   CheckDataStore<float32>(vertexValuesArrayPtr->getDataStoreRef(), 1);
 
@@ -546,15 +546,15 @@ void CheckTestDataStructure(const DataStructure& dataStructure)
   REQUIRE(rectDims[1] == constants::k_TupleShape[1]);
   REQUIRE(rectDims[2] == constants::k_TupleShape[2]);
   DataPath xPath = rectGridGeomPath.createChildPath(constants::k_XBounds);
-  const auto* xBoundsArrayPtr = dataStructure.getDataAs<Float32Array>(xPath);
+  const auto* xBoundsArrayPtr = dataStructure.getDataAs<Float32ArrayType>(xPath);
   REQUIRE(xBoundsArrayPtr != nullptr);
   REQUIRE(xBoundsArrayPtr->getNumberOfTuples() == constants::k_TupleShape[0] + 1);
   DataPath yPath = rectGridGeomPath.createChildPath(constants::k_YBounds);
-  const auto* yBoundsArrayPtr = dataStructure.getDataAs<Float32Array>(yPath);
+  const auto* yBoundsArrayPtr = dataStructure.getDataAs<Float32ArrayType>(yPath);
   REQUIRE(yBoundsArrayPtr != nullptr);
   REQUIRE(yBoundsArrayPtr->getNumberOfTuples() == constants::k_TupleShape[1] + 1);
   DataPath zPath = rectGridGeomPath.createChildPath(constants::k_ZBounds);
-  const auto* zBoundsArrayPtr = dataStructure.getDataAs<Float32Array>(zPath);
+  const auto* zBoundsArrayPtr = dataStructure.getDataAs<Float32ArrayType>(zPath);
   REQUIRE(zBoundsArrayPtr != nullptr);
   REQUIRE(zBoundsArrayPtr->getNumberOfTuples() == constants::k_TupleShape[2] + 1);
   REQUIRE(rectGridPtr->getXBoundsId() == xBoundsArrayPtr->getId());
@@ -579,7 +579,7 @@ DataStructure CreateTestDataStructure()
   ShapeType tupleShape = {10};
   auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, data_names::k_AttributeMatrixName, tupleShape, group1Ptr->getId());
 
-  Result<> arrayCreationResults = ArrayCreationUtilities::CreateArray<int8>(
+  Result<> arrayCreationResults = array_creation_utilities::CreateArray<int8>(
       dataStructure, tupleShape, std::vector<usize>{1}, DataPath({data_names::k_Group1Name, data_names::k_AttributeMatrixName, data_names::k_Array2Name}), IDataAction::Mode::Execute, "");
   SIMPLNX_RESULT_REQUIRE_VALID(arrayCreationResults);
 
@@ -593,36 +593,36 @@ DataStructure CreateTestDataStructure()
   listStorePtr->setList(3, std::vector<int16>{1, 2});
   listStorePtr->setList(4, std::vector<int16>{1, 2});
   listStorePtr->setList(5, std::vector<int16>{1, 2});
-  auto* neighborListPtr = Int16NeighborList::Create(dataStructure, constants::k_NeighborList, listStorePtr, dataGroupPtr->getId());
+  auto* neighborListPtr = Int16NeighborListType::Create(dataStructure, constants::k_NeighborList, listStorePtr, dataGroupPtr->getId());
   REQUIRE(neighborListPtr != nullptr);
 
-  auto vertices = std::make_shared<Float32DataStore>(constants::k_TupleShape, ShapeType{3}, 0.0f);
-  auto* vertexArrayPtr = Float32Array::Create(dataStructure, constants::k_VertexList, vertices, dataGroupPtr->getId());
+  auto vertices = std::make_shared<Float32DataStoreType>(constants::k_TupleShape, ShapeType{3}, 0.0f);
+  auto* vertexArrayPtr = Float32ArrayType::Create(dataStructure, constants::k_VertexList, vertices, dataGroupPtr->getId());
   FillDataStore<float32>(*vertices);
 
-  auto edges = std::make_shared<UInt64DataStore>(constants::k_TupleShape, ShapeType{2}, 0);
-  auto* edgesArrayPtr = IGeometry::SharedEdgeList::Create(dataStructure, constants::k_Edges, edges, dataGroupPtr->getId());
+  auto edges = std::make_shared<UInt64DataStoreType>(constants::k_TupleShape, ShapeType{2}, 0);
+  auto* edgesArrayPtr = IGeometry::SharedEdgeListType::Create(dataStructure, constants::k_Edges, edges, dataGroupPtr->getId());
   FillDataStore<uint64>(*edges);
 
-  auto triangles = std::make_shared<UInt64DataStore>(constants::k_TupleShape, ShapeType{3}, 0);
-  auto* trianglesArrayPtr = IGeometry::SharedTriList::Create(dataStructure, constants::k_Faces, triangles, dataGroupPtr->getId());
+  auto triangles = std::make_shared<UInt64DataStoreType>(constants::k_TupleShape, ShapeType{3}, 0);
+  auto* trianglesArrayPtr = IGeometry::SharedTriListType::Create(dataStructure, constants::k_Faces, triangles, dataGroupPtr->getId());
   FillDataStore<uint64>(*triangles);
 
-  auto polyhedra = std::make_shared<UInt64DataStore>(constants::k_TupleShape, ShapeType{4}, 0);
-  auto* polyhedraArrayPtr = IGeometry::SharedFaceList::Create(dataStructure, constants::k_Polyhedra, polyhedra, dataGroupPtr->getId());
+  auto polyhedra = std::make_shared<UInt64DataStoreType>(constants::k_TupleShape, ShapeType{4}, 0);
+  auto* polyhedraArrayPtr = IGeometry::SharedFaceListType::Create(dataStructure, constants::k_Polyhedra, polyhedra, dataGroupPtr->getId());
   REQUIRE(polyhedraArrayPtr != nullptr);
   FillDataStore<uint64>(*polyhedra);
 
-  auto quadStore = std::make_shared<UInt64DataStore>(constants::k_TupleShape, ShapeType{4}, 0);
-  auto* quadArrayPtr = IGeometry::SharedFaceList::Create(dataStructure, constants::k_QuadArray, quadStore, dataGroupPtr->getId());
+  auto quadStore = std::make_shared<UInt64DataStoreType>(constants::k_TupleShape, ShapeType{4}, 0);
+  auto* quadArrayPtr = IGeometry::SharedFaceListType::Create(dataStructure, constants::k_QuadArray, quadStore, dataGroupPtr->getId());
   FillDataStore<uint64>(*quadStore);
 
-  auto hexStore = std::make_shared<UInt64DataStore>(constants::k_TupleShape, ShapeType{8}, 0);
-  auto* hexArrayPtr = IGeometry::SharedHexList::Create(dataStructure, constants::k_HexaArray, hexStore, dataGroupPtr->getId());
+  auto hexStore = std::make_shared<UInt64DataStoreType>(constants::k_TupleShape, ShapeType{8}, 0);
+  auto* hexArrayPtr = IGeometry::SharedHexListType::Create(dataStructure, constants::k_HexaArray, hexStore, dataGroupPtr->getId());
   FillDataStore<uint64>(*hexStore);
 
-  auto tetraStore = std::make_shared<UInt64DataStore>(constants::k_TupleShape, ShapeType{4}, 0);
-  auto* tetraArrayPtr = IGeometry::SharedTetList::Create(dataStructure, constants::k_TetraArray, tetraStore, dataGroupPtr->getId());
+  auto tetraStore = std::make_shared<UInt64DataStoreType>(constants::k_TupleShape, ShapeType{4}, 0);
+  auto* tetraArrayPtr = IGeometry::SharedTetListType::Create(dataStructure, constants::k_TetraArray, tetraStore, dataGroupPtr->getId());
   FillDataStore<uint64>(*tetraStore);
 
   StringArray::CollectionType strings = {"1", "2", "3", "4", "5", "6"};
@@ -654,16 +654,16 @@ DataStructure CreateTestDataStructure()
   // N cells along a dimension require N+1 bounds values
   ShapeType xShape{constants::k_TupleShape[0] + 1};
   ShapeType componentBounds{1};
-  auto xBounds = std::make_shared<Float32DataStore>(xShape, componentBounds, 0.0f);
-  auto* xBoundsArrayPtr = Float32Array::Create(dataStructure, constants::k_XBounds, xBounds, rectGridGeomPtr->getId());
+  auto xBounds = std::make_shared<Float32DataStoreType>(xShape, componentBounds, 0.0f);
+  auto* xBoundsArrayPtr = Float32ArrayType::Create(dataStructure, constants::k_XBounds, xBounds, rectGridGeomPtr->getId());
   FillDataStore<float32>(*xBounds);
   ShapeType yShape{constants::k_TupleShape[1] + 1};
-  auto yBounds = std::make_shared<Float32DataStore>(yShape, componentBounds, 0.0f);
-  auto* yBoundsArrayPtr = Float32Array::Create(dataStructure, constants::k_YBounds, yBounds, rectGridGeomPtr->getId());
+  auto yBounds = std::make_shared<Float32DataStoreType>(yShape, componentBounds, 0.0f);
+  auto* yBoundsArrayPtr = Float32ArrayType::Create(dataStructure, constants::k_YBounds, yBounds, rectGridGeomPtr->getId());
   FillDataStore<float32>(*yBounds);
   ShapeType zShape{constants::k_TupleShape[2] + 1};
-  auto zBounds = std::make_shared<Float32DataStore>(zShape, componentBounds, 0.0f);
-  auto* zBoundsArrayPtr = Float32Array::Create(dataStructure, constants::k_ZBounds, zBounds, rectGridGeomPtr->getId());
+  auto zBounds = std::make_shared<Float32DataStoreType>(zShape, componentBounds, 0.0f);
+  auto* zBoundsArrayPtr = Float32ArrayType::Create(dataStructure, constants::k_ZBounds, zBounds, rectGridGeomPtr->getId());
   FillDataStore<float32>(*zBounds);
 
   rectGridGeomPtr->setDimensions(constants::k_TupleShape);
@@ -694,8 +694,8 @@ DataStructure CreateTestDataStructure()
   auto* vertexMatrixPtr = AttributeMatrix::Create(dataStructure, constants::k_VertexData, constants::k_TupleShape, triangleGeomPtr->getId());
   REQUIRE(vertexMatrixPtr != nullptr);
   triangleGeomPtr->setVertexAttributeMatrix(*vertexMatrixPtr);
-  auto vertexValues = std::make_shared<Float32DataStore>(constants::k_TupleShape, ShapeType{1}, 0.0f);
-  auto* vertexValuesArrayPtr = Float32Array::Create(dataStructure, constants::k_VertexValues, vertexValues, vertexMatrixPtr->getId());
+  auto vertexValues = std::make_shared<Float32DataStoreType>(constants::k_TupleShape, ShapeType{1}, 0.0f);
+  auto* vertexValuesArrayPtr = Float32ArrayType::Create(dataStructure, constants::k_VertexValues, vertexValues, vertexMatrixPtr->getId());
   REQUIRE(vertexValuesArrayPtr != nullptr);
   FillDataStore<float32>(*vertexValues);
 
@@ -837,7 +837,7 @@ Pipeline CreateMultiImportPipeline()
  * @brief Creates matching pipeline and DataStructure content for direct writer tests.
  * @return File data with the standard export pipeline and test DataStructure.
  */
-dream3d::FileData CreateFileData()
+dream3d::FileDataType CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
 }
@@ -853,9 +853,9 @@ using MeshIndexType = IGeometry::MeshIndexType;
  * @param geometry Geometry that owns the new objects.
  * @return The created vertex array.
  */
-Float32Array* CreateVertexList(DataStructure& dataStructure, INodeGeometry0D& geometry)
+Float32ArrayType* CreateVertexList(DataStructure& dataStructure, INodeGeometry0D& geometry)
 {
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, geometry.getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, geometry.getId());
   for(usize i = 0; i < verticesPtr->getSize(); i++)
   {
     (*verticesPtr)[i] = static_cast<float32>(i);
@@ -892,7 +892,7 @@ EdgeGeom* CreateEdgeGeometry(DataStructure& dataStructure, const std::string& ge
   auto* edgeGeomPtr = EdgeGeom::Create(dataStructure, geomName, parentId);
   CreateVertexList(dataStructure, *edgeGeomPtr);
 
-  auto* edgesPtr = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedEdgeList", {2}, {2}, edgeGeomPtr->getId());
+  auto* edgesPtr = unit_test::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedEdgeList", {2}, {2}, edgeGeomPtr->getId());
   (*edgesPtr)[0] = 0;
   (*edgesPtr)[1] = 1;
   (*edgesPtr)[2] = 2;
@@ -915,7 +915,7 @@ TriangleGeom* CreateTriangleGeometry(DataStructure& dataStructure, const std::st
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, geomName, parentId);
   CreateVertexList(dataStructure, *triangleGeomPtr);
 
-  auto* trianglesPtr = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedTriList", {1}, {3}, triangleGeomPtr->getId());
+  auto* trianglesPtr = unit_test::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedTriList", {1}, {3}, triangleGeomPtr->getId());
   (*trianglesPtr)[0] = 0;
   (*trianglesPtr)[1] = 1;
   (*trianglesPtr)[2] = 2;
@@ -937,7 +937,7 @@ QuadGeom* CreateQuadGeometry(DataStructure& dataStructure, const std::string& ge
   auto* quadGeomPtr = QuadGeom::Create(dataStructure, geomName, parentId);
   CreateVertexList(dataStructure, *quadGeomPtr);
 
-  auto* quadsPtr = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedQuadList", {1}, {4}, quadGeomPtr->getId());
+  auto* quadsPtr = unit_test::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedQuadList", {1}, {4}, quadGeomPtr->getId());
   (*quadsPtr)[0] = 0;
   (*quadsPtr)[1] = 1;
   (*quadsPtr)[2] = 2;
@@ -960,7 +960,7 @@ TetrahedralGeom* CreateTetrahedralGeometry(DataStructure& dataStructure, const s
   auto* tetGeomPtr = TetrahedralGeom::Create(dataStructure, geomName, parentId);
   CreateVertexList(dataStructure, *tetGeomPtr);
 
-  auto* tetsPtr = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedTetList", {1}, {4}, tetGeomPtr->getId());
+  auto* tetsPtr = unit_test::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedTetList", {1}, {4}, tetGeomPtr->getId());
   (*tetsPtr)[0] = 0;
   (*tetsPtr)[1] = 1;
   (*tetsPtr)[2] = 2;
@@ -982,7 +982,7 @@ HexahedralGeom* CreateHexahedralGeometry(DataStructure& dataStructure, const std
 {
   auto* hexGeomPtr = HexahedralGeom::Create(dataStructure, geomName, parentId);
   // One hexahedron requires eight vertices instead of the four-vertex helper fixture.
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {8}, {3}, hexGeomPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {8}, {3}, hexGeomPtr->getId());
   for(usize i = 0; i < verticesPtr->getSize(); i++)
   {
     (*verticesPtr)[i] = static_cast<float32>(i);
@@ -991,7 +991,7 @@ HexahedralGeom* CreateHexahedralGeometry(DataStructure& dataStructure, const std
   AttributeMatrix* vertexMatrixPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", ShapeType{8}, hexGeomPtr->getId());
   hexGeomPtr->setVertexAttributeMatrix(*vertexMatrixPtr);
 
-  auto* hexesPtr = UnitTest::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedHexList", {1}, {8}, hexGeomPtr->getId());
+  auto* hexesPtr = unit_test::CreateTestDataArray<MeshIndexType>(dataStructure, "SharedHexList", {1}, {8}, hexGeomPtr->getId());
   for(usize i = 0; i < 8; i++)
   {
     (*hexesPtr)[i] = i;
@@ -1012,9 +1012,9 @@ HexahedralGeom* CreateHexahedralGeometry(DataStructure& dataStructure, const std
 ImageGeom* CreateImageGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomName, parentId);
-  imageGeomPtr->setDimensions(SizeVec3{2, 2, 2});
-  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{0.0F, 0.0F, 0.0F}).valid());
-  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{1.0F, 1.0F, 1.0F}).valid());
+  imageGeomPtr->setDimensions(SizeVec3Type{2, 2, 2});
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{0.0F, 0.0F, 0.0F}).valid());
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3Type{1.0F, 1.0F, 1.0F}).valid());
   AttributeMatrix* cellMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2, 2}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellMatrixPtr);
   return imageGeomPtr;
@@ -1030,11 +1030,11 @@ ImageGeom* CreateImageGeometry(DataStructure& dataStructure, const std::string& 
 RectGridGeom* CreateRectGridGeometry(DataStructure& dataStructure, const std::string& geomName, const std::optional<DataObject::IdType>& parentId)
 {
   auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, geomName, parentId);
-  rectGridGeomPtr->setDimensions(SizeVec3{2, 2, 2});
+  rectGridGeomPtr->setDimensions(SizeVec3Type{2, 2, 2});
 
-  auto* xBoundsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "X Bounds", {3}, {1}, rectGridGeomPtr->getId());
-  auto* yBoundsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Y Bounds", {3}, {1}, rectGridGeomPtr->getId());
-  auto* zBoundsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Z Bounds", {3}, {1}, rectGridGeomPtr->getId());
+  auto* xBoundsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "X Bounds", {3}, {1}, rectGridGeomPtr->getId());
+  auto* yBoundsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Y Bounds", {3}, {1}, rectGridGeomPtr->getId());
+  auto* zBoundsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Z Bounds", {3}, {1}, rectGridGeomPtr->getId());
   for(usize i = 0; i < 3; i++)
   {
     (*xBoundsPtr)[i] = static_cast<float32>(i);
@@ -1082,7 +1082,7 @@ GeometryTestCase MakeGeometryTestCase(std::string typeName, const std::function<
 
 TEST_CASE("WriteDREAM3DFilter:Invalid Parameters", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::lock_guard<std::mutex> lock(MDataMutex);
 
   // Both sections only exercise preflight parameter guards, so no data is required.
@@ -1101,7 +1101,7 @@ TEST_CASE("WriteDREAM3DFilter:Invalid Parameters", "[ReadDREAM3DFilter][WriteDRE
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
   SECTION("Bad Compression Level")
@@ -1111,23 +1111,23 @@ TEST_CASE("WriteDREAM3DFilter:Invalid Parameters", "[ReadDREAM3DFilter][WriteDRE
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteDREAM3DFilter: real HDF5 chunk-tail raw-read oracle", "[SimplnxCore][WriteDREAM3DFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool compress = GENERATE(false, true);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_ChunkTuples = 65536;
   DataStructure dataStructure;
   const DataPath valuesPath({"Values"});
-  auto store = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, valuesPath, {k_ChunkTuples + 1}, {4});
-  auto* valuesPtr = UInt32Array::Create(dataStructure, "Values", store);
+  auto store = data_store_utilities::CreateDataStore<uint32>(dataStructure, valuesPath, {k_ChunkTuples + 1}, {4});
+  auto* valuesPtr = UInt32ArrayType::Create(dataStructure, "Values", store);
   REQUIRE(valuesPtr != nullptr);
   std::vector<uint32> expected((k_ChunkTuples + 1) * 4);
   for(usize valueIdx = 0; valueIdx < expected.size(); valueIdx++)
@@ -1156,14 +1156,14 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: real HDF5 chunk-tail raw-read oracle
   REQUIRE(group.isDataset("Values"));
   const auto actual = dataset.readAsVector<uint32>();
   REQUIRE(actual == expected);
-  const auto probe = UnitTest::ProbeHdf5Dataset(outputFile, "/DataStructure/Values");
+  const auto probe = unit_test::ProbeHdf5Dataset(outputFile, "/DataStructure/Values");
   REQUIRE(probe.has_value());
-  REQUIRE(probe->hasDeflate == compress);
+  REQUIRE(probe->has_deflate == compress);
 }
 
 TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::lock_guard<std::mutex> lock(MDataMutex);
 
   const fs::path exportFilePath = GetValidParamsFilePath();
@@ -1180,7 +1180,7 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -1198,7 +1198,7 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
     auto [pipeline, dataStructureRead] = fileResult.value();
 
     CheckTestDataStructure(dataStructureRead);
-    UnitTest::CheckArraysInheritTupleDims(dataStructureRead);
+    unit_test::CheckArraysInheritTupleDims(dataStructureRead);
   }
 }
 
@@ -1260,7 +1260,7 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: Reports a blocked XDMF replacement",
 
 TEST_CASE("WriteDREAM3D:Pipeline / WriteXdmf combinations", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::lock_guard<std::mutex> lock(MDataMutex);
 
   bool writeXdmf = GENERATE(true, false);
@@ -1276,12 +1276,12 @@ TEST_CASE("WriteDREAM3D:Pipeline / WriteXdmf combinations", "[ReadDREAM3DFilter]
     CheckXdmfFile(exportFilePath);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("WriteDREAM3D:FileData Overload", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::lock_guard<std::mutex> lock(MDataMutex);
 
   const fs::path exportFilePath = GetFileDataFilePath();
@@ -1301,12 +1301,12 @@ TEST_CASE("WriteDREAM3D:FileData Overload", "[ReadDREAM3DFilter][WriteDREAM3DFil
   auto [pipeline, dataStructure] = fileResult.value();
   REQUIRE(pipeline.size() == CreateExportPipeline().size());
   CheckTestDataStructure(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("WriteDREAM3D:Invalid File", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::lock_guard<std::mutex> lock(MDataMutex);
 
   bool writeXdmf = GENERATE(true, false);
@@ -1318,12 +1318,12 @@ TEST_CASE("WriteDREAM3D:Invalid File", "[ReadDREAM3DFilter][WriteDREAM3DFilter]"
   auto writeResult = dream3d::WriteFile(fs::path(), dataStructure, exportPipeline, writeXdmf);
   SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("WriteDREAM3DFilter:Unwritable DataObject Type", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::lock_guard<std::mutex> lock(MDataMutex);
 
   // The subject of this test is the write-failure contract, not GridMontage: when
@@ -1353,7 +1353,7 @@ TEST_CASE("WriteDREAM3DFilter:Unwritable DataObject Type", "[ReadDREAM3DFilter][
 
   // Preflight does not inspect DataObject types, so it must still succeed.
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -1363,12 +1363,12 @@ TEST_CASE("WriteDREAM3DFilter:Unwritable DataObject Type", "[ReadDREAM3DFilter][
   // The AtomicFile must not have been committed.
   REQUIRE_FALSE(fs::exists(exportFilePath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(MDataMutex);
 
@@ -1411,7 +1411,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
     REQUIRE(pipeline[0]->getName() == data_names::k_CreateDataFilterName.str());
     REQUIRE(pipeline[2]->getName() == data_names::k_ExportD3DFilterName.str());
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -1452,7 +1452,7 @@ TEST_CASE("DREAM3DFileTest::StringArray", "[ReadDREAM3DFilter][WriteDREAM3DFilte
 
 TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(MDataMutex);
 
@@ -1470,7 +1470,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     REQUIRE(dataArrayPtr != nullptr);
     REQUIRE(dataArrayPtr->getIDataStoreAs<AbstractDataStore<int8>>() != nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+    unit_test::CheckArraysInheritTupleDims(importDataStructure);
   }
   {
     auto importPipeline = CreateImportPipeline();
@@ -1483,13 +1483,13 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     REQUIRE(dataArrayPtr != nullptr);
     REQUIRE(dataArrayPtr->template getIDataStoreAs<EmptyDataStore<int8>>() != nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+    unit_test::CheckArraysInheritTupleDims(importDataStructure);
   }
 }
 
 TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-only stores", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // geoms.dream3d contains each node-connectivity type and RectGrid bounds.
   // Metadata-only preflight must import these arrays without reading their values.
@@ -1563,7 +1563,7 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
 
 TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::lock_guard<std::mutex> lock(MDataMutex);
 
@@ -1577,12 +1577,12 @@ TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test", "[ReadDREAM
   REQUIRE(importDataStructure.getData(DataPath({data_names::k_Group1Name})) != nullptr);
   REQUIRE(importDataStructure.getData(DataPath({data_names::k_Group2Name})) != nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+  unit_test::CheckArraysInheritTupleDims(importDataStructure);
 }
 
 TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   {
@@ -1620,7 +1620,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
   }
 
   {
-    const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+    const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
     ReadDREAM3DFilter filter;
     Arguments args;
@@ -1630,12 +1630,12 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("DREAM3DFileTest: Path Import Policy Tests", "[ReadDREAM3DFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   auto filePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure;
   ReadDREAM3DFilter filter;
@@ -1736,7 +1736,7 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests", "[ReadDREAM3DFilter]")
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths", "[SimplnxCore][ReadDREAM3DFilter]")
@@ -1747,7 +1747,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths"
   auto* groupPtr = DataGroup::Create(writtenData, "Group");
   REQUIRE(groupPtr != nullptr);
   auto store = std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 42);
-  REQUIRE(Int32Array::Create(writtenData, "Values", store, groupPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(writtenData, "Values", store, groupPtr->getId()) != nullptr);
   const fs::path filePath = GetTestFilePath("read_dream3d_missing_include_paths.dream3d");
   fs::remove(filePath);
   auto writeResult = dream3d::WriteFile(filePath, writtenData, Pipeline{}, false);
@@ -1780,12 +1780,12 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths"
   Dream3dImportParameter::ImportData importData(filePath, Dream3dImportParameter::PathImportPolicy::IncludeList, selectedPaths);
   args.insert(ReadDREAM3DFilter::k_ImportFileData, importData);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  CHECK(preflightResult.outputActions.warnings().size() == missingPaths.size());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  CHECK(preflightResult.output_actions.warnings().size() == missingPaths.size());
   for(const auto& missingPath : missingPaths)
   {
     bool foundWarning = false;
-    for(const auto& warning : preflightResult.outputActions.warnings())
+    for(const auto& warning : preflightResult.output_actions.warnings())
     {
       foundWarning = foundWarning || warning.message.find(missingPath.toString()) != std::string::npos;
     }
@@ -1801,7 +1801,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths"
   }
   if(selectedPaths.front() == validPath)
   {
-    const auto* valuesPtr = dataStructure.getDataAs<Int32Array>(validPath);
+    const auto* valuesPtr = dataStructure.getDataAs<Int32ArrayType>(validPath);
     REQUIRE(valuesPtr != nullptr);
     REQUIRE((*valuesPtr)[0] == 42);
   }
@@ -1815,7 +1815,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths"
 TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadDREAM3DFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -1850,7 +1850,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: SIMPL Backwards Compatibility", "[Sim
 TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteDREAM3DFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -1889,7 +1889,7 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[Si
 
 TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOptions requests it", "[WriteDREAM3DFilter][Compression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path outPath = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.view()) / "dream3d_compressed.dream3d";
   fs::remove(outPath);
@@ -1897,7 +1897,7 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   DataStructure dataStructure;
   const DataPath arrayPath({"LargeArray"});
   constexpr usize k_Tuples = 500'000; // 2 MB, above the 16 KiB small-array bypass
-  auto createRes = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
+  auto createRes = array_creation_utilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(createRes);
   {
     auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1909,35 +1909,35 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   }
 
   hdf5::DataStructureWriter::WriteOptions options;
-  options.compressionLevel = 5;
+  options.compression_level = 5;
   auto writeResult = dream3d::WriteFile(outPath, dataStructure, Pipeline{}, false, options);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/LargeArray";
-  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
+  const std::string hdfPath = std::string("/") + nx::core::constants::k_DataStructureTag + "/LargeArray";
+  auto info = nx::core::unit_test::ProbeHdf5Dataset(outPath, hdfPath);
   REQUIRE(info.has_value());
-  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(info->hasDeflate);
-  REQUIRE(info->deflateLevel == 5);
+  REQUIRE(info->layout == nx::core::unit_test::DatasetLayout::Chunked);
+  REQUIRE(info->has_deflate);
+  REQUIRE(info->deflate_level == 5);
 
-  DataStructure importedDs = UnitTest::LoadDataStructure(outPath);
+  DataStructure importedDs = unit_test::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(importedDs.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& imported = importedDs.getDataRefAs<DataArray<float32>>(arrayPath);
   const auto& original = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
   REQUIRE(imported.getSize() == original.getSize());
-  UnitTest::CompareDataArrays<float32>(original, imported);
-  UnitTest::CheckArraysInheritTupleDims(importedDs);
+  unit_test::CompareDataArrays<float32>(original, imported);
+  unit_test::CheckArraysInheritTupleDims(importedDs);
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilter][Compression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_off.dream3d";
   fs::remove(outPath);
 
   DataStructure dataStructure;
   const DataPath arrayPath({"A"});
-  auto cr = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "1.5");
+  auto cr = array_creation_utilities::CreateArray<float32>(dataStructure, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "1.5");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
 
   WriteDREAM3DFilter filter;
@@ -1949,22 +1949,22 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
   auto r = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
-  const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
-  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
+  const std::string hdfPath = std::string("/") + nx::core::constants::k_DataStructureTag + "/A";
+  auto info = nx::core::unit_test::ProbeHdf5Dataset(outPath, hdfPath);
   REQUIRE(info.has_value());
-  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(info->hasDeflate == false);
+  REQUIRE(info->layout == nx::core::unit_test::DatasetLayout::Contiguous);
+  REQUIRE(info->has_deflate == false);
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREAM3DFilter][Compression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_on.dream3d";
   fs::remove(outPath);
 
   DataStructure dataStructure;
   const DataPath arrayPath({"A"});
-  auto cr = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
+  auto cr = array_creation_utilities::CreateArray<float32>(dataStructure, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
   {
     auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -1984,31 +1984,31 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   auto r = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
-  const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
-  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
+  const std::string hdfPath = std::string("/") + nx::core::constants::k_DataStructureTag + "/A";
+  auto info = nx::core::unit_test::ProbeHdf5Dataset(outPath, hdfPath);
   REQUIRE(info.has_value());
-  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(info->hasDeflate);
-  REQUIRE(info->deflateLevel == 5);
+  REQUIRE(info->layout == nx::core::unit_test::DatasetLayout::Chunked);
+  REQUIRE(info->has_deflate);
+  REQUIRE(info->deflate_level == 5);
 
-  DataStructure imported = UnitTest::LoadDataStructure(outPath);
+  DataStructure imported = unit_test::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& importedArr = imported.getDataRefAs<DataArray<float32>>(arrayPath);
   const auto& originalArr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
-  UnitTest::CompareDataArrays<float32>(originalArr, importedArr);
-  UnitTest::CheckArraysInheritTupleDims(imported);
+  unit_test::CompareDataArrays<float32>(originalArr, importedArr);
+  unit_test::CheckArraysInheritTupleDims(imported);
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DFilter][Compression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_small_bypass.dream3d";
   fs::remove(outPath);
 
   DataStructure dataStructure;
-  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute, "", "2");
+  auto crSmall = array_creation_utilities::CreateArray<float32>(dataStructure, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute, "", "2");
   SIMPLNX_RESULT_REQUIRE_VALID(crSmall);
-  auto crBig = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute, "", "3");
+  auto crBig = array_creation_utilities::CreateArray<float32>(dataStructure, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute, "", "3");
   SIMPLNX_RESULT_REQUIRE_VALID(crBig);
 
   WriteDREAM3DFilter filter;
@@ -2020,20 +2020,20 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   auto r = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
-  const std::string dsRoot = std::string("/") + nx::core::Constants::k_DataStructureTag;
-  auto smallInfo = nx::core::UnitTest::ProbeHdf5Dataset(outPath, dsRoot + "/Small");
-  auto bigInfo = nx::core::UnitTest::ProbeHdf5Dataset(outPath, dsRoot + "/Big");
+  const std::string dsRoot = std::string("/") + nx::core::constants::k_DataStructureTag;
+  auto smallInfo = nx::core::unit_test::ProbeHdf5Dataset(outPath, dsRoot + "/Small");
+  auto bigInfo = nx::core::unit_test::ProbeHdf5Dataset(outPath, dsRoot + "/Big");
   REQUIRE(smallInfo.has_value());
   REQUIRE(bigInfo.has_value());
-  REQUIRE(smallInfo->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(smallInfo->hasDeflate == false);
-  REQUIRE(bigInfo->layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(bigInfo->hasDeflate);
+  REQUIRE(smallInfo->layout == nx::core::unit_test::DatasetLayout::Contiguous);
+  REQUIRE(smallInfo->has_deflate == false);
+  REQUIRE(bigInfo->layout == nx::core::unit_test::DatasetLayout::Chunked);
+  REQUIRE(bigInfo->has_deflate);
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilter][Compression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // One TEST_CASE invocation retains all file sizes for the final monotonicity check.
   // DYNAMIC_SECTION would restart the body and discard that accumulated state.
@@ -2047,7 +2047,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
 
     DataStructure dataStructure;
     const DataPath arrayPath({"A"});
-    auto cr = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
+    auto cr = array_creation_utilities::CreateArray<float32>(dataStructure, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
     SIMPLNX_RESULT_REQUIRE_VALID(cr);
     {
       auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -2067,9 +2067,9 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
     auto r = filter.execute(dataStructure, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(r);
 
-    DataStructure imported = UnitTest::LoadDataStructure(outPath);
+    DataStructure imported = unit_test::LoadDataStructure(outPath);
     REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
-    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
+    unit_test::CompareDataArrays<float32>(dataStructure.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
 
     // Add a size only after its file passes round-trip validation.
     sizesByLevel.push_back(fs::file_size(outPath));
@@ -2139,14 +2139,14 @@ TEST_CASE("DREAM3DFileTest: Geometry Nested In DataGroup Round Trip", "[ReadDREA
       testCase.require_type(importDataStructure, nestedPath);
       testCase.require_type(importDataStructure, DataPath({topName}));
 
-      UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+      unit_test::CheckArraysInheritTupleDims(importDataStructure);
     }
   }
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[WriteDREAM3DFilter][Compression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_preflight.dream3d";
   DataStructure dataStructure;
 
@@ -2159,7 +2159,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
-    REQUIRE(filter.preflight(dataStructure, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).output_actions.invalid());
   }
 
   // Enabled compression rejects a level above the valid range [1, 9].
@@ -2169,7 +2169,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(10));
-    REQUIRE(filter.preflight(dataStructure, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).output_actions.invalid());
   }
 
   // Disabled compression ignores the level value, including an out-of-range value.
@@ -2179,7 +2179,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
-    REQUIRE(filter.preflight(dataStructure, args).outputActions.valid());
+    REQUIRE(filter.preflight(dataStructure, args).output_actions.valid());
   }
 }
 
@@ -2191,7 +2191,7 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   DataStructure writtenData;
   auto* groupPtr = DataGroup::Create(writtenData, "CacheGroup");
   auto floatStore = std::make_shared<DataStore<float32>>(ShapeType{16}, ShapeType{1}, 2.5f);
-  Float32Array::Create(writtenData, "CacheFloats", floatStore, groupPtr->getId());
+  Float32ArrayType::Create(writtenData, "CacheFloats", floatStore, groupPtr->getId());
   fs::path filePath = GetDataDir(*Application::Instance()) / "preflight_cache_integration.dream3d";
   fs::remove(filePath);
   REQUIRE(dream3d::WriteFile(filePath, writtenData, Pipeline{}, false).valid());
@@ -2228,7 +2228,7 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   // Execution must still read the complete array values from disk.
   REQUIRE(pipeline.execute());
   const DataStructure executed = pipeline[0]->getDataStructure();
-  const auto* readFloatsPtr = executed.getDataAs<Float32Array>(DataPath({"CacheGroup", "CacheFloats"}));
+  const auto* readFloatsPtr = executed.getDataAs<Float32ArrayType>(DataPath({"CacheGroup", "CacheFloats"}));
   REQUIRE(readFloatsPtr != nullptr);
   REQUIRE((*readFloatsPtr)[0] == 2.5f);
 
@@ -2236,7 +2236,7 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   DataStructure newData;
   auto* group2Ptr = DataGroup::Create(newData, "CacheGroup");
   auto intStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, 9);
-  Int32Array::Create(newData, "CacheInts", intStore, group2Ptr->getId());
+  Int32ArrayType::Create(newData, "CacheInts", intStore, group2Ptr->getId());
   fs::remove(filePath);
   REQUIRE(dream3d::WriteFile(filePath, newData, Pipeline{}, false).valid());
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
@@ -2293,15 +2293,15 @@ void WriteC8FilterSelectionFile(const fs::path& path)
   auto* cellsPtr = AttributeMatrix::Create(source, "Cells", ShapeType{1, 2, 2}, imageGeomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   imageGeomPtr->setCellData(*cellsPtr);
-  auto selectedStore = DataStoreUtilities::CreateDataStore<int32>(source, DataPath({"Image", "Cells", "Selected"}), {1, 2, 2}, {1});
+  auto selectedStore = data_store_utilities::CreateDataStore<int32>(source, DataPath({"Image", "Cells", "Selected"}), {1, 2, 2}, {1});
   REQUIRE(selectedStore != nullptr);
   const std::vector<int32> values{4, -7, 12, 29};
   REQUIRE(selectedStore->copyFromBuffer(0, nonstd::span<const int32>(values.data(), values.size())).valid());
-  REQUIRE(Int32Array::Create(source, "Selected", selectedStore, cellsPtr->getId()) != nullptr);
-  auto excludedStore = DataStoreUtilities::CreateDataStore<int32>(source, DataPath({"Image", "Cells", "Excluded"}), {1, 2, 2}, {1});
+  REQUIRE(Int32ArrayType::Create(source, "Selected", selectedStore, cellsPtr->getId()) != nullptr);
+  auto excludedStore = data_store_utilities::CreateDataStore<int32>(source, DataPath({"Image", "Cells", "Excluded"}), {1, 2, 2}, {1});
   REQUIRE(excludedStore != nullptr);
   excludedStore->fill(90);
-  REQUIRE(Int32Array::Create(source, "Excluded", excludedStore, cellsPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(source, "Excluded", excludedStore, cellsPtr->getId()) != nullptr);
   auto* listsPtr = NeighborList<int32>::Create(source, "Lists", ShapeType{4}, imageGeomPtr->getId());
   REQUIRE(listsPtr != nullptr);
   const std::vector<std::vector<int32>> listValues{{1, 2}, {}, {-3}, {4, 5, 6}};
@@ -2327,16 +2327,16 @@ void WriteC8FilterLegacyWarningFile(const fs::path& path)
     REQUIRE(attributeMatrix.writeVectorAttribute("TupleDimensions", ShapeType{1}).valid());
     REQUIRE(attributeMatrix.writeScalarAttribute<uint32>("AttributeMatrixType", 13).valid());
     auto statistics = attributeMatrix.createGroup("StatisticsSource");
-    REQUIRE(statistics.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, "Statistics").valid());
+    REQUIRE(statistics.writeStringAttribute(nx::core::constants::k_ObjectTypeTag, "Statistics").valid());
     auto values = statistics.createDataset("Values");
     const std::vector<float32> payload{1.0F};
     REQUIRE(values.writeSpan<float32>({1, 1}, nonstd::span<const float32>(payload.data(), payload.size())).valid());
-    REQUIRE(values.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, DataArray<float32>::GetTypeName()).valid());
+    REQUIRE(values.writeStringAttribute(nx::core::constants::k_ObjectTypeTag, DataArray<float32>::GetTypeName()).valid());
     REQUIRE(values.writeVectorAttribute("TupleDimensions", ShapeType{1}).valid());
     REQUIRE(values.writeVectorAttribute("ComponentDimensions", ShapeType{1}).valid());
     REQUIRE(values.writeVectorAttribute<float32>("Mean", {4.0F, 5.0F, 6.0F}).valid());
     auto unsupported = attributeMatrix.createGroup("Unsupported");
-    REQUIRE(unsupported.writeStringAttribute(nx::core::Constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
+    REQUIRE(unsupported.writeStringAttribute(nx::core::constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
   }
   fs::last_write_time(path, fs::last_write_time(path) - std::chrono::seconds(10));
 }
@@ -2344,15 +2344,15 @@ void WriteC8FilterLegacyWarningFile(const fs::path& path)
 
 TEST_CASE("Scoped default format resolver preserves ownership and nested restoration", "[Core][FormatResolver]")
 {
-  UnitTest::LoadPlugins();
-  const auto incomingResolver = DataStructure::getDefaultFormatResolver();
+  unit_test::LoadPlugins();
+  const auto incomingResolver = DataStructure::GetDefaultFormatResolver();
   const bool throwFromNestedScope = GENERATE(false, true);
   CAPTURE(throwFromNestedScope);
   auto outerResolver = std::make_shared<InMemoryFormatResolver>();
   const auto* outerResolverPtr = outerResolver.get();
   const std::weak_ptr<const IDataStoreFormatResolver> outerLifetime = outerResolver;
   {
-    const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(std::move(outerResolver));
+    const auto restoreIncoming = unit_test::SetDefaultFormatResolverForScope(std::move(outerResolver));
     REQUIRE(outerResolver == nullptr);
     CHECK(&DataStructure{}.formatResolver() == outerResolverPtr);
     bool caughtException = false;
@@ -2360,7 +2360,7 @@ TEST_CASE("Scoped default format resolver preserves ownership and nested restora
     {
       auto innerResolver = std::make_shared<InMemoryFormatResolver>();
       const auto* innerResolverPtr = innerResolver.get();
-      const auto restoreOuter = UnitTest::SetDefaultFormatResolverForScope(std::move(innerResolver));
+      const auto restoreOuter = unit_test::SetDefaultFormatResolverForScope(std::move(innerResolver));
       REQUIRE(innerResolver == nullptr);
       REQUIRE_FALSE(outerLifetime.expired());
       CHECK(&DataStructure{}.formatResolver() == innerResolverPtr);
@@ -2378,17 +2378,17 @@ TEST_CASE("Scoped default format resolver preserves ownership and nested restora
   }
   CHECK(outerLifetime.expired());
   CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
-  const auto restoredResolver = DataStructure::getDefaultFormatResolver();
+  const auto restoredResolver = DataStructure::GetDefaultFormatResolver();
   CHECK_FALSE(restoredResolver.owner_before(incomingResolver));
   CHECK_FALSE(incomingResolver.owner_before(restoredResolver));
 }
 
 TEST_CASE("Scoped null default format resolver preserves the active policy", "[Core][FormatResolver]")
 {
-  UnitTest::LoadPlugins();
-  const auto incomingResolver = DataStructure::getDefaultFormatResolver();
+  unit_test::LoadPlugins();
+  const auto incomingResolver = DataStructure::GetDefaultFormatResolver();
   {
-    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(nullptr);
+    const auto restoreResolver = unit_test::SetDefaultFormatResolverForScope(nullptr);
     CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
   }
   CHECK(&DataStructure{}.formatResolver() == incomingResolver.get());
@@ -2396,7 +2396,7 @@ TEST_CASE("Scoped null default format resolver preserves the active policy", "[C
 
 TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context", "[C8][ReadDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto policy = GENERATE(Dream3dImportParameter::PathImportPolicy::IncludeList, Dream3dImportParameter::PathImportPolicy::ExcludeList);
   const bool warmCache = GENERATE(false, true);
   const bool execute = GENERATE(false, true);
@@ -2419,14 +2419,14 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
   }
   auto processResolver = std::make_shared<C8FilterResolver>();
   processResolver->reject = true;
-  const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(processResolver);
+  const auto restoreResolver = unit_test::SetDefaultFormatResolverForScope(processResolver);
   auto destinationResolver = std::make_shared<C8FilterResolver>();
   destinationResolver->require_context = true;
   destinationResolver->reject = rejectDestination;
   DataStructure destination;
   destination.setFormatResolver(destinationResolver);
   // The marker uses an explicit resident store because the process policy deliberately rejects every request.
-  auto* markerPtr = Int32Array::Create(destination, "DestinationMarker", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 73));
+  auto* markerPtr = Int32ArrayType::Create(destination, "DestinationMarker", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 73));
   REQUIRE(markerPtr != nullptr);
   const auto markerId = markerPtr->getId();
   const auto* originalStorePtr = markerPtr->getIDataStore();
@@ -2448,11 +2448,11 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
   else
   {
     auto preflight = filter.preflight(destination, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     CHECK(destination.getAllDataPaths() == originalPaths);
     CHECK(destinationResolver->paths.empty());
     CHECK(processResolver->paths.empty());
-    result = preflight.outputActions.value().applyRegular(destination, IDataAction::Mode::Preflight);
+    result = preflight.output_actions.value().applyRegular(destination, IDataAction::Mode::Preflight);
   }
   CHECK(cache.missCount() == (warmCache ? 0 : 1));
   CHECK(cache.hitCount() == (warmCache ? 2 : 1));
@@ -2472,8 +2472,8 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
     return;
   }
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  const Int32Array* selectedPtr = nullptr;
-  REQUIRE_NOTHROW(selectedPtr = &destination.getDataRefAs<Int32Array>(selectedPath));
+  const Int32ArrayType* selectedPtr = nullptr;
+  REQUIRE_NOTHROW(selectedPtr = &destination.getDataRefAs<Int32ArrayType>(selectedPath));
   const NeighborList<int32>* listsPtr = nullptr;
   REQUIRE_NOTHROW(listsPtr = &destination.getDataRefAs<NeighborList<int32>>(listsPath));
   const StringArray* labelsPtr = nullptr;
@@ -2484,9 +2484,9 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
   REQUIRE_NOTHROW(cellsPtr = &destination.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cells"})));
   CHECK(imageGeomPtr->getCellData() == cellsPtr);
   CHECK(imageGeomPtr->getCellDataId() == cellsPtr->getId());
-  CHECK(imageGeomPtr->getDimensions() == SizeVec3{2, 2, 1});
-  CHECK(imageGeomPtr->getOrigin() == FloatVec3{-2.0F, -1.0F, 0.0F});
-  CHECK(imageGeomPtr->getSpacing() == FloatVec3{1.0F, 2.0F, 3.0F});
+  CHECK(imageGeomPtr->getDimensions() == SizeVec3Type{2, 2, 1});
+  CHECK(imageGeomPtr->getOrigin() == FloatVec3Type{-2.0F, -1.0F, 0.0F});
+  CHECK(imageGeomPtr->getSpacing() == FloatVec3Type{1.0F, 2.0F, 3.0F});
   CHECK_FALSE(destination.containsData(DataPath({"Image", "Cells", "Excluded"})));
   if(execute)
   {
@@ -2511,12 +2511,12 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
     REQUIRE(dynamic_cast<const EmptyListStore<int32>*>(listsPtr->getStore().get()) != nullptr);
     CHECK(labelsPtr->isPlaceholder());
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("C8 ReadDREAM3DFilter retains metadata warnings on unsupported policy", "[C8][ReadDREAM3DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool warmCache = GENERATE(false, true);
   const bool execute = GENERATE(false, true);
   CAPTURE(warmCache, execute);
@@ -2552,7 +2552,7 @@ TEST_CASE("C8 ReadDREAM3DFilter retains metadata warnings on unsupported policy"
   else
   {
     auto preflight = filter.preflight(destination, args);
-    result = ConvertResult(std::move(preflight.outputActions));
+    result = ConvertResult(std::move(preflight.output_actions));
   }
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 1);
@@ -2568,20 +2568,20 @@ TEST_CASE("C8 ReadDREAM3DFilter retains metadata warnings on unsupported policy"
 
 TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid legacy metadata", "[ReadDREAM3DFilter]")
 {
-  const UnitTest::TestFileSentinel archive(unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
+  const unit_test::TestFileSentinel archive(unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
   const fs::path file = fs::path(unit_test::k_TestFilesDir.view()) / "6_6_ImportH5Data" / "6_6_import_h5_esprit_data.dream3d";
   const DataPath geometry({"Exemplar Data"});
   const ReadDREAM3DFilter filter;
   Arguments args;
   Dream3dImportParameter::ImportData input(file);
-  input.ImportPolicy = Dream3dImportParameter::PathImportPolicy::All;
+  input.import_policy = Dream3dImportParameter::PathImportPolicy::All;
   args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
 
   DataStructure dataStructure;
   const auto strict = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-  CHECK(strict.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
-  CHECK(strict.outputActions.errors().front().message == fmt::format("Cannot read image geometry 'Exemplar Data' from '{}'. Spacing on the X axis must be finite and greater than zero. Received 0. "
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict.output_actions);
+  CHECK(strict.output_actions.errors().front().code == ImageGeom::k_InvalidSpacing);
+  CHECK(strict.output_actions.errors().front().message == fmt::format("Cannot read image geometry 'Exemplar Data' from '{}'. Spacing on the X axis must be finite and greater than zero. Received 0. "
                                                                      "Enable 'Use Default Origin/Spacing for Invalid Values' to use defaults for invalid components in the loaded geometry.",
                                                                      file.string()));
 
@@ -2590,7 +2590,7 @@ TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid
   SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
   const auto* imagePtr = dataStructure.getDataAs<ImageGeom>(geometry);
   REQUIRE(imagePtr != nullptr);
-  CHECK(imagePtr->getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F});
+  CHECK(imagePtr->getSpacing() == FloatVec3Type{1.0F, 1.0F, 1.0F});
   const auto& warnings = execution.result.warnings();
   REQUIRE(std::count_if(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == 502693; }) == 1);
   const auto& defaultValuesWarning = *std::find_if(warnings.begin(), warnings.end(), [](const Warning& entry) { return entry.code == 502693; });
@@ -2601,8 +2601,8 @@ TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid
   args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, false);
   DataStructure strictAgain;
   const auto afterUsingDefaults = filter.preflight(strictAgain, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(afterUsingDefaults.outputActions);
-  CHECK(afterUsingDefaults.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
+  SIMPLNX_RESULT_REQUIRE_INVALID(afterUsingDefaults.output_actions);
+  CHECK(afterUsingDefaults.output_actions.errors().front().code == ImageGeom::k_InvalidSpacing);
 }
 
 TEST_CASE("ReadDREAM3DFilter: uses default values for invalid current-format components", "[ReadDREAM3DFilter]")
@@ -2619,13 +2619,13 @@ TEST_CASE("ReadDREAM3DFilter: uses default values for invalid current-format com
     auto hdf = hdf5::FileIO::AppendFile(file);
     auto image = hdf.openGroup("DataStructure").openGroup("Image Group").openGroup("Image");
     REQUIRE(image.isValid());
-    const auto removeSpacing = image.removeAttribute(IOConstants::k_H5_SPACING);
+    const auto removeSpacing = image.removeAttribute(io_constants::k_H5Spacing);
     SIMPLNX_RESULT_REQUIRE_VALID(removeSpacing);
-    const auto removeOrigin = image.removeAttribute(IOConstants::k_H5_ORIGIN);
+    const auto removeOrigin = image.removeAttribute(io_constants::k_H5Origin);
     SIMPLNX_RESULT_REQUIRE_VALID(removeOrigin);
-    const auto writeSpacing = image.writeVectorAttribute(IOConstants::k_H5_SPACING, std::vector<float32>{2.0F, -3.0F, 4.0F});
+    const auto writeSpacing = image.writeVectorAttribute(io_constants::k_H5Spacing, std::vector<float32>{2.0F, -3.0F, 4.0F});
     SIMPLNX_RESULT_REQUIRE_VALID(writeSpacing);
-    const auto writeOrigin = image.writeVectorAttribute(IOConstants::k_H5_ORIGIN, std::vector<float32>{1.0F, 2.0F, std::numeric_limits<float32>::quiet_NaN()});
+    const auto writeOrigin = image.writeVectorAttribute(io_constants::k_H5Origin, std::vector<float32>{1.0F, 2.0F, std::numeric_limits<float32>::quiet_NaN()});
     SIMPLNX_RESULT_REQUIRE_VALID(writeOrigin);
   }
 
@@ -2636,7 +2636,7 @@ TEST_CASE("ReadDREAM3DFilter: uses default values for invalid current-format com
   DataStructure dataStructure;
   const auto execution = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
-  UnitTest::RequireReaderGeometry(dataStructure, geometry, {1.0F, 2.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
+  unit_test::RequireReaderGeometry(dataStructure, geometry, {1.0F, 2.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
   const auto& warnings = execution.result.warnings();
   REQUIRE(warnings.size() == 1);
   CHECK(warnings.front().code == 502693);
@@ -2664,9 +2664,9 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
     auto hdf = hdf5::FileIO::AppendFile(file);
     auto image = hdf.openGroup("DataStructure").openGroup(badGeometry.getTargetName());
-    const auto removeSpacing = image.removeAttribute(IOConstants::k_H5_SPACING);
+    const auto removeSpacing = image.removeAttribute(io_constants::k_H5Spacing);
     SIMPLNX_RESULT_REQUIRE_VALID(removeSpacing);
-    const auto writeSpacing = image.writeVectorAttribute(IOConstants::k_H5_SPACING, std::vector<float32>{2.0F, 0.0F, 4.0F});
+    const auto writeSpacing = image.writeVectorAttribute(io_constants::k_H5Spacing, std::vector<float32>{2.0F, 0.0F, 4.0F});
     SIMPLNX_RESULT_REQUIRE_VALID(writeSpacing);
   }
 
@@ -2677,8 +2677,8 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
   const ReadDREAM3DFilter filter;
   Arguments args;
   Dream3dImportParameter::ImportData input(file);
-  input.ImportPolicy = Dream3dImportParameter::PathImportPolicy::IncludeList;
-  input.DataPaths = {goodCellData};
+  input.import_policy = Dream3dImportParameter::PathImportPolicy::IncludeList;
+  input.data_paths = {goodCellData};
   args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
 
   for(const bool useDefaults : {false, true})
@@ -2713,18 +2713,18 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings().front().code == 502693);
-    UnitTest::RequireReaderGeometry(withDefaultValues, badGeometry, {0.0F, 0.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
+    unit_test::RequireReaderGeometry(withDefaultValues, badGeometry, {0.0F, 0.0F, 0.0F}, {2.0F, 1.0F, 4.0F});
   }
   CHECK(cache.missCount() == 1);
   CHECK(cache.hitCount() == 1);
 
-  input.DataPaths = {badGeometry};
+  input.data_paths = {badGeometry};
   args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, input);
   args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, false);
   DataStructure destination;
   const auto preflight = filter.preflight(destination, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  CHECK(preflight.outputActions.errors().front().code == ImageGeom::k_InvalidSpacing);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+  CHECK(preflight.output_actions.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(cache.missCount() == 1);
 }
 
@@ -2764,17 +2764,17 @@ void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCo
       const auto components = malformed ? componentShape : ShapeType{1};
       auto dataset = geometry.createDataset(axis);
       REQUIRE(dataset.writeSpan<float32>({tuples.front(), components.front()}, malformed ? bounds : validBounds).valid());
-      REQUIRE(dataset.writeVectorAttribute(IOConstants::k_TupleShapeTag, tuples).valid());
-      REQUIRE(dataset.writeVectorAttribute(IOConstants::k_ComponentShapeTag, components).valid());
+      REQUIRE(dataset.writeVectorAttribute(io_constants::k_TupleShapeTag, tuples).valid());
+      REQUIRE(dataset.writeVectorAttribute(io_constants::k_ComponentShapeTag, components).valid());
     }
     return;
   }
 
   DataStructure source;
   REQUIRE(DataGroup::Create(source, "Selected") != nullptr);
-  const auto parentId = nested ? DataObject::OptionalId{DataGroup::Create(source, "Parent")->getId()} : DataObject::OptionalId{};
+  const auto parentId = nested ? DataObject::OptionalIdType{DataGroup::Create(source, "Parent")->getId()} : DataObject::OptionalIdType{};
   auto* gridPtr = CreateRectGridGeometry(source, "Malformed Grid", parentId);
-  auto* xBoundsPtr = UnitTest::CreateTestDataArray<float32>(source, "Stored X Bounds", {4}, {1}, gridPtr->getId());
+  auto* xBoundsPtr = unit_test::CreateTestDataArray<float32>(source, "Stored X Bounds", {4}, {1}, gridPtr->getId());
   REQUIRE(xBoundsPtr != nullptr);
   for(usize i = 0; i < 4; ++i)
   {
@@ -2792,10 +2792,10 @@ void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCo
   const auto datasetId = dataset.getId();
   REQUIRE(datasetId >= 0);
   REQUIRE(H5Dwrite(datasetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, bounds.data()) >= 0);
-  REQUIRE(H5Adelete(datasetId, IOConstants::k_TupleShapeTag.c_str()) >= 0);
-  REQUIRE(H5Adelete(datasetId, IOConstants::k_ComponentShapeTag.c_str()) >= 0);
-  REQUIRE(dataset.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape).valid());
-  REQUIRE(dataset.writeVectorAttribute(IOConstants::k_ComponentShapeTag, componentShape).valid());
+  REQUIRE(H5Adelete(datasetId, io_constants::k_TupleShapeTag.c_str()) >= 0);
+  REQUIRE(H5Adelete(datasetId, io_constants::k_ComponentShapeTag.c_str()) >= 0);
+  REQUIRE(dataset.writeVectorAttribute(io_constants::k_TupleShapeTag, tupleShape).valid());
+  REQUIRE(dataset.writeVectorAttribute(io_constants::k_ComponentShapeTag, componentShape).valid());
 }
 } // namespace
 
@@ -2813,8 +2813,8 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: only validates selected rectilinear g
   const DataPath badPath({"Malformed Grid"});
   const auto metadata = cache.fetchSelectableMetadata(file);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
-  CHECK(metadata.value().dataStructure.containsData(goodPath));
-  CHECK(metadata.value().dataStructure.containsData(badPath));
+  CHECK(metadata.value().data_structure.containsData(goodPath));
+  CHECK(metadata.value().data_structure.containsData(badPath));
 
   auto strict = dream3d::LoadDataStructure(file);
   SIMPLNX_RESULT_REQUIRE_INVALID(strict);
@@ -2827,7 +2827,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: only validates selected rectilinear g
   args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData(file, Dream3dImportParameter::PathImportPolicy::IncludeList, {goodPath}));
   DataStructure selected;
   const auto preflight = filter.preflight(selected, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(selected, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   CHECK(selected.containsData(goodPath));
@@ -2838,12 +2838,12 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: only validates selected rectilinear g
   const auto badPreflight = filter.preflight(rejected, args);
   if(errorCode == -4007 || errorCode == -4008)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(badPreflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(badPreflight.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(badPreflight.outputActions);
-    CHECK(badPreflight.outputActions.errors().front().code == errorCode);
+    SIMPLNX_RESULT_REQUIRE_INVALID(badPreflight.output_actions);
+    CHECK(badPreflight.output_actions.errors().front().code == errorCode);
   }
   const auto badExecute = filter.execute(rejected, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(badExecute.result);
@@ -2887,7 +2887,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: strict full reads reject duplicate bo
   const auto gridPath = legacy ? DataPath({"Malformed Grid"}) : DataPath({"Parent", "Malformed Grid"});
   const auto metadata = cache.fetchSelectableMetadata(file);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
-  CHECK(metadata.value().dataStructure.getDataAs<RectGridGeom>(gridPath) != nullptr);
+  CHECK(metadata.value().data_structure.getDataAs<RectGridGeom>(gridPath) != nullptr);
 
   const auto strict = dream3d::LoadDataStructure(file);
   SIMPLNX_RESULT_REQUIRE_INVALID(strict);

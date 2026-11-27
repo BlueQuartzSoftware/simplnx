@@ -18,21 +18,21 @@ constexpr StringLiteralType k_VertexListName = "SharedVertexList";
 constexpr StringLiteralType k_EdgeListName = "SharedEdgeList";
 
 const DataPath k_EdgeGeomPath({"Edge Geometry"});
-const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(Constants::k_Mask);
-const DataPath k_RegionIdsPath = k_EdgeGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(k_RegionIdsName);
-const DataPath k_SliceIdsPath = k_EdgeGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(k_SliceIdsName);
+const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(constants::k_Mask);
+const DataPath k_RegionIdsPath = k_EdgeGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(k_RegionIdsName);
+const DataPath k_SliceIdsPath = k_EdgeGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(k_SliceIdsName);
 const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
 } // namespace
 
 TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore][RemoveFlaggedEdgesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
-  DataStructure dataStructure = UnitTest::LoadDataStructure(KBaseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(KBaseDataFilePath);
 
   {
     // Instantiate the filter and an Arguments Object
@@ -49,7 +49,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -57,32 +57,32 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_RegionIdsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_RegionIdsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(::k_RegionIdsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(::k_RegionIdsName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_SliceIdsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_SliceIdsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(::k_SliceIdsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath(::k_SliceIdsName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_VertexListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_VertexListName);
 
-    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_EdgeListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_EdgeListName);
 
-    UnitTest::CompareDataArrays<uint64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<uint64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

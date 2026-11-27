@@ -12,11 +12,11 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ReadEnsembleInfoInputValues
 {
-  std::string InputFile;
-  DataPath DataContainerName;
-  DataPath CellEnsembleAttributeMatrixName;
-  DataPath CrystalStructuresArrayName;
-  DataPath PhaseTypesArrayName;
+  std::string input_file;
+  DataPath data_container_name;
+  DataPath cell_ensemble_attribute_matrix_name;
+  DataPath crystal_structures_array_name;
+  DataPath phase_types_array_name;
 };
 
 /**

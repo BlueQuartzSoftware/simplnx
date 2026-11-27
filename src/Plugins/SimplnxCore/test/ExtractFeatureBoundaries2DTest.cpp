@@ -51,8 +51,8 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
 
   auto rowBuffer = std::make_unique<int32[]>(k_BenchmarkDimX);
@@ -101,21 +101,21 @@ void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDa
   {
     const auto* exemplarGeomPtr = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
     REQUIRE(exemplarGeomPtr != nullptr);
-    UnitTest::CompareIGeometry(exemplarGeomPtr, computedEdgeGeomPtr);
+    unit_test::CompareIGeometry(exemplarGeomPtr, computedEdgeGeomPtr);
   }
 
   // Compare Shared Vertex List
   {
     const DataPath computedPath = k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
     const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Vertex List");
-    UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
+    unit_test::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
   }
 
   // Compare Edge List
   {
     const DataPath computedPath = k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
     const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Edge List");
-    UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
+    unit_test::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
   }
 }
 
@@ -123,8 +123,8 @@ void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDa
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D", true);
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D", true);
 
   std::vector<std::string> exemplarFilePaths = {"01_simple_adjacent.dream3d", "02_non_touching.dream3d",   "03_checkerboard.dream3d",  "04_single_feature.dream3d",
                                                 "05_nested_features.dream3d", "06_corner_contact.dream3d", "07_complex_mixed.dream3d", "08_complex_mixed.dream3d"};
@@ -137,7 +137,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
 
       // Read Exemplar DREAM3D File Filter
       // auto exemplarFilePath = "01_simple_adjacent.dream3d";
-      DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+      DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
       // Instantiate the filter
       ExtractFeatureBoundaries2DFilter filter;
@@ -153,7 +153,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
 
       // Preflight the filter
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
       // Execute the filter
       auto executeResult = filter.execute(dataStructure, args);
@@ -165,18 +165,18 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
 #endif
 
       VerifyOutput(dataStructure, k_ExemplarEdgeGeometryPath, k_OutputEdgeGeometryPath);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ExtractFeatureBoundaries2D/08_complex_mixed.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter
   ExtractFeatureBoundaries2DFilter filter;
@@ -192,7 +192,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
 
   // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter
   auto executeResult = filter.execute(dataStructure, args);
@@ -204,16 +204,16 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
 #endif
 
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Max Z"}), k_OutputEdgeGeometryPath);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ExtractFeatureBoundaries2D/08_complex_mixed.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter
   ExtractFeatureBoundaries2DFilter filter;
@@ -229,7 +229,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
 
   // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter
   auto executeResult = filter.execute(dataStructure, args);
@@ -242,16 +242,16 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
 
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Custom Z"}), k_OutputEdgeGeometryPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ExtractFeatureBoundaries2D/08_complex_mixed.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter
   ExtractFeatureBoundaries2DFilter filter;
@@ -267,7 +267,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
 
   // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter
   auto executeResult = filter.execute(dataStructure, args);
@@ -279,7 +279,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
 #endif
 
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Min Z No Edges"}), k_OutputEdgeGeometryPath);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Geometry cell tuple count", "[SimplnxCore][ExtractFeatureBoundaries2DFilter][TupleCount]")
@@ -310,13 +310,13 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Geometry cell tuple co
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -1019);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;

@@ -21,22 +21,22 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
-  const DataPath kExemplarShiftsPath = Constants::k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
+  const DataPath kExemplarShiftsPath = constants::k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // SIMPLNX_TEST_ALGORITHM_PATH selects the in-core and OOC scenarios for this test.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz", "align_sections_feature_centroids");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz", "align_sections_feature_centroids");
 
   // Load the exemplar before the selected algorithm scenario.
   auto exemplarFilePath = fs::path(fmt::format("{}/align_sections_feature_centroids/6_6_align_sections_feature_centroids.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath));
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(constants::k_MaskArrayPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(constants::k_MaskArrayPath));
 
   // Execute the alignment with a fixed reference slice.
   {
@@ -45,44 +45,44 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[R
     Arguments args;
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_UseReferenceSlice_Key, std::make_any<bool>(true));
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_ReferenceSlice_Key, std::make_any<int32>(0));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(constants::k_MaskArrayPath));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, Constants::k_CellAttributeMatrix, Constants::k_ExemplarDataContainer);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, dataStructure, constants::k_CellAttributeMatrix, constants::k_ExemplarDataContainer);
 
 // The optional output supports manual inspection of the aligned result.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
   const std::string kCentroidsName = "Centroids";
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // SIMPLNX_TEST_ALGORITHM_PATH selects the in-core and OOC scenarios for this test.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz", "align_sections_feature_centroids");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz", "align_sections_feature_centroids");
 
   // Load the baseline before the selected algorithm scenario.
   auto baselineFilePath = fs::path(fmt::format("{}/align_sections_feature_centroids/6_6_align_sections_feature_centroids.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baselineFilePath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath));
+  DataStructure dataStructure = unit_test::LoadDataStructure(baselineFilePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(constants::k_MaskArrayPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(constants::k_MaskArrayPath));
 
   // Execute the alignment and retain its diagnostic shift arrays.
   {
@@ -91,18 +91,18 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
     Arguments args;
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_UseReferenceSlice_Key, std::make_any<bool>(true));
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_ReferenceSlice_Key, std::make_any<int32>(0));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(constants::k_MaskArrayPath));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
 
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_StoreAlignmentShifts_Key, std::make_any<bool>(true));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_AlignmentAMName_Key, std::make_any<std::string>(Constants::k_AlignmentAMName));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SlicesArrayName_Key, std::make_any<std::string>(Constants::k_SlicesArrayName));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_RelativeShiftsArrayName_Key, std::make_any<std::string>(Constants::k_RelativeShiftsArrayName));
-    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>(Constants::k_CumulativeShiftsArrayName));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_AlignmentAMName_Key, std::make_any<std::string>(constants::k_AlignmentAMName));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SlicesArrayName_Key, std::make_any<std::string>(constants::k_SlicesArrayName));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_RelativeShiftsArrayName_Key, std::make_any<std::string>(constants::k_RelativeShiftsArrayName));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>(constants::k_CumulativeShiftsArrayName));
     args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(kCentroidsName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -110,36 +110,36 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
 
   // Load the expected shift arrays from the output exemplar.
   auto exemplarFilePath = fs::path(fmt::format("{}/align_sections_feature_centroids/output_align_sections_feature_centroids.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
-  const DataPath alignmentAMPath = Constants::k_DataContainerPath.createChildPath(Constants::k_AlignmentAMName);
+  const DataPath alignmentAMPath = constants::k_DataContainerPath.createChildPath(constants::k_AlignmentAMName);
 
-  const DataPath slicesPath = alignmentAMPath.createChildPath(Constants::k_SlicesArrayName);
+  const DataPath slicesPath = alignmentAMPath.createChildPath(constants::k_SlicesArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(slicesPath));
-  UnitTest::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath), dataStructure.getDataRefAs<IDataArray>(slicesPath));
+  unit_test::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath), dataStructure.getDataRefAs<IDataArray>(slicesPath));
 
-  const DataPath relativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_RelativeShiftsArrayName);
+  const DataPath relativeShiftsPath = alignmentAMPath.createChildPath(constants::k_RelativeShiftsArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
+  unit_test::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
 
-  const DataPath cumulativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_CumulativeShiftsArrayName);
+  const DataPath cumulativeShiftsPath = alignmentAMPath.createChildPath(constants::k_CumulativeShiftsArrayName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
+  unit_test::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
 
   const DataPath centroidsPath = alignmentAMPath.createChildPath(kCentroidsName);
   REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(centroidsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(centroidsPath));
-  UnitTest::CompareDataArrays<float32>(exemplarDataStructure.getDataRefAs<IDataArray>(centroidsPath), dataStructure.getDataRefAs<IDataArray>(centroidsPath));
+  unit_test::CompareDataArrays<float32>(exemplarDataStructure.getDataRefAs<IDataArray>(centroidsPath), dataStructure.getDataRefAs<IDataArray>(centroidsPath));
 
 // The optional output supports manual inspection of the aligned result.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/output_align_sections_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple count", "[Reconstruction][AlignSectionsFeatureCentroidFilter][TupleCount]")
@@ -170,13 +170,13 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple 
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -68071);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
@@ -186,10 +186,10 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Geometry cell tuple 
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference top slice", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool storeShifts = GENERATE(false, true);
   CAPTURE(scenario, storeShifts);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   using FilterType = AlignSectionsFeatureCentroidFilter;
   DataStructure dataStructure;
   auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -199,7 +199,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
-  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
+  auto* maskPtr = UInt8ArrayType::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
   REQUIRE(maskPtr != nullptr);
   maskPtr->fill(0);
   // One marked cell per slice: (1,1), (0,0), (1,1), (2,2) in ascending Z.
@@ -221,7 +221,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
   args.insertOrAssign(FilterType::k_AlignmentAMName_Key, std::make_any<std::string>("Shifts"));
   args.insertOrAssign(FilterType::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>("Cumulative"));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   for(usize z = 0; z < 4; z++)
@@ -234,13 +234,13 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
   }
   if(storeShifts)
   {
-    const auto& slices = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Image", "Shifts", "Slice Indices"}));
+    const auto& slices = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Image", "Shifts", "Slice Indices"}));
     // Row 0 pairs the top slice (physical 3) with the reference (physical 2).
     CHECK(slices[0] == 3);
     CHECK(slices[1] == 2);
     const DataPath shiftsPath({"Image", "Shifts", "Cumulative"});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(shiftsPath));
-    const auto& shifts = dataStructure.getDataRefAs<Int64Array>(shiftsPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64ArrayType>(shiftsPath));
+    const auto& shifts = dataStructure.getDataRefAs<Int64ArrayType>(shiftsPath);
     const std::array<int64, 4> expectedShifts = {1, 0, -1, 0};
     for(usize iter = 0; iter < 4; iter++)
     {
@@ -249,17 +249,17 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Nonzero reference to
       CHECK(shifts[(iter * 2) + 1] == expectedShifts[iter]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool storeShifts = GENERATE(false, true);
   const int emptyCase = GENERATE(0, 1, 2); // Empty top, middle, or fixed reference.
   const bool useReference = emptyCase != 1;
   CAPTURE(scenario, storeShifts, emptyCase);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   using FilterType = AlignSectionsFeatureCentroidFilter;
   DataStructure dataStructure;
   auto* geomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -269,7 +269,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{4, 3, 3}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
-  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
+  auto* maskPtr = UInt8ArrayType::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
   REQUIRE(maskPtr != nullptr);
   maskPtr->fill(0);
   // Descending-Z centroids are (2,2), (1,1), (0,0), (1,1) before removing a mark.
@@ -288,7 +288,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
     }
   }
   // A separate marker makes the empty slice's applied shift observable without diagnostics.
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{4, 3, 3}, ShapeType{1}, 0), cellsPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(0);
   for(usize z = 0; z < 4; z++)
@@ -306,7 +306,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   args.insertOrAssign(FilterType::k_AlignmentAMName_Key, std::make_any<std::string>("Shifts"));
   args.insertOrAssign(FilterType::k_CumulativeShiftsArrayName_Key, std::make_any<std::string>("Cumulative"));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   for(usize z = 0; z < 4; z++)
@@ -324,10 +324,10 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
   {
     const DataPath shiftsPath({"Image", "Shifts", "Cumulative"});
     const DataPath relativePath({"Image", "Shifts", "Relative Shifts"});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(shiftsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64Array>(relativePath));
-    const auto& shifts = dataStructure.getDataRefAs<Int64Array>(shiftsPath);
-    const auto& relative = dataStructure.getDataRefAs<Int64Array>(relativePath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64ArrayType>(shiftsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int64ArrayType>(relativePath));
+    const auto& shifts = dataStructure.getDataRefAs<Int64ArrayType>(shiftsPath);
+    const auto& relative = dataStructure.getDataRefAs<Int64ArrayType>(relativePath);
     for(usize iter = 0; iter < 4; iter++)
     {
       CAPTURE(iter);
@@ -338,7 +338,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Empty slices", "[Sim
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice bounds", "[SimplnxCore][AlignSectionsFeatureCentroidFilter]")
@@ -358,7 +358,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice boun
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{zDim, 3, 3}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
-  REQUIRE(UInt8Array::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{zDim, 3, 3}, ShapeType{1}, 0), cellsPtr->getId()) != nullptr);
+  REQUIRE(UInt8ArrayType::Create(dataStructure, "Mask", std::make_shared<DataStore<uint8>>(ShapeType{zDim, 3, 3}, ShapeType{1}, 0), cellsPtr->getId()) != nullptr);
 
   FilterType filter;
   Arguments args;
@@ -372,9 +372,9 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice boun
   REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
   if(useReference && atUpperBound)
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& error = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& error = result.output_actions.errors()[0];
     REQUIRE(error.code == -68073);
     CHECK(error.message.find(fmt::format("Reference Slice value ({}) is too large.", reference)) != std::string::npos);
     CHECK(error.message.find(fmt::format("Z dimension {}", zDim)) != std::string::npos);
@@ -382,7 +382,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Reference slice boun
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

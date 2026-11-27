@@ -31,31 +31,31 @@ public:
    * @brief Returns a shared pointer to the vertex coordinates array
    * @return
    */
-  SharedVertexList* getVertices();
+  SharedVertexListType* getVertices();
 
   /**
    * @brief Returns a shared pointer to the vertex coordinates array
    * @return
    */
-  const SharedVertexList* getVertices() const;
+  const SharedVertexListType* getVertices() const;
 
   /**
    * @brief Returns a reference to the vertex coordinates array
    * @return
    */
-  SharedVertexList& getVerticesRef();
+  SharedVertexListType& getVerticesRef();
 
   /**
    * @brief Returns a reference to the vertex coordinates array
    * @return
    */
-  const SharedVertexList& getVerticesRef() const;
+  const SharedVertexListType& getVerticesRef() const;
 
   /**
    * @brief Sets the internal reference to vertex coordinates to vertices
    * @param vertices Coordinate array to use for vertex coordinates.
    */
-  void setVertices(const SharedVertexList& vertices);
+  void setVertices(const SharedVertexListType& vertices);
 
   /**
    * @brief Returns the optional ID of the vertex list array.
@@ -92,7 +92,7 @@ public:
    * @brief Calculates and returns the bounding box for this geometry
    * @return
    */
-  BoundingBox3Df getBoundingBox() const;
+  BoundingBox3DfType getBoundingBox() const;
 
   /**
    * @brief Returns whether this geometry is in a YZ plane.
@@ -145,7 +145,7 @@ public:
    * @brief Sets the ID of the vertex data array.
    * @param vertexDataId The optional ID of the vertex data array
    */
-  void setVertexDataId(const OptionalId& vertexDataId);
+  void setVertexDataId(const OptionalIdType& vertexDataId);
 
   /**
    * @brief Returns pointer to the Attribute Matrix that holds data assigned to each vertex coordinate

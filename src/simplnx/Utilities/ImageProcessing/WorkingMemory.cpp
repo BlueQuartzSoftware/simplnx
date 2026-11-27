@@ -41,7 +41,7 @@ uint64 ResolveWorkingMemoryFractionBytes(uint64 usefulBytes, uint32 numerator, u
 CacheMemoryBudgetManager::WorkingMemoryReservation ReserveWorkingMemory(uint64 preferredBytes, uint64 usefulBytes)
 {
   const uint64 requestedBytes = std::min(ResolvePreferredWorkingMemoryBytes(preferredBytes), usefulBytes);
-  return CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+  return CacheMemoryBudgetManager::Instance().reserveWorkingMemory(requestedBytes);
 }
 
 CacheMemoryBudgetManager::WorkingMemoryReservation ReserveWorkingMemoryFraction(uint64 usefulBytes, uint32 numerator, uint32 denominator, uint64 minimumBytes)

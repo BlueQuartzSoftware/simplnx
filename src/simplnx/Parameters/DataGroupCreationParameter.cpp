@@ -20,7 +20,7 @@ Uuid DataGroupCreationParameter::uuid() const
   return ParameterTraits<DataGroupCreationParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataGroupCreationParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataGroupCreationParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -44,14 +44,14 @@ Result<std::any> DataGroupCreationParameter::fromJsonImpl(const nlohmann::json& 
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", k_Prefix.view(), valueString, name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", k_Prefix.view(), valueString, name()));
   }
   return {{std::move(*path)}};
 }
@@ -84,12 +84,12 @@ Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStruc
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* objectPtr = dataStructure.getData(value);
   if(objectPtr != nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
 
   return {};

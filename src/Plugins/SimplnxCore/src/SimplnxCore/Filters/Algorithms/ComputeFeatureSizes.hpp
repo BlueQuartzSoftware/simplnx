@@ -25,13 +25,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureSizesInputValues
 {
-  DataObjectNameParameter::ValueType EquivalentDiametersName;
-  AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  DataObjectNameParameter::ValueType NumElementsName;
-  BoolParameter::ValueType SaveElementSizes{}; ///< True to retain generated geometry element sizes.
-  DataObjectNameParameter::ValueType VolumesName;
+  DataObjectNameParameter::ValueType equivalent_diameters_name;
+  AttributeMatrixSelectionParameter::ValueType feature_attribute_matrix_path;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  DataObjectNameParameter::ValueType num_elements_name;
+  BoolParameter::ValueType save_element_sizes{}; ///< True to retain generated geometry element sizes.
+  DataObjectNameParameter::ValueType volumes_name;
 };
 
 /**

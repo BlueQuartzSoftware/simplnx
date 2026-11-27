@@ -13,8 +13,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT TriangleNormalInputValues
 {
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  DataObjectNameParameter::ValueType OutputNormalsArrayName;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
+  DataObjectNameParameter::ValueType output_normals_array_name;
 };
 
 /**

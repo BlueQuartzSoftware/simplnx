@@ -64,7 +64,7 @@ Parameters AppendImageGeometryFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_DestinationGeometry_Key, "Destination Image Geometry",
                                                              "The destination image geometry (cell data) that is the final location for the appended data.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ChoicesParameter>(k_Direction_Key, "Direction", "The direction that will be used to append the geometries.", to_underlying(CopyFromArray::Direction::Z),
+  params.insert(std::make_unique<ChoicesParameter>(k_Direction_Key, "Direction", "The direction that will be used to append the geometries.", to_underlying(copy_from_array::Direction::Z),
                                                    std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(k_MirrorGeometry_Key, "Mirror Geometry In Direction", "Mirrors the resulting geometry in the chosen direction.", false));
   params.insert(std::make_unique<BoolParameter>(k_CheckResolution_Key, "Check Spacing", "Checks to make sure the spacing for the input geometry and destination geometry match", false));
@@ -107,7 +107,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
 {
   auto pInputGeometriesPathsValue = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
   auto pDestinationGeometryPathValue = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
-  auto pDirection = static_cast<CopyFromArray::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
+  auto pDirection = static_cast<copy_from_array::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
   auto pCheckResolutionValue = filterArgs.value<bool>(k_CheckResolution_Key);
   auto pSaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
   auto pDefaultValue = filterArgs.value<std::string>(k_DefaultValue_Key);
@@ -116,28 +116,28 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto& destGeometry = dataStructure.getDataRefAs<ImageGeom>(pDestinationGeometryPathValue);
-  SizeVec3 destGeomDims = destGeometry.getDimensions();
+  SizeVec3Type destGeomDims = destGeometry.getDimensions();
   auto newDims = destGeomDims.toContainer<std::vector<usize>>();
   for(const DataPath& pInputGeometryPathValue : pInputGeometriesPathsValue)
   {
     const auto& inputGeometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryPathValue);
-    SizeVec3 inputGeomDims = inputGeometry.getDimensions();
-    if((pDirection == CopyFromArray::Direction::Y || pDirection == CopyFromArray::Direction::Z) && destGeomDims[0] != inputGeomDims[0])
+    SizeVec3Type inputGeomDims = inputGeometry.getDimensions();
+    if((pDirection == copy_from_array::Direction::Y || pDirection == copy_from_array::Direction::Z) && destGeomDims[0] != inputGeomDims[0])
     {
       return MakePreflightErrorResult(-8200, fmt::format("Input X Dim ({}) not equal to Destination X Dim ({})", inputGeomDims[0], destGeomDims[0]));
     }
-    if((pDirection == CopyFromArray::Direction::X || pDirection == CopyFromArray::Direction::Z) && destGeomDims[1] != inputGeomDims[1])
+    if((pDirection == copy_from_array::Direction::X || pDirection == copy_from_array::Direction::Z) && destGeomDims[1] != inputGeomDims[1])
     {
       return MakePreflightErrorResult(-8201, fmt::format("Input Y Dim ({}) not equal to Destination Y Dim ({})", inputGeomDims[1], destGeomDims[1]));
     }
-    if((pDirection == CopyFromArray::Direction::X || pDirection == CopyFromArray::Direction::Y) && destGeomDims[2] != inputGeomDims[2])
+    if((pDirection == copy_from_array::Direction::X || pDirection == copy_from_array::Direction::Y) && destGeomDims[2] != inputGeomDims[2])
     {
       return MakePreflightErrorResult(-8201, fmt::format("Input Z Dim ({}) not equal to Destination Z Dim ({})", inputGeomDims[2], destGeomDims[2]));
     }
     if(pCheckResolutionValue)
     {
-      FloatVec3 inputRes = inputGeometry.getSpacing();
-      FloatVec3 destRes = destGeometry.getSpacing();
+      FloatVec3Type inputRes = inputGeometry.getSpacing();
+      FloatVec3Type destRes = destGeometry.getSpacing();
 
       if(inputRes[0] != destRes[0])
       {
@@ -163,20 +163,20 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
 
     switch(pDirection)
     {
-    case CopyFromArray::Direction::X:
+    case copy_from_array::Direction::X:
       newDims[0] += inputGeomDims[0];
       break;
-    case CopyFromArray::Direction::Y:
+    case copy_from_array::Direction::Y:
       newDims[1] += inputGeomDims[1];
       break;
-    case CopyFromArray::Direction::Z:
+    case copy_from_array::Direction::Z:
       newDims[2] += inputGeomDims[2];
       break;
     }
   }
 
-  FloatVec3 origin = destGeometry.getOrigin();
-  FloatVec3 spacing = destGeometry.getSpacing();
+  FloatVec3Type origin = destGeometry.getOrigin();
+  FloatVec3Type spacing = destGeometry.getSpacing();
   DataPath pNewImageGeomPath;
   if(pSaveAsNewGeometry)
   {
@@ -337,10 +337,10 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   {
     resultOutputActions.warnings().push_back(
         {-8412, "You are appending cell data together which may change the number of features. As a result, any feature level attribute matrix data will likely be invalidated!"});
-    preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin, destGeometry.getUnits())});
+    preflightUpdatedValues.push_back({"Appended Image Geometry Info", geometry_helpers::description::GenerateGeometryInfo(newDims, spacing, origin, destGeometry.getUnits())});
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -349,14 +349,14 @@ Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, co
 {
   AppendImageGeometryInputValues inputValues;
 
-  inputValues.InputGeometriesPaths = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
-  inputValues.DestinationGeometryPath = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
-  inputValues.Direction = static_cast<CopyFromArray::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
-  inputValues.CheckResolution = filterArgs.value<bool>(k_CheckResolution_Key);
-  inputValues.DefaultValue = filterArgs.value<std::string>(k_DefaultValue_Key);
-  inputValues.MirrorGeometry = filterArgs.value<bool>(k_MirrorGeometry_Key);
-  inputValues.SaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
-  inputValues.NewGeometryPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
+  inputValues.input_geometries_paths = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
+  inputValues.destination_geometry_path = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
+  inputValues.direction = static_cast<copy_from_array::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
+  inputValues.check_resolution = filterArgs.value<bool>(k_CheckResolution_Key);
+  inputValues.default_value = filterArgs.value<std::string>(k_DefaultValue_Key);
+  inputValues.mirror_geometry = filterArgs.value<bool>(k_MirrorGeometry_Key);
+  inputValues.save_as_new_geometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
+  inputValues.new_geometry_path = filterArgs.value<DataPath>(k_NewGeometry_Key);
 
   return AppendImageGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

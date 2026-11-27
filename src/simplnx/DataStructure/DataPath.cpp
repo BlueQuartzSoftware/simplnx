@@ -52,7 +52,7 @@ std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char de
   {
     return DataPath{};
   }
-  auto parts = StringUtilities::Split(inputPath, delimiter);
+  auto parts = string_utilities::Split(inputPath, delimiter);
   if(parts.empty())
   {
     return DataPath{};

@@ -64,7 +64,7 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array (Mask)",
                                                           "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
                                                                  "Recreates the selected Feature Attribute Matrix in the reduced geometry with no arrays. Removing vertices changes which vertices "
@@ -76,7 +76,7 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after removing vertices", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexFeatureIdsPath_Key, "Vertex Feature Ids", "Specifies to which feature each vertex belongs.", DataPath({"Vertex Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
@@ -111,7 +111,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
   const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
 
-  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
   if(renumberFeatures && (featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1))
   {
     return MakePreflightErrorResult(
@@ -151,7 +151,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     const AttributeMatrix* selectedCellDataPtr = inputVertexGeom.getVertexAttributeMatrix();
     if(selectedCellDataPtr == nullptr)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-5751, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-5751, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};
     }
     const std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(vertexGeomPath.createChildPath(cellDataName));
@@ -190,7 +190,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
     if(elementDataResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
@@ -250,21 +250,21 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RemoveFlaggedVerticesInputValues inputValues;
-  inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
-  inputValues.MaskPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputMaskPath_Key);
-  inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
+  inputValues.input_vertex_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
+  inputValues.mask_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputMaskPath_Key);
+  inputValues.output_vertex_geometry_path = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
 
-  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
-  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
-  inputValues.VertexFeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumber_features = inputValues.clear_feature_attribute_matrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.vertex_feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_VertexFeatureIdsPath_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
 
   return RemoveFlaggedVertices(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

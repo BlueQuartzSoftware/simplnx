@@ -138,7 +138,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   std::vector<fs::path> stlFiles;
   for(const auto& dirEntry : std::filesystem::directory_iterator{pStlFilesPathValue})
   {
-    if(fs::is_regular_file(dirEntry.path()) && StringUtilities::toLower(dirEntry.path().extension().string()) == ".stl")
+    if(fs::is_regular_file(dirEntry.path()) && string_utilities::ToLower(dirEntry.path().extension().string()) == ".stl")
     {
       stlFiles.push_back(dirEntry.path());
     }
@@ -149,7 +149,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   }
 
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
                                                                                        TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
@@ -205,7 +205,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createFileListAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -216,23 +216,23 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
 
   CombineStlFilesInputValues inputValues;
 
-  inputValues.StlFilesPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilesPath_Key);
-  inputValues.TriangleDataContainerName = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
-  inputValues.FaceAttributeMatrixName = inputValues.TriangleDataContainerName.createChildPath(filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key));
-  inputValues.FaceNormalsArrayName = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceNormalsArrayName_Key));
+  inputValues.stl_files_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilesPath_Key);
+  inputValues.triangle_data_container_name = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  inputValues.face_attribute_matrix_name = inputValues.triangle_data_container_name.createChildPath(filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key));
+  inputValues.face_normals_array_name = inputValues.face_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_FaceNormalsArrayName_Key));
 
-  inputValues.CreatePartNumbers = filterArgs.value<BoolParameter::ValueType>(k_CreatePartNumbers_Key);
-  inputValues.PartNumberIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_PartNumbersName_Key));
+  inputValues.create_part_numbers = filterArgs.value<BoolParameter::ValueType>(k_CreatePartNumbers_Key);
+  inputValues.part_number_index_array_path = inputValues.face_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_PartNumbersName_Key));
 
-  inputValues.CreateFaceLabels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
-  inputValues.FaceLabelIndexArrayPath = inputValues.FaceAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_FaceLabelsName_Key));
+  inputValues.create_face_labels = filterArgs.value<BoolParameter::ValueType>(k_CreateFaceLabels_Key);
+  inputValues.face_label_index_array_path = inputValues.face_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_FaceLabelsName_Key));
 
-  inputValues.LabelVertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
-  inputValues.VertexFileIndexArrayPath = inputValues.TriangleDataContainerName.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(filterArgs.value<std::string>(k_VertexLabelName_Key));
+  inputValues.label_vertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
+  inputValues.vertex_file_index_array_path = inputValues.triangle_data_container_name.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(filterArgs.value<std::string>(k_VertexLabelName_Key));
 
-  inputValues.CellFeatureAttributeMatrixName = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
-  inputValues.ActiveArrayName = filterArgs.value<std::string>(k_ActiveArrayName_Key);
-  inputValues.FileListArrayName = filterArgs.value<std::string>(k_FileListName_Key);
+  inputValues.cell_feature_attribute_matrix_name = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
+  inputValues.active_array_name = filterArgs.value<std::string>(k_ActiveArrayName_Key);
+  inputValues.file_list_array_name = filterArgs.value<std::string>(k_FileListName_Key);
 
   return CombineStlFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

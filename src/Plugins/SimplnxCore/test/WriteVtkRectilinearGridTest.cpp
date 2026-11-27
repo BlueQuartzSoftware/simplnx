@@ -34,7 +34,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -144,7 +144,7 @@ private:
   mutable usize m_ReadCount = 0;
 };
 
-BoolArray& CreateBulkBoolInput(DataStructure& dataStructure, std::shared_ptr<AbstractDataStore<bool>> store = nullptr)
+BoolArrayType& CreateBulkBoolInput(DataStructure& dataStructure, std::shared_ptr<AbstractDataStore<bool>> store = nullptr)
 {
   auto* imagePtr = ImageGeom::Create(dataStructure, k_BulkImagePath.getTargetName());
   REQUIRE(imagePtr != nullptr);
@@ -158,7 +158,7 @@ BoolArray& CreateBulkBoolInput(DataStructure& dataStructure, std::shared_ptr<Abs
   {
     store = std::make_shared<DataStore<bool>>(cellAmPtr->getShape(), ShapeType{1}, false);
   }
-  auto* valuesPtr = BoolArray::Create(dataStructure, k_BulkBoolPath.getTargetName(), std::move(store), cellAmPtr->getId());
+  auto* valuesPtr = BoolArrayType::Create(dataStructure, k_BulkBoolPath.getTargetName(), std::move(store), cellAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < k_BoolCount; valueIdx++)
   {
@@ -250,7 +250,7 @@ std::string ExpectedBulkVtk(bool binary)
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII comparison preserves exemplar precision", "[SimplnxCore][WriteVtkRectilinearGridFilter][VtkAsciiComparison]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const auto compare = [](const std::string& computed, const std::string& exemplar) {
     std::istringstream computedFile(computed);
@@ -312,8 +312,8 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates",
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), ShapeType{3, 3, 3}, imagePtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imagePtr->setCellData(*cellDataPtr);
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, valuesPath, {3, 3, 3}, {1});
-  auto* valuesPtr = Float32Array::Create(dataStructure, valuesPath.getTargetName(), store, cellDataPtr->getId());
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, valuesPath, {3, 3, 3}, {1});
+  auto* valuesPtr = Float32ArrayType::Create(dataStructure, valuesPath.getTargetName(), store, cellDataPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(0.0F);
 
@@ -325,7 +325,7 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates",
   args.insertOrAssign(WriteVtkRectilinearGridFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(imagePath));
   args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{valuesPath}));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -361,12 +361,12 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII small coordinates",
       CHECK(actual == Approx(k_Expected[index]).margin(2.0e-14));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII floating point round trip", "[SimplnxCore][WriteVtkRectilinearGridFilter][VtkAsciiFloats]", float32, float64)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // The serialization oracle is the identity: parsing must recover each input
   // exactly, including values smaller than six fixed decimal places can retain.
@@ -386,7 +386,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII floating p
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellPath.getTargetName(), tupleShape, imagePtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imagePtr->setCellData(*cellDataPtr);
-  auto store = DataStoreUtilities::CreateDataStore<TestType>(dataStructure, valuesPath, tupleShape, {1});
+  auto store = data_store_utilities::CreateDataStore<TestType>(dataStructure, valuesPath, tupleShape, {1});
   auto* valuesPtr = DataArray<TestType>::Create(dataStructure, valuesPath.getTargetName(), store, cellDataPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   auto copyResult = store->copyFromBuffer(0, nonstd::span<const TestType>(k_ExpectedValues.data(), k_ExpectedValues.size()));
@@ -401,7 +401,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII floating p
   args.insertOrAssign(WriteVtkRectilinearGridFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(imagePath));
   args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{valuesPath}));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -423,19 +423,19 @@ TEMPLATE_TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: ASCII floating p
   }
   output >> std::ws;
   REQUIRE(output.eof());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "vtk_rectilinear_grid_writer.tar.gz", "vtk_rectilinear_grid_writer");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "vtk_rectilinear_grid_writer.tar.gz", "vtk_rectilinear_grid_writer");
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, and an Arguments Object
   WriteVtkRectilinearGridFilter filter;
@@ -455,7 +455,7 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
   args.insertOrAssign(WriteVtkRectilinearGridFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -465,7 +465,7 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
   args.insertOrAssign(WriteVtkRectilinearGridFilter::k_WriteBinaryFile_Key, std::make_any<bool>(true));
 
   preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -478,24 +478,24 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Valid Filter Execution", 
   REQUIRE(CompareVtkAsciiFiles(computedFile, exemplarFile));
   std::ifstream computedBinaryFile(computedBinaryOutputPath, std::ios::binary);
   std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath, std::ios::binary);
-  UnitTest::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
+  unit_test::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
 
   // Remove the test files since they can get quite large.
   std::error_code errorCode;
   std::filesystem::remove_all(fmt::format("{}/vtk_rectilinear_grid_writer", unit_test::k_BinaryTestOutputDir), errorCode);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: InValid Filter Execution", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, and an Arguments Object
   WriteVtkRectilinearGridFilter filter;
@@ -524,17 +524,17 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: InValid Filter Execution"
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Bulk bool page bytes and failure propagation", "[SimplnxCore][WriteVtkRectilinearGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("binary and ASCII output have independent exact bool payload oracles")
   {
@@ -558,7 +558,7 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Bulk bool page bytes and 
     {
       REQUIRE(source[valueIdx] == (valueIdx % 3 == 1));
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("second bool source page failure reaches the filter result")
@@ -582,7 +582,7 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Bulk bool page bytes and 
 TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteVtkRectilinearGridFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -633,8 +633,8 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Legacy scalar component l
   REQUIRE(cellsPtr != nullptr);
   imagePtr->setCellData(*cellsPtr);
   const DataPath arrayPath({"Image", "Cells", "Values"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
-  auto* valuesPtr = Float32Array::Create(dataStructure, "Values", store, cellsPtr->getId());
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
+  auto* valuesPtr = Float32ArrayType::Create(dataStructure, "Values", store, cellsPtr->getId());
   REQUIRE(valuesPtr != nullptr);
 
   WriteVtkRectilinearGridFilter filter;
@@ -651,13 +651,13 @@ TEST_CASE("SimplnxCore::WriteVtkRectilinearGridFilter: Legacy scalar component l
   REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
   if(components <= 4)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors()[0].code == -12073);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors()[0].code == -12073);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

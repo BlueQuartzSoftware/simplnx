@@ -17,7 +17,7 @@
 #include <catch2/catch.hpp>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace contour_test
 {
@@ -28,7 +28,7 @@ const std::string k_DataName = "Data";
 const std::string k_VertexNormals = "VertexNormals";
 
 const DataPath k_GeometryPath = DataPath({k_ImageGeometryName});
-const DataPath k_DataPath = k_GeometryPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_DataName);
+const DataPath k_DataPath = k_GeometryPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_DataName);
 
 const std::string k_NewTriangleContourName = "Contouring Test";
 const std::string k_ExemplarTriangleContourName = "Contouring Geometry";
@@ -42,19 +42,19 @@ const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::
 
 TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][FlyingEdges3D]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar_v2.tar.gz", "flying_edges_exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "flying_edges_exemplar_v2.tar.gz", "flying_edges_exemplar.dream3d");
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/flying_edges_exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(contour_test::k_DataPath));
-  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(contour_test::k_DataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(contour_test::k_DataPath));
+  algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<Float32ArrayType>(contour_test::k_DataPath));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -71,7 +71,7 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // The archive has 70 faces but an incorrect face AttributeMatrix size.
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(contour_test::k_ExemplarContourPath));
@@ -95,7 +95,7 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
     const auto& kExemplarsVertArray = exemplarContourTriGeom.getVerticesRef();
     algorithmTestScope.requireExpectedStore(kNxVertArray);
 
-    CompareDataArrays<IGeometry::SharedVertexList::value_type>(kExemplarsVertArray, kNxVertArray);
+    CompareDataArrays<IGeometry::SharedVertexListType::value_type>(kExemplarsVertArray, kNxVertArray);
 
     const auto& kNxTriArray = newContourTriGeom.getFacesRef();
     const auto& kExemplarsTriArray = exemplarContourTriGeom.getFacesRef();
@@ -103,10 +103,10 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
 
     CompareDataArrays<IGeometry::MeshIndexType>(kExemplarsTriArray, kNxTriArray);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(contour_test::k_NewNormals));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(contour_test::k_ExemplarNormals));
-    const auto& kNxNormalsArray = dataStructure.getDataRefAs<Float32Array>(contour_test::k_NewNormals);
-    const auto& kExemplarsNormalsArray = dataStructure.getDataRefAs<Float32Array>(contour_test::k_ExemplarNormals);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(contour_test::k_NewNormals));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(contour_test::k_ExemplarNormals));
+    const auto& kNxNormalsArray = dataStructure.getDataRefAs<Float32ArrayType>(contour_test::k_NewNormals);
+    const auto& kExemplarsNormalsArray = dataStructure.getDataRefAs<Float32ArrayType>(contour_test::k_ExemplarNormals);
     algorithmTestScope.requireExpectedStore(kNxNormalsArray);
 
     CompareDataArrays<float32>(kExemplarsNormalsArray, kNxNormalsArray);
@@ -116,7 +116,7 @@ TEST_CASE("SimplnxCore::Image Contouring Valid Execution", "[SimplnxCore][Flying
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/image_contouring_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::Image Contouring FlyingEdges3D: Geometry cell tuple count", "[SimplnxCore][FlyingEdges3D][TupleCount]")
@@ -147,13 +147,13 @@ TEST_CASE("SimplnxCore::Image Contouring FlyingEdges3D: Geometry cell tuple coun
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -10510);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;
@@ -179,9 +179,9 @@ TEST_CASE("SimplnxCore::FlyingEdges3D component contract", "[SimplnxCore][Flying
   imageGeomPtr->setCellData(*cellAMPtr);
 
   const DataPath inputPath({"Image", "Cell Data", "Values"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, tupleShape, ShapeType{components});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, tupleShape, ShapeType{components});
   REQUIRE(store != nullptr);
-  auto* inputPtr = Float32Array::Create(dataStructure, "Values", store, cellAMPtr->getId());
+  auto* inputPtr = Float32ArrayType::Create(dataStructure, "Values", store, cellAMPtr->getId());
   REQUIRE(inputPtr != nullptr);
   REQUIRE(imageGeomPtr->getNumberOfCells() == 24);
   REQUIRE(inputPtr->getNumberOfTuples() == 24);
@@ -195,15 +195,15 @@ TEST_CASE("SimplnxCore::FlyingEdges3D component contract", "[SimplnxCore][Flying
   const auto result = filter.preflight(dataStructure, args);
   if(components == 1)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors()[0].code == FilterParameter::Constants::k_Validate_TupleShapeValue);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors()[0].code == filter_parameter::constants::k_ValidateTupleShapeValue);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FlyingEdges3D: rejects nonnumeric input arrays", "[SimplnxCore][FlyingEdges3D]")
@@ -223,8 +223,8 @@ TEST_CASE("SimplnxCore::FlyingEdges3D: rejects nonnumeric input arrays", "[Simpl
   args.insertOrAssign(FlyingEdges3DFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath({"Input"})));
   IFilter::PreflightResult preflight;
   REQUIRE_NOTHROW(preflight = filter.preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  REQUIRE(preflight.outputActions.errors().front().code == -10512);
-  REQUIRE(preflight.outputActions.errors().front().message.find("Input") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+  REQUIRE(preflight.output_actions.errors().front().code == -10512);
+  REQUIRE(preflight.output_actions.errors().front().message.find("Input") != std::string::npos);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

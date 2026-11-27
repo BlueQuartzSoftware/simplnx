@@ -35,8 +35,8 @@
 #include <vector>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
-using namespace nx::core::Constants;
+using namespace nx::core::unit_test;
+using namespace nx::core::constants;
 namespace fs = std::filesystem;
 
 namespace
@@ -44,9 +44,9 @@ namespace
 template <class FilterT>
 auto ExecuteDispatchedFilter(FilterT& filter, DataStructure& dataStructure, const Arguments& args)
 {
-  const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE_COPY(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   return scope.executeFilter(filter, dataStructure, args);
 }
 
@@ -76,14 +76,14 @@ void CheckMeshIntegrity(DataStructure& dataStructure, const DataPath& triGeomPat
     REQUIRE(b != c);
     REQUIRE(a != c);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath).getDataStoreRef();
   for(usize i = 0; i < numTriangles; i++)
   {
     REQUIRE(faceLabelStore[i * 2 + 0] <= faceLabelStore[i * 2 + 1]);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(nodeTypesPath));
-  const auto& nodeTypeStore = dataStructure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+  const auto& nodeTypeStore = dataStructure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
   for(usize i = 0; i < numVertices; i++)
   {
     REQUIRE(nodeTypeStore[i] > 0);
@@ -131,9 +131,9 @@ void CheckMeshWithinVolume(const DataStructure& dataStructure, const DataPath& t
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(imageGeomPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 origin = imageGeom.getOrigin();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
 
   const std::array<float32, 3> lo = {origin[0], origin[1], origin[2]};
   const std::array<float32, 3> hi = {origin[0] + static_cast<float32>(dims[0]) * spacing[0], origin[1] + static_cast<float32>(dims[1]) * spacing[1],
@@ -171,8 +171,8 @@ void CheckMeshWithinVolume(const DataStructure& dataStructure, const DataPath& t
   // plane fails on real data for that reason. Spurious geometry generated inside the ghost shell
   // still violates the per-vertex form, which is what this guards.
   const auto& triStore = tri.getFaces()->getDataStoreRef();
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath).getDataStoreRef();
 
   for(usize i = 0; i < tri.getNumberOfFaces(); i++)
   {
@@ -203,12 +203,12 @@ void CheckMeshWithinVolume(const DataStructure& dataStructure, const DataPath& t
  */
 void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // The QuickSurfaceMesh fixture supplies a segmented Small IN100 volume.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
   auto baseDataFilePath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
@@ -248,8 +248,8 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, 2 + selectedCellArrayPaths.size() + selectedFeatureArrayPaths.size());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
+    unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, 2 + selectedCellArrayPaths.size() + selectedFeatureArrayPaths.size());
     std::vector<DataPath> expectedArrayPaths = {vertexGroupDataPath.createChildPath(k_NodeTypeArrayName), faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces)};
     for(const auto& path : selectedCellArrayPaths)
     {
@@ -259,7 +259,7 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
     {
       expectedArrayPaths.push_back(faceGroupDataPath.createChildPath(path.getTargetName()));
     }
-    UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, expectedArrayPaths);
+    unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, expectedArrayPaths);
 
     auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -280,8 +280,8 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
   REQUIRE(numVertices > 0);
 
   // FaceLabels and NodeTypes must use the triangle and vertex tuple counts.
-  const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces));
-  const auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(vertexGroupDataPath.createChildPath(k_NodeTypeArrayName));
+  const auto& faceLabels = dataStructure.getDataRefAs<Int32ArrayType>(faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces));
+  const auto& nodeTypes = dataStructure.getDataRefAs<Int8ArrayType>(vertexGroupDataPath.createChildPath(k_NodeTypeArrayName));
   REQUIRE(faceLabels.getNumberOfTuples() == numTriangles);
   REQUIRE(faceLabels.getNumberOfComponents() == 2);
   REQUIRE(nodeTypes.getNumberOfTuples() == numVertices);
@@ -317,7 +317,7 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
   }
   (void)vertStore;
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -348,7 +348,7 @@ namespace
 template <typename LabelFuncT>
 void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[maybe_unused]] const std::string& outputName)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -360,7 +360,7 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleDims, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleDims, std::vector<usize>{1}, cellAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", tupleDims, std::vector<usize>{1}, cellAmPtr->getId());
   auto& fidStore = featureIdsPtr->getDataStoreRef();
   usize idx = 0;
   for(usize z = 0; z < zDim; z++)
@@ -390,7 +390,7 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -593,7 +593,7 @@ void ExecuteM3CParityCase(DataStructure& dataStructure, AlgorithmTestScope& scop
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][M3CSurfaceMeshingFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion" / "6_5" / "M3CSurfaceMeshingFilter.json";
@@ -647,7 +647,7 @@ void RunM3COnSmallIn100(DataStructure& dataStructure)
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
@@ -659,13 +659,13 @@ void RunM3COnSmallIn100(DataStructure& dataStructure)
 DataStructure LoadSmallIn100Input()
 {
   auto inputPath = fs::path(fmt::format("{}/quick_surface_mesh_test_v3/quick_surface_mesh_test_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
-  return UnitTest::LoadDataStructure(inputPath);
+  return unit_test::LoadDataStructure(inputPath);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Error -90201 requires selected cell arrays to match the geometry cell count.
   SECTION("Cell transfer array tuple mismatch -> error -90201")
@@ -677,10 +677,10 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
     REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAmPtr->getId());
+    Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAmPtr->getId());
     // This transfer array has five tuples, while FeatureIds has eight.
     auto* badAmPtr = AttributeMatrix::Create(dataStructure, "Bad", std::vector<usize>{5}, imageGeomPtr->getId());
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "BadArray", std::vector<usize>{5}, std::vector<usize>{1}, badAmPtr->getId());
+    Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "BadArray", std::vector<usize>{5}, std::vector<usize>{1}, badAmPtr->getId());
 
     Arguments args;
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry"})));
@@ -694,9 +694,9 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
 
     M3CSurfaceMeshingFilter filter;
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
     bool has90201 = false;
-    for(const auto& err : preflightResult.outputActions.errors())
+    for(const auto& err : preflightResult.output_actions.errors())
     {
       if(err.code == -90201)
       {
@@ -713,10 +713,10 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
     auto* rectGridPtr = RectGridGeom::Create(dataStructure, "RectGrid");
     rectGridPtr->setDimensions({2, 2, 2});
     const char* axes[3] = {"xBounds", "yBounds", "zBounds"};
-    Float32Array* bounds[3];
+    Float32ArrayType* bounds[3];
     for(int a = 0; a < 3; a++)
     {
-      bounds[a] = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, axes[a], std::vector<usize>{3}, std::vector<usize>{1}, rectGridPtr->getId());
+      bounds[a] = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, axes[a], std::vector<usize>{3}, std::vector<usize>{1}, rectGridPtr->getId());
       bounds[a]->setValue(0, 0.0f);
       bounds[a]->setValue(1, 1.0f);
       bounds[a]->setValue(2, 2.0f);
@@ -725,7 +725,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
     SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", std::vector<usize>{2, 2, 2}, rectGridPtr->getId());
     rectGridPtr->setCellData(*cellAmPtr);
-    Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAmPtr->getId());
+    Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", std::vector<usize>{2, 2, 2}, std::vector<usize>{1}, cellAmPtr->getId());
 
     Arguments args;
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"RectGrid"})));
@@ -738,7 +738,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
 
     M3CSurfaceMeshingFilter filter;
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
   }
 }
 
@@ -758,8 +758,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[Simpl
 // by those invariants first, and its provenance recorded.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGenerateExemplar]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
@@ -778,10 +778,10 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGen
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Small IN100 structural validation", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Only the INPUT dataset is needed. The M3CSurfaceMeshingExemplar_v2 archive is no longer read -
   // see the note below on why the golden comparison was replaced.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
@@ -803,20 +803,20 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Small IN100 structural validati
   CheckMeshIntegrity(dataStructure, k_ExemplarMeshPath, faceLabelsPath, nodeTypesPath);
   CheckMeshWithinVolume(dataStructure, k_ExemplarMeshPath, faceLabelsPath, DataPath({k_DataContainer}));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source volume", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Every cell is its own Feature, so interfaces exist along all three axes and no axis can pass by
   // accident. A non-unit spacing and a non-zero origin are used deliberately: the two defects this
   // guards against were a half-CELL offset and a one-CELL overhang, either of which would be masked
   // by the common origin=0, spacing=1 case where those magnitudes coincide with round numbers.
   auto [dimX, dimY, dimZ] = GENERATE(std::make_tuple(2, 2, 2), std::make_tuple(3, 2, 4), std::make_tuple(2, 2, 1));
-  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
-  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3Type origin(10.0f, -5.0f, 2.5f);
+  const FloatVec3Type spacing(0.25f, 2.0f, 0.5f);
 
   DYNAMIC_SECTION("dims " << dimX << "x" << dimY << "x" << dimZ)
   {
@@ -828,7 +828,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
     const std::vector<usize> tupleShape = {static_cast<usize>(dimZ), static_cast<usize>(dimY), static_cast<usize>(dimX)};
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
     auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
     for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
     {
@@ -847,7 +847,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -878,13 +878,13 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
       REQUIRE(maxC == Approx(expectedHi));
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly the bounding box", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // A volume containing one Feature has no interior interfaces at all, so the entire mesh is the
   // exterior surface and must be exactly the bounding box of the volume - nothing inside it, nothing
@@ -892,8 +892,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   //
   // This is the case the ghost-shell defect distorted most visibly: with six distinct sentinels the
   // shell triangulated against itself and wrapped the box in extra surface.
-  const FloatVec3 origin(-1.0f, 3.0f, 0.5f);
-  const FloatVec3 spacing(2.0f, 0.5f, 1.5f);
+  const FloatVec3Type origin(-1.0f, 3.0f, 0.5f);
+  const FloatVec3Type spacing(2.0f, 0.5f, 1.5f);
   const usize dimX = 3;
   const usize dimY = 2;
   const usize dimZ = 2;
@@ -906,7 +906,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   const std::vector<usize> tupleShape = {dimZ, dimY, dimX};
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
   {
@@ -925,14 +925,14 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
   const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
   const auto& vertStore = tri.getVertices()->getDataStoreRef();
-  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath).getDataStoreRef();
 
   const std::array<float32, 3> lo = {origin[0], origin[1], origin[2]};
   const std::array<float32, 3> hi = {origin[0] + static_cast<float32>(dimX) * spacing[0], origin[1] + static_cast<float32>(dimY) * spacing[1], origin[2] + static_cast<float32>(dimZ) * spacing[2]};
@@ -960,7 +960,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
     REQUIRE(onBoundary);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -1044,18 +1044,18 @@ const DataPath k_SweepPathTriGeomPath({"M3CSweepPathMesh"});
 // Box Skin option's 'Background-Backed Walls Only' mode enabled, forcing the sweep path selected by the two M3C_* environment variables (see
 // M3CSurfaceMeshing::operator()()). Passing false/false for both selects the default parallel
 // sliding-window path.
-SurfaceMeshingTest::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool serial)
+surface_meshing_test::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool serial)
 {
   const ScopedEnvVar wholeVolumeVar("M3C_WHOLE_VOLUME", wholeVolume ? "1" : nullptr);
   const ScopedEnvVar serialVar("M3C_SERIAL", serial ? "1" : nullptr);
-  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SweepPathTriGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
+  return surface_meshing_test::RunMesher<M3CSurfaceMeshingFilter>(surface_meshing_test::CreateCylinderInBox(true), k_SweepPathTriGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
                                                                 [](Arguments&) {});
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across sweep paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // M3C's two serial paths (runEntireVolume and runWindowed(false)) are documented as byte-identical to
   // each other, including the exact triangulation. The default parallel path (runWindowed(true)) is
@@ -1066,16 +1066,16 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across
   // Skin option's 'Background-Backed Walls Only' mode enabled: the prune runs once, inside the shared
   // finalizeMesh(), after all three paths have produced their triangles/mCubeID vectors, so it should
   // not disturb this invariant either way.
-  SurfaceMeshingTest::MeshResult wholeVolumeResult = RunM3COmitSkinOnPath(/*wholeVolume*/ true, /*serial*/ false);
-  SurfaceMeshingTest::MeshResult serialWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ true);
-  SurfaceMeshingTest::MeshResult parallelWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ false);
+  surface_meshing_test::MeshResult wholeVolumeResult = RunM3COmitSkinOnPath(/*wholeVolume*/ true, /*serial*/ false);
+  surface_meshing_test::MeshResult serialWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ true);
+  surface_meshing_test::MeshResult parallelWindowedResult = RunM3COmitSkinOnPath(/*wholeVolume*/ false, /*serial*/ false);
 
-  REQUIRE_NOTHROW(wholeVolumeResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
-  REQUIRE_NOTHROW(serialWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
-  REQUIRE_NOTHROW(parallelWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
-  const auto& wholeVolumeGeom = wholeVolumeResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
-  const auto& serialWindowedGeom = serialWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
-  const auto& parallelWindowedGeom = parallelWindowedResult.Structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
+  REQUIRE_NOTHROW(wholeVolumeResult.structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
+  REQUIRE_NOTHROW(serialWindowedResult.structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
+  REQUIRE_NOTHROW(parallelWindowedResult.structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath));
+  const auto& wholeVolumeGeom = wholeVolumeResult.structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
+  const auto& serialWindowedGeom = serialWindowedResult.structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
+  const auto& parallelWindowedGeom = parallelWindowedResult.structure.getDataRefAs<TriangleGeom>(k_SweepPathTriGeomPath);
 
   REQUIRE(wholeVolumeGeom.getNumberOfVertices() == serialWindowedGeom.getNumberOfVertices());
   REQUIRE(wholeVolumeGeom.getNumberOfVertices() == parallelWindowedGeom.getNumberOfVertices());
@@ -1083,29 +1083,29 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across
   REQUIRE(wholeVolumeGeom.getNumberOfFaces() == parallelWindowedGeom.getNumberOfFaces());
 
   // Vertices (Shared Vertex List) must match exactly across all three paths.
-  UnitTest::CompareArrays<float32>(wholeVolumeGeom.getVertices(), serialWindowedGeom.getVertices());
-  UnitTest::CompareArrays<float32>(wholeVolumeGeom.getVertices(), parallelWindowedGeom.getVertices());
+  unit_test::CompareArrays<float32>(wholeVolumeGeom.getVertices(), serialWindowedGeom.getVertices());
+  unit_test::CompareArrays<float32>(wholeVolumeGeom.getVertices(), parallelWindowedGeom.getVertices());
 
   // Shared Faces List: only the two serial paths are guaranteed to match exactly (see comment above).
-  UnitTest::CompareArrays<IGeometry::MeshIndexType>(wholeVolumeGeom.getFaces(), serialWindowedGeom.getFaces());
+  unit_test::CompareArrays<IGeometry::MeshIndexType>(wholeVolumeGeom.getFaces(), serialWindowedGeom.getFaces());
 
   // RunM3COmitSkinOnPath (via SurfaceMeshingTest::RunMesher) creates "FaceLabels" and "NodeTypes" --
   // NOT the nx::core::UnitTest::k_FaceLabelsWithSpaces ("Face Labels") / k_NodeTypeArrayName ("Node Type")
   // constants used elsewhere in this file for the SIMPL-compatibility/exemplar tests.
-  const DataPath faceLabelsPath = wholeVolumeResult.FaceLabelsPath;
+  const DataPath faceLabelsPath = wholeVolumeResult.face_labels_path;
   const DataPath nodeTypesPath = k_SweepPathTriGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
 
   // Face Labels must match exactly across all three paths.
-  UnitTest::CompareArrays<int32>(wholeVolumeResult.Structure.getDataAs<IArray>(faceLabelsPath), serialWindowedResult.Structure.getDataAs<IArray>(faceLabelsPath));
-  UnitTest::CompareArrays<int32>(wholeVolumeResult.Structure.getDataAs<IArray>(faceLabelsPath), parallelWindowedResult.Structure.getDataAs<IArray>(faceLabelsPath));
+  unit_test::CompareArrays<int32>(wholeVolumeResult.structure.getDataAs<IArray>(faceLabelsPath), serialWindowedResult.structure.getDataAs<IArray>(faceLabelsPath));
+  unit_test::CompareArrays<int32>(wholeVolumeResult.structure.getDataAs<IArray>(faceLabelsPath), parallelWindowedResult.structure.getDataAs<IArray>(faceLabelsPath));
 
   // Node Types must match exactly across all three paths.
-  UnitTest::CompareArrays<int8>(wholeVolumeResult.Structure.getDataAs<IArray>(nodeTypesPath), serialWindowedResult.Structure.getDataAs<IArray>(nodeTypesPath));
-  UnitTest::CompareArrays<int8>(wholeVolumeResult.Structure.getDataAs<IArray>(nodeTypesPath), parallelWindowedResult.Structure.getDataAs<IArray>(nodeTypesPath));
+  unit_test::CompareArrays<int8>(wholeVolumeResult.structure.getDataAs<IArray>(nodeTypesPath), serialWindowedResult.structure.getDataAs<IArray>(nodeTypesPath));
+  unit_test::CompareArrays<int8>(wholeVolumeResult.structure.getDataAs<IArray>(nodeTypesPath), parallelWindowedResult.structure.getDataAs<IArray>(nodeTypesPath));
 
-  UnitTest::CheckArraysInheritTupleDims(wholeVolumeResult.Structure);
-  UnitTest::CheckArraysInheritTupleDims(serialWindowedResult.Structure);
-  UnitTest::CheckArraysInheritTupleDims(parallelWindowedResult.Structure);
+  unit_test::CheckArraysInheritTupleDims(wholeVolumeResult.structure);
+  unit_test::CheckArraysInheritTupleDims(serialWindowedResult.structure);
+  unit_test::CheckArraysInheritTupleDims(parallelWindowedResult.structure);
 }
 
 namespace
@@ -1120,7 +1120,7 @@ const DataPath k_SharpEdgesNodeTypesPath = k_SharpEdgesTriGeomPath.createChildPa
 // an arbitrary spacing and origin, so that a half-cell snap along one axis cannot be confused with one along
 // another, and so that the float arithmetic is exercised away from round numbers.
 template <typename LabelFuncT>
-DataStructure BuildToyVolume(const SizeVec3& dims, const FloatVec3& spacing, const FloatVec3& origin, LabelFuncT&& labeler)
+DataStructure BuildToyVolume(const SizeVec3Type& dims, const FloatVec3Type& spacing, const FloatVec3Type& origin, LabelFuncT&& labeler)
 {
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_SharpEdgesImageGeomPath.getTargetName());
@@ -1130,7 +1130,7 @@ DataStructure BuildToyVolume(const SizeVec3& dims, const FloatVec3& spacing, con
   const std::vector<usize> tupleShape = {dims[2], dims[1], dims[0]};
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", tupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", tupleShape, std::vector<usize>{1}, cellAmPtr->getId());
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   usize idx = 0;
   for(usize z = 0; z < dims[2]; z++)
@@ -1164,7 +1164,7 @@ void RunM3CSharpEdges(DataStructure& dataStructure, bool sharpEdges)
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -1182,9 +1182,9 @@ VolumeBounds GetVolumeBounds(const DataStructure& dataStructure, const DataPath&
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(imageGeomPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 origin = imageGeom.getOrigin();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   VolumeBounds bounds{};
   for(usize ax = 0; ax < 3; ax++)
   {
@@ -1208,8 +1208,8 @@ usize CountWallBridgingTriangles(const DataStructure& dataStructure, const DataP
   const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(triGeomPath);
   const auto& vertStore = tri.getVertices()->getDataStoreRef();
   const auto& triStore = tri.getFaces()->getDataStoreRef();
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(faceLabelsPath));
-  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath));
+  const auto& faceLabelStore = dataStructure.getDataRefAs<Int32ArrayType>(faceLabelsPath).getDataStoreRef();
 
   usize numBridging = 0;
   for(usize i = 0; i < tri.getNumberOfFaces(); i++)
@@ -1324,13 +1324,13 @@ int32 UniqueCellLabeler(usize x, usize y, usize z)
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Non-unit, anisotropic spacing and a non-zero origin: the half-cell snap distance differs per axis, so a
   // snap applied along the wrong axis (or by the wrong amount) cannot pass by coincidence.
-  const SizeVec3 dims(4, 3, 5);
-  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
-  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+  const SizeVec3Type dims(4, 3, 5);
+  const FloatVec3Type spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3Type origin(10.0f, -5.0f, 2.5f);
 
   using LabelerFnType = int32 (*)(usize, usize, usize);
   const auto [labelerName, labeler] =
@@ -1368,19 +1368,19 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges", "[Si
     if(std::string(labelerName) == "single feature")
     {
       const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath);
-      const SurfaceMeshingTest::EdgeUseCounts counts = SurfaceMeshingTest::CountEdgeUses(tri);
-      INFO("edge use counts -- Total: " << counts.TotalEdges << " UsedOnce: " << counts.EdgesUsedOnce << " UsedTwice: " << counts.EdgesUsedTwice
-                                        << " UsedMoreThanTwice: " << counts.EdgesUsedMoreThanTwice);
-      REQUIRE(SurfaceMeshingTest::IsWatertight(tri));
+      const surface_meshing_test::EdgeUseCounts counts = surface_meshing_test::CountEdgeUses(tri);
+      INFO("edge use counts -- Total: " << counts.total_edges << " UsedOnce: " << counts.edges_used_once << " UsedTwice: " << counts.edges_used_twice
+                                        << " UsedMoreThanTwice: " << counts.edges_used_more_than_twice);
+      REQUIRE(surface_meshing_test::IsWatertight(tri));
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on Small IN100", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
+  unit_test::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "quick_surface_mesh_test_v3.tar.gz", "quick_surface_mesh_test_v3");
 
   // Real segmented data: hundreds of Features, so triple lines and quad points run into every wall and
   // box edge. The option is on by default, which is what RunM3COnSmallIn100 uses.
@@ -1395,19 +1395,19 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on Sma
   RequireBoxCornersPresent(dataStructure, k_ExemplarMeshPath, imageGeomPath);
   RequireNoCoincidentVertices(dataStructure, k_ExemplarMeshPath);
   RequireMeshReachesBounds(dataStructure, k_ExemplarMeshPath, imageGeomPath);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on a one-cell-thick volume", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Along an axis that is only one cell thick, the single row of wall vertices is within half a cell of BOTH
   // bounding planes on that axis, so there is no unambiguous edge to snap it to; the option leaves that axis
   // chamfered. The other two axes are still sharpened, and the mesh must stay well-formed and span the volume.
-  const SizeVec3 dims(4, 3, 1);
-  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
-  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+  const SizeVec3Type dims(4, 3, 1);
+  const FloatVec3Type spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3Type origin(10.0f, -5.0f, 2.5f);
 
   DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, TripleLineLabeler);
   RunM3CSharpEdges(dataStructure, true);
@@ -1435,16 +1435,16 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on a o
     INFO("vertical box edge at (" << cx << ", " << cy << ") has no vertex at z = " << zMid);
     REQUIRE(found);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp edges with multiple thin axes", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto dims = GENERATE(SizeVec3(1, 1, 1), SizeVec3(1, 1, 4), SizeVec3(1, 4, 1), SizeVec3(4, 1, 1), SizeVec3(1, 4, 3), SizeVec3(4, 1, 3));
+  unit_test::LoadPlugins();
+  const auto dims = GENERATE(SizeVec3Type(1, 1, 1), SizeVec3Type(1, 1, 4), SizeVec3Type(1, 4, 1), SizeVec3Type(4, 1, 1), SizeVec3Type(1, 4, 3), SizeVec3Type(4, 1, 3));
   CAPTURE(dims[0], dims[1], dims[2]);
-  const FloatVec3 spacing(0.25f, 2.0f, 0.5f);
-  const FloatVec3 origin(10.0f, -5.0f, 2.5f);
+  const FloatVec3Type spacing(0.25f, 2.0f, 0.5f);
+  const FloatVec3Type origin(10.0f, -5.0f, 2.5f);
   DataStructure dataStructure = BuildToyVolume(dims, spacing, origin, SingleFeatureLabeler);
   RunM3CSharpEdges(dataStructure, true);
 
@@ -1454,8 +1454,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp edges with multiple thin 
   CheckMeshIntegrity(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesNodeTypesPath);
   CheckMeshWithinVolume(dataStructure, k_SharpEdgesTriGeomPath, k_SharpEdgesFaceLabelsPath, k_SharpEdgesImageGeomPath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath));
-  REQUIRE(SurfaceMeshingTest::IsWatertight(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath)));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(surface_meshing_test::IsWatertight(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath)));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Regression for a user-reported defect: a grain surface came out of M3C with two tunnels (handles) that the
@@ -1467,7 +1467,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp edges with multiple thin 
 // M3CSliceBySlice did, keeps label 2's closed surface a sphere.
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Saddle tie does not add handles", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   constexpr usize k_BlockX = 6;
   constexpr usize k_BlockY = 6;
@@ -1483,9 +1483,9 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Saddle tie does not add handles
   constexpr int32 k_GrainLabel = 2;
 
   // One cell of label 1 padding on every side so label 2 is a closed, interior feature.
-  const SizeVec3 dims(k_BlockX + 2, k_BlockY + 2, k_BlockZ + 2);
-  const FloatVec3 spacing(1.0f, 1.0f, 1.0f);
-  const FloatVec3 origin(0.0f, 0.0f, 0.0f);
+  const SizeVec3Type dims(k_BlockX + 2, k_BlockY + 2, k_BlockZ + 2);
+  const FloatVec3Type spacing(1.0f, 1.0f, 1.0f);
+  const FloatVec3Type origin(0.0f, 0.0f, 0.0f);
   auto labeler = [&](usize x, usize y, usize z) -> int32 {
     if(x == 0 || y == 0 || z == 0 || x > k_BlockX || y > k_BlockY || z > k_BlockZ)
     {
@@ -1501,8 +1501,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Saddle tie does not add handles
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath));
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_SharpEdgesTriGeomPath);
   const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_SharpEdgesFaceLabelsPath));
-  const auto& faceLabelsRef = dataStructure.getDataRefAs<Int32Array>(k_SharpEdgesFaceLabelsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_SharpEdgesFaceLabelsPath));
+  const auto& faceLabelsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_SharpEdgesFaceLabelsPath).getDataStoreRef();
 
   // Euler characteristic V - E + F of the closed surface bounding label 2.
   std::set<usize> vertexIds;
@@ -1537,7 +1537,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Saddle tie does not add handles
   INFO("label " << k_GrainLabel << ": V = " << numVertices << ", E = " << numEdges << ", F = " << numFaces << ", V - E + F = " << eulerCharacteristic << " (2 = sphere, each handle subtracts 2)");
   REQUIRE(eulerCharacteristic == 2);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Geometry cell tuple count", "[SimplnxCore][M3CSurfaceMeshingFilter][TupleCount]")
@@ -1575,13 +1575,13 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Geometry cell tuple count", "[S
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12 && !shortSecondInput)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -90201);
     const DataPath expectedPath = tuples != 12 ? inputPath : secondPath;
     const usize expectedTuples = tuples != 12 ? tuples : usize{10};

@@ -54,43 +54,43 @@ nlohmann::json ReadCSVData::writeJson() const
   nlohmann::json json;
 
   nlohmann::json dHeaders;
-  for(const auto& header : customHeaders)
+  for(const auto& header : custom_headers)
   {
     dHeaders.push_back(header);
   }
   json[k_CustomHeadersKey] = dHeaders;
 
   nlohmann::json dTypes;
-  for(const auto& dType : dataTypes)
+  for(const auto& dType : data_types)
   {
     dTypes.push_back(dType);
   }
   json[k_DataTypesKey] = dTypes;
 
   nlohmann::json tDims;
-  for(const auto& tDim : tupleDims)
+  for(const auto& tDim : tuple_dims)
   {
     tDims.push_back(tDim);
   }
   json[k_TupleDimensionsKey] = tDims;
 
   nlohmann::json dSkippedArrays;
-  for(const auto& skippedArrayVal : skippedArrayMask)
+  for(const auto& skippedArrayVal : skipped_array_mask)
   {
     dSkippedArrays.push_back(skippedArrayVal);
   }
   json[k_SkippedArrayMaskKey] = dSkippedArrays;
 
-  json[k_InputFilePathKey] = inputFilePath;
-  json[k_StartImportRowKey] = startImportRow;
-  json[k_HeaderLineKey] = headersLine;
-  json[k_HeaderModeKey] = headerMode;
+  json[k_InputFilePathKey] = input_file_path;
+  json[k_StartImportRowKey] = start_import_row;
+  json[k_HeaderLineKey] = headers_line;
+  json[k_HeaderModeKey] = header_mode;
 
   std::vector<std::string> stringVec(delimiters.size());
   std::transform(delimiters.begin(), delimiters.end(), stringVec.begin(), [](char c) { return std::string(1, c); });
   json[k_Delimiters] = stringVec;
 
-  json[k_ConsecutiveDelimitersKey] = consecutiveDelimiters;
+  json[k_ConsecutiveDelimitersKey] = consecutive_delimiters;
 
   return json;
 }
@@ -114,7 +114,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
       return MakeErrorResult<ReadCSVData>(-101, fmt::format("ReadCSVData: Custom header at index {} is of type {} and is not a string.", std::to_string(i), header.type_name()));
     }
 
-    data.customHeaders.push_back(header);
+    data.custom_headers.push_back(header);
   }
 
   if(!json.contains(k_DataTypesKey))
@@ -131,7 +131,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
       return MakeErrorResult<ReadCSVData>(-103, fmt::format("ReadCSVData: Data type at index {} is of type {} and is not an integer.", std::to_string(i), dType.type_name()));
     }
 
-    data.dataTypes.push_back(dType);
+    data.data_types.push_back(dType);
   }
 
   if(!json.contains(k_TupleDimensionsKey))
@@ -140,10 +140,10 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   }
 
   const nlohmann::json& tDims = json[k_TupleDimensionsKey];
-  data.tupleDims.clear();
+  data.tuple_dims.clear();
   for(const auto& tDim : tDims)
   {
-    data.tupleDims.push_back(tDim);
+    data.tuple_dims.push_back(tDim);
   }
 
   if(!json.contains(k_SkippedArrayMaskKey))
@@ -160,7 +160,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
       return MakeErrorResult<ReadCSVData>(-106, fmt::format("ReadCSVData: Skipped array value at index {} is of type {} and is not a boolean.", std::to_string(i), skippedArrayVal.type_name()));
     }
 
-    data.skippedArrayMask.push_back(skippedArrayVal);
+    data.skipped_array_mask.push_back(skippedArrayVal);
   }
 
   if(!json.contains(k_InputFilePathKey))
@@ -171,7 +171,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-108, fmt::format("ReadCSVData: 'Input File Path' value is of type {} and is not a string.", json[k_InputFilePathKey].type_name()));
   }
-  data.inputFilePath = json[k_InputFilePathKey];
+  data.input_file_path = json[k_InputFilePathKey];
 
   if(!json.contains(k_StartImportRowKey))
   {
@@ -181,7 +181,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-110, fmt::format("ReadCSVData: 'Begin Index' value is of type {} and is not an integer.", json[k_StartImportRowKey].type_name()));
   }
-  data.startImportRow = json[k_StartImportRowKey];
+  data.start_import_row = json[k_StartImportRowKey];
 
   if(!json.contains(k_HeaderLineKey))
   {
@@ -191,7 +191,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-114, fmt::format("ReadCSVData: 'Header Line' value is of type {} and is not an integer.", json[k_HeaderLineKey].type_name()));
   }
-  data.headersLine = json[k_HeaderLineKey];
+  data.headers_line = json[k_HeaderLineKey];
 
   if(!json.contains(k_HeaderModeKey))
   {
@@ -201,7 +201,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-116, fmt::format("ReadCSVData: 'Header Mode' value is of type {} and is not an integer.", json[k_HeaderModeKey].type_name()));
   }
-  data.headerMode = json[k_HeaderModeKey];
+  data.header_mode = json[k_HeaderModeKey];
 
   if(!json.contains(k_Delimiters))
   {
@@ -234,7 +234,7 @@ Result<ReadCSVData> ReadCSVData::ReadJson(const nlohmann::json& json)
   {
     return MakeErrorResult<ReadCSVData>(-126, fmt::format("ReadCSVData: 'Consecutive Delimiters' value is of type {} and is not a boolean.", json[k_ConsecutiveDelimitersKey].type_name()));
   }
-  data.consecutiveDelimiters = json[k_ConsecutiveDelimitersKey];
+  data.consecutive_delimiters = json[k_ConsecutiveDelimitersKey];
 
   return {data};
 }

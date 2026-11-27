@@ -92,7 +92,7 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to", static_cast<ChoicesParameter::ValueType>(0),
-      ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // Choice order matches InitializeType values.
+      ChoicesParameter::ChoicesType{"Fill Value", "Incremental", "Random", "Random With Range"})); // Choice order matches InitializeType values.
 
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
@@ -101,7 +101,7 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
       k_StartingFillValue_Key, "Starting Value [Seperated with ;]",
       "The value to start incrementing from. Ex: 6;8;12 would increment a 3-component array starting at 6 for the first component, 8 for the 2nd, and 12 for the 3rd.", "0;1;2"));
   params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to perform", static_cast<ChoicesParameter::ValueType>(0),
-                                                   ChoicesParameter::Choices{"Addition", "Subtraction"}));
+                                                   ChoicesParameter::ChoicesType{"Addition", "Subtraction"}));
   params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Step Value [Seperated with ;]", "The number to add/subtract the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true, the Seed Value will be used to seed the generator", false));
@@ -170,7 +170,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   auto componentDimensions = ConvertDimensions(compDimsData.at(0), "Component", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78605);
   if(componentDimensions.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
   }
   ShapeType compDims = std::move(componentDimensions.value());
   // Conversion has already checked the product.
@@ -178,7 +178,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   const usize previewCapacity = std::min(std::vector<float64>().max_size(), std::vector<std::string>().max_size());
   if(numComponents > previewCapacity)
   {
-    return MakePreflightErrorResult(DimensionConversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.", numComponents,
+    return MakePreflightErrorResult(dimension_conversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.", numComponents,
                                                                                           dataArrayPath.toString(), previewCapacity));
   }
 
@@ -197,7 +197,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
     auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78603);
     if(dimensions.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     tupleDims = std::move(dimensions.value());
   }
@@ -216,7 +216,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   auto tupleCount = ComputeDimensionProduct(tupleDims, "Tuple");
   if(tupleCount.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
   }
   const usize numTuples = tupleCount.value();
 
@@ -237,9 +237,9 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   {
   case InitializeType::FillValue: {
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitValue_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     CreateFillPreflightVals(initFillValue, numComponents, preflightUpdatedValues);
@@ -248,15 +248,15 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   case InitializeType::Incremental: {
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_StartingFillValue_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_StepValue_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComponents, preflightUpdatedValues);
@@ -265,21 +265,21 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   case InitializeType::RangedRandom: {
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitStartRange_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitEndRange_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateRangeOrderFunctor{}, arrayDataType, numComponents, initStartRange, initEndRange);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {.outputActions = MergeResults(result.outputActions, std::move(resultOutputActions)), .outputValues = std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     [[fallthrough]];
@@ -294,7 +294,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -313,20 +313,20 @@ Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure
   if(initType == InitializeType::Random || initType == InitializeType::RangedRandom)
   {
     // The stored seed makes random initialization reproducible.
-    dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+    dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
   }
 
   InitializeDataInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
-  inputValues.initType = initType;
-  inputValues.stepType = static_cast<StepType>(filterArgs.value<uint64>(k_StepOperation_Key));
-  inputValues.stringValues = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
-  inputValues.startValues = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
-  inputValues.stepValues = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
+  inputValues.input_array_path = filterArgs.value<DataPath>(k_DataPath_Key);
+  inputValues.init_type = initType;
+  inputValues.step_type = static_cast<StepType>(filterArgs.value<uint64>(k_StepOperation_Key));
+  inputValues.string_values = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
+  inputValues.start_values = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
+  inputValues.step_values = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
   inputValues.seed = seed;
-  inputValues.randBegin = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
-  inputValues.randEnd = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
-  inputValues.standardizeSeed = filterArgs.value<bool>(k_StandardizeSeed_Key);
+  inputValues.rand_begin = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
+  inputValues.rand_end = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
+  inputValues.standardize_seed = filterArgs.value<bool>(k_StandardizeSeed_Key);
 
   return InitializeData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

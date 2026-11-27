@@ -44,60 +44,60 @@ struct WatershedVoxelRecord
 {
   uint32 output = 0;
   uint8 status = 0;
-  TInput grayValue = {};
+  TInput gray_value = {};
 };
 
 template <class TInput>
-using WatershedPackedVoxelRecord = std::array<std::byte, sizeof(uint32) + sizeof(uint8) + sizeof(TInput)>;
+using WatershedPackedVoxelRecordType = std::array<std::byte, sizeof(uint32) + sizeof(uint8) + sizeof(TInput)>;
 
-static_assert(sizeof(WatershedPackedVoxelRecord<uint8>) == 6);
-static_assert(sizeof(WatershedPackedVoxelRecord<uint16>) == 7);
-
-template <class TInput>
-using WatershedPackedResidentStatusVoxelRecord = std::array<std::byte, sizeof(uint32) + sizeof(TInput)>;
-
-static_assert(sizeof(WatershedPackedResidentStatusVoxelRecord<uint8>) == 5);
-static_assert(sizeof(WatershedPackedResidentStatusVoxelRecord<uint16>) == 6);
+static_assert(sizeof(WatershedPackedVoxelRecordType<uint8>) == 6);
+static_assert(sizeof(WatershedPackedVoxelRecordType<uint16>) == 7);
 
 template <class TInput>
-WatershedPackedVoxelRecord<TInput> EncodeWatershedPackedVoxelRecord(const WatershedVoxelRecord<TInput>& record) noexcept
+using WatershedPackedResidentStatusVoxelRecordType = std::array<std::byte, sizeof(uint32) + sizeof(TInput)>;
+
+static_assert(sizeof(WatershedPackedResidentStatusVoxelRecordType<uint8>) == 5);
+static_assert(sizeof(WatershedPackedResidentStatusVoxelRecordType<uint16>) == 6);
+
+template <class TInput>
+WatershedPackedVoxelRecordType<TInput> EncodeWatershedPackedVoxelRecord(const WatershedVoxelRecord<TInput>& record) noexcept
 {
   static_assert(std::is_trivially_copyable_v<TInput>);
-  WatershedPackedVoxelRecord<TInput> packed = {};
+  WatershedPackedVoxelRecordType<TInput> packed = {};
   std::memcpy(packed.data(), &record.output, sizeof(record.output));
   std::memcpy(packed.data() + sizeof(record.output), &record.status, sizeof(record.status));
-  std::memcpy(packed.data() + sizeof(record.output) + sizeof(record.status), &record.grayValue, sizeof(record.grayValue));
+  std::memcpy(packed.data() + sizeof(record.output) + sizeof(record.status), &record.gray_value, sizeof(record.gray_value));
   return packed;
 }
 
 template <class TInput>
-WatershedVoxelRecord<TInput> DecodeWatershedPackedVoxelRecord(const WatershedPackedVoxelRecord<TInput>& packed) noexcept
+WatershedVoxelRecord<TInput> DecodeWatershedPackedVoxelRecord(const WatershedPackedVoxelRecordType<TInput>& packed) noexcept
 {
   static_assert(std::is_trivially_copyable_v<TInput>);
   WatershedVoxelRecord<TInput> record;
   std::memcpy(&record.output, packed.data(), sizeof(record.output));
   std::memcpy(&record.status, packed.data() + sizeof(record.output), sizeof(record.status));
-  std::memcpy(&record.grayValue, packed.data() + sizeof(record.output) + sizeof(record.status), sizeof(record.grayValue));
+  std::memcpy(&record.gray_value, packed.data() + sizeof(record.output) + sizeof(record.status), sizeof(record.gray_value));
   return record;
 }
 
 template <class TInput>
-WatershedPackedResidentStatusVoxelRecord<TInput> EncodeWatershedPackedResidentStatusVoxelRecord(const WatershedVoxelRecord<TInput>& record) noexcept
+WatershedPackedResidentStatusVoxelRecordType<TInput> EncodeWatershedPackedResidentStatusVoxelRecord(const WatershedVoxelRecord<TInput>& record) noexcept
 {
   static_assert(std::is_trivially_copyable_v<TInput>);
-  WatershedPackedResidentStatusVoxelRecord<TInput> packed = {};
+  WatershedPackedResidentStatusVoxelRecordType<TInput> packed = {};
   std::memcpy(packed.data(), &record.output, sizeof(record.output));
-  std::memcpy(packed.data() + sizeof(record.output), &record.grayValue, sizeof(record.grayValue));
+  std::memcpy(packed.data() + sizeof(record.output), &record.gray_value, sizeof(record.gray_value));
   return packed;
 }
 
 template <class TInput>
-WatershedVoxelRecord<TInput> DecodeWatershedPackedResidentStatusVoxelRecord(const WatershedPackedResidentStatusVoxelRecord<TInput>& packed) noexcept
+WatershedVoxelRecord<TInput> DecodeWatershedPackedResidentStatusVoxelRecord(const WatershedPackedResidentStatusVoxelRecordType<TInput>& packed) noexcept
 {
   static_assert(std::is_trivially_copyable_v<TInput>);
   WatershedVoxelRecord<TInput> record;
   std::memcpy(&record.output, packed.data(), sizeof(record.output));
-  std::memcpy(&record.grayValue, packed.data() + sizeof(record.output), sizeof(record.grayValue));
+  std::memcpy(&record.gray_value, packed.data() + sizeof(record.output), sizeof(record.gray_value));
   return record;
 }
 
@@ -106,7 +106,7 @@ struct WatershedHeapRecord
 {
   TInput level = {};
   uint64 sequence = 0;
-  int64 flatIndex = 0;
+  int64 flat_index = 0;
 };
 
 struct WatershedBucketVoxelRecord
@@ -117,29 +117,29 @@ struct WatershedBucketVoxelRecord
 template <class TInput>
 struct WatershedExternalMemoryPlan
 {
-  bool useBucketQueue = false;
-  bool useSplitBucketState = false;
-  bool usePackedCombinedState = false;
-  bool usePackedResidentStatusState = false;
-  bool completePrimaryStateCache = false;
-  bool useTiledVoxelLayout = false;
-  bool useResidentStatus = false;
-  usize bucketCount = 0;
-  usize queueMetadataBytes = 0;
-  usize residentStatusWordCount = 0;
-  usize residentStatusBytes = 0;
-  usize voxelRecordBytes = 0;
-  usize voxelRecordsPerPage = 0;
-  usize voxelCachePages = 0;
-  usize inputRecordsPerPage = 0;
-  usize inputCachePages = 0;
-  usize bucketBlockCount = 0;
-  usize bucketBlocksPerPage = 0;
-  usize bucketCachePages = 0;
-  usize heapRecordsPerPage = 0;
-  usize heapCachePages = 0;
-  usize transferRecords = 0;
-  usize residentBytes = 0;
+  bool use_bucket_queue = false;
+  bool use_split_bucket_state = false;
+  bool use_packed_combined_state = false;
+  bool use_packed_resident_status_state = false;
+  bool complete_primary_state_cache = false;
+  bool use_tiled_voxel_layout = false;
+  bool use_resident_status = false;
+  usize bucket_count = 0;
+  usize queue_metadata_bytes = 0;
+  usize resident_status_word_count = 0;
+  usize resident_status_bytes = 0;
+  usize voxel_record_bytes = 0;
+  usize voxel_records_per_page = 0;
+  usize voxel_cache_pages = 0;
+  usize input_records_per_page = 0;
+  usize input_cache_pages = 0;
+  usize bucket_block_count = 0;
+  usize bucket_blocks_per_page = 0;
+  usize bucket_cache_pages = 0;
+  usize heap_records_per_page = 0;
+  usize heap_cache_pages = 0;
+  usize transfer_records = 0;
+  usize resident_bytes = 0;
 };
 
 template <class TInput>
@@ -152,19 +152,19 @@ struct WatershedExternalMemoryAllocation
 struct WatershedResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
 struct WatershedBucketEndpoints
 {
-  uint64 headBlock = std::numeric_limits<uint64>::max();
-  uint64 tailBlock = std::numeric_limits<uint64>::max();
-  uint32 headOffset = 0;
+  uint64 head_block = std::numeric_limits<uint64>::max();
+  uint64 tail_block = std::numeric_limits<uint64>::max();
+  uint32 head_offset = 0;
 };
 
 inline constexpr usize k_WatershedQueueBlockBytes = 4096;
@@ -173,8 +173,8 @@ inline constexpr uint64 k_WatershedInvalidQueueBlock = std::numeric_limits<uint6
 
 struct WatershedQueueBlock
 {
-  uint64 nextBlock = k_WatershedInvalidQueueBlock;
-  uint64 valueCount = 0;
+  uint64 next_block = k_WatershedInvalidQueueBlock;
+  uint64 value_count = 0;
   std::array<int64, k_WatershedQueueBlockValueCount> values = {};
 };
 
@@ -227,12 +227,12 @@ inline void GrowWatershedCachePages(usize pageBytes, usize availablePages, usize
 
 struct WatershedTiledRecordLayout
 {
-  SizeVec3 dimensions = {0, 0, 0};
-  SizeVec3 tileDimensions = {0, 0, 0};
-  SizeVec3 tileCounts = {0, 0, 0};
-  usize logicalRecordCount = 0;
-  usize recordCount = 0;
-  usize recordsPerPage = 0;
+  SizeVec3Type dimensions = {0, 0, 0};
+  SizeVec3Type tile_dimensions = {0, 0, 0};
+  SizeVec3Type tile_counts = {0, 0, 0};
+  usize logical_record_count = 0;
+  usize record_count = 0;
+  usize records_per_page = 0;
 
   usize physicalIndexUnchecked(usize logicalIndex) const noexcept
   {
@@ -240,35 +240,35 @@ struct WatershedTiledRecordLayout
     const usize yz = logicalIndex / dimensions[0];
     const usize y = yz % dimensions[1];
     const usize z = yz / dimensions[1];
-    const usize tileX = x / tileDimensions[0];
-    const usize tileY = y / tileDimensions[1];
-    const usize tileZ = z / tileDimensions[2];
-    const usize localX = x % tileDimensions[0];
-    const usize localY = y % tileDimensions[1];
-    const usize localZ = z % tileDimensions[2];
-    const usize tileIndex = (tileZ * tileCounts[1] + tileY) * tileCounts[0] + tileX;
-    const usize localIndex = (localZ * tileDimensions[1] + localY) * tileDimensions[0] + localX;
-    return tileIndex * recordsPerPage + localIndex;
+    const usize tileX = x / tile_dimensions[0];
+    const usize tileY = y / tile_dimensions[1];
+    const usize tileZ = z / tile_dimensions[2];
+    const usize localX = x % tile_dimensions[0];
+    const usize localY = y % tile_dimensions[1];
+    const usize localZ = z % tile_dimensions[2];
+    const usize tileIndex = (tileZ * tile_counts[1] + tileY) * tile_counts[0] + tileX;
+    const usize localIndex = (localZ * tile_dimensions[1] + localY) * tile_dimensions[0] + localX;
+    return tileIndex * records_per_page + localIndex;
   }
 
   Result<usize> physicalIndex(usize logicalIndex) const
   {
-    if(logicalIndex >= logicalRecordCount || dimensions[0] == 0 || dimensions[1] == 0 || tileDimensions[0] == 0 || tileDimensions[1] == 0 || tileDimensions[2] == 0)
+    if(logicalIndex >= logical_record_count || dimensions[0] == 0 || dimensions[1] == 0 || tile_dimensions[0] == 0 || tile_dimensions[1] == 0 || tile_dimensions[2] == 0)
     {
-      return MakeErrorResult<usize>(-79072, fmt::format("External watershed tiled layout rejected logical index {}. Logical records: {}; dimensions: {} x {} x {}.", logicalIndex, logicalRecordCount,
+      return MakeErrorResult<usize>(-79072, fmt::format("External watershed tiled layout rejected logical index {}. Logical records: {}; dimensions: {} x {} x {}.", logicalIndex, logical_record_count,
                                                         dimensions[0], dimensions[1], dimensions[2]));
     }
     const usize physical = physicalIndexUnchecked(logicalIndex);
-    if(physical >= recordCount)
+    if(physical >= record_count)
     {
       return MakeErrorResult<usize>(-79072,
-                                    fmt::format("External watershed tiled layout mapped logical index {} to invalid physical index {}. Physical records: {}.", logicalIndex, physical, recordCount));
+                                    fmt::format("External watershed tiled layout mapped logical index {} to invalid physical index {}. Physical records: {}.", logicalIndex, physical, record_count));
     }
     return {physical};
   }
 };
 
-inline Result<WatershedTiledRecordLayout> CreateWatershedTiledRecordLayout(const SizeVec3& dimensions, usize recordsPerPage)
+inline Result<WatershedTiledRecordLayout> CreateWatershedTiledRecordLayout(const SizeVec3Type& dimensions, usize recordsPerPage)
 {
   if(dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0 || recordsPerPage == 0)
   {
@@ -279,7 +279,7 @@ inline Result<WatershedTiledRecordLayout> CreateWatershedTiledRecordLayout(const
 
   WatershedTiledRecordLayout layout;
   layout.dimensions = dimensions;
-  layout.recordsPerPage = recordsPerPage;
+  layout.records_per_page = recordsPerPage;
   if(dimensions[2] > 1)
   {
     constexpr usize k_TileX = 32;
@@ -289,7 +289,7 @@ inline Result<WatershedTiledRecordLayout> CreateWatershedTiledRecordLayout(const
       return MakeErrorResult<WatershedTiledRecordLayout>(
           -79072, fmt::format("External watershed 3-D tiled layout requires records per page divisible by {}. Records per page: {}.", k_TileX * k_TileY, recordsPerPage));
     }
-    layout.tileDimensions = {k_TileX, k_TileY, recordsPerPage / (k_TileX * k_TileY)};
+    layout.tile_dimensions = {k_TileX, k_TileY, recordsPerPage / (k_TileX * k_TileY)};
   }
   else
   {
@@ -299,21 +299,21 @@ inline Result<WatershedTiledRecordLayout> CreateWatershedTiledRecordLayout(const
       return MakeErrorResult<WatershedTiledRecordLayout>(-79072,
                                                          fmt::format("External watershed 2-D tiled layout requires records per page divisible by {}. Records per page: {}.", k_TileX, recordsPerPage));
     }
-    layout.tileDimensions = {k_TileX, recordsPerPage / k_TileX, 1};
+    layout.tile_dimensions = {k_TileX, recordsPerPage / k_TileX, 1};
   }
-  if(layout.tileDimensions[2] == 0)
+  if(layout.tile_dimensions[2] == 0)
   {
     return MakeErrorResult<WatershedTiledRecordLayout>(-79072, fmt::format("External watershed tiled layout has zero tile depth. Records per page: {}.", recordsPerPage));
   }
 
-  layout.tileCounts = {dimensions[0] / layout.tileDimensions[0] + static_cast<usize>(dimensions[0] % layout.tileDimensions[0] != 0),
-                       dimensions[1] / layout.tileDimensions[1] + static_cast<usize>(dimensions[1] % layout.tileDimensions[1] != 0),
-                       dimensions[2] / layout.tileDimensions[2] + static_cast<usize>(dimensions[2] % layout.tileDimensions[2] != 0)};
+  layout.tile_counts = {dimensions[0] / layout.tile_dimensions[0] + static_cast<usize>(dimensions[0] % layout.tile_dimensions[0] != 0),
+                       dimensions[1] / layout.tile_dimensions[1] + static_cast<usize>(dimensions[1] % layout.tile_dimensions[1] != 0),
+                       dimensions[2] / layout.tile_dimensions[2] + static_cast<usize>(dimensions[2] % layout.tile_dimensions[2] != 0)};
   usize logicalSlice = 0;
   usize tileCount = 0;
-  if(!TryMultiplyWatershedSize(dimensions[0], dimensions[1], logicalSlice) || !TryMultiplyWatershedSize(logicalSlice, dimensions[2], layout.logicalRecordCount) ||
-     !TryMultiplyWatershedSize(layout.tileCounts[0], layout.tileCounts[1], tileCount) || !TryMultiplyWatershedSize(tileCount, layout.tileCounts[2], tileCount) ||
-     !TryMultiplyWatershedSize(tileCount, recordsPerPage, layout.recordCount))
+  if(!TryMultiplyWatershedSize(dimensions[0], dimensions[1], logicalSlice) || !TryMultiplyWatershedSize(logicalSlice, dimensions[2], layout.logical_record_count) ||
+     !TryMultiplyWatershedSize(layout.tile_counts[0], layout.tile_counts[1], tileCount) || !TryMultiplyWatershedSize(tileCount, layout.tile_counts[2], tileCount) ||
+     !TryMultiplyWatershedSize(tileCount, recordsPerPage, layout.record_count))
   {
     return MakeErrorResult<WatershedTiledRecordLayout>(
         -79072, fmt::format("External watershed tiled layout size overflowed. Dimensions: {} x {} x {}; records per page: {}.", dimensions[0], dimensions[1], dimensions[2], recordsPerPage));
@@ -375,8 +375,8 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
 {
   static_assert(std::is_trivially_copyable_v<TInput>);
   static_assert(std::is_trivially_copyable_v<WatershedVoxelRecord<TInput>>);
-  static_assert(std::is_trivially_copyable_v<WatershedPackedVoxelRecord<TInput>>);
-  static_assert(std::is_trivially_copyable_v<WatershedPackedResidentStatusVoxelRecord<TInput>>);
+  static_assert(std::is_trivially_copyable_v<WatershedPackedVoxelRecordType<TInput>>);
+  static_assert(std::is_trivially_copyable_v<WatershedPackedResidentStatusVoxelRecordType<TInput>>);
   static_assert(std::is_trivially_copyable_v<WatershedHeapRecord<TInput>>);
   static_assert(std::is_trivially_copyable_v<WatershedQueueBlock>);
   if(valueCount == 0 || targetBytes == 0)
@@ -386,30 +386,30 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
   }
 
   WatershedExternalMemoryPlan<TInput> plan;
-  plan.useBucketQueue = k_UseWatershedBucketQueue<TInput>;
+  plan.use_bucket_queue = k_UseWatershedBucketQueue<TInput>;
   if(markWatershedLine)
   {
-    plan.residentStatusWordCount = valueCount / 64 + static_cast<usize>(valueCount % 64 != 0);
-    if(!TryMultiplyWatershedSize(plan.residentStatusWordCount, sizeof(uint64), plan.residentStatusBytes))
+    plan.resident_status_word_count = valueCount / 64 + static_cast<usize>(valueCount % 64 != 0);
+    if(!TryMultiplyWatershedSize(plan.resident_status_word_count, sizeof(uint64), plan.resident_status_bytes))
     {
       return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(
-          -79050, fmt::format("External watershed resident status size overflowed. Voxel count: {}; status words: {}.", valueCount, plan.residentStatusWordCount));
+          -79050, fmt::format("External watershed resident status size overflowed. Voxel count: {}; status words: {}.", valueCount, plan.resident_status_word_count));
     }
   }
   if constexpr(k_UseWatershedBucketQueue<TInput>)
   {
-    plan.bucketCount = usize{1} << (sizeof(TInput) * 8);
-    plan.bucketBlocksPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedQueueBlock));
-    if(!TryMultiplyWatershedSize(plan.bucketCount, sizeof(WatershedBucketEndpoints), plan.queueMetadataBytes) ||
-       !TryCalculateWatershedBucketBlockCount(valueCount, plan.bucketCount, plan.bucketBlockCount))
+    plan.bucket_count = usize{1} << (sizeof(TInput) * 8);
+    plan.bucket_blocks_per_page = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedQueueBlock));
+    if(!TryMultiplyWatershedSize(plan.bucket_count, sizeof(WatershedBucketEndpoints), plan.queue_metadata_bytes) ||
+       !TryCalculateWatershedBucketBlockCount(valueCount, plan.bucket_count, plan.bucket_block_count))
     {
       return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050,
                                                                   fmt::format("External watershed bucket storage size overflowed. Voxel count: {}; bucket count: {}; values per queue block: {}.",
-                                                                              valueCount, plan.bucketCount, k_WatershedQueueBlockValueCount));
+                                                                              valueCount, plan.bucket_count, k_WatershedQueueBlockValueCount));
     }
   }
   const usize planningHeadroomBytes = targetBytes / 8;
-  const usize metadataAndHeadroomBytes = std::max(planningHeadroomBytes, plan.queueMetadataBytes);
+  const usize metadataAndHeadroomBytes = std::max(planningHeadroomBytes, plan.queue_metadata_bytes);
   if(metadataAndHeadroomBytes >= targetBytes)
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(
@@ -422,25 +422,25 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
   {
     if(markWatershedLine)
     {
-      const usize residentStatusRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedPackedResidentStatusVoxelRecord<TInput>));
+      const usize residentStatusRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>));
       usize residentStatusVoxelPageBytes = 0;
       usize residentStatusBucketPageBytes = 0;
       usize residentStatusMinimumCacheBytes = 0;
       usize residentStatusTransferBytesPerRecord = 0;
       usize residentStatusFinalizationBytesPerRecord = 0;
       usize residentStatusMinimumTransferBytes = 0;
-      if(!TryMultiplyWatershedSize(residentStatusRecordsPerPage, sizeof(WatershedPackedResidentStatusVoxelRecord<TInput>), residentStatusVoxelPageBytes) ||
-         !TryMultiplyWatershedSize(plan.bucketBlocksPerPage, sizeof(WatershedQueueBlock), residentStatusBucketPageBytes) ||
+      if(!TryMultiplyWatershedSize(residentStatusRecordsPerPage, sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>), residentStatusVoxelPageBytes) ||
+         !TryMultiplyWatershedSize(plan.bucket_blocks_per_page, sizeof(WatershedQueueBlock), residentStatusBucketPageBytes) ||
          !TryAddWatershedSize(residentStatusVoxelPageBytes, residentStatusBucketPageBytes, residentStatusMinimumCacheBytes) ||
          !TryAddWatershedSize(sizeof(TInput), sizeof(uint32), residentStatusTransferBytesPerRecord) ||
-         !TryAddWatershedSize(residentStatusTransferBytesPerRecord, sizeof(WatershedPackedResidentStatusVoxelRecord<TInput>), residentStatusTransferBytesPerRecord) ||
-         !TryAddWatershedSize(sizeof(WatershedPackedResidentStatusVoxelRecord<TInput>), sizeof(uint32), residentStatusFinalizationBytesPerRecord) ||
+         !TryAddWatershedSize(residentStatusTransferBytesPerRecord, sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>), residentStatusTransferBytesPerRecord) ||
+         !TryAddWatershedSize(sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>), sizeof(uint32), residentStatusFinalizationBytesPerRecord) ||
          !TryMultiplyWatershedSize(residentStatusRecordsPerPage, std::max(residentStatusTransferBytesPerRecord, residentStatusFinalizationBytesPerRecord), residentStatusMinimumTransferBytes))
       {
         return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed resident-status packed page-size arithmetic overflowed.");
       }
-      if(plan.residentStatusBytes <= bytesAfterMetadata && residentStatusMinimumCacheBytes <= bytesAfterMetadata - plan.residentStatusBytes &&
-         residentStatusMinimumTransferBytes <= bytesAfterMetadata - plan.residentStatusBytes - residentStatusMinimumCacheBytes)
+      if(plan.resident_status_bytes <= bytesAfterMetadata && residentStatusMinimumCacheBytes <= bytesAfterMetadata - plan.resident_status_bytes &&
+         residentStatusMinimumTransferBytes <= bytesAfterMetadata - plan.resident_status_bytes - residentStatusMinimumCacheBytes)
       {
         residentStatusPackedRouteFits = true;
       }
@@ -461,7 +461,7 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
     usize splitRouteBytes = 0;
     usize splitInitializationBytes = 0;
     usize splitFinalizationBytes = 0;
-    const usize combinedVoxelRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedPackedVoxelRecord<TInput>));
+    const usize combinedVoxelRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedPackedVoxelRecordType<TInput>));
     const usize combinedVoxelPageCount = valueCount / combinedVoxelRecordsPerPage + static_cast<usize>(valueCount % combinedVoxelRecordsPerPage != 0);
     usize combinedVoxelPageBytes = 0;
     usize combinedVoxelCacheBytes = 0;
@@ -471,84 +471,84 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
     if(!TryMultiplyWatershedSize(splitVoxelRecordsPerPage, sizeof(WatershedBucketVoxelRecord), splitVoxelPageBytes) ||
        !TryMultiplyWatershedSize(splitInputRecordsPerPage, sizeof(TInput), splitInputPageBytes) || !TryMultiplyWatershedSize(splitVoxelPageCount, splitVoxelPageBytes, splitVoxelCacheBytes) ||
        !TryMultiplyWatershedSize(splitInputPageCount, splitInputPageBytes, splitInputCacheBytes) ||
-       !TryMultiplyWatershedSize(plan.bucketBlocksPerPage, sizeof(WatershedQueueBlock), splitQueuePageBytes) || !TryAddWatershedSize(splitVoxelCacheBytes, splitInputCacheBytes, splitRouteBytes) ||
+       !TryMultiplyWatershedSize(plan.bucket_blocks_per_page, sizeof(WatershedQueueBlock), splitQueuePageBytes) || !TryAddWatershedSize(splitVoxelCacheBytes, splitInputCacheBytes, splitRouteBytes) ||
        !TryAddWatershedSize(splitRouteBytes, splitQueuePageBytes, splitRouteBytes) || !TryAddWatershedSize(sizeof(TInput), sizeof(uint32), splitInitializationBytes) ||
        !TryAddWatershedSize(splitInitializationBytes, sizeof(WatershedBucketVoxelRecord), splitInitializationBytes) ||
        !TryAddWatershedSize(sizeof(WatershedBucketVoxelRecord), sizeof(uint32), splitFinalizationBytes) ||
-       !TryMultiplyWatershedSize(combinedVoxelRecordsPerPage, sizeof(WatershedPackedVoxelRecord<TInput>), combinedVoxelPageBytes) ||
+       !TryMultiplyWatershedSize(combinedVoxelRecordsPerPage, sizeof(WatershedPackedVoxelRecordType<TInput>), combinedVoxelPageBytes) ||
        !TryMultiplyWatershedSize(combinedVoxelPageCount, combinedVoxelPageBytes, combinedVoxelCacheBytes) || !TryAddWatershedSize(sizeof(TInput), sizeof(uint32), combinedInitializationBytes) ||
-       !TryAddWatershedSize(combinedInitializationBytes, sizeof(WatershedPackedVoxelRecord<TInput>), combinedInitializationBytes) ||
-       !TryAddWatershedSize(sizeof(WatershedPackedVoxelRecord<TInput>), sizeof(uint32), combinedFinalizationBytes) ||
+       !TryAddWatershedSize(combinedInitializationBytes, sizeof(WatershedPackedVoxelRecordType<TInput>), combinedInitializationBytes) ||
+       !TryAddWatershedSize(sizeof(WatershedPackedVoxelRecordType<TInput>), sizeof(uint32), combinedFinalizationBytes) ||
        !TryAddWatershedSize(combinedVoxelCacheBytes, splitQueuePageBytes, combinedRouteBytes))
     {
       return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed split bucket-state planning overflowed.");
     }
     const usize splitTransferBytesPerRecord = std::max(splitInitializationBytes, splitFinalizationBytes);
-    const usize splitStatusBytes = markWatershedLine ? plan.residentStatusBytes : 0;
+    const usize splitStatusBytes = markWatershedLine ? plan.resident_status_bytes : 0;
     const usize combinedTransferBytesPerRecord = std::max(combinedInitializationBytes, combinedFinalizationBytes);
-    const usize combinedStatusBytes = markWatershedLine ? plan.residentStatusBytes : 0;
+    const usize combinedStatusBytes = markWatershedLine ? plan.resident_status_bytes : 0;
     const bool combinedRouteFits = TryAddWatershedSize(combinedRouteBytes, combinedStatusBytes, combinedRouteBytes) &&
                                    TryAddWatershedSize(combinedRouteBytes, combinedTransferBytesPerRecord, combinedRouteBytes) && combinedRouteBytes <= bytesAfterMetadata;
     if(combinedRouteFits)
     {
-      plan.completePrimaryStateCache = true;
-      plan.useResidentStatus = markWatershedLine;
+      plan.complete_primary_state_cache = true;
+      plan.use_resident_status = markWatershedLine;
     }
     else if(TryAddWatershedSize(splitRouteBytes, splitStatusBytes, splitRouteBytes) && TryAddWatershedSize(splitRouteBytes, splitTransferBytesPerRecord, splitRouteBytes) &&
             splitRouteBytes <= bytesAfterMetadata)
     {
-      plan.useSplitBucketState = true;
-      plan.completePrimaryStateCache = true;
-      plan.useResidentStatus = markWatershedLine;
+      plan.use_split_bucket_state = true;
+      plan.complete_primary_state_cache = true;
+      plan.use_resident_status = markWatershedLine;
     }
   }
 
-  if(!plan.completePrimaryStateCache && !plan.useSplitBucketState && residentStatusPackedRouteFits)
+  if(!plan.complete_primary_state_cache && !plan.use_split_bucket_state && residentStatusPackedRouteFits)
   {
-    plan.usePackedResidentStatusState = true;
-    plan.useResidentStatus = true;
+    plan.use_packed_resident_status_state = true;
+    plan.use_resident_status = true;
   }
 
-  plan.useTiledVoxelLayout = plan.useBucketQueue && !plan.completePrimaryStateCache && !plan.useSplitBucketState;
-  plan.usePackedCombinedState = plan.useBucketQueue && !plan.useSplitBucketState && !plan.usePackedResidentStatusState;
-  plan.voxelRecordBytes = plan.useSplitBucketState ?
+  plan.use_tiled_voxel_layout = plan.use_bucket_queue && !plan.complete_primary_state_cache && !plan.use_split_bucket_state;
+  plan.use_packed_combined_state = plan.use_bucket_queue && !plan.use_split_bucket_state && !plan.use_packed_resident_status_state;
+  plan.voxel_record_bytes = plan.use_split_bucket_state ?
                               sizeof(WatershedBucketVoxelRecord) :
-                              (plan.usePackedResidentStatusState ? sizeof(WatershedPackedResidentStatusVoxelRecord<TInput>) :
-                                                                   (plan.usePackedCombinedState ? sizeof(WatershedPackedVoxelRecord<TInput>) : sizeof(WatershedVoxelRecord<TInput>)));
-  plan.voxelRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / plan.voxelRecordBytes);
-  if(plan.useTiledVoxelLayout)
+                              (plan.use_packed_resident_status_state ? sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>) :
+                                                                   (plan.use_packed_combined_state ? sizeof(WatershedPackedVoxelRecordType<TInput>) : sizeof(WatershedVoxelRecord<TInput>)));
+  plan.voxel_records_per_page = std::max<usize>(1, k_WatershedPageTargetBytes / plan.voxel_record_bytes);
+  if(plan.use_tiled_voxel_layout)
   {
     constexpr usize k_TiledRecordMultiple = 32 * 32;
-    plan.voxelRecordsPerPage = (plan.voxelRecordsPerPage / k_TiledRecordMultiple) * k_TiledRecordMultiple;
-    if(plan.voxelRecordsPerPage == 0)
+    plan.voxel_records_per_page = (plan.voxel_records_per_page / k_TiledRecordMultiple) * k_TiledRecordMultiple;
+    if(plan.voxel_records_per_page == 0)
     {
       return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, fmt::format("External watershed's {}-byte page target cannot hold one {}-record tiled page of {}-byte records.",
-                                                                                      k_WatershedPageTargetBytes, k_TiledRecordMultiple, plan.voxelRecordBytes));
+                                                                                      k_WatershedPageTargetBytes, k_TiledRecordMultiple, plan.voxel_record_bytes));
     }
   }
-  plan.inputRecordsPerPage = plan.useSplitBucketState ? std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(TInput)) : 0;
-  plan.heapRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedHeapRecord<TInput>));
+  plan.input_records_per_page = plan.use_split_bucket_state ? std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(TInput)) : 0;
+  plan.heap_records_per_page = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedHeapRecord<TInput>));
   usize voxelPageBytes = 0;
   usize inputPageBytes = 0;
   usize bucketPageBytes = 0;
   usize heapPageBytes = 0;
-  if(!TryMultiplyWatershedSize(plan.voxelRecordsPerPage, plan.voxelRecordBytes, voxelPageBytes) ||
-     (plan.useSplitBucketState && !TryMultiplyWatershedSize(plan.inputRecordsPerPage, sizeof(TInput), inputPageBytes)) ||
-     (plan.useBucketQueue && !TryMultiplyWatershedSize(plan.bucketBlocksPerPage, sizeof(WatershedQueueBlock), bucketPageBytes)) ||
-     (!plan.useBucketQueue && !TryMultiplyWatershedSize(plan.heapRecordsPerPage, sizeof(WatershedHeapRecord<TInput>), heapPageBytes)))
+  if(!TryMultiplyWatershedSize(plan.voxel_records_per_page, plan.voxel_record_bytes, voxelPageBytes) ||
+     (plan.use_split_bucket_state && !TryMultiplyWatershedSize(plan.input_records_per_page, sizeof(TInput), inputPageBytes)) ||
+     (plan.use_bucket_queue && !TryMultiplyWatershedSize(plan.bucket_blocks_per_page, sizeof(WatershedQueueBlock), bucketPageBytes)) ||
+     (!plan.use_bucket_queue && !TryMultiplyWatershedSize(plan.heap_records_per_page, sizeof(WatershedHeapRecord<TInput>), heapPageBytes)))
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed page-size arithmetic overflowed.");
   }
   usize initializationBytesPerRecord = 0;
   usize finalizationBytesPerRecord = 0;
-  if(!TryAddWatershedSize(sizeof(TInput), sizeof(uint32), initializationBytesPerRecord) || !TryAddWatershedSize(initializationBytesPerRecord, plan.voxelRecordBytes, initializationBytesPerRecord) ||
-     !TryAddWatershedSize(plan.voxelRecordBytes, sizeof(uint32), finalizationBytesPerRecord))
+  if(!TryAddWatershedSize(sizeof(TInput), sizeof(uint32), initializationBytesPerRecord) || !TryAddWatershedSize(initializationBytesPerRecord, plan.voxel_record_bytes, initializationBytesPerRecord) ||
+     !TryAddWatershedSize(plan.voxel_record_bytes, sizeof(uint32), finalizationBytesPerRecord))
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed transfer-size arithmetic overflowed.");
   }
   const usize transferBytesPerRecord = std::max(initializationBytesPerRecord, finalizationBytesPerRecord);
   usize minimumCacheBytes = voxelPageBytes;
-  const usize minimumQueueCacheBytes = plan.useBucketQueue ? bucketPageBytes : heapPageBytes;
+  const usize minimumQueueCacheBytes = plan.use_bucket_queue ? bucketPageBytes : heapPageBytes;
   if(!TryAddWatershedSize(minimumCacheBytes, inputPageBytes, minimumCacheBytes) || !TryAddWatershedSize(minimumCacheBytes, minimumQueueCacheBytes, minimumCacheBytes))
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed minimum page-cache size overflowed.");
@@ -558,18 +558,18 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(
         -79050, fmt::format("External watershed's {}-byte working-memory target cannot hold queue metadata, planning headroom, and one required record page per cache.", targetBytes));
   }
-  const usize selectedStatusBytes = plan.useResidentStatus ? plan.residentStatusBytes : 0;
+  const usize selectedStatusBytes = plan.use_resident_status ? plan.resident_status_bytes : 0;
   const usize bytesAfterStatus = bytesAfterMetadata - selectedStatusBytes;
   usize minimumTiledTransferBytes = 0;
-  if(plan.usePackedResidentStatusState && !TryMultiplyWatershedSize(plan.voxelRecordsPerPage, transferBytesPerRecord, minimumTiledTransferBytes))
+  if(plan.use_packed_resident_status_state && !TryMultiplyWatershedSize(plan.voxel_records_per_page, transferBytesPerRecord, minimumTiledTransferBytes))
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed resident-status packed transfer-page size overflowed.");
   }
   const usize transferTargetBytes =
-      plan.usePackedResidentStatusState ? std::min(k_WatershedTransferTargetBytes, std::max({targetBytes / 16, voxelPageBytes, minimumTiledTransferBytes})) : k_WatershedTransferTargetBytes;
+      plan.use_packed_resident_status_state ? std::min(k_WatershedTransferTargetBytes, std::max({targetBytes / 16, voxelPageBytes, minimumTiledTransferBytes})) : k_WatershedTransferTargetBytes;
   const usize maximumTransferBytes = std::min(transferTargetBytes, bytesAfterStatus - minimumCacheBytes);
-  plan.transferRecords = std::min(valueCount, maximumTransferBytes / transferBytesPerRecord);
-  if(plan.transferRecords == 0)
+  plan.transfer_records = std::min(valueCount, maximumTransferBytes / transferBytesPerRecord);
+  if(plan.transfer_records == 0)
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(
         -79050, fmt::format("External watershed's {}-byte working-memory target leaves a {}-byte transfer allowance that cannot hold one {}-byte transfer record.", targetBytes, maximumTransferBytes,
@@ -577,34 +577,34 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
   }
 
   usize transferBytes = 0;
-  if(!TryMultiplyWatershedSize(transferBytesPerRecord, plan.transferRecords, transferBytes))
+  if(!TryMultiplyWatershedSize(transferBytesPerRecord, plan.transfer_records, transferBytes))
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, "External watershed transfer-buffer size overflowed.");
   }
   const usize reusableCacheBytes = bytesAfterStatus - transferBytes;
-  const usize queueCacheWeight = plan.useBucketQueue ? k_WatershedBucketCacheWeight : k_WatershedHeapCacheWeight;
-  const usize inputCacheWeight = plan.useSplitBucketState ? k_WatershedInputCacheWeight : 0;
+  const usize queueCacheWeight = plan.use_bucket_queue ? k_WatershedBucketCacheWeight : k_WatershedHeapCacheWeight;
+  const usize inputCacheWeight = plan.use_split_bucket_state ? k_WatershedInputCacheWeight : 0;
   const usize cacheWeightTotal = k_WatershedVoxelCacheWeight + inputCacheWeight + queueCacheWeight;
   const usize voxelCacheTarget = (reusableCacheBytes / cacheWeightTotal) * k_WatershedVoxelCacheWeight + ((reusableCacheBytes % cacheWeightTotal) * k_WatershedVoxelCacheWeight) / cacheWeightTotal;
   const usize inputCacheTarget = (reusableCacheBytes / cacheWeightTotal) * inputCacheWeight + ((reusableCacheBytes % cacheWeightTotal) * inputCacheWeight) / cacheWeightTotal;
   const usize queueCacheTarget = reusableCacheBytes - voxelCacheTarget - inputCacheTarget;
-  const usize voxelPageCount = valueCount / plan.voxelRecordsPerPage + static_cast<usize>(valueCount % plan.voxelRecordsPerPage != 0);
-  const usize inputPageCount = plan.useSplitBucketState ? valueCount / plan.inputRecordsPerPage + static_cast<usize>(valueCount % plan.inputRecordsPerPage != 0) : 0;
-  const usize bucketPageCount = plan.useBucketQueue ? plan.bucketBlockCount / plan.bucketBlocksPerPage + static_cast<usize>(plan.bucketBlockCount % plan.bucketBlocksPerPage != 0) : 0;
-  const usize bucketUsefulPageCount = plan.useBucketQueue ? (plan.completePrimaryStateCache ? bucketPageCount : std::min(bucketPageCount, 2 * plan.bucketCount)) : 0;
-  const usize heapPageCount = plan.useBucketQueue ? 0 : valueCount / plan.heapRecordsPerPage + static_cast<usize>(valueCount % plan.heapRecordsPerPage != 0);
-  plan.voxelCachePages = std::min(voxelPageCount, std::max<usize>(1, voxelCacheTarget / voxelPageBytes));
-  plan.inputCachePages = plan.useSplitBucketState ? std::min(inputPageCount, std::max<usize>(1, inputCacheTarget / inputPageBytes)) : 0;
-  plan.bucketCachePages = plan.useBucketQueue ? std::min(bucketUsefulPageCount, std::max<usize>(1, queueCacheTarget / bucketPageBytes)) : 0;
-  plan.heapCachePages = plan.useBucketQueue ? 0 : std::min(heapPageCount, std::max<usize>(1, queueCacheTarget / heapPageBytes));
+  const usize voxelPageCount = valueCount / plan.voxel_records_per_page + static_cast<usize>(valueCount % plan.voxel_records_per_page != 0);
+  const usize inputPageCount = plan.use_split_bucket_state ? valueCount / plan.input_records_per_page + static_cast<usize>(valueCount % plan.input_records_per_page != 0) : 0;
+  const usize bucketPageCount = plan.use_bucket_queue ? plan.bucket_block_count / plan.bucket_blocks_per_page + static_cast<usize>(plan.bucket_block_count % plan.bucket_blocks_per_page != 0) : 0;
+  const usize bucketUsefulPageCount = plan.use_bucket_queue ? (plan.complete_primary_state_cache ? bucketPageCount : std::min(bucketPageCount, 2 * plan.bucket_count)) : 0;
+  const usize heapPageCount = plan.use_bucket_queue ? 0 : valueCount / plan.heap_records_per_page + static_cast<usize>(valueCount % plan.heap_records_per_page != 0);
+  plan.voxel_cache_pages = std::min(voxelPageCount, std::max<usize>(1, voxelCacheTarget / voxelPageBytes));
+  plan.input_cache_pages = plan.use_split_bucket_state ? std::min(inputPageCount, std::max<usize>(1, inputCacheTarget / inputPageBytes)) : 0;
+  plan.bucket_cache_pages = plan.use_bucket_queue ? std::min(bucketUsefulPageCount, std::max<usize>(1, queueCacheTarget / bucketPageBytes)) : 0;
+  plan.heap_cache_pages = plan.use_bucket_queue ? 0 : std::min(heapPageCount, std::max<usize>(1, queueCacheTarget / heapPageBytes));
 
   usize voxelCacheBytes = 0;
   usize inputCacheBytes = 0;
   usize bucketCacheBytes = 0;
   usize heapCacheBytes = 0;
   usize allocatedCacheBytes = 0;
-  if(!TryMultiplyWatershedSize(voxelPageBytes, plan.voxelCachePages, voxelCacheBytes) || !TryMultiplyWatershedSize(inputPageBytes, plan.inputCachePages, inputCacheBytes) ||
-     !TryMultiplyWatershedSize(bucketPageBytes, plan.bucketCachePages, bucketCacheBytes) || !TryMultiplyWatershedSize(heapPageBytes, plan.heapCachePages, heapCacheBytes) ||
+  if(!TryMultiplyWatershedSize(voxelPageBytes, plan.voxel_cache_pages, voxelCacheBytes) || !TryMultiplyWatershedSize(inputPageBytes, plan.input_cache_pages, inputCacheBytes) ||
+     !TryMultiplyWatershedSize(bucketPageBytes, plan.bucket_cache_pages, bucketCacheBytes) || !TryMultiplyWatershedSize(heapPageBytes, plan.heap_cache_pages, heapCacheBytes) ||
      !TryAddWatershedSize(voxelCacheBytes, inputCacheBytes, allocatedCacheBytes) || !TryAddWatershedSize(allocatedCacheBytes, bucketCacheBytes, allocatedCacheBytes) ||
      !TryAddWatershedSize(allocatedCacheBytes, heapCacheBytes, allocatedCacheBytes) || allocatedCacheBytes > reusableCacheBytes)
   {
@@ -612,27 +612,27 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
   }
 
   usize remainingCacheBytes = reusableCacheBytes - allocatedCacheBytes;
-  GrowWatershedCachePages(voxelPageBytes, voxelPageCount, plan.voxelCachePages, remainingCacheBytes);
-  GrowWatershedCachePages(inputPageBytes, inputPageCount, plan.inputCachePages, remainingCacheBytes);
-  if(plan.useBucketQueue)
+  GrowWatershedCachePages(voxelPageBytes, voxelPageCount, plan.voxel_cache_pages, remainingCacheBytes);
+  GrowWatershedCachePages(inputPageBytes, inputPageCount, plan.input_cache_pages, remainingCacheBytes);
+  if(plan.use_bucket_queue)
   {
-    GrowWatershedCachePages(bucketPageBytes, bucketUsefulPageCount, plan.bucketCachePages, remainingCacheBytes);
+    GrowWatershedCachePages(bucketPageBytes, bucketUsefulPageCount, plan.bucket_cache_pages, remainingCacheBytes);
   }
   else
   {
-    GrowWatershedCachePages(heapPageBytes, heapPageCount, plan.heapCachePages, remainingCacheBytes);
+    GrowWatershedCachePages(heapPageBytes, heapPageCount, plan.heap_cache_pages, remainingCacheBytes);
   }
 
   usize residentBytes = 0;
-  if(!TryMultiplyWatershedSize(voxelPageBytes, plan.voxelCachePages, voxelCacheBytes) || !TryMultiplyWatershedSize(inputPageBytes, plan.inputCachePages, inputCacheBytes) ||
-     !TryMultiplyWatershedSize(bucketPageBytes, plan.bucketCachePages, bucketCacheBytes) || !TryMultiplyWatershedSize(heapPageBytes, plan.heapCachePages, heapCacheBytes) ||
+  if(!TryMultiplyWatershedSize(voxelPageBytes, plan.voxel_cache_pages, voxelCacheBytes) || !TryMultiplyWatershedSize(inputPageBytes, plan.input_cache_pages, inputCacheBytes) ||
+     !TryMultiplyWatershedSize(bucketPageBytes, plan.bucket_cache_pages, bucketCacheBytes) || !TryMultiplyWatershedSize(heapPageBytes, plan.heap_cache_pages, heapCacheBytes) ||
      !TryAddWatershedSize(voxelCacheBytes, inputCacheBytes, residentBytes) || !TryAddWatershedSize(residentBytes, bucketCacheBytes, residentBytes) ||
      !TryAddWatershedSize(residentBytes, heapCacheBytes, residentBytes) || !TryAddWatershedSize(residentBytes, transferBytes, residentBytes) ||
-     !TryAddWatershedSize(residentBytes, selectedStatusBytes, residentBytes) || !TryAddWatershedSize(residentBytes, plan.queueMetadataBytes, residentBytes) || residentBytes > targetBytes)
+     !TryAddWatershedSize(residentBytes, selectedStatusBytes, residentBytes) || !TryAddWatershedSize(residentBytes, plan.queue_metadata_bytes, residentBytes) || residentBytes > targetBytes)
   {
     return MakeErrorResult<WatershedExternalMemoryPlan<TInput>>(-79050, fmt::format("External watershed resident planning exceeded its {}-byte working-memory target.", targetBytes));
   }
-  plan.residentBytes = residentBytes;
+  plan.resident_bytes = residentBytes;
   return {plan};
 }
 
@@ -646,7 +646,7 @@ Result<usize> CalculateWatershedUsefulWorkingMemoryBytes(usize valueCount, bool 
 
   // The useful endpoint must hold the largest complete bucket route. The packed combined route is larger than the split
   // output-plus-input route for both uint8 and uint16 inputs, so it is the conservative bucket estimate.
-  constexpr usize k_VoxelRecordBytes = k_UseWatershedBucketQueue<TInput> ? sizeof(WatershedPackedVoxelRecord<TInput>) : sizeof(WatershedVoxelRecord<TInput>);
+  constexpr usize k_VoxelRecordBytes = k_UseWatershedBucketQueue<TInput> ? sizeof(WatershedPackedVoxelRecordType<TInput>) : sizeof(WatershedVoxelRecord<TInput>);
   const usize voxelRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / k_VoxelRecordBytes);
   const usize bucketBlocksPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedQueueBlock));
   const usize heapRecordsPerPage = std::max<usize>(1, k_WatershedPageTargetBytes / sizeof(WatershedHeapRecord<TInput>));
@@ -782,11 +782,11 @@ template <class TInput>
 class WatershedExternalMinHeap
 {
 public:
-  using Record = WatershedHeapRecord<TInput>;
+  using RecordType = WatershedHeapRecord<TInput>;
 
   static Result<std::unique_ptr<WatershedExternalMinHeap>> Create(std::unique_ptr<ITemporaryRecordStore> store, usize recordsPerPage, usize maximumPages, const std::atomic_bool& shouldCancel)
   {
-    if(store == nullptr || store->recordSize() != sizeof(Record) || store->recordCount() == 0 || store->maxRecordsPerBatch() == 0 || recordsPerPage == 0 ||
+    if(store == nullptr || store->recordSize() != sizeof(RecordType) || store->recordCount() == 0 || store->maxRecordsPerBatch() == 0 || recordsPerPage == 0 ||
        recordsPerPage > store->maxRecordsPerBatch() || maximumPages == 0)
     {
       return MakeErrorResult<std::unique_ptr<WatershedExternalMinHeap>>(
@@ -817,7 +817,7 @@ public:
     {
       return MakeErrorResult(-79052, "External watershed heap insertion sequence overflowed.");
     }
-    const Record inserted{level, m_NextSequence++, flatIndex};
+    const RecordType inserted{level, m_NextSequence++, flatIndex};
     uint64 index = m_Size++;
     while(index > 0)
     {
@@ -840,15 +840,15 @@ public:
     return write(index, inserted);
   }
 
-  Result<Record> pop()
+  Result<RecordType> pop()
   {
     if(m_ShouldCancel)
     {
-      return MakeErrorResult<Record>(-79053, "External watershed heap pop was cancelled.");
+      return MakeErrorResult<RecordType>(-79053, "External watershed heap pop was cancelled.");
     }
     if(m_Size == 0)
     {
-      return MakeErrorResult<Record>(-79053, "External watershed heap pop requested an empty queue.");
+      return MakeErrorResult<RecordType>(-79053, "External watershed heap pop requested an empty queue.");
     }
     auto rootResult = read(0);
     if(rootResult.invalid())
@@ -865,7 +865,7 @@ public:
     {
       return lastResult;
     }
-    const Record replacement = lastResult.value();
+    const RecordType replacement = lastResult.value();
     uint64 index = 0;
     while(true)
     {
@@ -885,7 +885,7 @@ public:
         return childResult;
       }
       uint64 selectedIndex = left;
-      Record selected = childResult.value();
+      RecordType selected = childResult.value();
       if(right < m_Size)
       {
         auto rightResult = read(right);
@@ -905,13 +905,13 @@ public:
       }
       if(Result<> result = write(index, selected); result.invalid())
       {
-        return ConvertInvalidResult<Record>(std::move(result));
+        return ConvertInvalidResult<RecordType>(std::move(result));
       }
       index = selectedIndex;
     }
     if(Result<> result = write(index, replacement); result.invalid())
     {
-      return ConvertInvalidResult<Record>(std::move(result));
+      return ConvertInvalidResult<RecordType>(std::move(result));
     }
     return rootResult;
   }
@@ -944,7 +944,7 @@ private:
   {
   }
 
-  static bool Less(const Record& left, const Record& right)
+  static bool Less(const RecordType& left, const RecordType& right)
   {
     if(left.level < right.level)
     {
@@ -957,17 +957,17 @@ private:
     return left.sequence < right.sequence;
   }
 
-  Result<Record> read(uint64 index)
+  Result<RecordType> read(uint64 index)
   {
     auto result = m_Cache.read(index, m_ShouldCancel);
     if(result.invalid())
     {
-      return MakeErrorResult<Record>(-79054, fmt::format("External watershed heap read at index {} failed: {}", index, DescribeWatershedStoreError(result)));
+      return MakeErrorResult<RecordType>(-79054, fmt::format("External watershed heap read at index {} failed: {}", index, DescribeWatershedStoreError(result)));
     }
     return result;
   }
 
-  Result<> write(uint64 index, const Record& value)
+  Result<> write(uint64 index, const RecordType& value)
   {
     auto result = m_Cache.write(index, value, m_ShouldCancel);
     if(result.invalid())
@@ -978,7 +978,7 @@ private:
   }
 
   std::unique_ptr<ITemporaryRecordStore> m_Store;
-  BoundedRecordPageCache<Record> m_Cache;
+  BoundedRecordPageCache<RecordType> m_Cache;
   const std::atomic_bool& m_ShouldCancel;
   uint64 m_Size = 0;
   uint64 m_NextSequence = 0;
@@ -988,14 +988,14 @@ template <class TInput>
 class WatershedExternalBucketQueue
 {
 public:
-  using Record = WatershedHeapRecord<TInput>;
-  using Block = WatershedQueueBlock;
+  using RecordType = WatershedHeapRecord<TInput>;
+  using BlockType = WatershedQueueBlock;
 
   static Result<std::unique_ptr<WatershedExternalBucketQueue>> Create(std::unique_ptr<ITemporaryRecordStore> store, usize recordsPerPage, usize maximumPages, uint64 capacity,
                                                                       const std::atomic_bool& shouldCancel)
   {
     static_assert(k_UseWatershedBucketQueue<TInput>);
-    if(store == nullptr || store->recordSize() != sizeof(Block) || store->recordCount() == 0 || store->maxRecordsPerBatch() == 0 || recordsPerPage == 0 ||
+    if(store == nullptr || store->recordSize() != sizeof(BlockType) || store->recordCount() == 0 || store->maxRecordsPerBatch() == 0 || recordsPerPage == 0 ||
        recordsPerPage > store->maxRecordsPerBatch() || maximumPages == 0 || capacity == 0 || capacity > static_cast<uint64>(std::numeric_limits<int64>::max()))
     {
       return MakeErrorResult<std::unique_ptr<WatershedExternalBucketQueue>>(
@@ -1025,7 +1025,7 @@ public:
     }
     const usize bucketIndex = OrderedIndex(level);
     WatershedBucketEndpoints& bucket = m_Buckets[bucketIndex];
-    uint64 blockIndex = bucket.tailBlock;
+    uint64 blockIndex = bucket.tail_block;
     if(blockIndex == k_WatershedInvalidQueueBlock)
     {
       auto blockIndexResult = allocateBlock();
@@ -1034,15 +1034,15 @@ public:
         return ConvertResult(std::move(blockIndexResult));
       }
       blockIndex = blockIndexResult.value();
-      bucket.headBlock = blockIndex;
-      bucket.tailBlock = blockIndex;
-      bucket.headOffset = 0;
+      bucket.head_block = blockIndex;
+      bucket.tail_block = blockIndex;
+      bucket.head_offset = 0;
       auto initializeResult = m_Cache.modify(
           blockIndex,
-          [flatIndex](Block& block) noexcept {
+          [flatIndex](BlockType& block) noexcept {
             block = {};
             block.values[0] = flatIndex;
-            block.valueCount = 1;
+            block.value_count = 1;
           },
           m_ShouldCancel);
       if(initializeResult.invalid())
@@ -1056,16 +1056,16 @@ public:
       bool invalidMetadata = false;
       auto appendResult = m_Cache.modify(
           blockIndex,
-          [flatIndex, &appended, &invalidMetadata](Block& block) noexcept {
-            if(block.valueCount > block.values.size())
+          [flatIndex, &appended, &invalidMetadata](BlockType& block) noexcept {
+            if(block.value_count > block.values.size())
             {
               invalidMetadata = true;
               return;
             }
-            if(block.valueCount < block.values.size())
+            if(block.value_count < block.values.size())
             {
-              block.values[static_cast<usize>(block.valueCount)] = flatIndex;
-              ++block.valueCount;
+              block.values[static_cast<usize>(block.value_count)] = flatIndex;
+              ++block.value_count;
               appended = true;
             }
           },
@@ -1076,12 +1076,12 @@ public:
       }
       if(appended && m_LoadedHeadBlockIndex == blockIndex)
       {
-        m_LoadedHeadBlock.values[static_cast<usize>(m_LoadedHeadBlock.valueCount)] = flatIndex;
-        ++m_LoadedHeadBlock.valueCount;
+        m_LoadedHeadBlock.values[static_cast<usize>(m_LoadedHeadBlock.value_count)] = flatIndex;
+        ++m_LoadedHeadBlock.value_count;
       }
       if(invalidMetadata)
       {
-        return MakeErrorResult(-79065, fmt::format("External watershed bucket queue block {} contains more than {} values.", blockIndex, Block{}.values.size()));
+        return MakeErrorResult(-79065, fmt::format("External watershed bucket queue block {} contains more than {} values.", blockIndex, BlockType{}.values.size()));
       }
       if(!appended)
       {
@@ -1091,23 +1091,23 @@ public:
           return ConvertResult(std::move(nextBlockResult));
         }
         const uint64 nextBlock = nextBlockResult.value();
-        auto linkResult = m_Cache.modify(blockIndex, [nextBlock](Block& block) noexcept { block.nextBlock = nextBlock; }, m_ShouldCancel);
+        auto linkResult = m_Cache.modify(blockIndex, [nextBlock](BlockType& block) noexcept { block.next_block = nextBlock; }, m_ShouldCancel);
         if(linkResult.invalid())
         {
           return MakeErrorResult(-79068, fmt::format("External watershed bucket queue link from block {} to block {} failed: {}", blockIndex, nextBlock, DescribeWatershedStoreError(linkResult)));
         }
         if(m_LoadedHeadBlockIndex == blockIndex)
         {
-          m_LoadedHeadBlock.nextBlock = nextBlock;
+          m_LoadedHeadBlock.next_block = nextBlock;
         }
         blockIndex = nextBlock;
-        bucket.tailBlock = blockIndex;
+        bucket.tail_block = blockIndex;
         auto initializeResult = m_Cache.modify(
             blockIndex,
-            [flatIndex](Block& block) noexcept {
+            [flatIndex](BlockType& block) noexcept {
               block = {};
               block.values[0] = flatIndex;
-              block.valueCount = 1;
+              block.value_count = 1;
             },
             m_ShouldCancel);
         if(initializeResult.invalid())
@@ -1121,53 +1121,53 @@ public:
     return {};
   }
 
-  Result<Record> pop()
+  Result<RecordType> pop()
   {
     if(m_ShouldCancel)
     {
-      return MakeErrorResult<Record>(-79066, "External watershed bucket pop was cancelled.");
+      return MakeErrorResult<RecordType>(-79066, "External watershed bucket pop was cancelled.");
     }
     if(m_Size == 0 || m_MinimumBucket >= m_Buckets.size())
     {
-      return MakeErrorResult<Record>(-79066, "External watershed bucket pop requested an empty queue.");
+      return MakeErrorResult<RecordType>(-79066, "External watershed bucket pop requested an empty queue.");
     }
     WatershedBucketEndpoints& bucket = m_Buckets[m_MinimumBucket];
-    if(m_LoadedHeadBlockIndex != bucket.headBlock)
+    if(m_LoadedHeadBlockIndex != bucket.head_block)
     {
-      auto inspectResult = m_Cache.inspect(bucket.headBlock, [this](const Block& block) noexcept { m_LoadedHeadBlock = block; }, m_ShouldCancel);
+      auto inspectResult = m_Cache.inspect(bucket.head_block, [this](const BlockType& block) noexcept { m_LoadedHeadBlock = block; }, m_ShouldCancel);
       if(inspectResult.invalid())
       {
-        return MakeErrorResult<Record>(-79067, fmt::format("External watershed bucket queue inspection of block {} failed: {}", bucket.headBlock, DescribeWatershedStoreError(inspectResult)));
+        return MakeErrorResult<RecordType>(-79067, fmt::format("External watershed bucket queue inspection of block {} failed: {}", bucket.head_block, DescribeWatershedStoreError(inspectResult)));
       }
-      m_LoadedHeadBlockIndex = bucket.headBlock;
+      m_LoadedHeadBlockIndex = bucket.head_block;
     }
-    if(m_LoadedHeadBlock.valueCount == 0 || m_LoadedHeadBlock.valueCount > m_LoadedHeadBlock.values.size() || bucket.headOffset >= m_LoadedHeadBlock.valueCount)
+    if(m_LoadedHeadBlock.value_count == 0 || m_LoadedHeadBlock.value_count > m_LoadedHeadBlock.values.size() || bucket.head_offset >= m_LoadedHeadBlock.value_count)
     {
-      return MakeErrorResult<Record>(-79066, fmt::format("External watershed bucket block {} has invalid read metadata. Stored values: {}; head offset: {}; block capacity: {}.", bucket.headBlock,
-                                                         m_LoadedHeadBlock.valueCount, bucket.headOffset, m_LoadedHeadBlock.values.size()));
+      return MakeErrorResult<RecordType>(-79066, fmt::format("External watershed bucket block {} has invalid read metadata. Stored values: {}; head offset: {}; block capacity: {}.", bucket.head_block,
+                                                         m_LoadedHeadBlock.value_count, bucket.head_offset, m_LoadedHeadBlock.values.size()));
     }
-    const int64 flatIndex = m_LoadedHeadBlock.values[bucket.headOffset];
-    ++bucket.headOffset;
+    const int64 flatIndex = m_LoadedHeadBlock.values[bucket.head_offset];
+    ++bucket.head_offset;
     const TInput level = LevelFromOrderedIndex(m_MinimumBucket);
     --m_Size;
-    if(bucket.headOffset == m_LoadedHeadBlock.valueCount)
+    if(bucket.head_offset == m_LoadedHeadBlock.value_count)
     {
-      bucket.headBlock = m_LoadedHeadBlock.nextBlock;
-      bucket.headOffset = 0;
+      bucket.head_block = m_LoadedHeadBlock.next_block;
+      bucket.head_offset = 0;
       m_LoadedHeadBlockIndex = k_WatershedInvalidQueueBlock;
-      if(bucket.headBlock == k_WatershedInvalidQueueBlock)
+      if(bucket.head_block == k_WatershedInvalidQueueBlock)
       {
-        bucket.tailBlock = k_WatershedInvalidQueueBlock;
+        bucket.tail_block = k_WatershedInvalidQueueBlock;
       }
     }
-    if(bucket.headBlock == k_WatershedInvalidQueueBlock)
+    if(bucket.head_block == k_WatershedInvalidQueueBlock)
     {
-      while(m_MinimumBucket < m_Buckets.size() && m_Buckets[m_MinimumBucket].headBlock == k_WatershedInvalidQueueBlock)
+      while(m_MinimumBucket < m_Buckets.size() && m_Buckets[m_MinimumBucket].head_block == k_WatershedInvalidQueueBlock)
       {
         ++m_MinimumBucket;
       }
     }
-    return {Record{level, uint64{0}, flatIndex}};
+    return {RecordType{level, uint64{0}, flatIndex}};
   }
 
   Result<> flush()
@@ -1236,14 +1236,14 @@ private:
   }
 
   std::unique_ptr<ITemporaryRecordStore> m_Store;
-  BoundedRecordPageCache<Block> m_Cache;
+  BoundedRecordPageCache<BlockType> m_Cache;
   uint64 m_Capacity = 0;
   const std::atomic_bool& m_ShouldCancel;
   std::vector<WatershedBucketEndpoints> m_Buckets;
   usize m_MinimumBucket = 0;
   uint64 m_Size = 0;
   uint64 m_NextBlock = 0;
-  Block m_LoadedHeadBlock;
+  BlockType m_LoadedHeadBlock;
   uint64 m_LoadedHeadBlockIndex = k_WatershedInvalidQueueBlock;
 };
 
@@ -1251,8 +1251,8 @@ template <class TInput>
 class WatershedExternalQueue
 {
 public:
-  using Record = WatershedHeapRecord<TInput>;
-  using VoxelRecord = WatershedVoxelRecord<TInput>;
+  using RecordType = WatershedHeapRecord<TInput>;
+  using VoxelRecordType = WatershedVoxelRecord<TInput>;
 
   static Result<std::unique_ptr<WatershedExternalQueue>> Create(std::unique_ptr<ITemporaryRecordStore> queueStore, const WatershedExternalMemoryPlan<TInput>& plan, uint64 capacity,
                                                                 const std::atomic_bool& shouldCancel)
@@ -1262,11 +1262,11 @@ public:
       auto queue = std::unique_ptr<WatershedExternalQueue>(new WatershedExternalQueue());
       if constexpr(k_UseWatershedBucketQueue<TInput>)
       {
-        if(!plan.useBucketQueue)
+        if(!plan.use_bucket_queue)
         {
           return MakeErrorResult<std::unique_ptr<WatershedExternalQueue>>(-79069, "External watershed bucket queue plan did not select bucket storage.");
         }
-        auto result = WatershedExternalBucketQueue<TInput>::Create(std::move(queueStore), plan.bucketBlocksPerPage, plan.bucketCachePages, capacity, shouldCancel);
+        auto result = WatershedExternalBucketQueue<TInput>::Create(std::move(queueStore), plan.bucket_blocks_per_page, plan.bucket_cache_pages, capacity, shouldCancel);
         if(result.invalid())
         {
           return ConvertInvalidResult<std::unique_ptr<WatershedExternalQueue>>(std::move(result));
@@ -1275,7 +1275,7 @@ public:
       }
       else
       {
-        auto result = WatershedExternalMinHeap<TInput>::Create(std::move(queueStore), plan.heapRecordsPerPage, plan.heapCachePages, shouldCancel);
+        auto result = WatershedExternalMinHeap<TInput>::Create(std::move(queueStore), plan.heap_records_per_page, plan.heap_cache_pages, shouldCancel);
         if(result.invalid())
         {
           return ConvertInvalidResult<std::unique_ptr<WatershedExternalQueue>>(std::move(result));
@@ -1301,7 +1301,7 @@ public:
     }
   }
 
-  Result<Record> pop()
+  Result<RecordType> pop()
   {
     if constexpr(k_UseWatershedBucketQueue<TInput>)
     {

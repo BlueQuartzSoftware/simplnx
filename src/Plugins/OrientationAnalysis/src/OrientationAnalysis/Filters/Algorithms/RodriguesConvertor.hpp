@@ -18,9 +18,9 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT RodriguesConvertorInputValues
 {
-  DataPath RodriguesDataArrayPath;
-  DataPath OutputDataArrayPath;
-  bool DeleteOriginalData{};
+  DataPath rodrigues_data_array_path;
+  DataPath output_data_array_path;
+  bool delete_original_data{};
 };
 
 /**

@@ -189,21 +189,21 @@ inline bool ContourCheckedMultiply(usize left, usize right, usize& product)
 struct ContourResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseContourResidentState(const SizeVec3& dims)
+inline bool ShouldUseContourResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateContourResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateContourResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -218,13 +218,13 @@ Result<usize> CalculateContourResidentWorkingMemoryBytes(const SizeVec3& dims)
      !ContourCheckedMultiply(residentValues, sizeof(T), requiredBytes))
   {
     return MakeErrorResult<usize>(
-        -8762, fmt::format("Contour dimensions ({}) and element size ({} bytes) overflow while sizing the resident input and output state.", StringUtilities::formatDimensions3D(dims), sizeof(T)));
+        -8762, fmt::format("Contour dimensions ({}) and element size ({} bytes) overflow while sizing the resident input and output state.", string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<ContourResidentMemoryAllocation> ReserveContourResidentWorkingMemory(const SizeVec3& dims)
+Result<ContourResidentMemoryAllocation> ReserveContourResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateContourResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -259,22 +259,22 @@ template <class T, class PredicateT>
 struct ContourPlaneBody
 {
   const T* slab;           // read-only slab or volume beginning at zLo, laid out [slabZ][y][x]
-  T* outPlane;             // output plane, dimX*dimY
+  T* out_plane;             // output plane, dimX*dimY
   const SEOffset* offsets; // neighbor offsets (center {0,0,0} already excluded by the caller)
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize dimZ;
-  usize zLo; // slab's first Z index
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
+  usize z_lo; // slab's first Z index
   usize z;   // output plane's Z index
   const PredicateT& predicate;
 
   void operator()(const Range& range) const
   {
-    const usize sliceValues = dimX * dimY;
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
-    const int64 dimZi = static_cast<int64>(dimZ);
+    const usize sliceValues = dim_x * dim_y;
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
+    const int64 dimZi = static_cast<int64>(dim_z);
     const int64 zi = static_cast<int64>(z); // loop-invariant across the whole plane (only x/y vary per tuple)
     // A radius-1 connectivity neighborhood with the center excluded holds at most k_MaxRadius1Neighbors, so
     // gather into a fixed-capacity, per-worker stack buffer -- no per-voxel heap allocation, and thread-safe
@@ -283,16 +283,16 @@ struct ContourPlaneBody
 
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize x = tuple % dimX;
-      const usize y = tuple / dimX;
+      const usize x = tuple % dim_x;
+      const usize y = tuple / dim_x;
       const int64 xi = static_cast<int64>(x);
       const int64 yi = static_cast<int64>(y);
 
       // The output plane's Z is always inside the slab or resident volume.
-      const T center = slab[(z - zLo) * sliceValues + y * dimX + x];
+      const T center = slab[(z - z_lo) * sliceValues + y * dim_x + x];
 
       usize count = 0;
-      for(usize k = 0; k < numOffsets; ++k)
+      for(usize k = 0; k < num_offsets; ++k)
       {
         const SEOffset& off = offsets[k];
         const int64 nx = xi + off.dx;
@@ -302,10 +302,10 @@ struct ContourPlaneBody
         {
           continue; // out-of-image neighbor is ignored (ITK contour compares only in-bounds neighbors)
         }
-        const usize slabZ = static_cast<usize>(nz) - zLo;
-        neighbors[count++] = slab[slabZ * sliceValues + static_cast<usize>(ny) * dimX + static_cast<usize>(nx)];
+        const usize slabZ = static_cast<usize>(nz) - z_lo;
+        neighbors[count++] = slab[slabZ * sliceValues + static_cast<usize>(ny) * dim_x + static_cast<usize>(nx)];
       }
-      outPlane[tuple] = predicate(center, nonstd::span<const T>(neighbors.data(), count));
+      out_plane[tuple] = predicate(center, nonstd::span<const T>(neighbors.data(), count));
     }
   }
 };
@@ -315,47 +315,47 @@ struct ContourPlaneBody
 template <class T, class PredicateT>
 struct ContourRollingPlaneBody
 {
-  const T* previousPlane;
-  const T* currentPlane;
-  const T* nextPlane;
-  T* outPlane;
+  const T* previous_plane;
+  const T* current_plane;
+  const T* next_plane;
+  T* out_plane;
   const SEOffset* offsets;
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  bool hasPrevious;
-  bool hasNext;
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  bool has_previous;
+  bool has_next;
   const PredicateT& predicate;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
     std::array<T, k_MaxRadius1Neighbors> neighbors{};
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize x = tuple % dimX;
-      const usize y = tuple / dimX;
+      const usize x = tuple % dim_x;
+      const usize y = tuple / dim_x;
       const int64 xi = static_cast<int64>(x);
       const int64 yi = static_cast<int64>(y);
-      const T center = currentPlane[y * dimX + x];
+      const T center = current_plane[y * dim_x + x];
 
       usize count = 0;
-      for(usize offsetIndex = 0; offsetIndex < numOffsets; ++offsetIndex)
+      for(usize offsetIndex = 0; offsetIndex < num_offsets; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
         const int64 neighborX = xi + offset.dx;
         const int64 neighborY = yi + offset.dy;
         const bool needsPreviousPlane = offset.dz < 0;
         const bool needsNextPlane = offset.dz > 0;
-        if(neighborX < 0 || neighborX >= dimXi || neighborY < 0 || neighborY >= dimYi || (needsPreviousPlane && !hasPrevious) || (needsNextPlane && !hasNext))
+        if(neighborX < 0 || neighborX >= dimXi || neighborY < 0 || neighborY >= dimYi || (needsPreviousPlane && !has_previous) || (needsNextPlane && !has_next))
         {
           continue;
         }
-        const T* neighborPlanePtr = needsPreviousPlane ? previousPlane : (needsNextPlane ? nextPlane : currentPlane);
-        neighbors[count++] = neighborPlanePtr[static_cast<usize>(neighborY) * dimX + static_cast<usize>(neighborX)];
+        const T* neighborPlanePtr = needsPreviousPlane ? previous_plane : (needsNextPlane ? next_plane : current_plane);
+        neighbors[count++] = neighborPlanePtr[static_cast<usize>(neighborY) * dim_x + static_cast<usize>(neighborX)];
       }
-      outPlane[tuple] = predicate(center, nonstd::span<const T>(neighbors.data(), count));
+      out_plane[tuple] = predicate(center, nonstd::span<const T>(neighbors.data(), count));
     }
   }
 };
@@ -366,33 +366,33 @@ struct Contour2DBlockBody
   const T* input;
   T* output;
   const SEOffset* offsets;
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
   const PredicateT& predicate;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
     std::array<T, k_MaxRadius1Neighbors> neighbors{};
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
-      const usize centerIndex = (y - inputYBegin) * inputWidth + (x - inputXBegin);
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
+      const usize centerIndex = (y - input_y_begin) * input_width + (x - input_x_begin);
       const T center = input[centerIndex];
 
       usize count = 0;
-      for(usize offsetIndex = 0; offsetIndex < numOffsets; ++offsetIndex)
+      for(usize offsetIndex = 0; offsetIndex < num_offsets; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
         if(offset.dz != 0)
@@ -405,7 +405,7 @@ struct Contour2DBlockBody
         {
           continue;
         }
-        const usize inputIndex = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth + (static_cast<usize>(neighborX) - inputXBegin);
+        const usize inputIndex = (static_cast<usize>(neighborY) - input_y_begin) * input_width + (static_cast<usize>(neighborX) - input_x_begin);
         neighbors[count++] = input[inputIndex];
       }
       output[tuple] = predicate(center, nonstd::span<const T>(neighbors.data(), count));
@@ -436,7 +436,7 @@ struct Contour2DBlockBody
  * @tparam T scalar voxel type. @tparam PredicateT `T(T center, nonstd::span<const T> inBoundsNeighbors) const`.
  */
 template <class T, class PredicateT>
-Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const std::vector<SEOffset>& neighborOffsets, const PredicateT& predicate,
+Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const std::vector<SEOffset>& neighborOffsets, const PredicateT& predicate,
                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_RadiusOneStencil2DTargetBytes)
 {
   const usize dimX = dims[0];
@@ -473,13 +473,13 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, sliceValues);
       const auto body = detail::ContourPlaneBody<T, PredicateT>{.slab = input.data(),
-                                                                .outPlane = output.data() + z * sliceValues,
+                                                                .out_plane = output.data() + z * sliceValues,
                                                                 .offsets = neighborOffsets.data(),
-                                                                .numOffsets = neighborOffsets.size(),
-                                                                .dimX = dimX,
-                                                                .dimY = dimY,
-                                                                .dimZ = dimZ,
-                                                                .zLo = 0,
+                                                                .num_offsets = neighborOffsets.size(),
+                                                                .dim_x = dimX,
+                                                                .dim_y = dimY,
+                                                                .dim_z = dimZ,
+                                                                .z_lo = 0,
                                                                 .z = z,
                                                                 .predicate = predicate};
       parallelAlgorithm.execute([&](const Range& range) {
@@ -549,15 +549,15 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
                                                   const auto body = detail::Contour2DBlockBody<T, PredicateT>{.input = input,
                                                                                                               .output = output,
                                                                                                               .offsets = neighborOffsets.data(),
-                                                                                                              .numOffsets = neighborOffsets.size(),
-                                                                                                              .dimX = dimX,
-                                                                                                              .dimY = dimY,
-                                                                                                              .inputXBegin = inputXBegin,
-                                                                                                              .inputYBegin = inputYBegin,
-                                                                                                              .inputWidth = inputWidth,
-                                                                                                              .outputXBegin = outputXBegin,
-                                                                                                              .outputYBegin = outputYBegin,
-                                                                                                              .outputWidth = outputWidth,
+                                                                                                              .num_offsets = neighborOffsets.size(),
+                                                                                                              .dim_x = dimX,
+                                                                                                              .dim_y = dimY,
+                                                                                                              .input_x_begin = inputXBegin,
+                                                                                                              .input_y_begin = inputYBegin,
+                                                                                                              .input_width = inputWidth,
+                                                                                                              .output_x_begin = outputXBegin,
+                                                                                                              .output_y_begin = outputYBegin,
+                                                                                                              .output_width = outputWidth,
                                                                                                               .predicate = predicate};
                                                   return [body, &sendThreadSafeProgress, &shouldCancel](const Range& range) {
                                                     constexpr usize k_ProgressBatchValues = 4096;
@@ -594,13 +594,13 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
   if(!detail::ContourCheckedMultiply(sliceValues, sizeof(T), planeBytes) || !detail::ContourCheckedMultiply(planeBytes, dimZ, fullVolumeBytes))
   {
     return MakeErrorResult(-8770,
-                           fmt::format("Contour dimensions ({}) and element size ({} bytes) overflow while sizing the streamed band buffers.", StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                           fmt::format("Contour dimensions ({}) and element size ({} bytes) overflow while sizing the streamed band buffers.", string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   usize minimumBandBytes = 0;
   if(!detail::ContourCheckedMultiply(planeBytes, usize{4}, minimumBandBytes))
   {
     return MakeErrorResult(-8770,
-                           fmt::format("Contour dimensions ({}) and element size ({} bytes) overflow while sizing the streamed band buffers.", StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                           fmt::format("Contour dimensions ({}) and element size ({} bytes) overflow while sizing the streamed band buffers.", string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   const uint64 usefulBandBytes = ResolveWorkingMemoryFractionBytes(fullVolumeBytes, 1, 20, minimumBandBytes);
   auto bandReservation = ReserveWorkingMemory(usefulBandBytes, usefulBandBytes);
@@ -666,16 +666,16 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
       const T* nextPlanePtr = hasNext ? currentBandDataPtr + (computed + 1) * sliceValues : nullptr;
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, sliceValues);
-      parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previousPlane = previousPlanePtr,
-                                                                               .currentPlane = currentBandDataPtr + computed * sliceValues,
-                                                                               .nextPlane = nextPlanePtr,
-                                                                               .outPlane = outputBand.get() + computed * sliceValues,
+      parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previous_plane = previousPlanePtr,
+                                                                               .current_plane = currentBandDataPtr + computed * sliceValues,
+                                                                               .next_plane = nextPlanePtr,
+                                                                               .out_plane = outputBand.get() + computed * sliceValues,
                                                                                .offsets = neighborOffsets.data(),
-                                                                               .numOffsets = neighborOffsets.size(),
-                                                                               .dimX = dimX,
-                                                                               .dimY = dimY,
-                                                                               .hasPrevious = hasPrevious,
-                                                                               .hasNext = hasNext,
+                                                                               .num_offsets = neighborOffsets.size(),
+                                                                               .dim_x = dimX,
+                                                                               .dim_y = dimY,
+                                                                               .has_previous = hasPrevious,
+                                                                               .has_next = hasNext,
                                                                                .predicate = predicate});
       reportCompletedPlane();
     }
@@ -711,16 +711,16 @@ Result<> ApplyContour(const AbstractDataStore<T>& in, AbstractDataStore<T>& out,
     const T* deferredPreviousPtr = deferredLocal > 0 ? currentBandDataPtr + (deferredLocal - 1) * sliceValues : (hasPreviousCarry ? previousPlaneCarry.get() : nullptr);
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, sliceValues);
-    parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previousPlane = deferredPreviousPtr,
-                                                                             .currentPlane = currentBandDataPtr + deferredLocal * sliceValues,
-                                                                             .nextPlane = bandStorage[nextParity].get(),
-                                                                             .outPlane = outputBand.get(),
+    parallelAlgorithm.execute(detail::ContourRollingPlaneBody<T, PredicateT>{.previous_plane = deferredPreviousPtr,
+                                                                             .current_plane = currentBandDataPtr + deferredLocal * sliceValues,
+                                                                             .next_plane = bandStorage[nextParity].get(),
+                                                                             .out_plane = outputBand.get(),
                                                                              .offsets = neighborOffsets.data(),
-                                                                             .numOffsets = neighborOffsets.size(),
-                                                                             .dimX = dimX,
-                                                                             .dimY = dimY,
-                                                                             .hasPrevious = deferredZ != 0,
-                                                                             .hasNext = true,
+                                                                             .num_offsets = neighborOffsets.size(),
+                                                                             .dim_x = dimX,
+                                                                             .dim_y = dimY,
+                                                                             .has_previous = deferredZ != 0,
+                                                                             .has_next = true,
                                                                              .predicate = predicate});
     if(shouldCancel)
     {

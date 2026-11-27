@@ -12,7 +12,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ReverseTriangleWindingInputValues
 {
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
 };
 
 /**

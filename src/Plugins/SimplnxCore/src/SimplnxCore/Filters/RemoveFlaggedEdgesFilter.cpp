@@ -59,7 +59,7 @@ Parameters RemoveFlaggedEdgesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputEdgeGeometryPath_Key, "Edge Geometry", "The Edge Geometry that will be processed.", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The DataArrayPath to the mask array that marks each edge as either true (remove) or false(keep).", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputEdgeGeometryPath_Key, "Created Geometry", "The name of the created Edge Geometry", DataPath({"ReducedGeometry"})));
@@ -146,15 +146,15 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(!selectedEdgeArrays.empty() && nullptr == srcEdgeAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5651, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5651, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+      transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
     }
     else if(pEdgeArrayHandling == detail::k_CopyAllEdgeArraysIdx)
     {
       if(nullptr == srcEdgeAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5652, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5652, fmt::format("'{}' must have edge data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -162,7 +162,7 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       if(getChildrenResult.has_value())
       {
         selectedEdgeArrays = getChildrenResult.value();
-        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
+        transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcEdgeAttrMatPtr, selectedEdgeArrays, reducedEdgeAttributeMatrixPath, resultOutputActions);
       }
     }
   }
@@ -176,15 +176,15 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
     {
       if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5653, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5653, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+      transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
     else if(pVertexArrayHandling == detail::k_CopyAllVertexArraysIdx)
     {
       if(nullptr == srcVertexAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5654, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5654, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -192,13 +192,13 @@ IFilter::PreflightResult RemoveFlaggedEdgesFilter::preflightImpl(const DataStruc
       if(getChildrenResult.has_value())
       {
         selectedVertexArrays = getChildrenResult.value();
-        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+        transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
       }
     }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -207,17 +207,17 @@ Result<> RemoveFlaggedEdgesFilter::executeImpl(DataStructure& dataStructure, con
 {
   RemoveFlaggedEdgesInputValues inputValues;
 
-  inputValues.EdgeGeometry = filterArgs.value<DataPath>(k_InputEdgeGeometryPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ReducedEdgeGeometry = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
+  inputValues.edge_geometry = filterArgs.value<DataPath>(k_InputEdgeGeometryPath_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.reduced_edge_geometry = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
 
-  inputValues.EdgeDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
-  inputValues.EdgeAttributeMatrixPath = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
-  inputValues.SelectedEdgeData = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
+  inputValues.edge_data_handling = filterArgs.value<ChoicesParameter::ValueType>(k_EdgeDataHandling_Key);
+  inputValues.edge_attribute_matrix_path = filterArgs.value<DataPath>(k_EdgeDataSelectedAttributeMatrix_Key);
+  inputValues.selected_edge_data = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_EdgeDataSelectedArrays_Key);
 
-  inputValues.VertexDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
-  inputValues.VertexAttributeMatrixPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
-  inputValues.SelectedVertexData = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
+  inputValues.vertex_data_handling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
+  inputValues.vertex_attribute_matrix_path = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
+  inputValues.selected_vertex_data = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
 
   return RemoveFlaggedEdges(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

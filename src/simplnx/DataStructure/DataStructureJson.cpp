@@ -187,7 +187,7 @@ bool HasReadableBounds(const RectGridGeom& rectGridGeom)
   const auto* yBoundsPtr = rectGridGeom.getYBounds();
   const auto* zBoundsPtr = rectGridGeom.getZBounds();
 
-  const auto hasReadableStore = [](const Float32Array* boundsPtr) {
+  const auto hasReadableStore = [](const Float32ArrayType* boundsPtr) {
     if(boundsPtr == nullptr)
     {
       return false;
@@ -222,7 +222,7 @@ void AppendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry&
   }
   else if(const auto* rectGridGeomPtr = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeomPtr != nullptr && HasReadableBounds(*rectGridGeomPtr))
   {
-    const Result<FloatVec3> originResult = rectGridGeomPtr->getOrigin();
+    const Result<FloatVec3Type> originResult = rectGridGeomPtr->getOrigin();
     if(originResult.valid())
     {
       geometryNode[keys::k_Origin.view()] = Vec3ToJson(originResult.value());
@@ -413,7 +413,7 @@ nlohmann::json MakeHierarchyNode(const DataObject& object, const DataPath& path)
       continue;
     }
 
-    const std::vector<const DataObject*> sortedChildPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
+    const std::vector<const DataObject*> sortedChildPtrs = data_structure_export_utilities::GetSortedObjectPointers(groupPtr->getDataMap());
     auto& children = pendingNode.getJson().at(keys::k_Children.view()).get_ref<nlohmann::json::array_t&>();
     // Reserve before pendingNodes stores pointers to child JSON values.
     children.reserve(sortedChildPtrs.size());
@@ -435,7 +435,7 @@ nlohmann::json DataStructure::exportHierarchyAsJson() const
   root[keys::k_Objects.view()] = nlohmann::json::array();
 
   auto& objects = root[keys::k_Objects.view()].get_ref<nlohmann::json::array_t&>();
-  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
+  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export_utilities::GetSortedObjectPointers(m_RootGroup);
   objects.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : rootObjectPtrs)
   {

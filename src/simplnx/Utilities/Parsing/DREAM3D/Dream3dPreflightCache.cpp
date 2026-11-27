@@ -108,13 +108,13 @@ Result<NeutralMetadataHandout> ReadFromDisk(const fs::path& filePath, bool neutr
     return MakeErrorResult<NeutralMetadataHandout>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", filePath.string()));
   }
   auto version = GetFileVersion(fileReader);
-  DeferredImageMetadata deferredImageMetadata;
+  DeferredImageMetadataType deferredImageMetadata;
   auto result = neutral ? detail::ImportMetadata(fileReader, std::make_shared<InMemoryFormatResolver>(), deferredImageMetadata) : ImportDataStructureFromFile(fileReader, true);
   if(result.invalid())
   {
     return ConvertInvalidResult<NeutralMetadataHandout>(std::move(result));
   }
-  NeutralMetadataHandout handout{.dataStructure = std::move(result.value()), .fileVersion = std::move(version), .deferredImageMetadata = std::move(deferredImageMetadata)};
+  NeutralMetadataHandout handout{.data_structure = std::move(result.value()), .file_version = std::move(version), .deferred_image_metadata = std::move(deferredImageMetadata)};
   return ConvertResultTo<NeutralMetadataHandout>(ConvertResult(std::move(result)), std::move(handout));
 }
 
@@ -142,7 +142,7 @@ struct RefreshDataArrayStoreFunctor
 
     if(dataArrayPtr->getStoreType() == IDataStore::StoreType::Empty)
     {
-      auto plannedResult = DataStoreUtilities::CreatePlannedDataStore<T>(dataStructure, path, dataArrayPtr->getTupleShape(), dataArrayPtr->getComponentShape(), "");
+      auto plannedResult = data_store_utilities::CreatePlannedDataStore<T>(dataStructure, path, dataArrayPtr->getTupleShape(), dataArrayPtr->getComponentShape(), "");
       if(plannedResult.invalid())
       {
         return ConvertResult(std::move(plannedResult));
@@ -230,7 +230,7 @@ struct RefreshNeighborListStoreFunctor
     auto& neighborList = dataStructure.getDataRefAs<NeighborList<T>>(path);
     // Tuple metadata supplies a lower-bound policy estimate without list reads.
     const auto bytes = CalculateStoreCopyBytes(neighborList.getTupleShape(), ShapeType{1}, sizeof(T));
-    const auto format = ArrayCreationUtilities::ResolveStorageFormat(dataStructure, path, GetDataType<T>(), bytes, "");
+    const auto format = array_creation_utilities::ResolveStorageFormat(dataStructure, path, GetDataType<T>(), bytes, "");
     neighborList.setStore(std::shared_ptr<AbstractListStore<T>>(neighborList.getStore()->deepCopy(format)));
   }
 };
@@ -290,7 +290,7 @@ Result<> Dream3dPreflightCache::RefreshStores(DataStructure& dataStructure)
 
 Result<NeutralMetadataHandout> Dream3dPreflightCache::PrepareHandout(NeutralMetadataHandout handout, const fs::path& filePath)
 {
-  auto refreshResult = RefreshStores(handout.dataStructure);
+  auto refreshResult = RefreshStores(handout.data_structure);
   if(refreshResult.invalid())
   {
     for(auto& error : refreshResult.errors())
@@ -309,12 +309,12 @@ Result<std::optional<NeutralMetadataHandout>> Dream3dPreflightCache::tryServeFro
   {
     const std::lock_guard<std::mutex> lock(m_Mutex);
     auto iter = m_Entries.find(key);
-    if(iter != m_Entries.end() && iter->second.fileSize == fileSize && iter->second.mtime == mtime)
+    if(iter != m_Entries.end() && iter->second.file_size == fileSize && iter->second.mtime == mtime)
     {
       m_Hits++;
       iter->second.last_used_tick = ++m_Tick;
       handout = iter->second.master;
-      diskWarnings = iter->second.diskWarnings;
+      diskWarnings = iter->second.disk_warnings;
     }
   }
   if(!handout.has_value())
@@ -339,7 +339,7 @@ Result<DataStructure> Dream3dPreflightCache::fetch(const fs::path& filePath)
   {
     return ConvertInvalidResult<DataStructure>(std::move(result));
   }
-  auto structure = std::move(result.value().dataStructure);
+  auto structure = std::move(result.value().data_structure);
   return ConvertResultTo<DataStructure>(ConvertResult(std::move(result)), std::move(structure));
 }
 
@@ -349,13 +349,13 @@ Result<> NeutralMetadataHandout::applyImageMetadata(const fs::path& filePath, co
   std::unordered_set<DataObject::IdType> checkedIds;
   for(const auto& path : selectedPaths)
   {
-    auto* geometryPtr = dataStructure.getDataAs<ImageGeom>(path);
+    auto* geometryPtr = data_structure.getDataAs<ImageGeom>(path);
     if(geometryPtr == nullptr || !checkedIds.insert(geometryPtr->getId()).second)
     {
       continue;
     }
-    const auto metadata = deferredImageMetadata.find(geometryPtr->getId());
-    if(metadata == deferredImageMetadata.end())
+    const auto metadata = deferred_image_metadata.find(geometryPtr->getId());
+    if(metadata == deferred_image_metadata.end())
     {
       continue;
     }
@@ -376,10 +376,10 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchNeutralMetadata(const
     return result;
   }
   auto& handout = result.value();
-  auto validation = hdf5::RectGridGeomIO::ValidateImportedBounds(handout.dataStructure, filePath);
+  auto validation = hdf5::RectGridGeomIO::ValidateImportedBounds(handout.data_structure, filePath);
   if(validation.valid())
   {
-    validation = handout.applyImageMetadata(filePath, handout.dataStructure.getAllDataPaths(), false);
+    validation = handout.applyImageMetadata(filePath, handout.data_structure.getAllDataPaths(), false);
   }
   PrependWarnings(validation, result.warnings());
   if(validation.invalid())
@@ -387,7 +387,7 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchNeutralMetadata(const
     return ConvertInvalidResult<NeutralMetadataHandout>(std::move(validation));
   }
   result.warnings() = std::move(validation.warnings());
-  handout.deferredImageMetadata.clear();
+  handout.deferred_image_metadata.clear();
   return result;
 }
 
@@ -454,8 +454,8 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchMetadata(const fs::pa
     Entry& entry = m_Entries[key];
     entry.master = std::move(disk.value());
     // Ordinary warm hits retain their existing behavior. Neutral hits replay only original disk warnings.
-    entry.diskWarnings = neutral ? warnings : std::vector<Warning>{};
-    entry.fileSize = metadata->file_size;
+    entry.disk_warnings = neutral ? warnings : std::vector<Warning>{};
+    entry.file_size = metadata->file_size;
     entry.mtime = metadata->mtime;
     entry.last_used_tick = ++m_Tick;
     while(m_Entries.size() > k_Capacity)

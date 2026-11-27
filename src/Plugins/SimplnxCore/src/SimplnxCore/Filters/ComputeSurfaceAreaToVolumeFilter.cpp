@@ -70,11 +70,11 @@ Parameters ComputeSurfaceAreaToVolumeFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_NumCellsArrayPath_Key, "Number of Cells", "Number of Cells that are owned by the Feature. This value does not place any distinction between Cells that may be of a different size",
-      DataPath({"Cell Feature Data", "NumElements"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      DataPath({"Cell Feature Data", "NumElements"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio",
                                                           "Ratio of surface area to volume for each Feature. The units are inverse length", "SurfaceAreaVolumeRatio"));
@@ -110,7 +110,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
   // Keep the local type checks until the parameter validates supported array kinds.
   // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
-  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   if(featureIdsPtr == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(pFeatureIdsArrayPathValue);
@@ -120,7 +120,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto tupleCountResult = ValidateCellTupleCount(imageGeom, pImageGeometryPathValue, featureIdsPtr->getNumberOfTuples(), pFeatureIdsArrayPathValue, -12804);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCountResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(tupleCountResult))};
   }
 
   PreflightResult preflightResult;
@@ -128,7 +128,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* featureDataArrayPtr = dataStructure.getDataAs<Int32Array>(pNumCellsArrayPathValue);
+  const auto* featureDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pNumCellsArrayPathValue);
   if(nullptr == featureDataArrayPtr)
   {
     return MakePreflightErrorResult(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pNumCellsArrayPathValue.toString()));
@@ -158,7 +158,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -167,12 +167,12 @@ Result<> ComputeSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStruct
 {
   ComputeSurfaceAreaToVolumeInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.NumCellsArrayPath = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
-  inputValues.SurfaceAreaVolumeRatioArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
-  inputValues.CalculateSphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);
-  inputValues.SphericityArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.num_cells_array_path = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
+  inputValues.surface_area_volume_ratio_array_name = inputValues.num_cells_array_path.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
+  inputValues.calculate_sphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);
+  inputValues.sphericity_array_name = inputValues.num_cells_array_path.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeSurfaceAreaToVolume(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

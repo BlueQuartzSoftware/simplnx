@@ -58,7 +58,7 @@ Parameters RandomizeFeatureIdsFilter::parameters() const
   Parameters params;
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs Array", "Array storing the Feature IDs", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAMPath_Key, "Feature Attribute Matrix", "The path to the Feature Attribute Matrix, so it can be updated", DataPath{}));
 
   return params;
@@ -93,9 +93,9 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
   // Preflight reports that execution remaps Feature IDs in place.
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, featureIdsPath);
   // Preflight reports that execution reorders Feature AttributeMatrix arrays in place.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureAMPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, featureAMPath, {});
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
   auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
   auto featureAMPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();
   // Discover the maximum ID with one-mebibyte bulk reads. Iterating the store
   // element by element would repeatedly enter the OOC cache and dominate this
@@ -149,6 +149,6 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
     }
   }
 
-  return ClusterUtilities::RandomizeFeatureIds(featureIdsStore, totalFeatures, featureIArrays);
+  return cluster_utilities::RandomizeFeatureIds(featureIdsStore, totalFeatures, featureIArrays);
 }
 } // namespace nx::core

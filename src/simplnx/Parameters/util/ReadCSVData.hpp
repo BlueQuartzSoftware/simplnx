@@ -381,15 +381,15 @@ public:
   nlohmann::json writeJson() const;
   static Result<ReadCSVData> ReadJson(const nlohmann::json& json);
 
-  std::string inputFilePath;
-  std::vector<std::string> customHeaders;
-  usize startImportRow = 1;
-  std::vector<CSVType> dataTypes;
-  std::vector<bool> skippedArrayMask;
-  usize headersLine = 1;
-  HeaderMode headerMode = HeaderMode::CUSTOM;
-  ShapeType tupleDims = {1};
+  std::string input_file_path;
+  std::vector<std::string> custom_headers;
+  usize start_import_row = 1;
+  std::vector<CSVType> data_types;
+  std::vector<bool> skipped_array_mask;
+  usize headers_line = 1;
+  HeaderMode header_mode = HeaderMode::CUSTOM;
+  ShapeType tuple_dims = {1};
   std::vector<char> delimiters;
-  bool consecutiveDelimiters = false;
+  bool consecutive_delimiters = false;
 };
 } // namespace nx::core

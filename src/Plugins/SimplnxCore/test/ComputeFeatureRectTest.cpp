@@ -43,7 +43,7 @@ DataStructure CreateTestData()
   iGeomPtr->setDimensions(dims);
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, {dims[2], dims[1], dims[0]}, iGeomPtr->getId());
 
-  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsArrayName, {dims[2], dims[1], dims[0]}, {1}, cellAmPtr->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_FeatureIdsArrayName, {dims[2], dims[1], dims[0]}, {1}, cellAmPtr->getId());
   featureIdsPtr->fill(0);
 
   auto& featureIdsStore = featureIdsPtr->getDataStoreRef();
@@ -86,7 +86,7 @@ DataStructure CreateTestData()
   AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {4}, iGeomPtr->getId());
 
   ShapeType compDims = {6};
-  UInt32Array* rectPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAmPtr->getId());
+  UInt32ArrayType* rectPtr = UInt32ArrayType::CreateWithStore<UInt32DataStoreType>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAmPtr->getId());
   auto& rectStore = rectPtr->getDataStoreRef();
   rectStore.setComponent(1, 0, 1);
   rectStore.setComponent(1, 1, 1);
@@ -112,7 +112,7 @@ DataStructure CreateTestData()
   return dataStructure;
 }
 
-Int32Array* CreateLargeBlockTestData(DataStructure& dataStructure)
+Int32ArrayType* CreateLargeBlockTestData(DataStructure& dataStructure)
 {
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
   imageGeomPtr->setDimensions({k_LargeDim, k_LargeDim, k_LargeDim});
@@ -122,8 +122,8 @@ Int32Array* CreateLargeBlockTestData(DataStructure& dataStructure)
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath{{k_ImageGeometryName, k_CellAttrMatrixName, k_FeatureIdsArrayName}};
-  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellShape, {1});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, k_FeatureIdsArrayName, featureIdsDataStore, cellAmPtr->getId());
+  auto featureIdsDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellShape, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, k_FeatureIdsArrayName, featureIdsDataStore, cellAmPtr->getId());
   auto& featureIdsStore = featureIdsPtr->getDataStoreRef();
 
   constexpr usize k_SliceTuples = k_LargeDim * k_LargeDim;
@@ -149,7 +149,7 @@ Int32Array* CreateLargeBlockTestData(DataStructure& dataStructure)
   return featureIdsPtr;
 }
 
-void RequireFeatureCorners(const UInt32Array& corners, usize featureId, const std::array<uint32, 6>& expected)
+void RequireFeatureCorners(const UInt32ArrayType& corners, usize featureId, const std::array<uint32, 6>& expected)
 {
   const auto& cornersStore = corners.getDataStoreRef();
   INFO("Feature ID: " << featureId);
@@ -162,7 +162,7 @@ void RequireFeatureCorners(const UInt32Array& corners, usize featureId, const st
 
 TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[SimplnxCore][ComputeFeatureRectFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Configure the filter arguments.
   ComputeFeatureRectFilter filter;
@@ -174,17 +174,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[Sim
   args.insertOrAssign(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(k_RectCoordsArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsArrayName}}));
-  const UInt32Array& coords = dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsArrayName}});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsArrayName}}));
+  const UInt32ArrayType& coords = dataStructure.getDataRefAs<UInt32ArrayType>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsArrayName}});
   const auto& coordsDataStore = coords.getDataStoreRef();
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsExemplaryArrayName}}));
-  const UInt32Array& exemplaryCoords = dataStructure.getDataRefAs<UInt32Array>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsExemplaryArrayName}});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsExemplaryArrayName}}));
+  const UInt32ArrayType& exemplaryCoords = dataStructure.getDataRefAs<UInt32ArrayType>({{k_ImageGeometryName, k_FeatureAttrMatrixName, k_RectCoordsExemplaryArrayName}});
   const auto& exemplaryCoordsDataStore = exemplaryCoords.getDataStoreRef();
 
   REQUIRE(coordsDataStore.getNumberOfTuples() == exemplaryCoordsDataStore.getNumberOfTuples());
@@ -197,13 +197,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: Valid filter execution", "[Sim
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureRectFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureRectFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

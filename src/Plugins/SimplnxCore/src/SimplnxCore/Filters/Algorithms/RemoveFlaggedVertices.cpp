@@ -28,7 +28,7 @@ struct RemoveFlaggedVerticesFunctor
    * @return The first destination resize error.
    */
   template <class T>
-  Result<> operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, size_t numVerticesToKeep) const
+  Result<> operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& maskCompare, size_t numVerticesToKeep) const
   {
     const auto& sourceDataStore = sourceIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destinationDataStore = destIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -74,18 +74,18 @@ RemoveFlaggedVertices::RemoveFlaggedVertices(DataStructure& dataStructure, const
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedVertices::operator()()
 {
-  const VertexGeom& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->InputVertexGeometryPath);
+  const VertexGeom& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->input_vertex_geometry_path);
   const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_path);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_path.toString());
     return MakeErrorResult(-54070, message);
   }
 
@@ -95,7 +95,7 @@ Result<> RemoveFlaggedVertices::operator()()
   const ShapeType tDims = {numVerticesToKeep};
 
   // Resize the reduced vertex geometry object
-  auto& reducedVertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
+  auto& reducedVertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->output_vertex_geometry_path);
   Result<> resizeResult = reducedVertexGeom.resizeVertexList(numVerticesToKeep);
   if(resizeResult.invalid())
   {
@@ -147,18 +147,18 @@ Result<> RemoveFlaggedVertices::operator()()
   {
     return {};
   }
-  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
+  if(m_InputValues->clear_feature_attribute_matrix && m_InputValues->renumber_features)
   {
     // Validate all source IDs, including vertices removed by the mask, as Crop Image does.
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->VertexFeatureIdsPath);
-    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAttributeMatrixPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->vertex_feature_ids_path);
+    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->feature_attribute_matrix_path, featureIds, false, m_MessageHandler, &m_ShouldCancel);
     if(validateResult.invalid() || m_ShouldCancel)
     {
       return validateResult;
     }
-    const DataPath destFeatureAmPath = m_InputValues->OutputVertexGeometryPath.createChildPath(m_InputValues->FeatureAttributeMatrixPath.getTargetName());
-    const DataPath destFeatureIdsPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(m_InputValues->VertexFeatureIdsPath.getTargetName());
-    return Sampling::RenumberFeatures(m_DataStructure, destFeatureAmPath, m_InputValues->VertexFeatureIdsPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+    const DataPath destFeatureAmPath = m_InputValues->output_vertex_geometry_path.createChildPath(m_InputValues->feature_attribute_matrix_path.getTargetName());
+    const DataPath destFeatureIdsPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(m_InputValues->vertex_feature_ids_path.getTargetName());
+    return sampling::RenumberFeatures(m_DataStructure, destFeatureAmPath, m_InputValues->vertex_feature_ids_path, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};

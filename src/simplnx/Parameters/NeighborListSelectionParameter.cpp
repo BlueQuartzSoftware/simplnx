@@ -50,7 +50,7 @@ Uuid NeighborListSelectionParameter::uuid() const
   return ParameterTraits<NeighborListSelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes NeighborListSelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType NeighborListSelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -73,7 +73,7 @@ Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::js
   static constexpr StringLiteralType k_Prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
@@ -83,7 +83,7 @@ Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::js
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
   }
   return {{std::move(*path)}};
 }
@@ -121,18 +121,18 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* objectPtr = dataStructure.getData(value);
   if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateDoesNotExist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
   const auto* neighborListPtr = dynamic_cast<const INeighborList*>(objectPtr);
   if(neighborListPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));
   }
 
   if(!m_AllowedTypes.empty())

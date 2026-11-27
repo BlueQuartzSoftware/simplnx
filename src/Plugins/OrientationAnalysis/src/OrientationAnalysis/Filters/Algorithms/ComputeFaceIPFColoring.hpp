@@ -19,14 +19,14 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFaceIPFColoringInputValues
 {
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath SurfaceMeshFaceNormalsArrayPath;
-  DataPath FeatureEulerAnglesArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  std::string FirstFaceIPFColorsArrayName;
-  std::string SecondFaceIPFColorsArrayName;
-  ebsdlib::ColorKeyKind ColorKey = ebsdlib::ColorKeyKind::TSL;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath surface_mesh_face_normals_array_path;
+  DataPath feature_euler_angles_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  std::string first_face_ipf_colors_array_name;
+  std::string second_face_ipf_colors_array_name;
+  ebsdlib::ColorKeyKind color_key = ebsdlib::ColorKeyKind::TSL;
 };
 
 /**

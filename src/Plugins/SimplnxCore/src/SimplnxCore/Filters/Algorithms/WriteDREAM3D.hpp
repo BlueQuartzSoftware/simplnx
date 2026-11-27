@@ -19,13 +19,13 @@ class PipelineFilter;
  */
 struct SIMPLNXCORE_EXPORT WriteDREAM3DInputValues
 {
-  FileSystemPathParameter::ValueType ExportFilePath;
-  BoolParameter::ValueType WriteXdmfFile{};
+  FileSystemPathParameter::ValueType export_file_path;
+  BoolParameter::ValueType write_xdmf_file{};
   /// Master on/off switch for HDF5 gzip compression of DataArray / NeighborList datasets.
-  bool UseCompression = true;
+  bool use_compression = true;
   /// Gzip/deflate level in [1, 9]; ignored when UseCompression is false.
-  int32 CompressionLevel = 5;
-  const PipelineFilter* PipelineNode = nullptr;
+  int32 compression_level = 5;
+  const PipelineFilter* pipeline_node = nullptr;
 };
 
 /**

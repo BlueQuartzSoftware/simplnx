@@ -37,7 +37,7 @@ Result<> ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArr
   messageHandler.sendInfoMessage(
       fmt::format("Reshaping data array '{}' from [{}] to [{}]...", inputArrayPath.toString(), fmt::join(inputDataArray.getTupleShape(), ","), fmt::join(outputDataArray.getTupleShape(), ",")));
   usize tuplesToCopy = std::min(inputDataArray.getNumberOfTuples(), outputDataArray.getNumberOfTuples());
-  auto result = CopyFromArray::CopyData(inputDataArray, outputDataArray, 0, 0, tuplesToCopy);
+  auto result = copy_from_array::CopyData(inputDataArray, outputDataArray, 0, 0, tuplesToCopy);
   if(result.invalid())
   {
     return result;
@@ -72,8 +72,8 @@ Result<> ReshapeNeighborListImpl(DataStructure& dataStructure, const DataPath& i
 
 struct SIMPLNXCORE_EXPORT ReshapeDataArrayInputValues
 {
-  DataPath InputArrayPath;
-  DynamicTableParameter::ValueType TupleDims;
+  DataPath input_array_path;
+  DynamicTableParameter::ValueType tuple_dims;
 };
 
 /**

@@ -36,7 +36,7 @@ public:
 
   };
 
-  using Types = std::vector<Type>;
+  using TypesType = std::vector<Type>;
 
   /**
    * @brief Converts to a std::vector<EnumType>. Useful for
@@ -44,7 +44,7 @@ public:
    * @param types
    * @return
    */
-  static std::vector<EnumType> ToVector(Types& types);
+  static std::vector<EnumType> ToVector(TypesType& types);
 
   /**
    * @brief Converts <b>From</b> a std::vector<EnumType> to std::vector<Type>. Useful for
@@ -52,7 +52,7 @@ public:
    * @param types
    * @return
    */
-  static Types FromVector(std::vector<EnumType>& types);
+  static TypesType FromVector(std::vector<EnumType>& types);
 
   /**
    * @brief PrimaryStr
@@ -95,32 +95,32 @@ public:
    * @param phaseType
    * @return
    */
-  static std::string getPhaseTypeString(Type phaseType);
+  static std::string GetPhaseTypeString(Type phaseType);
 
   /**
    * @brief getPhaseType
    * @param str
    * @return
    */
-  static Type getPhaseType(const char* str);
+  static Type GetPhaseType(const char* str);
 
   /**
    * @brief getPhaseTypeStrings
    * @param strings
    */
-  static void getPhaseTypeStrings(std::vector<std::string>& strings);
+  static void GetPhaseTypeStrings(std::vector<std::string>& strings);
 
   /**
    * @brief getPhaseTypeEnums
    * @param types
    */
-  static void getPhaseTypeEnums(std::vector<Type>& types);
+  static void GetPhaseTypeEnums(std::vector<Type>& types);
 
   /**
    * @brief getPhaseTypeMap
    * @param map
    */
-  static void getPhaseTypeMap(std::map<Type, std::string>& phaseMap);
+  static void GetPhaseTypeMap(std::map<Type, std::string>& phaseMap);
 
 protected:
   PhaseType();

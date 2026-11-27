@@ -27,8 +27,8 @@ ExtractPipelineToFile::ExtractPipelineToFile(DataStructure& dataStructure, const
 // -----------------------------------------------------------------------------
 Result<> ExtractPipelineToFile::operator()()
 {
-  const auto importFile = m_InputValues->InputFilePath;
-  auto outputFile = m_InputValues->OutputFilePath;
+  const auto importFile = m_InputValues->input_file_path;
+  auto outputFile = m_InputValues->output_file_path;
 
   Result<nlohmann::json> pipelineResult = dream3d::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())

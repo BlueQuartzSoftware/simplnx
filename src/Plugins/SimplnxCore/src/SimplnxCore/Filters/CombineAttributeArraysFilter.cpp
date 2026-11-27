@@ -61,7 +61,7 @@ Parameters CombineAttributeArraysFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "The complete path to each of the Attribute Arrays to combine",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the name of the created output array of the combined attribute arrays.",
@@ -99,18 +99,18 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
 
   if(selectedDataArrayPathsValue.empty())
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-66005, "Please select arrays to combine")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-66005, "Please select arrays to combine")};
   }
 
   bool result = nx::core::CheckArraysAreSameType(dataStructure, selectedDataArrayPathsValue);
   if(!result)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-66006, "All selected arrays must be of the same type")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-66006, "All selected arrays must be of the same type")};
   }
   result = nx::core::CheckArraysHaveSameTupleCount(dataStructure, selectedDataArrayPathsValue);
   if(!result)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-66007, "All selected arrays must have the same number of tuples")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-66007, "All selected arrays must have the same number of tuples")};
   }
 
   // Figure out the total number of components
@@ -141,7 +141,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -150,10 +150,10 @@ Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure,
 {
   CombineAttributeArraysInputValues inputValues;
 
-  inputValues.NormalizeData = filterArgs.value<bool>(k_NormalizeData_Key);
-  inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.normalize_data = filterArgs.value<bool>(k_NormalizeData_Key);
+  inputValues.selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  inputValues.StackedDataArrayPath = inputValues.SelectedDataArrayPaths[0].replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
+  inputValues.stacked_data_array_path = inputValues.selected_data_array_paths[0].replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
 
   return CombineAttributeArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

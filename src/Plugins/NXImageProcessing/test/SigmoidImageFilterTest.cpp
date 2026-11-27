@@ -11,8 +11,8 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SigmoidImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SigmoidImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -28,7 +28,7 @@ TEST_CASE("NXImageProcessing::SigmoidImageFilter: ITK real-image golden (default
   args.insertOrAssign(SigmoidImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   SigmoidImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -37,5 +37,5 @@ TEST_CASE("NXImageProcessing::SigmoidImageFilter: ITK real-image golden (default
   INFO(fmt::format("SigmoidImageFilter defaults md5: ours='{}' committed='{}'", ourMd5, "c9222b9c9150e0d7a07e9de184c10167"));
   REQUIRE(ourMd5 == "c9222b9c9150e0d7a07e9de184c10167");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

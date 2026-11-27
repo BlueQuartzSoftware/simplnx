@@ -10,7 +10,7 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-namespace nx::core::OStreamUtilities
+namespace nx::core::o_stream_utilities
 {
 /**
  * @enum Delimiter

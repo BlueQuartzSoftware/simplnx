@@ -104,11 +104,11 @@ void ArrayThreshold::setArrayPath(const DataPath& path)
   m_ArrayPath = path;
 }
 
-ArrayThreshold::ComparisonValue ArrayThreshold::getComparisonValue() const
+ArrayThreshold::ComparisonValueType ArrayThreshold::getComparisonValue() const
 {
   return m_Value;
 }
-void ArrayThreshold::setComparisonValue(ComparisonValue value)
+void ArrayThreshold::setComparisonValue(ComparisonValueType value)
 {
   m_Value = value;
 }
@@ -170,7 +170,7 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
     usize componentIndex = json.contains(k_ComponentIndexTag) ? json[k_ComponentIndexTag].get<usize>() : 0;
     threshold->setComponentIndex(componentIndex);
     threshold->setComparisonType(static_cast<ComparisonType>(json[k_ComparisonTag].get<int32>()));
-    threshold->setComparisonValue(json[k_ValueTag].get<ComparisonValue>());
+    threshold->setComparisonValue(json[k_ValueTag].get<ComparisonValueType>());
 
     return threshold;
   } catch(std::exception& e)

@@ -55,18 +55,18 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   Result<> sampleDataActionResult = sampleDataAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sampleDataActionResult);
 
-  auto* sampleDataStorePtr = dataStructure.getDataAs<Float64Array>(k_SampleDataArrayPath)->getDataStore();
+  auto* sampleDataStorePtr = dataStructure.getDataAs<Float64ArrayType>(k_SampleDataArrayPath)->getDataStore();
   std::iota(sampleDataStorePtr->begin(), sampleDataStorePtr->end(), 1.0);
 
   auto* sampleBoolArrayPtr =
-      UnitTest::CreateTestDataArray<bool>(dataStructure, k_SampleBoolArrayPath.getTargetName(), attrMatrixDims, {1}, dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
+      unit_test::CreateTestDataArray<bool>(dataStructure, k_SampleBoolArrayPath.getTargetName(), attrMatrixDims, {1}, dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
   REQUIRE(sampleBoolArrayPtr != nullptr);
   for(usize index = 0; index < sampleBoolArrayPtr->getNumberOfTuples(); index++)
   {
     (*sampleBoolArrayPtr)[index] = index % 2 == 0;
   }
 
-  auto* sampleMultiComponentArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_SampleMultiComponentArrayPath.getTargetName(), attrMatrixDims, {3},
+  auto* sampleMultiComponentArrayPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_SampleMultiComponentArrayPath.getTargetName(), attrMatrixDims, {3},
                                                                             dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
   REQUIRE(sampleMultiComponentArrayPtr != nullptr);
   for(usize index = 0; index < sampleMultiComponentArrayPtr->getNumberOfTuples(); index++)
@@ -88,7 +88,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   Result<> refDataActionResult = refDataAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refDataActionResult);
 
-  auto* refDataStorePtr = dataStructure.getDataAs<Int32Array>(k_RefDataArrayPath)->getDataStore();
+  auto* refDataStorePtr = dataStructure.getDataAs<Int32ArrayType>(k_RefDataArrayPath)->getDataStore();
   std::iota(refDataStorePtr->begin(), refDataStorePtr->end(), 26);
 
   return dataStructure;
@@ -97,10 +97,10 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {2.5f, 2.5f, 0.0f};
@@ -119,7 +119,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   REQUIRE(dataStructure.getData(k_CopiedNeighborListPath) == nullptr);
 
   algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
@@ -127,7 +127,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(dataStructure.getData(k_CopiedNeighborListPath) == nullptr);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64ArrayType>(k_CopiedDataArrayPath);
   REQUIRE(copiedArray[0] == 13.0);
   REQUIRE(copiedArray[1] == 14.0);
   REQUIRE(copiedArray[2] == 15.0);
@@ -154,23 +154,23 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Basic Valid Executio
   REQUIRE(copiedArray[23] == 9.8);
   REQUIRE(copiedArray[24] == 9.8);
 
-  auto& copiedBoolArray = dataStructure.getDataRefAs<BoolArray>(k_CopiedBoolArrayPath);
-  auto& copiedMultiComponentArray = dataStructure.getDataRefAs<Int32Array>(k_CopiedMultiComponentArrayPath);
+  auto& copiedBoolArray = dataStructure.getDataRefAs<BoolArrayType>(k_CopiedBoolArrayPath);
+  auto& copiedMultiComponentArray = dataStructure.getDataRefAs<Int32ArrayType>(k_CopiedMultiComponentArrayPath);
   REQUIRE(copiedBoolArray[0] == true);
   REQUIRE(copiedBoolArray[3] == static_cast<bool>(9.8));
   REQUIRE(copiedMultiComponentArray[0] == 12);
   REQUIRE(copiedMultiComponentArray[1] == 112);
   REQUIRE(copiedMultiComponentArray[2] == 212);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {10.0f, 10.0f, 3.0f};
@@ -189,27 +189,27 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: No Overlap Valid Exe
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64ArrayType>(k_CopiedDataArrayPath);
   for(const auto& value : copiedArray)
   {
     REQUIRE(value == 9.8);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {1.0f, 1.0f, 0.0f};
@@ -228,13 +228,13 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Executi
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64ArrayType>(k_CopiedDataArrayPath);
   REQUIRE(copiedArray[0] == 7.0);
   REQUIRE(copiedArray[1] == 7.0);
   REQUIRE(copiedArray[2] == 7.0);
@@ -261,15 +261,15 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Nested Valid Executi
   REQUIRE(copiedArray[23] == 12.0);
   REQUIRE(copiedArray[24] == 13.0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid Execution", "[SimplnxCore][NearestPointFuseRegularGridsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const CreateImageGeometryAction::DimensionType refDims = {5, 5, 1};
   const CreateImageGeometryAction::OriginType refOrigin = {-2.0f, -2.0f, 0.0f};
@@ -288,13 +288,13 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(k_RefCellDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_SampleDataArrayPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& copiedArray = dataStructure.getDataRefAs<Float64Array>(k_CopiedDataArrayPath);
+  auto& copiedArray = dataStructure.getDataRefAs<Float64ArrayType>(k_CopiedDataArrayPath);
   REQUIRE(copiedArray[0] == 9.8);
   REQUIRE(copiedArray[1] == 9.8);
   REQUIRE(copiedArray[2] == 9.8);
@@ -321,13 +321,13 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Encompassing Valid E
   REQUIRE(copiedArray[23] == 9.8);
   REQUIRE(copiedArray[24] == 9.8);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][NearestPointFuseRegularGridsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -392,7 +392,7 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Geometry cell tuple 
   auto* sampleAMPtr = AttributeMatrix::Create(dataStructure, "Other Sampling Data", ShapeType{samplingTuples});
   REQUIRE(sampleAMPtr != nullptr);
   REQUIRE(AttributeMatrix::Create(dataStructure, "Other Reference Data", ShapeType{referenceTuples}) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Values", std::make_shared<Int32DataStore>(ShapeType{samplingTuples}, ShapeType{1}, 0), sampleAMPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Values", std::make_shared<Int32DataStoreType>(ShapeType{samplingTuples}, ShapeType{1}, 0), sampleAMPtr->getId()) != nullptr);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Strings", ShapeType{samplingTuples}, std::vector<std::string>(samplingTuples, "value"), sampleAMPtr->getId()) != nullptr);
 
   FilterType filter;
@@ -404,13 +404,13 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Geometry cell tuple 
   const auto result = filter.preflight(dataStructure, args);
   if(samplingTuples == 12 && referenceTuples == 20)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -5565);
     const bool samplingMismatch = samplingTuples != 12;
     REQUIRE(errorRef.message.find(samplingMismatch ? "Other Sampling Data" : "Other Reference Data") != std::string::npos);

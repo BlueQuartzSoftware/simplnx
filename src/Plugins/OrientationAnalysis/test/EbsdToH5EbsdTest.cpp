@@ -190,29 +190,29 @@ const int32 k_StartIndex = 1;
 const int32 k_EndIndex = 2;
 const int32 k_IncrementIndex = 1;
 const uint32 k_PaddingDigits = 1;
-const GeneratedFileListParameter::Ordering k_Ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+const GeneratedFileListParameter::OrderingType k_Ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 const std::string k_InputPath = fmt::format("{}/Small_IN100", unit_test::k_TestFilesDir);
 const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
-GeneratedFileListParameter::ValueType KFileListInfo = {.startIndex = k_StartIndex,
-                                                       .endIndex = k_EndIndex,
-                                                       .incrementIndex = k_IncrementIndex,
-                                                       .paddingDigits = k_PaddingDigits,
+GeneratedFileListParameter::ValueType KFileListInfo = {.start_index = k_StartIndex,
+                                                       .end_index = k_EndIndex,
+                                                       .increment_index = k_IncrementIndex,
+                                                       .padding_digits = k_PaddingDigits,
                                                        .ordering = k_Ordering,
-                                                       .inputPath = k_InputPath,
-                                                       .filePrefix = k_FilePrefix,
-                                                       .fileSuffix = k_FileSuffix,
-                                                       .fileExtension = k_FileExtension};
+                                                       .input_path = k_InputPath,
+                                                       .file_prefix = k_FilePrefix,
+                                                       .file_suffix = k_FileSuffix,
+                                                       .file_extension = k_FileExtension};
 
 } // namespace
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
 
   fs::path inputPath(k_InputPath);
   REQUIRE(fs::exists(inputPath));
@@ -229,13 +229,13 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
   // Create default Parameters for the filter.
   args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32ParameterType::ValueType>(0.25F));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::ebsd_to_h5_ebsd_input_constants::k_Edax));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(SOutputFilePath)));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(KFileListInfo));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -243,14 +243,14 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
 
   ::TraverseFile(k_ExemplarFilePath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication preserves the destination", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_to_h5ebsd_cancellation.h5ebsd";
   const std::string sentinel = "existing h5ebsd bytes";
 
@@ -273,11 +273,11 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
       Arguments args;
       args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32ParameterType::ValueType>(0.25F));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
-      args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::ebsd_to_h5_ebsd_input_constants::k_Edax));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(KFileListInfo));
 
-      auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+      auto preflightResult2 = filter.preflight(dataStructure, args).output_actions;
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
       std::atomic_bool shouldCancel = false;
       bool sawSaveCheckpoint = false;
@@ -308,7 +308,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
         REQUIRE_FALSE(fs::exists(outputPath));
       }
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }

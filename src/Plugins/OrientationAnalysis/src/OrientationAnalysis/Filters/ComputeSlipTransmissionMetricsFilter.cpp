@@ -54,15 +54,15 @@ Parameters ComputeSlipTransmissionMetricsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Data Array that specifies the average orientation of each Feature as a quaternion",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Data Array that specifies to which Ensemble each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "List of the contiguous neighboring Features for a given Feature", DataPath{},
                                                                  NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each phase", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_mPrimeListArrayName_Key, "Luster-Morris M-Prime", "DataArray Name to store the calculated Luster-Morris Parameters", "mPrime List"));
@@ -100,7 +100,7 @@ IFilter::PreflightResult ComputeSlipTransmissionMetricsFilter::preflightImpl(con
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  ShapeType tupShape = dataStructure.getDataAs<Int32NeighborList>(pNeighborListPathValue)->getTupleShape();
+  ShapeType tupShape = dataStructure.getDataAs<Int32NeighborListType>(pNeighborListPathValue)->getTupleShape();
 
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.replaceName(pF1ListNameValue));
@@ -123,7 +123,7 @@ IFilter::PreflightResult ComputeSlipTransmissionMetricsFilter::preflightImpl(con
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -132,14 +132,14 @@ Result<> ComputeSlipTransmissionMetricsFilter::executeImpl(DataStructure& dataSt
 {
   ComputeSlipTransmissionMetricsInputValues inputValues;
 
-  inputValues.NeighborListArrayPath = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.F1ListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_F1ListArrayName_Key));
-  inputValues.F1sptListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_F1sptListArrayName_Key));
-  inputValues.F7ListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_F7ListArrayName_Key));
-  inputValues.mPrimeListArrayName = inputValues.NeighborListArrayPath.replaceName(filterArgs.value<std::string>(k_mPrimeListArrayName_Key));
+  inputValues.neighbor_list_array_path = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.f1_list_array_name = inputValues.neighbor_list_array_path.replaceName(filterArgs.value<std::string>(k_F1ListArrayName_Key));
+  inputValues.f1spt_list_array_name = inputValues.neighbor_list_array_path.replaceName(filterArgs.value<std::string>(k_F1sptListArrayName_Key));
+  inputValues.f7_list_array_name = inputValues.neighbor_list_array_path.replaceName(filterArgs.value<std::string>(k_F7ListArrayName_Key));
+  inputValues.m_prime_list_array_name = inputValues.neighbor_list_array_path.replaceName(filterArgs.value<std::string>(k_mPrimeListArrayName_Key));
 
   return ComputeSlipTransmissionMetrics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

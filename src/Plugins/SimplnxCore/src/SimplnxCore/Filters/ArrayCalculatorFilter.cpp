@@ -85,7 +85,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
 
   // Parse and validate the expression
   const std::atomic_bool mShouldCancel(false);
-  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.equation, mShouldCancel);
+  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_selected_group, pInfixEquationValue.equation, mShouldCancel);
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
   Result<> parseResult = parser.parseAndValidate(calculatedTupleShape, calculatedComponentShape);
@@ -112,7 +112,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   auto createArrayAction = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), calculatedTupleShape, calculatedComponentShape, pCalculatedArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -121,11 +121,11 @@ Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const 
 {
   ArrayCalculatorInputValues inputValues;
   auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
-  inputValues.InfixEquation = pInfixEquationValue.equation;
-  inputValues.Units = pInfixEquationValue.m_Units;
-  inputValues.SelectedGroup = pInfixEquationValue.m_SelectedGroup;
-  inputValues.ScalarType = filterArgs.value<NumericTypeParameter::ValueType>(k_ScalarType_Key);
-  inputValues.CalculatedArray = filterArgs.value<DataPath>(k_CalculatedArray_Key);
+  inputValues.infix_equation = pInfixEquationValue.equation;
+  inputValues.units = pInfixEquationValue.m_units;
+  inputValues.selected_group = pInfixEquationValue.m_selected_group;
+  inputValues.scalar_type = filterArgs.value<NumericTypeParameter::ValueType>(k_ScalarType_Key);
+  inputValues.calculated_array = filterArgs.value<DataPath>(k_CalculatedArray_Key);
 
   return ArrayCalculator(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

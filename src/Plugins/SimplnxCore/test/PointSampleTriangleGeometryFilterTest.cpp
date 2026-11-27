@@ -31,9 +31,9 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
-static std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertices, usize numVerts)
+static std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexListType* vertices, usize numVerts)
 {
   std::array<float, 6> minMaxVerts = {std::numeric_limits<float>::max(), std::numeric_limits<float>::min(), std::numeric_limits<float>::max(),
                                       std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), std::numeric_limits<float>::min()};
@@ -61,7 +61,7 @@ static std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertice
 
 TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][PointSampleTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
@@ -88,7 +88,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -112,7 +112,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -122,7 +122,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleGeom.getFaceAttributeMatrix()->getName()).createChildPath(triangleAreasName);
 
     // Let's sum up all the areas.
-    Float64Array& faceAreas = dataStructure.getDataRefAs<Float64Array>(triangleAreasDataPath);
+    Float64ArrayType& faceAreas = dataStructure.getDataRefAs<Float64ArrayType>(triangleAreasDataPath);
     double sumOfAreas = 0.0;
     for(const auto& area : faceAreas)
     {
@@ -162,7 +162,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -170,11 +170,11 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     VertexGeom& vertGeom = dataStructure.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     usize numVerts = vertGeom.getNumberOfVertices();
-    IGeometry::SharedVertexList* verticesPtr = vertGeom.getVertices();
+    IGeometry::SharedVertexListType* verticesPtr = vertGeom.getVertices();
     std::array<float, 6> minMaxVerts = FindMinMaxCoord(verticesPtr, numVerts);
 
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedVertexList* triVertsPtr = triangleGeom.getVertices();
+    IGeometry::SharedVertexListType* triVertsPtr = triangleGeom.getVertices();
     usize triNumVerts = triangleGeom.getNumberOfVertices();
     std::array<float, 6> minMaxTriVerts = FindMinMaxCoord(triVertsPtr, triNumVerts);
 
@@ -219,13 +219,13 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     REQUIRE(minMaxVerts[5] <= 3.7f);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][PointSampleTriangleGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -270,7 +270,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: SIMPL Backwards Compa
 TEMPLATE_TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete face tuples", "[SimplnxCore][PointSampleTriangleGeometryFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64, float32, float64, bool)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize numComponents = GENERATE(usize{3}, usize{1}, usize{2});
   const usize numTriangles = GENERATE(usize{4}, usize{1});
   const int32 numSamples = GENERATE(2, 8);
@@ -279,8 +279,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer com
   DataStructure dataStructure;
   auto* trianglesPtr = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(trianglesPtr != nullptr);
-  auto* coordinatesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3 * numTriangles}, {3}, trianglesPtr->getId());
-  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {numTriangles}, {3}, trianglesPtr->getId());
+  auto* coordinatesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices", {3 * numTriangles}, {3}, trianglesPtr->getId());
+  auto* facesPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {numTriangles}, {3}, trianglesPtr->getId());
   REQUIRE(coordinatesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   for(usize face = 0; face < numTriangles; ++face)
@@ -304,8 +304,8 @@ TEMPLATE_TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer com
   REQUIRE(vertexDataPtr != nullptr);
   trianglesPtr->setFaceAttributeMatrix(*faceDataPtr);
   trianglesPtr->setVertexAttributeMatrix(*vertexDataPtr);
-  auto* areasPtr = UnitTest::CreateTestDataArray<float64>(dataStructure, "Areas", {numTriangles}, {1}, faceDataPtr->getId());
-  auto* valuesPtr = UnitTest::CreateTestDataArray<TestType>(dataStructure, "Values", {numTriangles}, {numComponents}, faceDataPtr->getId());
+  auto* areasPtr = unit_test::CreateTestDataArray<float64>(dataStructure, "Areas", {numTriangles}, {1}, faceDataPtr->getId());
+  auto* valuesPtr = unit_test::CreateTestDataArray<TestType>(dataStructure, "Values", {numTriangles}, {numComponents}, faceDataPtr->getId());
   REQUIRE(areasPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   areasPtr->fill(2.0);
@@ -342,7 +342,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer com
   args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(DataPath({"Samples"})));
   args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupName_Key, std::make_any<std::string>("Vertex Data"));
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
@@ -389,16 +389,16 @@ TEMPLATE_TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer com
       CHECK((*valuesPtr)[face * numComponents + component] == expectedValue(face, component));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete feature tuples", "[SimplnxCore][PointSampleTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
-  auto* featuresPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Features", {3}, {3});
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {2}, {1});
-  auto* samplesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Samples", {8}, {3});
+  auto* featuresPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Features", {3}, {3});
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {2}, {1});
+  auto* samplesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Samples", {8}, {3});
   REQUIRE(featuresPtr != nullptr);
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(samplesPtr != nullptr);
@@ -432,5 +432,5 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter: Transfer complete fea
   }
   CHECK((*featureIdsPtr)[0] == 2);
   CHECK((*featureIdsPtr)[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

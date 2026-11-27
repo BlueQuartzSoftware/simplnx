@@ -63,7 +63,7 @@ Parameters WriteSPParksSitesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath, "Input Image Geometry", "The image geometry holding the arrays to write", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -89,7 +89,7 @@ IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStruct
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -77453); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   return {};
@@ -108,9 +108,9 @@ Result<> WriteSPParksSitesFilter::executeImpl(DataStructure& dataStructure, cons
 
   WriteSPParksSitesInputValues inputValues;
 
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.image_geom_path = filterArgs.value<DataPath>(k_ImageGeomPath);
 
   auto result = WriteSPParksSites(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

@@ -44,7 +44,7 @@ constexpr CoordinatesType k_TaubinCoordinates{1.0F / 18.0F, 1.0F / 18.0F, 1.0F /
 /** @brief Supplies every edge once; each vertex has degree three. */
 constexpr std::array<IGeometry::MeshIndexType, 12> k_Edges{0, 1, 0, 2, 0, 3, 1, 2, 1, 3, 2, 3};
 /** @brief Makes every vertex use the default lambda. */
-constexpr std::array<int8, 4> k_NodeTypes{node_type::Default, node_type::Default, node_type::Default, node_type::Default};
+constexpr std::array<int8, 4> k_NodeTypes{node_type::k_Default, node_type::k_Default, node_type::k_Default, node_type::k_Default};
 /** @brief Distinguishes the injected store failure from the algorithm's contextual error. */
 constexpr int32 k_InjectedError = -95241;
 /** @brief Supplies the exact backend diagnostic that the filter must preserve. */
@@ -217,8 +217,8 @@ InputStores BuildGraph(DataStructure& dataStructure, TransferTrace& trace)
   InputStores stores{.vertices = std::make_shared<RecordingStore<float32>>(4, 3, trace, Transfer::ReadVertices, Transfer::WriteVertices),
                      .nodes = std::make_shared<RecordingStore<int8>>(4, 1, trace, Transfer::ReadNodes, Transfer::WriteNodes),
                      .edges = std::make_shared<RecordingStore<IGeometry::MeshIndexType>>(6, 2, trace, Transfer::ReadEdges, Transfer::WriteEdges)};
-  auto* verticesPtr = Float32Array::Create(dataStructure, k_VerticesPath.getTargetName(), stores.vertices, geometryPtr->getId());
-  auto* nodesPtr = Int8Array::Create(dataStructure, k_NodeTypesPath.getTargetName(), stores.nodes, vertexDataPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, k_VerticesPath.getTargetName(), stores.vertices, geometryPtr->getId());
+  auto* nodesPtr = Int8ArrayType::Create(dataStructure, k_NodeTypesPath.getTargetName(), stores.nodes, vertexDataPtr->getId());
   auto* edgesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, k_EdgesPath.getTargetName(), stores.edges, geometryPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(nodesPtr != nullptr);
@@ -302,10 +302,10 @@ void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, c
 {
   const EdgeGeom* geometryPtr = nullptr;
   REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<EdgeGeom>(k_GeometryPath));
-  const Float32Array* verticesPtr = nullptr;
-  REQUIRE_NOTHROW(verticesPtr = &dataStructure.getDataRefAs<Float32Array>(k_VerticesPath));
-  const Int8Array* nodesPtr = nullptr;
-  REQUIRE_NOTHROW(nodesPtr = &dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath));
+  const Float32ArrayType* verticesPtr = nullptr;
+  REQUIRE_NOTHROW(verticesPtr = &dataStructure.getDataRefAs<Float32ArrayType>(k_VerticesPath));
+  const Int8ArrayType* nodesPtr = nullptr;
+  REQUIRE_NOTHROW(nodesPtr = &dataStructure.getDataRefAs<Int8ArrayType>(k_NodeTypesPath));
   const IGeometry::MeshIndexArrayType* edgesPtr = nullptr;
   REQUIRE_NOTHROW(edgesPtr = &dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_EdgesPath));
   CHECK(geometryPtr->getVertices() == verticesPtr);
@@ -346,16 +346,16 @@ void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, c
   }
   CHECK(stores.nodes->attempted_write.empty());
   CHECK(stores.edges->attempted_write.empty());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: bulk failures stop at the failed transfer", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianTransfer]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto failure = GENERATE(Catch::Generators::from_range(k_FailureCases));
   CAPTURE(failure.name);
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
   const auto stores = BuildGraph(dataStructure, trace);
@@ -363,7 +363,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: bulk failures stop at the failed tra
   LaplacianSmoothingFilter filter;
   const auto args = MakeArguments(1, false);
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   trace.failure = failure.operation;
   trace.armed = true;
   const auto result = filter.execute(dataStructure, args).result;
@@ -388,13 +388,13 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: bulk failures stop at the failed tra
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed passes and retains write failures", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianCancellation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::string schedule = GENERATE("after plain pass", "before Taubin second pass", "after Taubin pair");
   const bool failWrite = GENERATE(false, true);
   CAPTURE(schedule, failWrite);
   const bool useTaubin = schedule != "after plain pass";
   const auto& expected = schedule == "after Taubin pair" ? k_TaubinCoordinates : k_PlainCoordinates;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
   const auto stores = BuildGraph(dataStructure, trace);
@@ -402,7 +402,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
   LaplacianSmoothingFilter filter;
   const auto args = MakeArguments(2, useTaubin);
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   std::atomic_bool shouldCancel = false;
   std::vector<std::string> iterations;
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
@@ -456,11 +456,11 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: zero iterations and pre-cancellation do not write coordinates", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianTransfer]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::string scenario = GENERATE("zero plain iterations", "zero Taubin iterations", "pre-cancelled");
   CAPTURE(scenario);
   const bool preCancelled = scenario == "pre-cancelled";
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
   const auto stores = BuildGraph(dataStructure, trace);
@@ -468,7 +468,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: zero iterations and pre-cancellation
   LaplacianSmoothingFilter filter;
   const auto args = MakeArguments(preCancelled ? 2 : 0, scenario == "zero Taubin iterations");
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const std::atomic_bool shouldCancel = preCancelled;
   trace.armed = true;
   const auto result = filter.execute(dataStructure, args, nullptr, {}, shouldCancel).result;
@@ -503,15 +503,15 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: zero iterations and pre-cancellation
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: missing vertices fail the direct algorithm guard", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianTransfer]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   DataStructure dataStructure;
   auto* geometryPtr = EdgeGeom::Create(dataStructure, k_GeometryPath.getTargetName());
   REQUIRE(geometryPtr != nullptr);
   REQUIRE(geometryPtr->getVertices() == nullptr);
   LaplacianSmoothingInputValues values{};
-  values.pTriangleGeometryDataPath = k_GeometryPath;
-  values.pSurfaceMeshNodeTypeArrayPath = k_NodeTypesPath;
+  values.p_triangle_geometry_data_path = k_GeometryPath;
+  values.p_surface_mesh_node_type_array_path = k_NodeTypesPath;
   const std::atomic_bool shouldCancel = false;
   const IFilter::MessageHandler handler{};
   Result<> result;
@@ -527,5 +527,5 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: missing vertices fail the direct alg
   CHECK(dataStructure.getData(k_VerticesPath) == nullptr);
   CHECK(dataStructure.getData(k_NodeTypesPath) == nullptr);
   CHECK(dataStructure.getData(k_EdgesPath) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

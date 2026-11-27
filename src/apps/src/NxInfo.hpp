@@ -21,8 +21,8 @@ namespace nx::core::nxinfo
  */
 struct OutputStreams
 {
-  std::reference_wrapper<std::ostream> Output; ///< Receives successful command output.
-  std::reference_wrapper<std::ostream> Error;  ///< Receives diagnostics and usage on errors.
+  std::reference_wrapper<std::ostream> output; ///< Receives successful command output.
+  std::reference_wrapper<std::ostream> error;  ///< Receives diagnostics and usage on errors.
 };
 
 /**

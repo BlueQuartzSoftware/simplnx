@@ -21,7 +21,7 @@ template <typename T>
 class PadImageGeomDataArray
 {
 public:
-  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, SizeVec3 paddedDims, const PadImageGeometryInputValues* inputValues,
+  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, SizeVec3Type paddedDims, const PadImageGeometryInputValues* inputValues,
                         const std::atomic_bool& shouldCancel)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -47,7 +47,7 @@ public:
 protected:
   void convert() const
   {
-    m_NewCellStore.fill(static_cast<T>(m_InputValues->DefaultFillValue));
+    m_NewCellStore.fill(static_cast<T>(m_InputValues->default_fill_value));
 
     auto srcDims = m_SrcImageGeom.getDimensions();
 
@@ -58,9 +58,9 @@ protected:
     const usize newXDim = m_PaddedDims[0];
     const usize newYDim = m_PaddedDims[1];
 
-    const size_t newXOffset = m_InputValues->PadInX ? m_InputValues->XMinMax[0] : 0;
-    const size_t newYOffset = m_InputValues->PadInY ? m_InputValues->YMinMax[0] : 0;
-    const size_t newZOffset = m_InputValues->PadInZ ? m_InputValues->ZMinMax[0] : 0;
+    const size_t newXOffset = m_InputValues->pad_in_x ? m_InputValues->x_min_max[0] : 0;
+    const size_t newYOffset = m_InputValues->pad_in_y ? m_InputValues->y_min_max[0] : 0;
+    const size_t newZOffset = m_InputValues->pad_in_z ? m_InputValues->z_min_max[0] : 0;
 
     // Copy one row at a time (along X axis)
     for(size_t z = 0; z < zDim; ++z)
@@ -80,7 +80,7 @@ private:
   const AbstractDataStore<T>& m_OldCellStore;
   AbstractDataStore<T>& m_NewCellStore;
   const ImageGeom& m_SrcImageGeom;
-  const SizeVec3 m_PaddedDims;
+  const SizeVec3Type m_PaddedDims;
   const PadImageGeometryInputValues* m_InputValues;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -108,10 +108,10 @@ const std::atomic_bool& PadImageGeometry::getCancel()
 Result<> PadImageGeometry::operator()()
 {
 
-  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
-  const std::array<bool, 3> active = {m_InputValues->PadInX, m_InputValues->PadInY, m_InputValues->PadInZ};
-  const std::array<std::reference_wrapper<const VectorInt32ParameterType::ValueType>, 3> vectors = {std::cref(m_InputValues->XMinMax), std::cref(m_InputValues->YMinMax),
-                                                                                                std::cref(m_InputValues->ZMinMax)};
+  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->selected_image_geometry_path);
+  const std::array<bool, 3> active = {m_InputValues->pad_in_x, m_InputValues->pad_in_y, m_InputValues->pad_in_z};
+  const std::array<std::reference_wrapper<const VectorInt32ParameterType::ValueType>, 3> vectors = {std::cref(m_InputValues->x_min_max), std::cref(m_InputValues->y_min_max),
+                                                                                                std::cref(m_InputValues->z_min_max)};
   std::array<std::array<int32, 2>, 3> padding{};
   for(usize axis = 0; axis < 3; ++axis)
   {
@@ -120,12 +120,12 @@ Result<> PadImageGeometry::operator()()
       padding[axis] = {vectors[axis].get()[0], vectors[axis].get()[1]};
     }
   }
-  auto dimensions = GeometryUtilities::ComputePaddedDimensions(srcImageGeom.getDimensions(), padding, active);
+  auto dimensions = geometry_utilities::ComputePaddedDimensions(srcImageGeom.getDimensions(), padding, active);
   if(dimensions.invalid())
   {
     return ConvertResult(std::move(dimensions));
   }
-  if(m_InputValues->UpdateOrigin)
+  if(m_InputValues->update_origin)
   {
     const auto origin = srcImageGeom.getOrigin();
     const auto spacing = srcImageGeom.getSpacing();
@@ -146,16 +146,16 @@ Result<> PadImageGeometry::operator()()
   }
 
   // Nothing is changing
-  if(!m_InputValues->PadInX && !m_InputValues->PadInY && !m_InputValues->PadInZ)
+  if(!m_InputValues->pad_in_x && !m_InputValues->pad_in_y && !m_InputValues->pad_in_z)
   {
     return {};
   }
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to pad
 
-  DataPath destImagePath = m_InputValues->CreatedOutputPath;
-  if(m_InputValues->RemoveOriginalGeometry)
+  DataPath destImagePath = m_InputValues->created_output_path;
+  if(m_InputValues->remove_original_geometry)
   {
-    auto tempPathVector = m_InputValues->SelectedImageGeometryPath.getPathVector();
+    auto tempPathVector = m_InputValues->selected_image_geometry_path.getPathVector();
     std::string tempName = pad_image_geometry::k_TempGeometryName;
     tempPathVector.back() = tempName;
     destImagePath = DataPath({tempPathVector});

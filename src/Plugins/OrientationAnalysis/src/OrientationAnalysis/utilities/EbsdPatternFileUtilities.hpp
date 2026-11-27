@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace nx::core::EbsdPatternFileUtilities
+namespace nx::core::ebsd_pattern_file_utilities
 {
 inline constexpr int32 k_FileAccessError = -78000;
 inline constexpr int32 k_ExactReadError = -78001;

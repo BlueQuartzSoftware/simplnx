@@ -9,7 +9,7 @@
 #include <numeric>
 #include <random>
 
-namespace nx::core::ClusterUtilities
+namespace nx::core::cluster_utilities
 {
 /**
  * @enum DistanceMetric
@@ -181,7 +181,7 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
  *
  * Feature zero remains fixed. The supplied count avoids an additional full-store scan.
  */
-[[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures);
+[[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStoreType& featureIds, usize totalFeatures);
 
 /**
  * @brief Permutes cell feature IDs and moves feature tuples to their matching IDs.
@@ -197,5 +197,5 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
  * Feature zero remains fixed. Each complete permutation cycle moves all feature
  * tuples to their mapped IDs. Tuples at or beyond totalFeatures remain unchanged.
  */
-[[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIds, usize totalFeatures, std::vector<IArray*>& featureIArrays);
+[[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStoreType& featureIds, usize totalFeatures, std::vector<IArray*>& featureIArrays);
 } // namespace nx::core::ClusterUtilities

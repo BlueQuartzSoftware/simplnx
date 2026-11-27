@@ -80,32 +80,32 @@ const std::atomic_bool& WriteINLFile::getCancel()
 Result<> WriteINLFile::operator()()
 {
   // Create the destination directory before opening and truncating the file.
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  std::ofstream fout(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
+  std::ofstream fout(m_InputValues->output_file, std::ios_base::out | std::ios_base::binary);
   if(!fout.is_open())
   {
-    return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", m_InputValues->output_file.string()));
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto& numFeatures = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->NumFeaturesArrayPath);
-  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  const auto& numFeatures = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->num_features_array_path);
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->material_name_array_path);
 
   const usize totalPoints = featureIds.getNumberOfTuples();
 
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 res = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type res = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
   const usize totalCells = imageGeom.getNumberOfCells();
 
   const auto& featureIdsStore = featureIds.getDataStoreRef();
@@ -114,9 +114,9 @@ Result<> WriteINLFile::operator()()
 
   // Concrete DataStore instances bypass staging unless tests force the bulk path.
   // Other store implementations retain bounded sequential reads.
-  const auto* directFeatureIdsStorePtr = dynamic_cast<const Int32DataStore*>(&featureIdsStore);
-  const auto* directEulerAnglesStorePtr = dynamic_cast<const Float32DataStore*>(&eulerAnglesStore);
-  const auto* directCellPhasesStorePtr = dynamic_cast<const Int32DataStore*>(&cellPhasesStore);
+  const auto* directFeatureIdsStorePtr = dynamic_cast<const Int32DataStoreType*>(&featureIdsStore);
+  const auto* directEulerAnglesStorePtr = dynamic_cast<const Float32DataStoreType*>(&eulerAnglesStore);
+  const auto* directCellPhasesStorePtr = dynamic_cast<const Int32DataStoreType*>(&cellPhasesStore);
   const bool forceBulkAccess = !ForceInCoreAlgorithm() && ForceOocAlgorithm();
   const bool useDirectFeatureIds = !forceBulkAccess && directFeatureIdsStorePtr != nullptr;
   const bool useDirectEulerAngles = !forceBulkAccess && directEulerAnglesStorePtr != nullptr;
@@ -222,7 +222,7 @@ Result<> WriteINLFile::operator()()
   fout.write(header.data(), static_cast<std::streamsize>(header.size()));
   if(!fout)
   {
-    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->output_file.string()));
   }
 
   std::ostringstream textBuffer;
@@ -325,14 +325,14 @@ Result<> WriteINLFile::operator()()
     }
     if(!fout)
     {
-      return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->OutputFile.string()));
+      return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->output_file.string()));
     }
   }
 
   fout.flush();
   if(!fout)
   {
-    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->output_file.string()));
   }
 
   return {};

@@ -58,8 +58,8 @@ Parameters CropVertexGeometryFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexAttributeMatrixName));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "The complete path to all the vertex data arrays to crop", std::vector<DataPath>(),
                                                                MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   return params;
@@ -121,7 +121,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     }
     if(xDimError || yDimError || zDimError)
     {
-      return PreflightResult{.outputActions = {nonstd::make_unexpected(errors)}};
+      return PreflightResult{.output_actions = {nonstd::make_unexpected(errors)}};
     }
   }
 
@@ -147,15 +147,15 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     }
     if(xDimError || yDimError || zDimError)
     {
-      return PreflightResult{.outputActions = {nonstd::make_unexpected(errors)}};
+      return PreflightResult{.output_actions = {nonstd::make_unexpected(errors)}};
     }
   }
 
   const auto* vertexAmPtr = vertexGeom.getVertexAttributeMatrix();
   if(vertexAmPtr == nullptr)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
-            .outputValues = {}};
+    return {.output_actions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
+            .output_values = {}};
   }
   auto tupleShape = vertexAmPtr->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
@@ -182,12 +182,12 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CropVertexGeometryInputValues inputValues;
-  inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
-  inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
-  inputValues.MinPos = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinPos_Key);
-  inputValues.MaxPos = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxPos_Key);
-  inputValues.TargetArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TargetArrayPaths_Key);
-  inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  inputValues.input_vertex_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
+  inputValues.output_vertex_geometry_path = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
+  inputValues.min_pos = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinPos_Key);
+  inputValues.max_pos = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxPos_Key);
+  inputValues.target_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TargetArrayPaths_Key);
+  inputValues.vertex_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
 
   return CropVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -214,8 +214,8 @@ Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   // Convert 3 numeric inputs into Vec3 inputs
-  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
-  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverterType>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverterType>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
 

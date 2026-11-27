@@ -18,9 +18,9 @@ namespace nx::core
 namespace detail
 {
 // Bounded transfers use four 65,536-value pages and 4,096-face destination runs.
-constexpr usize kTransferPageValues = 65536;
+constexpr usize k_TransferPageValues = 65536;
 constexpr usize k_TransferPageCount = 4;
-constexpr usize kTransferFaceRun = 4096;
+constexpr usize k_TransferFaceRun = 4096;
 
 /**
  * @brief Copies cell tuples to two-sided face tuples with bounded pages.
@@ -56,8 +56,8 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
   {
     return MakeErrorResult(-62066, "Tuple transfer array component shapes are incompatible.");
   }
-  const usize tuplesPerPage = kTransferPageValues / numComps;
-  const usize facesPerRun = std::min(kTransferFaceRun, std::max(usize{1}, kTransferPageValues / valuesPerFace));
+  const usize tuplesPerPage = k_TransferPageValues / numComps;
+  const usize facesPerRun = std::min(k_TransferFaceRun, std::max(usize{1}, k_TransferPageValues / valuesPerFace));
   const usize sourceTuples = source.getNumberOfTuples();
   const usize destinationTuples = destination.getNumberOfTuples();
   bool hasSource = false;
@@ -76,12 +76,12 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
   }
 
   // A tuple wider than one page streams component ranges without tuple-sized scratch.
-  if(numComps > kTransferPageValues)
+  if(numComps > k_TransferPageValues)
   {
     std::unique_ptr<T[]> values;
     try
     {
-      values = std::make_unique<T[]>(kTransferPageValues);
+      values = std::make_unique<T[]>(k_TransferPageValues);
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult(-62061, "Tuple transfer failed to allocate its bounded component buffer.");
@@ -119,7 +119,7 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
         const usize destinationSideOffset = destinationFaceOffset + side * numComps;
         for(usize componentStart = 0; componentStart < numComps;)
         {
-          const usize componentCount = std::min(kTransferPageValues, numComps - componentStart);
+          const usize componentCount = std::min(k_TransferPageValues, numComps - componentStart);
           if(sourceTuple == std::numeric_limits<usize>::max())
           {
             std::fill_n(values.get(), componentCount, T{});
@@ -161,7 +161,7 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
   {
     for(auto& page : pages)
     {
-      page = std::make_unique<T[]>(kTransferPageValues);
+      page = std::make_unique<T[]>(k_TransferPageValues);
     }
   } catch(const std::bad_alloc&)
   {
@@ -304,14 +304,14 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     return {};
   }
 
-  if(numComps > kTransferPageValues)
+  if(numComps > k_TransferPageValues)
   {
     std::unique_ptr<K[]> idPage;
     std::unique_ptr<T[]> values;
     try
     {
-      idPage = std::make_unique<K[]>(kTransferPageValues);
-      values = std::make_unique<T[]>(kTransferPageValues);
+      idPage = std::make_unique<K[]>(k_TransferPageValues);
+      values = std::make_unique<T[]>(k_TransferPageValues);
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult(-62071, "Feature tuple transfer failed to allocate its bounded component buffers.");
@@ -326,10 +326,10 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
       {
         return MakeErrorResult<K>(-62072, "Feature tuple transfer cell index is outside FeatureIds.");
       }
-      const usize pageStart = (cell / kTransferPageValues) * kTransferPageValues;
+      const usize pageStart = (cell / k_TransferPageValues) * k_TransferPageValues;
       if(pageStart != idPageStart)
       {
-        auto readResult = featureIds.copyIntoBuffer(pageStart, nonstd::span<K>(idPage.get(), std::min(kTransferPageValues, featureIds.getNumberOfTuples() - pageStart)));
+        auto readResult = featureIds.copyIntoBuffer(pageStart, nonstd::span<K>(idPage.get(), std::min(k_TransferPageValues, featureIds.getNumberOfTuples() - pageStart)));
         if(readResult.invalid())
         {
           return ConvertInvalidResult<K>(std::move(readResult));
@@ -385,7 +385,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
         const usize destinationSideOffset = destinationFaceOffset + side * numComps;
         for(usize componentStart = 0; componentStart < numComps;)
         {
-          const usize componentCount = std::min(kTransferPageValues, numComps - componentStart);
+          const usize componentCount = std::min(k_TransferPageValues, numComps - componentStart);
           if(feature == k_Invalid)
           {
             std::fill_n(values.get(), componentCount, T{});
@@ -418,8 +418,8 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     return {};
   }
 
-  const usize tuplesPerFeaturePage = kTransferPageValues / numComps;
-  const usize facesPerRun = std::min(kTransferFaceRun, std::max(usize{1}, kTransferPageValues / valuesPerFace));
+  const usize tuplesPerFeaturePage = k_TransferPageValues / numComps;
+  const usize facesPerRun = std::min(k_TransferFaceRun, std::max(usize{1}, k_TransferPageValues / valuesPerFace));
   std::array<std::unique_ptr<K[]>, k_TransferPageCount> idPages;
   std::array<std::unique_ptr<T[]>, k_TransferPageCount> valuePages;
   std::array<usize, k_TransferPageCount> idStarts{};
@@ -434,8 +434,8 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
   {
     for(usize i = 0; i < k_TransferPageCount; i++)
     {
-      idPages[i] = std::make_unique<K[]>(kTransferPageValues);
-      valuePages[i] = std::make_unique<T[]>(kTransferPageValues);
+      idPages[i] = std::make_unique<K[]>(k_TransferPageValues);
+      valuePages[i] = std::make_unique<T[]>(k_TransferPageValues);
     }
   } catch(const std::bad_alloc&)
   {
@@ -449,7 +449,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     {
       return MakeErrorResult<K>(-62072, "Feature tuple transfer cell index is outside FeatureIds.");
     }
-    const usize start = (cell / kTransferPageValues) * kTransferPageValues;
+    const usize start = (cell / k_TransferPageValues) * k_TransferPageValues;
     usize p = 0;
     while(p < k_TransferPageCount && idStarts[p] != start)
     {
@@ -458,7 +458,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     if(p == k_TransferPageCount)
     {
       p = static_cast<usize>(std::min_element(idUse.begin(), idUse.end()) - idUse.begin());
-      auto r = featureIds.copyIntoBuffer(start, nonstd::span<K>(idPages[p].get(), std::min(kTransferPageValues, featureIds.getNumberOfTuples() - start)));
+      auto r = featureIds.copyIntoBuffer(start, nonstd::span<K>(idPages[p].get(), std::min(k_TransferPageValues, featureIds.getNumberOfTuples() - start)));
       if(r.invalid())
       {
         return ConvertInvalidResult<K>(std::move(r));
@@ -571,10 +571,10 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
 struct QuickSurfaceTransferData
 {
   usize face_index = 0;
-  usize firstcIndex = 0;
-  usize secondcIndex = 0;
-  int32 faceLabel0 = 0;
-  int32 faceLabel1 = 0;
+  usize firstc_index = 0;
+  usize secondc_index = 0;
+  int32 face_label0 = 0;
+  int32 face_label1 = 0;
 };
 
 /**
@@ -587,7 +587,7 @@ struct QuickSurfaceTransferData
 struct SurfaceNetsTransferData
 {
   usize face_index = 0;
-  std::array<usize, 2> quadNxArrayIndices = {std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max()};
+  std::array<usize, 2> quad_nx_array_indices = {std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max()};
 };
 
 /**
@@ -798,7 +798,7 @@ public:
   Result<> quickSurfaceTransferBatch(nonstd::span<const QuickSurfaceTransferData> records) override
   {
     return detail::TransferBoundedCellTuples(m_CellRef, m_FaceRef, m_NumComps, records, [](const QuickSurfaceTransferData& record) {
-      return std::array<usize, 2>{record.faceLabel0 == -1 ? std::numeric_limits<usize>::max() : record.firstcIndex, record.faceLabel1 == -1 ? std::numeric_limits<usize>::max() : record.secondcIndex};
+      return std::array<usize, 2>{record.face_label0 == -1 ? std::numeric_limits<usize>::max() : record.firstc_index, record.face_label1 == -1 ? std::numeric_limits<usize>::max() : record.secondc_index};
     });
   }
 
@@ -809,7 +809,7 @@ public:
    */
   Result<> surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData> records) override
   {
-    return detail::TransferBoundedCellTuples(m_CellRef, m_FaceRef, m_NumComps, records, [](const SurfaceNetsTransferData& record) { return record.quadNxArrayIndices; });
+    return detail::TransferBoundedCellTuples(m_CellRef, m_FaceRef, m_NumComps, records, [](const SurfaceNetsTransferData& record) { return record.quad_nx_array_indices; });
   }
 
 private:
@@ -965,7 +965,7 @@ public:
   {
     return detail::TransferBoundedFeatureTuples<T, K>(m_FeatureIdsRef, m_FeatureDataRef, m_FaceRef, m_NumComps, records, [](const QuickSurfaceTransferData& record) {
       constexpr usize k_Invalid = std::numeric_limits<usize>::max();
-      return std::array<usize, 2>{record.faceLabel0 == -1 ? k_Invalid : record.firstcIndex, record.faceLabel1 == -1 ? k_Invalid : record.secondcIndex};
+      return std::array<usize, 2>{record.face_label0 == -1 ? k_Invalid : record.firstc_index, record.face_label1 == -1 ? k_Invalid : record.secondc_index};
     });
   }
 
@@ -977,7 +977,7 @@ public:
   Result<> surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData> records) override
   {
     return detail::TransferBoundedFeatureTuples<T, K>(m_FeatureIdsRef, m_FeatureDataRef, m_FaceRef, m_NumComps, records,
-                                                      [](const SurfaceNetsTransferData& record) { return record.quadNxArrayIndices; });
+                                                      [](const SurfaceNetsTransferData& record) { return record.quad_nx_array_indices; });
   }
 
 private:

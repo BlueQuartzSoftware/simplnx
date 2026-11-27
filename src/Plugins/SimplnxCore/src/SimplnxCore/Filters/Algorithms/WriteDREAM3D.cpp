@@ -42,7 +42,7 @@ WriteDREAM3D::WriteDREAM3D(DataStructure& dataStructure, const IFilter::MessageH
 // -----------------------------------------------------------------------------
 Result<> WriteDREAM3D::operator()()
 {
-  auto atomicFileResult = AtomicFile::Create(m_InputValues->ExportFilePath);
+  auto atomicFileResult = AtomicFile::Create(m_InputValues->export_file_path);
   if(atomicFileResult.invalid())
   {
     return ConvertResult(std::move(atomicFileResult));
@@ -50,13 +50,13 @@ Result<> WriteDREAM3D::operator()()
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
   const auto exportFilePath = atomicFile.tempFilePath();
-  const bool writeXdmf = m_InputValues->WriteXdmfFile;
+  const bool writeXdmf = m_InputValues->write_xdmf_file;
 
   Pipeline pipeline;
 
-  if(m_InputValues->PipelineNode != nullptr)
+  if(m_InputValues->pipeline_node != nullptr)
   {
-    auto pipelinePtr = m_InputValues->PipelineNode->getPrecedingPipeline();
+    auto pipelinePtr = m_InputValues->pipeline_node->getPrecedingPipeline();
     if(pipelinePtr == nullptr)
     {
       return MakeErrorResult(k_FailedFindPipelineError, "Failed to retrieve pipeline.");
@@ -66,7 +66,7 @@ Result<> WriteDREAM3D::operator()()
   }
 
   nx::core::hdf5::DataStructureWriter::WriteOptions writeOptions;
-  writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
+  writeOptions.compression_level = m_InputValues->use_compression ? m_InputValues->compression_level : 0;
   auto results = dream3d::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
   if(results.invalid())
   {
@@ -86,18 +86,18 @@ Result<> WriteDREAM3D::operator()()
   {
     fs::path temporarySidecar = exportFilePath;
     temporarySidecar.replace_extension(".xdmf");
-    fs::path destinationSidecar = m_InputValues->ExportFilePath;
+    fs::path destinationSidecar = m_InputValues->export_file_path;
     destinationSidecar.replace_extension(".xdmf");
     const auto outcome = InstallReplacementFile(temporarySidecar, destinationSidecar);
-    if(outcome.Error)
+    if(outcome.error)
     {
-      const std::string_view recoveryAdvice = outcome.RetriesExhausted ? "The .xdmf file may be open in another program, or you may not have permission to replace it. "
+      const std::string_view recoveryAdvice = outcome.retries_exhausted ? "The .xdmf file may be open in another program, or you may not have permission to replace it. "
                                                                          "Close programs that use the .xdmf file and run the filter again." :
                                                                          "The .xdmf file or the output folder may be read-only, or you may not have permission to replace the file. "
                                                                          "Fix any read-only settings or permissions and run the filter again.";
       const auto message = fmt::format("The .dream3d file '{}' was saved. Its .xdmf file '{}' could not be saved. "
                                        "An existing .xdmf file at that path may not match the new .dream3d file. {} {}",
-                                       m_InputValues->ExportFilePath, destinationSidecar, recoveryAdvice, DescribeFileReplacementSystemError(outcome));
+                                       m_InputValues->export_file_path, destinationSidecar, recoveryAdvice, DescribeFileReplacementSystemError(outcome));
       return MergeResults(std::move(results), MakeErrorResult(k_XdmfReplacementError, message));
     }
   }

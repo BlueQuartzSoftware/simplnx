@@ -18,7 +18,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -28,9 +28,9 @@ DataStructure CreateTestData()
   auto* movingGeomPtr = ImageGeom::Create(dataStructure, "Moving Geometry");
   auto* targetGeomPtr = ImageGeom::Create(dataStructure, "Target Geometry");
 
-  SizeVec3 dimensions(5, 10, 15);
-  FloatVec3 origin1(0, 0, 0);
-  FloatVec3 origin2(50, 100, 60);
+  SizeVec3Type dimensions(5, 10, 15);
+  FloatVec3Type origin1(0, 0, 0);
+  FloatVec3Type origin2(50, 100, 60);
 
   movingGeomPtr->setDimensions(dimensions);
   targetGeomPtr->setDimensions(dimensions);
@@ -47,11 +47,11 @@ RectGridGeom& CreateRectGrid(DataStructure& dataStructure, const std::string& na
   REQUIRE(zb.size() >= 2);
   auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, name);
   REQUIRE(rectGridGeomPtr != nullptr);
-  rectGridGeomPtr->setDimensions(SizeVec3(xb.size() - 1, yb.size() - 1, zb.size() - 1));
+  rectGridGeomPtr->setDimensions(SizeVec3Type(xb.size() - 1, yb.size() - 1, zb.size() - 1));
 
-  auto* xBoundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", ShapeType{xb.size()}, ShapeType{1}, rectGridGeomPtr->getId());
-  auto* yBoundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{yb.size()}, ShapeType{1}, rectGridGeomPtr->getId());
-  auto* zBoundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{zb.size()}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* xBoundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "xBounds", ShapeType{xb.size()}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* yBoundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "yBounds", ShapeType{yb.size()}, ShapeType{1}, rectGridGeomPtr->getId());
+  auto* zBoundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "zBounds", ShapeType{zb.size()}, ShapeType{1}, rectGridGeomPtr->getId());
   REQUIRE(xBoundsPtr != nullptr);
   REQUIRE(yBoundsPtr != nullptr);
   REQUIRE(zBoundsPtr != nullptr);
@@ -75,7 +75,7 @@ RectGridGeom& CreateRectGrid(DataStructure& dataStructure, const std::string& na
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Instantiate Filter", "[AlignGeometriesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   AlignGeometriesFilter filter;
   DataStructure dataStructure = CreateTestData();
@@ -91,18 +91,18 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Instantiate Filter", "[AlignGeome
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(!preflightResult.outputActions.valid());
+  REQUIRE(!preflightResult.output_actions.valid());
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeometriesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   AlignGeometriesFilter filter;
   DataStructure dataStructure = CreateTestData();
@@ -118,18 +118,18 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Bad Alignment Type", "[AlignGeome
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometriesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   AlignGeometriesFilter filter;
   DataStructure dataStructure = CreateTestData();
@@ -145,7 +145,7 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometri
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -156,24 +156,24 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Valid Arguments", "[AlignGeometri
 
   REQUIRE(movingGeom.getOrigin() == targetGeom.getOrigin());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Centroid Image", "[SimplnxCore][AlignGeometriesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* movingGeomPtr = ImageGeom::Create(dataStructure, "Moving Geometry");
   auto* targetGeomPtr = ImageGeom::Create(dataStructure, "Target Geometry");
   REQUIRE(movingGeomPtr != nullptr);
   REQUIRE(targetGeomPtr != nullptr);
-  movingGeomPtr->setDimensions(SizeVec3(2, 4, 6));
-  REQUIRE(movingGeomPtr->setSpacing(FloatVec3(0.5f, 1.0f, 2.0f)).valid());
-  REQUIRE(movingGeomPtr->setOrigin(FloatVec3(-1.0f, -2.0f, -3.0f)).valid());
-  targetGeomPtr->setDimensions(SizeVec3(4, 2, 3));
-  REQUIRE(targetGeomPtr->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f)).valid());
-  REQUIRE(targetGeomPtr->setOrigin(FloatVec3(10.0f, 20.0f, 30.0f)).valid());
+  movingGeomPtr->setDimensions(SizeVec3Type(2, 4, 6));
+  REQUIRE(movingGeomPtr->setSpacing(FloatVec3Type(0.5f, 1.0f, 2.0f)).valid());
+  REQUIRE(movingGeomPtr->setOrigin(FloatVec3Type(-1.0f, -2.0f, -3.0f)).valid());
+  targetGeomPtr->setDimensions(SizeVec3Type(4, 2, 3));
+  REQUIRE(targetGeomPtr->setSpacing(FloatVec3Type(1.0f, 1.0f, 1.0f)).valid());
+  REQUIRE(targetGeomPtr->setOrigin(FloatVec3Type(10.0f, 20.0f, 30.0f)).valid());
 
   AlignGeometriesFilter filter;
   Arguments args;
@@ -185,22 +185,22 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Centroid Image", "[SimplnxCore][A
 
   // The centroids are origin + dimensions * spacing / 2: (-0.5, 0, 3) and (12, 21, 31.5).
   // The translation is (12.5, 21, 28.5). Add it to the moving origin (-1, -2, -3).
-  REQUIRE(movingGeomPtr->getOrigin() == FloatVec3(11.5f, 19.0f, 25.5f));
-  REQUIRE(targetGeomPtr->getOrigin() == FloatVec3(10.0f, 20.0f, 30.0f));
+  REQUIRE(movingGeomPtr->getOrigin() == FloatVec3Type(11.5f, 19.0f, 25.5f));
+  REQUIRE(targetGeomPtr->getOrigin() == FloatVec3Type(10.0f, 20.0f, 30.0f));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Centroid RectGrid Target", "[SimplnxCore][AlignGeometriesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* movingGeomPtr = ImageGeom::Create(dataStructure, "Moving Geometry");
   REQUIRE(movingGeomPtr != nullptr);
-  movingGeomPtr->setDimensions(SizeVec3(2, 4, 6));
-  REQUIRE(movingGeomPtr->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f)).valid());
-  REQUIRE(movingGeomPtr->setOrigin(FloatVec3(0.0f, 0.0f, 0.0f)).valid());
+  movingGeomPtr->setDimensions(SizeVec3Type(2, 4, 6));
+  REQUIRE(movingGeomPtr->setSpacing(FloatVec3Type(1.0f, 1.0f, 1.0f)).valid());
+  REQUIRE(movingGeomPtr->setOrigin(FloatVec3Type(0.0f, 0.0f, 0.0f)).valid());
   CreateRectGrid(dataStructure, "Target Geometry", {10.0f, 11.0f, 13.0f}, {-6.0f, -5.0f, -2.0f}, {4.0f, 8.0f});
 
   AlignGeometriesFilter filter;
@@ -213,22 +213,22 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Centroid RectGrid Target", "[Simp
 
   // The target centroid is ((10 + 13) / 2, (-6 - 2) / 2, (4 + 8) / 2) = (11.5, -4, 6).
   // Subtract the moving centroid (1, 2, 3) to get the translation (10.5, -6, 3).
-  REQUIRE(movingGeomPtr->getOrigin() == FloatVec3(10.5f, -6.0f, 3.0f));
+  REQUIRE(movingGeomPtr->getOrigin() == FloatVec3Type(10.5f, -6.0f, 3.0f));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: Origin RectGrid Moving", "[SimplnxCore][AlignGeometriesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto& movingGeom = CreateRectGrid(dataStructure, "Moving Geometry", {0.0f, 1.0f, 3.0f}, {0.0f, 2.0f}, {0.0f, 5.0f, 6.0f, 9.0f});
   auto* targetGeomPtr = ImageGeom::Create(dataStructure, "Target Geometry");
   REQUIRE(targetGeomPtr != nullptr);
-  targetGeomPtr->setDimensions(SizeVec3(1, 1, 1));
-  REQUIRE(targetGeomPtr->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f)).valid());
-  REQUIRE(targetGeomPtr->setOrigin(FloatVec3(10.0f, -20.0f, 30.5f)).valid());
+  targetGeomPtr->setDimensions(SizeVec3Type(1, 1, 1));
+  REQUIRE(targetGeomPtr->setSpacing(FloatVec3Type(1.0f, 1.0f, 1.0f)).valid());
+  REQUIRE(targetGeomPtr->setOrigin(FloatVec3Type(10.0f, -20.0f, 30.5f)).valid());
 
   AlignGeometriesFilter filter;
   Arguments args;
@@ -258,13 +258,13 @@ TEST_CASE("SimplnxCore::AlignGeometriesFilter: Origin RectGrid Moving", "[Simpln
     REQUIRE(movingGeom.getZBounds()->getDataStoreRef()[boundIdx] == expectedZ[boundIdx]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AlignGeometriesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][AlignGeometriesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

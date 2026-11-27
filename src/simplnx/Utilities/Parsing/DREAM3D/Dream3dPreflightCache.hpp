@@ -21,9 +21,9 @@ namespace nx::core::dream3d
  */
 struct SIMPLNX_EXPORT NeutralMetadataHandout
 {
-  DataStructure dataStructure;
-  std::string fileVersion;
-  DeferredImageMetadata deferredImageMetadata; /**< Unvalidated metadata retained until the caller selects image geometries. */
+  DataStructure data_structure;
+  std::string file_version;
+  DeferredImageMetadataType deferred_image_metadata; /**< Unvalidated metadata retained until the caller selects image geometries. */
 
   /**
    * @brief Validates and installs origin and spacing for selected image geometries.
@@ -210,8 +210,8 @@ private:
   struct Entry
   {
     NeutralMetadataHandout master;
-    std::vector<Warning> diskWarnings;
-    uint64 fileSize = 0;
+    std::vector<Warning> disk_warnings;
+    uint64 file_size = 0;
     std::filesystem::file_time_type mtime;
     uint64 last_used_tick = 0;
   };

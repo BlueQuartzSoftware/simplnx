@@ -19,8 +19,8 @@ namespace
 class CombineStlImpl
 {
 public:
-  CombineStlImpl(UInt64Array& destTriArray, Float32Array& destVerticesArray, Float64Array& destFaceNormalsArray, const UInt64Array& inputTriArray, const Float32Array& inputVerticesArray,
-                 const Float64Array& inputFaceNormalsArray, usize triTupleOffset, usize vertexTupleOffset, usize faceNormalsTupleOffset)
+  CombineStlImpl(UInt64ArrayType& destTriArray, Float32ArrayType& destVerticesArray, Float64ArrayType& destFaceNormalsArray, const UInt64ArrayType& inputTriArray, const Float32ArrayType& inputVerticesArray,
+                 const Float64ArrayType& inputFaceNormalsArray, usize triTupleOffset, usize vertexTupleOffset, usize faceNormalsTupleOffset)
   : m_DestTriangles(destTriArray.getDataStoreRef())
   , m_DestVertices(destVerticesArray.getDataStoreRef())
   , m_DestFaceNormals(destFaceNormalsArray.getDataStoreRef())
@@ -86,9 +86,9 @@ Result<> CombineStlFiles::operator()()
 
   // Just count up the stl files in the directory
   size_t index = 0;
-  for(const auto& entry : std::filesystem::directory_iterator{m_InputValues->StlFilesPath})
+  for(const auto& entry : std::filesystem::directory_iterator{m_InputValues->stl_files_path})
   {
-    if(fs::is_regular_file(entry) && StringUtilities::toLower(entry.path().extension().string()) == ext)
+    if(fs::is_regular_file(entry) && string_utilities::ToLower(entry.path().extension().string()) == ext)
     {
       paths.emplace_back(entry);
     }
@@ -97,11 +97,11 @@ Result<> CombineStlFiles::operator()()
   // Sort paths so file lists and geometry labels are independent of directory iteration order.
   std::sort(paths.begin(), paths.end());
 
-  auto pCellFeatureAttributeMatrixPath = m_InputValues->TriangleDataContainerName.createChildPath(m_InputValues->CellFeatureAttributeMatrixName);
-  auto activeArrayPath = pCellFeatureAttributeMatrixPath.createChildPath(m_InputValues->ActiveArrayName);
-  auto fileListPath = pCellFeatureAttributeMatrixPath.createChildPath(m_InputValues->FileListArrayName);
+  auto pCellFeatureAttributeMatrixPath = m_InputValues->triangle_data_container_name.createChildPath(m_InputValues->cell_feature_attribute_matrix_name);
+  auto activeArrayPath = pCellFeatureAttributeMatrixPath.createChildPath(m_InputValues->active_array_name);
+  auto fileListPath = pCellFeatureAttributeMatrixPath.createChildPath(m_InputValues->file_list_array_name);
 
-  auto activeArray = m_DataStructure.getDataRefAs<UInt8Array>(activeArrayPath);
+  auto activeArray = m_DataStructure.getDataRefAs<UInt8ArrayType>(activeArrayPath);
   activeArray[0] = 0;
   auto fileListStrArray = m_DataStructure.getDataRefAs<StringArray>(fileListPath);
 
@@ -142,9 +142,9 @@ Result<> CombineStlFiles::operator()()
     totalVertices += triangleGeomPtr->getNumberOfVertices();
   }
 
-  auto& combinedGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainerName);
+  auto& combinedGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_data_container_name);
   auto* combinedFaceAmPtr = combinedGeom.getFaceAttributeMatrix();
-  auto& combinedFaceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->FaceNormalsArrayName);
+  auto& combinedFaceNormals = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->face_normals_array_name);
   auto* combinedVertexAmPtr = combinedGeom.getVertexAttributeMatrix();
 
   // Make sure all arrays and Attribute Matrix are sized correctly.
@@ -173,8 +173,8 @@ Result<> CombineStlFiles::operator()()
   usize vertexOffset = 0;
   usize triCounter = 0;
   usize faceNormalsOffset = 0;
-  INodeGeometry2D::SharedFaceList& triangles = combinedGeom.getFacesRef();
-  INodeGeometry0D::SharedVertexList& vertices = combinedGeom.getVerticesRef();
+  INodeGeometry2D::SharedFaceListType& triangles = combinedGeom.getFacesRef();
+  INodeGeometry0D::SharedVertexListType& vertices = combinedGeom.getVerticesRef();
   ParallelTaskAlgorithm taskRunner;
   // Concurrent writes to one out-of-core store are not safe.
   taskRunner.requireArraysInMemory({&triangles, &vertices, &combinedFaceNormals});
@@ -192,7 +192,7 @@ Result<> CombineStlFiles::operator()()
       return {};
     }
 
-    INodeGeometry2D::SharedFaceList& currentSharedFaceList = currentGeometryPtr->getFacesRef();
+    INodeGeometry2D::SharedFaceListType& currentSharedFaceList = currentGeometryPtr->getFacesRef();
     usize currentGeomNumTriangles = currentGeometryPtr->getNumberOfFaces();
     usize currentGeomNumVertices = currentGeometryPtr->getNumberOfVertices();
     {
@@ -206,25 +206,25 @@ Result<> CombineStlFiles::operator()()
       triCounter += currentGeomNumVertices;
     }
 
-    if(m_InputValues->CreatePartNumbers)
+    if(m_InputValues->create_part_numbers)
     {
       // Type checked in preflight; Unsafe acceptable; pointer for speed
-      auto* partNumberDataStorePtr = m_DataStructure.getDataAsUnsafe<Int32Array>(m_InputValues->PartNumberIndexArrayPath)->getDataStore();
+      auto* partNumberDataStorePtr = m_DataStructure.getDataAsUnsafe<Int32ArrayType>(m_InputValues->part_number_index_array_path)->getDataStore();
       std::fill(partNumberDataStorePtr->begin() + faceLabelOffset, partNumberDataStorePtr->begin() + faceLabelOffset + currentGeomNumTriangles, fileIndex);
     }
 
     faceLabelOffset += currentGeomNumTriangles;
 
-    if(m_InputValues->LabelVertices)
+    if(m_InputValues->label_vertices)
     {
       // Type checked in preflight; Unsafe acceptable; pointer for speed
-      auto* vertexLabelsPtr = m_DataStructure.getDataAsUnsafe<Int32Array>(m_InputValues->VertexFileIndexArrayPath)->getDataStore();
+      auto* vertexLabelsPtr = m_DataStructure.getDataAsUnsafe<Int32ArrayType>(m_InputValues->vertex_file_index_array_path)->getDataStore();
       std::fill(vertexLabelsPtr->begin() + vertexLabelOffset, vertexLabelsPtr->begin() + vertexLabelOffset + currentGeomNumVertices, fileIndex);
     }
     vertexLabelOffset += currentGeomNumVertices;
 
-    INodeGeometry0D::SharedVertexList& curVertices = currentGeometryPtr->getVerticesRef();
-    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(currentGeometryPtr->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
+    INodeGeometry0D::SharedVertexListType& curVertices = currentGeometryPtr->getVerticesRef();
+    auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64ArrayType>(currentGeometryPtr->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
 
     taskRunner.execute(CombineStlImpl{triangles, vertices, combinedFaceNormals, currentSharedFaceList, curVertices, curFaceNormals, triOffset, vertexOffset, faceNormalsOffset});
 
@@ -236,14 +236,14 @@ Result<> CombineStlFiles::operator()()
   taskRunner.wait(); // This will spill over if the number of geometries to processes does not divide evenly by the number of threads.
 
   // Create the Face Labels Array if the user asked for it.
-  if(m_InputValues->CreateFaceLabels)
+  if(m_InputValues->create_face_labels)
   {
-    auto* faceLabelDataStorePtr = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelIndexArrayPath).getDataStore();
+    auto* faceLabelDataStorePtr = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_label_index_array_path).getDataStore();
     usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
     AbstractDataStore<int32>* partNumberDataStorePtr = nullptr;
-    if(m_InputValues->CreatePartNumbers)
+    if(m_InputValues->create_part_numbers)
     {
-      partNumberDataStorePtr = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PartNumberIndexArrayPath).getDataStore();
+      partNumberDataStorePtr = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->part_number_index_array_path).getDataStore();
     }
 
     for(usize idx = 0; idx < numTuples; idx++)

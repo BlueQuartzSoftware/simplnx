@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @brief Runs Catch with profile routing installed before listener construction.
@@ -47,19 +47,19 @@ inline int RunOwnedCatchSession(int argc, char* argv[])
   } catch(const std::exception& exception)
   {
     std::cerr << "Test runner failed: " << exception.what() << '\n';
-    result = {.exitCode = 255, .successful = false};
+    result = {.exit_code = 255, .successful = false};
   } catch(...)
   {
     std::fputs("Test runner failed with an unknown exception\n", stderr);
-    result = {.exitCode = 255, .successful = false};
+    result = {.exit_code = 255, .successful = false};
   }
 
   // RunCatchSession destroys Session and its listeners before checked Application teardown.
   if(!FinishTestApplication())
   {
-    result = {.exitCode = 1, .successful = false};
+    result = {.exit_code = 1, .successful = false};
   }
-  const int exitCode = profile.finishExitCode(result.exitCode, result.successful, error);
+  const int exitCode = profile.finishExitCode(result.exit_code, result.successful, error);
   if(!error.empty())
   {
     std::cerr << error << '\n';

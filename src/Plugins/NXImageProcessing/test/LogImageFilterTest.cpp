@@ -10,8 +10,8 @@ using namespace nx::core;
 // golden test only tolerates the -inf tail, it does not assert it explicitly.)
 TEST_CASE("NXImageProcessing::LogImageFilter: log of negative is NaN and log(0) is -inf (domain edge)", "[NXImageProcessing][LogImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<float32>(dataStructure, {-2.0f, 0.0f});
@@ -31,8 +31,8 @@ TEST_CASE("NXImageProcessing::LogImageFilter: log of negative is NaN and log(0) 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::LogImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][LogImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -48,7 +48,7 @@ TEST_CASE("NXImageProcessing::LogImageFilter: ITK real-image golden (defaults)",
   args.insertOrAssign(LogImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   LogImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -60,5 +60,5 @@ TEST_CASE("NXImageProcessing::LogImageFilter: ITK real-image golden (defaults)",
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -12,7 +12,7 @@
 #include <functional>
 #include <vector>
 
-namespace nx::core::HistogramUtilities
+namespace nx::core::histogram_utilities
 {
 namespace serial
 {
@@ -88,7 +88,7 @@ void FillBinRanges(Container& outputContainer, const std::pair<Type, Type>& rang
 template <typename Type>
 auto CalculateBin(Type value, Type min, float32 increment)
 {
-  return StatisticsCalculations::CalculateBin(value, min, increment);
+  return statistics_calculations::CalculateBin(value, min, increment);
 }
 
 /**
@@ -288,7 +288,7 @@ public:
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
                         const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore,
-                        const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow)
+                        const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, std::atomic<usize>& overflow)
   : m_Range(std::make_pair(static_cast<Type>(rangeMinMax.first), static_cast<Type>(rangeMinMax.second)))
   , m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
@@ -312,7 +312,7 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
-                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask,
                         std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
@@ -375,16 +375,16 @@ private:
   AbstractDataStore<Type>& m_BinRangesStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
   AbstractDataStore<SizeType>& m_MostPopulatedStore;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<mask_compare_utilities::MaskCompare>& m_Mask;
   std::atomic<usize>& m_Overflow;
 };
 
 template <typename T>
-using FeatureHasDataStats = std::tuple<std::vector<uint64>, std::vector<T>, std::vector<T>, std::vector<float32>, std::vector<std::map<T, uint64>>>;
+using FeatureHasDataStatsType = std::tuple<std::vector<uint64>, std::vector<T>, std::vector<T>, std::vector<float32>, std::vector<std::map<T, uint64>>>;
 
 template <typename T>
-FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
-                                                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::function<void(usize)>& reportProgress,
+FeatureHasDataStatsType<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
+                                                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, const std::function<void(usize)>& reportProgress,
                                                     const std::atomic_bool& shouldCancel)
 {
   const usize numTuples = featureIdsStore.getNumberOfTuples();

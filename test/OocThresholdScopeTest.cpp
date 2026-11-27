@@ -52,7 +52,7 @@ TEST_CASE("P1 owned shared sentinel restores exact threshold and presence", "[.P
   preferencesPtr->removeValue(Preferences::k_DataStorageMode_Key);
 
   {
-    UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
+    unit_test::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
     REQUIRE(preferencesPtr->dataStorageMode() == DataStorageMode::ForceInCore);
     RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, 0);
   }
@@ -63,13 +63,13 @@ TEST_CASE("P1 owned shared sentinel restores exact threshold and presence", "[.P
   preferencesPtr->setDataStorageMode(DataStorageMode::Adaptive);
   const auto originalMode = preferencesPtr->value(Preferences::k_DataStorageMode_Key);
   {
-    UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, nlohmann::json(uint64{17}));
+    unit_test::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, nlohmann::json(uint64{17}));
     RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, 17);
   }
   RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
   CHECK(preferencesPtr->value(Preferences::k_DataStorageMode_Key) == originalMode);
 
-  CHECK_THROWS_AS(UnitTest::PreferencesSentinel(DataStorageMode::ForceInCore, int64{-1}), std::invalid_argument);
+  CHECK_THROWS_AS(unit_test::PreferencesSentinel(DataStorageMode::ForceInCore, int64{-1}), std::invalid_argument);
   RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
   CHECK(preferencesPtr->value(Preferences::k_DataStorageMode_Key) == originalMode);
 
@@ -77,7 +77,7 @@ TEST_CASE("P1 owned shared sentinel restores exact threshold and presence", "[.P
   {
     preferencesPtr->setValue(Preferences::k_LargeDataSize_Key, value);
     {
-      UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
+      unit_test::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
     }
     RequireThreshold(*preferencesPtr, true, value.type(), 37);
   }
@@ -93,14 +93,14 @@ TEST_CASE("P1 owned public algorithm scope retains maximum threshold", "[.P1Owne
   auto* preferencesPtr = app->getPreferences();
   preferencesPtr->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
   {
-    UnitTest::AlgorithmTestScope scope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+    unit_test::AlgorithmTestScope scope(unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
     REQUIRE(preferencesPtr->dataStorageMode() == DataStorageMode::ForceInCore);
   }
   RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
   preferencesPtr->removeValue(Preferences::k_LargeDataSize_Key);
   preferencesPtr->removeValue(Preferences::k_DataStorageMode_Key);
   {
-    UnitTest::AlgorithmTestScope scope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+    unit_test::AlgorithmTestScope scope(unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
   }
   CHECK_FALSE(preferencesPtr->contains(Preferences::k_LargeDataSize_Key));
   CHECK_FALSE(preferencesPtr->contains(Preferences::k_DataStorageMode_Key));

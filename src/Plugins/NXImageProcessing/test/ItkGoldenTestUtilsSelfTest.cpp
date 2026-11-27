@@ -6,8 +6,8 @@ using namespace nx::core;
 
 TEST_CASE("NXImageProcessing::ItkGoldenTestUtils self-test", "[NXImageProcessing][ItkGolden]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   // (1) NRRD reader route: read RA-Short.nrrd; array + geom must materialize.
   DataStructure dataStructure;

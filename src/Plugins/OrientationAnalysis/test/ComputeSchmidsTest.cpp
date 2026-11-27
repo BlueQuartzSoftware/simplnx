@@ -24,8 +24,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -105,9 +105,9 @@ const DataPath k_EnsembleAMPath({k_GeomName, k_EnsembleAMName});
 struct SchmidFixture
 {
   DataStructure ds;
-  Int32Array* feature_phases_ptr = nullptr;
-  Float32Array* avg_quats_ptr = nullptr;
-  UInt32Array* crystal_structures_ptr = nullptr;
+  Int32ArrayType* feature_phases_ptr = nullptr;
+  Float32ArrayType* avg_quats_ptr = nullptr;
+  UInt32ArrayType* crystal_structures_ptr = nullptr;
 };
 
 SchmidFixture MakeFixture(usize numFeatures, usize numEnsembles = 2)
@@ -121,12 +121,12 @@ SchmidFixture MakeFixture(usize numFeatures, usize numEnsembles = 2)
   auto* featureAMPtr = AttributeMatrix::Create(fixture.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeomPtr->getId());
   auto* ensembleAMPtr = AttributeMatrix::Create(fixture.ds, k_EnsembleAMName, ShapeType{numEnsembles}, imageGeomPtr->getId());
 
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.ds, k_FeatureAMPath.createChildPath(k_PhasesName), {numFeatures}, {1});
-  fixture.feature_phases_ptr = Int32Array::Create(fixture.ds, k_PhasesName, featurePhasesStore, featureAMPtr->getId());
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(fixture.ds, k_FeatureAMPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
-  fixture.avg_quats_ptr = Float32Array::Create(fixture.ds, k_AvgQuatsName, avgQuatsStore, featureAMPtr->getId());
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(fixture.ds, k_EnsembleAMPath.createChildPath(k_CrystalStructuresName), {numEnsembles}, {1});
-  fixture.crystal_structures_ptr = UInt32Array::Create(fixture.ds, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
+  auto featurePhasesStore = data_store_utilities::CreateDataStore<int32>(fixture.ds, k_FeatureAMPath.createChildPath(k_PhasesName), {numFeatures}, {1});
+  fixture.feature_phases_ptr = Int32ArrayType::Create(fixture.ds, k_PhasesName, featurePhasesStore, featureAMPtr->getId());
+  auto avgQuatsStore = data_store_utilities::CreateDataStore<float32>(fixture.ds, k_FeatureAMPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
+  fixture.avg_quats_ptr = Float32ArrayType::Create(fixture.ds, k_AvgQuatsName, avgQuatsStore, featureAMPtr->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(fixture.ds, k_EnsembleAMPath.createChildPath(k_CrystalStructuresName), {numEnsembles}, {1});
+  fixture.crystal_structures_ptr = UInt32ArrayType::Create(fixture.ds, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
 
   for(usize featureIdx = 0; featureIdx < numFeatures; ++featureIdx)
   {
@@ -163,11 +163,11 @@ Arguments MakeArgs(const std::vector<float32>& loading, bool storeAngleComps, bo
                    const std::vector<float32>& direction = {1.0F, 0.0F, 0.0F})
 {
   Arguments args;
-  args.insertOrAssign(ComputeSchmidsFilter::k_LoadingDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(loading));
+  args.insertOrAssign(ComputeSchmidsFilter::k_LoadingDirection_Key, std::make_any<VectorFloat32ParameterType::ValueType>(loading));
   args.insertOrAssign(ComputeSchmidsFilter::k_StoreAngleComponents_Key, std::make_any<bool>(storeAngleComps));
   args.insertOrAssign(ComputeSchmidsFilter::k_OverrideSystem_Key, std::make_any<bool>(overrideSystem));
-  args.insertOrAssign(ComputeSchmidsFilter::k_SlipPlane_Key, std::make_any<VectorFloat32Parameter::ValueType>(plane));
-  args.insertOrAssign(ComputeSchmidsFilter::k_SlipDirection_Key, std::make_any<VectorFloat32Parameter::ValueType>(direction));
+  args.insertOrAssign(ComputeSchmidsFilter::k_SlipPlane_Key, std::make_any<VectorFloat32ParameterType::ValueType>(plane));
+  args.insertOrAssign(ComputeSchmidsFilter::k_SlipDirection_Key, std::make_any<VectorFloat32ParameterType::ValueType>(direction));
   args.insertOrAssign(ComputeSchmidsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_FeatureAMPath.createChildPath(k_PhasesName)));
   args.insertOrAssign(ComputeSchmidsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_FeatureAMPath.createChildPath(k_AvgQuatsName)));
   args.insertOrAssign(ComputeSchmidsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_EnsembleAMPath.createChildPath(k_CrystalStructuresName)));
@@ -186,12 +186,12 @@ Arguments MakeArgs(const std::vector<float32>& loading, bool storeAngleComps, bo
 void CheckFeature(const DataStructure& dataStructure, usize featureIdx, float64 expectedM, int32 expectedSlipSystem, const std::array<int32, 3>& expectedPoles, float64 expectedPhi,
                   float64 expectedLambda)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
-  const auto& schmidsRef = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-  const auto& slipSystemsRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
-  const auto& polesRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
+  const auto& schmidsRef = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+  const auto& slipSystemsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
+  const auto& polesRef = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
 
   CAPTURE(featureIdx);
   CHECK(static_cast<float64>(schmidsRef[featureIdx]) == Approx(expectedM).margin(k_Tol));
@@ -204,10 +204,10 @@ void CheckFeature(const DataStructure& dataStructure, usize featureIdx, float64 
 
   if(expectedPhi >= 0.0)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
-    const auto& phisRef = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-    const auto& lambdasRef = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
+    const auto& phisRef = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+    const auto& lambdasRef = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
     CHECK(static_cast<float64>(phisRef[featureIdx]) == Approx(expectedPhi).margin(k_Tol));
     CHECK(static_cast<float64>(lambdasRef[featureIdx]) == Approx(expectedLambda).margin(k_Tol));
   }
@@ -258,7 +258,7 @@ void CheckFeature(const DataStructure& dataStructure, usize featureIdx, float64 
 // -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle, auto slip system", "[OrientationAnalysis][ComputeSchmidsFilter][VV]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   struct OracleRow
   {
@@ -291,19 +291,19 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle,
       Arguments args = MakeArgs(row.loading, true, false);
 
       auto preflightResult = filter.preflight(fixture.ds, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = filter.execute(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
       CheckFeature(fixture.ds, 1, row.m, row.slip_system, row.poles, row.cos_phi, row.cos_lambda);
 
       // Class 4 invariants.
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
-      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-      const auto& phisRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-      const auto& lambdasRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
+      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+      const auto& phisRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+      const auto& lambdasRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
       // (a) The Schmid factor of a cubic crystal cannot exceed 0.5 and cannot be negative.
       //     EbsdLib <= 3.1.0 violated the upper bound (max 0.500090176); this assertion is only
       //     satisfiable against the fixed normalizers.
@@ -320,7 +320,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle,
       // Feature 0 is the sentinel slot; the algorithm writes explicit zeros there.
       CheckFeature(fixture.ds, 0, 0.0, 0, {0, 0, 0}, 0.0, 0.0);
 
-      UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+      unit_test::CheckArraysInheritTupleDims(fixture.ds);
     }
   }
 }
@@ -367,7 +367,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: Class 1 analytical oracle,
 // -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convention and equivariance", "[OrientationAnalysis][ComputeSchmidsFilter][VV]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   struct QuatRow
   {
@@ -399,17 +399,17 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convent
       Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
 
       auto preflightResult = filter.preflight(fixture.ds, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = filter.execute(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
       CheckFeature(fixture.ds, 1, kExpectedM, row.slip_system, row.poles, kExpectedPhi, kExpectedLambda);
 
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
-      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
       CHECK(schmidsRef[1] <= 0.5F);
 
-      UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+      unit_test::CheckArraysInheritTupleDims(fixture.ds);
     }
   }
 }
@@ -458,7 +458,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: orientation-matrix convent
 // -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path", "[OrientationAnalysis][ComputeSchmidsFilter][VV]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   struct OverrideRow
   {
@@ -489,7 +489,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
       Arguments args = MakeArgs(row.loading, true, true, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F, 0.0F});
 
       auto preflightResult = filter.preflight(fixture.ds, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = filter.execute(fixture.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -498,19 +498,19 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
       // Class 4: on the override path m must equal cos(Phis) * cos(Lambdas) because the stored
       // components are the ANGLES, not their cosines. This is the assertion that proves the SC-3
       // unit flip is real rather than a documentation misreading.
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
-      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
-      const auto& phisRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
-      const auto& lambdasRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName)));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)));
+      const auto& schmidsRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_SchmidsArrayName));
+      const auto& phisRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName));
+      const auto& lambdasRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName));
       if(row.m > 0.0)
       {
         CHECK(static_cast<float64>(schmidsRef[1]) == Approx(std::cos(static_cast<float64>(phisRef[1])) * std::cos(static_cast<float64>(lambdasRef[1]))).margin(k_Tol));
       }
       CHECK(schmidsRef[1] <= 0.5F);
 
-      UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+      unit_test::CheckArraysInheritTupleDims(fixture.ds);
     }
   }
 
@@ -521,9 +521,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
     // (0,0,1) . (1,0,1) == 1 != 0
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, true, {0.0F, 0.0F, 1.0F}, {1.0F, 0.0F, 1.0F});
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13500);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13500);
   }
 }
 
@@ -541,7 +541,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: override slip system path"
 // -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and phase guards", "[OrientationAnalysis][ComputeSchmidsFilter][VV]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("StoreAngleComponents == false does not create Phis/Lambdas")
   {
@@ -550,16 +550,16 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, false, false);
 
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // The three unconditional outputs are unchanged by the toggle.
     CheckFeature(fixture.ds, 1, 0.4665694748158435, 10, {26, 53, 80}, -1.0, -1.0);
-    CHECK(fixture.ds.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_PhisArrayName)) == nullptr);
-    CHECK(fixture.ds.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)) == nullptr);
+    CHECK(fixture.ds.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_PhisArrayName)) == nullptr);
+    CHECK(fixture.ds.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_LambdasArrayName)) == nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+    unit_test::CheckArraysInheritTupleDims(fixture.ds);
   }
 
   SECTION("Features whose Laue class is beyond LaueGroupEnd get defined zeros")
@@ -577,7 +577,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -593,8 +593,8 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     usize nonZeroFloatValues = 0;
     for(const auto& arrayName : {k_SchmidsArrayName, k_PhisArrayName, k_LambdasArrayName})
     {
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(arrayName)));
-      const auto& arrayRef = fixture.ds.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(arrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(arrayName)));
+      const auto& arrayRef = fixture.ds.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(arrayName));
       REQUIRE(arrayRef.getSize() == k_FeatureCount);
       for(usize featureIdx = 0; featureIdx < k_FeatureCount; ++featureIdx)
       {
@@ -608,8 +608,8 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
     usize nonZeroSlipSystemValues = 0;
     {
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
-      const auto& slipSystemsRef = fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName)));
+      const auto& slipSystemsRef = fixture.ds.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_SlipSystemsArrayName));
       REQUIRE(slipSystemsRef.getSize() == k_FeatureCount);
       for(usize featureIdx = 0; featureIdx < k_FeatureCount; ++featureIdx)
       {
@@ -623,8 +623,8 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
     usize nonZeroPoleValues = 0;
     {
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
-      const auto& polesRef = fixture.ds.getDataRefAs<Int32Array>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_PolesArrayName)));
+      const auto& polesRef = fixture.ds.getDataRefAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_PolesArrayName));
       REQUIRE(polesRef.getSize() == k_FeatureCount * 3);
       for(usize compIdx = 0; compIdx < k_FeatureCount * 3; ++compIdx)
       {
@@ -636,7 +636,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     }
     CHECK(nonZeroPoleValues == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+    unit_test::CheckArraysInheritTupleDims(fixture.ds);
   }
 
   SECTION("Valid Laue classes without slip systems keep zero Schmid outputs and computed Poles")
@@ -648,12 +648,12 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     CheckFeature(fixture.ds, 2, 0.0, 0, {26, 53, 80}, 0.0, 0.0);
-    UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+    unit_test::CheckArraysInheritTupleDims(fixture.ds);
   }
 
   SECTION("a phase id beyond the ensemble count is an error, not an out-of-bounds read")
@@ -664,7 +664,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
@@ -682,7 +682,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(fixture.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
@@ -693,7 +693,7 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: options, skip path and pha
 
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation", "[OrientationAnalysis][ComputeSchmidsFilter][VV][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Feature Phases and Average Quaternions must have equal tuple counts")
   {
@@ -702,14 +702,14 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     imageGeomPtr->setDimensions({1, 1, 1});
 
     auto* phasesAMPtr = AttributeMatrix::Create(dataStructure, "Phases Data", ShapeType{2}, imageGeomPtr->getId());
-    auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({k_GeomName, "Phases Data", k_PhasesName}), {2}, {1});
-    Int32Array::Create(dataStructure, k_PhasesName, featurePhasesStore, phasesAMPtr->getId());
+    auto featurePhasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({k_GeomName, "Phases Data", k_PhasesName}), {2}, {1});
+    Int32ArrayType::Create(dataStructure, k_PhasesName, featurePhasesStore, phasesAMPtr->getId());
     auto* quatsAMPtr = AttributeMatrix::Create(dataStructure, "Quaternions Data", ShapeType{6}, imageGeomPtr->getId());
-    auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({k_GeomName, "Quaternions Data", k_AvgQuatsName}), {6}, {4});
-    Float32Array::Create(dataStructure, k_AvgQuatsName, avgQuatsStore, quatsAMPtr->getId());
+    auto avgQuatsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, DataPath({k_GeomName, "Quaternions Data", k_AvgQuatsName}), {6}, {4});
+    Float32ArrayType::Create(dataStructure, k_AvgQuatsName, avgQuatsStore, quatsAMPtr->getId());
     auto* ensembleAMPtr = AttributeMatrix::Create(dataStructure, k_EnsembleAMName, ShapeType{2}, imageGeomPtr->getId());
-    auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_EnsembleAMPath.createChildPath(k_CrystalStructuresName), {2}, {1});
-    UInt32Array::Create(dataStructure, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
+    auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, k_EnsembleAMPath.createChildPath(k_CrystalStructuresName), {2}, {1});
+    UInt32ArrayType::Create(dataStructure, k_CrystalStructuresName, crystalStructuresStore, ensembleAMPtr->getId());
 
     ComputeSchmidsFilter filter;
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
@@ -717,9 +717,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     args.insertOrAssign(ComputeSchmidsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_GeomName, "Quaternions Data", k_AvgQuatsName})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13503);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13503);
   }
 
   SECTION("Feature arrays must contain the sentinel tuple")
@@ -729,9 +729,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
 
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13504);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13504);
   }
 
   SECTION("Crystal Structures must contain at least one ensemble")
@@ -741,9 +741,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, false);
 
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13505);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13505);
   }
 
   SECTION("Loading Direction must be non-zero")
@@ -753,9 +753,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     Arguments args = MakeArgs({0.0F, 0.0F, 0.0F}, true, false);
 
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13506);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13506);
   }
 
   SECTION("Override Slip Plane must be non-zero")
@@ -765,9 +765,9 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, true, {0.0F, 0.0F, 0.0F}, {1.0F, 0.0F, 0.0F});
 
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13507);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13507);
   }
 
   SECTION("Override Slip Direction must be non-zero")
@@ -777,26 +777,26 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: preflight input validation
     Arguments args = MakeArgs({1.0F, 2.0F, 3.0F}, true, true, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F, 0.0F});
 
     auto preflightResult = filter.preflight(fixture.ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -13508);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -13508);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: real HDF5 quaternion-chunk tail oracle", "[OrientationAnalysis][ComputeSchmidsFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   constexpr usize k_ChunkTuples = 65536;
   auto fixture = [] {
-    const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
+    const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
     return MakeFixture(k_ChunkTuples + 1);
   }();
   fixture.feature_phases_ptr->fill(0);
   (*fixture.feature_phases_ptr)[k_ChunkTuples - 1] = 1;
   (*fixture.feature_phases_ptr)[k_ChunkTuples] = 1;
   SetQuat(fixture, k_ChunkTuples, {0.0F, 0.0F, 0.6F, 0.8F});
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   for(const auto& path : {k_FeatureAMPath.createChildPath(k_PhasesName), k_FeatureAMPath.createChildPath(k_AvgQuatsName), k_EnsembleAMPath.createChildPath(k_CrystalStructuresName)})
   {
     auto array = fixture.ds.getSharedDataAs<IDataArray>(path);
@@ -812,10 +812,10 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: real HDF5 quaternion-chunk
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto schmidsPath = k_FeatureAMPath.createChildPath(k_SchmidsArrayName);
   const auto polesPath = k_FeatureAMPath.createChildPath(k_PolesArrayName);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(schmidsPath));
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(polesPath));
-  const auto& schmids = fixture.ds.getDataRefAs<Float32Array>(schmidsPath);
-  const auto& poles = fixture.ds.getDataRefAs<Int32Array>(polesPath);
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(schmidsPath));
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32ArrayType>(polesPath));
+  const auto& schmids = fixture.ds.getDataRefAs<Float32ArrayType>(schmidsPath);
+  const auto& poles = fixture.ds.getDataRefAs<Int32ArrayType>(polesPath);
   REQUIRE(schmids.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(poles.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   // Cubic equivalents select the largest product of two loading components.
@@ -828,13 +828,13 @@ TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: real HDF5 quaternion-chunk
   {
     REQUIRE(poles[(k_ChunkTuples - 1) * 3 + compIdx] == expectedPoles[compIdx]);
   }
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeSchmidsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeSchmidsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

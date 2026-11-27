@@ -100,7 +100,7 @@ Result<> AvizoWriter::printOutput(FILE* stream, const char* format, ...) const
   const int errorNumber = errno;
   if(printed < 0)
   {
-    return MakeErrorResult(-5831, fmt::format("Cannot write text to Avizo output '{}'. {}.", m_InputValues->OutputFile.string(), SystemErrorText(errorNumber)));
+    return MakeErrorResult(-5831, fmt::format("Cannot write text to Avizo output '{}'. {}.", m_InputValues->output_file.string(), SystemErrorText(errorNumber)));
   }
   return {};
 }
@@ -110,7 +110,7 @@ Result<> AvizoWriter::writeOutputChecked(FILE* stream, const void* data, usize e
   if(elementSize != 0 && count > std::numeric_limits<usize>::max() / elementSize)
   {
     return MakeErrorResult(
-        -5833, fmt::format("Cannot write {} elements of {} bytes each to Avizo output '{}': the byte count exceeds the platform limit.", count, elementSize, m_InputValues->OutputFile.string()));
+        -5833, fmt::format("Cannot write {} elements of {} bytes each to Avizo output '{}': the byte count exceeds the platform limit.", count, elementSize, m_InputValues->output_file.string()));
   }
 
   const usize expectedBytes = elementSize * count;
@@ -121,7 +121,7 @@ Result<> AvizoWriter::writeOutputChecked(FILE* stream, const void* data, usize e
   {
     const std::string actualBytes = elementSize != 0 && written > std::numeric_limits<usize>::max() / elementSize ? "unrepresentable" : std::to_string(written * elementSize);
     return MakeErrorResult(-5832, fmt::format("Cannot write Avizo output '{}': requested {} elements ({} bytes), wrote {} elements ({} bytes), with {} bytes per element. {}.",
-                                              m_InputValues->OutputFile.string(), count, expectedBytes, written, actualBytes, elementSize, SystemErrorText(errorNumber)));
+                                              m_InputValues->output_file.string(), count, expectedBytes, written, actualBytes, elementSize, SystemErrorText(errorNumber)));
   }
   return {};
 }
@@ -131,13 +131,13 @@ Result<> AvizoWriter::execute()
 {
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
-  Result<> result = CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> result = CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(result.invalid())
   {
     return result;
   }
 
-  const std::string outputPath = m_InputValues->OutputFile.string();
+  const std::string outputPath = m_InputValues->output_file.string();
   errno = 0;
   FILE* outputFilePtr = std::fopen(outputPath.c_str(), "wb");
   const int openErrorNumber = errno;

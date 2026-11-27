@@ -108,7 +108,7 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  CreatePluginFunc createPluginFuncPtr = ImportFunction<CreatePluginFunc>(m_Handle, SIMPLNX_CREATE_PLUGIN_FUNC_NAME);
+  CreatePluginFuncType createPluginFuncPtr = ImportFunction<CreatePluginFuncType>(m_Handle, SIMPLNX_CREATE_PLUGIN_FUNC_NAME);
   if(createPluginFuncPtr == nullptr)
   {
     unloadPlugin();
@@ -117,7 +117,7 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  DestroyPluginFunc destroyPluginFuncPtr = ImportFunction<DestroyPluginFunc>(m_Handle, SIMPLNX_DESTROY_PLUGIN_FUNC_NAME);
+  DestroyPluginFuncType destroyPluginFuncPtr = ImportFunction<DestroyPluginFuncType>(m_Handle, SIMPLNX_DESTROY_PLUGIN_FUNC_NAME);
   if(destroyPluginFuncPtr == nullptr)
   {
     unloadPlugin();

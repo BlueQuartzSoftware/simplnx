@@ -32,29 +32,29 @@ std::string DataIOManager::formatName() const
 
 void DataIOManager::addCoreFactories()
 {
-  addFactory<UInt8ArrayIO>();
-  addFactory<UInt16ArrayIO>();
-  addFactory<UInt32ArrayIO>();
-  addFactory<UInt64ArrayIO>();
-  addFactory<Int8ArrayIO>();
-  addFactory<Int16ArrayIO>();
-  addFactory<Int32ArrayIO>();
-  addFactory<Int64ArrayIO>();
-  addFactory<Float32ArrayIO>();
-  addFactory<Float64ArrayIO>();
-  addFactory<BoolArrayIO>();
+  addFactory<UInt8ArrayIoType>();
+  addFactory<UInt16ArrayIoType>();
+  addFactory<UInt32ArrayIoType>();
+  addFactory<UInt64ArrayIoType>();
+  addFactory<Int8ArrayIoType>();
+  addFactory<Int16ArrayIoType>();
+  addFactory<Int32ArrayIoType>();
+  addFactory<Int64ArrayIoType>();
+  addFactory<Float32ArrayIoType>();
+  addFactory<Float64ArrayIoType>();
+  addFactory<BoolArrayIoType>();
   addFactory<StringArrayIO>();
 
-  addFactory<UInt8NeighborIO>();
-  addFactory<UInt16NeighborIO>();
-  addFactory<UInt32NeighborIO>();
-  addFactory<UInt64NeighborIO>();
-  addFactory<Int8NeighborIO>();
-  addFactory<Int16NeighborIO>();
-  addFactory<Int32NeighborIO>();
-  addFactory<Int64NeighborIO>();
-  addFactory<Float32NeighborIO>();
-  addFactory<Float64NeighborIO>();
+  addFactory<UInt8NeighborIoType>();
+  addFactory<UInt16NeighborIoType>();
+  addFactory<UInt32NeighborIoType>();
+  addFactory<UInt64NeighborIoType>();
+  addFactory<Int8NeighborIoType>();
+  addFactory<Int16NeighborIoType>();
+  addFactory<Int32NeighborIoType>();
+  addFactory<Int64NeighborIoType>();
+  addFactory<Float32NeighborIoType>();
+  addFactory<Float64NeighborIoType>();
 
   addFactory<ScalarDataIO<uint8>>();
   addFactory<ScalarDataIO<uint16>>();

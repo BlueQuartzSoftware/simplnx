@@ -28,7 +28,7 @@ DataPath BuildMultimodalImage(DataStructure& dataStructure, usize dim)
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -53,7 +53,7 @@ DataPath BuildCompactInt16Image(DataStructure& dataStructure, usize dim)
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<int16>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<int16>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<int16>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < ref.getSize(); ++i)
@@ -77,7 +77,7 @@ void RunCompactInt16Otsu(DataStructure& dataStructure, const DataPath& inputPath
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key, std::make_any<bool>(true));
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -90,8 +90,8 @@ void RunCompactInt16Otsu(DataStructure& dataStructure, const DataPath& inputPath
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Invalid threshold count (-8311)", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = BuildMultimodalImage(dataStructure, 8);
@@ -121,8 +121,8 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Invalid thresho
   args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -8311);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -8311);
 }
 
 // -----------------------------------------------------------------------------
@@ -133,8 +133,8 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: Invalid thresho
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constant image -> lower class at the tie", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
@@ -143,7 +143,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constant image 
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < ref.getSize(); ++i)
@@ -182,8 +182,8 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: constant image 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: LabelOffset shifts labels", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr uint8 k_Offset = 10;
   const auto runWithOffset = [](DataStructure& dataStructure, const DataPath& inputPath, uint8 labelOffset) {
@@ -198,7 +198,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: LabelOffset shi
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key, std::make_any<bool>(false));
     args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_ReturnBinMidpoint_Key, std::make_any<bool>(false));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   };
@@ -242,20 +242,20 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: LabelOffset shi
 
 TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: real OOC int16 compact-range parity", "[.OOC][NXImageProcessing][OtsuMultipleThresholdsImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_Dim = 19;
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
 
   DataStructure inCoreDs;
   {
-    const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+    const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
     const DataPath inputPath = BuildCompactInt16Image(inCoreDs, k_Dim);
     RunCompactInt16Otsu(inCoreDs, inputPath);
   }
 
   DataStructure oocDs;
   {
-    const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceOutOfCore, 0);
+    const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceOutOfCore, 0);
     const DataPath inputPath = BuildCompactInt16Image(oocDs, k_Dim);
     REQUIRE(oocDs.getDataRefAs<IDataArray>(inputPath).getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
     RunCompactInt16Otsu(oocDs, inputPath);
@@ -264,7 +264,7 @@ TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: real OOC int16 
 
   const auto& inCoreOutput = inCoreDs.getDataRefAs<IDataArray>(outputPath);
   const auto& oocOutput = oocDs.getDataRefAs<IDataArray>(outputPath);
-  UnitTest::CompareDataArrays<uint8>(inCoreOutput, oocOutput);
+  unit_test::CompareDataArrays<uint8>(inCoreOutput, oocOutput);
 }
 
 namespace
@@ -276,8 +276,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunOtsuItkGolden(const std::string& inputFile, const std::function<void(Arguments&)>& setParams, const std::string& committedMd5)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -294,7 +294,7 @@ void RunOtsuItkGolden(const std::string& inputFile, const std::function<void(Arg
   setParams(args);
   OtsuMultipleThresholdsImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -303,7 +303,7 @@ void RunOtsuItkGolden(const std::string& inputFile, const std::function<void(Arg
   INFO(fmt::format("OtsuMultipleThresholdsImageFilter md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

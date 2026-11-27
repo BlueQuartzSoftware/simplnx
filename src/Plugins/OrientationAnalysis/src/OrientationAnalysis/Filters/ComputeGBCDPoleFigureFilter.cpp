@@ -62,7 +62,7 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32ParameterType>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD", std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD", std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F},
                                                          std::vector<std::string>{"Angle (Deg)", "h", "k", "l"}));
   params.insert(std::make_unique<Int32ParameterType>(k_OutputImageDimension_Key, "Output Image Dimension", "The value to use for the dimensions for the image geometry", 100));
   params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
@@ -71,7 +71,7 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
                                                           DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Pole Figure"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryName_Key, "Image Geometry", "The path to the created image geometry", DataPath({"GBCD Pole Figure"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name of the cell attribute matrix for the created image geometry",
@@ -98,7 +98,7 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  auto pMisorientationRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
+  auto pMisorientationRotationValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MisorientationRotation_Key);
   auto pOutputImageDimension = static_cast<usize>(filterArgs.value<int32>(k_OutputImageDimension_Key));
   auto pGBCDArrayPathValue = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
@@ -110,12 +110,12 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
+  const auto& gbcd = dataStructure.getDataRefAs<Float64ArrayType>(pGBCDArrayPathValue);
 
   const auto componentShape = gbcd.getComponentShape();
   if(componentShape.size() != 6 || componentShape[5] != 2 || std::any_of(componentShape.begin(), componentShape.end(), [](usize dimension) { return dimension == 0; }))
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-34645, fmt::format("The DataArray '{}' selected for **Input GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 "
                                                                    "positive bin dimensions followed by a final dimension of 2 (hemispheres).",
                                                                    pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
@@ -124,7 +124,7 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-34642, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-34642, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
   }
 
   std::vector<usize> imageDims = {pOutputImageDimension, pOutputImageDimension, 1ULL}; // Image Geometry wants the tuple dims as XYZ
@@ -140,7 +140,7 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tDims, cDims, cellIntensityArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -148,16 +148,16 @@ Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeGBCDPoleFigureInputValues inputValues;
-  inputValues.PhaseOfInterest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  inputValues.MisorientationRotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
-  inputValues.GBCDArrayPath = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.OutputImageDimension = filterArgs.value<int32>(k_OutputImageDimension_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
+  inputValues.phase_of_interest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
+  inputValues.misorientation_rotation = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MisorientationRotation_Key);
+  inputValues.gbcd_array_path = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.output_image_dimension = filterArgs.value<int32>(k_OutputImageDimension_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.cell_intensity_array_name = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
-  auto* gbcdArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
+  auto* gbcdArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues.gbcd_array_path);
   // A disk-backed GBCD selects the phase-slice scanline executor. A resident
   // GBCD selects the full-cache direct executor.
   return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArrayPtr}, dataStructure, messageHandler, shouldCancel, &inputValues);

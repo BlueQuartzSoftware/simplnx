@@ -24,8 +24,8 @@ template <typename T>
 class KMedoidsTemplate
 {
 public:
-  KMedoidsTemplate(ComputeKMedoidsDirect* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray,
-                   bool useMask, usize numClusters, Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+  KMedoidsTemplate(ComputeKMedoidsDirect* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& maskDataArray,
+                   bool useMask, usize numClusters, Int32AbstractDataStoreType& fIds, cluster_utilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_Medoids(medoidsIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -128,11 +128,11 @@ private:
   ComputeKMedoidsDirect* m_Filter;
   const AbstractDataStoreTType& m_InputArray;
   AbstractDataStoreTType& m_Medoids;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<mask_compare_utilities::MaskCompare>& m_Mask;
   bool m_UseMask = false;
   usize m_NumClusters = 0;
-  Int32AbstractDataStore& m_FeatureIds;
-  ClusterUtilities::DistanceMetric m_DistMetric;
+  Int32AbstractDataStoreType& m_FeatureIds;
+  cluster_utilities::DistanceMetric m_DistMetric;
   std::mt19937_64::result_type m_Seed;
 
   // -----------------------------------------------------------------------------
@@ -157,7 +157,7 @@ private:
         float64 minDist = std::numeric_limits<float64>::max();
         for(int32 j = 0; j < m_NumClusters; j++)
         {
-          float64 dist = ClusterUtilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
+          float64 dist = cluster_utilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
           if(dist < minDist)
           {
             minDist = dist;
@@ -213,7 +213,7 @@ private:
               }
               if(m_FeatureIds[k] == i + 1 && (!m_UseMask || m_Mask->isTrue(k)))
               {
-                cost += ClusterUtilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
+                cost += cluster_utilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
               }
             }
 
@@ -266,25 +266,25 @@ const std::atomic_bool& ComputeKMedoidsDirect::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeKMedoidsDirect::operator()()
 {
-  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->clustering_array_path);
   if(clusteringArrayPtr->getNumberOfTuples() == 0)
   {
     return MakeErrorResult(-54071, "Compute K Medoids requires at least one input tuple.");
   }
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  if(m_InputValues->UseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range&)
     {
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
       return MakeErrorResult(-54070, message);
     }
     bool hasEligible = false;
     constexpr usize k_EligibilityChunk = 4096;
-    if(auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath); maskArrayPtr->getDataType() == DataType::boolean)
+    if(auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path); maskArrayPtr->getDataType() == DataType::boolean)
     {
       std::array<bool, k_EligibilityChunk> values = {};
       const auto& store = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
@@ -329,8 +329,8 @@ Result<> ComputeKMedoidsDirect::operator()()
   }
 
   RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(
-      clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare, m_InputValues->UseMask,
-      m_InputValues->InitClusters, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric, m_InputValues->Seed);
+      clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->medoids_array_path), maskCompare, m_InputValues->use_mask,
+      m_InputValues->init_clusters, m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef(), m_InputValues->distance_metric, m_InputValues->seed);
 
   return {};
 }

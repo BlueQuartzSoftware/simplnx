@@ -87,7 +87,7 @@ uint64 BuildPrefixSumTable(const std::vector<uint64>& bitmap, std::vector<uint64
  * @param reportProgress Reports completed source tuples, when supplied.
  * @return The first node-type bulk-read error.
  */
-Result<> BuildVertOkMask(const Int8AbstractDataStore& nodeTypesStore, std::vector<uint64>& vertOkMask, int8 minType, int8 maxType, const std::atomic_bool& shouldCancel,
+Result<> BuildVertOkMask(const Int8AbstractDataStoreType& nodeTypesStore, std::vector<uint64>& vertOkMask, int8 minType, int8 maxType, const std::atomic_bool& shouldCancel,
                          const std::function<void(usize)>& reportProgress = {})
 {
   const usize numVerts = nodeTypesStore.getNumberOfTuples();
@@ -134,7 +134,7 @@ Result<> BuildVertOkMask(const Int8AbstractDataStore& nodeTypesStore, std::vecto
  *
  * First encounter order preserves triangle traversal order.
  */
-Result<> ScanTrianglesAndAssignVertexIndices(const UInt64AbstractDataStore& triangleStore, const std::vector<uint64>& vertOkMask, std::vector<uint64>& triMask,
+Result<> ScanTrianglesAndAssignVertexIndices(const UInt64AbstractDataStoreType& triangleStore, const std::vector<uint64>& vertOkMask, std::vector<uint64>& triMask,
                                              std::vector<IGeometry::MeshIndexType>& vertNewIndex, IGeometry::MeshIndexType& outNumKeptVerts, usize numTris, const std::atomic_bool& shouldCancel,
                                              const std::function<void(usize)>& reportProgress = {})
 {
@@ -199,7 +199,7 @@ Result<> ScanTrianglesAndAssignVertexIndices(const UInt64AbstractDataStore& tria
  * @param reportProgress Reports completed source tuples, when supplied.
  * @return The first connectivity or face-label bulk-read error.
  */
-Result<> ScanTrianglesByFaceLabels(const UInt64AbstractDataStore& triangleStore, const Int32AbstractDataStore& faceLabelsStore, std::vector<uint64>& triMask,
+Result<> ScanTrianglesByFaceLabels(const UInt64AbstractDataStoreType& triangleStore, const Int32AbstractDataStoreType& faceLabelsStore, std::vector<uint64>& triMask,
                                    std::vector<IGeometry::MeshIndexType>& vertNewIndex, IGeometry::MeshIndexType& outNumKeptVerts, usize numTris, const std::atomic_bool& shouldCancel,
                                    const std::function<void(usize)>& reportProgress = {})
 {
@@ -328,7 +328,7 @@ struct VertexRemapCopyFunctor
  * @param reportProgress Reports completed source tuples, when supplied.
  * @return The first connectivity bulk-I/O error.
  */
-Result<> CopyTrianglesRemapped(const UInt64AbstractDataStore& srcStore, UInt64AbstractDataStore& dstStore, const std::vector<uint64>& triMask, const std::vector<uint64>& triPrefixSum,
+Result<> CopyTrianglesRemapped(const UInt64AbstractDataStoreType& srcStore, UInt64AbstractDataStoreType& dstStore, const std::vector<uint64>& triMask, const std::vector<uint64>& triPrefixSum,
                                const std::vector<IGeometry::MeshIndexType>& vertNewIndex, usize numInputTris, const std::atomic_bool& shouldCancel,
                                const std::function<void(usize)>& reportProgress = {})
 {
@@ -461,10 +461,10 @@ ExtractInternalSurfacesFromTriangleGeometry::ExtractInternalSurfacesFromTriangle
 // -----------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
 {
-  auto internalTrianglesPath = m_InputValues->OutputTriangleGeometryPath;
-  auto minMaxNodeValues = m_InputValues->NodeTypeRange;
+  auto internalTrianglesPath = m_InputValues->output_triangle_geometry_path;
+  auto minMaxNodeValues = m_InputValues->node_type_range;
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->InputTriangleGeometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->input_triangle_geometry_path);
   auto& internalTriangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(internalTrianglesPath);
   auto& vertices = *triangleGeom.getVertices();
   auto& triangles = *triangleGeom.getFaces();
@@ -472,10 +472,10 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   const usize numTris = triangleGeom.getNumberOfFaces();
 
   auto internalVerticesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedVertexListName);
-  internalTriangleGeom.setVertices(*m_DataStructure.getDataAs<Float32Array>(internalVerticesPath));
+  internalTriangleGeom.setVertices(*m_DataStructure.getDataAs<Float32ArrayType>(internalVerticesPath));
 
   auto internalFacesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedFacesListName);
-  internalTriangleGeom.setFaceList(*m_DataStructure.getDataAs<UInt64Array>(internalFacesPath));
+  internalTriangleGeom.setFaceList(*m_DataStructure.getDataAs<UInt64ArrayType>(internalFacesPath));
 
   const auto& trianglesStore = triangles.getDataStoreRef();
 
@@ -489,9 +489,9 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   const auto reportProgress = [&progressThrottle](usize completed) { progressThrottle.updatePercent(completed); };
 
-  if(m_InputValues->CriterionMode == 0)
+  if(m_InputValues->criterion_mode == 0)
   {
-    const auto& nodeTypesStore = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesPath).getDataStoreRef();
+    const auto& nodeTypesStore = m_DataStructure.getDataRefAs<Int8ArrayType>(m_InputValues->node_types_path).getDataStoreRef();
     std::vector<uint64> vertOkMask((numVerts + 63) / 64, 0ULL);
     m_MessageHandler.sendInfoMessage("Selecting Mesh Vertices");
     progressThrottle.reset(numVerts, "Selecting Mesh Vertices");
@@ -514,7 +514,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   }
   else
   {
-    const auto& faceLabelsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsPath).getDataStoreRef();
+    const auto& faceLabelsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_path).getDataStoreRef();
     m_MessageHandler.sendInfoMessage("Selecting Mesh Triangles");
     progressThrottle.reset(numTris, "Selecting Mesh Triangles");
     Result<> operationResult = ScanTrianglesByFaceLabels(trianglesStore, faceLabelsStore, triMask, vertNewIndex, numKeptVerts, numTris, m_ShouldCancel, reportProgress);
@@ -555,8 +555,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
     return operationResult;
   }
 
-  IGeometry::SharedVertexList* internalVertsPtr = internalTriangleGeom.getVertices();
-  IGeometry::SharedFaceList* internalTrianglesPtr = internalTriangleGeom.getFaces();
+  IGeometry::SharedVertexListType* internalVertsPtr = internalTriangleGeom.getVertices();
+  IGeometry::SharedFaceListType* internalTrianglesPtr = internalTriangleGeom.getFaces();
 
   // Pass 3 — copy kept vertex XYZ coordinates into the compact output.
   m_MessageHandler.sendInfoMessage("Copying Mesh Vertices");
@@ -585,17 +585,17 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   }
 
   m_MessageHandler.sendInfoMessage("Copying Attached Arrays");
-  progressThrottle.reset(m_InputValues->CopyVertexArrayPaths.size() + m_InputValues->CopyTriangleArrayPaths.size(), "Copying Attached Arrays");
+  progressThrottle.reset(m_InputValues->copy_vertex_array_paths.size() + m_InputValues->copy_triangle_array_paths.size(), "Copying Attached Arrays");
   usize copiedArrays = 0;
 
   // Pass 5 — copy per-vertex attached arrays using the dense vertex map.
-  for(const auto& targetArrayPath : m_InputValues->CopyVertexArrayPaths)
+  for(const auto& targetArrayPath : m_InputValues->copy_vertex_array_paths)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->VertexAttributeMatrixName).createChildPath(targetArrayPath.getTargetName());
+    DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->vertex_attribute_matrix_name).createChildPath(targetArrayPath.getTargetName());
     auto* srcPtr = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
     auto* destPtr = m_DataStructure.getDataAs<IDataArray>(destinationPath);
     operationResult = ExecuteDataFunction(VertexRemapCopyFunctor{}, srcPtr->getDataType(), srcPtr, destPtr, vertNewIndex, numVerts, m_ShouldCancel, std::function<void(usize)>{});
@@ -611,13 +611,13 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   }
 
   // Pass 6 — copy per-triangle attached arrays using the triangle mask + prefix sum.
-  for(const auto& targetArrayPath : m_InputValues->CopyTriangleArrayPaths)
+  for(const auto& targetArrayPath : m_InputValues->copy_triangle_array_paths)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->TriangleAttributeMatrixName).createChildPath(targetArrayPath.getTargetName());
+    DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->triangle_attribute_matrix_name).createChildPath(targetArrayPath.getTargetName());
     auto* srcPtr = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
     auto* destPtr = m_DataStructure.getDataAs<IDataArray>(destinationPath);
     operationResult = destPtr->resizeTuples({numKeptTris});

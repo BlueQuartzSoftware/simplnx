@@ -21,7 +21,7 @@ IdentifySample::IdentifySample(DataStructure& dataStructure, const IFilter::Mess
 
 Result<> IdentifySample::operator()()
 {
-  auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
 
   return DispatchAlgorithm<IdentifySampleBFS, IdentifySampleCCL>({maskArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

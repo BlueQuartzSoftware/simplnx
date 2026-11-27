@@ -90,7 +90,7 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   const AttributeMatrix* faceAttributeMatrixPtr = triangleGeomPtr->getFaceAttributeMatrix();
   if(faceAttributeMatrixPtr == nullptr)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
+    return {.output_actions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
                                                             fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   // Instantiate and move the action that will create the output array
@@ -102,7 +102,7 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -111,8 +111,8 @@ Result<> TriangleCentroidFilter::executeImpl(DataStructure& dataStructure, const
 {
   TriangleCentroidInputValues inputValues;
 
-  inputValues.TriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  inputValues.CentroidsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
+  inputValues.triangle_geometry_data_path = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
+  inputValues.centroids_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
 
   return TriangleCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

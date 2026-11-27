@@ -15,12 +15,12 @@ class SIMPLNX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 public:
   using ValueType = std::vector<DataPath>;
   using AllowedTypeSetType = std::set<IArray::ArrayType>;
-  using AllowedDataTypes = nx::core::DataTypeSetType;
-  using AllowedComponentShapes = std::vector<ShapeType>;
+  using AllowedDataTypesType = nx::core::DataTypeSetType;
+  using AllowedComponentShapesType = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes, AllowedDataTypes allowedDataTypes,
-                               AllowedComponentShapes requiredComps = {});
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes, AllowedDataTypesType allowedDataTypes,
+                               AllowedComponentShapesType requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -39,7 +39,7 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
@@ -77,13 +77,13 @@ public:
    * @brief Returns the set of allowed DataTypes. An empty set means all are allowed.
    * @return
    */
-  AllowedDataTypes allowedDataTypes() const;
+  AllowedDataTypesType allowedDataTypes() const;
 
   /**
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  AllowedComponentShapes requiredComponentShapes() const;
+  AllowedComponentShapesType requiredComponentShapes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -128,8 +128,8 @@ protected:
 private:
   ValueType m_DefaultValue;
   AllowedTypeSetType m_AllowedTypes;
-  AllowedDataTypes m_AllowedDataTypes;
-  AllowedComponentShapes m_RequiredComponentShapes;
+  AllowedDataTypesType m_AllowedDataTypes;
+  AllowedComponentShapesType m_RequiredComponentShapes;
 };
 
 namespace simpl_conversion

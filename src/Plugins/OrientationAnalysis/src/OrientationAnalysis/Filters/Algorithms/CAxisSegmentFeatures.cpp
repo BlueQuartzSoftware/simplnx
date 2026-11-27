@@ -30,26 +30,26 @@ CAxisSegmentFeatures::~CAxisSegmentFeatures() noexcept = default;
 
 Result<> CAxisSegmentFeatures::operator()()
 {
-  m_NeighborScheme = m_InputValues->NeighborScheme;
+  m_NeighborScheme = m_InputValues->neighbor_scheme;
   // The geometry parameter accepts Image and RectGrid geometries; both derive from IGridGeometry.
-  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
-  m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  if(m_InputValues->UseMask)
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->image_geometry_path);
+  m_QuatsArray = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  m_CellPhases = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  if(m_InputValues->use_mask)
   {
     try
     {
-      m_GoodVoxelsArray = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      m_GoodVoxelsArray = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range&)
     {
       // This fallback supports callers that bypass parameter preflight.
-      return MakeErrorResult(-8362, fmt::format("Mask Array DataPath '{}' does not exist or is not of the correct type (Bool | UInt8).", m_InputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-8362, fmt::format("Mask Array DataPath '{}' does not exist or is not of the correct type (Bool | UInt8).", m_InputValues->mask_array_path.toString()));
     }
   }
 
   // Validate each positive, unmasked phase once. Cache both the ensemble table and phase batches
   // so validation stays efficient for out-of-core stores.
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   const usize numEnsembles = crystalStructures.getNumberOfTuples();
   std::vector<uint32> crystalStructuresCache(numEnsembles);
   auto crystalStructuresReadResult = crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), numEnsembles));
@@ -60,11 +60,11 @@ Result<> CAxisSegmentFeatures::operator()()
   std::vector<uint8> phaseValidated(numEnsembles, 0);
 
   const usize numCells = m_CellPhases->getNumberOfTuples();
-  const SizeVec3 scanDims = gridGeomPtr->getDimensions();
+  const SizeVec3Type scanDims = gridGeomPtr->getDimensions();
   const usize scanBatchSize = std::max<usize>(1, static_cast<usize>(scanDims[0]) * static_cast<usize>(scanDims[1]));
   std::vector<int32> phasesBuffer(scanBatchSize);
   std::vector<uint8> maskBuffer(scanBatchSize, 1);
-  IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  IDataArray* maskArrayPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
   auto& phasesStore = m_CellPhases->getDataStoreRef();
   for(usize offset = 0; offset < numCells; offset += scanBatchSize)
   {
@@ -117,7 +117,7 @@ Result<> CAxisSegmentFeatures::operator()()
       if(static_cast<usize>(currentPhaseIdx) >= numEnsembles)
       {
         return MakeErrorResult(-8364, fmt::format("Cell {} has a phase value of {} but the Crystal Structures array '{}' only has {} entries.", cellIdx, currentPhaseIdx,
-                                                  m_InputValues->CrystalStructuresArrayPath.toString(), numEnsembles));
+                                                  m_InputValues->crystal_structures_array_path.toString(), numEnsembles));
       }
 
       const auto crystalStructureType = crystalStructuresCache[static_cast<usize>(currentPhaseIdx)];
@@ -131,10 +131,10 @@ Result<> CAxisSegmentFeatures::operator()()
     }
   }
 
-  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   m_FeatureIdsArray->fill(0);
 
-  const SizeVec3 udims = gridGeomPtr->getDimensions();
+  const SizeVec3Type udims = gridGeomPtr->getDimensions();
   allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
 
   auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
@@ -159,20 +159,20 @@ Result<> CAxisSegmentFeatures::operator()()
 
   // Feature tuple zero remains reserved for background cells.
   ShapeType tDims = {static_cast<usize>(m_FoundFeatures + 1)};
-  auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cell_feature_attribute_matrix_path);
   if(Result<> resizeResult = cellFeatureAM.resizeTuples(tDims); resizeResult.invalid())
   {
     return ConvertResult(std::move(resizeResult));
   }
 
-  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8ArrayType>(m_InputValues->active_array_path);
   activeArrayPtr->getDataStore()->fill(1);
   (*activeArrayPtr)[0] = 0;
 
   // Random IDs improve visual distinction between adjacent features.
-  if(m_InputValues->RandomizeFeatureIds)
+  if(m_InputValues->randomize_feature_ids)
   {
-    if(Result<> randomizeResult = ClusterUtilities::RandomizeFeatureIds(m_FeatureIdsArray->getDataStoreRef(), m_FoundFeatures + 1); randomizeResult.invalid())
+    if(Result<> randomizeResult = cluster_utilities::RandomizeFeatureIds(m_FeatureIdsArray->getDataStoreRef(), m_FoundFeatures + 1); randomizeResult.invalid())
     {
       return ConvertResult(std::move(randomizeResult));
     }
@@ -191,7 +191,7 @@ bool CAxisSegmentFeatures::isValidVoxel(int64 point) const
       int64 slot = (sliceZ == m_BufferedSliceZ[0]) ? 0 : 1;
       int64 offset = point - sliceZ * m_BufSliceSize;
       int64 bufIdx = slot * m_BufSliceSize + offset;
-      if(m_InputValues->UseMask && m_MaskBuffer[bufIdx] == 0)
+      if(m_InputValues->use_mask && m_MaskBuffer[bufIdx] == 0)
       {
         return false;
       }
@@ -204,11 +204,11 @@ bool CAxisSegmentFeatures::isValidVoxel(int64 point) const
     return false;
   }
 
-  if(m_InputValues->UseMask && !m_GoodVoxelsArray->isTrue(point))
+  if(m_InputValues->use_mask && !m_GoodVoxelsArray->isTrue(point))
   {
     return false;
   }
-  Int32Array& cellPhases = *m_CellPhases;
+  Int32ArrayType& cellPhases = *m_CellPhases;
   return cellPhases[point] > 0;
 }
 
@@ -230,7 +230,7 @@ bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
       int64 bufIdx1 = slot1 * m_BufSliceSize + off1;
       int64 bufIdx2 = slot2 * m_BufSliceSize + off2;
 
-      if(m_InputValues->UseMask && m_MaskBuffer[bufIdx2] == 0)
+      if(m_InputValues->use_mask && m_MaskBuffer[bufIdx2] == 0)
       {
         return false;
       }
@@ -262,7 +262,7 @@ bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
       float32 w = std::clamp(((c1[0] * c2[0]) + (c1[1] * c2[1]) + (c1[2] * c2[2])), -1.0F, 1.0F);
       w = std::acos(w);
 
-      return w <= m_InputValues->MisorientationTolerance || (Constants::k_PiD - w) <= m_InputValues->MisorientationTolerance;
+      return w <= m_InputValues->misorientation_tolerance || (constants::k_PiD - w) <= m_InputValues->misorientation_tolerance;
     }
     return false;
   }
@@ -272,7 +272,7 @@ bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
     return false;
   }
 
-  Int32Array& cellPhases = *m_CellPhases;
+  Int32ArrayType& cellPhases = *m_CellPhases;
 
   if(cellPhases[point1] != cellPhases[point2])
   {
@@ -280,7 +280,7 @@ bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
   }
 
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
-  Float32Array& quats = *m_QuatsArray;
+  Float32ArrayType& quats = *m_QuatsArray;
 
   const ebsdlib::QuatF q1(quats[point1 * 4], quats[point1 * 4 + 1], quats[point1 * 4 + 2], quats[point1 * 4 + 3]);
   const ebsdlib::QuatF q2(quats[point2 * 4], quats[point2 * 4 + 1], quats[point2 * 4 + 2], quats[point2 * 4 + 3]);
@@ -297,7 +297,7 @@ bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
   float32 w = std::clamp(((c1[0] * c2[0]) + (c1[1] * c2[1]) + (c1[2] * c2[2])), -1.0F, 1.0F);
   w = std::acos(w);
 
-  return w <= m_InputValues->MisorientationTolerance || (Constants::k_PiD - w) <= m_InputValues->MisorientationTolerance;
+  return w <= m_InputValues->misorientation_tolerance || (constants::k_PiD - w) <= m_InputValues->misorientation_tolerance;
 }
 
 void CAxisSegmentFeatures::allocateSliceBuffers(int64 dimX, int64 dimY)
@@ -376,9 +376,9 @@ Result<> CAxisSegmentFeatures::prepareForSlice(int64 iz, int64 /*dimX*/, int64 /
     return phaseReadResult;
   }
 
-  if(m_InputValues->UseMask && m_GoodVoxelsArray != nullptr)
+  if(m_InputValues->use_mask && m_GoodVoxelsArray != nullptr)
   {
-    auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     if(maskArray.getDataType() == DataType::uint8)
     {
       auto& typedStore = maskArray.getIDataStoreRefAs<AbstractDataStore<uint8>>();

@@ -41,7 +41,7 @@ TEST_CASE("Memory Check", "IOTest")
 TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory", "[IOTest][DataFormat]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, app->getPreferences()->value(Preferences::k_LargeDataSize_Key));
+  unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, app->getPreferences()->value(Preferences::k_LargeDataSize_Key));
 
   // ForceInCore is the only mode for which OOC is "not in use".
   REQUIRE_FALSE(app->getPreferences()->useOocData());
@@ -49,7 +49,7 @@ TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory"
   // CreateDataStore should produce an InMemory store regardless of size.
   DataStructure dataStructure;
   DataPath dp({"TestArray"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 }
@@ -57,7 +57,7 @@ TEST_CASE("Data Format: ForceInCore keeps useOocData false and stores in memory"
 TEST_CASE("Data Format: Adaptive and ForceOutOfCore report useOocData true", "[IOTest][DataFormat]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::Adaptive, app->getPreferences()->value(Preferences::k_LargeDataSize_Key));
+  unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::Adaptive, app->getPreferences()->value(Preferences::k_LargeDataSize_Key));
 
   // OOC is "in use" for both size-driven and always-out-of-core intents.
   REQUIRE(app->getPreferences()->useOocData());
@@ -69,7 +69,7 @@ TEST_CASE("Data Format: Adaptive and ForceOutOfCore report useOocData true", "[I
   // produce an in-memory store — the resolver has no disk-backed format to return.
   DataStructure dataStructure;
   DataPath dp({"TestArray"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, dp, {100, 100, 100}, {1});
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 }
@@ -176,7 +176,7 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
   class FakeExternalSort : public IExternalSort
   {
   public:
-    Result<> append(uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& progressCallback) override
+    Result<> append(uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& shouldCancel, const ExternalSortProgressCallbackType& progressCallback) override
     {
       if(shouldCancel)
       {
@@ -191,7 +191,7 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
       return {};
     }
 
-    Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& /*progressCallback*/) override
+    Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallbackType& /*progressCallback*/) override
     {
       return shouldCancel ? MakeErrorResult(-7001, "cancelled") : Result<>{};
     }
@@ -230,7 +230,7 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
 
     Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig& config) const override
     {
-      if(config.recordSize != 2 || config.maxRecordsPerBatch != 3 || !config.compare)
+      if(config.record_size != 2 || config.max_records_per_batch != 3 || !config.compare)
       {
         return MakeErrorResult<std::unique_ptr<IExternalSort>>(-7004, "unexpected config");
       }
@@ -246,8 +246,8 @@ TEST_CASE("Data Format: external-sort capability is optional and storage neutral
   REQUIRE(collection.hasExternalSortCapability());
 
   ExternalSortConfig config;
-  config.recordSize = 2;
-  config.maxRecordsPerBatch = 3;
+  config.record_size = 2;
+  config.max_records_per_batch = 3;
   config.compare = [](nonstd::span<const std::byte> left, nonstd::span<const std::byte> right) { return left[0] < right[0] ? -1 : (left[0] > right[0] ? 1 : 0); };
 
   auto sortResult = collection.createExternalSort(config);

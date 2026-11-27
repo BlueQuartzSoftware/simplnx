@@ -20,14 +20,14 @@ TriangleNormal::TriangleNormal(DataStructure& dataStructure, const IFilter::Mess
 // -----------------------------------------------------------------------------
 Result<> TriangleNormal::operator()()
 {
-  auto pTriangleGeometryDataPath = m_InputValues->InputTriangleGeometryPath;
-  auto pNormalsName = m_InputValues->OutputNormalsArrayName;
+  auto pTriangleGeometryDataPath = m_InputValues->input_triangle_geometry_path;
+  auto pNormalsName = m_InputValues->output_normals_array_name;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
   const AttributeMatrix* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
 
   DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pNormalsName);
-  auto& normalsRef = m_DataStructure.getDataAs<Float64Array>(pNormalsArrayPath)->getDataStoreRef();
+  auto& normalsRef = m_DataStructure.getDataAs<Float64ArrayType>(pNormalsArrayPath)->getDataStoreRef();
 
-  return MeshingUtilities::CalculateNormals(*triangleGeom.getFaces(), *triangleGeom.getVertices(), normalsRef, m_ShouldCancel);
+  return meshing_utilities::CalculateNormals(*triangleGeom.getFaces(), *triangleGeom.getVertices(), normalsRef, m_ShouldCancel);
 }

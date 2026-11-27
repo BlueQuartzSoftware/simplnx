@@ -103,12 +103,12 @@ const std::atomic_bool& ComputeFeatureCentroids::getCancel()
 
 Result<> ComputeFeatureCentroids::operator()()
 {
-  const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStoreRef = featureIdsPtr->getDataStoreRef();
 
-  auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  auto& centroids = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->CentroidsArrayPath, *featureIdsPtr, false, m_MessageHandler, &m_ShouldCancel);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->centroids_array_path, *featureIdsPtr, false, m_MessageHandler, &m_ShouldCancel);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -119,7 +119,7 @@ Result<> ComputeFeatureCentroids::operator()()
     return result;
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   const usize totalFeatures = centroids.getNumberOfTuples();
   const usize xPoints = imageGeom.getNumXCells();
   const usize yPoints = imageGeom.getNumYCells();
@@ -132,7 +132,7 @@ Result<> ComputeFeatureCentroids::operator()()
     return MergeResults(
         std::move(result),
         MakeErrorResult(-5320, fmt::format("ComputeFeatureCentroids cannot index Image Geometry '{}' with dimensions ({}, {}, {}) and {} feature tuples: working-size arithmetic overflows.",
-                                           m_InputValues->ImageGeometryPath.toString(), xPoints, yPoints, zPoints, totalFeatures)));
+                                           m_InputValues->image_geometry_path.toString(), xPoints, yPoints, zPoints, totalFeatures)));
   }
 
   // Feature-sized vectors avoid DataStore calls in the voxel accumulation loop.
@@ -152,8 +152,8 @@ Result<> ComputeFeatureCentroids::operator()()
     rangeZ[f * 2] = std::numeric_limits<uint64>::max();
   }
 
-  const FloatVec3 origin = imageGeom.getOrigin();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   const usize totalVoxels = xPoints * yPoints * zPoints;
   const usize xySize = xPoints * yPoints;
 
@@ -225,7 +225,7 @@ Result<> ComputeFeatureCentroids::operator()()
       }
     }
   }
-  if(m_InputValues->IsPeriodic)
+  if(m_InputValues->is_periodic)
   {
     m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Checking for periodic data."});
     // Reuse the range minima as a constant-time feature/axis-to-candidate lookup.
@@ -261,12 +261,12 @@ Result<> ComputeFeatureCentroids::operator()()
     if(!candidates.empty())
     {
       {
-        auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(static_cast<uint64>(usefulWords) * sizeof(uint64));
+        auto reservation = CacheMemoryBudgetManager::Instance().reserveWorkingMemory(static_cast<uint64>(usefulWords) * sizeof(uint64));
         if(reservation.sizeBytes() < k_MinimumOccupancyBytes)
         {
           return MergeResults(std::move(result), MakeErrorResult(-5321, fmt::format("ComputeFeatureCentroids cannot scan periodic Feature IDs at '{}': shared working allowance granted {} bytes; at "
                                                                                     "least {} bytes are required. Retry after other working operations finish.",
-                                                                                    m_InputValues->FeatureIdsArrayPath.toString(), reservation.sizeBytes(), k_MinimumOccupancyBytes)));
+                                                                                    m_InputValues->feature_ids_array_path.toString(), reservation.sizeBytes(), k_MinimumOccupancyBytes)));
         }
 
         const usize availableWords = static_cast<usize>(reservation.sizeBytes() / sizeof(uint64));

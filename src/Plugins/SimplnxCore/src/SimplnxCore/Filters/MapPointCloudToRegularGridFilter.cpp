@@ -31,7 +31,7 @@ const std::string k_MaskName = "temp_mask";
 constexpr nx::core::StringLiteralType k_SilentMode = "Silent";
 constexpr nx::core::StringLiteralType k_WarningMode = "Warning with Count";
 constexpr nx::core::StringLiteralType k_ErrorMode = "Error at First Instance";
-const nx::core::ChoicesParameter::Choices k_OutOfBoundsHandlingChoices = {k_SilentMode, k_WarningMode, k_ErrorMode};
+const nx::core::ChoicesParameter::ChoicesType k_OutOfBoundsHandlingChoices = {k_SilentMode, k_WarningMode, k_ErrorMode};
 const nx::core::ChoicesParameter::ValueType k_SilentModeIndex = 0;
 
 constexpr int64 k_BadGridDimensions = -2601;
@@ -72,7 +72,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   usize numVerts = pointCloudPtr->getNumberOfVertices();
   const auto& vertex = pointCloudPtr->getVertices()->getDataStoreRef();
 
-  const auto* maskPtr = useMask ? dataStructure.getDataAs<BoolArray>(maskArrayPath)->getDataStore() : nullptr;
+  const auto* maskPtr = useMask ? dataStructure.getDataAs<BoolArrayType>(maskArrayPath)->getDataStore() : nullptr;
   if(useMask && maskPtr == nullptr)
   {
     return MakeErrorResult(k_MaskSelectedArrayInvalid, fmt::format("Use Mask was selected but the mask array at path '{}' could not be found or is not a BoolArray.", maskArrayPath.toString()));
@@ -100,7 +100,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
     }
   }
 
-  SizeVec3 iDims = imagePtr->getDimensions();
+  SizeVec3Type iDims = imagePtr->getDimensions();
 
   std::vector<float32> iRes(3, 0.0f);
   std::vector<float32> iOrigin(3, 0.0f);
@@ -263,7 +263,7 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean/uint8 mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndicesName_Key, "Created Voxel Indices", "Path to the created Voxel Indices array", "Voxel Indices"));
@@ -378,28 +378,28 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& dataStruct
     {
       return result;
     }
-    inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+    inputValues.image_geom_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   }
   else if(samplingGridType == 1)
   {
-    inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+    inputValues.image_geom_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   }
 
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
-  if(!inputValues.UseMask)
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_InputMaskPath_Key);
+  if(!inputValues.use_mask)
   {
-    inputValues.MaskArrayPath = DataPath({k_MaskName});
+    inputValues.mask_array_path = DataPath({k_MaskName});
   }
 
-  inputValues.VertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.VertexGeomPath);
+  inputValues.vertex_geom_path = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.vertex_geom_path);
   const AttributeMatrix* vertexDataPtr = vertexGeom.getVertexAttributeMatrix();
-  const DataPath vertexDataPath = inputValues.VertexGeomPath.createChildPath(vertexDataPtr->getName());
-  inputValues.VoxelIndicesPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_VoxelIndicesName_Key));
+  const DataPath vertexDataPath = inputValues.vertex_geom_path.createChildPath(vertexDataPtr->getName());
+  inputValues.voxel_indices_path = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_VoxelIndicesName_Key));
 
-  inputValues.OutOfBoundsHandling = filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key);
-  inputValues.OutOfBoundsValue = filterArgs.value<uint64>(k_OutOfBoundsValue_Key);
+  inputValues.out_of_bounds_handling = filterArgs.value<ChoicesParameter::ValueType>(k_OutOfBoundsHandlingType_Key);
+  inputValues.out_of_bounds_value = filterArgs.value<uint64>(k_OutOfBoundsValue_Key);
 
   return MapPointCloudToRegularGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -426,7 +426,7 @@ Result<Arguments> MapPointCloudToRegularGridFilter::FromSIMPLJson(const nlohmann
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_SamplingGridTypeKey, k_SamplingGridType_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_GridDimensionsKey, k_GridDimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverterType>(args, json, simpl::k_GridDimensionsKey, k_GridDimensions_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ImageDataContainerPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));

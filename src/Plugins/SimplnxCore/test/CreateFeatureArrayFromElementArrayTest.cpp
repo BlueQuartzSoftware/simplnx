@@ -21,19 +21,19 @@ const std::string k_ComputedCellData("Computed_CellData");
 template <typename T>
 void TestElementArray(const DataPath& cellDataPath)
 {
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({constants::k_DataContainer});
 
   // This section creates the needed AttributeMatrix of size 1. The filter should be resizing as needed.
   {
     AttributeMatrix::Create(dataStructure, k_ComputedCellData, std::vector<usize>{1}, dataStructure.getId(smallIn100Group));
   }
 
-  DataPath featureIdsDataPath = smallIn100Group.createChildPath(Constants::k_CellData).createChildPath(k_FeatureIDs);
+  DataPath featureIdsDataPath = smallIn100Group.createChildPath(constants::k_CellData).createChildPath(k_FeatureIDs);
   DataPath computedFeatureGroupPath = smallIn100Group.createChildPath(k_ComputedCellData);
   DataPath computedFeatureArrayPath = computedFeatureGroupPath.createChildPath(cellDataPath.getTargetName());
 
@@ -49,7 +49,7 @@ void TestElementArray(const DataPath& cellDataPath)
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -62,10 +62,10 @@ void TestElementArray(const DataPath& cellDataPath)
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedFeatureArrayPath));
     const DataArray<T>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(computedFeatureArrayPath);
 
-    UnitTest::CompareDataArrays<T>(featureArrayExemplary, createdFeatureArray);
+    unit_test::CompareDataArrays<T>(featureArrayExemplary, createdFeatureArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -74,25 +74,25 @@ namespace analytical_fixtures
 constexpr StringLiteralType k_ParentDGName = "ParentGroup";
 const DataPath k_ParentDGPath({k_ParentDGName});
 
-const DataPath k_CellAMPath = k_ParentDGPath.createChildPath(Constants::k_CellData);
-const DataPath k_FeatureIdsPath = k_CellAMPath.createChildPath(Constants::k_FeatureIds);
-const DataPath k_InputCellPath = k_CellAMPath.createChildPath(Constants::k_FaceData);
+const DataPath k_CellAMPath = k_ParentDGPath.createChildPath(constants::k_CellData);
+const DataPath k_FeatureIdsPath = k_CellAMPath.createChildPath(constants::k_FeatureIds);
+const DataPath k_InputCellPath = k_CellAMPath.createChildPath(constants::k_FaceData);
 
-const DataPath k_FeatureAMPath = k_ParentDGPath.createChildPath(Constants::k_FeatureData);
+const DataPath k_FeatureAMPath = k_ParentDGPath.createChildPath(constants::k_FeatureData);
 const DataPath k_OutputFeaturePath = k_FeatureAMPath.createChildPath("OutputFeatureArray");
 } // namespace analytical_fixtures
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Valid filter execution - 1 Component")
 {
-  DataPath smallIn100Group({Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(Constants::k_CellData).createChildPath(Constants::k_ConfidenceIndex);
+  DataPath smallIn100Group({constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(constants::k_CellData).createChildPath(constants::k_ConfidenceIndex);
   TestElementArray<float32>(cellDataPath);
 }
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Valid filter execution - 3 Component")
 {
-  DataPath smallIn100Group({Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(Constants::k_CellData).createChildPath(Constants::k_IPFColors);
+  DataPath smallIn100Group({constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(constants::k_CellData).createChildPath(constants::k_IPFColors);
   TestElementArray<uint8>(cellDataPath);
 }
 
@@ -114,7 +114,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 0;
     (*fidsArrayPtr)[1] = 1;
     (*fidsArrayPtr)[2] = 2;
@@ -122,7 +122,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
     (*fidsArrayPtr)[4] = 2;
 
     auto* cellFloatArrayPtr =
-        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 5.0f;
     (*cellFloatArrayPtr)[1] = 10.0f;
     (*cellFloatArrayPtr)[2] = 20.0f;
@@ -140,7 +140,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -151,8 +151,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath));
     const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(analytical_fixtures::k_OutputFeaturePath));
-    const auto& outArray = dataStructure.getDataRefAs<Float32Array>(analytical_fixtures::k_OutputFeaturePath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_OutputFeaturePath));
+    const auto& outArray = dataStructure.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
     REQUIRE(outArray.getNumberOfTuples() == 3); // max(featureIds)+1 = 2+1 = 3
@@ -164,7 +164,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-1 single-co
     REQUIRE(outArray[1] == 10.0f);
     REQUIRE(outArray[2] == 20.0f);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -186,14 +186,14 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-co
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 1;
     (*fidsArrayPtr)[3] = 2;
 
     auto* cellFloatArrayPtr =
-        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 10.0f;
     (*cellFloatArrayPtr)[1] = 20.0f;
     (*cellFloatArrayPtr)[2] = 15.0f;
@@ -210,7 +210,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-co
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -221,8 +221,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-co
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath));
     const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(analytical_fixtures::k_OutputFeaturePath));
-    const auto& outArray = dataStructure.getDataRefAs<Float32Array>(analytical_fixtures::k_OutputFeaturePath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_OutputFeaturePath));
+    const auto& outArray = dataStructure.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
     REQUIRE(outArray.getNumberOfTuples() == 3); // max(featureIds)+1 = 2+1 = 3
@@ -234,7 +234,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-2 single-co
     REQUIRE(outArray[1] == 15.0f); // feature 1: last-writer cell 2 wins (15.0 over first-seen 10.0)
     REQUIRE(outArray[2] == 20.0f); // feature 2: consistent
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -256,14 +256,14 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-com
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 1;
     (*fidsArrayPtr)[3] = 2;
 
     auto* cellRgbArrayPtr =
-        UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{3ULL}, cellAmPtr->getId());
+        UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{3ULL}, cellAmPtr->getId());
     // cell 0 → [10, 20, 30]
     (*cellRgbArrayPtr)[0 * 3 + 0] = 10;
     (*cellRgbArrayPtr)[0 * 3 + 1] = 20;
@@ -292,7 +292,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-com
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -303,8 +303,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-com
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath));
     const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(analytical_fixtures::k_OutputFeaturePath));
-    const auto& outArray = dataStructure.getDataRefAs<UInt8Array>(analytical_fixtures::k_OutputFeaturePath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(analytical_fixtures::k_OutputFeaturePath));
+    const auto& outArray = dataStructure.getDataRefAs<UInt8ArrayType>(analytical_fixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
     REQUIRE(outArray.getNumberOfTuples() == 3); // max(featureIds)+1 = 2+1 = 3
@@ -325,7 +325,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-3 three-com
     REQUIRE(outArray[2 * 3 + 1] == 50);
     REQUIRE(outArray[2 * 3 + 2] == 60);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -343,13 +343,13 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error pat
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{3ULL}, topGroupPtr->getId());
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = -1;
     (*fidsArrayPtr)[1] = -2;
     (*fidsArrayPtr)[2] = -1;
 
     auto* cellFloatArrayPtr =
-        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 1.0f;
     (*cellFloatArrayPtr)[1] = 2.0f;
     (*cellFloatArrayPtr)[2] = 1.0f;
@@ -365,7 +365,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-4 error pat
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE_FALSE(executeResult.result.valid());
@@ -391,19 +391,19 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error pat
     auto* featureAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{2ULL}, topGroupPtr->getId());
 
     // Child array created directly with 5 tuples -more than AM.tupleCount=2 and more than maxValue+1=4
-    auto* siblingArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, kSiblingArrayPath.getTargetName(), featureAmPtr->getShape(), ShapeType{1ULL}, featureAmPtr->getId());
+    auto* siblingArrayPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, kSiblingArrayPath.getTargetName(), featureAmPtr->getShape(), ShapeType{1ULL}, featureAmPtr->getId());
     auto siblingArrayResizeResult = siblingArrayPtr->resizeTuples(ShapeType{5ULL});
     SIMPLNX_RESULT_REQUIRE_VALID(siblingArrayResizeResult);
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 3;
     (*fidsArrayPtr)[3] = 2;
 
     auto* cellFloatArrayPtr =
-        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 10.0f;
     (*cellFloatArrayPtr)[1] = 20.0f;
     (*cellFloatArrayPtr)[2] = 30.0f;
@@ -420,7 +420,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-5 error pat
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE_FALSE(executeResult.result.valid());
@@ -448,14 +448,14 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in Fe
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = 0;
     (*fidsArrayPtr)[1] = 2;
     (*fidsArrayPtr)[2] = 0;
     (*fidsArrayPtr)[3] = 2;
 
     auto* cellFloatArrayPtr =
-        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 5.0f;
     (*cellFloatArrayPtr)[1] = 30.0f;
     (*cellFloatArrayPtr)[2] = 5.0f;
@@ -472,7 +472,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in Fe
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -483,8 +483,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in Fe
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath));
     const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(analytical_fixtures::k_InputCellPath);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(analytical_fixtures::k_OutputFeaturePath));
-    const auto& outArray = dataStructure.getDataRefAs<Float32Array>(analytical_fixtures::k_OutputFeaturePath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_OutputFeaturePath));
+    const auto& outArray = dataStructure.getDataRefAs<Float32ArrayType>(analytical_fixtures::k_OutputFeaturePath);
 
     // Class 4 invariants: shape, type, and component count
     REQUIRE(outArray.getNumberOfTuples() == 3); // max(featureIds)+1 = 2+1 = 3
@@ -496,7 +496,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-6 gap in Fe
     REQUIRE(outArray[1] == 0.0f);  // feature 1: gap, grown by resizeTuples, never written; 0 from m_InitValue (in-core DataStore<T>)
     REQUIRE(outArray[2] == 30.0f); // feature 2: written by cells 1 and 3
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -513,8 +513,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-7 error pat
     auto* cellAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_CellAMPath.getTargetName(), ShapeType{0ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
-    Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
   }
 
   // Execution
@@ -527,7 +527,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-7 error pat
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE_FALSE(executeResult.result.valid());
@@ -550,14 +550,14 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error pat
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
     auto* fidsArrayPtr =
-        Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*fidsArrayPtr)[0] = -1;
     (*fidsArrayPtr)[1] = 1;
     (*fidsArrayPtr)[2] = 2;
     (*fidsArrayPtr)[3] = -1;
 
     auto* cellFloatArrayPtr =
-        Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+        Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
     (*cellFloatArrayPtr)[0] = 1.0f;
     (*cellFloatArrayPtr)[1] = 2.0f;
     (*cellFloatArrayPtr)[2] = 3.0f;
@@ -574,7 +574,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-8 error pat
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE_FALSE(executeResult.result.valid());
@@ -589,7 +589,7 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error pat
   // The expected error code is -81883.
   DataStructure dataStructure;
   const DataPath kSmallerAmPath = analytical_fixtures::k_ParentDGPath.createChildPath("SmallerAM");
-  const DataPath kMismatchedFeatureIdsPath = kSmallerAmPath.createChildPath(Constants::k_FeatureIds);
+  const DataPath kMismatchedFeatureIdsPath = kSmallerAmPath.createChildPath(constants::k_FeatureIds);
 
   // Creation
   {
@@ -598,11 +598,11 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error pat
     auto* smallerAmPtr = AttributeMatrix::Create(dataStructure, kSmallerAmPath.getTargetName(), ShapeType{2ULL}, topGroupPtr->getId());
     AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1ULL}, topGroupPtr->getId());
 
-    auto* fidsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, kMismatchedFeatureIdsPath.getTargetName(), smallerAmPtr->getShape(), ShapeType{1ULL}, smallerAmPtr->getId());
+    auto* fidsArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, kMismatchedFeatureIdsPath.getTargetName(), smallerAmPtr->getShape(), ShapeType{1ULL}, smallerAmPtr->getId());
     (*fidsArrayPtr)[0] = 1;
     (*fidsArrayPtr)[1] = 2;
 
-    Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
+    Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1ULL}, cellAmPtr->getId());
   }
 
   // Execution
@@ -615,14 +615,14 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: AF-9 error pat
     args.insertOrAssign(CreateFeatureArrayFromElementArrayFilter::k_CreatedArrayName_Key, std::make_any<std::string>(analytical_fixtures::k_OutputFeaturePath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE_FALSE(preflightResult.outputActions.valid());
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -81883);
+    REQUIRE_FALSE(preflightResult.output_actions.valid());
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -81883);
   }
 }
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-value boundary oracle", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_CellCount = 65538;
   constexpr usize k_ComponentCount = 3;
   DataStructure dataStructure;
@@ -633,9 +633,9 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-valu
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1}, parentPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
 
-  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
   auto* valuesPtr =
-      Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{k_ComponentCount}, cellAmPtr->getId());
+      Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{k_ComponentCount}, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   for(usize cellIdx = 0; cellIdx < k_CellCount; cellIdx++)
@@ -672,8 +672,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-valu
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   REQUIRE(executeResult.result.warnings().size() == 1);
   REQUIRE(executeResult.result.warnings().front().code == -1000);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(analytical_fixtures::k_OutputFeaturePath));
-  const auto& output = dataStructure.getDataRefAs<Int32Array>(analytical_fixtures::k_OutputFeaturePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(analytical_fixtures::k_OutputFeaturePath));
+  const auto& output = dataStructure.getDataRefAs<Int32ArrayType>(analytical_fixtures::k_OutputFeaturePath);
   REQUIRE(output.getNumberOfTuples() == 4);
   REQUIRE(output.getNumberOfComponents() == k_ComponentCount);
   REQUIRE(output[0] == 0);
@@ -688,13 +688,13 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-valu
   REQUIRE(output[9] == 2);
   REQUIRE(output[10] == 20);
   REQUIRE(output[11] == 200);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateFeatureArrayFromElementArrayFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

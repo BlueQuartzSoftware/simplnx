@@ -62,7 +62,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
@@ -75,7 +75,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "The complete path to the array specifying the area of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer",
                                                                "The paths to the Face Attribute Arrays to transfer to the created Vertex Geometry where the mask is false, if Use Mask is checked",
@@ -173,7 +173,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -187,28 +187,28 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
   }
 
   // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   PointSampleTriangleGeometryInputs inputs;
 
-  inputs.pNumberOfSamples = filterArgs.value<int32>(k_NumberOfSamples_Key);
-  inputs.pUseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputs.pTriangleGeometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
-  inputs.pTriangleAreasArrayPath = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
-  inputs.pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  inputs.pVertexGeometryPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
+  inputs.p_number_of_samples = filterArgs.value<int32>(k_NumberOfSamples_Key);
+  inputs.p_use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputs.p_triangle_geometry = filterArgs.value<DataPath>(k_TriangleGeometry_Key);
+  inputs.p_triangle_areas_array_path = filterArgs.value<DataPath>(k_TriangleAreasArrayPath_Key);
+  inputs.p_mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputs.p_selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputs.p_vertex_geometry_path = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
-  inputs.pVertexGroupDataPath = inputs.pVertexGeometryPath.createChildPath(pVertexGroupDataName);
-  inputs.Seed = seed;
+  inputs.p_vertex_group_data_path = inputs.p_vertex_geometry_path.createChildPath(pVertexGroupDataName);
+  inputs.seed = seed;
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
-  for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)
+  for(const auto& selectedDataPath : inputs.p_selected_data_array_paths)
   {
-    DataPath createdDataPath = inputs.pVertexGroupDataPath.createChildPath(selectedDataPath.getTargetName());
+    DataPath createdDataPath = inputs.p_vertex_group_data_path.createChildPath(selectedDataPath.getTargetName());
     createdDataPaths.push_back(createdDataPath);
   }
-  inputs.pCreatedDataArrayPaths = createdDataPaths;
+  inputs.p_created_data_array_paths = createdDataPaths;
 
   return PointSampleTriangleGeometry(dataStructure, &inputs, shouldCancel, messageHandler)();
 }

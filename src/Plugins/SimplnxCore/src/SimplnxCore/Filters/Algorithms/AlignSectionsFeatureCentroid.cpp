@@ -43,9 +43,9 @@ Result<> AlignSectionsFeatureCentroid::operator()()
   {
     return {};
   }
-  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->image_geometry_path);
 
-  return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
+  return execute(gridGeom.getDimensions(), m_InputValues->image_geometry_path);
 }
 
 Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
@@ -53,7 +53,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
   bool usesOutOfCoreStore = false;
   // Select storage-neutral bulk access before MaskCompare can perform element access.
   {
-    const auto& maskCheck = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskCheck = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     usesOutOfCoreStore = IsOutOfCore(maskCheck);
     if(!ForceInCoreAlgorithm() && (ForceOocAlgorithm() || usesOutOfCoreStore))
     {
@@ -64,20 +64,20 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
 
   RecordAlgorithmPathExecution(AlgorithmPath::InCore, usesOutOfCoreStore);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // Direct callers can bypass preflight, so return an invalid mask as a Result.
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
     return MakeErrorResult(-53900, message);
   }
 
-  auto* gridGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->image_geometry_path);
 
-  SizeVec3 dims = gridGeomPtr->getDimensions();
+  SizeVec3Type dims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> sdims = {
       static_cast<int64>(dims[0]),
@@ -89,7 +89,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
 
   usize slice = 0;
   usize point = 0;
-  nx::core::FloatVec3 spacing = gridGeomPtr->getSpacing();
+  nx::core::FloatVec3Type spacing = gridGeomPtr->getSpacing();
   std::vector<float32> xCentroid(dims[2], 0.0f);
   std::vector<float32> yCentroid(dims[2], 0.0f);
 
@@ -128,27 +128,27 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
 
   bool xWarning = false;
   bool yWarning = false;
-  if(m_InputValues->StoreAlignmentShifts)
+  if(m_InputValues->store_alignment_shifts)
   {
     // These unsigned intermediates preserve current direct-path behavior.
     // A negative relative shift can wrap before it reaches signed output storage.
     usize relativexshift = 0;
     usize relativeyshift = 0;
 
-    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
-    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
-    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
-    auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->slices_array_path)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->relative_shifts_array_path)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->cumulative_shifts_array_path)->getDataStoreRef();
+    auto& centroidsStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
 
     // Convert physical centroid differences to integer voxel offsets.
-    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->use_reference_slice && m_InputValues->reference_slice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       slice = (dims[2] - 1) - iter;
-      if(m_InputValues->UseReferenceSlice)
+      if(m_InputValues->use_reference_slice)
       {
         // Reference-relative and cumulative shifts are identical in this mode.
-        relativexshift = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
-        relativeyshift = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
+        relativexshift = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->reference_slice)], spacing[0]);
+        relativeyshift = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->reference_slice)], spacing[1]);
         xShifts[iter] = relativexshift;
         yShifts[iter] = relativeyshift;
       }
@@ -193,7 +193,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
-      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->ReferenceSlice) : slice + 1;
+      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->reference_slice) : slice + 1;
       relativeShiftsStore[xIndex] = relativexshift;
       relativeShiftsStore[yIndex] = relativeyshift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];
@@ -205,12 +205,12 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
   else
   {
     // Compute shifts without writing diagnostic arrays.
-    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->use_reference_slice && m_InputValues->reference_slice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
-      if(m_InputValues->UseReferenceSlice)
+      if(m_InputValues->use_reference_slice)
       {
-        xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
-        yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
+        xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->reference_slice)], spacing[0]);
+        yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->reference_slice)], spacing[1]);
       }
       else
       {
@@ -255,7 +255,7 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
 Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
   // Resolve Bool or UInt8 storage for one-slice bulk reads.
-  const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+  const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
   const AbstractDataStore<uint8>* maskUInt8StorePtr = nullptr;
   const AbstractDataStore<bool>* maskBoolStorePtr = nullptr;
   if(maskArray.getDataType() == DataType::uint8)
@@ -268,11 +268,11 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
   }
   else
   {
-    return MakeErrorResult(-53900, fmt::format("Mask Array is not Bool or UInt8: {}", m_InputValues->MaskArrayPath.toString()));
+    return MakeErrorResult(-53900, fmt::format("Mask Array is not Bool or UInt8: {}", m_InputValues->mask_array_path.toString()));
   }
 
-  auto* gridGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  SizeVec3 dims = gridGeomPtr->getDimensions();
+  auto* gridGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->image_geometry_path);
+  SizeVec3Type dims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> sdims = {
       static_cast<int64>(dims[0]),
@@ -280,7 +280,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
       static_cast<int64>(dims[2]),
   };
 
-  nx::core::FloatVec3 spacing = gridGeomPtr->getSpacing();
+  nx::core::FloatVec3Type spacing = gridGeomPtr->getSpacing();
   std::vector<float32> xCentroid(dims[2], 0.0f);
   std::vector<float32> yCentroid(dims[2], 0.0f);
 
@@ -346,12 +346,12 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
   // Convert physical centroid differences to integer voxel offsets.
   bool xWarning = false;
   bool yWarning = false;
-  for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
+  for(usize iter = (m_InputValues->use_reference_slice && m_InputValues->reference_slice != 0) ? 0 : 1; iter < dims[2]; iter++)
   {
-    if(m_InputValues->UseReferenceSlice)
+    if(m_InputValues->use_reference_slice)
     {
-      xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[0]);
-      yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->ReferenceSlice)], spacing[1]);
+      xShifts[iter] = ComputeCentroidShift(xCentroid[iter], xCentroid[static_cast<usize>(m_InputValues->reference_slice)], spacing[0]);
+      yShifts[iter] = ComputeCentroidShift(yCentroid[iter], yCentroid[static_cast<usize>(m_InputValues->reference_slice)], spacing[1]);
     }
     else
     {
@@ -386,19 +386,19 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
   }
 
   // Scanline diagnostics keep relative shifts signed.
-  if(m_InputValues->StoreAlignmentShifts)
+  if(m_InputValues->store_alignment_shifts)
   {
-    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
-    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
-    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
-    auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->slices_array_path)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->relative_shifts_array_path)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->cumulative_shifts_array_path)->getDataStoreRef();
+    auto& centroidsStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
 
-    for(usize iter = (m_InputValues->UseReferenceSlice && m_InputValues->ReferenceSlice != 0) ? 0 : 1; iter < dims[2]; iter++)
+    for(usize iter = (m_InputValues->use_reference_slice && m_InputValues->reference_slice != 0) ? 0 : 1; iter < dims[2]; iter++)
     {
       usize slice = (dims[2] - 1) - iter;
       int64 relativexshift = 0;
       int64 relativeyshift = 0;
-      if(m_InputValues->UseReferenceSlice)
+      if(m_InputValues->use_reference_slice)
       {
         relativexshift = xShifts[iter];
         relativeyshift = yShifts[iter];
@@ -412,7 +412,7 @@ Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
       slicesStore[xIndex] = slice;
-      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->ReferenceSlice) : slice + 1;
+      slicesStore[yIndex] = iter == 0 ? dims[2] - 1 - static_cast<usize>(m_InputValues->reference_slice) : slice + 1;
       relativeShiftsStore[xIndex] = relativexshift;
       relativeShiftsStore[yIndex] = relativeyshift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];

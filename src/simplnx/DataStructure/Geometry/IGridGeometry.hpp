@@ -26,13 +26,13 @@ public:
    * @brief Returns the dimensions of the grid geometry.
    * @return SizeVec3 The dimensions in X, Y, and Z
    */
-  virtual SizeVec3 getDimensions() const = 0;
+  virtual SizeVec3Type getDimensions() const = 0;
 
   /**
    * @brief Sets the dimensions of the grid geometry.
    * @param dims The new dimensions in X, Y, and Z
    */
-  virtual void setDimensions(const SizeVec3& dims) = 0;
+  virtual void setDimensions(const SizeVec3Type& dims) = 0;
 
   /**
    * @brief Returns the number of cells in the X dimension.
@@ -208,7 +208,7 @@ public:
    * @brief Sets the cell data AttributeMatrix by ID.
    * @param id The optional ID of the AttributeMatrix to use as cell data
    */
-  void setCellData(OptionalId id);
+  void setCellData(OptionalIdType id);
 
   /**
    * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.

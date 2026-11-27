@@ -42,10 +42,10 @@ Result<> ComputeIPFColorsScanline::operator()()
 {
   std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  auto& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
-  auto& ipfColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->cellIpfColorsArrayPath);
+  auto& eulers = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path);
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  auto& ipfColors = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->cell_ipf_colors_array_path);
 
   const usize totalPoints = eulers.getNumberOfTuples();
   const int32 numPhases = static_cast<int32>(crystalStructuresArray.getNumberOfTuples());
@@ -58,14 +58,14 @@ Result<> ComputeIPFColorsScanline::operator()()
   }
 
   // EbsdLib expects a normalized double reference direction.
-  FloatVec3 normRefDir = m_InputValues->referenceDirection;
+  FloatVec3Type normRefDir = m_InputValues->reference_direction;
   normRefDir = normRefDir.normalize();
   std::array<double, 3> refDir = {normRefDir[0], normRefDir[1], normRefDir[2]};
 
   const IDataArray* maskArrayPtr = nullptr;
-  if(m_InputValues->useMask)
+  if(m_InputValues->use_mask)
   {
-    maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
+    maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
   }
 
   const auto& eulersStore = eulers.getDataStoreRef();
@@ -114,14 +114,14 @@ Result<> ComputeIPFColorsScanline::operator()()
 
     if(hasBoolMask)
     {
-      if(Result<> ioResult = dynamic_cast<const BoolArray*>(maskArrayPtr)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<bool>(boolMaskBuf.get(), count)); ioResult.invalid())
+      if(Result<> ioResult = dynamic_cast<const BoolArrayType*>(maskArrayPtr)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<bool>(boolMaskBuf.get(), count)); ioResult.invalid())
       {
         return ConvertResult(std::move(ioResult));
       }
     }
     else if(hasUint8Mask)
     {
-      if(Result<> ioResult = dynamic_cast<const UInt8Array*>(maskArrayPtr)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<uint8>(uint8MaskBuf.get(), count)); ioResult.invalid())
+      if(Result<> ioResult = dynamic_cast<const UInt8ArrayType*>(maskArrayPtr)->getDataStoreRef().copyIntoBuffer(offset, nonstd::span<uint8>(uint8MaskBuf.get(), count)); ioResult.invalid())
       {
         return ConvertResult(std::move(ioResult));
       }
@@ -151,7 +151,7 @@ Result<> ComputeIPFColorsScanline::operator()()
 
       if(calcIPF && phase < 0)
       {
-        return MakeErrorResult(-48001, fmt::format("Cell Phases array '{}' has value {} at voxel index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->cellPhasesArrayPath.toString(),
+        return MakeErrorResult(-48001, fmt::format("Cell Phases array '{}' has value {} at voxel index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->cell_phases_array_path.toString(),
                                                    phase, offset + i, numPhases));
       }
 
@@ -162,10 +162,10 @@ Result<> ComputeIPFColorsScanline::operator()()
 
       if(phase < numPhases && calcIPF && crystalStructures[phase] < ebsdlib::CrystalStructure::LaueGroupEnd)
       {
-        Rgba argb = ops[crystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false, m_InputValues->colorKey);
-        colorBuf[ci] = static_cast<uint8>(RgbColor::dRed(argb));
-        colorBuf[ci + 1] = static_cast<uint8>(RgbColor::dGreen(argb));
-        colorBuf[ci + 2] = static_cast<uint8>(RgbColor::dBlue(argb));
+        RgbaType argb = ops[crystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false, m_InputValues->color_key);
+        colorBuf[ci] = static_cast<uint8>(rgb_color::DRed(argb));
+        colorBuf[ci + 1] = static_cast<uint8>(rgb_color::DGreen(argb));
+        colorBuf[ci + 2] = static_cast<uint8>(rgb_color::DBlue(argb));
       }
     }
 

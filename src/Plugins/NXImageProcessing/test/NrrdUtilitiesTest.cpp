@@ -28,7 +28,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -128,9 +128,9 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageP
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.dataType == DataType::int16);
-  REQUIRE(md.componentCount == 1);
-  REQUIRE(md.spatialDim == 3);
+  REQUIRE(md.data_type == DataType::int16);
+  REQUIRE(md.component_count == 1);
+  REQUIRE(md.spatial_dim == 3);
   REQUIRE(md.dimensions == std::array<usize, 3>{4, 3, 2});
   REQUIRE(md.spacing[0] == Approx(0.5f));
   REQUIRE(md.spacing[1] == Approx(0.75f));
@@ -139,10 +139,10 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageP
   REQUIRE(md.origin[1] == Approx(2.0f));
   REQUIRE(md.origin[2] == Approx(3.5f));
   REQUIRE(md.encoding == nrrd::Encoding::Raw);
-  REQUIRE(md.byteSwapRequired == false); // little endian on a little-endian host
-  REQUIRE_FALSE(md.affineHasRotation);
+  REQUIRE(md.byte_swap_required == false); // little endian on a little-endian host
+  REQUIRE_FALSE(md.affine_has_rotation);
   REQUIRE(md.detached == false);
-  REQUIRE(md.dataStartOffset > 0);
+  REQUIRE(md.data_start_offset > 0);
 }
 
 TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImageProcessing][NrrdUtilities]")
@@ -154,10 +154,10 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImagePr
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.spatialDim == 2);
+  REQUIRE(md.spatial_dim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{5, 4, 1});
-  REQUIRE(md.componentCount == 1);
-  REQUIRE(md.dataType == DataType::uint8);
+  REQUIRE(md.component_count == 1);
+  REQUIRE(md.data_type == DataType::uint8);
 }
 
 TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "[NXImageProcessing][NrrdUtilities]")
@@ -170,11 +170,11 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.componentCount == 3);
-  REQUIRE(md.spatialDim == 2);
+  REQUIRE(md.component_count == 3);
+  REQUIRE(md.spatial_dim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{8, 6, 1}); // X=8, Y=6, Z=1
-  REQUIRE(md.dataType == DataType::uint8);
-  REQUIRE_FALSE(md.affineHasRotation);
+  REQUIRE(md.data_type == DataType::uint8);
+  REQUIRE_FALSE(md.affine_has_rotation);
 }
 
 TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation", "[NXImageProcessing][NrrdUtilities]")
@@ -187,7 +187,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation",
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.affineHasRotation);          // permutation is not axis-aligned
+  REQUIRE(md.affine_has_rotation);          // permutation is not axis-aligned
   REQUIRE(md.spacing[0] == Approx(2.0f)); // ||(0,-2,0)||
   REQUIRE(md.spacing[2] == Approx(2.5f)); // ||(2.5,0,0)||
 }
@@ -426,11 +426,11 @@ DataStructure BuildNrrdTarget(DataType dataType, const std::array<usize, 3>& des
 Result<> RunReadNrrdFile(DataStructure& dataStructure, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
 {
   ReadNrrdFileInputValues inputValues;
-  inputValues.InputFilePath = inputFile;
-  inputValues.ImageGeometryPath = k_GeomPath;
-  inputValues.CellAttributeMatrixName = k_CellDataName;
-  inputValues.ImageDataArrayName = k_ArrayName;
-  inputValues.CroppingOptions = crop;
+  inputValues.input_file_path = inputFile;
+  inputValues.image_geometry_path = k_GeomPath;
+  inputValues.cell_attribute_matrix_name = k_CellDataName;
+  inputValues.image_data_array_name = k_ArrayName;
+  inputValues.cropping_options = crop;
 
   const IFilter::MessageHandler messageHandler{};
   const std::atomic_bool shouldCancel{false};
@@ -536,12 +536,12 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the 
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  crop.cropX = true;
-  crop.xBoundVoxels = {1, 2};
-  crop.cropY = true;
-  crop.yBoundVoxels = {0, 1};
-  crop.cropZ = true;
-  crop.zBoundVoxels = {1, 1};
+  crop.crop_x = true;
+  crop.x_bound_voxels = {1, 2};
+  crop.crop_y = true;
+  crop.y_bound_voxels = {0, 1};
+  crop.crop_z = true;
+  crop.z_bound_voxels = {1, 1};
 
   // Cropped extent is X=2, Y=2, Z=1.
   DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {2, 2, 1}, 1);

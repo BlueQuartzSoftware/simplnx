@@ -104,7 +104,7 @@ Parameters ExampleFilter1Filter::parameters() const
   // param10 should be active if either param8 OR param9 are the correct value
   params.insertSeparator(Parameters::Separator{"Multiple Linked Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param8, "Bool Parameter", "A boolean Parameter", true));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param9, "Choices Parameter", "A choices parameter", 0, ChoicesParameter::Choices{"0", "1", "2"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param9, "Choices Parameter", "A choices parameter", 0, ChoicesParameter::ChoicesType{"0", "1", "2"}));
   params.insert(std::make_unique<Int32ParameterType>(k_Param10, "Int32 Parameter", "An Integer Parameter", 42));
   params.linkParameters(k_Param8, k_Param10, true);
   params.linkParameters(k_Param9, k_Param10, std::make_any<ChoicesParameter::ValueType>(1));

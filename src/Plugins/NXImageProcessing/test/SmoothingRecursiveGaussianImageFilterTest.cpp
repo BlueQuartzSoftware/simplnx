@@ -75,7 +75,7 @@ void RunSmooth(IFilter& filter, DataStructure& dataStructure, const DataPath& in
   args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(sigma));
   args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(normalize));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -101,8 +101,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: co
                    float32, float64)
 {
   using T = TestType;
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 12;
   const std::vector<T> field(d * d * d, static_cast<T>(20));
   DataStructure dataStructure;
@@ -121,8 +121,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: co
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: symmetric blob stays symmetric", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 13; // odd so there is a true center voxel
   const std::vector<float64> field = MakeRadial<float64>(d, d, d);
   DataStructure dataStructure;
@@ -150,8 +150,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: symmetric b
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight rejections", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("unsigned input rejected")
   {
@@ -167,7 +167,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
   SECTION("too-few-pixels rejected")
   {
@@ -183,8 +183,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   // The "too-few-pixels" arm above trips via X == 3. ValidateSeparableImageDims separately rejects a genuinely 3D image
   // (Z > 1) whose Z < 4 (`zIs2D || dims[2] >= 4`, zIs2D == (dims[2]==1)); a Z of 2 or 3 (NOT treated as 2D) hits that
@@ -202,8 +202,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("3D image with Z==3 rejected (too few Z pixels)")
   {
@@ -218,8 +218,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianTooFewPixels);
   }
   SECTION("Z==1 accepted as a 2D image")
   {
@@ -234,7 +234,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{1.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
   SECTION("non-positive sigma rejected")
   {
@@ -250,8 +250,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: preflight r
     args.insertOrAssign(SmoothFilterType::k_Sigma_Key, std::make_any<std::vector<float64>>(std::vector<float64>{0.0, 1.0, 1.0}));
     args.insertOrAssign(SmoothFilterType::k_NormalizeAcrossScale_Key, std::make_any<bool>(false));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_RecursiveGaussianNonPositiveSigma);
   }
 }
 
@@ -285,8 +285,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJs
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic sigma spreads along the larger-sigma axis", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 15;
   std::vector<float64> field(d * d * d, 0.0);
   const usize c = d / 2;
@@ -308,8 +308,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic spacing scales the per-axis blur", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 15;
   std::vector<float64> field(d * d * d, 0.0);
   const usize c = d / 2;
@@ -317,7 +317,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic
   DataStructure dataStructure;
   const DataPath input = rt::BuildImageFromPattern<float64>(dataStructure, d, d, d, field);
   // Use coarser spacing on the X axis.
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(input.getParent().getParent()).setSpacing(FloatVec3{2.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(input.getParent().getParent()).setSpacing(FloatVec3Type{2.0f, 1.0f, 1.0f}).valid());
   SmoothFilterType filter;
   RunSmooth(filter, dataStructure, input, {2.0, 2.0, 2.0}, false); // isotropic physical sigma -> sigmad_x=1 < sigmad_y=sigmad_z=2
   const std::vector<float64> out = ReadArray<float64>(dataStructure, DataPath({"Image Geometry", "CellData", "Output"}));
@@ -332,8 +332,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: anisotropic
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothing preserves a constant and stays symmetric", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 13;
   SECTION("constant preserved")
   {
@@ -374,8 +374,8 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: 2D smoothin
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: NormalizeAcrossScale is a no-op for smoothing", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize d = 12;
   const std::vector<float64> field = MakeRadial<float64>(d, d, d);
   DataStructure dsOff;
@@ -395,10 +395,10 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: NormalizeAc
 TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fused plane path matches direct path", "[NXImageProcessing][SmoothingRecursiveGaussianImageFilter]", int16, float64)
 {
   using T = TestType;
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   const usize dimZ = GENERATE(1ULL, 8ULL);
-  const FloatVec3 spacing{0.6f, 1.4f, 2.2f};
+  const FloatVec3Type spacing{0.6f, 1.4f, 2.2f};
   const std::vector<T> field = MakeRamp<T>(12, 11, dimZ);
   const std::vector<float64> sigma{1.25, 2.0, 1.6};
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
@@ -412,8 +412,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
     SmoothFilterType filter;
     RunSmooth(filter, directDs, directInput, sigma, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    REQUIRE(counts.InCoreOnInMemoryStore == 1);
-    REQUIRE(counts.OutOfCore == 0);
+    REQUIRE(counts.in_core_on_in_memory_store == 1);
+    REQUIRE(counts.out_of_core == 0);
   }
 
   DataStructure fusedDs;
@@ -425,8 +425,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
     SmoothFilterType filter;
     RunSmooth(filter, fusedDs, fusedInput, sigma, true);
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    REQUIRE(counts.OutOfCoreOnInMemoryStore == 1);
-    REQUIRE(counts.InCore == 0);
+    REQUIRE(counts.out_of_core_on_in_memory_store == 1);
+    REQUIRE(counts.in_core == 0);
   }
 
   REQUIRE(ReadArray<T>(directDs, outputPath) == ReadArray<T>(fusedDs, outputPath));
@@ -441,8 +441,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: fu
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][SmoothingRecursiveGaussianImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -461,7 +461,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
   args.insertOrAssign(SmoothingRecursiveGaussianImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   SmoothingRecursiveGaussianImageFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -473,5 +473,5 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: ITK real-im
   const Result<> compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.0001);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

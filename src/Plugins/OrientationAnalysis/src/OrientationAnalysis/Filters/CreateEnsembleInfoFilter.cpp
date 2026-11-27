@@ -115,11 +115,11 @@ Result<> CreateEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, con
                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CreateEnsembleInfoInputValues inputValues;
-  inputValues.Ensemble = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
-  inputValues.CrystalStructuresArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CrystalStructuresArrayName_Key);
-  inputValues.PhaseTypesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseTypesArrayName_Key);
-  inputValues.PhaseNamesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
+  inputValues.ensemble = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
+  inputValues.crystal_structures_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CrystalStructuresArrayName_Key);
+  inputValues.phase_types_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseTypesArrayName_Key);
+  inputValues.phase_names_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
 
   return CreateEnsembleInfo(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

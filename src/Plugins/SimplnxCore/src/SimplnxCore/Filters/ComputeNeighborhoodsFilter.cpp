@@ -70,7 +70,7 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_SearchRadiusType_Key, "Search Radius Type",
       "How the neighbor search radius is defined: (0) as a multiple of each feature's own Equivalent Sphere Diameter, or (1) as an absolute search radius in microns.", k_MultiplesOfAverageIndex,
-      ChoicesParameter::Choices{"Multiples of Equivalent Diameter", "Search Radius (microns)"}));
+      ChoicesParameter::ChoicesType{"Multiples of Equivalent Diameter", "Search Radius (microns)"}));
 
   params.insert(std::make_unique<Float32ParameterType>(
       k_MultiplesOfAverage_Key, "Multiples of Equivalent Diameter",
@@ -89,10 +89,10 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters",
       "Path to the array specifying the diameter of a sphere with the same volume as the Feature. Only required when 'Search Radius Type' is 'Multiples of Equivalent Diameter'.",
-      DataPath({"Cell Feature Data", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      DataPath({"Cell Feature Data", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "Path to the array specifying the X, Y, Z coordinates of Feature center of mass",
                                                           DataPath({"Cell Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
                                                           "Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature",
@@ -143,7 +143,7 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   // Report the input Image Geometry information so the user has spatial context for choosing a search radius
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pSelectedImageGeometryPathValue);
   preflightUpdatedValues.push_back(
-      {"Input Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(imageGeom.getDimensions(), imageGeom.getSpacing(), imageGeom.getOrigin(), imageGeom.getUnits())});
+      {"Input Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(imageGeom.getDimensions(), imageGeom.getSpacing(), imageGeom.getOrigin(), imageGeom.getUnits())});
 
   // Validate only the value parameter that is active for the selected search radius type. In the
   // "Multiples of Equivalent Diameter" mode the Equivalent Diameters array is required and must have the
@@ -152,12 +152,12 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   {
     if(pMultiplesOfAverageValue <= 0.0F)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-5732, "'Multiples of Equivalent Diameter' must be greater than zero.")};
+      return {.output_actions = MakeErrorResult<OutputActions>(-5732, "'Multiples of Equivalent Diameter' must be greater than zero.")};
     }
     auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pEquivalentDiametersArrayPathValue, pCentroidsArrayPathValue});
     if(!tupleValidityCheck)
     {
-      return {.outputActions =
+      return {.output_actions =
                   MakeErrorResult<OutputActions>(-5730, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
     }
   }
@@ -165,13 +165,13 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   {
     if(pSearchRadiusValue <= 0.0F)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-5733, "'Search Radius (microns)' must be greater than zero.")};
+      return {.output_actions = MakeErrorResult<OutputActions>(-5733, "'Search Radius (microns)' must be greater than zero.")};
     }
 
     // Give the user context for the absolute search radius relative to the geometry's physical size
-    const SizeVec3 dims = imageGeom.getDimensions();
-    const FloatVec3 spacing = imageGeom.getSpacing();
-    const FloatVec3 extents = {static_cast<float32>(dims[0]) * spacing[0], static_cast<float32>(dims[1]) * spacing[1], static_cast<float32>(dims[2]) * spacing[2]};
+    const SizeVec3Type dims = imageGeom.getDimensions();
+    const FloatVec3Type spacing = imageGeom.getSpacing();
+    const FloatVec3Type extents = {static_cast<float32>(dims[0]) * spacing[0], static_cast<float32>(dims[1]) * spacing[1], static_cast<float32>(dims[2]) * spacing[2]};
     const float32 minSpacing = std::min({spacing[0], spacing[1], spacing[2]});
     const float32 maxExtent = std::max({extents[0], extents[1], extents[2]});
 
@@ -215,7 +215,7 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -224,14 +224,14 @@ Result<> ComputeNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, c
 {
   ComputeNeighborhoodsInputValues inputValues;
 
-  inputValues.SearchRadiusType = filterArgs.value<ChoicesParameter::ValueType>(k_SearchRadiusType_Key);
-  inputValues.MultiplesOfAverage = filterArgs.value<float32>(k_MultiplesOfAverage_Key);
-  inputValues.SearchRadius = filterArgs.value<float32>(k_SearchRadius_Key);
-  inputValues.EquivalentDiametersArrayPath = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.NeighborhoodsArrayName = inputValues.CentroidsArrayPath.replaceName(filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key));
-  inputValues.NeighborhoodListArrayName = inputValues.CentroidsArrayPath.replaceName(filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.search_radius_type = filterArgs.value<ChoicesParameter::ValueType>(k_SearchRadiusType_Key);
+  inputValues.multiples_of_average = filterArgs.value<float32>(k_MultiplesOfAverage_Key);
+  inputValues.search_radius = filterArgs.value<float32>(k_SearchRadius_Key);
+  inputValues.equivalent_diameters_array_path = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
+  inputValues.centroids_array_path = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  inputValues.neighborhoods_array_name = inputValues.centroids_array_path.replaceName(filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key));
+  inputValues.neighborhood_list_array_name = inputValues.centroids_array_path.replaceName(filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key));
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeNeighborhoods(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

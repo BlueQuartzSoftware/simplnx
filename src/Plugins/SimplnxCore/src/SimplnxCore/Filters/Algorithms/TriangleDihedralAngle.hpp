@@ -13,8 +13,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT TriangleDihedralAngleInputValues
 {
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  DataObjectNameParameter::ValueType SurfaceMeshTriangleDihedralAnglesArrayName;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
+  DataObjectNameParameter::ValueType surface_mesh_triangle_dihedral_angles_array_name;
 };
 
 /**

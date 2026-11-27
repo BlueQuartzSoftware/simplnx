@@ -33,14 +33,14 @@ struct TIFTAG
 };
 
 } // namespace
-std::pair<int32_t, std::string> TiffWriter::WriteImage(const std::string& filepath, int32_t width, int32_t height, uint16_t samplesPerPixel, const uint8_t* data)
+std::pair<int32_t, std::string> tiff_writer::WriteImage(const std::string& filepath, int32_t width, int32_t height, uint16_t samplesPerPixel, const uint8_t* data)
 {
   const uint16_t photometricInterpretation = (samplesPerPixel == 1 ? k_PhotometricMinisblack : k_PhotometricRgb);
 
   // Check for Endianess of the system and write the appropriate magic number according to the tiff spec
   std::array<char, 4> magicNumber = {0x49, 0x49, 0x2A, 0x00};
 
-  if(nx::core::checkEndian() == nx::core::endian::big)
+  if(nx::core::CheckEndian() == nx::core::endian::big)
   {
     magicNumber = {0x4D, 0x4D, 0x00, 0x2A};
   }

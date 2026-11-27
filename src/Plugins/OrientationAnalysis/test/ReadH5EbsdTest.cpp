@@ -32,7 +32,7 @@
 #include <system_error>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 namespace fs = std::filesystem;
 namespace
 {
@@ -204,33 +204,33 @@ void CompareNumericArrays(const IDataArray& generatedDataArray, const IDataArray
 Arguments SmallArchiveArguments(int32 endSlice, bool useRecommendedTransform)
 {
   ReadH5EbsdFileParameter::ValueType input;
-  input.inputFilePath = fmt::format("{}/6_5_h5ebsd_exemplar/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_TestFilesDir);
-  input.startSlice = k_FirstSlice;
-  input.endSlice = endSlice;
-  input.eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-  input.selectedArrayNames = {Constants::k_ConfidenceIndex, Constants::k_EulerAngles, Constants::k_Fit,        Constants::k_ImageQuality,
-                              Constants::k_Phases,          Constants::k_SEMSignal,   ebsdlib::Ang::XPosition, ebsdlib::Ang::YPosition};
-  input.useRecommendedTransform = useRecommendedTransform;
+  input.input_file_path = fmt::format("{}/6_5_h5ebsd_exemplar/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_TestFilesDir);
+  input.start_slice = k_FirstSlice;
+  input.end_slice = endSlice;
+  input.euler_representation = ebsdlib::AngleRepresentation::Radians;
+  input.selected_array_names = {constants::k_ConfidenceIndex, constants::k_EulerAngles, constants::k_Fit,        constants::k_ImageQuality,
+                              constants::k_Phases,          constants::k_SEMSignal,   ebsdlib::Ang::XPosition, ebsdlib::Ang::YPosition};
+  input.use_recommended_transform = useRecommendedTransform;
   Arguments args;
   args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
-  args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-  args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_CellData));
-  args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(constants::k_CellData));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(constants::k_EnsembleAttributeMatrix));
   return args;
 }
 
 const ImageGeom& GetImageGeometry(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(Constants::k_DataContainerPath));
-  return dataStructure.getDataRefAs<ImageGeom>(Constants::k_DataContainerPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(constants::k_DataContainerPath));
+  return dataStructure.getDataRefAs<ImageGeom>(constants::k_DataContainerPath);
 }
 
 void CheckRotatedGeometry(const ImageGeom& geometry, usize sliceCount)
 {
-  const SizeVec3 expectedDims = {k_XPoints, k_YPoints, sliceCount};
-  const FloatVec3 expectedSpacing = {k_Resolution, k_Resolution, k_Resolution};
-  const FloatVec3 expectedMin = {k_XMin, k_Zero, -static_cast<float32>(sliceCount) * k_Resolution};
-  const FloatVec3 expectedMax = {k_Zero, k_YMax, k_Zero};
+  const SizeVec3Type expectedDims = {k_XPoints, k_YPoints, sliceCount};
+  const FloatVec3Type expectedSpacing = {k_Resolution, k_Resolution, k_Resolution};
+  const FloatVec3Type expectedMin = {k_XMin, k_Zero, -static_cast<float32>(sliceCount) * k_Resolution};
+  const FloatVec3Type expectedMax = {k_Zero, k_YMax, k_Zero};
   CHECK(geometry.getDimensions() == expectedDims);
   CHECK(geometry.getSpacing() == expectedSpacing);
   const auto origin = geometry.getOrigin();
@@ -249,8 +249,8 @@ void ApplyExplicitTransforms(DataStructure& dataStructure)
 {
   RotateEulerRefFrameFilter eulerFilter;
   Arguments eulerArgs;
-  eulerArgs.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix.createChildPath(Constants::k_EulerAngles)));
-  eulerArgs.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, k_EulerRotationDegrees}));
+  eulerArgs.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(constants::k_CellAttributeMatrix.createChildPath(constants::k_EulerAngles)));
+  eulerArgs.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32ParameterType::ValueType>({0.0F, 0.0F, 1.0F, k_EulerRotationDegrees}));
   const auto eulerResult = eulerFilter.execute(dataStructure, eulerArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(eulerResult.result);
 
@@ -260,9 +260,9 @@ void ApplyExplicitTransforms(DataStructure& dataStructure)
   REQUIRE(sampleFilter != nullptr);
   Arguments sampleArgs;
   sampleArgs.insertOrAssign(k_RotateClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
-  sampleArgs.insertOrAssign(k_RotateSelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-  sampleArgs.insertOrAssign(k_RotateCreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-  sampleArgs.insertOrAssign(k_RotateRotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 1.0F, 0.0F, k_SampleRotationDegrees}));
+  sampleArgs.insertOrAssign(k_RotateSelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
+  sampleArgs.insertOrAssign(k_RotateCreatedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
+  sampleArgs.insertOrAssign(k_RotateRotationAxisAngle_Key, std::make_any<VectorFloat32ParameterType::ValueType>({0.0F, 1.0F, 0.0F, k_SampleRotationDegrees}));
   sampleArgs.insertOrAssign(k_RotateRotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(k_AxisAngleRepresentation));
   sampleArgs.insertOrAssign(k_RotateSliceBySlice_Key, std::make_any<bool>(true));
   sampleArgs.insertOrAssign(k_RotateRemoveOriginalGeometry_Key, std::make_any<bool>(true));
@@ -273,7 +273,7 @@ void ApplyExplicitTransforms(DataStructure& dataStructure)
 
 void CompareImportedArrays(const DataStructure& automatic, const DataStructure& manual)
 {
-  for(const auto& groupPath : {Constants::k_CellAttributeMatrix, Constants::k_CellEnsembleAttributeMatrixPath})
+  for(const auto& groupPath : {constants::k_CellAttributeMatrix, constants::k_CellEnsembleAttributeMatrixPath})
   {
     REQUIRE_NOTHROW(automatic.getDataRefAs<AttributeMatrix>(groupPath));
     REQUIRE_NOTHROW(manual.getDataRefAs<AttributeMatrix>(groupPath));
@@ -301,7 +301,7 @@ void CompareImportedArrays(const DataStructure& automatic, const DataStructure& 
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HKL hex correction is independent of phase selection", "[OrientationAnalysis][ReadH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto inputPath = WriteHexagonalH5EbsdFixture();
   auto inputFileGuard = MakeScopeGuard([&inputPath]() noexcept {
     std::error_code errorCode;
@@ -316,37 +316,37 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HKL hex correction is independent of
   const std::array<float64, 9> expectedDegrees = {30, 45, 90, 30, 45, 60, 30, 45, 60};
   const auto& expected = convertToRadians ? expectedRadians : expectedDegrees;
   std::array<float32, 9> eulersOnly = {};
-  for(const auto& selection : std::vector<std::vector<std::string>>{{Constants::k_EulerAngles}, {Constants::k_EulerAngles, Constants::k_Phases}, {Constants::k_Phases}})
+  for(const auto& selection : std::vector<std::vector<std::string>>{{constants::k_EulerAngles}, {constants::k_EulerAngles, constants::k_Phases}, {constants::k_Phases}})
   {
     CAPTURE(selection);
-    const bool hasEuler = selection.front() == Constants::k_EulerAngles;
-    const bool hasPhases = selection.back() == Constants::k_Phases;
+    const bool hasEuler = selection.front() == constants::k_EulerAngles;
+    const bool hasPhases = selection.back() == constants::k_Phases;
     ReadH5EbsdFileParameter::ValueType input;
-    input.inputFilePath = inputPath.string();
-    input.startSlice = 0;
-    input.endSlice = 0;
-    input.eulerRepresentation = ebsdlib::AngleRepresentation::Degrees;
-    input.useRecommendedTransform = convertToRadians;
-    input.selectedArrayNames = selection;
+    input.input_file_path = inputPath.string();
+    input.start_slice = 0;
+    input.end_slice = 0;
+    input.euler_representation = ebsdlib::AngleRepresentation::Degrees;
+    input.use_recommended_transform = convertToRadians;
+    input.selected_array_names = selection;
     Arguments args;
     args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_CellData));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(constants::k_CellData));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(constants::k_EnsembleAttributeMatrix));
     ReadH5EbsdFilter filter;
     DataStructure dataStructure;
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    const auto eulerPath = Constants::k_CellAttributeMatrix.createChildPath(Constants::k_EulerAngles);
-    const auto phasePath = Constants::k_CellAttributeMatrix.createChildPath(Constants::k_Phases);
+    const auto eulerPath = constants::k_CellAttributeMatrix.createChildPath(constants::k_EulerAngles);
+    const auto phasePath = constants::k_CellAttributeMatrix.createChildPath(constants::k_Phases);
     CHECK(dataStructure.containsData(eulerPath) == hasEuler);
     CHECK(dataStructure.containsData(phasePath) == hasPhases);
     if(hasEuler)
     {
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulerPath));
-      const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulerPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(eulerPath));
+      const auto& eulers = dataStructure.getDataRefAs<Float32ArrayType>(eulerPath);
       REQUIRE(eulers.getSize() == expected.size());
       std::array<float32, 9> values = {};
       const auto copyResult = eulers.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(values));
@@ -367,25 +367,25 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: HKL hex correction is independent of
     }
     if(hasPhases)
     {
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasePath));
-      const auto& phases = dataStructure.getDataRefAs<Int32Array>(phasePath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasePath));
+      const auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(phasePath);
       REQUIRE(phases.getSize() == 3);
       std::array<int32, 3> values = {};
       const auto copyResult = phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(values));
       SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
       CHECK(values == std::array<int32, 3>{1, 2, 0});
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[OrientationAnalysis][ReadH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_h5ebsd.tar.gz", "Small_IN100.h5ebsd");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_h5ebsd.tar.gz", "Small_IN100.h5ebsd");
 
   auto* filterListPtr = Application::Instance()->getFilterList();
 
@@ -398,20 +398,20 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     Arguments args;
 
     ReadH5EbsdFileParameter::ValueType h5ebsdParamVal;
-    h5ebsdParamVal.inputFilePath = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
-    h5ebsdParamVal.startSlice = 1;
-    h5ebsdParamVal.endSlice = 117;
-    h5ebsdParamVal.eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-    h5ebsdParamVal.selectedArrayNames = {Constants::k_ConfidenceIndex, Constants::k_EulerAngles, Constants::k_Fit, Constants::k_ImageQuality, Constants::k_Phases, Constants::k_SEMSignal};
-    h5ebsdParamVal.useRecommendedTransform = true;
+    h5ebsdParamVal.input_file_path = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
+    h5ebsdParamVal.start_slice = 1;
+    h5ebsdParamVal.end_slice = 117;
+    h5ebsdParamVal.euler_representation = ebsdlib::AngleRepresentation::Radians;
+    h5ebsdParamVal.selected_array_names = {constants::k_ConfidenceIndex, constants::k_EulerAngles, constants::k_Fit, constants::k_ImageQuality, constants::k_Phases, constants::k_SEMSignal};
+    h5ebsdParamVal.use_recommended_transform = true;
 
     args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(h5ebsdParamVal));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_CellData));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_EnsembleAttributeMatrix));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(constants::k_CellData));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(constants::k_EnsembleAttributeMatrix));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -422,19 +422,19 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
 #endif
 
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellAttributeMatrix));
-    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellAttributeMatrix);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellEnsembleAttributeMatrixPath));
-    auto& cellEnsembleDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellEnsembleAttributeMatrixPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(constants::k_CellAttributeMatrix));
+    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(constants::k_CellAttributeMatrix);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(constants::k_CellEnsembleAttributeMatrixPath));
+    auto& cellEnsembleDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(constants::k_CellEnsembleAttributeMatrixPath);
     std::vector<DataPath> selectedArrays;
 
     for(auto& child : cellDataGroup)
     {
-      selectedArrays.push_back(Constants::k_CellAttributeMatrix.createChildPath(child.second->getName()));
+      selectedArrays.push_back(constants::k_CellAttributeMatrix.createChildPath(child.second->getName()));
     }
     for(auto& child : cellEnsembleDataGroup)
     {
-      selectedArrays.push_back(Constants::k_CellEnsembleAttributeMatrixPath.createChildPath(child.second->getName()));
+      selectedArrays.push_back(constants::k_CellEnsembleAttributeMatrixPath.createChildPath(child.second->getName()));
     }
 
     for(const auto& arrayPath : selectedArrays)
@@ -464,13 +464,13 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadH5EbsdFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -503,18 +503,18 @@ TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: SIMPL Backwards Compatibility"
       CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
 
       const auto h5EbsdValue = args.value<ReadH5EbsdFileParameter::ValueType>(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key);
-      CHECK(h5EbsdValue.inputFilePath == "/test/path/file.h5ebsd");
-      CHECK(h5EbsdValue.startSlice == 0);
-      CHECK(h5EbsdValue.endSlice == 10);
-      CHECK(h5EbsdValue.useRecommendedTransform == true);
-      CHECK(h5EbsdValue.selectedArrayNames == std::vector<std::string>{"Confidence Index", "Image Quality"});
+      CHECK(h5EbsdValue.input_file_path == "/test/path/file.h5ebsd");
+      CHECK(h5EbsdValue.start_slice == 0);
+      CHECK(h5EbsdValue.end_slice == 10);
+      CHECK(h5EbsdValue.use_recommended_transform == true);
+      CHECK(h5EbsdValue.selected_array_names == std::vector<std::string>{"Confidence Index", "Image Quality"});
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Single sample rotation origin", "[OrientationAnalysis][ReadH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const TestFileSentinel sentinel(unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
   const int32 endSlice = GENERATE(k_FirstSlice, k_LastSlice);
   CAPTURE(endSlice);
@@ -522,13 +522,13 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Single sample rotation origin", "[Or
   ReadH5EbsdFilter filter;
   DataStructure dataStructure;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  std::optional<FloatVec3> preflightOrigin;
-  for(const auto& action : preflightResult.outputActions.value().actions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  std::optional<FloatVec3Type> preflightOrigin;
+  for(const auto& action : preflightResult.output_actions.value().actions)
   {
     if(const auto* updatePtr = dynamic_cast<const UpdateImageGeomAction*>(action.get()); updatePtr != nullptr)
     {
-      REQUIRE(updatePtr->path() == Constants::k_DataContainerPath);
+      REQUIRE(updatePtr->path() == constants::k_DataContainerPath);
       REQUIRE(updatePtr->origin().has_value());
       preflightOrigin = updatePtr->origin();
     }
@@ -539,12 +539,12 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Single sample rotation origin", "[Or
   const auto& geometry = GetImageGeometry(dataStructure);
   CheckRotatedGeometry(geometry, static_cast<usize>(endSlice));
   CHECK(geometry.getOrigin() == preflightOrigin.value());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Automatic and explicit transformations agree", "[OrientationAnalysis][ReadH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const TestFileSentinel sentinel(unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
   const int32 endSlice = GENERATE(k_FirstSlice, k_LastSlice);
   CAPTURE(endSlice);
@@ -555,7 +555,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Automatic and explicit transformatio
   DataStructure manual;
   const auto manualResult = filter.execute(manual, SmallArchiveArguments(endSlice, false));
   SIMPLNX_RESULT_REQUIRE_VALID(manualResult.result);
-  const FloatVec3 untransformedOrigin = {k_Zero, k_Zero, k_Zero};
+  const FloatVec3Type untransformedOrigin = {k_Zero, k_Zero, k_Zero};
   REQUIRE(GetImageGeometry(manual).getOrigin() == untransformedOrigin);
   ApplyExplicitTransforms(manual);
   const auto& automaticGeometry = GetImageGeometry(automatic);
@@ -565,24 +565,24 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Automatic and explicit transformatio
   CHECK(automaticGeometry.getDimensions() == manualGeometry.getDimensions());
   CHECK(automaticGeometry.getSpacing() == manualGeometry.getSpacing());
   CompareImportedArrays(automatic, manual);
-  UnitTest::CheckArraysInheritTupleDims(automatic);
-  UnitTest::CheckArraysInheritTupleDims(manual);
+  unit_test::CheckArraysInheritTupleDims(automatic);
+  unit_test::CheckArraysInheritTupleDims(manual);
 }
 
 TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: override origin and spacing", "[OrientationAnalysis][ReadH5Ebsd]")
 {
-  const UnitTest::TestFileSentinel archive(unit_test::k_TestFilesDir, "Small_IN100_h5ebsd.tar.gz", "Small_IN100.h5ebsd");
+  const unit_test::TestFileSentinel archive(unit_test::k_TestFilesDir, "Small_IN100_h5ebsd.tar.gz", "Small_IN100.h5ebsd");
   ReadH5EbsdFileParameter::ValueType input;
-  input.inputFilePath = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
-  input.startSlice = 1;
-  input.endSlice = 2;
-  input.eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-  input.selectedArrayNames = {Constants::k_EulerAngles, Constants::k_Phases};
-  input.useRecommendedTransform = false;
+  input.input_file_path = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
+  input.start_slice = 1;
+  input.end_slice = 2;
+  input.euler_representation = ebsdlib::AngleRepresentation::Radians;
+  input.selected_array_names = {constants::k_EulerAngles, constants::k_Phases};
+  input.use_recommended_transform = false;
   Arguments args;
   const DataPath geometry({"Override H5EBSD"});
   args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, input);
   args.insertOrAssign(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key, geometry);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  UnitTest::RequireReaderGeometryExecution(ReadH5EbsdFilter{}, args, geometry, {4, -3, 8}, {2, 3, 4});
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireReaderGeometryExecution(ReadH5EbsdFilter{}, args, geometry, {4, -3, 8}, {2, 3, 4});
 }

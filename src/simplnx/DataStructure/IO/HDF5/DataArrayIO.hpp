@@ -48,7 +48,7 @@ public:
    * a recovery placeholder after preserving its warnings.
    */
   template <typename K>
-  static Result<> importDataArray(DataStructure& dataStructure, const nx::core::hdf5::DatasetIO& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
+  static Result<> ImportDataArray(DataStructure& dataStructure, const nx::core::hdf5::DatasetIO& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
                                   const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
     if(preflight)
@@ -112,7 +112,7 @@ public:
       return ConvertResult(std::move(storeResult));
     }
     Result<> result;
-    result.m_Warnings = std::move(storeResult.warnings());
+    result.m_warnings = std::move(storeResult.warnings());
     if(storeResult.value() == nullptr)
     {
       // A recovery placeholder has no inline values. Preserve warnings and skip it.
@@ -151,7 +151,7 @@ public:
     }
 
     auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
-    auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    auto dataTypeStrResult = datasetReader.readStringAttribute(constants::k_ObjectTypeTag);
     if(dataTypeStrResult.invalid())
     {
       return ConvertResult(std::move(dataTypeStrResult));
@@ -222,7 +222,7 @@ public:
     const auto type = typeResult.value();
 
     std::string dataTypeStr;
-    auto dataTypeStrResult = datasetReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    auto dataTypeStrResult = datasetReader.readStringAttribute(constants::k_ObjectTypeTag);
     if(dataTypeStrResult.invalid())
     {
       return ConvertResult(std::move(dataTypeStrResult));
@@ -231,7 +231,7 @@ public:
     const bool isBoolArray = (dataTypeStr == "DataArray<bool>");
 
     // The importable attribute excludes objects that the writer marked unavailable.
-    auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
+    auto importableResult = datasetReader.readScalarAttribute<int32>(constants::k_ImportableTag);
     if(importableResult.invalid())
     {
       return ConvertResult(std::move(importableResult));
@@ -249,40 +249,40 @@ public:
     switch(type)
     {
     case DataType::float32:
-      result = importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::float64:
-      result = importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int8:
-      result = importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int16:
-      result = importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int32:
-      result = importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::int64:
-      result = importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::uint8: {
       if(isBoolArray)
       {
-        result = importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+        result = ImportDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
         break;
       }
-      result = importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     }
     case DataType::uint16:
-      result = importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::uint32:
-      result = importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     case DataType::uint64:
-      result = importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
+      result = ImportDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, parentId, useEmptyDataStore);
       break;
     default:
       result = MakeErrorResult(-777, fmt::format("Cannot import numeric dataset '{}' because its type is unsupported.", datasetReader.getObjectPath()));
@@ -303,7 +303,7 @@ public:
   Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, GroupWriterType& parentGroup, bool importable) const
   {
     auto datasetWriter = parentGroup.createDataset(dataArray.getName());
-    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
+    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compression_level);
     Result<> storeResult = data_store_io::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
     if(storeResult.invalid())
     {
@@ -345,17 +345,17 @@ public:
   DataArrayIO& operator=(DataArrayIO&& rhs) = delete;
 };
 
-using Int8ArrayIO = DataArrayIO<int8>;
-using Int16ArrayIO = DataArrayIO<int16>;
-using Int32ArrayIO = DataArrayIO<int32>;
-using Int64ArrayIO = DataArrayIO<int64>;
+using Int8ArrayIoType = DataArrayIO<int8>;
+using Int16ArrayIoType = DataArrayIO<int16>;
+using Int32ArrayIoType = DataArrayIO<int32>;
+using Int64ArrayIoType = DataArrayIO<int64>;
 
-using UInt8ArrayIO = DataArrayIO<uint8>;
-using UInt16ArrayIO = DataArrayIO<uint16>;
-using UInt32ArrayIO = DataArrayIO<uint32>;
-using UInt64ArrayIO = DataArrayIO<uint64>;
+using UInt8ArrayIoType = DataArrayIO<uint8>;
+using UInt16ArrayIoType = DataArrayIO<uint16>;
+using UInt32ArrayIoType = DataArrayIO<uint32>;
+using UInt64ArrayIoType = DataArrayIO<uint64>;
 
-using BoolArrayIO = DataArrayIO<bool>;
-using Float32ArrayIO = DataArrayIO<float32>;
-using Float64ArrayIO = DataArrayIO<float64>;
+using BoolArrayIoType = DataArrayIO<bool>;
+using Float32ArrayIoType = DataArrayIO<float32>;
+using Float64ArrayIoType = DataArrayIO<float64>;
 } // namespace nx::core::hdf5

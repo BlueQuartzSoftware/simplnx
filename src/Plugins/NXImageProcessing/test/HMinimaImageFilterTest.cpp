@@ -26,8 +26,8 @@ constexpr int32 k_NegativeHeight = -8555;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppression", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 9;
   constexpr usize k_Dy = 9;
@@ -65,8 +65,8 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppression (both algorithm paths)", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   constexpr usize k_Dx = 9;
@@ -81,7 +81,7 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
   pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_DeepDent;    // isolated regional minimum (all face-neighbors are background)
   pattern[rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)] = k_ShallowDent; // isolated regional minimum, separated from the deep dent by background
 
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
@@ -115,8 +115,8 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 12;
   constexpr usize k_Dy = 12;
@@ -147,8 +147,8 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[N
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to type maximum", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 12;
   constexpr usize k_Dy = 12;
@@ -175,8 +175,8 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height guard", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   HMinimaImageFilter filter;
 
@@ -196,28 +196,28 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height gu
   SECTION("finite Height preflights cleanly")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, 2.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("NaN Height is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteHeight);
   }
 
   SECTION("Inf Height is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteHeight);
   }
 
   SECTION("Negative Height is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(inputPath, -1.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NegativeHeight);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NegativeHeight);
   }
 }
 

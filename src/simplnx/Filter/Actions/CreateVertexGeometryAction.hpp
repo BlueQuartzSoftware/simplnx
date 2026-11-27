@@ -108,7 +108,7 @@ public:
       return MakeErrorResult(-6104, fmt::format("{}Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
     }
 
-    auto* const verticesPtr = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    auto* const verticesPtr = dataStructure.getDataAs<Float32ArrayType>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && verticesPtr == nullptr)
     {
       return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", k_Prefix, m_InputVertices.toString()));
@@ -132,7 +132,7 @@ public:
     if(m_ArrayHandlingType == ArrayHandlingType::Copy)
     {
       std::shared_ptr<DataObject> copy = verticesPtr->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
-      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(copy);
+      const auto vertexArray = std::dynamic_pointer_cast<Float32ArrayType>(copy);
 
       vertexGeomPtr->setVertices(*vertexArray);
     }
@@ -160,12 +160,12 @@ public:
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVertexListName);
       const ShapeType componentShape = {3};
 
-      Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, componentShape, vertexPath, mode);
+      Result<> result = array_creation_utilities::CreateArray<float32>(dataStructure, tupleShape, componentShape, vertexPath, mode);
       if(result.invalid())
       {
         return result;
       }
-      auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(vertexPath);
+      auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(vertexPath);
       if(vertexArrayPtr == nullptr)
       {
         throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));

@@ -324,7 +324,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -360,7 +360,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint8>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -398,7 +398,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<float32>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -435,9 +435,9 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
 
     // Last chunk is the bottom-right edge chunk: rows 8-9 (clamped from 8-11), cols 4-6 (clamped from 4-7).
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     const uint64 edgeChunk = numChunks - 1;
-    const Extent bounds = getChunkBounds(edgeChunk, tupleShape, chunkShape);
+    const Extent bounds = GetChunkBounds(edgeChunk, tupleShape, chunkShape);
 
     const std::vector<std::byte> expected = SerialReadChunkRegion(dataset, bounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
     const std::vector<std::byte> actual = codec.inflateChunk(edgeChunk);
@@ -534,7 +534,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> writtenChunks = {0, 3};
     for(const uint64 flatChunk : writtenChunks)
     {
-      const Extent bounds = getChunkBounds(flatChunk, tupleShape, chunkShape);
+      const Extent bounds = GetChunkBounds(flatChunk, tupleShape, chunkShape);
 
       // Build the chunk's nominal (4x4) element bytes from a deterministic pattern.
       std::vector<uint16> chunkValues(chunkElements);
@@ -576,13 +576,13 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
       REQUIRE(H5Dget_num_chunks(rDataset, allocSpace, &allocatedChunks) >= 0);
       H5Sclose(allocSpace);
       REQUIRE(allocatedChunks == writtenChunks.size());
-      REQUIRE(allocatedChunks < getNumberOfChunks(tupleShape, chunkShape));
+      REQUIRE(allocatedChunks < GetNumberOfChunks(tupleShape, chunkShape));
     }
 
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, rDataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -630,7 +630,7 @@ TEST_CASE("ParallelChunkCodec batch-locates chunks for parallel inflate", "[Para
   {
     INFO("Chunk " << chunkIndices[localIndex]);
     REQUIRE(chunkInfos[localIndex].allocated);
-    REQUIRE(chunkInfos[localIndex].storedSize > 0);
+    REQUIRE(chunkInfos[localIndex].stored_size > 0);
     const std::vector<std::byte> inflated = codec.inflateChunk(chunkIndices[localIndex], chunkInfos[localIndex]);
     REQUIRE(std::equal(inflated.begin(), inflated.end(), source.begin() + static_cast<std::ptrdiff_t>(localIndex * chunkShape[1])));
   }
@@ -667,7 +667,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -754,7 +754,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<float32>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -794,7 +794,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -826,7 +826,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -1012,7 +1012,7 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     REQUIRE(codec.writeCompressedChunk(targetChunk, compressed, &errorOut));
     REQUIRE(errorOut.empty());
 
-    const Extent bounds = getChunkBounds(targetChunk, tupleShape, chunkShape);
+    const Extent bounds = GetChunkBounds(targetChunk, tupleShape, chunkShape);
     const std::vector<std::byte> readBack = SerialReadChunkRegion(dataset, bounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
     H5Dclose(dataset);
     H5Fclose(fileId);
@@ -1230,7 +1230,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
   using namespace nx::core::hdf5;
 
   // The writer regime the in-core write path uses to pick the on-disk chunk shape.
-  const ChunkShapeOptions kWriterRegime{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
+  const ChunkShapeOptions kWriterRegime{.target_bytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
 
   SECTION("eligible: single-chunk compressed write (level > 0) round-trips and writes the policy chunk shape")
   {
@@ -1264,7 +1264,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
     // This proves that the write used chunked deflate rather than contiguous fallback.
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), kWriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     std::vector<uint32> readBack(numElements, 0u);
@@ -1304,14 +1304,14 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
 
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), kWriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     // Require multiple chunks and a non-divisible outer extent.
     // These checks keep this test on the parallel edge-chunk path.
     const std::vector<uint64> chunkU64(onDiskChunk.begin(), onDiskChunk.end());
     const std::vector<uint64> dimsU64(dims.begin(), dims.end());
-    REQUIRE(getNumberOfChunks(dimsU64, chunkU64) > 1);
+    REQUIRE(GetNumberOfChunks(dimsU64, chunkU64) > 1);
     REQUIRE(dimsU64[0] % chunkU64[0] != 0); // edge chunk exists along the banded outer dimension
 
     std::vector<uint32> readBack(numElements, 0u);
@@ -1353,12 +1353,12 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
 
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), kWriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     const std::vector<uint64> chunkU64(onDiskChunk.begin(), onDiskChunk.end());
     const std::vector<uint64> dimsU64(dims.begin(), dims.end());
-    REQUIRE(getNumberOfChunks(dimsU64, chunkU64) > 1);
+    REQUIRE(GetNumberOfChunks(dimsU64, chunkU64) > 1);
     REQUIRE(dimsU64[0] % chunkU64[0] != 0); // edge chunk exists along the banded outer dimension
 
     std::vector<float32> readBack(numElements, 0.0f);
@@ -1397,7 +1397,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
     // bool is stored as H5_BOOL_TYPE on disk; the policy shape uses that element size.
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(H5_BOOL_TYPE), kWriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(H5_BOOL_TYPE), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     auto readBack = std::make_unique<bool[]>(numElements);
@@ -1492,7 +1492,7 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
   using ClockType = std::chrono::steady_clock;
 
   // Match the regime the in-core write path uses to choose the on-disk chunk shape.
-  const ChunkShapeOptions kWriterRegime{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
+  const ChunkShapeOptions kWriterRegime{.target_bytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
   const int kDeflateLevel = 5;
 
   WARN("ParallelChunkCodec write benchmark — hardware_concurrency = " << std::thread::hardware_concurrency());
@@ -1537,10 +1537,10 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
     const usize sourceBytes = numElements * sizeof(float32);
 
     // The on-disk chunk shape both paths use (exactly what writeSpan would pick for these dims).
-    const ShapeType chunkShape = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), kWriterRegime);
+    const ShapeType chunkShape = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), kWriterRegime);
     const std::vector<uint64> dimsU64(dims.begin(), dims.end());
     const std::vector<uint64> chunkU64(chunkShape.begin(), chunkShape.end());
-    const uint64 numChunks = getNumberOfChunks(dimsU64, chunkU64);
+    const uint64 numChunks = GetNumberOfChunks(dimsU64, chunkU64);
 
     // -------- Serial baseline: one H5Dwrite into a chunked+deflate dataset of that chunk shape ----
     const fs::path serialPath = TestFilePath("bench_write_serial.h5");
@@ -1976,7 +1976,7 @@ void H8RequireRejectedRepresentation()
   const hid_t datasetId = dataset.getId();
   const hid_t memoryType = CodecMemoryType<MemoryT>();
   int32 level = -1;
-  CHECK_FALSE(probeSingleDeflateEligibility(datasetId, sizeof(MemoryT), memoryType, &level));
+  CHECK_FALSE(ProbeSingleDeflateEligibility(datasetId, sizeof(MemoryT), memoryType, &level));
   CHECK(level == 5);
   ParallelChunkCodec codec(path, "/data", {7, 5}, {3, 2}, {}, sizeof(MemoryT), datasetId, memoryType);
   CHECK_FALSE(codec.isEligible());
@@ -2036,10 +2036,10 @@ TEST_CASE("H8 codecs reject inconsistent memory size and invalid memory IDs", "[
   const Extent extent({0, 0}, {0, 0});
   const auto wrongBounded = wrongSize.readExtentIntoBufferBounded(extent, destination, 65536);
   REQUIRE(wrongBounded.invalid());
-  REQUIRE(wrongBounded.errors().front().code == BoundedRead::InvalidExtent);
+  REQUIRE(wrongBounded.errors().front().code == bounded_read::InvalidExtent);
   const auto invalidBounded = invalidType.readExtentIntoBufferBounded(extent, destination, 65536);
   REQUIRE(invalidBounded.invalid());
-  REQUIRE(invalidBounded.errors().front().code == BoundedRead::MetadataFailure);
+  REQUIRE(invalidBounded.errors().front().code == bounded_read::MetadataFailure);
 }
 
 TEST_CASE("H8 codecs reject reduced precision and same-size structured file types", "[H8][ParallelChunkCodec]")
@@ -2155,7 +2155,7 @@ TEST_CASE("ParallelChunkCodec preserves legacy stream acceptance", "[ParallelChu
   else
   {
     REQUIRE(bounded.invalid());
-    REQUIRE(bounded.errors().front().code == BoundedRead::DecodeFailure);
+    REQUIRE(bounded.errors().front().code == bounded_read::DecodeFailure);
   }
   // The ordinary decoder retains its former trailing-byte acceptance.
   if(streamCase == StreamCase::Complete || streamCase == StreamCase::Trailing)
@@ -2190,8 +2190,8 @@ TEST_CASE("ParallelChunkCodec observes nominal edge and returned payload lifetim
   REQUIRE(codec.isEligible());
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
   const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const std::array<uint64, 4> selected{0, 1, 2, 3};
@@ -2199,14 +2199,14 @@ TEST_CASE("ParallelChunkCodec observes nominal edge and returned payload lifetim
   codec.inflateChunksIntoSpan(result, selected);
   REQUIRE(result == expected);
   const auto after = GetCodecOwnershipStateForTesting();
-  CHECK(after.outstandingBuffers == 0);
-  CHECK(after.activeTasks == 0);
-  CHECK(after.integrityFailures == before.integrityFailures);
-  CHECK(after.unobservedReturns == before.unobservedReturns);
-  CHECK(counters.nominalAcquired.load() == 4);
-  CHECK(counters.edgeAcquired.load() == 3);
+  CHECK(after.outstanding_buffers == 0);
+  CHECK(after.active_tasks == 0);
+  CHECK(after.integrity_failures == before.integrity_failures);
+  CHECK(after.unobserved_returns == before.unobserved_returns);
+  CHECK(counters.nominal_acquired.load() == 4);
+  CHECK(counters.edge_acquired.load() == 3);
   CHECK(counters.live.load() == 0);
-  CHECK_FALSE(counters.invalidRelease.load());
+  CHECK_FALSE(counters.invalid_release.load());
   CHECK(counters.peak.load() >= 18);
 }
 
@@ -2215,8 +2215,8 @@ TEST_CASE("ParallelChunkCodec observation refuses active replacement", "[Paralle
   CodecOwnershipCountersForTesting original;
   CodecOwnershipCountersForTesting replacement;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
   const auto previous = SetCodecIoObserverForTesting({.context = &original, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = TestFilePath("ownership-control.h5");
@@ -2228,11 +2228,11 @@ TEST_CASE("ParallelChunkCodec observation refuses active replacement", "[Paralle
     ticket.acquire(path, "/data", bytes, LegacyPayloadKindForTesting::Nominal);
   }
   const auto after = GetCodecOwnershipStateForTesting();
-  CHECK(after.integrityFailures == before.integrityFailures + 1);
-  CHECK(after.outstandingBuffers == 0);
-  CHECK(after.activeTasks == 0);
-  CHECK(original.nominalAcquired.load() == 1);
-  CHECK(replacement.nominalAcquired.load() == 0);
+  CHECK(after.integrity_failures == before.integrity_failures + 1);
+  CHECK(after.outstanding_buffers == 0);
+  CHECK(after.active_tasks == 0);
+  CHECK(original.nominal_acquired.load() == 1);
+  CHECK(replacement.nominal_acquired.load() == 0);
   CHECK(original.live.load() == 0);
 }
 
@@ -2240,8 +2240,8 @@ TEST_CASE("ParallelChunkCodec checks stranded receipts on each worker exit", "[P
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
   const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = TestFilePath("ownership-worker-control.h5");
@@ -2261,20 +2261,20 @@ TEST_CASE("ParallelChunkCodec checks stranded receipts on each worker exit", "[P
   CHECK_THROWS_AS(ParallelLoadChunks<uint64>(selected, loader, sink), std::runtime_error);
   const auto after = GetCodecOwnershipStateForTesting();
   // Each task strands one receipt. The throwing task also reaches error aggregation with that charge.
-  CHECK(after.errorAggregations == before.errorAggregations + 1);
-  CHECK(after.integrityFailures == before.integrityFailures + selected.size() + 1);
-  CHECK(after.outstandingBuffers == 0);
-  CHECK(after.activeTasks == 0);
+  CHECK(after.error_aggregations == before.error_aggregations + 1);
+  CHECK(after.integrity_failures == before.integrity_failures + selected.size() + 1);
+  CHECK(after.outstanding_buffers == 0);
+  CHECK(after.active_tasks == 0);
   CHECK(counters.live.load() == 0);
-  CHECK_FALSE(counters.invalidRelease.load());
+  CHECK_FALSE(counters.invalid_release.load());
 }
 
 TEST_CASE("ParallelChunkCodec releases a throwing vector sink before error aggregation", "[ParallelChunkCodec][ooc-review-codec-ownership]")
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
   const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = TestFilePath("throwing-vector-sink-control.h5");
@@ -2289,10 +2289,10 @@ TEST_CASE("ParallelChunkCodec releases a throwing vector sink before error aggre
   const auto sink = [](usize, std::vector<std::byte>&&) { throw std::runtime_error("throwing vector sink"); };
   CHECK_THROWS_AS(ParallelLoadChunks<std::vector<std::byte>>(selected, loader, sink), std::runtime_error);
   const auto after = GetCodecOwnershipStateForTesting();
-  REQUIRE(after.errorAggregations == before.errorAggregations + 1);
-  REQUIRE(after.integrityFailures == before.integrityFailures);
-  REQUIRE(after.outstandingBuffers == 0);
-  REQUIRE(after.activeTasks == 0);
+  REQUIRE(after.error_aggregations == before.error_aggregations + 1);
+  REQUIRE(after.integrity_failures == before.integrity_failures);
+  REQUIRE(after.outstanding_buffers == 0);
+  REQUIRE(after.active_tasks == 0);
   REQUIRE(counters.live.load() == 0);
 }
 
@@ -2300,8 +2300,8 @@ TEST_CASE("ParallelChunkCodec observes simultaneous worker payloads deterministi
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
   const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto path = TestFilePath("simultaneous-ownership-control.h5");
@@ -2366,9 +2366,9 @@ TEST_CASE("ParallelChunkCodec observes simultaneous worker payloads deterministi
   first.join();
   second.join();
   const auto after = GetCodecOwnershipStateForTesting();
-  REQUIRE(after.outstandingBuffers == 0);
-  REQUIRE(after.activeTasks == 0);
-  REQUIRE(after.integrityFailures == before.integrityFailures);
+  REQUIRE(after.outstanding_buffers == 0);
+  REQUIRE(after.active_tasks == 0);
+  REQUIRE(after.integrity_failures == before.integrity_failures);
   REQUIRE(counters.live.load() == 0);
 }
 
@@ -2376,8 +2376,8 @@ TEST_CASE("ParallelChunkCodec labels a non-codec vector return as unobserved", "
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
   const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const std::array<uint64, 1> selected{0};
@@ -2385,10 +2385,10 @@ TEST_CASE("ParallelChunkCodec labels a non-codec vector return as unobserved", "
   const auto sink = [](usize, std::vector<std::byte>&& bytes) { REQUIRE(bytes.size() == 64); };
   ParallelLoadChunks<std::vector<std::byte>>(selected, loader, sink);
   const auto after = GetCodecOwnershipStateForTesting();
-  REQUIRE(after.unobservedReturns == before.unobservedReturns + 1);
-  REQUIRE(after.integrityFailures == before.integrityFailures);
-  REQUIRE(after.outstandingBuffers == 0);
-  REQUIRE(after.activeTasks == 0);
+  REQUIRE(after.unobserved_returns == before.unobserved_returns + 1);
+  REQUIRE(after.integrity_failures == before.integrity_failures);
+  REQUIRE(after.outstanding_buffers == 0);
+  REQUIRE(after.active_tasks == 0);
 }
 
 namespace
@@ -2464,7 +2464,7 @@ struct BoundedCodecObservation
       self.live_at_success_construction = self.live;
       self.metadata_cleanups_at_success_construction = self.metadata_cleanups;
       self.decoder_cleanups_at_success_construction = self.decoder_cleanups;
-      self.active_tasks_at_success_construction = GetCodecOwnershipStateForTesting().activeTasks;
+      self.active_tasks_at_success_construction = GetCodecOwnershipStateForTesting().active_tasks;
     }
     else if(point == BoundedFaultPointForTesting::MetadataCleanup)
     {
@@ -2537,7 +2537,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     }
   }
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16));
   SECTION("zero allowance refuses with required and available bytes before payload I/O")
@@ -2546,7 +2546,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     REQUIRE(result.valid());
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+    REQUIRE(result.warnings().front().code == bounded_read::Insufficient);
     REQUIRE(result.warnings().front().message.find("available=0") != std::string::npos);
     REQUIRE(observation.queries > 0);
     REQUIRE(observation.raw_reads == 0);
@@ -2568,7 +2568,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     ParallelChunkCodec wrongSize(path, "data", {3, 5}, {2, 4}, {3}, 1, dataset, CodecMemoryType<uint16>());
     auto result = wrongSize.readExtentIntoBufferBounded(extent, destination, 1024 * 1024);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::InvalidExtent);
+    REQUIRE(result.errors().front().code == bounded_read::InvalidExtent);
     REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
   }
@@ -2582,7 +2582,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     REQUIRE(result.invalid());
     if(fault == BoundedFaultPointForTesting::NativeSizeQuery || fault == BoundedFaultPointForTesting::ContradictoryRecord || fault == BoundedFaultPointForTesting::MetadataQuery)
     {
-      REQUIRE(result.errors().front().code == BoundedRead::MetadataFailure);
+      REQUIRE(result.errors().front().code == bounded_read::MetadataFailure);
     }
     REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
@@ -2595,7 +2595,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       REQUIRE(result.valid());
       REQUIRE_FALSE(result.value());
       REQUIRE(result.warnings().size() == 1);
-      REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+      REQUIRE(result.warnings().front().code == bounded_read::Insufficient);
       REQUIRE(observation.queries > 0);
       REQUIRE(observation.raw_reads == 0);
       REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
@@ -2609,7 +2609,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       observation.fault = BoundedFaultPointForTesting::DecoderQuotaAfterPayload;
       const auto result = codec.readExtentIntoBufferBounded(extent, destination, 1024 * 1024);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::DecoderQuotaFailure);
+      REQUIRE(result.errors().front().code == bounded_read::DecoderQuotaFailure);
       REQUIRE(observation.raw_reads > 0);
     }
   }
@@ -2621,7 +2621,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       observation.fault = GENERATE(BoundedFaultPointForTesting::NominalAllocation, BoundedFaultPointForTesting::DecoderAllocation);
       auto result = codec.readExtentIntoBufferBounded(extent, destination, 1024 * 1024);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::AllocationFailure);
+      REQUIRE(result.errors().front().code == bounded_read::AllocationFailure);
       REQUIRE(observation.raw_reads == 0);
     }
   }
@@ -2680,7 +2680,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
   // Two selected four-byte chunks share one input buffer; deflate also owns four decoded bytes and its named workspace.
   const uint64 required = 8 + maximumStored + (compressed ? 4 + 128 * 1024 : 0);
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   SECTION("one byte short refuses before payload I/O")
   {
@@ -2688,7 +2688,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     REQUIRE(result.valid());
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+    REQUIRE(result.warnings().front().code == bounded_read::Insufficient);
     REQUIRE(result.warnings().front().message.find("required=" + std::to_string(required)) != std::string::npos);
     REQUIRE(result.warnings().front().message.find("available=" + std::to_string(required - 1)) != std::string::npos);
     REQUIRE(observation.raw_reads == 0);
@@ -2708,7 +2708,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
   {
     Result<> diagnostic;
     const auto status = codec.readExtentIntoBufferBoundedState(extent, nonstd::span<std::byte>(output.data(), 8), required - 8, diagnostic);
-    REQUIRE(status == BoundedRead::Status::Complete);
+    REQUIRE(status == bounded_read::Status::Complete);
     REQUIRE(output[0] == std::byte{0});
     REQUIRE(output[7] == std::byte{7});
     REQUIRE(output[8] == std::byte{0xCA});
@@ -2720,7 +2720,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     observation.fault = BoundedFaultPointForTesting::SelectedAllocation;
     const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::AllocationFailure);
+    REQUIRE(result.errors().front().code == bounded_read::AllocationFailure);
     REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == sentinel);
   }
@@ -2730,7 +2730,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     observation.fault = BoundedFaultPointForTesting::MetadataCleanup;
     const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::MetadataFailure);
+    REQUIRE(result.errors().front().code == bounded_read::MetadataFailure);
     REQUIRE(observation.raw_reads == 2);
     REQUIRE(output == sentinel);
   }
@@ -2742,7 +2742,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
       observation.fault = BoundedFaultPointForTesting::DecoderCleanup;
       const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::DecodeFailure);
+      REQUIRE(result.errors().front().code == bounded_read::DecodeFailure);
       REQUIRE(observation.raw_reads == 2);
       REQUIRE(observation.decoded > 0);
       REQUIRE(output == sentinel);
@@ -2768,7 +2768,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     observation.fault_after_reads = 1;
     const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::ReadFailure);
+    REQUIRE(result.errors().front().code == bounded_read::ReadFailure);
     REQUIRE(observation.raw_reads == 1);
     REQUIRE(output == sentinel);
   }
@@ -2791,7 +2791,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     {
       const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::DecodeFailure);
+      REQUIRE(result.errors().front().code == bounded_read::DecodeFailure);
       REQUIRE(observation.raw_reads == 2);
       REQUIRE(observation.decoded > 0);
       REQUIRE(output == sentinel);
@@ -2854,7 +2854,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
   ParallelChunkCodec codec(path, "data", {2, 3}, {1, 2}, {1}, sizeof(uint16), dataset, CodecMemoryType<uint16>());
   std::vector<uint16> output(6, 77);
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto result = codec.readExtentIntoBufferBounded(Extent({0, 0, 0}, {1, 2, 0}), nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16)), 16384);
   REQUIRE(result.valid());
@@ -2862,7 +2862,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
   {
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == BoundedRead::UndefinedFill);
+    REQUIRE(result.warnings().front().code == bounded_read::UndefinedFill);
     REQUIRE(output == std::vector<uint16>(6, 77));
   }
   else
@@ -2877,7 +2877,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
   const auto info = codec.getChunkInfoChecked(origin);
   REQUIRE(info.valid());
   REQUIRE_FALSE(info.value().allocated);
-  REQUIRE(info.value().storedSize == 0);
+  REQUIRE(info.value().stored_size == 0);
 }
 
 TEST_CASE("Bounded codec rejects a second-pass request for an unprepared decoder", "[ParallelChunkCodec][bounded]")
@@ -2902,13 +2902,13 @@ TEST_CASE("Bounded codec rejects a second-pass request for an unprepared decoder
   BoundedCodecObservation observation;
   observation.inject = true;
   observation.fault = BoundedFaultPointForTesting::SecondPassUnpreparedDecoder;
-  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   std::array<std::byte, 64> destination{};
   destination.fill(std::byte{0x7B});
   const auto result = codec.readExtentIntoBufferBounded(Extent({0, 0}, {63, 0}), destination, 65536);
   REQUIRE(result.invalid());
-  REQUIRE(result.errors().front().code == BoundedRead::MetadataChanged);
+  REQUIRE(result.errors().front().code == bounded_read::MetadataChanged);
   REQUIRE(observation.raw_reads == 0);
   REQUIRE(std::all_of(destination.begin(), destination.end(), [](std::byte value) { return value == std::byte{0x7B}; }));
   REQUIRE(observation.live == 0);
@@ -3056,7 +3056,7 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
       std::fill_n(guardedOutput.end() - k_GuardValues, k_GuardValues, k_TrailingGuard);
       const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(guardedOutput.data() + k_GuardValues), fixture.expected.size() * sizeof(uint16));
       BoundedCodecObservation observation;
-      const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .boundedFault = &BoundedCodecObservation::Fault});
+      const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
       auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
       constexpr uint64 k_Allowance = 1024 * 1024;
       const auto result = codec.readExtentIntoBufferBounded(fixture.extent, destination, k_Allowance);

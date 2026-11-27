@@ -665,7 +665,7 @@ struct SeamResults
 };
 
 template <class T>
-SeamResults RunSeam(const std::vector<int32>& pattern, const SizeVec3& dims, const ImageProcessing::detail::Maurer3DSlabParameters<T>& parameters, TransferLog& /*unused*/,
+SeamResults RunSeam(const std::vector<int32>& pattern, const SizeVec3Type& dims, const ImageProcessing::detail::Maurer3DSlabParameters<T>& parameters, TransferLog& /*unused*/,
                     RecordingInputStore<T>& inputStore, RecordingWorkStore& workStore, RecordingOutputStore& outputStore, std::atomic_bool& shouldCancel)
 {
   REQUIRE(pattern.size() == dims[0] * dims[1] * dims[2]);
@@ -686,7 +686,7 @@ SeamResults RunSeam(const std::vector<int32>& pattern, const SizeVec3& dims, con
   return {.xy_result = std::move(xyResult), .z_result = std::move(zResult), .z_ran = zRan};
 }
 
-usize PlanGrant(const SizeVec3& dims, usize rows)
+usize PlanGrant(const SizeVec3Type& dims, usize rows)
 {
   const usize workerCount = std::max<usize>(1, static_cast<usize>(std::thread::hardware_concurrency()));
   const usize maximumLineValues = std::max({dims[0], dims[1], dims[2]});
@@ -788,7 +788,7 @@ std::vector<float32> MaurerOracle(const std::vector<int32>& in, usize dx, usize 
 }
 
 template <class T>
-std::vector<float32> BuildMaurerEncodedInitReference(const std::vector<T>& input, T backgroundValue, const SizeVec3& dims, bool insideIsPositive)
+std::vector<float32> BuildMaurerEncodedInitReference(const std::vector<T>& input, T backgroundValue, const SizeVec3Type& dims, bool insideIsPositive)
 {
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   const int64 dimX = static_cast<int64>(dims[0]);
@@ -841,7 +841,7 @@ std::vector<float32> BuildMaurerEncodedInitReference(const std::vector<T>& input
 
 template <class T>
 std::vector<float32> RunInCore(const std::vector<int32>& pattern, usize dx, usize dy, usize dz, int32 bg, bool insideIsPositive, bool squared, bool useSpacing = false,
-                               FloatVec3 spacing = FloatVec3{1.0f, 1.0f, 1.0f})
+                               FloatVec3Type spacing = FloatVec3Type{1.0f, 1.0f, 1.0f})
 {
   DataStore<T> inStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   for(usize i = 0; i < pattern.size(); ++i)
@@ -851,7 +851,7 @@ std::vector<float32> RunInCore(const std::vector<int32>& pattern, usize dx, usiz
   DataStore<float32> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceInCore<T> engine(inStore, outStore, SizeVec3{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, std::move(spacing), shouldCancel, messageHandler);
+  MaurerDistanceInCore<T> engine(inStore, outStore, SizeVec3Type{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, std::move(spacing), shouldCancel, messageHandler);
   const Result<> r = engine();
   REQUIRE(r.valid());
   std::vector<float32> out(pattern.size());
@@ -864,7 +864,7 @@ std::vector<float32> RunInCore(const std::vector<int32>& pattern, usize dx, usiz
 
 template <class T>
 std::vector<float32> RunSlab(const std::vector<int32>& pattern, usize dx, usize dy, usize dz, int32 bg, bool insideIsPositive, bool squared, bool useSpacing = false,
-                             FloatVec3 spacing = FloatVec3{1.0f, 1.0f, 1.0f})
+                             FloatVec3Type spacing = FloatVec3Type{1.0f, 1.0f, 1.0f})
 {
   DataStore<T> inStore(ShapeType{dz, dy, dx}, ShapeType{1}, static_cast<T>(0));
   for(usize i = 0; i < pattern.size(); ++i)
@@ -874,7 +874,7 @@ std::vector<float32> RunSlab(const std::vector<int32>& pattern, usize dx, usize 
   DataStore<float32> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceSlab<T> engine(inStore, outStore, SizeVec3{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, std::move(spacing), shouldCancel, messageHandler);
+  MaurerDistanceSlab<T> engine(inStore, outStore, SizeVec3Type{dx, dy, dz}, static_cast<T>(bg), insideIsPositive, squared, useSpacing, std::move(spacing), shouldCancel, messageHandler);
   const Result<> r = engine();
   REQUIRE(r.valid());
   std::vector<float32> out(pattern.size());
@@ -1011,8 +1011,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: in-core == brute
 TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D interior scan matches the border scan and the oracle", "[NXImageProcessing][MaurerDistanceMapEngine]", uint8, int16)
 {
   using T = TestType;
-  const std::vector<SizeVec3> dimensions = {{5, 6, 7}, {3, 3, 3}, {4, 5, 3}, {1, 6, 7}, {2, 6, 7}, {7, 2, 7}};
-  for(const SizeVec3& dims : dimensions)
+  const std::vector<SizeVec3Type> dimensions = {{5, 6, 7}, {3, 3, 3}, {4, 5, 3}, {1, 6, 7}, {2, 6, 7}, {7, 2, 7}};
+  for(const SizeVec3Type& dims : dimensions)
   {
     DYNAMIC_SECTION(dims[0] << "x" << dims[1] << "x" << dims[2])
     {
@@ -1075,10 +1075,10 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded initiali
   using T = TestType;
   constexpr uint32 k_PoisonBits = 0x7FC00001u;
   const float32 poison = std::bit_cast<float32>(k_PoisonBits);
-  const std::array<SizeVec3, 12> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 7}, SizeVec3{7, 1, 1}, SizeVec3{1, 5, 1}, SizeVec3{5, 1, 7}, SizeVec3{5, 6, 1},
-                                               SizeVec3{5, 6, 2}, SizeVec3{2, 6, 7}, SizeVec3{5, 2, 7}, SizeVec3{2, 2, 2}, SizeVec3{3, 3, 3}, SizeVec3{5, 6, 7}};
+  const std::array<SizeVec3Type, 12> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 7}, SizeVec3Type{7, 1, 1}, SizeVec3Type{1, 5, 1}, SizeVec3Type{5, 1, 7}, SizeVec3Type{5, 6, 1},
+                                               SizeVec3Type{5, 6, 2}, SizeVec3Type{2, 6, 7}, SizeVec3Type{5, 2, 7}, SizeVec3Type{2, 2, 2}, SizeVec3Type{3, 3, 3}, SizeVec3Type{5, 6, 7}};
 
-  for(const SizeVec3& dims : dimensions)
+  for(const SizeVec3Type& dims : dimensions)
   {
     const std::array<std::vector<int32>, 2> patterns = {MakePattern(dims[0], dims[1], dims[2]), MakeInteriorPattern(dims[0], dims[1], dims[2])};
     for(usize patternIndex = 0; patternIndex < patterns.size(); ++patternIndex)
@@ -1130,7 +1130,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab == in-core 
   using T = TestType;
   const bool insideIsPositive = GENERATE(false, true);
   const bool squared = GENERATE(false, true);
-  const FloatVec3 spacing{2.0f, 1.5f, 3.0f};
+  const FloatVec3Type spacing{2.0f, 1.5f, 3.0f};
   CAPTURE(insideIsPositive, squared);
 
   auto check = [&](usize dx, usize dy, usize dz) {
@@ -1162,7 +1162,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: featureless volume normal
   constexpr usize k_DimZ = 7;
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
-  const FloatVec3 spacing{0.5f, 2.0f, 1.25f};
+  const FloatVec3Type spacing{0.5f, 2.0f, 1.25f};
 
   for(const int32 inputValue : {int32{0}, int32{1}})
   {
@@ -1194,25 +1194,25 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner bounds direct 
 {
   const auto benchmark = ImageProcessing::detail::BuildMaurer2DBufferPlan(5888, 5888, sizeof(uint8));
   REQUIRE(benchmark.valid);
-  REQUIRE_FALSE(benchmark.spillX);
-  REQUIRE_FALSE(benchmark.spillY);
-  REQUIRE(benchmark.rowBatchRows > 1000);
-  REQUIRE(benchmark.columnBatchCols > 1000);
-  REQUIRE(benchmark.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
+  REQUIRE_FALSE(benchmark.spill_x);
+  REQUIRE_FALSE(benchmark.spill_y);
+  REQUIRE(benchmark.row_batch_rows > 1000);
+  REQUIRE(benchmark.column_batch_cols > 1000);
+  REQUIRE(benchmark.resident_bytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
 
   for(const usize inputBytes : {sizeof(uint8), sizeof(uint64)})
   {
     const auto stress = ImageProcessing::detail::BuildMaurer2DBufferPlan(16385, 1025, inputBytes);
     CAPTURE(inputBytes);
     REQUIRE(stress.valid);
-    REQUIRE(stress.rowBatchRows > 0);
-    REQUIRE(stress.columnBatchCols > 0);
-    REQUIRE(stress.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
+    REQUIRE(stress.row_batch_rows > 0);
+    REQUIRE(stress.column_batch_cols > 0);
+    REQUIRE(stress.resident_bytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
   }
 
   const auto oneCell = ImageProcessing::detail::BuildMaurer2DBufferPlan(1, 1, sizeof(uint64));
   REQUIRE(oneCell.valid);
-  REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
+  REQUIRE(oneCell.resident_bytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
 }
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner selects spill lines", "[NXImageProcessing][MaurerDistanceMapEngine]")
@@ -1221,24 +1221,24 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner selects spill 
   const auto yPlan = ImageProcessing::detail::BuildMaurer2DBufferPlan(1, 100000000, sizeof(uint8));
   REQUIRE(xPlan.valid);
   REQUIRE(yPlan.valid);
-  REQUIRE(xPlan.spillX);
-  REQUIRE(yPlan.spillY);
-  REQUIRE(xPlan.lineBlockValues >= 2);
-  REQUIRE(yPlan.lineBlockValues >= 2);
-  REQUIRE(xPlan.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
-  REQUIRE(yPlan.residentBytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
+  REQUIRE(xPlan.spill_x);
+  REQUIRE(yPlan.spill_y);
+  REQUIRE(xPlan.line_block_values >= 2);
+  REQUIRE(yPlan.line_block_values >= 2);
+  REQUIRE(xPlan.resident_bytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
+  REQUIRE(yPlan.resident_bytes <= ImageProcessing::detail::k_Maurer2DResidentLimit);
 
   constexpr usize k_SmallTestLimit = 8192;
   const auto forcedX = ImageProcessing::detail::BuildMaurer2DBufferPlan(100, 8, sizeof(uint8), k_SmallTestLimit);
   const auto forcedY = ImageProcessing::detail::BuildMaurer2DBufferPlan(8, 100, sizeof(uint8), k_SmallTestLimit);
   REQUIRE(forcedX.valid);
-  REQUIRE(forcedX.spillX);
-  REQUIRE(forcedX.spillY);
-  REQUIRE(forcedX.residentBytes <= k_SmallTestLimit);
+  REQUIRE(forcedX.spill_x);
+  REQUIRE(forcedX.spill_y);
+  REQUIRE(forcedX.resident_bytes <= k_SmallTestLimit);
   REQUIRE(forcedY.valid);
-  REQUIRE_FALSE(forcedY.spillX);
-  REQUIRE(forcedY.spillY);
-  REQUIRE(forcedY.residentBytes <= k_SmallTestLimit);
+  REQUIRE_FALSE(forcedY.spill_x);
+  REQUIRE(forcedY.spill_y);
+  REQUIRE(forcedY.resident_bytes <= k_SmallTestLimit);
 }
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 2D planner rejects overflow", "[NXImageProcessing][MaurerDistanceMapEngine]")
@@ -1268,29 +1268,29 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: working format follows OO
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D slab plan charges two staging buffers", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
-  const SizeVec3 dims{5, 6, 7};
+  const SizeVec3Type dims{5, 6, 7};
   for(const usize rows : {usize{1}, usize{3}, usize{6}})
   {
     const usize grant = PlanGrant(dims, rows);
     auto planResult = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, grant);
     SIMPLNX_RESULT_REQUIRE_VALID(planResult);
-    REQUIRE(planResult.value().maxYRows == rows);
-    REQUIRE(planResult.value().stagingValues == rows * 5 * 7);
-    REQUIRE(planResult.value().residentBytes == grant);
-    REQUIRE(planResult.value().residentBytes <= grant);
+    REQUIRE(planResult.value().max_y_rows == rows);
+    REQUIRE(planResult.value().staging_values == rows * 5 * 7);
+    REQUIRE(planResult.value().resident_bytes == grant);
+    REQUIRE(planResult.value().resident_bytes <= grant);
   }
 
   auto minimumGrantPlanResult = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, PlanGrant(dims, 1) - 1);
   SIMPLNX_RESULT_REQUIRE_INVALID(minimumGrantPlanResult);
 
-  const SizeVec3 largeDims{512, 512, 128};
+  const SizeVec3Type largeDims{512, 512, 128};
   const usize largeGrant = PlanGrant(largeDims, 512);
   auto largePlanResult = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(largeDims, largeGrant);
   SIMPLNX_RESULT_REQUIRE_VALID(largePlanResult);
-  REQUIRE(largePlanResult.value().maxYRows == 512);
-  REQUIRE(largePlanResult.value().stagingValues == 512 * 512 * 128);
-  REQUIRE(largePlanResult.value().residentBytes == largeGrant);
-  REQUIRE(largePlanResult.value().residentBytes <= largeGrant);
+  REQUIRE(largePlanResult.value().max_y_rows == 512);
+  REQUIRE(largePlanResult.value().staging_values == 512 * 512 * 128);
+  REQUIRE(largePlanResult.value().resident_bytes == largeGrant);
+  REQUIRE(largePlanResult.value().resident_bytes <= largeGrant);
 }
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
@@ -1301,20 +1301,20 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: resident state requires a
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   constexpr uint64 k_GiB = 1024ULL * k_MiB;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateMaurerResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == k_ValueCount * (sizeof(uint8) + sizeof(float32)));
 
-  auto halfResult = ImageProcessing::detail::CalculateMaurerResidentWorkingMemoryBytes<uint8>(SizeVec3{k_DimX, k_DimY, k_DimZ / 2});
+  auto halfResult = ImageProcessing::detail::CalculateMaurerResidentWorkingMemoryBytes<uint8>(SizeVec3Type{k_DimX, k_DimY, k_DimZ / 2});
   SIMPLNX_RESULT_REQUIRE_VALID(halfResult);
   REQUIRE(halfResult.value() * 2 == requiredResult.value());
-  Result<usize> overflowDimsResult = ImageProcessing::detail::CalculateMaurerResidentWorkingMemoryBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  Result<usize> overflowDimsResult = ImageProcessing::detail::CalculateMaurerResidentWorkingMemoryBytes<uint8>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowDimsResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseMaurerResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseMaurerResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseMaurerResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
   auto smallSlabPlan = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, 16 * k_MiB);
   auto mediumSlabPlan = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, 128 * k_MiB);
@@ -1324,26 +1324,26 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: resident state requires a
   SIMPLNX_RESULT_REQUIRE_VALID(mediumSlabPlan);
   SIMPLNX_RESULT_REQUIRE_VALID(fullSlabPlan);
   const usize expectedWorkerCount = std::max<usize>(1, static_cast<usize>(std::thread::hardware_concurrency()));
-  REQUIRE(smallSlabPlan.value().workerCount == expectedWorkerCount);
-  REQUIRE(mediumSlabPlan.value().workerCount == expectedWorkerCount);
-  REQUIRE(fullSlabPlan.value().workerCount == expectedWorkerCount);
-  REQUIRE(smallSlabPlan.value().maxYRows > 0);
-  REQUIRE(mediumSlabPlan.value().maxYRows > smallSlabPlan.value().maxYRows);
-  REQUIRE(fullSlabPlan.value().maxYRows == k_DimY);
+  REQUIRE(smallSlabPlan.value().worker_count == expectedWorkerCount);
+  REQUIRE(mediumSlabPlan.value().worker_count == expectedWorkerCount);
+  REQUIRE(fullSlabPlan.value().worker_count == expectedWorkerCount);
+  REQUIRE(smallSlabPlan.value().max_y_rows > 0);
+  REQUIRE(mediumSlabPlan.value().max_y_rows > smallSlabPlan.value().max_y_rows);
+  REQUIRE(fullSlabPlan.value().max_y_rows == k_DimY);
   auto requireMinimumRowsForBatchCount = [k_DimY](const ImageProcessing::detail::Maurer3DSlabMemoryPlan& plan) {
-    const usize batchCount = (k_DimY + plan.maxYRows - 1) / plan.maxYRows;
-    REQUIRE(plan.maxYRows == (k_DimY + batchCount - 1) / batchCount);
+    const usize batchCount = (k_DimY + plan.max_y_rows - 1) / plan.max_y_rows;
+    REQUIRE(plan.max_y_rows == (k_DimY + batchCount - 1) / batchCount);
   };
   requireMinimumRowsForBatchCount(smallSlabPlan.value());
   requireMinimumRowsForBatchCount(mediumSlabPlan.value());
   requireMinimumRowsForBatchCount(fullSlabPlan.value());
-  REQUIRE(smallSlabPlan.value().residentBytes <= 16 * k_MiB);
-  REQUIRE(mediumSlabPlan.value().residentBytes <= 128 * k_MiB);
-  REQUIRE(fullSlabPlan.value().residentBytes <= fullSlabGrant);
+  REQUIRE(smallSlabPlan.value().resident_bytes <= 16 * k_MiB);
+  REQUIRE(mediumSlabPlan.value().resident_bytes <= 128 * k_MiB);
+  REQUIRE(fullSlabPlan.value().resident_bytes <= fullSlabGrant);
   auto undersizedGrantPlanResult = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, 1);
   SIMPLNX_RESULT_REQUIRE_INVALID(undersizedGrantPlanResult);
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(512 * k_MiB);
@@ -1368,14 +1368,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: resident state requires a
 
 TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: 3D chunk hint follows the bounded Y plan", "[NXImageProcessing][MaurerDistanceMapEngine][WorkingMemory]")
 {
-  const SizeVec3 dims{512, 512, 128};
+  const SizeVec3Type dims{512, 512, 128};
   constexpr usize k_GrantBytes = 16ULL * 1024ULL * 1024ULL;
   auto planResult = ImageProcessing::detail::CreateMaurer3DSlabMemoryPlan<uint8>(dims, k_GrantBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
 
   auto hintResult = ImageProcessing::detail::CreateMaurer3DChunkHint<uint8>(dims, k_GrantBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(hintResult);
-  REQUIRE(hintResult.value() == ShapeType{1, planResult.value().maxYRows, dims[0]});
+  REQUIRE(hintResult.value() == ShapeType{1, planResult.value().max_y_rows, dims[0]});
   REQUIRE(hintResult.value()[0] * hintResult.value()[1] * hintResult.value()[2] * sizeof(float32) > 0);
 }
 
@@ -1403,11 +1403,11 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D reads each inp
   constexpr usize k_DimZ = 7;
   constexpr uint64 k_PartialBudgetBytes = 1024;
   constexpr uint64 k_CompleteBudgetBytes = 8192;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   const std::vector<float32> expected = RunInCore<uint8>(pattern, k_DimX, k_DimY, k_DimZ, 0, false, true);
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
 
   auto run = [&](uint64 budgetBytes) {
@@ -1422,7 +1422,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D reads each inp
 
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
-    MaurerDistanceWorkingMemory<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    MaurerDistanceWorkingMemory<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     Result<> engineResult = engine();
     SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
 
@@ -1446,7 +1446,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D reads each inp
 
     std::atomic_bool shouldCancel{false};
     IFilter::MessageHandler messageHandler{};
-    MaurerDistanceWorkingMemory<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    MaurerDistanceWorkingMemory<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     Result<> engineResult = engine();
     SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
 
@@ -1470,7 +1470,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab cancellation after t
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
   constexpr float32 k_Poison = -999.0f;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   CancelOnThirdReadDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, shouldCancel);
@@ -1481,7 +1481,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: slab cancellation after t
   }
 
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceSlab<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+  MaurerDistanceSlab<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
   Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   REQUIRE(inputStore.readCount() == 3);
@@ -1499,7 +1499,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: non-DataStore in-memory i
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   const std::vector<float32> expected = RunInCore<uint8>(pattern, k_DimX, k_DimY, k_DimZ, 0, false, true);
   CountingForwardingDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
@@ -1511,7 +1511,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: non-DataStore in-memory i
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceInCore<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+  MaurerDistanceInCore<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
   Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   REQUIRE(inputStore.readCount() == 1);
@@ -1527,7 +1527,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-inpu
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
   constexpr float32 k_Poison = -999.0f;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   CountingForwardingDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
   WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
@@ -1538,7 +1538,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled copied-inpu
 
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceInCore<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+  MaurerDistanceInCore<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
   Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   REQUIRE(inputStore.readCount() == 0);
@@ -1557,7 +1557,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-sp
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
   constexpr float32 k_Poison = -999.0f;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   ReadCountingDataStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0});
   WriteCountingDataStoreType<float32> outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
@@ -1568,7 +1568,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: pre-cancelled borrowed-sp
 
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceInCore<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+  MaurerDistanceInCore<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
   Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
   REQUIRE(inputStore.readCount() == 0);
@@ -1586,11 +1586,11 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D Z pass transfe
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   const std::vector<float32> expected = RunInCore<uint8>(pattern, k_DimX, k_DimY, k_DimZ, 0, false, true);
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(1024);
@@ -1604,7 +1604,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: bounded 3D Z pass transfe
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  MaurerDistanceWorkingMemory<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+  MaurerDistanceWorkingMemory<uint8> engine(inputStore, outputStore, dims, uint8{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
   Result<> engineResult = engine();
   SIMPLNX_RESULT_REQUIRE_VALID(engineResult);
 
@@ -1639,7 +1639,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: XY stream and Z pass tran
   {
     DYNAMIC_SECTION(k_DimX << "x" << k_DimY << "x" << testCase.dim_z)
     {
-      const SizeVec3 dims{k_DimX, k_DimY, testCase.dim_z};
+      const SizeVec3Type dims{k_DimX, k_DimY, testCase.dim_z};
       const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, testCase.dim_z);
       const std::vector<float32> expected = RunInCore<uint8>(pattern, k_DimX, k_DimY, testCase.dim_z, 0, false, true);
       TransferLog log;
@@ -1648,7 +1648,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: XY stream and Z pass tran
       RecordingWorkStore workStore(ShapeType{testCase.dim_z, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
       RecordingOutputStore outputStore(ShapeType{testCase.dim_z, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
       const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-          .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+          .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
       const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
       SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1677,7 +1677,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: single store call in flig
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
 
   for(const usize maxYRows : {usize{3}, usize{1}, usize{6}})
@@ -1689,13 +1689,13 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: single store call in flig
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
     const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
-                                                                            .backgroundValue = uint8{0},
-                                                                            .insideIsPositive = false,
-                                                                            .squaredDistance = true,
-                                                                            .useSpacing = false,
-                                                                            .spacing = FloatVec3{1.0f, 1.0f, 1.0f},
-                                                                            .maxYRows = maxYRows,
-                                                                            .workerCount = 2};
+                                                                            .background_value = uint8{0},
+                                                                            .inside_is_positive = false,
+                                                                            .squared_distance = true,
+                                                                            .use_spacing = false,
+                                                                            .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                            .max_y_rows = maxYRows,
+                                                                            .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1712,7 +1712,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a pre
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
   constexpr float32 k_Poison = -999.0f;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
@@ -1720,7 +1720,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a pre
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison, log, shouldCancel);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1738,7 +1738,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during the f
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
@@ -1746,7 +1746,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during the f
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel, 1);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 2, .workerCount = 2};
+      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 2, .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1763,7 +1763,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a scr
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 9;
   constexpr usize k_DimZ = 4;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
@@ -1771,7 +1771,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a scr
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, std::nullopt, 9);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1792,7 +1792,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: input read error stops th
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
@@ -1800,7 +1800,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: input read error stops th
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1821,7 +1821,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: scratch-plane write error
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 4;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
@@ -1829,7 +1829,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: scratch-plane write error
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, 3);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1848,7 +1848,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: work read error stops the
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
   TransferLog log;
   std::atomic_bool shouldCancel{false};
@@ -1856,7 +1856,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: work read error stops the
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, 9);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
   const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1878,7 +1878,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 7;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int32> pattern = MakePattern(k_DimX, k_DimY, k_DimZ);
 
   SECTION("input read")
@@ -1889,7 +1889,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
     const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-        .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+        .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1907,7 +1907,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
   SECTION("work write")
   {
     constexpr usize k_WriteDimZ = 4;
-    const SizeVec3 writeDims{k_DimX, k_DimY, k_WriteDimZ};
+    const SizeVec3Type writeDims{k_DimX, k_DimY, k_WriteDimZ};
     const std::vector<int32> writePattern = MakePattern(k_DimX, k_DimY, k_WriteDimZ);
     TransferLog log;
     std::atomic_bool shouldCancel{false};
@@ -1915,13 +1915,13 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingWorkStore workStore(ShapeType{k_WriteDimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, std::nullopt, std::nullopt, std::nullopt, 3);
     RecordingOutputStore outputStore(ShapeType{k_WriteDimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
     const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = writeDims,
-                                                                            .backgroundValue = uint8{0},
-                                                                            .insideIsPositive = false,
-                                                                            .squaredDistance = true,
-                                                                            .useSpacing = false,
-                                                                            .spacing = FloatVec3{1.0f, 1.0f, 1.0f},
-                                                                            .maxYRows = 3,
-                                                                            .workerCount = 2};
+                                                                            .background_value = uint8{0},
+                                                                            .inside_is_positive = false,
+                                                                            .squared_distance = true,
+                                                                            .use_spacing = false,
+                                                                            .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                            .max_y_rows = 3,
+                                                                            .worker_count = 2};
 
     const SeamResults results = RunSeam(writePattern, writeDims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1944,7 +1944,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, std::nullopt, std::nullopt, 9);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
     const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-        .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+        .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1965,7 +1965,7 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel, std::nullopt, 2);
     const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-        .dims = dims, .backgroundValue = uint8{0}, .insideIsPositive = false, .squaredDistance = true, .useSpacing = false, .spacing = FloatVec3{1.0f, 1.0f, 1.0f}, .maxYRows = 3, .workerCount = 2};
+        .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1987,7 +1987,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the
   using T = TestType;
   SECTION("all integer types")
   {
-    const SizeVec3 dims{5, 6, 7};
+    const SizeVec3Type dims{5, 6, 7};
     const std::vector<int32> pattern = MakePattern(dims[0], dims[1], dims[2]);
     const std::vector<float32> oracle = MaurerOracle(pattern, dims[0], dims[1], dims[2], 0, false, true);
     const std::vector<float32> inCore = RunInCore<T>(pattern, dims[0], dims[1], dims[2], 0, false, true);
@@ -1996,7 +1996,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the
     RecordingInputStore<T> inputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{0}, log, shouldCancel);
     RecordingWorkStore workStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 0.0f, log, shouldCancel);
     RecordingOutputStore outputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, -999.0f, log, shouldCancel);
-    const ImageProcessing::detail::Maurer3DSlabParameters<T> parameters{dims, T{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, 3, 2};
+    const ImageProcessing::detail::Maurer3DSlabParameters<T> parameters{dims, T{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, 3, 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -2011,8 +2011,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the
   {
     SECTION("unit spacing full matrix")
     {
-      const std::vector<SizeVec3> dimensions = {{5, 6, 7}, {7, 9, 5}, {5, 6, 2}, {5, 6, 3}};
-      for(const SizeVec3& dims : dimensions)
+      const std::vector<SizeVec3Type> dimensions = {{5, 6, 7}, {7, 9, 5}, {5, 6, 2}, {5, 6, 3}};
+      for(const SizeVec3Type& dims : dimensions)
       {
         const std::vector<int32> pattern = MakePattern(dims[0], dims[1], dims[2]);
         const std::vector<float32> oracle = MaurerOracle(pattern, dims[0], dims[1], dims[2], 0, false, true);
@@ -2026,7 +2026,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the
             RecordingInputStore<T> inputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{0}, log, shouldCancel);
             RecordingWorkStore workStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 0.0f, log, shouldCancel);
             RecordingOutputStore outputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, -999.0f, log, shouldCancel);
-            const ImageProcessing::detail::Maurer3DSlabParameters<T> parameters{dims, T{0}, false, true, false, FloatVec3{1.0f, 1.0f, 1.0f}, maxYRows, 2};
+            const ImageProcessing::detail::Maurer3DSlabParameters<T> parameters{dims, T{0}, false, true, false, FloatVec3Type{1.0f, 1.0f, 1.0f}, maxYRows, 2};
 
             const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
             SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -2042,9 +2042,9 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: seam matches the
 
     SECTION("image spacing")
     {
-      const SizeVec3 dims{5, 6, 7};
+      const SizeVec3Type dims{5, 6, 7};
       const std::vector<int32> pattern = MakePattern(dims[0], dims[1], dims[2]);
-      const FloatVec3 spacing{0.5f, 2.0f, 1.25f};
+      const FloatVec3Type spacing{0.5f, 2.0f, 1.25f};
       const std::vector<float32> inCore = RunInCore<T>(pattern, dims[0], dims[1], dims[2], 0, false, false, true, spacing);
       TransferLog log;
       std::atomic_bool shouldCancel{false};

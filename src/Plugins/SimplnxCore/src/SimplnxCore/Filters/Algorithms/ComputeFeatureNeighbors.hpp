@@ -27,16 +27,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureNeighborsInputValues
 {
-  DataPath BoundaryCellsPath;
-  AttributeMatrixSelectionParameter::ValueType CellFeatureArrayPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  DataPath NeighborListPath;
-  DataPath NumberOfNeighborsPath;
-  DataPath SharedSurfaceAreaListPath;
-  BoolParameter::ValueType StoreBoundaryCells{};
-  BoolParameter::ValueType StoreSurfaceFeatures{};
-  DataPath SurfaceFeaturesPath;
+  DataPath boundary_cells_path;
+  AttributeMatrixSelectionParameter::ValueType cell_feature_array_path;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  DataPath neighbor_list_path;
+  DataPath number_of_neighbors_path;
+  DataPath shared_surface_area_list_path;
+  BoolParameter::ValueType store_boundary_cells{};
+  BoolParameter::ValueType store_surface_features{};
+  DataPath surface_features_path;
 };
 
 /**

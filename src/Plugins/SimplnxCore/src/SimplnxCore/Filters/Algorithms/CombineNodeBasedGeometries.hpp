@@ -17,8 +17,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CombineNodeBasedGeometriesInputValues
 {
-  std::vector<DataPath> InputGeometryPaths;
-  DataPath OutputGeometryPath;
+  std::vector<DataPath> input_geometry_paths;
+  DataPath output_geometry_path;
 };
 
 /**

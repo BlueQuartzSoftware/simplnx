@@ -90,7 +90,7 @@ std::set<std::string> FindMissingFilterUuids(const fs::path& path, const FilterL
 
 TEST_CASE("Prebuilt Pipelines: Parameter Keys Are Current", "[Pipeline][PrebuiltPipelines]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto* filterListPtr = Application::GetOrCreateInstance()->getFilterList();
 
   std::vector<fs::path> pipelinePaths;

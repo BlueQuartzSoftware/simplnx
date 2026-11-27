@@ -28,7 +28,7 @@ namespace dream3d::detail
  * metadata factory runs.
  * @return Metadata and original disk-import diagnostics.
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadata& deferredImageMetadata);
+SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadataType& deferredImageMetadata);
 
 /**
  * @brief Materializes exact imported leaf paths from one open DREAM3D file.

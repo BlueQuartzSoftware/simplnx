@@ -63,8 +63,8 @@ public:
 
   void generate(usize start, usize end) const
   {
-    std::vector<int32>& gbcdBins = m_SizeGBCD.m_GbcdBins;
-    std::vector<bool>& hemiCheck = m_SizeGBCD.m_GbcdHemiCheck; // Definitely do NOT want a raw pointer to vector<bool> because that done in bits, not bytes.
+    std::vector<int32>& gbcdBins = m_SizeGBCD.m_gbcd_bins;
+    std::vector<bool>& hemiCheck = m_SizeGBCD.m_gbcd_hemi_check; // Definitely do NOT want a raw pointer to vector<bool> because that done in bits, not bytes.
 
     int32 feature1 = 0;
     int32 feature2 = 0;
@@ -147,10 +147,10 @@ public:
               ebsdlib::EulerFType eu = om.toEuler();
               eu.copyTo(eulerMis.data());
 
-              if(eulerMis[0] < nx::core::Constants::k_PiOver2D && eulerMis[1] < nx::core::Constants::k_PiOver2D && eulerMis[2] < nx::core::Constants::k_PiOver2D)
+              if(eulerMis[0] < nx::core::constants::k_PiOver2D && eulerMis[1] < nx::core::constants::k_PiOver2D && eulerMis[2] < nx::core::constants::k_PiOver2D)
               {
                 eulerMis[1] = cosf(eulerMis[1]);
-                int32 gbcdIndex = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoord);
+                int32 gbcdIndex = GBCDIndex(m_SizeGBCD.m_gbcd_deltas, m_SizeGBCD.m_gbcd_sizes, m_SizeGBCD.m_gbcd_limits, eulerMis.data(), sqCoord);
                 if(gbcdIndex != -1)
                 {
                   const usize kGbcdBinIndex = minGbcdBinIndex + symCounter;
@@ -160,7 +160,7 @@ public:
                 symCounter++;
                 if(inversion == 1)
                 {
-                  gbcdIndex = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoordInv);
+                  gbcdIndex = GBCDIndex(m_SizeGBCD.m_gbcd_deltas, m_SizeGBCD.m_gbcd_sizes, m_SizeGBCD.m_gbcd_limits, eulerMis.data(), sqCoordInv);
                   if(gbcdIndex != -1)
                   {
                     const usize kGbcdBinIndex = minGbcdBinIndex + symCounter;
@@ -248,27 +248,27 @@ public:
     }
     if(fabs(crystalNormal[0]) >= fabs(crystalNormal[1]))
     {
-      sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
+      sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::constants::k_SqrtPiD / 2.0);
       sqCoord[1] =
-          (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
+          (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / nx::core::constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
     }
     else
     {
       sqCoord[0] =
-          (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
-      sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
+          (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / nx::core::constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
+      sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::constants::k_SqrtPiD / 2.0);
     }
     return nhCheck;
   }
 };
 
 SizeGBCD::SizeGBCD(usize faceChunkSize, usize numMisoReps, float32 gbcdRes)
-: m_GbcdDeltas(std::vector<float32>(5, 0))
-, m_GbcdLimits(std::vector<float32>(10, 0))
-, m_GbcdSizes(std::vector<int32>(5, 0))
-, m_GbcdHemiCheck(std::vector<bool>(faceChunkSize * numMisoReps, false))
-, m_FaceChunkSize(faceChunkSize)
-, m_NumMisoReps(numMisoReps)
+: m_gbcd_deltas(std::vector<float32>(5, 0))
+, m_gbcd_limits(std::vector<float32>(10, 0))
+, m_gbcd_sizes(std::vector<int32>(5, 0))
+, m_gbcd_hemi_check(std::vector<bool>(faceChunkSize * numMisoReps, false))
+, m_face_chunk_size(faceChunkSize)
+, m_num_miso_reps(numMisoReps)
 {
   initializeBinsWithValue(0);
 
@@ -284,46 +284,46 @@ SizeGBCD::SizeGBCD(usize faceChunkSize, usize numMisoReps, float32 gbcdRes)
   // m_GBCDlimits[8] = 2.0f*m_pi;
   // m_GBCDlimits[9] = cosf(0.0f);
 
-  m_GbcdLimits[0] = 0.0f;
-  m_GbcdLimits[1] = 0.0f;
-  m_GbcdLimits[2] = 0.0f;
-  m_GbcdLimits[3] = 0.0f;
-  m_GbcdLimits[4] = 0.0f;
-  m_GbcdLimits[5] = Constants::k_PiOver2D;
-  m_GbcdLimits[6] = 1.0f;
-  m_GbcdLimits[7] = Constants::k_PiOver2D;
-  m_GbcdLimits[8] = 1.0f;
-  m_GbcdLimits[9] = Constants::k_2PiD;
+  m_gbcd_limits[0] = 0.0f;
+  m_gbcd_limits[1] = 0.0f;
+  m_gbcd_limits[2] = 0.0f;
+  m_gbcd_limits[3] = 0.0f;
+  m_gbcd_limits[4] = 0.0f;
+  m_gbcd_limits[5] = constants::k_PiOver2D;
+  m_gbcd_limits[6] = 1.0f;
+  m_gbcd_limits[7] = constants::k_PiOver2D;
+  m_gbcd_limits[8] = 1.0f;
+  m_gbcd_limits[9] = constants::k_2PiD;
 
-  float32 binSize = gbcdRes * Constants::k_PiOver180D;
-  float32 binSize2 = binSize * (2.0 / Constants::k_PiD);
-  m_GbcdDeltas[0] = binSize;
-  m_GbcdDeltas[1] = binSize2;
-  m_GbcdDeltas[2] = binSize;
-  m_GbcdDeltas[3] = binSize2;
-  m_GbcdDeltas[4] = binSize;
+  float32 binSize = gbcdRes * constants::k_PiOver180D;
+  float32 binSize2 = binSize * (2.0 / constants::k_PiD);
+  m_gbcd_deltas[0] = binSize;
+  m_gbcd_deltas[1] = binSize2;
+  m_gbcd_deltas[2] = binSize;
+  m_gbcd_deltas[3] = binSize2;
+  m_gbcd_deltas[4] = binSize;
 
-  m_GbcdSizes[0] = int32(0.5 + (m_GbcdLimits[5] - m_GbcdLimits[0]) / m_GbcdDeltas[0]);
-  m_GbcdSizes[1] = int32(0.5 + (m_GbcdLimits[6] - m_GbcdLimits[1]) / m_GbcdDeltas[1]);
-  m_GbcdSizes[2] = int32(0.5 + (m_GbcdLimits[7] - m_GbcdLimits[2]) / m_GbcdDeltas[2]);
-  m_GbcdSizes[3] = int32(0.5 + (m_GbcdLimits[8] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
-  m_GbcdSizes[4] = int32(0.5 + (m_GbcdLimits[9] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
+  m_gbcd_sizes[0] = int32(0.5 + (m_gbcd_limits[5] - m_gbcd_limits[0]) / m_gbcd_deltas[0]);
+  m_gbcd_sizes[1] = int32(0.5 + (m_gbcd_limits[6] - m_gbcd_limits[1]) / m_gbcd_deltas[1]);
+  m_gbcd_sizes[2] = int32(0.5 + (m_gbcd_limits[7] - m_gbcd_limits[2]) / m_gbcd_deltas[2]);
+  m_gbcd_sizes[3] = int32(0.5 + (m_gbcd_limits[8] - m_gbcd_limits[3]) / m_gbcd_deltas[3]);
+  m_gbcd_sizes[4] = int32(0.5 + (m_gbcd_limits[9] - m_gbcd_limits[4]) / m_gbcd_deltas[4]);
 
   // The square projection defines the last two GBCD dimensions.
-  float32 totalNormalBins = m_GbcdSizes[3] * m_GbcdSizes[4];
-  m_GbcdSizes[3] = int32(sqrtf(totalNormalBins) + 0.5f);
-  m_GbcdSizes[4] = int32(sqrtf(totalNormalBins) + 0.5f);
-  m_GbcdLimits[3] = -sqrtf(Constants::k_PiOver2D);
-  m_GbcdLimits[4] = -sqrtf(Constants::k_PiOver2D);
-  m_GbcdLimits[8] = sqrtf(Constants::k_PiOver2D);
-  m_GbcdLimits[9] = sqrtf(Constants::k_PiOver2D);
-  m_GbcdDeltas[3] = (m_GbcdLimits[8] - m_GbcdLimits[3]) / float32(m_GbcdSizes[3]);
-  m_GbcdDeltas[4] = (m_GbcdLimits[9] - m_GbcdLimits[4]) / float32(m_GbcdSizes[4]);
+  float32 totalNormalBins = m_gbcd_sizes[3] * m_gbcd_sizes[4];
+  m_gbcd_sizes[3] = int32(sqrtf(totalNormalBins) + 0.5f);
+  m_gbcd_sizes[4] = int32(sqrtf(totalNormalBins) + 0.5f);
+  m_gbcd_limits[3] = -sqrtf(constants::k_PiOver2D);
+  m_gbcd_limits[4] = -sqrtf(constants::k_PiOver2D);
+  m_gbcd_limits[8] = sqrtf(constants::k_PiOver2D);
+  m_gbcd_limits[9] = sqrtf(constants::k_PiOver2D);
+  m_gbcd_deltas[3] = (m_gbcd_limits[8] - m_gbcd_limits[3]) / float32(m_gbcd_sizes[3]);
+  m_gbcd_deltas[4] = (m_gbcd_limits[9] - m_gbcd_limits[4]) / float32(m_gbcd_sizes[4]);
 }
 
 void SizeGBCD::initializeBinsWithValue(int32 value)
 {
-  m_GbcdBins = std::vector<int32>(m_FaceChunkSize * m_NumMisoReps, value);
+  m_gbcd_bins = std::vector<int32>(m_face_chunk_size * m_num_miso_reps, value);
 }
 
 ComputeGBCD::ComputeGBCD(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBCDInputValues* inputValues)
@@ -341,14 +341,14 @@ const std::atomic_bool& ComputeGBCD::getCancel()
 
 Result<> ComputeGBCD::operator()()
 {
-  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  auto& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceNormalsArrayPath);
-  auto& faceAreas = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceAreasArrayPath);
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_euler_angles_array_path);
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  auto& faceLabels = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_array_path);
+  auto& faceNormals = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_normals_array_path);
+  auto& faceAreas = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_areas_array_path);
 
-  auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayName);
+  auto& gbcd = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->gbcd_array_name);
 
   // Triangle labels access feature data in random order.
   const usize numEulerElements = eulerAngles.getSize();
@@ -376,8 +376,8 @@ Result<> ComputeGBCD::operator()()
   usize triangleChunkSize = 50000;
 
   triangleChunkSize = std::min(totalFaces, triangleChunkSize);
-  SizeGBCD sizeGbcd(triangleChunkSize, k_NumMisoReps, m_InputValues->GBCDRes);
-  int32 totalGBCDBins = sizeGbcd.m_GbcdSizes[0] * sizeGbcd.m_GbcdSizes[1] * sizeGbcd.m_GbcdSizes[2] * sizeGbcd.m_GbcdSizes[3] * sizeGbcd.m_GbcdSizes[4] * 2;
+  SizeGBCD sizeGbcd(triangleChunkSize, k_NumMisoReps, m_InputValues->gbcd_res);
+  int32 totalGBCDBins = sizeGbcd.m_gbcd_sizes[0] * sizeGbcd.m_gbcd_sizes[1] * sizeGbcd.m_gbcd_sizes[2] * sizeGbcd.m_gbcd_sizes[3] * sizeGbcd.m_gbcd_sizes[4] * 2;
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
@@ -411,7 +411,7 @@ Result<> ComputeGBCD::operator()()
       triangleChunkSize = totalFaces - i;
     }
     sizeGbcd.initializeBinsWithValue(-1);
-    sizeGbcd.m_GbcdHemiCheck.assign(sizeGbcd.m_GbcdHemiCheck.size(), false);
+    sizeGbcd.m_gbcd_hemi_check.assign(sizeGbcd.m_gbcd_hemi_check.size(), false);
 
     // Bulk-read this chunk of triangle data (labels, normals, areas).
     // The parallel worker indexes these local buffers from zero.
@@ -448,13 +448,13 @@ Result<> ComputeGBCD::operator()()
             -75000,
             fmt::format(
                 "Feature Phases array '{}' has value {} at Feature index {}, referenced by face {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, firstFeatureIdx, i + chunkFaceIdx, m_InputValues->CrystalStructuresArrayPath.toString(), totalPhases, totalPhases));
+                m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, firstFeatureIdx, i + chunkFaceIdx, m_InputValues->crystal_structures_array_path.toString(), totalPhases, totalPhases));
       }
       const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
       if(currentLaueIndex >= orientationOps.size())
       {
         return MakeErrorResult(-75001, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                                   m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
+                                                   m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
       }
     }
 
@@ -480,14 +480,14 @@ Result<> ComputeGBCD::operator()()
       {
         usize gbcdBinIdx = (j * k_NumMisoReps) + k;
 
-        if(sizeGbcd.m_GbcdBins[gbcdBinIdx] >= 0)
+        if(sizeGbcd.m_gbcd_bins[gbcdBinIdx] >= 0)
         {
           int32 hemisphere = 0;
-          if(!sizeGbcd.m_GbcdHemiCheck[gbcdBinIdx])
+          if(!sizeGbcd.m_gbcd_hemi_check[gbcdBinIdx])
           {
             hemisphere = 1;
           }
-          usize gbcdIdx = (phase * totalGBCDBins) + (2 * sizeGbcd.m_GbcdBins[gbcdBinIdx] + hemisphere);
+          usize gbcdIdx = (phase * totalGBCDBins) + (2 * sizeGbcd.m_gbcd_bins[gbcdBinIdx] + hemisphere);
           gbcdBuf[gbcdIdx] += area;
           totalFaceArea[phase] += area;
         }

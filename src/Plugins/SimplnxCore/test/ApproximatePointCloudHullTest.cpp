@@ -22,8 +22,8 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -43,7 +43,7 @@ const std::vector<float> k_SVertices = {0.0F,      0.0F,       -8.305164E-7F,  4
 
 TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[ApproximatePointCloudHullFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "FaceData";
@@ -66,7 +66,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -89,7 +89,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
 
     // Copy the vertices into the new Vertex Geometry
     VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-    Float32Array* verticesPtr = vertexGeom.getVertices();
+    Float32ArrayType* verticesPtr = vertexGeom.getVertices();
     for(size_t eIdx = 0; eIdx < triangleVerticesPtr->getSize(); eIdx++)
     {
       (*verticesPtr)[eIdx] = (*triangleVerticesPtr)[eIdx];
@@ -108,7 +108,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -118,7 +118,7 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
   {
     VertexGeom& vertexGeom1 = dataStructure.getDataRefAs<VertexGeom>(hullVertexGeomPath);
     REQUIRE(vertexGeom1.getNumberOfVertices() == 48);
-    Float32Array* verticesPtr = vertexGeom1.getVertices();
+    Float32ArrayType* verticesPtr = vertexGeom1.getVertices();
     bool verticesEqual = true;
     for(size_t eIdx = 0; eIdx < verticesPtr->getSize(); eIdx++)
     {
@@ -136,13 +136,13 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Instantiate Filter", "[
   WriteTestDataStructure(dataStructure, fmt::format("{}/ApproximatePointCloudHullFilter.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ApproximatePointCloudHullFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -187,7 +187,7 @@ namespace
 // hull point equals its input point.
 void RunSolidBlockHullTest(float32 resolution, const std::array<float32, 3>& xs, const std::array<float32, 3>& ys, const std::array<float32, 3>& zs)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath inputPath({"Points"});
   const DataPath outputPath({"Hull"});
@@ -217,7 +217,7 @@ void RunSolidBlockHullTest(float32 resolution, const std::array<float32, 3>& xs,
   args.insertOrAssign(ApproximatePointCloudHullFilter::k_VertexGeomPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(ApproximatePointCloudHullFilter::k_HullVertexGeomPath_Key, std::make_any<DataPath>(outputPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -237,7 +237,7 @@ void RunSolidBlockHullTest(float32 resolution, const std::array<float32, 3>& xs,
       REQUIRE(hullPoints[outputIndex++] == points[3 * point + component]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -290,6 +290,6 @@ TEST_CASE("SimplnxCore::ApproximatePointCloudHullFilter: Border at large global 
     {
       REQUIRE((*hull.getVertices())[component] == coordinate);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }

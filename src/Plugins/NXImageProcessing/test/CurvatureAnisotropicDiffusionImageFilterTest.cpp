@@ -37,7 +37,7 @@ void RunCurvatureAniso(IFilter& filter, DataStructure& dataStructure, const Data
   args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(conductanceScalingUpdateInterval));
   args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -70,8 +70,8 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: preflight guards", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("integer input rejected")
   {
@@ -92,14 +92,14 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: prefligh
     args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
     args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 0.0f));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<float32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -113,8 +113,8 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: prefligh
     args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
     args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar float input creates a SameAsInput output")
   {
@@ -142,9 +142,9 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: prefligh
     args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
     args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE_FALSE(result.outputActions.warnings().empty());
-    REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE_FALSE(result.output_actions.warnings().empty());
+    REQUIRE(result.output_actions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
   }
 }
 
@@ -162,8 +162,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunCurvatureAnisoItkGolden(float64 timeStep, std::optional<uint32> numberOfIterations, const std::string& baselineFile)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -187,7 +187,7 @@ void RunCurvatureAnisoItkGolden(float64 timeStep, std::optional<uint32> numberOf
   }
   CurvatureAnisotropicDiffusionImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -199,7 +199,7 @@ void RunCurvatureAnisoItkGolden(float64 timeStep, std::optional<uint32> numberOf
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.1);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -229,8 +229,8 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: ITK real
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant image is identity", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;
@@ -252,8 +252,8 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: constant
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-large TimeStep warns (3D, ImageDimension=3)", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -270,10 +270,10 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-lar
   args.insertOrAssign(CurvatureAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
   args.insertOrAssign(CurvatureAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
   const auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE_FALSE(result.outputActions.warnings().empty());
-  REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
-  REQUIRE(result.outputActions.warnings().front().message.find("ImageDimension=3") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE_FALSE(result.output_actions.warnings().empty());
+  REQUIRE(result.output_actions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
+  REQUIRE(result.output_actions.warnings().front().message.find("ImageDimension=3") != std::string::npos);
 }
 
 // -----------------------------------------------------------------------------
@@ -283,8 +283,8 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: over-lar
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero conductance update interval runs cleanly", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;
@@ -304,8 +304,8 @@ TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero con
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureAnisotropicDiffusionImageFilter: zero iterations is a no-op", "[NXImageProcessing][CurvatureAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;

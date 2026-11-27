@@ -203,7 +203,7 @@ std::vector<uint32> RunLabel(const std::vector<int32>& mask, usize dx, usize dy,
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   const auto pred = [](int32 v) { return v != 0; };
-  const Result<> r = LabelConnectedComponents<int32>(inStore, outStore, SizeVec3{dx, dy, dz}, pred, fullyConnected, shouldCancel, messageHandler);
+  const Result<> r = LabelConnectedComponents<int32>(inStore, outStore, SizeVec3Type{dx, dy, dz}, pred, fullyConnected, shouldCancel, messageHandler);
   REQUIRE(r.valid());
   std::vector<uint32> out(mask.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -221,19 +221,19 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: resident provisional lab
   constexpr usize k_DimZ = 128;
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateConnectedComponentResidentProvisionalBytes(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == k_ValueCount * sizeof(uint32));
   REQUIRE(requiredResult.value() == 128 * k_MiB);
-  const auto overflowResult = ImageProcessing::detail::CalculateConnectedComponentResidentProvisionalBytes(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  const auto overflowResult = ImageProcessing::detail::CalculateConnectedComponentResidentProvisionalBytes(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseConnectedComponentResidentProvisional(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseConnectedComponentResidentProvisional(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseConnectedComponentResidentProvisional(SizeVec3Type{k_DimX, k_DimY, 1}));
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(256 * k_MiB);
@@ -264,8 +264,8 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: provisional selection re
   constexpr usize k_DimY = 512;
   constexpr usize k_DimZ = 128;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
-  auto& manager = CacheMemoryBudgetManager::instance();
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
 
@@ -282,7 +282,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: provisional selection re
     auto partialResult = TryCreateConnectedComponentResidentProvisionalSelection(dims, /*usesOutOfCoreEndpoint=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(partialResult);
     REQUIRE_FALSE(partialResult.value().holdsResidentState());
-    REQUIRE(partialResult.value().dataStore == nullptr);
+    REQUIRE(partialResult.value().data_store == nullptr);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
   manager.setBudgetBytes(previousBudget);
@@ -294,16 +294,16 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: full resident state uses
   constexpr usize k_DimY = 512;
   constexpr usize k_DimZ = 32;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateConnectedComponentResidentWorkingMemoryBytes<uint8>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == 214 * k_MiB + 32);
-  const auto overflowResult = ImageProcessing::detail::CalculateConnectedComponentResidentWorkingMemoryBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  const auto overflowResult = ImageProcessing::detail::CalculateConnectedComponentResidentWorkingMemoryBytes<uint8>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   REQUIRE_FALSE(manager.setBudgetBytes(768 * k_MiB));
@@ -334,7 +334,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded, resident-provis
   constexpr uint64 k_BoundedBudgetBytes = 2048;
   constexpr uint64 k_ProvisionalBudgetBytes = 4096;
   constexpr uint64 k_FullBudgetBytes = 65536;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   std::vector<int32> mask(k_DimX * k_DimY * k_DimZ);
   for(usize index = 0; index < mask.size(); ++index)
   {
@@ -346,7 +346,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded, resident-provis
   OutOfCoreReportingDataStore<uint32> oocOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint32{0});
   REQUIRE(ImageProcessing::detail::SelectConnectedComponentProvisionalDataFormat(residentInput, oocOutput) == oocOutput.getDataFormat());
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
 
   auto run = [&](uint64 budgetBytes, bool expectResidentProvisional) {
@@ -355,7 +355,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded, resident-provis
     {
       auto selectionResult = ImageProcessing::detail::CreateConnectedComponentProvisionalSelection(dims, /*usesOutOfCoreEndpoint=*/true, "Unregistered-Connected-Component-Test-Format");
       SIMPLNX_RESULT_REQUIRE_VALID(selectionResult);
-      REQUIRE(selectionResult.value().dataStore != nullptr);
+      REQUIRE(selectionResult.value().data_store != nullptr);
       REQUIRE(selectionResult.value().holdsResidentState() == expectResidentProvisional);
       REQUIRE(manager.reservedWorkingMemoryBytes() == (expectResidentProvisional ? mask.size() * sizeof(uint32) : 0));
     }
@@ -464,7 +464,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: deterministic + tall-Z s
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   const auto pred = [](int32 v) { return v != 0; };
-  const Result<uint32> countResult = CountConnectedComponents<int32>(inStore, SizeVec3{dx, dy, dz}, pred, false, /*minSize=*/1, shouldCancel);
+  const Result<uint32> countResult = CountConnectedComponents<int32>(inStore, SizeVec3Type{dx, dy, dz}, pred, false, /*minSize=*/1, shouldCancel);
   REQUIRE(countResult.valid());
   REQUIRE(countResult.value() == maxLabel);
 }
@@ -508,7 +508,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: grouped three-dimensiona
   std::atomic_bool shouldCancel{false};
   const auto predicate = [](int32 value) { return value != 0; };
   ScopedWorkingMemoryTuningOverride tuningOverride(tuningBytes);
-  const Result<> result = ImageProcessing::detail::ReplayThreeDimensionalLabels(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, predicate, finalLabel, shouldCancel);
+  const Result<> result = ImageProcessing::detail::ReplayThreeDimensionalLabels(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, predicate, finalLabel, shouldCancel);
   REQUIRE(result.valid());
 
   std::vector<uint32> actual(k_VolumeValues);
@@ -608,11 +608,11 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: CountConnectedComponents
   std::atomic_bool shouldCancel{false};
   const auto pred = [](int32 v) { return v != 0; };
 
-  const Result<uint32> allResult = CountConnectedComponents<int32>(inStore, SizeVec3{dx, dy, dz}, pred, false, /*minSize=*/1, shouldCancel);
+  const Result<uint32> allResult = CountConnectedComponents<int32>(inStore, SizeVec3Type{dx, dy, dz}, pred, false, /*minSize=*/1, shouldCancel);
   REQUIRE(allResult.valid());
   REQUIRE(allResult.value() == 6u); // 1 large + 5 singles
 
-  const Result<uint32> largeOnlyResult = CountConnectedComponents<int32>(inStore, SizeVec3{dx, dy, dz}, pred, false, /*minSize=*/2, shouldCancel);
+  const Result<uint32> largeOnlyResult = CountConnectedComponents<int32>(inStore, SizeVec3Type{dx, dy, dz}, pred, false, /*minSize=*/2, shouldCancel);
   REQUIRE(largeOnlyResult.valid());
   REQUIRE(largeOnlyResult.value() == 1u); // only the 10-voxel run meets minSize=2
 }
@@ -625,18 +625,18 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: rejects mismatched store
   IFilter::MessageHandler messageHandler{};
   const auto pred = [](int32 value) { return value != 0; };
 
-  const Result<> labelResult = LabelConnectedComponents<int32>(inStore, outStore, SizeVec3{3, 2, 2}, pred, false, shouldCancel, messageHandler);
+  const Result<> labelResult = LabelConnectedComponents<int32>(inStore, outStore, SizeVec3Type{3, 2, 2}, pred, false, shouldCancel, messageHandler);
   REQUIRE(labelResult.invalid());
   REQUIRE(labelResult.errors()[0].code == -8372);
 
-  const Result<uint32> countResult = CountConnectedComponents<int32>(inStore, SizeVec3{3, 2, 2}, pred, false, 1, shouldCancel);
+  const Result<uint32> countResult = CountConnectedComponents<int32>(inStore, SizeVec3Type{3, 2, 2}, pred, false, 1, shouldCancel);
   REQUIRE(countResult.invalid());
   REQUIRE(countResult.errors()[0].code == -8372);
 }
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: checked true-2-D plan", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using ImageProcessing::detail::CcRun;
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
 
@@ -651,52 +651,52 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: checked true-2-D plan", 
 
   const auto labelResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, /*writesProvisional=*/true, labelTargetBytes);
   REQUIRE(labelResult.valid());
-  REQUIRE_FALSE(labelResult.value().useTiles);
-  REQUIRE(labelResult.value().coreRows == 3);
-  REQUIRE(labelResult.value().coreColumns == k_DimX);
-  REQUIRE(labelResult.value().maximumRunsPerLine == k_MaximumRuns);
-  REQUIRE(labelResult.value().residentBytes == labelTargetBytes);
+  REQUIRE_FALSE(labelResult.value().use_tiles);
+  REQUIRE(labelResult.value().core_rows == 3);
+  REQUIRE(labelResult.value().core_columns == k_DimX);
+  REQUIRE(labelResult.value().maximum_runs_per_line == k_MaximumRuns);
+  REQUIRE(labelResult.value().resident_bytes == labelTargetBytes);
   const auto labelShortResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, true, labelTargetBytes - 1);
   REQUIRE(labelShortResult.valid());
-  REQUIRE_FALSE(labelShortResult.value().useTiles);
-  REQUIRE((labelShortResult.value().coreRows == 2));
-  REQUIRE((labelShortResult.value().residentBytes == labelFixedBytes + (2 * k_DimX * (sizeof(int16) + sizeof(uint32)))));
+  REQUIRE_FALSE(labelShortResult.value().use_tiles);
+  REQUIRE((labelShortResult.value().core_rows == 2));
+  REQUIRE((labelShortResult.value().resident_bytes == labelFixedBytes + (2 * k_DimX * (sizeof(int16) + sizeof(uint32)))));
 
   const auto countResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, /*writesProvisional=*/false, countTargetBytes);
   REQUIRE(countResult.valid());
-  REQUIRE_FALSE(countResult.value().useTiles);
-  REQUIRE(countResult.value().coreRows == 3);
-  REQUIRE(countResult.value().residentBytes == countTargetBytes);
+  REQUIRE_FALSE(countResult.value().use_tiles);
+  REQUIRE(countResult.value().core_rows == 3);
+  REQUIRE(countResult.value().resident_bytes == countTargetBytes);
   const auto countShortResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, false, countTargetBytes - 1);
   REQUIRE(countShortResult.valid());
-  REQUIRE_FALSE(countShortResult.value().useTiles);
-  REQUIRE((countShortResult.value().coreRows == 2));
-  REQUIRE((countShortResult.value().residentBytes == countFixedBytes + (2 * k_DimX * sizeof(int16))));
+  REQUIRE_FALSE(countShortResult.value().use_tiles);
+  REQUIRE((countShortResult.value().core_rows == 2));
+  REQUIRE((countShortResult.value().resident_bytes == countFixedBytes + (2 * k_DimX * sizeof(int16))));
 
   const usize oneLabelRowBytes = labelFixedBytes + (k_DimX * (sizeof(int16) + sizeof(uint32)));
   const auto oneLabelRowResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, true, oneLabelRowBytes);
   REQUIRE(oneLabelRowResult.valid());
-  REQUIRE_FALSE(oneLabelRowResult.value().useTiles);
-  REQUIRE((oneLabelRowResult.value().coreRows == 1));
-  REQUIRE((oneLabelRowResult.value().residentBytes == oneLabelRowBytes));
+  REQUIRE_FALSE(oneLabelRowResult.value().use_tiles);
+  REQUIRE((oneLabelRowResult.value().core_rows == 1));
+  REQUIRE((oneLabelRowResult.value().resident_bytes == oneLabelRowBytes));
   const auto oneLabelRowShortResult = CreateConnectedComponent2DPlan<int16>(k_DimX, k_DimY, true, oneLabelRowBytes - 1);
   REQUIRE(oneLabelRowShortResult.valid());
-  REQUIRE(oneLabelRowShortResult.value().useTiles);
+  REQUIRE(oneLabelRowShortResult.value().use_tiles);
 
   constexpr usize k_TileDimX = 31;
   const usize tileFixedBytes = 2 * sizeof(uint32);
   const usize tileTargetBytes = tileFixedBytes + 5 * (sizeof(int32) + 2 * sizeof(uint32));
   const auto tileResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, /*dimY=*/4, /*writesProvisional=*/true, tileTargetBytes);
   REQUIRE(tileResult.valid());
-  REQUIRE(tileResult.value().useTiles);
-  REQUIRE(tileResult.value().coreRows == 1);
-  REQUIRE(tileResult.value().coreColumns == 5);
-  REQUIRE(tileResult.value().residentBytes == tileTargetBytes);
+  REQUIRE(tileResult.value().use_tiles);
+  REQUIRE(tileResult.value().core_rows == 1);
+  REQUIRE(tileResult.value().core_columns == 5);
+  REQUIRE(tileResult.value().resident_bytes == tileTargetBytes);
   const auto tileShortResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, 4, true, tileTargetBytes - 1);
   REQUIRE(tileShortResult.valid());
-  REQUIRE(tileShortResult.value().useTiles);
-  REQUIRE((tileShortResult.value().coreColumns == 4));
-  REQUIRE((tileShortResult.value().residentBytes == tileFixedBytes + (4 * (sizeof(int32) + 2 * sizeof(uint32)))));
+  REQUIRE(tileShortResult.value().use_tiles);
+  REQUIRE((tileShortResult.value().core_columns == 4));
+  REQUIRE((tileShortResult.value().resident_bytes == tileFixedBytes + (4 * (sizeof(int32) + 2 * sizeof(uint32)))));
 
   const auto zeroWidthResult = CreateConnectedComponent2DPlan<int32>(/*dimX=*/0, /*dimY=*/4, true, tileTargetBytes);
   REQUIRE(zeroWidthResult.invalid());
@@ -705,9 +705,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: checked true-2-D plan", 
   const usize oneColumnTileBytes = tileFixedBytes + sizeof(int32) + 2 * sizeof(uint32);
   const auto oneColumnResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, 4, true, oneColumnTileBytes);
   REQUIRE(oneColumnResult.valid());
-  REQUIRE(oneColumnResult.value().useTiles);
-  REQUIRE((oneColumnResult.value().coreColumns == 1));
-  REQUIRE((oneColumnResult.value().residentBytes == oneColumnTileBytes));
+  REQUIRE(oneColumnResult.value().use_tiles);
+  REQUIRE((oneColumnResult.value().core_columns == 1));
+  REQUIRE((oneColumnResult.value().resident_bytes == oneColumnTileBytes));
   const auto insufficientResult = CreateConnectedComponent2DPlan<int32>(k_TileDimX, /*dimY=*/4, true, oneColumnTileBytes - 1);
   REQUIRE(insufficientResult.invalid());
   REQUIRE((insufficientResult.errors()[0].code == -8374));
@@ -734,9 +734,9 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: provisional adapter supp
   REQUIRE(actual == expected);
 
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(uint32);
-  config.maxRecordsPerBatch = 3;
-  config.initialRecordCount = expected.size();
+  config.record_size = sizeof(uint32);
+  config.max_records_per_batch = 3;
+  config.initial_record_count = expected.size();
   auto recordResult = InMemoryTemporaryRecordStore::Create(config);
   REQUIRE(recordResult.valid());
   SweepTemporaryStore<uint32> fixedRecords(std::move(recordResult.value()), shouldCancel, "Connected-component test");
@@ -750,7 +750,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: provisional adapter supp
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: true-2-D row blocks align to OOC chunk bands", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using ImageProcessing::detail::AlignConnectedComponent2DRows;
   using ImageProcessing::detail::CreateConnectedComponent2DFinalChunkValues;
 
@@ -790,7 +790,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: true-2-D row blocks alig
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks preserve connectivity and transfer caps", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using ImageProcessing::detail::CcRun;
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
 
@@ -815,18 +815,18 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks 
   const usize labelTargetBytes = labelFixedBytes + 2 * k_DimX * (sizeof(int32) + sizeof(uint32));
   const auto labelPlanResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/true, labelTargetBytes);
   REQUIRE(labelPlanResult.valid());
-  REQUIRE_FALSE(labelPlanResult.value().useTiles);
-  REQUIRE(labelPlanResult.value().coreRows == 2);
+  REQUIRE_FALSE(labelPlanResult.value().use_tiles);
+  REQUIRE(labelPlanResult.value().core_rows == 2);
   const auto labelPass1PlanResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/false, labelTargetBytes);
   REQUIRE(labelPass1PlanResult.valid());
-  REQUIRE_FALSE(labelPass1PlanResult.value().useTiles);
-  REQUIRE(labelPass1PlanResult.value().coreRows == 4);
+  REQUIRE_FALSE(labelPass1PlanResult.value().use_tiles);
+  REQUIRE(labelPass1PlanResult.value().core_rows == 4);
 
   const usize countFixedBytes = 2 * k_MaximumRuns * sizeof(CcRun);
   const usize countTargetBytes = countFixedBytes + 2 * k_DimX * sizeof(int32);
   const auto countPlanResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/false, countTargetBytes);
   REQUIRE(countPlanResult.valid());
-  REQUIRE(countPlanResult.value().coreRows == 2);
+  REQUIRE(countPlanResult.value().core_rows == 2);
 
   const bool fullyConnected = GENERATE(false, true);
   CAPTURE(fullyConnected);
@@ -838,16 +838,16 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks 
   OutOfCoreReportingDataStore<uint32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0u);
   std::atomic_bool shouldCancel{false};
   const auto predicate = [](int32 value) { return value != 0; };
-  const Result<> labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, labelTargetBytes);
+  const Result<> labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, labelTargetBytes);
   REQUIRE(labelResult.valid());
 
   std::vector<uint32> actual(mask.size());
   const Result<> readResult = outputStore.copyIntoBuffer(0, nonstd::span<uint32>(actual.data(), actual.size()));
   REQUIRE(readResult.valid());
   REQUIRE(actual == ConnectedComponent2DOracle(mask, k_DimX, k_DimY, fullyConnected));
-  REQUIRE(inputStore.maximumReadValues() <= std::max(labelPlanResult.value().coreRows, labelPass1PlanResult.value().coreRows) * k_DimX);
+  REQUIRE(inputStore.maximumReadValues() <= std::max(labelPlanResult.value().core_rows, labelPass1PlanResult.value().core_rows) * k_DimX);
   REQUIRE(inputStore.readCount() ==
-          (k_DimY + labelPass1PlanResult.value().coreRows - 1) / labelPass1PlanResult.value().coreRows + (k_DimY + labelPlanResult.value().coreRows - 1) / labelPlanResult.value().coreRows);
+          (k_DimY + labelPass1PlanResult.value().core_rows - 1) / labelPass1PlanResult.value().core_rows + (k_DimY + labelPlanResult.value().core_rows - 1) / labelPlanResult.value().core_rows);
   const auto finalChunkResult = ImageProcessing::detail::CreateConnectedComponent2DFinalChunkValues(mask.size(), k_DimX, labelTargetBytes, std::nullopt, std::nullopt);
   REQUIRE(finalChunkResult.valid());
   REQUIRE(outputStore.maximumWriteValues() <= finalChunkResult.value());
@@ -857,16 +857,16 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D blocks 
   {
     countInputStore.setValue(index, mask[index]);
   }
-  const Result<uint32> countResult = CountConnectedComponents<int32>(countInputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, /*minSize=*/1, shouldCancel, countTargetBytes);
+  const Result<uint32> countResult = CountConnectedComponents<int32>(countInputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, /*minSize=*/1, shouldCancel, countTargetBytes);
   REQUIRE(countResult.valid());
   const std::vector<uint32> expected = ConnectedComponent2DOracle(mask, k_DimX, k_DimY, fullyConnected);
   REQUIRE(countResult.value() == *std::max_element(expected.cbegin(), expected.cend()));
-  REQUIRE(countInputStore.maximumReadValues() <= countPlanResult.value().coreRows * k_DimX);
+  REQUIRE(countInputStore.maximumReadValues() <= countPlanResult.value().core_rows * k_DimX);
 }
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles preserve run and neighbor continuity", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using ImageProcessing::detail::CreateConnectedComponent2DPlan;
 
   constexpr usize k_DimX = 13;
@@ -889,8 +889,8 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles p
   const usize targetBytes = tileFixedBytes + k_CoreColumns * (sizeof(int32) + 2 * sizeof(uint32));
   const auto planResult = CreateConnectedComponent2DPlan<int32>(k_DimX, k_DimY, /*writesProvisional=*/true, targetBytes);
   REQUIRE(planResult.valid());
-  REQUIRE(planResult.value().useTiles);
-  REQUIRE(planResult.value().coreColumns == k_CoreColumns);
+  REQUIRE(planResult.value().use_tiles);
+  REQUIRE(planResult.value().core_columns == k_CoreColumns);
 
   const bool fullyConnected = GENERATE(false, true);
   CAPTURE(fullyConnected);
@@ -902,7 +902,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles p
   OutOfCoreReportingDataStore<uint32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0u);
   std::atomic_bool shouldCancel{false};
   const auto predicate = [](int32 value) { return value != 0; };
-  const Result<> labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, targetBytes);
+  const Result<> labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, targetBytes);
   REQUIRE(labelResult.valid());
 
   std::vector<uint32> actual(mask.size());
@@ -918,7 +918,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles p
   {
     countInputStore.setValue(index, mask[index]);
   }
-  const Result<uint32> countResult = CountConnectedComponents<int32>(countInputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, /*minSize=*/1, shouldCancel, targetBytes);
+  const Result<uint32> countResult = CountConnectedComponents<int32>(countInputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, /*minSize=*/1, shouldCancel, targetBytes);
   REQUIRE(countResult.valid());
   REQUIRE(countResult.value() == *std::max_element(expected.cbegin(), expected.cend()));
   REQUIRE(countInputStore.maximumReadValues() <= k_CoreColumns);
@@ -926,7 +926,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D tiles p
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: minimum tile payload preserves hand-defined labels and counts", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_DimX = 5;
   constexpr usize k_DimY = 3;
   // One input, current label, previous label, and two previous-row halo values.
@@ -943,7 +943,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: minimum tile payload pre
 
   SECTION("one byte short refuses before reading or writing")
   {
-    const auto labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, k_MinimumTileBytes - 1);
+    const auto labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, k_MinimumTileBytes - 1);
     REQUIRE(labelResult.invalid());
     REQUIRE((labelResult.errors()[0].code == -8374));
     REQUIRE((inputStore.readCount() == 0));
@@ -951,7 +951,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: minimum tile payload pre
     {
       REQUIRE((outputStore.getValue(index) == k_Poison));
     }
-    const auto countResult = CountConnectedComponents<int32>(inputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, 1, shouldCancel, k_MinimumTileBytes - 1);
+    const auto countResult = CountConnectedComponents<int32>(inputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, 1, shouldCancel, k_MinimumTileBytes - 1);
     REQUIRE(countResult.invalid());
     REQUIRE((countResult.errors()[0].code == -8374));
     REQUIRE((inputStore.readCount() == 0));
@@ -959,17 +959,17 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: minimum tile payload pre
 
   SECTION("exact payload yields the raster labels and size-filtered counts")
   {
-    const auto labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, k_MinimumTileBytes);
+    const auto labelResult = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, shouldCancel, {}, k_MinimumTileBytes);
     REQUIRE(labelResult.valid());
     for(usize index = 0; index < expected.size(); ++index)
     {
       REQUIRE((outputStore.getValue(index) == expected.at(index)));
     }
     REQUIRE((inputStore.maximumReadValues() == 1));
-    const auto countResult = CountConnectedComponents<int32>(inputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, 1, shouldCancel, k_MinimumTileBytes);
+    const auto countResult = CountConnectedComponents<int32>(inputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, 1, shouldCancel, k_MinimumTileBytes);
     REQUIRE(countResult.valid());
     REQUIRE((countResult.value() == (fullyConnected ? 1 : 4)));
-    const auto filteredCountResult = CountConnectedComponents<int32>(inputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, fullyConnected, 2, shouldCancel, k_MinimumTileBytes);
+    const auto filteredCountResult = CountConnectedComponents<int32>(inputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, fullyConnected, 2, shouldCancel, k_MinimumTileBytes);
     REQUIRE(filteredCountResult.valid());
     REQUIRE((filteredCountResult.value() == (fullyConnected ? 1 : 2)));
   }
@@ -977,7 +977,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: minimum tile payload pre
 
 TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D cancellation and input errors stop before final output", "[NXImageProcessing][ConnectedComponentEngine]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using ImageProcessing::detail::CcRun;
 
   constexpr usize k_DimX = 9;
@@ -993,7 +993,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D cancell
     std::atomic_bool shouldCancel{false};
     CancelAfterFirstReadDataStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 1, shouldCancel);
     DataStore<uint32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
-    const Result<> result = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, false, shouldCancel, {}, targetBytes);
+    const Result<> result = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, false, shouldCancel, {}, targetBytes);
 
     REQUIRE(result.valid());
     REQUIRE(inputStore.readCount() == 1);
@@ -1008,7 +1008,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentEngine: bounded true-2-D cancell
     std::atomic_bool shouldCancel{false};
     FailOnSecondReadDataStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 1);
     DataStore<uint32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
-    const Result<> result = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, predicate, false, shouldCancel, {}, targetBytes);
+    const Result<> result = LabelConnectedComponents<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, predicate, false, shouldCancel, {}, targetBytes);
 
     REQUIRE(result.invalid());
     REQUIRE(result.errors()[0].code == -8390);

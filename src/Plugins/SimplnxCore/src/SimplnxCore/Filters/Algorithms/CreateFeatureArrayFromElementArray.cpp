@@ -22,7 +22,7 @@ constexpr usize k_ChunkTuples = 65536;
  * @param shouldCancel Signals cancellation between chunks.
  * @return Maximum ID, zero after cancellation, or an input or read error.
  */
-Result<int32> FindMaximumFeatureId(const Int32AbstractDataStore& featureIdsStore, const std::atomic_bool& shouldCancel)
+Result<int32> FindMaximumFeatureId(const Int32AbstractDataStoreType& featureIdsStore, const std::atomic_bool& shouldCancel)
 {
   const usize totalTuples = featureIdsStore.getNumberOfTuples();
   auto featureIdsBuffer = std::make_unique<int32[]>(k_ChunkTuples);
@@ -75,7 +75,7 @@ struct CopyCellDataFunctor
    * not publish the partially assembled feature buffer.
    */
   template <typename T>
-  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel) const
+  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStoreType& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel) const
   {
     const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -165,9 +165,9 @@ CreateFeatureArrayFromElementArray::CreateFeatureArrayFromElementArray(DataStruc
 // -----------------------------------------------------------------------------
 Result<> CreateFeatureArrayFromElementArray::operator()()
 {
-  const DataPath createdArrayPath = m_InputValues->CellFeatureAttributeMatrixPath.createChildPath(m_InputValues->CreatedArrayName);
-  const auto* selectedCellArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedCellArrayPath);
-  const auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+  const DataPath createdArrayPath = m_InputValues->cell_feature_attribute_matrix_path.createChildPath(m_InputValues->created_array_name);
+  const auto* selectedCellArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->selected_cell_array_path);
+  const auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
   auto* createdArrayPtr = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
 
   const usize totalCellTuples = featureIdsStore.getNumberOfTuples();
@@ -187,7 +187,7 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
   }
 
   const usize requiredFeatureTuples = static_cast<usize>(maximumFeatureIdResult.value()) + 1;
-  auto& cellFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  auto& cellFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cell_feature_attribute_matrix_path);
 
   // Validate that growing the attribute matrix will not shrink a larger child array.
   if(requiredFeatureTuples > cellFeatureAttrMat.getNumberOfTuples())
@@ -198,7 +198,7 @@ Result<> CreateFeatureArrayFromElementArray::operator()()
       if(iArrayPtr != nullptr && iArrayPtr->getNumberOfTuples() > requiredFeatureTuples)
       {
         return MakeErrorResult(-81881, fmt::format("Resizing would cause data loss in {}. Make sure all objects in {} have tuple counts equal to or less then the max Feature ID {}!",
-                                                   iArrayPtr->getName(), m_InputValues->CellFeatureAttributeMatrixPath.toString(), requiredFeatureTuples));
+                                                   iArrayPtr->getName(), m_InputValues->cell_feature_attribute_matrix_path.toString(), requiredFeatureTuples));
       }
     }
 

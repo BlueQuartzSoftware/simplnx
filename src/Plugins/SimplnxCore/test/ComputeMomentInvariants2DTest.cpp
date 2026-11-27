@@ -35,7 +35,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace fs = std::filesystem;
 
 namespace
@@ -56,7 +56,7 @@ DataStructure CreateInvalidTestData()
   dims[2] = 5;
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAmPtr->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAmPtr->getId());
   featureIdsPtr->fill(0);
   (*featureIdsPtr)[6] = 1;
   (*featureIdsPtr)[7] = 1;
@@ -80,7 +80,7 @@ DataStructure CreateInvalidTestData()
       0, 0, 0, 0, 0;
 #endif
   const std::vector<size_t> compDims(1, 6);
-  UInt32Array* rectPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAmPtr->getId());
+  UInt32ArrayType* rectPtr = UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAmPtr->getId());
   rectPtr->fill(0);
   (*rectPtr)[6] = 1;
   (*rectPtr)[7] = 1;
@@ -107,7 +107,7 @@ DataStructure CreateTestData()
   dims[2] = 5;
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAmPtr->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAmPtr->getId());
   featureIdsPtr->fill(0);
   (*featureIdsPtr)[6] = 1;
   (*featureIdsPtr)[7] = 1;
@@ -131,7 +131,7 @@ DataStructure CreateTestData()
       0, 0, 0, 0, 0;
 #endif
   const std::vector<size_t> compDims(1, 6);
-  UInt32Array* rectPtr = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAmPtr->getId());
+  UInt32ArrayType* rectPtr = UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, k_RectCoords, dims, compDims, featureAmPtr->getId());
   rectPtr->fill(0);
   (*rectPtr)[6] = 1;
   (*rectPtr)[7] = 1;
@@ -164,9 +164,9 @@ DataStructure CreateUnusedFeatureTestData(int32 liveId)
   imageGeomPtr->setCellData(*cellAMPtr);
   auto* featureAMPtr = AttributeMatrix::Create(dataStructure, k_FeatureData, ShapeType{65537}, imageGeomPtr->getId());
   REQUIRE((featureAMPtr != nullptr));
-  auto featureIdsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, ShapeType{1, 5, 5}, ShapeType{1});
+  auto featureIdsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, ShapeType{1, 5, 5}, ShapeType{1});
   REQUIRE((featureIdsStorePtr != nullptr));
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, k_FeatureIds, featureIdsStorePtr, cellAMPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, k_FeatureIds, featureIdsStorePtr, cellAMPtr->getId());
   REQUIRE((featureIdsPtr != nullptr));
   featureIdsPtr->fill(0);
   for(usize row = 1; row <= 3; ++row)
@@ -185,7 +185,7 @@ DataStructure CreateUnusedFeatureTestData(int32 liveId)
   const auto cornerResult = cornerFilter.execute(dataStructure, cornerArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(cornerResult.result);
 
-  const auto* rectPtr = dataStructure.getDataAs<UInt32Array>(k_RectCoordsPath);
+  const auto* rectPtr = dataStructure.getDataAs<UInt32ArrayType>(k_RectCoordsPath);
   REQUIRE((rectPtr != nullptr));
   constexpr std::array<uint32, 6> k_ExpectedRect = {1, 1, 0, 3, 3, 0};
   for(usize component = 0; component < k_ExpectedRect.size(); ++component)
@@ -222,16 +222,16 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
   const auto appPtr = Application::GetOrCreateInstance();
   REQUIRE((appPtr != nullptr));
   const bool saveCentralMoments = GENERATE(false, true);
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(saveCentralMoments, scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   std::array<float32, 2> referenceOmega{};
   std::array<float32, 9> referenceCentral{};
   constexpr std::array<int32, 2> k_LiveIds = {1, 2};
 
   // A centered square of side 3 has area 9, mu20 = mu02 = 27/4, and mu22 = 81/16.
-  constexpr float64 k_ExpectedOmega1 = 3.0 / numbers::pi;
-  constexpr float64 k_ExpectedOmega2 = 9.0 / (numbers::pi * numbers::pi);
+  constexpr float64 k_ExpectedOmega1 = 3.0 / numbers::k_Pi;
+  constexpr float64 k_ExpectedOmega2 = 9.0 / (numbers::k_Pi * numbers::k_Pi);
   constexpr std::array<float64, 9> k_ExpectedCentral = {9.0, 0.0, 6.75, 0.0, 0.0, 0.0, 6.75, 0.0, 5.0625};
   constexpr float64 k_Tolerance = 0.00001;
   for(const int32 liveId : k_LiveIds)
@@ -251,8 +251,8 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     CHECK_FALSE(reportedNonXY.load());
 
-    const auto* omega1Ptr = dataStructure.getDataAs<Float32Array>(k_Omega1Path);
-    const auto* omega2Ptr = dataStructure.getDataAs<Float32Array>(k_Omega2Path);
+    const auto* omega1Ptr = dataStructure.getDataAs<Float32ArrayType>(k_Omega1Path);
+    const auto* omega2Ptr = dataStructure.getDataAs<Float32ArrayType>(k_Omega2Path);
     REQUIRE((omega1Ptr != nullptr));
     REQUIRE((omega2Ptr != nullptr));
     scope.requireExpectedStore(*omega1Ptr);
@@ -276,7 +276,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
       CHECK(((*omega2Ptr)[1] == 0.0F));
     }
 
-    const auto* centralPtr = dataStructure.getDataAs<Float32Array>(k_CentralMomentsPath);
+    const auto* centralPtr = dataStructure.getDataAs<Float32ArrayType>(k_CentralMomentsPath);
     if(saveCentralMoments)
     {
       REQUIRE((centralPtr != nullptr));
@@ -303,7 +303,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Unused feature regressi
     {
       CHECK((centralPtr == nullptr));
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -315,8 +315,8 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rec
 #ifndef SIMPLNX_ENABLE_MULTICORE
   const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
 #else
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto scanlineIter = std::ranges::find(scenarios, UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scanlineIter = std::ranges::find(scenarios, unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   if(scanlineIter == scenarios.cend())
   {
     SUCCEED("The Scanline cancellation case requires the Scanline test scenario.");
@@ -325,10 +325,10 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rec
   const auto scenario = *scanlineIter;
 #endif
   CAPTURE(saveCentralMoments, scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = CreateUnusedFeatureTestData(2);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_RectCoordsPath));
-  auto& rectRef = dataStructure.getDataRefAs<UInt32Array>(k_RectCoordsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_RectCoordsPath));
+  auto& rectRef = dataStructure.getDataRefAs<UInt32ArrayType>(k_RectCoordsPath);
   // A supplied nonempty rectangle with two Z cells exercises the skip branch in an XY geometry.
   constexpr std::array<uint32, 6> k_NonXyRect = {0, 0, 0, 0, 0, 1};
   for(usize component = 0; component < k_NonXyRect.size(); ++component)
@@ -353,30 +353,30 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rec
   CHECK((executeResult.result.errors()[0].code == -1));
   CHECK((executeResult.result.errors()[0].message == "Filter cancelled"));
 
-  const auto* omega1Ptr = dataStructure.getDataAs<Float32Array>(k_Omega1Path);
-  const auto* omega2Ptr = dataStructure.getDataAs<Float32Array>(k_Omega2Path);
+  const auto* omega1Ptr = dataStructure.getDataAs<Float32ArrayType>(k_Omega1Path);
+  const auto* omega2Ptr = dataStructure.getDataAs<Float32ArrayType>(k_Omega2Path);
   REQUIRE((omega1Ptr != nullptr));
   REQUIRE((omega2Ptr != nullptr));
   CHECK(((*omega1Ptr)[2] == 0.0F));
   CHECK(((*omega2Ptr)[2] == 0.0F));
   if(saveCentralMoments)
   {
-    const auto* centralPtr = dataStructure.getDataAs<Float32Array>(k_CentralMomentsPath);
+    const auto* centralPtr = dataStructure.getDataAs<Float32ArrayType>(k_CentralMomentsPath);
     REQUIRE((centralPtr != nullptr));
     for(usize component = 0; component < 9; ++component)
     {
       CHECK(((*centralPtr)[18 + component] == 0.0F));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   // Configure the filter arguments.
   ComputeMomentInvariants2DFilter filter;
@@ -394,13 +394,13 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key, std::make_any<std::string>(k_CentralMoments));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const Float32Array* omega1Ptr = dataStructure.getDataAs<Float32Array>(k_Omega1Path);
-  const Float32Array* omega2Ptr = dataStructure.getDataAs<Float32Array>(k_Omega2Path);
+  const Float32ArrayType* omega1Ptr = dataStructure.getDataAs<Float32ArrayType>(k_Omega1Path);
+  const Float32ArrayType* omega2Ptr = dataStructure.getDataAs<Float32ArrayType>(k_Omega2Path);
   REQUIRE(omega1Ptr != nullptr);
   REQUIRE(omega2Ptr != nullptr);
   float32 value1 = (*omega1Ptr)[1];
@@ -408,12 +408,12 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Valid Filter Execution"
   REQUIRE(std::fabs(value1 - 0.95493) < 0.00001);
   REQUIRE(std::fabs(value2 - 0.911891) < 0.00001);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Execution", "[SimplnxCore][ComputeMomentInvariants2DFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Configure the filter arguments.
   ComputeMomentInvariants2DFilter filter;
@@ -431,18 +431,18 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Executio
   args.insertOrAssign(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key, std::make_any<std::string>(k_CentralMoments));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeMomentInvariants2DFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -517,13 +517,13 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Geometry cell tuple cou
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -9511);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);

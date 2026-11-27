@@ -28,7 +28,7 @@ namespace fs = std::filesystem;
 
 static void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  Float32Array* verticesArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {144}, {3}, parentId);
+  Float32ArrayType* verticesArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, name, {144}, {3}, parentId);
   (*verticesArrayPtr)[0] = -0.707107;
   (*verticesArrayPtr)[1] = -0.707107;
   (*verticesArrayPtr)[2] = 0;
@@ -465,7 +465,7 @@ static void CreateVerticesArray(DataStructure& dataStructure, const std::string&
 
 static void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* edgesListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {264}, {2}, parentId);
+  IGeometry::MeshIndexArrayType* edgesListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {264}, {2}, parentId);
   (*edgesListArrayPtr)[0] = 12;
   (*edgesListArrayPtr)[1] = 0;
   (*edgesListArrayPtr)[2] = 0;
@@ -998,7 +998,7 @@ static void CreateEdgesArray(DataStructure& dataStructure, const std::string& na
 
 static void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* trianglesListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {242}, {3}, parentId);
+  IGeometry::MeshIndexArrayType* trianglesListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {242}, {3}, parentId);
   (*trianglesListArrayPtr)[0] = 0;
   (*trianglesListArrayPtr)[1] = 1;
   (*trianglesListArrayPtr)[2] = 13;
@@ -1729,7 +1729,7 @@ static void CreateTrianglesArray(DataStructure& dataStructure, const std::string
 
 static void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* quadsListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {121}, {4}, parentId);
+  IGeometry::MeshIndexArrayType* quadsListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {121}, {4}, parentId);
   (*quadsListArrayPtr)[0] = 0;
   (*quadsListArrayPtr)[1] = 1;
   (*quadsListArrayPtr)[2] = 13;
@@ -2218,7 +2218,7 @@ static void CreateQuadsArray(DataStructure& dataStructure, const std::string& na
 
 static void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& tetsName, DataObject::IdType parentId)
 {
-  Float32Array* vertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {5}, {3}, parentId);
+  Float32ArrayType* vertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, verticesName, {5}, {3}, parentId);
   (*vertListArrayPtr)[0] = -1;
   (*vertListArrayPtr)[1] = 0.5;
   (*vertListArrayPtr)[2] = 0;
@@ -2234,7 +2234,7 @@ static void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::
   (*vertListArrayPtr)[12] = 1;
   (*vertListArrayPtr)[13] = 0.5;
   (*vertListArrayPtr)[14] = 0;
-  IGeometry::MeshIndexArrayType* polyListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, tetsName, {2}, {4}, parentId);
+  IGeometry::MeshIndexArrayType* polyListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, tetsName, {2}, {4}, parentId);
   (*polyListArrayPtr)[0] = 0;
   (*polyListArrayPtr)[1] = 1;
   (*polyListArrayPtr)[2] = 2;
@@ -2247,7 +2247,7 @@ static void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::
 
 static void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& hexsName, DataObject::IdType parentId)
 {
-  Float32Array* vertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {12}, {3}, parentId);
+  Float32ArrayType* vertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, verticesName, {12}, {3}, parentId);
   (*vertListArrayPtr)[0] = -1;
   (*vertListArrayPtr)[1] = 1;
   (*vertListArrayPtr)[2] = 1;
@@ -2284,7 +2284,7 @@ static void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::
   (*vertListArrayPtr)[33] = 1;
   (*vertListArrayPtr)[34] = -1;
   (*vertListArrayPtr)[35] = 1;
-  IGeometry::MeshIndexArrayType* polyListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, hexsName, {2}, {8}, parentId);
+  IGeometry::MeshIndexArrayType* polyListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, hexsName, {2}, {8}, parentId);
   (*polyListArrayPtr)[0] = 6;
   (*polyListArrayPtr)[1] = 7;
   (*polyListArrayPtr)[2] = 4;
@@ -2305,7 +2305,7 @@ static void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::
 
 static void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  Float32Array* verticesArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {2}, {3}, parentId);
+  Float32ArrayType* verticesArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, name, {2}, {3}, parentId);
   (*verticesArrayPtr)[0] = -0.707107;
   (*verticesArrayPtr)[1] = -0.707107;
   (*verticesArrayPtr)[2] = 0;
@@ -2316,7 +2316,7 @@ static void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const 
 
 TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateGeometryFilter filter;
@@ -2377,8 +2377,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
     std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(imageDims));
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(imageOrigin));
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(imageSpacing));
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2404,7 +2404,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2419,7 +2419,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
   SECTION("RectGrid Geometry Copy")
   {
-    Float32Array* xBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, xBoundsName, {14}, {1}, 0);
+    Float32ArrayType* xBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, xBoundsName, {14}, {1}, 0);
     (*xBoundsArrayPtr)[0] = 0;
     (*xBoundsArrayPtr)[1] = 1;
     (*xBoundsArrayPtr)[2] = 2;
@@ -2434,7 +2434,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     (*xBoundsArrayPtr)[11] = 11;
     (*xBoundsArrayPtr)[12] = 12;
     (*xBoundsArrayPtr)[13] = 14;
-    Float32Array* yBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, yBoundsName, {14}, {1}, 0);
+    Float32ArrayType* yBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, yBoundsName, {14}, {1}, 0);
     (*yBoundsArrayPtr)[0] = 0;
     (*yBoundsArrayPtr)[1] = 2;
     (*yBoundsArrayPtr)[2] = 4;
@@ -2449,7 +2449,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     (*yBoundsArrayPtr)[11] = 22;
     (*yBoundsArrayPtr)[12] = 24;
     (*yBoundsArrayPtr)[13] = 26;
-    Float32Array* zBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, zBoundsName, {14}, {1}, 0);
+    Float32ArrayType* zBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, zBoundsName, {14}, {1}, 0);
     (*zBoundsArrayPtr)[0] = 0;
     (*zBoundsArrayPtr)[1] = 5;
     (*zBoundsArrayPtr)[2] = 10;
@@ -2472,8 +2472,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(xBoundsPath));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(yBoundsPath));
@@ -2499,7 +2499,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2508,19 +2508,19 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const createdGeomPtr = dataStructure.getDataAs<RectGridGeom>(geometryPath);
     REQUIRE(createdGeomPtr != nullptr);
     const auto dims = createdGeomPtr->getDimensions();
-    REQUIRE(dims == SizeVec3{13, 13, 13});
+    REQUIRE(dims == SizeVec3Type{13, 13, 13});
     auto* const cellAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(cellAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getCellData() != nullptr);
-    auto* const destXBoundsPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsName));
+    auto* const destXBoundsPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(xBoundsName));
     REQUIRE(destXBoundsPtr != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, xBoundsPath, geometryPath.createChildPath(xBoundsName));
-    auto* const destYBoundsPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsName));
+    unit_test::CompareArrays<float32>(dataStructure, xBoundsPath, geometryPath.createChildPath(xBoundsName));
+    auto* const destYBoundsPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(yBoundsName));
     REQUIRE(destYBoundsPtr != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, yBoundsPath, geometryPath.createChildPath(yBoundsName));
-    auto* const destZBoundsPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsName));
+    unit_test::CompareArrays<float32>(dataStructure, yBoundsPath, geometryPath.createChildPath(yBoundsName));
+    auto* const destZBoundsPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(zBoundsName));
     REQUIRE(destZBoundsPtr != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, zBoundsPath, geometryPath.createChildPath(zBoundsName));
+    unit_test::CompareArrays<float32>(dataStructure, zBoundsPath, geometryPath.createChildPath(zBoundsName));
   }
 
   SECTION("Vertex Geometry Copy")
@@ -2532,8 +2532,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2559,7 +2559,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2570,10 +2570,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    unit_test::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
   }
 
   SECTION("Edge Geometry Copy")
@@ -2585,8 +2585,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2612,7 +2612,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2624,10 +2624,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    unit_test::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
     auto* const edgeAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(edgeAmName));
     REQUIRE(edgeAmPtr != nullptr);
@@ -2635,7 +2635,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const destEdgesPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
     REQUIRE(destEdgesPtr != nullptr);
     REQUIRE(createdGeomPtr->getEdges() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcEdgesPath, geometryPath.createChildPath(edgeListName));
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcEdgesPath, geometryPath.createChildPath(edgeListName));
   }
 
   SECTION("Triangle Geometry Copy")
@@ -2647,8 +2647,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2674,7 +2674,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2686,10 +2686,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    unit_test::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
     auto* const faceAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAmPtr != nullptr);
@@ -2697,7 +2697,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const destFacesPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFacesPtr != nullptr);
     REQUIRE(createdGeomPtr->getFaces() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
   }
 
   SECTION("Quad Geometry Copy")
@@ -2709,8 +2709,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2736,7 +2736,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2748,10 +2748,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    unit_test::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
     auto* const quadAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(quadAmPtr != nullptr);
@@ -2759,7 +2759,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const destFacesPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
     REQUIRE(destFacesPtr != nullptr);
     REQUIRE(createdGeomPtr->getFaces() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcQuadsPath, geometryPath.createChildPath(quadListName));
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcQuadsPath, geometryPath.createChildPath(quadListName));
   }
 
   SECTION("Tetrahedral Geometry Copy")
@@ -2771,8 +2771,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2798,7 +2798,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2810,10 +2810,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(tetVertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(tetVertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, srcTetVerticesPath, geometryPath.createChildPath(tetVertexListName));
+    unit_test::CompareArrays<float32>(dataStructure, srcTetVerticesPath, geometryPath.createChildPath(tetVertexListName));
 
     auto* const tetAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(tetAmPtr != nullptr);
@@ -2821,7 +2821,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const destCellsPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
     REQUIRE(destCellsPtr != nullptr);
     REQUIRE(createdGeomPtr->getPolyhedra() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTetsPath, geometryPath.createChildPath(tetListName));
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTetsPath, geometryPath.createChildPath(tetListName));
   }
 
   SECTION("Hexahedral Geometry Copy")
@@ -2833,8 +2833,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2860,7 +2860,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2872,10 +2872,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(hexVertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(hexVertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(dataStructure, srcHexVerticesPath, geometryPath.createChildPath(hexVertexListName));
+    unit_test::CompareArrays<float32>(dataStructure, srcHexVerticesPath, geometryPath.createChildPath(hexVertexListName));
 
     auto* const hexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(hexAmPtr != nullptr);
@@ -2883,7 +2883,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const destCellsPtr = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
     REQUIRE(destCellsPtr != nullptr);
     REQUIRE(createdGeomPtr->getPolyhedra() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcHexsPath, geometryPath.createChildPath(hexListName));
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcHexsPath, geometryPath.createChildPath(hexListName));
   }
 
   SECTION("Triangle Geometry Move")
@@ -2895,8 +2895,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_MoveArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2922,7 +2922,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2934,7 +2934,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     auto* const vertexAmPtr = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAmPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertexAttributeMatrix() != nullptr);
-    auto* const destVerticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    auto* const destVerticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVerticesPtr != nullptr);
     REQUIRE(createdGeomPtr->getVertices() != nullptr);
 
@@ -2958,8 +2958,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -2985,7 +2985,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -2994,7 +2994,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
   SECTION("RectGrid Geometry Invalid Grid Bounds Resolution")
   {
-    Float32Array* xBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, xBoundsName, {14}, {1}, 0);
+    Float32ArrayType* xBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, xBoundsName, {14}, {1}, 0);
     (*xBoundsArrayPtr)[0] = 0;
     (*xBoundsArrayPtr)[1] = 1;
     (*xBoundsArrayPtr)[2] = 2;
@@ -3009,7 +3009,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     (*xBoundsArrayPtr)[11] = 13;
     (*xBoundsArrayPtr)[12] = 12;
     (*xBoundsArrayPtr)[13] = 11;
-    Float32Array* yBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, yBoundsName, {14}, {1}, 0);
+    Float32ArrayType* yBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, yBoundsName, {14}, {1}, 0);
     (*yBoundsArrayPtr)[0] = 0;
     (*yBoundsArrayPtr)[1] = 2;
     (*yBoundsArrayPtr)[2] = 4;
@@ -3024,7 +3024,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     (*yBoundsArrayPtr)[11] = 22;
     (*yBoundsArrayPtr)[12] = 24;
     (*yBoundsArrayPtr)[13] = 26;
-    Float32Array* zBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, zBoundsName, {14}, {1}, 0);
+    Float32ArrayType* zBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, zBoundsName, {14}, {1}, 0);
     (*zBoundsArrayPtr)[0] = 0;
     (*zBoundsArrayPtr)[1] = 5;
     (*zBoundsArrayPtr)[2] = 10;
@@ -3047,8 +3047,8 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
-    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>());
     // RectilinearGrid Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_XBoundsPath_Key, std::make_any<DataPath>(xBoundsPath));
     args.insertOrAssign(CreateGeometryFilter::k_YBoundsPath_Key, std::make_any<DataPath>(yBoundsPath));
@@ -3074,14 +3074,14 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateGeometry: RectGrid preflight with EmptyDataStore bounds", "[SimplnxCore][CreateGeometry]")
@@ -3095,7 +3095,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: RectGrid preflight with EmptyDataStore b
   {
     auto storeResult = EmptyDataStore<float32>::Create(ShapeType{3}, ShapeType{1}, "");
     SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
-    const auto* boundsPtr = Float32Array::Create(dataStructure, namePtr, std::move(storeResult.value()), inputGroupPtr->getId());
+    const auto* boundsPtr = Float32ArrayType::Create(dataStructure, namePtr, std::move(storeResult.value()), inputGroupPtr->getId());
     REQUIRE(boundsPtr != nullptr);
     REQUIRE(boundsPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::Empty);
   }
@@ -3121,23 +3121,23 @@ TEST_CASE("SimplnxCore::CreateGeometry: RectGrid preflight with EmptyDataStore b
   else
   {
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE_NOTHROW(actionsResult = preflightResult.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE_NOTHROW(actionsResult = preflightResult.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight));
   }
   SIMPLNX_RESULT_REQUIRE_VALID(actionsResult);
   const auto* geometryPtr = dataStructure.getDataAs<RectGridGeom>(geometryPath);
   REQUIRE(geometryPtr != nullptr);
-  REQUIRE(geometryPtr->getDimensions() == SizeVec3{2, 2, 2});
+  REQUIRE(geometryPtr->getDimensions() == SizeVec3Type{2, 2, 2});
   REQUIRE(geometryPtr->getXBounds() != nullptr);
   REQUIRE(geometryPtr->getYBounds() != nullptr);
   REQUIRE(geometryPtr->getZBounds() != nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -3185,14 +3185,14 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Numeric domain regression", "[Simp
   args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
   args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{0});
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
-  const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {-1, 1, 1}, {nan, 1, 1}, {1, 1, 1}};
+  const std::vector<VectorFloat32ParameterType::ValueType> spacings = {{0, 1, 1}, {-1, 1, 1}, {nan, 1, 1}, {1, 1, 1}};
   args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, spacings[row]);
-  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
+  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32ParameterType::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86008 : -86007));
-  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Y" : "X") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == (row == 3 ? -86008 : -86007));
+  CHECK(result.output_actions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find(row == 3 ? "Y" : "X") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::CreateGeometryFilter: Origin X domain regression", "[SimplnxCore][CreateGeometryFilter][NumericDomainRed]")
@@ -3203,18 +3203,18 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Origin X domain regression", "[Sim
   args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64ParameterType::ValueType{2, 2, 2});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{0});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
-  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::infinity(), 0, 0});
+  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32ParameterType::ValueType{std::numeric_limits<float32>::infinity(), 0, 0});
   auto pre = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
-  CHECK(pre.outputActions.errors()[0].code == -86008);
-  CHECK(pre.outputActions.errors()[0].message.find("Origin") != std::string::npos);
-  CHECK(pre.outputActions.errors()[0].message.find('X') != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(pre.output_actions);
+  CHECK(pre.output_actions.errors()[0].code == -86008);
+  CHECK(pre.output_actions.errors()[0].message.find("Origin") != std::string::npos);
+  CHECK(pre.output_actions.errors()[0].message.find('X') != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::CreateGeometryFilter: Inactive image vectors", "[SimplnxCore][CreateGeometryFilter]")
 {
   DataStructure dataStructure;
-  auto* verticesPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {4}, {3});
+  auto* verticesPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {4}, {3});
   REQUIRE(verticesPtr != nullptr);
   verticesPtr->fill(1);
   CreateGeometryFilter filter;
@@ -3223,8 +3223,8 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Inactive image vectors", "[Simplnx
   args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{2});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
   args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, DataPath({"Vertices"}));
-  args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, VectorFloat32Parameter::ValueType{0, 0, 0});
-  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
+  args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, VectorFloat32ParameterType::ValueType{0, 0, 0});
+  args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32ParameterType::ValueType{std::numeric_limits<float32>::quiet_NaN(), 0, 0});
   auto pre = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.output_actions);
 }

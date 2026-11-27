@@ -12,7 +12,7 @@ namespace nx::core::memory_utilities
  * @brief Holds a total capacity and free-space measurement for a storage
  * device or filesystem, in bytes.
  */
-struct SIMPLNX_EXPORT dataStorage
+struct SIMPLNX_EXPORT DataStorage
 {
   uint64_t total = 0; ///< Total capacity of the storage device in bytes.
   uint64_t free = 0;  ///< Available (free) space on the storage device in bytes.
@@ -33,7 +33,7 @@ uint64 SIMPLNX_EXPORT GetTotalMemory();
  * @return dataStorage containing total and free bytes on the temp drive.
  * @see GetAvailableStorageOnDrive()
  */
-dataStorage SIMPLNX_EXPORT GetAvailableStorage();
+DataStorage SIMPLNX_EXPORT GetAvailableStorage();
 
 /**
  * @brief Returns the total and free space on the filesystem that contains
@@ -45,7 +45,7 @@ dataStorage SIMPLNX_EXPORT GetAvailableStorage();
  * @return dataStorage containing total and free bytes on the queried drive.
  * @see GetAvailableStorage()
  */
-dataStorage SIMPLNX_EXPORT GetAvailableStorageOnDrive(const std::filesystem::path& path);
+DataStorage SIMPLNX_EXPORT GetAvailableStorageOnDrive(const std::filesystem::path& path);
 
 /**
  * @brief Snapshot of system-wide and per-process memory statistics.

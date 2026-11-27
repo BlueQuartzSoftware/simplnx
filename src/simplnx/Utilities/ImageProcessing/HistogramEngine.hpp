@@ -23,13 +23,13 @@ struct Histogram
   std::vector<usize> counts;
   float64 min = 0.0;
   float64 max = 0.0;
-  float64 binWidth = 0.0;
+  float64 bin_width = 0.0;
 };
 
 struct HistogramScanOptions
 {
   static constexpr usize k_DefaultTargetBytes = 64ULL * 1024ULL * 1024ULL;
-  usize targetBytes = k_DefaultTargetBytes;
+  usize target_bytes = k_DefaultTargetBytes;
 };
 
 namespace detail
@@ -55,11 +55,11 @@ HistogramScanBuffer<T> ReserveHistogramScanBuffer(const AbstractDataStore<T>& st
   }
   if(store.getStoreType() != IDataStore::StoreType::OutOfCore)
   {
-    const usize bytes = options.targetBytes == HistogramScanOptions::k_DefaultTargetBytes ? HistogramScanOptions::k_DefaultTargetBytes : options.targetBytes;
+    const usize bytes = options.target_bytes == HistogramScanOptions::k_DefaultTargetBytes ? HistogramScanOptions::k_DefaultTargetBytes : options.target_bytes;
     return {{}, std::max<usize>(1, std::min(totalValues, bytes / sizeof(T)))};
   }
   const uint64 preferredBytes =
-      options.targetBytes == HistogramScanOptions::k_DefaultTargetBytes ? ResolveWorkingMemoryFractionBytes(usefulBytes, 1, 4, HistogramScanOptions::k_DefaultTargetBytes) : options.targetBytes;
+      options.target_bytes == HistogramScanOptions::k_DefaultTargetBytes ? ResolveWorkingMemoryFractionBytes(usefulBytes, 1, 4, HistogramScanOptions::k_DefaultTargetBytes) : options.target_bytes;
   auto reservation = ReserveWorkingMemory(preferredBytes, usefulBytes);
   const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), std::numeric_limits<usize>::max()));
   return {std::move(reservation), std::max<usize>(1, std::min(totalValues, grantedBytes / sizeof(T)))};
@@ -79,7 +79,7 @@ inline Histogram InitializeHistogram(usize numBins, float64 min, float64 max)
  */
 inline void ConfigureHistogramBinning(Histogram& histogram)
 {
-  histogram.binWidth = 0.0;
+  histogram.bin_width = 0.0;
   const float64 range = histogram.max - histogram.min;
   if(range > 0.0)
   {
@@ -90,7 +90,7 @@ inline void ConfigureHistogramBinning(Histogram& histogram)
     // continuous-intensity data (the lower bound stays == min).
     constexpr float64 k_MarginalScale = 100.0;
     const float64 upper = histogram.max + range / (static_cast<float64>(histogram.counts.size()) * k_MarginalScale);
-    histogram.binWidth = (upper - histogram.min) / static_cast<float64>(histogram.counts.size());
+    histogram.bin_width = (upper - histogram.min) / static_cast<float64>(histogram.counts.size());
   }
 }
 
@@ -160,12 +160,12 @@ Result<Histogram> ComputeHistogram(const AbstractDataStore<T>& store, usize numB
     return {h};
   }
   detail::ConfigureHistogramBinning(h);
-  if(h.binWidth <= 0.0)
+  if(h.bin_width <= 0.0)
   {
     h.counts[0] = total; // degenerate range (min==max): all mass goes to bin 0
     return {h};
   }
-  const float64 invBinWidth = 1.0 / h.binWidth; // hoist: multiply per value, don't divide
+  const float64 invBinWidth = 1.0 / h.bin_width; // hoist: multiply per value, don't divide
   const int64 maxBin = static_cast<int64>(numBins) - 1;
 
   auto scanBuffer = detail::ReserveHistogramScanBuffer<T>(store, total, options);
@@ -319,7 +319,7 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
   histogram.min = static_cast<float64>(minValue);
   histogram.max = static_cast<float64>(maxValue);
   detail::ConfigureHistogramBinning(histogram);
-  if(histogram.binWidth <= 0.0)
+  if(histogram.bin_width <= 0.0)
   {
     histogram.counts[0] = total;
     return {histogram};
@@ -331,7 +331,7 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
     return ComputeHistogram(store, numBins, histogram.min, histogram.max, shouldCancel, options);
   }
 
-  const float64 invBinWidth = 1.0 / histogram.binWidth;
+  const float64 invBinWidth = 1.0 / histogram.bin_width;
   const int64 maxBin = static_cast<int64>(numBins) - 1;
   for(usize i = 0; i < k_RingSize; ++i)
   {
@@ -416,7 +416,7 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   }
 
   // Per-bin measurement value == bin midpoint (ITK Histogram::GetMeasurementVector(bin)[0]).
-  auto measurement = [&](usize bin) -> float64 { return h.min + (static_cast<float64>(bin) + 0.5) * h.binWidth; };
+  auto measurement = [&](usize bin) -> float64 { return h.min + (static_cast<float64>(bin) + 0.5) * h.bin_width; };
   auto frequency = [&](usize bin) -> float64 { return static_cast<float64>(h.counts[bin]); };
 
   const usize numberOfClasses = numThresholds + 1;
@@ -583,7 +583,7 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   for(usize t = 0; t < numThresholds; ++t)
   {
     const float64 offset = returnBinMidpoint ? 0.5 : 1.0;
-    thresholds[t] = h.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * h.binWidth;
+    thresholds[t] = h.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * h.bin_width;
   }
   return thresholds;
 }

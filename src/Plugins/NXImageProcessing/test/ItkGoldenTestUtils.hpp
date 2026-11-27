@@ -79,9 +79,9 @@ inline Result<> ReadInputImage(DataStructure& dataStructure, const fs::path& fil
     args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::make_any<std::string>(cellAmName));
     args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(arrayName));
     auto preflight = filter.preflight(dataStructure, args);
-    if(preflight.outputActions.invalid())
+    if(preflight.output_actions.invalid())
     {
-      return ConvertResult(std::move(preflight.outputActions));
+      return ConvertResult(std::move(preflight.output_actions));
     }
     return filter.execute(dataStructure, args).result;
   }
@@ -101,9 +101,9 @@ inline Result<> ReadInputImage(DataStructure& dataStructure, const fs::path& fil
     args.insertOrAssign(ReadMhaFileFilter::k_SaveImageTransformation_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadMhaFileFilter::k_TransformationMatrixPath_Key, std::make_any<DataPath>(geomPath.createChildPath("TransformationMatrix")));
     auto preflight = filter.preflight(dataStructure, args);
-    if(preflight.outputActions.invalid())
+    if(preflight.output_actions.invalid())
     {
-      return ConvertResult(std::move(preflight.outputActions));
+      return ConvertResult(std::move(preflight.output_actions));
     }
     return filter.execute(dataStructure, args).result;
   }
@@ -121,9 +121,9 @@ inline Result<> ReadInputImage(DataStructure& dataStructure, const fs::path& fil
     args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(CropGeometryParameter::ValueType{}));
     auto preflight = filter.preflight(dataStructure, args);
-    if(preflight.outputActions.invalid())
+    if(preflight.output_actions.invalid())
     {
-      return ConvertResult(std::move(preflight.outputActions));
+      return ConvertResult(std::move(preflight.output_actions));
     }
     return filter.execute(dataStructure, args).result;
   }
@@ -185,8 +185,8 @@ inline Result<> CompareImages(DataStructure& dataStructure, const DataPath& base
   }
   if(baselineImageGeomPtr->getDimensions() != outputImageGeomPtr->getDimensions())
   {
-    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", StringUtilities::formatDimensions3D(outputImageGeomPtr->getDimensions()),
-                                            StringUtilities::formatDimensions3D(baselineImageGeomPtr->getDimensions())));
+    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", string_utilities::FormatDimensions3D(outputImageGeomPtr->getDimensions()),
+                                            string_utilities::FormatDimensions3D(baselineImageGeomPtr->getDimensions())));
   }
   if(baselineDataArrayPtr->getIDataStoreRef().getTupleShape() != outputDataArrayPtr->getIDataStoreRef().getTupleShape())
   {

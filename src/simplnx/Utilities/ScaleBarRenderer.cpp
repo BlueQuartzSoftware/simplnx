@@ -101,7 +101,7 @@ constexpr std::array<std::pair<int32, const char*>, 17> k_EngineeringPrefixes = 
                                                                                   {24, "Ym"}}};
 } // namespace
 
-namespace nx::core::ScaleBarRenderer
+namespace nx::core::scale_bar_renderer
 {
 //------------------------------------------------------------------------------
 float64 ComputeNiceBarLength(usize imageWidthPixels, float64 unitsPerPixel)

@@ -385,7 +385,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
   }
 
   NrrdMetadata md;
-  md.filePath = pathStr;
+  md.file_path = pathStr;
   md.version = (line.size() >= 8 && std::isdigit(static_cast<unsigned char>(line[7])) != 0) ? (line[7] - '0') : 0;
 
   std::string typeStr;
@@ -407,7 +407,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     line = StripCR(line);
     if(line.empty())
     {
-      md.dataStartOffset = static_cast<usize>(in.tellg());
+      md.data_start_offset = static_cast<usize>(in.tellg());
       headerTerminated = true;
       break;
     }
@@ -575,10 +575,10 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     }
   }
 
-  md.dataType = typeInfo->first;
-  md.elementSize = typeInfo->second;
-  md.typeString = typeStr;
-  md.rawSizes = sizes;
+  md.data_type = typeInfo->first;
+  md.element_size = typeInfo->second;
+  md.type_string = typeStr;
+  md.raw_sizes = sizes;
 
   // ---- component (interleaved) axis detection: must be the fastest axis (axis 0) ----
   usize componentAxis = std::numeric_limits<usize>::max();
@@ -605,17 +605,17 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         -35707, fmt::format("NRRD '{}': the component/vector axis (index {}) must be the fastest axis (index 0) to map to interleaved simplnx components.", pathStr, componentAxis));
   }
   const bool hasComponentAxis = (componentAxis == 0);
-  md.componentCount = hasComponentAxis ? sizes[0] : 1;
+  md.component_count = hasComponentAxis ? sizes[0] : 1;
   const usize spatialStart = hasComponentAxis ? 1 : 0;
-  md.spatialDim = dimension - spatialStart;
-  if(md.spatialDim != 2 && md.spatialDim != 3)
+  md.spatial_dim = dimension - spatialStart;
+  if(md.spatial_dim != 2 && md.spatial_dim != 3)
   {
-    return MakeErrorResult<NrrdMetadata>(-35708, fmt::format("NRRD '{}': spatial dimension {} is unsupported (only 2D and 3D images are read).", pathStr, md.spatialDim));
+    return MakeErrorResult<NrrdMetadata>(-35708, fmt::format("NRRD '{}': spatial dimension {} is unsupported (only 2D and 3D images are read).", pathStr, md.spatial_dim));
   }
 
   // ---- dimensions [X,Y,Z] (Z=1 for 2D) ----
   md.dimensions = {1, 1, 1};
-  for(usize s = 0; s < md.spatialDim; s++)
+  for(usize s = 0; s < md.spatial_dim; s++)
   {
     md.dimensions[s] = sizes[spatialStart + s];
   }
@@ -624,7 +624,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
   md.spacing = {1.0f, 1.0f, 1.0f};
   if(!spaceDirTokens.empty())
   {
-    for(usize s = 0; s < md.spatialDim; s++)
+    for(usize s = 0; s < md.spatial_dim; s++)
     {
       const usize axis = spatialStart + s;
       if(axis >= spaceDirTokens.size())
@@ -659,14 +659,14 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         }
         if(std::fabs(vec[c]) > 1.0e-6 * std::max(mag, 1.0e-6))
         {
-          md.affineHasRotation = true;
+          md.affine_has_rotation = true;
         }
       }
     }
   }
   else if(!spacings.empty())
   {
-    for(usize s = 0; s < md.spatialDim; s++)
+    for(usize s = 0; s < md.spatial_dim; s++)
     {
       const usize axis = spatialStart + s;
       if(axis >= spacings.size())
@@ -679,7 +679,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
 
   // ---- origin ----
   md.origin = {0.0f, 0.0f, 0.0f};
-  for(usize s = 0; s < md.spatialDim && s < spaceOrigin.size(); s++)
+  for(usize s = 0; s < md.spatial_dim && s < spaceOrigin.size(); s++)
   {
     md.origin[s] = static_cast<float32>(spaceOrigin[s]);
   }
@@ -711,7 +711,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
   // this case ("type (...) and encoding (...) require endian info") rather than
   // assuming a default byte order, so we match that behavior exactly instead of
   // silently assuming host order (which would be a silent ITK divergence).
-  if(md.elementSize > 1)
+  if(md.element_size > 1)
   {
     if(endianStr.empty())
     {
@@ -719,8 +719,8 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
           -35713, fmt::format("NRRD '{}' stores a multi-byte type ('{}') with '{}' encoding but is missing the required 'endian' field (expected 'little' or 'big').", pathStr, typeStr, encodingStr));
     }
     const bool fileIsLittle = (endianStr == "little");
-    const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
-    md.byteSwapRequired = (fileIsLittle != hostIsLittle);
+    const bool hostIsLittle = (nx::core::CheckEndian() == nx::core::endian::little);
+    md.byte_swap_required = (fileIsLittle != hostIsLittle);
   }
 
   // ---- attached vs detached data ----
@@ -742,8 +742,8 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
       return MakeErrorResult<NrrdMetadata>(-35710, fmt::format("NRRD '{}': detached data file '{}' does not exist.", pathStr, df.string()));
     }
     md.detached = true;
-    md.dataFilePath = df;
-    md.dataStartOffset = 0;
+    md.data_file_path = df;
+    md.data_start_offset = 0;
   }
   else
   {
@@ -752,7 +752,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
       return MakeErrorResult<NrrdMetadata>(-35703, fmt::format("NRRD '{}' has no blank line terminating the header and no detached data file.", pathStr));
     }
     md.detached = false;
-    md.dataFilePath = filePath;
+    md.data_file_path = filePath;
   }
 
   return {md};
@@ -762,16 +762,16 @@ Result<std::unique_ptr<NrrdDataReader>> NrrdDataReader::Create(const NrrdMetadat
 {
   auto reader = std::unique_ptr<NrrdDataReader>(new NrrdDataReader());
   reader->m_Encoding = md.encoding;
-  reader->m_FilePath = md.dataFilePath.string();
-  reader->m_Stream.open(md.dataFilePath, std::ios::binary);
+  reader->m_FilePath = md.data_file_path.string();
+  reader->m_Stream.open(md.data_file_path, std::ios::binary);
   if(!reader->m_Stream.is_open())
   {
     return MakeErrorResult<std::unique_ptr<NrrdDataReader>>(-35730, fmt::format("Could not open NRRD data file for reading: '{}'", reader->m_FilePath));
   }
-  reader->m_Stream.seekg(static_cast<std::streamoff>(md.dataStartOffset), std::ios::beg);
+  reader->m_Stream.seekg(static_cast<std::streamoff>(md.data_start_offset), std::ios::beg);
   if(!reader->m_Stream.good())
   {
-    return MakeErrorResult<std::unique_ptr<NrrdDataReader>>(-35730, fmt::format("Failed to seek to NRRD data offset {} in '{}'", md.dataStartOffset, reader->m_FilePath));
+    return MakeErrorResult<std::unique_ptr<NrrdDataReader>>(-35730, fmt::format("Failed to seek to NRRD data offset {} in '{}'", md.data_start_offset, reader->m_FilePath));
   }
   if(md.encoding == Encoding::Gzip)
   {

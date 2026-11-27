@@ -17,8 +17,8 @@
 #include "SimplnxCore/Filters/ComputeFeatureClusteringFilter.hpp"
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 namespace fs = std::filesystem;
 
 namespace
@@ -41,24 +41,24 @@ Arguments CreateBinCountClusteringFixture(DataStructure& dataStructure, int32 nu
   auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, imageGeomPtr->getId());
   REQUIRE(ensemblesPtr != nullptr);
   const DataPath featuresPath({"BinCountGeometry", "Features"});
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featuresPath.createChildPath("Phases"), {4}, {1});
-  auto* phasesPtr = Int32Array::Create(dataStructure, "Phases", std::move(phasesStore), featuresPtr->getId());
+  auto phasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featuresPath.createChildPath("Phases"), {4}, {1});
+  auto* phasesPtr = Int32ArrayType::Create(dataStructure, "Phases", std::move(phasesStore), featuresPtr->getId());
   REQUIRE(phasesPtr != nullptr);
   const std::array<int32, 4> phases = {0, 1, 1, 1};
   for(usize index = 0; index < phases.size(); index++)
   {
     (*phasesPtr)[index] = phases[index];
   }
-  auto centroidsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, featuresPath.createChildPath("Centroids"), {4}, {3});
-  auto* centroidsPtr = Float32Array::Create(dataStructure, "Centroids", std::move(centroidsStore), featuresPtr->getId());
+  auto centroidsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, featuresPath.createChildPath("Centroids"), {4}, {3});
+  auto* centroidsPtr = Float32ArrayType::Create(dataStructure, "Centroids", std::move(centroidsStore), featuresPtr->getId());
   REQUIRE(centroidsPtr != nullptr);
   const std::array<float32, 12> centroids = {0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 0};
   for(usize index = 0; index < centroids.size(); index++)
   {
     (*centroidsPtr)[index] = centroids[index];
   }
-  auto biasedStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, featuresPath.createChildPath("Biased"), {4}, {1});
-  auto* biasedPtr = BoolArray::Create(dataStructure, "Biased", std::move(biasedStore), featuresPtr->getId());
+  auto biasedStore = data_store_utilities::CreateDataStore<bool>(dataStructure, featuresPath.createChildPath("Biased"), {4}, {1});
+  auto* biasedPtr = BoolArrayType::Create(dataStructure, "Biased", std::move(biasedStore), featuresPtr->getId());
   REQUIRE(biasedPtr != nullptr);
   biasedPtr->fill(false);
   Arguments args;
@@ -78,9 +78,9 @@ Arguments CreateBinCountClusteringFixture(DataStructure& dataStructure, int32 nu
 
 TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Valid Filter Execution", "[SimplnxCore][ComputeFeatureClusteringFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_clustering.tar.gz", "6_6_find_feature_clustering.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_clustering.tar.gz", "6_6_find_feature_clustering.dream3d");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_feature_clustering.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -106,7 +106,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Valid Filter Execution",
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -119,8 +119,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Valid Filter Execution",
   // In this data set some of the 999 distances from sample zero fall inside the RDF distance range,
   // so at least one bin must shrink.
   {
-    const auto& legacyRdf = dataStructure.getDataRefAs<Float32Array>(k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarRDF));
-    const auto& generatedRdf = dataStructure.getDataRefAs<Float32Array>(k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedRDF));
+    const auto& legacyRdf = dataStructure.getDataRefAs<Float32ArrayType>(k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarRDF));
+    const auto& generatedRdf = dataStructure.getDataRefAs<Float32ArrayType>(k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedRDF));
     REQUIRE(generatedRdf.getSize() == legacyRdf.getSize());
     usize lowerBins = 0;
     for(usize i = 0; i < generatedRdf.getSize(); i++)
@@ -136,14 +136,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Valid Filter Execution",
   }
   CompareArrays<float32>(dataStructure, k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarMinMaxDistances), k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedMinMaxDistances));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: InValid Filter Execution", "[SimplnxCore][ComputeFeatureClusteringFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_clustering.tar.gz", "6_6_find_feature_clustering.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_clustering.tar.gz", "6_6_find_feature_clustering.dream3d");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_feature_clustering.dream3d", unit_test::k_TestFilesDir));
@@ -170,19 +170,19 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: InValid Filter Execution
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureClusteringFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -236,11 +236,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: zero bins preflight", "[Simpln
   DataStructure dataStructure;
   const Arguments args = CreateBinCountClusteringFixture(dataStructure, 0);
   const auto result = ComputeFeatureClusteringFilter{}.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors().front().code == -54099);
-  CHECK(result.outputActions.errors().front().message == "Number of Bins for RDF must be at least 1, but was 0.");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors().front().code == -54099);
+  CHECK(result.output_actions.errors().front().message == "Number of Bins for RDF must be at least 1, but was 0.");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClustering: four bins control", "[SimplnxCore][ComputeFeatureClustering]")
@@ -252,14 +252,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: four bins control", "[SimplnxC
   args.insertOrAssign(ComputeFeatureClusteringFilter::k_RemoveBiasedFeatures_Key, std::make_any<bool>(removeBiasedFeatures));
   ComputeFeatureClusteringFilter filter;
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const DataPath outputPath({"BinCountGeometry", "Ensembles"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath.createChildPath("RDF")));
-  const auto& rdf = dataStructure.getDataRefAs<Float32Array>(outputPath.createChildPath("RDF"));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath.createChildPath("RDFMaxMinDistances")));
-  const auto& maxMin = dataStructure.getDataRefAs<Float32Array>(outputPath.createChildPath("RDFMaxMinDistances"));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath.createChildPath("RDF")));
+  const auto& rdf = dataStructure.getDataRefAs<Float32ArrayType>(outputPath.createChildPath("RDF"));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath.createChildPath("RDFMaxMinDistances")));
+  const auto& maxMin = dataStructure.getDataRefAs<Float32ArrayType>(outputPath.createChildPath("RDFMaxMinDistances"));
   REQUIRE(rdf.getSize() == 8);
   REQUIRE(maxMin.getSize() == 4);
   // Distances 1, 2, and 3 each occur twice. The last distance stays in the last bin.
@@ -277,7 +277,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: four bins control", "[SimplnxC
   {
     CHECK(maxMin[index] == expectedMaxMin[index]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClustering: negative bins preflight", "[SimplnxCore][ComputeFeatureClustering]")
@@ -285,11 +285,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: negative bins preflight", "[Si
   DataStructure dataStructure;
   const Arguments args = CreateBinCountClusteringFixture(dataStructure, -1);
   const auto result = ComputeFeatureClusteringFilter{}.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors().front().code == -54099);
-  CHECK(result.outputActions.errors().front().message == "Number of Bins for RDF must be at least 1, but was -1.");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors().front().code == -54099);
+  CHECK(result.output_actions.errors().front().message == "Number of Bins for RDF must be at least 1, but was -1.");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClustering: invalid bins execute leaves data unchanged", "[SimplnxCore][ComputeFeatureClustering]")
@@ -300,14 +300,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: invalid bins execute leaves da
   const Arguments args = CreateBinCountClusteringFixture(dataStructure, numberOfBins);
   const auto originalPaths = dataStructure.getAllDataPaths();
   const DataPath featuresPath({"BinCountGeometry", "Features"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featuresPath.createChildPath("Phases")));
-  const auto& phases = dataStructure.getDataRefAs<Int32Array>(featuresPath.createChildPath("Phases"));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featuresPath.createChildPath("Phases")));
+  const auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(featuresPath.createChildPath("Phases"));
   const std::vector<int32> originalPhases(phases.begin(), phases.end());
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(featuresPath.createChildPath("Centroids")));
-  const auto& centroids = dataStructure.getDataRefAs<Float32Array>(featuresPath.createChildPath("Centroids"));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(featuresPath.createChildPath("Centroids")));
+  const auto& centroids = dataStructure.getDataRefAs<Float32ArrayType>(featuresPath.createChildPath("Centroids"));
   const std::vector<float32> originalCentroids(centroids.begin(), centroids.end());
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(featuresPath.createChildPath("Biased")));
-  const auto& biased = dataStructure.getDataRefAs<BoolArray>(featuresPath.createChildPath("Biased"));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(featuresPath.createChildPath("Biased")));
+  const auto& biased = dataStructure.getDataRefAs<BoolArrayType>(featuresPath.createChildPath("Biased"));
   const std::vector<bool> originalBiased(biased.begin(), biased.end());
   IFilter::ExecuteResult result;
   REQUIRE_NOTHROW(result = ComputeFeatureClusteringFilter{}.execute(dataStructure, args));
@@ -319,7 +319,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: invalid bins execute leaves da
   CHECK(std::vector<int32>(phases.begin(), phases.end()) == originalPhases);
   CHECK(std::vector<float32>(centroids.begin(), centroids.end()) == originalCentroids);
   CHECK(std::vector<bool>(biased.begin(), biased.end()) == originalBiased);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClustering: RDF cache indices", "[SimplnxCore][ComputeFeatureClustering]")
@@ -335,8 +335,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureClustering: positive bin count domain", "[
   DataStructure dataStructure;
   const Arguments args = CreateBinCountClusteringFixture(dataStructure, numberOfBins);
   const auto preflight = ComputeFeatureClusteringFilter{}.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair normalization", "[SimplnxCore][ComputeFeatureClusteringFilter]")
@@ -350,8 +350,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair 
   REQUIRE(featuresPtr != nullptr);
   auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, "Ensembles", {2}, geometryPtr->getId());
   REQUIRE(ensemblesPtr != nullptr);
-  auto* phasesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {4}, {1}, featuresPtr->getId());
-  auto* centroidsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Centroids", {4}, {3}, featuresPtr->getId());
+  auto* phasesPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Phases", {4}, {1}, featuresPtr->getId());
+  auto* centroidsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Centroids", {4}, {3}, featuresPtr->getId());
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(centroidsPtr != nullptr);
   phasesPtr->fill(1);
@@ -372,15 +372,15 @@ TEST_CASE("SimplnxCore::ComputeFeatureClusteringFilter: Complete reference pair 
   args.insertOrAssign(ComputeFeatureClusteringFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Image", "Ensembles"})));
   args.insertOrAssign(ComputeFeatureClusteringFilter::k_RDFArrayName_Key, std::make_any<std::string>("RDF"));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Closed form: a one-voxel reference puts all 1000 * 999 ordered pairs at distance zero.
   // The three feature distances are 0, 0.5, 0.5. One bin contains all six ordered pairs.
   // Its reference probability is 1, so RDF = 6 / (1 * 3 * 2) = 1, independent of seed.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Image", "Ensembles", "RDF"})));
-  const auto& rdf = dataStructure.getDataRefAs<Float32Array>(DataPath({"Image", "Ensembles", "RDF"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Image", "Ensembles", "RDF"})));
+  const auto& rdf = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Image", "Ensembles", "RDF"}));
   REQUIRE(rdf[1] == Approx(1.0f).margin(1.0e-6f));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

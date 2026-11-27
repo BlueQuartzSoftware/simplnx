@@ -13,9 +13,9 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT WriteLAMMPSFileInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  DataPath VertexGeomPath;
-  DataPath AtomLabelsPath;
+  FileSystemPathParameter::ValueType output_file;
+  DataPath vertex_geom_path;
+  DataPath atom_labels_path;
 };
 
 /**

@@ -19,7 +19,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -52,7 +52,7 @@ std::vector<char> ReadIn(const fs::path& filePath)
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatureDataCSVFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   WriteFeatureDataCSVFilter filter;
   DataStructure dataStructure;
@@ -67,11 +67,11 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   neighborListPtr->setList(1, std::make_shared<std::vector<float32>>(list2));
   neighborListPtr->setList(2, std::make_shared<std::vector<float32>>(list3));
 
-  auto* dataArray1Ptr = UnitTest::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto* dataArray1Ptr = unit_test::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray1Ptr->fill(1.23);
-  auto* dataArray2Ptr = UnitTest::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto* dataArray2Ptr = unit_test::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray2Ptr->fill(-678);
-  auto* dataArray3Ptr = UnitTest::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto* dataArray3Ptr = unit_test::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray3Ptr->fill(24343);
 
   auto file = std::filesystem::path(fmt::format("{}/{}.csv", k_TestOutput, "CSV_Test"));
@@ -85,26 +85,26 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
 
   auto exemplarPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
   REQUIRE(fs::exists(exemplarPath));
 
   REQUIRE(ReadIn(file) == ReadIn(exemplarPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteFeatureDataCSVFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

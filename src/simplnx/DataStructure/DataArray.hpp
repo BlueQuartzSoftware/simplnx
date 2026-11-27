@@ -27,7 +27,7 @@ class NeighborList;
  * @namespace DataArrayConstants
  * @brief Contains DataArray constants.
  */
-namespace DataArrayConstants
+namespace data_array_constants
 {
 /**
  * @brief Names the generic DataArray type.
@@ -989,55 +989,55 @@ extern template bool DataArray<bool>::setValueFromString(usize tupleIndex, usize
 /**
  * @brief Names a uint8 data array.
  */
-using UInt8Array = DataArray<uint8>;
+using UInt8ArrayType = DataArray<uint8>;
 
 /**
  * @brief Names a uint16 data array.
  */
-using UInt16Array = DataArray<uint16>;
+using UInt16ArrayType = DataArray<uint16>;
 
 /**
  * @brief Names a uint32 data array.
  */
-using UInt32Array = DataArray<uint32>;
+using UInt32ArrayType = DataArray<uint32>;
 
 /**
  * @brief Names a uint64 data array.
  */
-using UInt64Array = DataArray<uint64>;
+using UInt64ArrayType = DataArray<uint64>;
 
 /**
  * @brief Names an int8 data array.
  */
-using Int8Array = DataArray<int8>;
+using Int8ArrayType = DataArray<int8>;
 
 /**
  * @brief Names an int16 data array.
  */
-using Int16Array = DataArray<int16>;
+using Int16ArrayType = DataArray<int16>;
 
 /**
  * @brief Names an int32 data array.
  */
-using Int32Array = DataArray<int32>;
+using Int32ArrayType = DataArray<int32>;
 
 /**
  * @brief Names an int64 data array.
  */
-using Int64Array = DataArray<int64>;
+using Int64ArrayType = DataArray<int64>;
 
 /**
  * @brief Names a float32 data array.
  */
-using Float32Array = DataArray<float32>;
+using Float32ArrayType = DataArray<float32>;
 
 /**
  * @brief Names a float64 data array.
  */
-using Float64Array = DataArray<float64>;
+using Float64ArrayType = DataArray<float64>;
 
 /**
  * @brief Names a bool data array.
  */
-using BoolArray = DataArray<bool>;
+using BoolArrayType = DataArray<bool>;
 } // namespace nx::core

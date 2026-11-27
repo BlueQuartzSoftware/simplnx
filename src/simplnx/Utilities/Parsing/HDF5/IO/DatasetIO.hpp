@@ -38,11 +38,11 @@ class GroupIO;
  */
 struct SIMPLNX_EXPORT ChunkedDataInfo
 {
-  hid_t dataType = 0;
-  hid_t datasetId = 0;
-  hid_t dataspaceId = 0;
-  hid_t transferProp = 0;
-  hid_t chunkProp = 0;
+  hid_t data_type = 0;
+  hid_t dataset_id = 0;
+  hid_t dataspace_id = 0;
+  hid_t transfer_prop = 0;
+  hid_t chunk_prop = 0;
 };
 
 /**
@@ -281,7 +281,7 @@ public:
    * @param datasetInfo Provides handles to close.
    * @return First HDF5 close error, or success.
    */
-  static nx::core::Result<> closeChunkedDataset(const ChunkedDataInfo& datasetInfo);
+  static nx::core::Result<> CloseChunkedDataset(const ChunkedDataInfo& datasetInfo);
 
   /**
    * @brief Reads one chunk selection through open chunk handles.

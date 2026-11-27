@@ -49,7 +49,7 @@ TEST_CASE("NXImageProcessing::Plugin exposes ITK->new Threshold redirect", "[NXI
 {
   // This test verifies the replacement map while both image-processing plugins are loaded.
   // The pipeline tests use isolated FilterLists to verify the fallback path.
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto plugins = Application::Instance()->getFilterList()->getLoadedPlugins();
   const AbstractPlugin* pluginPtr = nullptr;
   for(const auto* candidatePtr : plugins)
@@ -73,7 +73,7 @@ TEST_CASE("NXImageProcessing::Plugin exposes ITK->new Threshold redirect", "[NXI
 
 TEST_CASE("NXImageProcessing::Plugin owns Write Image and exposes the ITK writer fallback", "[NXImageProcessing][WriteImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const auto plugins = Application::Instance()->getFilterList()->getLoadedPlugins();
   const AbstractPlugin* nxImageProcessingPluginPtr = nullptr;
@@ -136,7 +136,7 @@ TEST_CASE("NXImageProcessing::ITK reader pipeline UUID redirect (ITKImageProcess
 
   // Sanity: the ITK plugin is absent from this list, so a legacy reader UUID does NOT resolve
   // directly -- the redirect fallback is what must resolve it.
-  REQUIRE(filterList->createFilter(NXImageProcessingLegacyUuids::k_ITKImageReader) == nullptr);
+  REQUIRE(filterList->createFilter(nx_image_processing_legacy_uuids::k_ITKImageReader) == nullptr);
 
   SECTION("ITKImageReader -> ReadImage (identical parameter keys)")
   {
@@ -144,7 +144,7 @@ TEST_CASE("NXImageProcessing::ITK reader pipeline UUID redirect (ITKImageProcess
     args[ReadImageFilter::k_ImageDataArrayPath_Key.str()] = "RedirectedImageData";
     args[ReadImageFilter::k_CellDataName_Key.str()] = "RedirectedCellData";
 
-    const nlohmann::json node = MakeSavedFilterNode(NXImageProcessingLegacyUuids::k_ITKImageReader, args);
+    const nlohmann::json node = MakeSavedFilterNode(nx_image_processing_legacy_uuids::k_ITKImageReader, args);
     Result<std::unique_ptr<PipelineFilter>> result = PipelineFilter::FromJson(node, *filterList);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -164,7 +164,7 @@ TEST_CASE("NXImageProcessing::ITK reader pipeline UUID redirect (ITKImageProcess
     // Non-default value on a transform parameter (default is false) proves the transform-key mapping.
     args[ReadMhaFileFilter::k_ApplyImageTransformation_Key.str()] = true;
 
-    const nlohmann::json node = MakeSavedFilterNode(NXImageProcessingLegacyUuids::k_ITKMhaFileReader, args);
+    const nlohmann::json node = MakeSavedFilterNode(nx_image_processing_legacy_uuids::k_ITKMhaFileReader, args);
     Result<std::unique_ptr<PipelineFilter>> result = PipelineFilter::FromJson(node, *filterList);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -183,7 +183,7 @@ TEST_CASE("NXImageProcessing::ITK reader pipeline UUID redirect (ITKImageProcess
     args[ReadImageStackFilter::k_ImageDataArrayPath_Key.str()] = "StackRedirectedData";
     args[ReadImageStackFilter::k_CellDataName_Key.str()] = "StackRedirectedCellData";
 
-    const nlohmann::json node = MakeSavedFilterNode(NXImageProcessingLegacyUuids::k_ITKImportImageStack, args);
+    const nlohmann::json node = MakeSavedFilterNode(nx_image_processing_legacy_uuids::k_ITKImportImageStack, args);
     Result<std::unique_ptr<PipelineFilter>> result = PipelineFilter::FromJson(node, *filterList);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -202,7 +202,7 @@ TEST_CASE("NXImageProcessing::ITK reader pipeline UUID redirect (ITKImageProcess
     args[ImportFijiMontageFilter::k_DataGroupName_Key.str()] = "RedirectedMontageGroup";
     args[ImportFijiMontageFilter::k_ImageDataArrayName_Key.str()] = "RedirectedMontageImage";
 
-    const nlohmann::json node = MakeSavedFilterNode(NXImageProcessingLegacyUuids::k_ITKImportFijiMontage, args);
+    const nlohmann::json node = MakeSavedFilterNode(nx_image_processing_legacy_uuids::k_ITKImportFijiMontage, args);
     Result<std::unique_ptr<PipelineFilter>> result = PipelineFilter::FromJson(node, *filterList);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
 

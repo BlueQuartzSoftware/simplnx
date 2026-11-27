@@ -43,7 +43,7 @@ std::vector<float32> RunChamfer(std::vector<float32> field, usize dx, usize dy, 
   }
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ApplyFastChamferDistance(store, SizeVec3{dx, dy, dz}, maxDist, shouldCancel, messageHandler, negateOutput);
+  const Result<> r = ApplyFastChamferDistance(store, SizeVec3Type{dx, dy, dz}, maxDist, shouldCancel, messageHandler, negateOutput);
   REQUIRE(r.valid());
   std::vector<float32> out(field.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -189,7 +189,7 @@ std::vector<float32> RunChamferEngine(const std::vector<float32>& field, usize d
   }
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  FastChamferDistance engine(store, SizeVec3{dx, dy, dz}, maxDist, shouldCancel, messageHandler, ImageProcessing::detail::k_Chamfer2DResidentLimit, negate, rowGroupRows);
+  FastChamferDistance engine(store, SizeVec3Type{dx, dy, dz}, maxDist, shouldCancel, messageHandler, ImageProcessing::detail::k_Chamfer2DResidentLimit, negate, rowGroupRows);
   const Result<> result = engine();
   REQUIRE(result.valid());
   std::vector<float32> output(field.size());
@@ -347,7 +347,7 @@ class ScopedBudget
 {
 public:
   explicit ScopedBudget(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -473,7 +473,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: deterministic", "[NXIma
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: fused output negation is exact", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
-  for(const SizeVec3& dims : {SizeVec3{7, 6, 5}, SizeVec3{9, 8, 1}})
+  for(const SizeVec3Type& dims : {SizeVec3Type{7, 6, 5}, SizeVec3Type{9, 8, 1}})
   {
     const usize valueCount = dims[0] * dims[1] * dims[2];
     std::vector<float32> field(valueCount, 51.0f);
@@ -516,18 +516,18 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: resident state requires
   constexpr usize k_SliceValues = k_DimX * k_DimY;
   constexpr usize k_ValueCount = k_SliceValues * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateFastChamferResidentWorkingMemoryBytes(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == k_ValueCount * sizeof(float32));
-  const auto overflowResult = ImageProcessing::detail::CalculateFastChamferResidentWorkingMemoryBytes(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  const auto overflowResult = ImageProcessing::detail::CalculateFastChamferResidentWorkingMemoryBytes(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseFastChamferResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFastChamferResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseFastChamferResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(256 * k_MiB);
@@ -554,46 +554,46 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: 2D planner bounds row b
 {
   const auto benchmark = ImageProcessing::detail::BuildChamfer2DBufferPlan(5888, 5888);
   REQUIRE(benchmark.valid);
-  REQUIRE(benchmark.coreCols == 5888);
-  REQUIRE(benchmark.coreRows > 1);
-  REQUIRE(benchmark.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
+  REQUIRE(benchmark.core_cols == 5888);
+  REQUIRE(benchmark.core_rows > 1);
+  REQUIRE(benchmark.resident_bytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
 
   const auto stress = ImageProcessing::detail::BuildChamfer2DBufferPlan(16385, 1025);
   REQUIRE(stress.valid);
-  REQUIRE(stress.coreCols == 16385);
-  REQUIRE(stress.coreRows > 0);
-  REQUIRE(stress.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
+  REQUIRE(stress.core_cols == 16385);
+  REQUIRE(stress.core_rows > 0);
+  REQUIRE(stress.resident_bytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
 
   for(const auto dimensions : {std::array<usize, 2>{1, 16385}, std::array<usize, 2>{16385, 1}})
   {
     const auto oneDimensional = ImageProcessing::detail::BuildChamfer2DBufferPlan(dimensions[0], dimensions[1]);
     CAPTURE(dimensions[0], dimensions[1]);
     REQUIRE(oneDimensional.valid);
-    REQUIRE(oneDimensional.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
+    REQUIRE(oneDimensional.resident_bytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
   }
 
   const auto overwide = ImageProcessing::detail::BuildChamfer2DBufferPlan(100000000, 2);
   REQUIRE(overwide.valid);
-  REQUIRE(overwide.coreCols < 100000000);
-  REQUIRE(overwide.coreRows == 1);
-  REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
+  REQUIRE(overwide.core_cols < 100000000);
+  REQUIRE(overwide.core_rows == 1);
+  REQUIRE(overwide.resident_bytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
 
   constexpr usize k_SmallLimit = 4500;
   const auto forcedTiled = ImageProcessing::detail::BuildChamfer2DBufferPlan(100, 8, k_SmallLimit);
   REQUIRE(forcedTiled.valid);
-  REQUIRE(forcedTiled.coreCols < 100);
-  REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
+  REQUIRE(forcedTiled.core_cols < 100);
+  REQUIRE(forcedTiled.core_rows == 1);
+  REQUIRE(forcedTiled.resident_bytes <= k_SmallLimit);
 
   constexpr usize k_OneColumnTileLimit = ImageProcessing::detail::k_Chamfer2DFixedStateBytes + ImageProcessing::detail::k_Chamfer2DMaxTileRecords * sizeof(float32);
   const auto oneColumnTiles = ImageProcessing::detail::BuildChamfer2DBufferPlan(9, 7, k_OneColumnTileLimit);
   REQUIRE(oneColumnTiles.valid);
-  REQUIRE(oneColumnTiles.coreCols == 1);
-  REQUIRE(oneColumnTiles.residentBytes == k_OneColumnTileLimit);
+  REQUIRE(oneColumnTiles.core_cols == 1);
+  REQUIRE(oneColumnTiles.resident_bytes == k_OneColumnTileLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildChamfer2DBufferPlan(1, 1);
   REQUIRE(oneCell.valid);
-  REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
+  REQUIRE(oneCell.resident_bytes <= ImageProcessing::detail::k_Chamfer2DResidentLimit);
 }
 
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: 2D planner rejects invalid and overflow dimensions", "[NXImageProcessing][FastChamferDistanceEngine]")
@@ -612,9 +612,9 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: 2D planner rejects inva
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: row-group wavefront is bit-identical to the serial recurrence", "[NXImageProcessing][FastChamferDistanceEngine]")
 {
   STATIC_REQUIRE(ImageProcessing::detail::k_ChamferRowGroupRows == 8);
-  const std::array<SizeVec3, 12> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 5}, SizeVec3{5, 1, 1},    SizeVec3{1, 7, 1},  SizeVec3{2, 2, 2},  SizeVec3{3, 3, 3},
-                                               SizeVec3{7, 6, 5}, SizeVec3{9, 8, 1}, SizeVec3{17, 13, 11}, SizeVec3{33, 9, 7}, SizeVec3{5, 40, 3}, SizeVec3{6, 30, 20}};
-  for(const SizeVec3& dims : dimensions)
+  const std::array<SizeVec3Type, 12> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 5}, SizeVec3Type{5, 1, 1},    SizeVec3Type{1, 7, 1},  SizeVec3Type{2, 2, 2},  SizeVec3Type{3, 3, 3},
+                                               SizeVec3Type{7, 6, 5}, SizeVec3Type{9, 8, 1}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 3}, SizeVec3Type{6, 30, 20}};
+  for(const SizeVec3Type& dims : dimensions)
   {
     const usize dx = dims[0];
     const usize dy = dims[1];
@@ -660,7 +660,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: in-core resident path p
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> result = ApplyFastChamferDistance(store, SizeVec3{k_DimX, k_DimY, k_DimZ}, k_MaxDist, shouldCancel, messageHandler);
+  const Result<> result = ApplyFastChamferDistance(store, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_MaxDist, shouldCancel, messageHandler);
   REQUIRE(result.valid());
   REQUIRE(store.readValues() == 0);
   REQUIRE(store.writtenValues() == 0);
@@ -677,7 +677,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: pre-cancelled run leave
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ApplyFastChamferDistance(store, SizeVec3{k_DimX, k_DimY, k_DimZ}, 50.0f, shouldCancel, messageHandler);
+  const Result<> result = ApplyFastChamferDistance(store, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, 50.0f, shouldCancel, messageHandler);
   REQUIRE(result.valid());
   for(const float32 value : store)
   {
@@ -690,11 +690,11 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: pre-cancelled run leave
 TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: bounded 3-D route matches the serial recurrence across plane blocks", "[NXImageProcessing][FastChamferDistanceEngine][WorkingMemory]")
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = 4;
-  config.maxRecordsPerBatch = 1;
-  config.initialRecordCount = 1;
+  config.record_size = 4;
+  config.max_records_per_batch = 1;
+  config.initial_record_count = 1;
   {
-    auto scratchResult = DataStoreUtilities::CreateTemporaryRecordStore(config);
+    auto scratchResult = data_store_utilities::CreateTemporaryRecordStore(config);
     if(scratchResult.invalid())
     {
       SUCCEED("no temporary record store provider in this build configuration");
@@ -706,7 +706,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: bounded 3-D route match
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 40;
   constexpr float32 k_MaxDist = 50.0f;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<float32> field = MakeRandomField(k_DimX, k_DimY, k_DimZ, k_MaxDist, 0x2468ACE0u);
   const ScopedBudget budget(4096);
 
@@ -726,7 +726,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: bounded 3-D route match
     RequireBitIdentical(ReadStoreValues(store), ReferenceChamfer(field, k_DimX, k_DimY, k_DimZ, k_MaxDist, negate));
     REQUIRE(store.readCount() == 3);
     REQUIRE(store.writeCount() == 3);
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 }
 
@@ -736,7 +736,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: complete-grant route co
   constexpr usize k_DimY = 6;
   constexpr usize k_DimZ = 40;
   constexpr float32 k_MaxDist = 50.0f;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<float32> field = MakeRandomField(k_DimX, k_DimY, k_DimZ, k_MaxDist, 0x2468ACE0u);
   const ScopedBudget budget(1024ULL * 1024ULL * 1024ULL);
 
@@ -756,6 +756,6 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: complete-grant route co
     RequireBitIdentical(ReadStoreValues(store), ReferenceChamfer(field, k_DimX, k_DimY, k_DimZ, k_MaxDist, negate));
     REQUIRE(store.readCount() == 1);
     REQUIRE(store.writeCount() == 1);
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 }

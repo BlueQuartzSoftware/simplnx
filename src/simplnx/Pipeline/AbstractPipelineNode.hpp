@@ -31,8 +31,8 @@ public:
   // they contain.
   friend class Pipeline;
 
-  using RenamedPath = std::pair<DataPath, DataPath>;
-  using RenamedPaths = std::vector<RenamedPath>;
+  using RenamedPathType = std::pair<DataPath, DataPath>;
+  using RenamedPathsType = std::vector<RenamedPathType>;
 
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
@@ -66,7 +66,7 @@ public:
   FilterFaultSignalType& getFilterFaultSignal();
   void sendFilterFaultMessage(int32_t filterIndex, FaultState state);
 
-  using FilterFaultDetailSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, WarningCollection, ErrorCollection)>;
+  using FilterFaultDetailSignalType = nod::signal<void(AbstractPipelineNode*, int32_t, WarningCollectionType, ErrorCollectionType)>;
   const FilterFaultDetailSignalType& getFilterFaultDetailSignal() const;
   FilterFaultDetailSignalType& getFilterFaultDetailSignal();
   /**
@@ -75,7 +75,7 @@ public:
    * @param warnings Warning details in execution order.
    * @param errors Error details in execution order.
    */
-  void sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors);
+  void sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollectionType& warnings, const ErrorCollectionType& errors);
 
   using CancelledSignalType = nod::signal<void()>;
   const CancelledSignalType& getCancelledSignal() const;
@@ -142,7 +142,7 @@ public:
    * @param allowRenaming
    * @return bool
    */
-  virtual bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) = 0;
+  virtual bool preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.

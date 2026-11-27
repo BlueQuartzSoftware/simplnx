@@ -107,7 +107,7 @@ public:
    * Error -4008 indicates nonfinite values. Error -4007 indicates bounds that fail to increase.
    * Store read errors also propagate.
    */
-  [[nodiscard]] Result<> setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds);
+  [[nodiscard]] Result<> setBounds(const Float32ArrayType* xBounds, const Float32ArrayType* yBounds, const Float32ArrayType* zBounds);
 
   static constexpr int32 k_NonfiniteBounds = -4008;
   static constexpr int32 k_NonscalarBounds = -4048;
@@ -124,136 +124,136 @@ public:
    * Error -4008 indicates nonfinite values. Error -4007 indicates bounds that fail to increase.
    * Store read errors also propagate.
    */
-  [[nodiscard]] static Result<> ValidateBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds, const FloatVec3& translation = {});
+  [[nodiscard]] static Result<> ValidateBounds(const Float32ArrayType* xBounds, const Float32ArrayType* yBounds, const Float32ArrayType* zBounds, const FloatVec3Type& translation = {});
 
   /**
    * @brief Returns a pointer to the X coordinate bounds array.
    * @return Float32Array* Pointer to the X bounds, or nullptr if not available
    */
-  Float32Array* getXBounds();
+  Float32ArrayType* getXBounds();
 
   /**
    * @brief Returns a pointer to the Y coordinate bounds array.
    * @return Float32Array* Pointer to the Y bounds, or nullptr if not available
    */
-  Float32Array* getYBounds();
+  Float32ArrayType* getYBounds();
 
   /**
    * @brief Returns a pointer to the Z coordinate bounds array.
    * @return Float32Array* Pointer to the Z bounds, or nullptr if not available
    */
-  Float32Array* getZBounds();
+  Float32ArrayType* getZBounds();
 
   /**
    * @brief Returns a const pointer to the X coordinate bounds array.
    * @return const Float32Array* Const pointer to the X bounds, or nullptr if not available
    */
-  const Float32Array* getXBounds() const;
+  const Float32ArrayType* getXBounds() const;
 
   /**
    * @brief Returns a const pointer to the Y coordinate bounds array.
    * @return const Float32Array* Const pointer to the Y bounds, or nullptr if not available
    */
-  const Float32Array* getYBounds() const;
+  const Float32ArrayType* getYBounds() const;
 
   /**
    * @brief Returns a const pointer to the Z coordinate bounds array.
    * @return const Float32Array* Const pointer to the Z bounds, or nullptr if not available
    */
-  const Float32Array* getZBounds() const;
+  const Float32ArrayType* getZBounds() const;
 
   /**
    * @brief Returns a reference to the X coordinate bounds array.
    * @return Float32Array& Reference to the X bounds
    */
-  Float32Array& getXBoundsRef();
+  Float32ArrayType& getXBoundsRef();
 
   /**
    * @brief Returns a reference to the Y coordinate bounds array.
    * @return Float32Array& Reference to the Y bounds
    */
-  Float32Array& getYBoundsRef();
+  Float32ArrayType& getYBoundsRef();
 
   /**
    * @brief Returns a reference to the Z coordinate bounds array.
    * @return Float32Array& Reference to the Z bounds
    */
-  Float32Array& getZBoundsRef();
+  Float32ArrayType& getZBoundsRef();
 
   /**
    * @brief Returns a const reference to the X coordinate bounds array.
    * @return const Float32Array& Const reference to the X bounds
    */
-  const Float32Array& getXBoundsRef() const;
+  const Float32ArrayType& getXBoundsRef() const;
 
   /**
    * @brief Returns a const reference to the Y coordinate bounds array.
    * @return const Float32Array& Const reference to the Y bounds
    */
-  const Float32Array& getYBoundsRef() const;
+  const Float32ArrayType& getYBoundsRef() const;
 
   /**
    * @brief Returns a const reference to the Z coordinate bounds array.
    * @return const Float32Array& Const reference to the Z bounds
    */
-  const Float32Array& getZBoundsRef() const;
+  const Float32ArrayType& getZBoundsRef() const;
 
   /**
    * @brief Returns the optional ID of the X bounds array.
    * @return OptionalId The X bounds ID if it exists
    */
-  OptionalId getXBoundsId() const;
+  OptionalIdType getXBoundsId() const;
 
   /**
    * @brief Returns the optional ID of the Y bounds array.
    * @return OptionalId The Y bounds ID if it exists
    */
-  OptionalId getYBoundsId() const;
+  OptionalIdType getYBoundsId() const;
 
   /**
    * @brief Returns the optional ID of the Z bounds array.
    * @return OptionalId The Z bounds ID if it exists
    */
-  OptionalId getZBoundsId() const;
+  OptionalIdType getZBoundsId() const;
 
   /**
    * @brief Sets the ID of the X bounds array.
    * @param xBoundsId The optional ID of the X bounds array
    * Use only for ID remapping or deferred import. Validate populated bounds with setBounds().
    */
-  void setXBoundsId(const OptionalId& xBoundsId);
+  void setXBoundsId(const OptionalIdType& xBoundsId);
 
   /**
    * @brief Sets the ID of the Y bounds array.
    * @param yBoundsId The optional ID of the Y bounds array
    * Use only for ID remapping or deferred import. Validate populated bounds with setBounds().
    */
-  void setYBoundsId(const OptionalId& yBoundsId);
+  void setYBoundsId(const OptionalIdType& yBoundsId);
 
   /**
    * @brief Sets the ID of the Z bounds array.
    * @param zBoundsId The optional ID of the Z bounds array
    * Use only for ID remapping or deferred import. Validate populated bounds with setBounds().
    */
-  void setZBoundsId(const OptionalId& zBoundsId);
+  void setZBoundsId(const OptionalIdType& zBoundsId);
 
   /**
    * @brief Returns a shared pointer to the X coordinate bounds array.
    * @return std::shared_ptr<Float32Array> Shared pointer to the X bounds
    */
-  std::shared_ptr<Float32Array> getSharedXBounds();
+  std::shared_ptr<Float32ArrayType> getSharedXBounds();
 
   /**
    * @brief Returns a shared pointer to the Y coordinate bounds array.
    * @return std::shared_ptr<Float32Array> Shared pointer to the Y bounds
    */
-  std::shared_ptr<Float32Array> getSharedYBounds();
+  std::shared_ptr<Float32ArrayType> getSharedYBounds();
 
   /**
    * @brief Returns a shared pointer to the Z coordinate bounds array.
    * @return std::shared_ptr<Float32Array> Shared pointer to the Z bounds
    */
-  std::shared_ptr<Float32Array> getSharedZBounds();
+  std::shared_ptr<Float32ArrayType> getSharedZBounds();
 
   /**
    * @brief Returns the total number of cells in the grid.
@@ -287,19 +287,19 @@ public:
    * @brief Sets the dimensions of the grid geometry.
    * @param dims The new dimensions in X, Y, and Z
    */
-  void setDimensions(const SizeVec3& dims) override;
+  void setDimensions(const SizeVec3Type& dims) override;
 
   /**
    * @brief Returns the dimensions of the grid geometry.
    * @return SizeVec3 The dimensions in X, Y, and Z
    */
-  SizeVec3 getDimensions() const override;
+  SizeVec3Type getDimensions() const override;
 
   /**
    * @brief Returns the origin coordinates (minimum bounds) of the grid.
    * @return Result<FloatVec3> The origin coordinates or an error
    */
-  Result<FloatVec3> getOrigin() const;
+  Result<FloatVec3Type> getOrigin() const;
 
   /**
    * @brief Returns the number of cells in the X dimension.
@@ -455,6 +455,6 @@ private:
   std::optional<IdType> m_XBoundsId;
   std::optional<IdType> m_YBoundsId;
   std::optional<IdType> m_ZBoundsId;
-  SizeVec3 m_Dimensions;
+  SizeVec3Type m_Dimensions;
 };
 } // namespace nx::core

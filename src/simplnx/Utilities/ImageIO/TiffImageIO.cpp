@@ -151,7 +151,7 @@ Result<DataType> DetermineTiffDataType(TIFF* tiff)
 
 // Decode each uint8_t tile through libTiff's RGBA converter.
 // Reuse one tile raster and one converted row to keep memory bounded.
-Result<> ReadTiledUInt8Rows(const TiffFile& tiffFile, const std::string& pathStr, uint32_t width, uint32_t height, uint16_t samplesPerPixel, const IImageIO::ReadRowCallback& callback)
+Result<> ReadTiledUInt8Rows(const TiffFile& tiffFile, const std::string& pathStr, uint32_t width, uint32_t height, uint16_t samplesPerPixel, const IImageIO::ReadRowCallbackType& callback)
 {
   TIFF* tiffPtr = tiffFile.get();
   if(samplesPerPixel == 0 || samplesPerPixel > 4)
@@ -327,12 +327,12 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   ImageMetadata metadata;
   metadata.width = static_cast<usize>(width);
   metadata.height = static_cast<usize>(height);
-  metadata.numComponents = static_cast<usize>(samplesPerPixel);
-  metadata.dataType = dataTypeResult.value();
+  metadata.num_components = static_cast<usize>(samplesPerPixel);
+  metadata.data_type = dataTypeResult.value();
   // Count only real pages, excluding reduced-resolution / mask subfiles, to match ITK.
   // CollectPageDirectories() restores the TIFF to directory 0, so the origin/spacing reads
   // below still come from directory 0.
-  metadata.numPages = CollectPageDirectories(tiffPtr).size();
+  metadata.num_pages = CollectPageDirectories(tiffPtr).size();
 
   // X and Y position tags supply optional origin metadata.
   float xPosition = 0.0f;
@@ -348,7 +348,7 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
   }
   if(hasOrigin)
   {
-    metadata.origin = FloatVec3(xPosition, yPosition, 0.0f);
+    metadata.origin = FloatVec3Type(xPosition, yPosition, 0.0f);
   }
 
   // X and Y resolution tags supply optional spacing metadata.
@@ -361,7 +361,7 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
     // A missing resolution uses unit spacing. Preserve a stored zero for validation.
     const float32 xSpacing = hasXResolution ? (xRes == 0.0F ? 0.0F : 1.0F / xRes) : 1.0F;
     const float32 ySpacing = hasYResolution ? (yRes == 0.0F ? 0.0F : 1.0F / yRes) : 1.0F;
-    metadata.spacing = FloatVec3(xSpacing, ySpacing, 1.0F);
+    metadata.spacing = FloatVec3Type(xSpacing, ySpacing, 1.0F);
   }
 
   return {std::move(metadata)};
@@ -376,8 +376,8 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
     return ConvertResult(std::move(metadataResult));
   }
   const ImageMetadata& metadata = metadataResult.value();
-  const usize bytesPerElement = GetDataTypeSize(metadata.dataType);
-  const usize rowBytes = metadata.width * metadata.numComponents * bytesPerElement;
+  const usize bytesPerElement = GetDataTypeSize(metadata.data_type);
+  const usize rowBytes = metadata.width * metadata.num_components * bytesPerElement;
   const usize expectedSize = rowBytes * metadata.height;
   if(buffer.size() != expectedSize)
   {
@@ -387,8 +387,8 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
   return readPixelDataRows(
       filePath,
       [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8_t> pixels) -> Result<> {
-        const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bytesPerElement;
-        const usize byteCount = pixelCount * metadata.numComponents * bytesPerElement;
+        const usize byteOffset = row * rowBytes + columnOffset * metadata.num_components * bytesPerElement;
+        const usize byteCount = pixelCount * metadata.num_components * bytesPerElement;
         std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
         return {};
       },
@@ -396,7 +396,7 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
 }
 
 // -----------------------------------------------------------------------------
-Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex) const
+Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallbackType& callback, usize pageIndex) const
 {
   const std::string pathStr = filePath.string();
   TiffFile tiffFile(pathStr, "r");
@@ -527,13 +527,13 @@ Result<> TiffImageIO::readPixelDataRows(const std::filesystem::path& filePath, c
 
 Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std::span<const uint8_t> buffer, const ImageMetadata& metadata) const
 {
-  if(metadata.dataType != DataType::uint8 && metadata.dataType != DataType::uint16 && metadata.dataType != DataType::float32)
+  if(metadata.data_type != DataType::uint8 && metadata.data_type != DataType::uint16 && metadata.data_type != DataType::float32)
   {
     return MakeErrorResult(k_ErrorUnsupportedFormat, fmt::format("Unsupported data type for TIFF writing to '{}'. Supported: uint8_t, uint16, float32.", filePath.string()));
   }
-  usize bpe = GetDataTypeSize(metadata.dataType);
+  usize bpe = GetDataTypeSize(metadata.data_type);
 
-  usize expectedSize = metadata.width * metadata.height * metadata.numComponents * bpe;
+  usize expectedSize = metadata.width * metadata.height * metadata.num_components * bpe;
   if(buffer.size() != expectedSize)
   {
     return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for TIFF write to '{}'", buffer.size(), expectedSize, filePath.string()));
@@ -550,7 +550,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
 
   uint32_t w = static_cast<uint32_t>(metadata.width);
   uint32_t h = static_cast<uint32_t>(metadata.height);
-  uint16_t comp = static_cast<uint16_t>(metadata.numComponents);
+  uint16_t comp = static_cast<uint16_t>(metadata.num_components);
 
   // TIFFSetField returns zero on failure. Most required-tag failures indicate an unwritable handle.
   if(TIFFSetField(tiffPtr, TIFFTAG_IMAGEWIDTH, w) == 0 || TIFFSetField(tiffPtr, TIFFTAG_IMAGELENGTH, h) == 0 || TIFFSetField(tiffPtr, TIFFTAG_SAMPLESPERPIXEL, comp) == 0 ||
@@ -562,7 +562,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
 
   // The value type determines the bit width and TIFF sample format.
   bool fieldsSet = false;
-  switch(metadata.dataType)
+  switch(metadata.data_type)
   {
   case DataType::uint8:
     fieldsSet = TIFFSetField(tiffPtr, TIFFTAG_BITSPERSAMPLE, 8) != 0 && TIFFSetField(tiffPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0;
@@ -600,7 +600,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
   // Position tags are optional. A tag failure does not invalidate pixel output.
   if(metadata.origin.has_value())
   {
-    const FloatVec3& origin = metadata.origin.value();
+    const FloatVec3Type& origin = metadata.origin.value();
     TIFFSetField(tiffPtr, TIFFTAG_XPOSITION, origin[0]);
     TIFFSetField(tiffPtr, TIFFTAG_YPOSITION, origin[1]);
   }
@@ -608,7 +608,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
   // Store positive spacing as its pixels-per-unit resolution.
   if(metadata.spacing.has_value())
   {
-    const FloatVec3& spacing = metadata.spacing.value();
+    const FloatVec3Type& spacing = metadata.spacing.value();
     float32 xRes = (spacing[0] > 0.0f) ? (1.0f / spacing[0]) : 1.0f;
     float32 yRes = (spacing[1] > 0.0f) ? (1.0f / spacing[1]) : 1.0f;
     TIFFSetField(tiffPtr, TIFFTAG_XRESOLUTION, xRes);

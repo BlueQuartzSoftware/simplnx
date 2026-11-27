@@ -11,7 +11,7 @@ using namespace nx::core;
 
 namespace
 {
-bool ValidNeighbor(const SizeVec3& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
+bool ValidNeighbor(const SizeVec3Type& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
 {
   int64 modX = x + neighborhood[3 * index + 0];
   int64 modY = y + neighborhood[3 * index + 1];
@@ -36,14 +36,14 @@ ApproximatePointCloudHull::ApproximatePointCloudHull(DataStructure& dataStructur
 // -----------------------------------------------------------------------------
 Result<> ApproximatePointCloudHull::operator()()
 {
-  float inverseResolution[3] = {1.0f / m_InputValues->GridResolution[0], 1.0f / m_InputValues->GridResolution[1], 1.0f / m_InputValues->GridResolution[2]};
+  float inverseResolution[3] = {1.0f / m_InputValues->grid_resolution[0], 1.0f / m_InputValues->grid_resolution[1], 1.0f / m_InputValues->grid_resolution[2]};
 
-  auto* sourcePtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->InputVertexGeometryPath);
+  auto* sourcePtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->input_vertex_geometry_path);
   auto* vertsPtr = sourcePtr->getVertices();
 
   DataStructure temp;
   auto* samplingGridPtr = ImageGeom::Create(temp, "Image Geometry");
-  if(auto result = samplingGridPtr->setSpacing(m_InputValues->GridResolution[0], m_InputValues->GridResolution[1], m_InputValues->GridResolution[2]); result.invalid())
+  if(auto result = samplingGridPtr->setSpacing(m_InputValues->grid_resolution[0], m_InputValues->grid_resolution[1], m_InputValues->grid_resolution[2]); result.invalid())
   {
     return result;
   }
@@ -84,7 +84,7 @@ Result<> ApproximatePointCloudHull::operator()()
   auto dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
   auto dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
   auto dims3 = static_cast<usize>(bboxMax[2] - bboxMin[2] + 1);
-  SizeVec3 dims(std::vector<usize>{dims1, dims2, dims3});
+  SizeVec3Type dims(std::vector<usize>{dims1, dims2, dims3});
   samplingGridPtr->setDimensions(dims);
 
   int64 multiplier[3] = {1, static_cast<int64>(samplingGridPtr->getNumXCells()), static_cast<int64>(samplingGridPtr->getNumXCells() * samplingGridPtr->getNumYCells())};
@@ -155,7 +155,7 @@ Result<> ApproximatePointCloudHull::operator()()
           }
         }
 
-        if(emtpyNeighbors > m_InputValues->MinEmptyNeighbors)
+        if(emtpyNeighbors > m_InputValues->min_empty_neighbors)
         {
           for(auto vert : vertsInVoxels[index])
           {
@@ -180,7 +180,7 @@ Result<> ApproximatePointCloudHull::operator()()
     progressThrottle.updateCount(z + 1);
   }
 
-  auto* hullPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
+  auto* hullPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->output_vertex_geometry_path);
   Result<> resizeResult = hullPtr->resizeVertexList(tmpVerts.size() / 3);
   if(resizeResult.invalid())
   {

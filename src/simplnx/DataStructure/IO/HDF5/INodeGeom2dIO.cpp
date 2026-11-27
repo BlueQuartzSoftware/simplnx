@@ -22,9 +22,9 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
 
   auto groupReader = parentGroup.openGroup(objectName);
 
-  geometry.setFaceListId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
-  geometry.setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
-  geometry.setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
+  geometry.setFaceListId(ReadDataId(groupReader, io_constants::k_FaceListTag));
+  geometry.setFaceDataId(ReadDataId(groupReader, io_constants::k_FaceDataTag));
+  geometry.setUnsharedEdgesId(ReadDataId(groupReader, io_constants::k_UnsharedEdgeListTag));
 
   return {};
 }
@@ -50,19 +50,19 @@ Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWr
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceListId(), IOConstants::k_FaceListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceListId(), io_constants::k_FaceListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceAttributeMatrixId(), IOConstants::k_FaceDataTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceAttributeMatrixId(), io_constants::k_FaceDataTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getUnsharedEdgesId(), IOConstants::k_UnsharedEdgeListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getUnsharedEdgesId(), io_constants::k_UnsharedEdgeListTag));
   if(result.invalid())
   {
     return result;

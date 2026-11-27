@@ -46,7 +46,7 @@ constexpr usize k_ValidationChunkTuples = 65536;
  * @param inputValues Provides DataPaths for error diagnostics.
  * @return Success, or an error for invalid Phase indices or bulk I/O.
  */
-Result<> ValidateReferencedFeaturePhases(const Int32Array& faceLabelsArrayRef, const Int32Array& featurePhasesArrayRef, const UInt32Array& crystalStructuresArrayRef,
+Result<> ValidateReferencedFeaturePhases(const Int32ArrayType& faceLabelsArrayRef, const Int32ArrayType& featurePhasesArrayRef, const UInt32ArrayType& crystalStructuresArrayRef,
                                          const ComputeFaceIPFColoringInputValues& inputValues)
 {
   const usize numFeatures = featurePhasesArrayRef.getNumberOfTuples();
@@ -82,8 +82,8 @@ Result<> ValidateReferencedFeaturePhases(const Int32Array& faceLabelsArrayRef, c
         {
           return MakeErrorResult(-24341, fmt::format("Feature Phases array '{}' has value {} at Feature index {}, referenced by face {} side {}, but Crystal Structures array '{}' contains {} tuples. "
                                                      "Valid positive Phase indices are in [1, {}).",
-                                                     inputValues.FeaturePhasesArrayPath.toString(), currentPhaseIdx, featureIdx, faceOffset + chunkFaceIdx, faceSideIdx,
-                                                     inputValues.CrystalStructuresArrayPath.toString(), numCrystalStructures, numCrystalStructures));
+                                                     inputValues.feature_phases_array_path.toString(), currentPhaseIdx, featureIdx, faceOffset + chunkFaceIdx, faceSideIdx,
+                                                     inputValues.crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
         }
       }
     }
@@ -98,18 +98,18 @@ Result<> ValidateReferencedFeaturePhases(const Int32Array& faceLabelsArrayRef, c
  */
 class CalculateFaceIPFColorsImpl
 {
-  const Int32Array& m_FaceLabels;
-  const Int32Array& m_FeaturePhases;
-  const Float64Array& m_FaceNormals;
-  const Float32Array& m_FeatureEulerAngles;
-  const UInt32Array& m_CrystalStructures;
-  UInt8Array& m_FirstColors;
-  UInt8Array& m_SecondColors;
+  const Int32ArrayType& m_FaceLabels;
+  const Int32ArrayType& m_FeaturePhases;
+  const Float64ArrayType& m_FaceNormals;
+  const Float32ArrayType& m_FeatureEulerAngles;
+  const UInt32ArrayType& m_CrystalStructures;
+  UInt8ArrayType& m_FirstColors;
+  UInt8ArrayType& m_SecondColors;
   ebsdlib::ColorKeyKind m_ColorKey;
 
 public:
-  CalculateFaceIPFColorsImpl(const Int32Array& faceLabels, const Int32Array& featurePhases, const Float64Array& faceNormals, const Float32Array& featureEulerAngles,
-                             const UInt32Array& crystalStructures, UInt8Array& firstColors, UInt8Array& secondColors, ebsdlib::ColorKeyKind colorKey)
+  CalculateFaceIPFColorsImpl(const Int32ArrayType& faceLabels, const Int32ArrayType& featurePhases, const Float64ArrayType& faceNormals, const Float32ArrayType& featureEulerAngles,
+                             const UInt32ArrayType& crystalStructures, UInt8ArrayType& firstColors, UInt8ArrayType& secondColors, ebsdlib::ColorKeyKind colorKey)
   : m_FaceLabels(faceLabels)
   , m_FeaturePhases(featurePhases)
   , m_FaceNormals(faceNormals)
@@ -128,7 +128,7 @@ public:
 
     double refDir[3] = {0.0, 0.0, 0.0};
     double dEuler[3] = {0.0, 0.0, 0.0};
-    Rgba argb = 0x00000000;
+    RgbaType argb = 0x00000000;
 
     int32 firstFeatureIdx = 0;
     int32 secondFeatureIdx = 0;
@@ -169,9 +169,9 @@ public:
           refDir[2] = m_FaceNormals[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
-          m_FirstColors[3 * faceIdx] = RgbColor::dRed(argb);
-          m_FirstColors[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
-          m_FirstColors[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
+          m_FirstColors[3 * faceIdx] = rgb_color::DRed(argb);
+          m_FirstColors[(3 * faceIdx) + 1] = rgb_color::DGreen(argb);
+          m_FirstColors[(3 * faceIdx) + 2] = rgb_color::DBlue(argb);
         }
       }
       else // A face side without a positive Phase receives black.
@@ -195,9 +195,9 @@ public:
           refDir[2] = -m_FaceNormals[(3 * faceIdx) + 2];
 
           argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
-          m_SecondColors[3 * faceIdx] = RgbColor::dRed(argb);
-          m_SecondColors[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
-          m_SecondColors[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
+          m_SecondColors[3 * faceIdx] = rgb_color::DRed(argb);
+          m_SecondColors[(3 * faceIdx) + 1] = rgb_color::DGreen(argb);
+          m_SecondColors[(3 * faceIdx) + 2] = rgb_color::DBlue(argb);
         }
       }
       else
@@ -221,8 +221,8 @@ public:
 
 namespace
 {
-Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int32Array& phases, const Float64Array& faceNormals, const Float32Array& eulerAngles, const UInt32Array& structures,
-                                        UInt8Array& firstColors, UInt8Array& secondColors, const ComputeFaceIPFColoringInputValues& inputValues, const std::atomic_bool& shouldCancel)
+Result<> CalculateFaceIPFColorsInBlocks(const Int32ArrayType& faceLabels, const Int32ArrayType& phases, const Float64ArrayType& faceNormals, const Float32ArrayType& eulerAngles, const UInt32ArrayType& structures,
+                                        UInt8ArrayType& firstColors, UInt8ArrayType& secondColors, const ComputeFaceIPFColoringInputValues& inputValues, const std::atomic_bool& shouldCancel)
 {
   const usize numTriangles = faceLabels.getNumberOfTuples();
   if(shouldCancel || numTriangles == 0)
@@ -232,36 +232,36 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
   using namespace orientation::detail;
   constexpr usize k_FaceBytes = (2 * sizeof(int32)) + (3 * sizeof(float64)) + (6 * sizeof(uint8));
   auto planResult = PlanLookups(
-      {.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 3, .FaceBytes = k_FaceBytes}, -24359);
+      {.face_count = numTriangles, .feature_count = phases.getNumberOfTuples(), .ensemble_count = structures.getNumberOfTuples(), .orientation_components = 3, .face_bytes = k_FaceBytes}, -24359);
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
   // This owner precedes every buffer, so the reservation outlives their payloads.
   auto plan = std::move(planResult.value());
-  const usize bufferTriangles = plan.FaceCapacity;
-  const bool wholeTables = plan.CacheWholeTables;
+  const usize bufferTriangles = plan.face_capacity;
+  const bool wholeTables = plan.cache_whole_tables;
   Result<> result;
   std::vector<int32> featurePhases(wholeTables ? phases.getSize() : bufferTriangles * 2);
   std::vector<float32> featureEulerAngles(wholeTables ? eulerAngles.getSize() : bufferTriangles * 6);
   std::vector<uint32> crystalStructures(wholeTables ? structures.getSize() : bufferTriangles * 2);
   std::vector<usize> lookupOrder(wholeTables ? 0 : bufferTriangles * 2);
-  std::vector<int32> phasePage(plan.PageCapacity);
-  std::vector<float32> eulerPage(plan.PageCapacity * 3);
-  std::vector<uint32> structurePage(plan.PageCapacity);
+  std::vector<int32> phasePage(plan.page_capacity);
+  std::vector<float32> eulerPage(plan.page_capacity * 3);
+  std::vector<uint32> structurePage(plan.page_capacity);
   if(wholeTables)
   {
-    result = MergeResults(std::move(result), ReadLookupTable<int32>(phases.getDataStoreRef(), featurePhases, -24350, inputValues.FeaturePhasesArrayPath));
+    result = MergeResults(std::move(result), ReadLookupTable<int32>(phases.getDataStoreRef(), featurePhases, -24350, inputValues.feature_phases_array_path));
     if(result.invalid())
     {
       return result;
     }
-    result = MergeResults(std::move(result), ReadLookupTable<float32>(eulerAngles.getDataStoreRef(), featureEulerAngles, -24351, inputValues.FeatureEulerAnglesArrayPath));
+    result = MergeResults(std::move(result), ReadLookupTable<float32>(eulerAngles.getDataStoreRef(), featureEulerAngles, -24351, inputValues.feature_euler_angles_array_path));
     if(result.invalid())
     {
       return result;
     }
-    result = MergeResults(std::move(result), ReadLookupTable<uint32>(structures.getDataStoreRef(), crystalStructures, -24352, inputValues.CrystalStructuresArrayPath));
+    result = MergeResults(std::move(result), ReadLookupTable<uint32>(structures.getDataStoreRef(), crystalStructures, -24352, inputValues.crystal_structures_array_path));
     if(result.invalid())
     {
       return result;
@@ -306,19 +306,19 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
     {
       const nonstd::span<const int32> labels(faceLabelsBuffer.data(), count * 2);
       result = MergeResults(std::move(result),
-                            GatherLookupTuples<int32, 1>(phases.getDataStoreRef(), labels, lookupOrder, featurePhases, phasePage, shouldCancel, -24350, inputValues.FeaturePhasesArrayPath));
+                            GatherLookupTuples<int32, 1>(phases.getDataStoreRef(), labels, lookupOrder, featurePhases, phasePage, shouldCancel, -24350, inputValues.feature_phases_array_path));
       if(result.invalid() || shouldCancel)
       {
         return result;
       }
       result = MergeResults(std::move(result), GatherLookupTuples<float32, 3>(eulerAngles.getDataStoreRef(), labels, lookupOrder, featureEulerAngles, eulerPage, shouldCancel, -24351,
-                                                                              inputValues.FeatureEulerAnglesArrayPath, true));
+                                                                              inputValues.feature_euler_angles_array_path, true));
       if(result.invalid() || shouldCancel)
       {
         return result;
       }
       result = MergeResults(std::move(result), GatherLookupTuples<uint32, 1>(structures.getDataStoreRef(), {featurePhases.data(), count * 2}, lookupOrder, crystalStructures, structurePage,
-                                                                             shouldCancel, -24352, inputValues.CrystalStructuresArrayPath));
+                                                                             shouldCancel, -24352, inputValues.crystal_structures_array_path));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -329,7 +329,7 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
 
     std::array<double, 3> refDir{};
     std::array<double, 3> dEuler{};
-    Rgba argb = 0x00000000;
+    RgbaType argb = 0x00000000;
 
     int32 firstFeatureIdx = 0;
     int32 secondFeatureIdx = 0;
@@ -370,10 +370,10 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
           refDir[1] = faceNormalsBuffer[(3 * faceIdx) + 1];
           refDir[2] = faceNormalsBuffer[(3 * faceIdx) + 2];
 
-          argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.ColorKey);
-          firstColorsBuffer[3 * faceIdx] = RgbColor::dRed(argb);
-          firstColorsBuffer[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
-          firstColorsBuffer[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
+          argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.color_key);
+          firstColorsBuffer[3 * faceIdx] = rgb_color::DRed(argb);
+          firstColorsBuffer[(3 * faceIdx) + 1] = rgb_color::DGreen(argb);
+          firstColorsBuffer[(3 * faceIdx) + 2] = rgb_color::DBlue(argb);
         }
       }
       else // A face side without a positive Phase receives black.
@@ -397,10 +397,10 @@ Result<> CalculateFaceIPFColorsInBlocks(const Int32Array& faceLabels, const Int3
           refDir[1] = -faceNormalsBuffer[(3 * faceIdx) + 1];
           refDir[2] = -faceNormalsBuffer[(3 * faceIdx) + 2];
 
-          argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.ColorKey);
-          secondColorsBuffer[3 * faceIdx] = RgbColor::dRed(argb);
-          secondColorsBuffer[(3 * faceIdx) + 1] = RgbColor::dGreen(argb);
-          secondColorsBuffer[(3 * faceIdx) + 2] = RgbColor::dBlue(argb);
+          argb = orientationOps[currentLaueIndex]->generateIPFColor(dEuler.data(), refDir.data(), false, inputValues.color_key);
+          secondColorsBuffer[3 * faceIdx] = rgb_color::DRed(argb);
+          secondColorsBuffer[(3 * faceIdx) + 1] = rgb_color::DGreen(argb);
+          secondColorsBuffer[(3 * faceIdx) + 2] = rgb_color::DBlue(argb);
         }
       }
       else
@@ -441,15 +441,15 @@ ComputeFaceIPFColoring::ComputeFaceIPFColoring(DataStructure& dataStructure, con
 // -----------------------------------------------------------------------------
 Result<> ComputeFaceIPFColoring::operator()()
 {
-  auto& faceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  auto& faceNormalsArrayRef = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceNormalsArrayPath);
-  auto& featureEulerAnglesArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
-  auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  DataPath firstIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->FirstFaceIPFColorsArrayName);
-  auto& firstIpfColorsArrayRef = m_DataStructure.getDataRefAs<UInt8Array>(firstIpfColorsArrayPath);
-  DataPath secondIpfColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->SecondFaceIPFColorsArrayName);
-  auto& secondIpfColorsArrayRef = m_DataStructure.getDataRefAs<UInt8Array>(secondIpfColorsArrayPath);
+  auto& faceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_array_path);
+  auto& faceNormalsArrayRef = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_normals_array_path);
+  auto& featureEulerAnglesArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_euler_angles_array_path);
+  auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  DataPath firstIpfColorsArrayPath = m_InputValues->surface_mesh_face_labels_array_path.replaceName(m_InputValues->first_face_ipf_colors_array_name);
+  auto& firstIpfColorsArrayRef = m_DataStructure.getDataRefAs<UInt8ArrayType>(firstIpfColorsArrayPath);
+  DataPath secondIpfColorsArrayPath = m_InputValues->surface_mesh_face_labels_array_path.replaceName(m_InputValues->second_face_ipf_colors_array_name);
+  auto& secondIpfColorsArrayRef = m_DataStructure.getDataRefAs<UInt8ArrayType>(secondIpfColorsArrayPath);
   const int64 numTriangles = faceLabelsArrayRef.getNumberOfTuples();
 
   if(Result<> validationResult = ValidateReferencedFeaturePhases(faceLabelsArrayRef, featurePhasesArrayRef, crystalStructuresArrayRef, *m_InputValues); validationResult.invalid())
@@ -467,7 +467,7 @@ Result<> ComputeFaceIPFColoring::operator()()
                                           secondIpfColorsArrayRef, *m_InputValues, m_ShouldCancel);
   }
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename IParallelAlgorithm::AlgorithmArraysType algArrays;
   algArrays.push_back(&faceLabelsArrayRef);
   algArrays.push_back(&faceNormalsArrayRef);
   algArrays.push_back(&featureEulerAnglesArrayRef);
@@ -483,7 +483,7 @@ Result<> ComputeFaceIPFColoring::operator()()
   // Keep parallelization disabled to match ComputeFeatureFaceMisorientation.
   parallelTask.setParallelizationEnabled(false);
   parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabelsArrayRef, featurePhasesArrayRef, faceNormalsArrayRef, featureEulerAnglesArrayRef, crystalStructuresArrayRef, firstIpfColorsArrayRef,
-                                                  secondIpfColorsArrayRef, m_InputValues->ColorKey));
+                                                  secondIpfColorsArrayRef, m_InputValues->color_key));
 
   return {};
 }

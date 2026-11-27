@@ -29,7 +29,7 @@ bool PlaceholderFilter::preflight(DataStructure& /*dataStructure*/, const std::a
   return true;
 }
 
-bool PlaceholderFilter::preflight(DataStructure& /*dataStructure*/, RenamedPaths& /*renamedPaths*/, const std::atomic_bool& /*shouldCancel*/, bool /*allowRenaming*/)
+bool PlaceholderFilter::preflight(DataStructure& /*dataStructure*/, RenamedPathsType& /*renamedPaths*/, const std::atomic_bool& /*shouldCancel*/, bool /*allowRenaming*/)
 {
   return true;
 }

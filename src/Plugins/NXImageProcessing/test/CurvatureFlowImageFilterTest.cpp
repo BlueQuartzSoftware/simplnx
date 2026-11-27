@@ -34,7 +34,7 @@ void RunCurvatureFlow(IFilter& filter, DataStructure& dataStructure, const DataP
   args.insertOrAssign(CurvFilterType::k_TimeStep_Key, std::make_any<float64>(timeStep));
   args.insertOrAssign(CurvFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -65,15 +65,15 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: preflight guards", "[NXImageProcessing][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -85,8 +85,8 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: preflight guards", "[NXI
     args.insertOrAssign(CurvFilterType::k_TimeStep_Key, std::make_any<float64>(0.05));
     args.insertOrAssign(CurvFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input creates a SameAsInput output")
   {
@@ -126,8 +126,8 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (l
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-op", "[NXImageProcessing][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;

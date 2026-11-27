@@ -17,7 +17,7 @@ namespace
 class CalculateCentroidsImpl
 {
 public:
-  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& centroids, const std::atomic_bool& shouldCancel)
+  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStoreType& centroids, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Centroids(centroids)
   , m_ShouldCancel(shouldCancel)
@@ -34,7 +34,7 @@ public:
         break;
       }
 
-      std::array<FloatVec3, 3> vertCoords;
+      std::array<FloatVec3Type, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
       m_Centroids[triangleIndex * 3] = (vertCoords[0].getX() + vertCoords[1].getX() + vertCoords[2].getX()) / 3.0F;
@@ -50,7 +50,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64AbstractDataStore& m_Centroids;
+  Float64AbstractDataStoreType& m_Centroids;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -76,11 +76,11 @@ const std::atomic_bool& TriangleCentroid::getCancel()
 Result<> TriangleCentroid::operator()()
 {
 
-  const TriangleGeom* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryDataPath);
+  const TriangleGeom* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangle_geometry_data_path);
   const AttributeMatrix& faceAttributeMatrix = triangleGeomPtr->getFaceAttributeMatrixRef();
 
-  const DataPath pCentroidsPath = m_InputValues->TriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->CentroidsArrayName);
-  auto& centroidsStore = m_DataStructure.getDataAs<Float64Array>(pCentroidsPath)->getDataStoreRef();
+  const DataPath pCentroidsPath = m_InputValues->triangle_geometry_data_path.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->centroids_array_name);
+  auto& centroidsStore = m_DataStructure.getDataAs<Float64ArrayType>(pCentroidsPath)->getDataStoreRef();
 
   // Parallel algorithm to calculate the centroids
   ParallelDataAlgorithm dataAlg;

@@ -243,7 +243,7 @@ std::vector<LineSegment> FillPolygonWithParallelLines(const std::vector<float>& 
  * Pre-bucketed indexes avoid scanning the complete CAD edge list for each
  * region-slice pair.
  */
-void ExtractRegion(const INodeGeometry0D::SharedVertexList& vertices, const INodeGeometry1D::SharedEdgeList& edges, nonstd::span<const usize> regionSliceEdgeIndices, std::vector<float>& outVertices,
+void ExtractRegion(const INodeGeometry0D::SharedVertexListType& vertices, const INodeGeometry1D::SharedEdgeListType& edges, nonstd::span<const usize> regionSliceEdgeIndices, std::vector<float>& outVertices,
                    std::vector<usize>& outEdges)
 {
   outVertices.clear();
@@ -343,14 +343,14 @@ const std::atomic_bool& CreateAMScanPaths::getCancel()
 
 Result<> CreateAMScanPaths::operator()()
 {
-  auto& cadLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->CADSliceDataContainerName);
-  INodeGeometry1D::SharedEdgeList& outlineEdges = cadLayers.getEdgesRef();
-  INodeGeometry0D::SharedVertexList& outlineVertices = cadLayers.getVerticesRef();
-  auto& cadSliceIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath)->getDataStoreRef();
-  auto& cadRegionIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath)->getDataStoreRef();
+  auto& cadLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->cad_slice_data_container_name);
+  INodeGeometry1D::SharedEdgeListType& outlineEdges = cadLayers.getEdgesRef();
+  INodeGeometry0D::SharedVertexListType& outlineVertices = cadLayers.getVerticesRef();
+  auto& cadSliceIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cad_slice_ids_array_path)->getDataStoreRef();
+  auto& cadRegionIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cad_region_ids_array_path)->getDataStoreRef();
   usize numCADLayerEdges = cadLayers.getNumberOfEdges();
 
-  auto& hatchesEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->HatchDataContainerName);
+  auto& hatchesEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->hatch_data_container_name);
   Result<> resizeResult = hatchesEdgeGeom.resizeEdgeList(0ULL);
   if(resizeResult.invalid())
   {
@@ -362,12 +362,12 @@ Result<> CreateAMScanPaths::operator()()
     return resizeResult;
   }
 
-  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& hatchVertsDataStore = hatchesEdgeGeom.getVertices()->getDataStoreRef();
-  AbstractDataStore<INodeGeometry1D::SharedEdgeList::value_type>& hatchesDataStore = hatchesEdgeGeom.getEdges()->getDataStoreRef();
+  AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>& hatchVertsDataStore = hatchesEdgeGeom.getVertices()->getDataStoreRef();
+  AbstractDataStore<INodeGeometry1D::SharedEdgeListType::value_type>& hatchesDataStore = hatchesEdgeGeom.getEdges()->getDataStoreRef();
 
-  const DataPath hatchAttributeMatrixPath = m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->HatchAttributeMatrixName);
-  auto& hatchSliceIdsDataStore = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->CADSliceIdsArrayPath.getTargetName()))->getDataStoreRef();
-  auto& hatchRegionIdsDataStore = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->RegionIdsArrayName))->getDataStoreRef();
+  const DataPath hatchAttributeMatrixPath = m_InputValues->hatch_data_container_name.createChildPath(m_InputValues->hatch_attribute_matrix_name);
+  auto& hatchSliceIdsDataStore = m_DataStructure.getDataAs<Int32ArrayType>(hatchAttributeMatrixPath.createChildPath(m_InputValues->cad_slice_ids_array_path.getTargetName()))->getDataStoreRef();
+  auto& hatchRegionIdsDataStore = m_DataStructure.getDataAs<Int32ArrayType>(hatchAttributeMatrixPath.createChildPath(m_InputValues->region_ids_array_name))->getDataStoreRef();
 
   int32 numCADLayers = 0;
   int32 numCADRegions = 0;
@@ -407,10 +407,10 @@ Result<> CreateAMScanPaths::operator()()
 
       ExtractRegion(outlineVertices, outlineEdges, sliceBucketsForRegion[sliceId], outVertices, outEdges);
 
-      regionHatches[sliceId] = ::FillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->HatchSpacing, angle);
+      regionHatches[sliceId] = ::FillPolygonWithParallelLines(outVertices, outEdges, m_InputValues->hatch_spacing, angle);
 
       // printRegionSliceFiles(regionId, sliceId, regionHatches[sliceId]);
-      angle = angle + m_InputValues->SliceHatchRotationAngle;
+      angle = angle + m_InputValues->slice_hatch_rotation_angle;
     }
 
     usize currentNumVerts = hatchVertsDataStore.getNumberOfTuples();

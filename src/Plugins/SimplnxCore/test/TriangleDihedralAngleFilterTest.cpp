@@ -33,7 +33,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -43,32 +43,32 @@ constexpr usize k_VertexCompCount = 3;
 constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
 
-const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedVertexListType* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
   auto* dataStructurePtr = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
-  auto* dataArrPtr = IGeometry::SharedVertexList::Create(*dataStructurePtr, "Vertices", std::move(dataStore), parentId);
+  auto* dataArrPtr = IGeometry::SharedVertexListType::Create(*dataStructurePtr, "Vertices", std::move(dataStore), parentId);
   REQUIRE(dataArrPtr != nullptr);
-  return dynamic_cast<IGeometry::SharedVertexList*>(dataArrPtr);
+  return dynamic_cast<IGeometry::SharedVertexListType*>(dataArrPtr);
 }
 
-const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedFaceListType* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
 {
   auto* dataStructurePtr = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
-  auto* dataArrPtr = IGeometry::SharedFaceList::Create(*dataStructurePtr, "Faces", std::move(dataStore), parentId);
+  auto* dataArrPtr = IGeometry::SharedFaceListType::Create(*dataStructurePtr, "Faces", std::move(dataStore), parentId);
   REQUIRE(dataArrPtr != nullptr);
-  return dynamic_cast<IGeometry::SharedFaceList*>(dataArrPtr);
+  return dynamic_cast<IGeometry::SharedFaceListType*>(dataArrPtr);
 }
 
 } // namespace
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCore][TriangleDihedralAngleFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
@@ -121,7 +121,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -131,7 +131,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(triangleDihedralAnglesDataPath));
 
   std::vector<float64> officialDihedralAngleMinimums = {53.1301002502441, 18.4349555969238, 0.0, 0.0};
-  Float64Array& calculatedDihedralAngleMinimums = dataStructure.getDataRefAs<Float64Array>(triangleDihedralAnglesDataPath);
+  Float64ArrayType& calculatedDihedralAngleMinimums = dataStructure.getDataRefAs<Float64ArrayType>(triangleDihedralAnglesDataPath);
 
   auto debug1 = calculatedDihedralAngleMinimums[0];
   auto debug2 = calculatedDihedralAngleMinimums[1];
@@ -146,13 +146,13 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   auto result4 = fabs(officialDihedralAngleMinimums[3] - calculatedDihedralAngleMinimums[3]);
   REQUIRE(result4 < ::k_MaxDifference);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: SIMPL Backwards Compatibility", "[SimplnxCore][TriangleDihedralAngleFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -398,7 +398,7 @@ struct DihedralFixture
 {
   DataStructure data_structure;
   TriangleGeom* geometry_ptr = nullptr;
-  Float32Array* vertices_ptr = nullptr;
+  Float32ArrayType* vertices_ptr = nullptr;
   DataArray<IGeometry::MeshIndexType>* faces_ptr = nullptr;
   AttributeMatrix* face_data_ptr = nullptr;
   AttributeMatrix* vertex_data_ptr = nullptr;
@@ -427,12 +427,12 @@ struct DihedralFixture
     }
     else
     {
-      verticesStore = DataStoreUtilities::CreateDataStore<float32>(data_structure, k_DihedralVerticesPath, {11}, {3});
-      facesStore = DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(data_structure, k_DihedralFacesPath, {faceCount}, {3});
+      verticesStore = data_store_utilities::CreateDataStore<float32>(data_structure, k_DihedralVerticesPath, {11}, {3});
+      facesStore = data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(data_structure, k_DihedralFacesPath, {faceCount}, {3});
     }
     REQUIRE(verticesStore != nullptr);
     REQUIRE(facesStore != nullptr);
-    vertices_ptr = Float32Array::Create(data_structure, "Vertices", verticesStore, geometry_ptr->getId());
+    vertices_ptr = Float32ArrayType::Create(data_structure, "Vertices", verticesStore, geometry_ptr->getId());
     faces_ptr = DataArray<IGeometry::MeshIndexType>::Create(data_structure, "Faces", facesStore, geometry_ptr->getId());
     REQUIRE(vertices_ptr != nullptr);
     REQUIRE(faces_ptr != nullptr);
@@ -468,10 +468,10 @@ struct DihedralFixture
     return args;
   }
 
-  Float64Array& output()
+  Float64ArrayType& output()
   {
-    REQUIRE_NOTHROW(data_structure.getDataRefAs<Float64Array>(k_DihedralOutputPath));
-    return data_structure.getDataRefAs<Float64Array>(k_DihedralOutputPath);
+    REQUIRE_NOTHROW(data_structure.getDataRefAs<Float64ArrayType>(k_DihedralOutputPath));
+    return data_structure.getDataRefAs<Float64ArrayType>(k_DihedralOutputPath);
   }
 };
 
@@ -543,7 +543,7 @@ void CheckDihedralFixture(DihedralFixture& fixture, usize completedFaces)
     CAPTURE(faceIndex, angle, completedFaces);
     CHECK(MatchesDihedralAngle(angle, DihedralFixtureRow(faceIndex), faceIndex < completedFaces));
   }
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 /**
@@ -552,15 +552,15 @@ void CheckDihedralFixture(DihedralFixture& fixture, usize completedFaces)
  * @param state Outlives the fixture and records the direct algorithm's transfers.
  * @return The created resident output array.
  */
-Float64Array* AddDihedralReportingOutput(DihedralFixture& fixture, DihedralTransferState& state)
+Float64ArrayType* AddDihedralReportingOutput(DihedralFixture& fixture, DihedralTransferState& state)
 {
   TriangleDihedralAngleFilter filter;
   REQUIRE(fixture.data_structure.getData(k_DihedralOutputPath) == nullptr);
   const auto preflight = filter.preflight(fixture.data_structure, fixture.arguments());
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto store = std::make_shared<DihedralReportingStore<float64>>(fixture.faces_ptr->getNumberOfTuples(), state, DihedralStoreRole::Angles);
   store->fill(k_DihedralSentinel);
-  auto* outputPtr = Float64Array::Create(fixture.data_structure, "Angles", store, fixture.face_data_ptr->getId());
+  auto* outputPtr = Float64ArrayType::Create(fixture.data_structure, "Angles", store, fixture.face_data_ptr->getId());
   REQUIRE(outputPtr != nullptr);
   return outputPtr;
 }
@@ -568,10 +568,10 @@ Float64Array* AddDihedralReportingOutput(DihedralFixture& fixture, DihedralTrans
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: computation block tail", "[SimplnxCore][TriangleDihedralAngleFilter][D2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DihedralFixture fixture(k_DihedralBlockFaces + 1);
   scope.requireExpectedStore(*fixture.vertices_ptr);
   scope.requireExpectedStore(*fixture.faces_ptr);
@@ -579,7 +579,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: computation block tail", "[
   TriangleDihedralAngleFilter filter;
   const auto args = fixture.arguments();
   const auto preflight = filter.preflight(fixture.data_structure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = scope.executeFilter(filter, fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   scope.requireExpectedStore(fixture.output());
@@ -589,8 +589,8 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: computation block tail", "[
 #if SIMPLNX_TEST_ALGORITHM_PATH != 2
 TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[SimplnxCore][TriangleDihedralAngleFilter][D2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenarios({UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenarios({unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
   const usize caseIndex = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4}, usize{5}, usize{6});
   struct ContractCase
   {
@@ -661,7 +661,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[Simp
                                                .context_message = ""}}};
   const auto& contract = cases[caseIndex];
   CAPTURE(scenario, contract.name);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DihedralTransferState state;
   DihedralFixture fixture(k_DihedralBlockFaces + 1, &state);
   auto* outputPtr = AddDihedralReportingOutput(fixture, state);
@@ -672,7 +672,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[Simp
   state.failing_write = contract.failing_write;
   state.failing_call = contract.failing_call;
   state.cancel_after_first_write = caseIndex == 6;
-  TriangleDihedralAngleInputValues inputValues{.InputTriangleGeometryPath = k_DihedralGeometryPath, .SurfaceMeshTriangleDihedralAnglesArrayName = "Angles"};
+  TriangleDihedralAngleInputValues inputValues{.input_triangle_geometry_path = k_DihedralGeometryPath, .surface_mesh_triangle_dihedral_angles_array_name = "Angles"};
   const IFilter::MessageHandler messages{};
   DihedralTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleDihedralAngle(fixture.data_structure, messages, state.should_cancel, &inputValues)(); });
@@ -713,11 +713,11 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: block transfer contracts", "[Simp
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngle: early exit controls", "[SimplnxCore][TriangleDihedralAngleFilter][D2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool preCancelled = GENERATE(false, true);
   CAPTURE(scenario, preCancelled);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DihedralTransferState state;
   DihedralFixture fixture(preCancelled ? 4 : 0, &state);
   auto* outputPtr = AddDihedralReportingOutput(fixture, state);
@@ -725,7 +725,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: early exit controls", "[SimplnxCo
   scope.requireExpectedStore(*fixture.faces_ptr);
   scope.requireExpectedStore(*outputPtr);
   state.should_cancel = preCancelled;
-  TriangleDihedralAngleInputValues inputValues{.InputTriangleGeometryPath = k_DihedralGeometryPath, .SurfaceMeshTriangleDihedralAnglesArrayName = "Angles"};
+  TriangleDihedralAngleInputValues inputValues{.input_triangle_geometry_path = k_DihedralGeometryPath, .surface_mesh_triangle_dihedral_angles_array_name = "Angles"};
   const IFilter::MessageHandler messages{};
   DihedralTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleDihedralAngle(fixture.data_structure, messages, state.should_cancel, &inputValues)(); });
@@ -740,10 +740,10 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: early exit controls", "[SimplnxCo
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: empty geometry", "[SimplnxCore][TriangleDihedralAngleFilter][D2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DihedralFixture fixture(0);
   scope.requireExpectedStore(*fixture.vertices_ptr);
   scope.requireExpectedStore(*fixture.faces_ptr);
@@ -751,7 +751,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: empty geometry", "[SimplnxC
   TriangleDihedralAngleFilter filter;
   const auto args = fixture.arguments();
   const auto preflight = filter.preflight(fixture.data_structure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = scope.executeFilter(filter, fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   scope.requireExpectedStore(fixture.output());
@@ -761,13 +761,13 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: empty geometry", "[SimplnxC
 #if SIMPLNX_TEST_ALGORITHM_PATH != 2
 TEST_CASE("SimplnxCore::TriangleDihedralAngle: buffered invalid connectivity", "[SimplnxCore][TriangleDihedralAngleFilter][D2][InvalidConnectivity]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenarios({UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenarios({unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
   const auto invalidVertex = GENERATE(IGeometry::MeshIndexType{3}, std::numeric_limits<IGeometry::MeshIndexType>::max());
   const usize invalidFace = GENERATE(usize{0}, usize{1});
   const usize invalidCorner = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(scenario, invalidVertex, invalidFace, invalidCorner);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DihedralTransferState state;
   DihedralFixture fixture(2, &state);
   auto resizeVertices = fixture.geometry_ptr->resizeVertexList(3);
@@ -783,7 +783,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: buffered invalid connectivity", "
   scope.requireExpectedStore(*fixture.vertices_ptr);
   scope.requireExpectedStore(*fixture.faces_ptr);
   scope.requireExpectedStore(*outputPtr);
-  TriangleDihedralAngleInputValues inputValues{.InputTriangleGeometryPath = k_DihedralGeometryPath, .SurfaceMeshTriangleDihedralAnglesArrayName = "Angles"};
+  TriangleDihedralAngleInputValues inputValues{.input_triangle_geometry_path = k_DihedralGeometryPath, .surface_mesh_triangle_dihedral_angles_array_name = "Angles"};
   const IFilter::MessageHandler messages{};
   const DihedralTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleDihedralAngle(fixture.data_structure, messages, state.should_cancel, &inputValues)(); });
@@ -809,13 +809,13 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngle: buffered invalid connectivity", "
   auto verticesRead = fixture.vertices_ptr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(actualVertices.data(), actualVertices.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(verticesRead);
   CHECK(std::equal(actualVertices.begin(), actualVertices.end(), k_DihedralVertices.begin()));
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 #endif
 
 TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: Permutation invariant minimum", "[SimplnxCore][TriangleDihedralAngleFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Issue #1790 (70-30-80 degrees); a right triangle with atan(1/10) at B; an obtuse triangle (135 degrees at A);
   // a collinear face (C = -2B exactly in float32) whose normalized dot products round past +/-1 without the clamp.
@@ -838,7 +838,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: Permutation invariant minim
     REQUIRE(vertexDataPtr != nullptr);
     geomPtr->setFaceAttributeMatrix(*faceDataPtr);
     geomPtr->setVertexAttributeMatrix(*vertexDataPtr);
-    auto* verticesPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", std::vector<usize>{3}, std::vector<usize>{3}, geomPtr->getId());
+    auto* verticesPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", std::vector<usize>{3}, std::vector<usize>{3}, geomPtr->getId());
     auto* facesPtr = DataArray<IGeometry::MeshIndexType>::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Faces", std::vector<usize>{6}, std::vector<usize>{3}, geomPtr->getId());
     REQUIRE(verticesPtr != nullptr);
     REQUIRE(facesPtr != nullptr);
@@ -876,11 +876,11 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: Permutation invariant minim
     args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(DataPath({"Triangles"})));
     args.insertOrAssign(TriangleDihedralAngleFilter::k_SurfaceMeshTriangleDihedralAnglesArrayName_Key, std::make_any<std::string>("Minimum"));
     auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(DataPath({"Triangles", "Face Data", "Minimum"})));
-    const auto& output = dataStructure.getDataRefAs<Float64Array>(DataPath({"Triangles", "Face Data", "Minimum"}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(DataPath({"Triangles", "Face Data", "Minimum"})));
+    const auto& output = dataStructure.getDataRefAs<Float64ArrayType>(DataPath({"Triangles", "Face Data", "Minimum"}));
     for(usize face = 0; face < 6; ++face)
     {
       CAPTURE(face, expected, output[face]);
@@ -889,6 +889,6 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter: Permutation invariant minim
       CHECK(std::abs(output[face] - expected) < 1.0e-5);
       CHECK(output[face] <= 60.0 + 1.0e-5);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }

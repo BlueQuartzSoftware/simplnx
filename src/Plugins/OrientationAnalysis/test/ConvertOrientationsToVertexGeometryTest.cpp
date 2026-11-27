@@ -10,7 +10,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace convert_orientation_to_vertex_geom
 {
@@ -21,7 +21,7 @@ const DataPath k_InputCrystalStructuresPath({"DataContainer", "All_Laue_Classes"
 
 TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[OrientationAnalysis][ConvertOrientationsToVertexGeometry]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_orientations_to_vertex_geometry.tar.gz", "convert_orientations_to_vertex_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_orientations_to_vertex_geometry.tar.gz", "convert_orientations_to_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/convert_orientations_to_vertex_geometry/convert_orientations_to_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
   const std::vector<std::string> kPhaseNames = {"Laue_1", "Laue_2", "Laue_222", "Laue_23", "Laue_3", "Laue_32", "Laue_4", "Laue_422", "Laue_432", "Laue_6", "Laue_622"};
@@ -31,7 +31,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
     SECTION(phaseName)
     {
       // Read the modified Small IN100 Data set
-      DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+      DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
       // Instantiate the filter, a DataStructure object and an Arguments Object
       ConvertOrientationsToVertexGeometryFilter filter;
@@ -56,9 +56,9 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
 
       // Preflight the filter and check result
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-      UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, 1);
-      UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions,
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
+      unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, 1);
+      unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions,
                                                    std::vector<DataPath>{kOutputGeometry.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(kInputPhasesPath.getTargetName())});
 
       // Execute the filter and check the result
@@ -74,25 +74,25 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
 #endif
 
       const DataPath kExemplarGeometry({fmt::format("{} Data", phaseName)});
-      UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, kOutputGeometry.createChildPath("Shared Vertex List"), kExemplarGeometry.createChildPath("Shared Vertex List"), 5.0E-7f, false);
+      unit_test::CompareFloatArraysWithNans<float32>(dataStructure, kOutputGeometry.createChildPath("Shared Vertex List"), kExemplarGeometry.createChildPath("Shared Vertex List"), 5.0E-7f, false);
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry: Phase Index Bounds", "[OrientationAnalysis][ConvertOrientationsToVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "convert_orientations_to_vertex_geometry.tar.gz", "convert_orientations_to_vertex_geometry");
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "convert_orientations_to_vertex_geometry.tar.gz", "convert_orientations_to_vertex_geometry");
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "convert_orientations_to_vertex_geometry" / "convert_orientations_to_vertex_geometry.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
   const DataPath cellPhasesPath({"DataContainer", "CellData", "Laue_1"});
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(cellPhasesPath));
-  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(cellPhasesPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(convert_orientation_to_vertex_geom::k_InputCrystalStructuresPath));
-  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(convert_orientation_to_vertex_geom::k_InputCrystalStructuresPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(cellPhasesPath));
+  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(cellPhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(convert_orientation_to_vertex_geom::k_InputCrystalStructuresPath));
+  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(convert_orientation_to_vertex_geom::k_InputCrystalStructuresPath);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
     REQUIRE(cellPhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");

@@ -36,13 +36,13 @@ AddBadDataInputValues CreateInputValues(const Arguments& filterArgs)
 {
   AddBadDataInputValues inputValues;
 
-  inputValues.PoissonNoise = filterArgs.value<bool>(AddBadDataFilter::k_PoissonNoise_Key);
-  inputValues.PoissonVolFraction = filterArgs.value<float32>(AddBadDataFilter::k_PoissonVolFraction_Key);
-  inputValues.BoundaryNoise = filterArgs.value<bool>(AddBadDataFilter::k_BoundaryNoise_Key);
-  inputValues.BoundaryVolFraction = filterArgs.value<float32>(AddBadDataFilter::k_BoundaryVolFraction_Key);
-  inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(AddBadDataFilter::k_ImageGeometryPath_Key);
-  inputValues.SeedValue = filterArgs.value<uint64>(AddBadDataFilter::k_SeedValue_Key);
+  inputValues.poisson_noise = filterArgs.value<bool>(AddBadDataFilter::k_PoissonNoise_Key);
+  inputValues.poisson_vol_fraction = filterArgs.value<float32>(AddBadDataFilter::k_PoissonVolFraction_Key);
+  inputValues.boundary_noise = filterArgs.value<bool>(AddBadDataFilter::k_BoundaryNoise_Key);
+  inputValues.boundary_vol_fraction = filterArgs.value<float32>(AddBadDataFilter::k_BoundaryVolFraction_Key);
+  inputValues.gb_euclidean_distances_array_path = filterArgs.value<DataPath>(AddBadDataFilter::k_GBEuclideanDistancesArrayPath_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(AddBadDataFilter::k_ImageGeometryPath_Key);
+  inputValues.seed_value = filterArgs.value<uint64>(AddBadDataFilter::k_SeedValue_Key);
 
   return inputValues;
 }
@@ -103,7 +103,7 @@ Parameters AddBadDataFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "This is the GB Manhattan Distances array", DataPath{},
-                                                          std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_PoissonNoise_Key, k_PoissonVolFraction_Key, true);
@@ -140,14 +140,14 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   // ArraySelectionParameter checks type and component shape only for an IDataArray, so a StringArray passes it.
   if(dataStructure.getDataAs<IDataArray>(pGBEuclideanDistancesArrayPathValue) == nullptr)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.",
+    return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.",
                                                                                                   pGBEuclideanDistancesArrayPathValue.toString()))};
   }
 
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, k_CellTupleCountError);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   PreflightResult preflightResult;
@@ -156,24 +156,24 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
 
   if(!pBoundaryNoiseValue && !pPoissonNoiseValue)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
   }
 
   if(pPoissonVolFractionValue > 1.0 || pPoissonVolFractionValue < 0.0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-76235, fmt::format("Poisson Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pPoissonVolFractionValue))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-76235, fmt::format("Poisson Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pPoissonVolFractionValue))};
   }
 
   if(pBoundaryVolFractionValue > 1.0 || pBoundaryVolFractionValue < 0.0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-76236, fmt::format("Boundary Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pBoundaryVolFractionValue))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-76236, fmt::format("Boundary Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pBoundaryVolFractionValue))};
   }
 
   const auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
   const auto* cellAmPtr = imgGeomPtr->getCellData();
   if(cellAmPtr == nullptr)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
   }
 
   const auto childArrayPaths = GetAllChildArrayDataPaths(dataStructure, imgGeomPtr->getCellDataPath());
@@ -183,7 +183,7 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
     {
       if(dataStructure.getDataAs<IDataArray>(arrayPath) == nullptr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(
+        return {.output_actions = MakeErrorResult<OutputActions>(
                     -76239, fmt::format("Cell array '{}' is not a numeric DataArray. Move StringArray and NeighborList objects out of the geometry's cell Attribute Matrix before adding bad data.",
                                         arrayPath.toString()))};
       }
@@ -197,10 +197,10 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imgGeomPtr->getCellDataPath(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, imgGeomPtr->getCellDataPath(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -214,7 +214,7 @@ Result<> AddBadDataFilter::executeImpl(DataStructure& dataStructure, const Argum
   }
 
   // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   auto inputValues = CreateInputValues(filterArgs);
 

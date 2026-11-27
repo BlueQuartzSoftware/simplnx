@@ -16,23 +16,23 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeNeighborListStatisticsInputValues
 {
-  bool FindLength = false;
-  bool FindMin = false;
-  bool FindMax = false;
-  bool FindMean = false;
-  bool FindMedian = false;
-  bool FindStdDeviation = false;
-  bool FindSummation = false;
+  bool find_length = false;
+  bool find_min = false;
+  bool find_max = false;
+  bool find_mean = false;
+  bool find_median = false;
+  bool find_std_deviation = false;
+  bool find_summation = false;
 
-  DataPath TargetNeighborListPath;
+  DataPath target_neighbor_list_path;
 
-  DataPath LengthPath;
-  DataPath MinPath;
-  DataPath MaxPath;
-  DataPath MeanPath;
-  DataPath MedianPath;
-  DataPath StdDeviationPath;
-  DataPath SummationPath;
+  DataPath length_path;
+  DataPath min_path;
+  DataPath max_path;
+  DataPath mean_path;
+  DataPath median_path;
+  DataPath std_deviation_path;
+  DataPath summation_path;
 };
 
 /**

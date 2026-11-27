@@ -17,7 +17,7 @@ using ClosingFilterType = BinaryMorphologicalClosingImageFilter;
 
 // Kernel + Foreground + Safe Border param setter for Binary Morphological Closing. Closing has no user
 // Background Value (it derives its internal background from the foreground).
-morph_test::KernelParamSetter ClosingKernelParamSetter(float64 foreground, bool safeBorder)
+morph_test::KernelParamSetterType ClosingKernelParamSetter(float64 foreground, bool safeBorder)
 {
   return [foreground, safeBorder](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
@@ -69,8 +69,8 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // values in [0,199] -> NOT binary
@@ -86,7 +86,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non
   args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // fg is in range -> preflight is clean
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // fg is in range -> preflight is clean
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid()); // non-binary input rejected at execute
   REQUIRE_FALSE(executeResult.result.errors().empty());
@@ -103,11 +103,11 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-expected (safeBorder=false, both algorithm paths)", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 32;
   constexpr uint8 k_Fg = 1;
@@ -177,7 +177,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -187,8 +187,8 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight rejects non-finite / out-of-range foreground", "[NXImageProcessing][BinaryMorphologicalClosingImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // uint8 input, range [0, 255]
@@ -207,11 +207,11 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight r
 
   ClosingFilterType filter;
 
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0)).outputActions.valid());                                   // fg out of uint8 range
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(-5.0)).outputActions.valid());                                      // fg negative out of range
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN())).outputActions.valid()); // NaN fg
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0)).output_actions.valid());                                   // fg out of uint8 range
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(-5.0)).output_actions.valid());                                      // fg negative out of range
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN())).output_actions.valid()); // NaN fg
   auto preflightResult = filter.preflight(dataStructure, makeArgs(1.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // in-range integer preflights cleanly
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // in-range integer preflights cleanly
 }
 
 // -----------------------------------------------------------------------------

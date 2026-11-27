@@ -78,7 +78,7 @@ Parameters ReadChannel5DataFilter::parameters() const
                                                 "Some arrays will be converted from the type they are in the file to more compatible types.", true));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
@@ -125,24 +125,24 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   {
     if(!std::filesystem::exists(crcPath))
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-66500, fmt::format("Matching .crc file does not exist. '{}' ", crcPath.string())), .outputValues = {}};
+      return {.output_actions = MakeErrorResult<OutputActions>(-66500, fmt::format("Matching .crc file does not exist. '{}' ", crcPath.string())), .output_values = {}};
     }
   } catch(std::exception& e)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-66501, fmt::format("Attempting to figure out if '{}' exists threw a std::exception. Please report this to the developers.", crcPath.string())),
-            .outputValues = {}};
+            .output_values = {}};
   }
 
   // Read the CPR file to gather the Geometry information and what arrays are present in the file.
   ebsdlib::CprReader reader;
-  const auto xStep = EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistX);
-  const auto yStep = EbsdStepMetadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistY);
+  const auto xStep = ebsd_step_metadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistX);
+  const auto yStep = ebsd_step_metadata::Observe<ebsdlib::CprReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::GridDistY);
   reader.setFileName(pInputFileValue.string());
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
+    return {.output_actions = MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
   }
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
@@ -150,17 +150,17 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
 
   CreateImageGeometryAction::SpacingType spacing = {xStep->storedOr(0.0F), yStep->storedOr(0.0F), 1.0F};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   // These variables should be updated with the latest data generated for each variable during preflight.
   // These will be returned through the preflightResult variable to the
   // user interface.
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues, FloatVec3Type(spacing));
+  ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
 
   // Define an Action that makes changes to the DataStructure
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
@@ -269,7 +269,7 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -277,14 +277,14 @@ Result<> ReadChannel5DataFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadChannel5DataInputValues inputValues;
-  inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;
+  inputValues.spacing_override = image_io::GeometryOverrides::FromArguments(filterArgs).Spacing;
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.EdaxHexagonalAlignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
-  inputValues.CreateCompatibleArrays = filterArgs.value<bool>(k_CreateCompatibleArrays_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.edax_hexagonal_alignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
+  inputValues.data_container_name = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.create_compatible_arrays = filterArgs.value<bool>(k_CreateCompatibleArrays_Key);
   return ReadChannel5Data(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 

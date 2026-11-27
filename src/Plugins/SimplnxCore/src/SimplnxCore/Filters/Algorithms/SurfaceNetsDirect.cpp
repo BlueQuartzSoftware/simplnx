@@ -131,14 +131,14 @@ SurfaceNetsDirect::SurfaceNetsDirect(DataStructure& dataStructure, const IFilter
 
 Result<> SurfaceNetsDirect::operator()()
 {
-  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, true, m_ShouldCancel, m_MessageHandler);
+  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  Result<> sentinelCheck = meshing_utilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->feature_ids_array_path, true, m_ShouldCancel, m_MessageHandler);
   if(sentinelCheck.invalid())
   {
     return sentinelCheck;
   }
 
-  if(!m_InputValues->SelectedFeatureDataArrayPaths.empty())
+  if(!m_InputValues->selected_feature_data_array_paths.empty())
   {
     // Feature Ids are tuple indices in each selected feature DataArray.
     int32 largestFeatureId = 0;
@@ -146,7 +146,7 @@ Result<> SurfaceNetsDirect::operator()()
     {
       largestFeatureId = std::max(largestFeatureId, featureIdsStore[tupleIdx]);
     }
-    for(const auto& featureArrayPath : m_InputValues->SelectedFeatureDataArrayPaths)
+    for(const auto& featureArrayPath : m_InputValues->selected_feature_data_array_paths)
     {
       const auto& featureArray = m_DataStructure.getDataRefAs<IDataArray>(featureArrayPath);
       if(static_cast<usize>(largestFeatureId) >= featureArray.getNumberOfTuples())
@@ -155,22 +155,22 @@ Result<> SurfaceNetsDirect::operator()()
             -62073,
             fmt::format(
                 "Feature Id {} in Cell Feature Ids DataArray '{}' is outside the selected feature DataArray '{}' with {} tuples. The number of tuples must be greater than the largest Feature Id.",
-                largestFeatureId, m_InputValues->FeatureIdsArrayPath.toString(), featureArrayPath.toString(), featureArray.getNumberOfTuples()));
+                largestFeatureId, m_InputValues->feature_ids_array_path.toString(), featureArrayPath.toString(), featureArray.getNumberOfTuples()));
       }
     }
   }
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->grid_geom_data_path);
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
+  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
 
   auto gridDimensions = imageGeom.getDimensions();
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
 
   // MMSurfaceNet classifies the complete padded grid through direct Feature ID reads.
-  MMSurfaceNet surfaceNet(triangleGeomPtr->getVerticesRef().getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), gridDimensions.data(), voxelSize.data());
+  MMSurfaceNet surfaceNet(triangleGeomPtr->getVerticesRef().getDataStoreRef(), m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path), gridDimensions.data(), voxelSize.data());
   Result<> initializationResult = surfaceNet.takeInitializationResult();
   if(initializationResult.invalid())
   {
@@ -178,7 +178,7 @@ Result<> SurfaceNetsDirect::operator()()
   }
   if(!surfaceNet.getCellMap()->valid())
   {
-    return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal data structures for grid geometry at path '{}'.", m_InputValues->GridGeomDataPath.toString()));
+    return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal data structures for grid geometry at path '{}'.", m_InputValues->grid_geom_data_path.toString()));
   }
 
   if(m_ShouldCancel)
@@ -187,12 +187,12 @@ Result<> SurfaceNetsDirect::operator()()
   }
 
   // Optional relaxation uses face neighbors and clamps local cell coordinates.
-  if(m_InputValues->ApplySmoothing)
+  if(m_InputValues->apply_smoothing)
   {
     MMSurfaceNet::RelaxAttrs relaxAttrs{};
-    relaxAttrs.maxDistFromCellCenter = m_InputValues->MaxDistanceFromVoxel;
-    relaxAttrs.numRelaxIterations = m_InputValues->SmoothingIterations;
-    relaxAttrs.relaxFactor = m_InputValues->RelaxationFactor;
+    relaxAttrs.max_dist_from_cell_center = m_InputValues->max_distance_from_voxel;
+    relaxAttrs.num_relax_iterations = m_InputValues->smoothing_iterations;
+    relaxAttrs.relax_factor = m_InputValues->relaxation_factor;
 
     surfaceNet.relax(relaxAttrs);
   }
@@ -209,7 +209,7 @@ Result<> SurfaceNetsDirect::operator()()
     return resizeResult;
   }
 
-  auto& nodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
+  auto& nodeTypes = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->node_types_data_path)->getDataStoreRef();
   resizeResult = nodeTypes.resizeTuples({static_cast<usize>(nodeCount)});
   if(resizeResult.invalid())
   {
@@ -217,7 +217,7 @@ Result<> SurfaceNetsDirect::operator()()
   }
 
   // Transform local cell positions and assign junction-count node types.
-  FloatVec3 position = {0.0f, 0.0f, 0.0f};
+  FloatVec3Type position = {0.0f, 0.0f, 0.0f};
 
   std::array<int, 3> vertCellIndex = {0, 0, 0};
   for(usize vertIndex = 0; vertIndex < nodeCount; vertIndex++)
@@ -228,7 +228,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
     cellMapPtr->getVertexPosition(vertIndex, position.data());
     // Relocate the vertex correctly based on the origin of the ImageGeometry
-    position = position + origin - FloatVec3(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
+    position = position + origin - FloatVec3Type(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
 
     triangleGeom.setVertexCoordinate(vertIndex, position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
@@ -251,7 +251,7 @@ Result<> SurfaceNetsDirect::operator()()
 
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      if(SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
       {
         suppressedFaceCount++;
       }
@@ -262,7 +262,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      if(SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
       {
         suppressedFaceCount++;
       }
@@ -273,7 +273,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()))
     {
-      if(SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+      if(SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
       {
         suppressedFaceCount++;
       }
@@ -295,7 +295,7 @@ Result<> SurfaceNetsDirect::operator()()
     return resizeResult;
   }
 
-  auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
+  auto& faceLabels = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef();
   resizeResult = faceLabels.resizeTuples({triangleCount});
   if(resizeResult.invalid())
   {
@@ -304,18 +304,18 @@ Result<> SurfaceNetsDirect::operator()()
 
   // Match each selected cell array with its created two-sided face array.
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(usize i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
+  for(usize i = 0; i < m_InputValues->selected_cell_data_array_paths.size(); i++)
   {
-    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->selected_cell_data_array_paths[i], m_InputValues->created_data_array_paths[i], tupleTransferFunctions);
   }
 
-  auto numSelectedCellArrayPaths = m_InputValues->SelectedCellDataArrayPaths.size();
+  auto numSelectedCellArrayPaths = m_InputValues->selected_cell_data_array_paths.size();
 
-  for(usize i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
+  for(usize i = 0; i < m_InputValues->selected_feature_data_array_paths.size(); i++)
   {
-    auto selectedPath = m_InputValues->SelectedFeatureDataArrayPaths[i];
-    auto createdPath = m_InputValues->CreatedDataArrayPaths[i + numSelectedCellArrayPaths];
-    ::AddFeatureTupleTransferInstance(m_DataStructure, selectedPath, createdPath, m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
+    auto selectedPath = m_InputValues->selected_feature_data_array_paths[i];
+    auto createdPath = m_InputValues->created_data_array_paths[i + numSelectedCellArrayPaths];
+    ::AddFeatureTupleTransferInstance(m_DataStructure, selectedPath, createdPath, m_InputValues->feature_ids_array_path, tupleTransferFunctions);
   }
 
   // Generate connectivity, labels, and tuple transfers in the count-pass order.
@@ -338,7 +338,7 @@ Result<> SurfaceNetsDirect::operator()()
     cellMapPtr->getVertexCellIndex(idxVtx, cellIndex.data());
     // Back-bottom edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
-       !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+       !SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
     {
       vData[0] = {.vertex_id = vertexIndices[0], .position = {0.0f, 0.0f, 0.0f}};
       vData[1] = {.vertex_id = vertexIndices[1], .position = {0.0f, 0.0f, 0.0f}};
@@ -398,7 +398,7 @@ Result<> SurfaceNetsDirect::operator()()
 
     // Left-bottom edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
-       !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+       !SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
     {
       vData[0] = {.vertex_id = vertexIndices[0], .position = {0.0f, 0.0f, 0.0f}};
       vData[1] = {.vertex_id = vertexIndices[1], .position = {0.0f, 0.0f, 0.0f}};
@@ -455,7 +455,7 @@ Result<> SurfaceNetsDirect::operator()()
 
     // Left-back edge
     if(cellMapPtr->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data(), quadNxArrayIndices.data()) &&
-       !SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+       !SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
     {
       vData[0] = {.vertex_id = vertexIndices[0], .position = {0.0f, 0.0f, 0.0f}};
       vData[1] = {.vertex_id = vertexIndices[1], .position = {0.0f, 0.0f, 0.0f}};
@@ -511,7 +511,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
     const usize numFaceIndices = triangleCount * 3;
@@ -567,7 +567,7 @@ Result<> SurfaceNetsDirect::operator()()
 
   // Temporary connectivity exists only for optional resident winding repair.
   Result<> windingResult = {};
-  if(m_InputValues->RepairTriangleWinding)
+  if(m_InputValues->repair_triangle_winding)
   {
     m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
     triangleGeom.findElementNeighbors(true);
@@ -576,28 +576,28 @@ Result<> SurfaceNetsDirect::operator()()
     {
       return MakeErrorResult(-56331, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
     }
-    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
 
     m_MessageHandler.sendInfoMessage("Repairing Windings...");
 
-    windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                            m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+    windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                            m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
 
     // Remove temporary connectivity after winding repair.
     m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
     m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
-      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
+      return meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
                                                     triangleGeom.getNumberOfVertices());
     }
     if(suppressedFaceCount == 0)
     {
-      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+      return meshing_utilities::MakeNoFacesPrunedWarning(m_InputValues->triangle_geometry_path);
     }
   }
 

@@ -76,12 +76,12 @@ private:
    */
   struct MetadataCache
   {
-    std::filesystem::path inputFile;
-    std::filesystem::file_time_type timeStamp;
-    std::vector<fiji::FijiTile> rawTiles; ///< Parsed straight from the config (no prefix, no rebase).
+    std::filesystem::path input_file;
+    std::filesystem::file_time_type time_stamp;
+    std::vector<fiji::FijiTile> raw_tiles; ///< Parsed straight from the config (no prefix, no rebase).
     std::vector<ImageMetadata> metadata;  ///< Parallel to rawTiles; populated only when metadataValid.
-    bool tilesValid = false;
-    bool metadataValid = false;
+    bool tiles_valid = false;
+    bool metadata_valid = false;
   };
   mutable MetadataCache m_Cache;
 

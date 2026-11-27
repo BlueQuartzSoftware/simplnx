@@ -20,7 +20,7 @@ struct AdaptiveHistogramEqualizationExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   std::array<usize, 3> radius;
   float32 alpha;
   float32 beta;
@@ -50,7 +50,7 @@ Result<> ExecuteAdaptiveHistogramEqualizationImageFilter(DataStructure& dataStru
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   detail::AdaptiveHistogramEqualizationExecuteFn executeFn{.data_structure = dataStructure,
                                                            .input_array_path = inputArrayPath,
                                                            .output_array_path = outputArrayPath,
@@ -60,7 +60,7 @@ Result<> ExecuteAdaptiveHistogramEqualizationImageFilter(DataStructure& dataStru
                                                            .beta = beta,
                                                            .should_cancel = shouldCancel,
                                                            .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

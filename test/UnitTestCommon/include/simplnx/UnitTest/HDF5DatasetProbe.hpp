@@ -5,7 +5,7 @@
 #include <optional>
 #include <string>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @brief Storage layout of an HDF5 dataset, mirroring the relevant subset of H5D_layout_t.
@@ -27,8 +27,8 @@ enum class DatasetLayout : std::int8_t
 struct DatasetProbeInfo
 {
   DatasetLayout layout = DatasetLayout::Contiguous;
-  bool hasDeflate = false;
-  std::int32_t deflateLevel = -1;
+  bool has_deflate = false;
+  std::int32_t deflate_level = -1;
 };
 
 /**

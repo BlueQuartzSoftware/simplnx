@@ -50,7 +50,7 @@ bool HasBackwardsCompatFixture(const std::string& filterName)
 TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility][Inventory]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   auto plugins = filterListPtr->getLoadedPlugins();
@@ -74,13 +74,13 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
     {
       totalEntries++;
 
-      IFilter::UniquePointerType filter = filterListPtr->createFilter(simplData.simplnxUuid);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(simplData.simplnx_uuid);
       std::string filterClassName = filter ? filter->className() : "UNKNOWN";
-      std::string nxUuid = simplData.simplnxUuid.str();
+      std::string nxUuid = simplData.simplnx_uuid.str();
       std::string simplUuidStr = simplUuid.str();
 
-      bool isFirstOccurrence = !seenNxUuids.contains(simplData.simplnxUuid);
-      seenNxUuids.insert(simplData.simplnxUuid);
+      bool isFirstOccurrence = !seenNxUuids.contains(simplData.simplnx_uuid);
+      seenNxUuids.insert(simplData.simplnx_uuid);
 
       bool hasFixture = false;
       if(filter)
@@ -123,7 +123,7 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
 TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][Inventory]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   auto plugins = filterListPtr->getLoadedPlugins();
@@ -140,13 +140,13 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
     for(const auto& [simplUuid, simplData] : simplMap)
     {
       // Only check each NX filter once even if it has multiple SIMPL UUIDs
-      if(seenNxUuids.contains(simplData.simplnxUuid))
+      if(seenNxUuids.contains(simplData.simplnx_uuid))
       {
         continue;
       }
-      seenNxUuids.insert(simplData.simplnxUuid);
+      seenNxUuids.insert(simplData.simplnx_uuid);
 
-      IFilter::UniquePointerType filter = filterListPtr->createFilter(simplData.simplnxUuid);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(simplData.simplnx_uuid);
       if(filter == nullptr)
       {
         continue;

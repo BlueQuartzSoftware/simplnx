@@ -21,11 +21,11 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
   }
 
   auto groupReader = parentGroup.openGroup(objectName);
-  geometry.setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
-  geometry.setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
-  geometry.setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
-  geometry.setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
-  geometry.setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  geometry.setEdgeListId(ReadDataId(groupReader, io_constants::k_EdgeListTag));
+  geometry.setEdgeDataId(ReadDataId(groupReader, io_constants::k_EdgeDataTag));
+  geometry.setElementContainingVertId(ReadDataId(groupReader, io_constants::k_ElementContainingVertTag));
+  geometry.setElementNeighborsId(ReadDataId(groupReader, io_constants::k_ElementNeighborsTag));
+  geometry.setElementCentroidsId(ReadDataId(groupReader, io_constants::k_ElementCentroidTag));
 
   return {};
 }
@@ -50,31 +50,31 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
   }
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeListId(), io_constants::k_EdgeListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeAttributeMatrixId(), IOConstants::k_EdgeDataTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getEdgeAttributeMatrixId(), io_constants::k_EdgeDataTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag));
+  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementContainingVertId(), io_constants::k_ElementContainingVertTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag));
+  AppendWriteResult(result, WriteConnectivityId(dataStructureWriter, groupWriter, geometry.getElementNeighborsId(), io_constants::k_ElementNeighborsTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getElementCentroidsId(), io_constants::k_ElementCentroidTag));
   if(result.invalid())
   {
     return result;

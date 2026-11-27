@@ -17,16 +17,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT AlignSectionsFeatureCentroidInputValues
 {
-  DataPath ImageGeometryPath;
-  DataPath MaskArrayPath;
-  bool UseReferenceSlice{};
-  int32 ReferenceSlice{};
-  bool StoreAlignmentShifts{};
-  DataPath AlignmentAMPath;
-  DataPath SlicesArrayPath;
-  DataPath RelativeShiftsArrayPath;
-  DataPath CumulativeShiftsArrayPath;
-  DataPath CentroidsArrayPath;
+  DataPath image_geometry_path;
+  DataPath mask_array_path;
+  bool use_reference_slice{};
+  int32 reference_slice{};
+  bool store_alignment_shifts{};
+  DataPath alignment_am_path;
+  DataPath slices_array_path;
+  DataPath relative_shifts_array_path;
+  DataPath cumulative_shifts_array_path;
+  DataPath centroids_array_path;
 };
 
 /**

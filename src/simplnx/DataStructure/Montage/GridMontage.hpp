@@ -18,7 +18,7 @@ class SIMPLNX_EXPORT GridMontage : virtual public AbstractMontage
 {
 public:
   using iterator = void;
-  using DimensionsType = SizeVec3;
+  using DimensionsType = SizeVec3Type;
   using TileIdType = GridTileIndex;
 
   static constexpr StringLiteralType k_TypeName = "GridMontage";
@@ -118,7 +118,7 @@ public:
    * @brief Returns the 3D tile dimensions as a SizeVec3.
    * @return SizeVec3
    */
-  SizeVec3 getGridSize() const;
+  SizeVec3Type getGridSize() const;
 
   /**
    * @brief Resizes the montage using the specified values.
@@ -145,7 +145,7 @@ public:
    * @param pos
    * @return GridTileIndex
    */
-  GridTileIndex getTileIndex(const SizeVec3& pos) const;
+  GridTileIndex getTileIndex(const SizeVec3Type& pos) const;
 
   /**
    * @brief Returns the 3D tile position of the specified geometry if it could
@@ -154,7 +154,7 @@ public:
    * @param geom
    * @return std::optional<SizeVec3>
    */
-  std::optional<SizeVec3> getTilePosOfGeometry(const IGeometry* geom) const;
+  std::optional<SizeVec3Type> getTilePosOfGeometry(const IGeometry* geom) const;
 
   /**
    * @brief Returns the tile index for the target geometry. Returns nullptr if the geometry
@@ -195,21 +195,21 @@ public:
    * @param position
    * @param geom
    */
-  void setGeometry(const SizeVec3& position, IGeometry* geom);
+  void setGeometry(const SizeVec3Type& position, IGeometry* geom);
 
   /**
    * @brief Returns the geometry at the specified position.
    * Returns nullptr if no geometry could be found.
    * @return const IGeometry*
    */
-  IGeometry* getGeometry(const SizeVec3& position);
+  IGeometry* getGeometry(const SizeVec3Type& position);
 
   /**
    * @brief Returns the geometry at the specified position.
    * Returns nullptr if no geometry could be found.
    * @return const IGeometry*
    */
-  const IGeometry* getGeometry(const SizeVec3& position) const;
+  const IGeometry* getGeometry(const SizeVec3Type& position) const;
 
   /**
    * @brief Returns a TooltipGenerator for generating the appropriate HTML tooltips.
@@ -227,7 +227,7 @@ public:
    * @brief Returns the geometry bounds in 3D.
    * @return BoundsType
    */
-  static BoundsType getBounds();
+  static BoundsType GetBounds();
 
 protected:
   /**
@@ -260,7 +260,7 @@ protected:
    * @param tilePos
    * @return usize
    */
-  usize getOffsetFromTilePos(const SizeVec3& tilePos) const;
+  usize getOffsetFromTilePos(const SizeVec3Type& tilePos) const;
 
   /**
    * @brief Returns the appropriate linear offset for the specified 3D tile
@@ -269,14 +269,14 @@ protected:
    * @param dims
    * @return usize
    */
-  static usize GetOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims);
+  static usize GetOffsetFromTilePos(const SizeVec3Type& tilePos, const DimensionsType& dims);
 
   /**
    * @brief Returns the 3D tile position from the specified linear index.
    * @param offset
    * @return SizeVec3
    */
-  SizeVec3 getTilePosFromOffset(usize offset) const;
+  SizeVec3Type getTilePosFromOffset(usize offset) const;
 
 private:
   usize m_RowCount = 0;

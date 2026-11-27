@@ -192,35 +192,35 @@ WritePoleFigure::WritePoleFigure(DataStructure& dataStructure, const IFilter::Me
 Result<> WritePoleFigure::operator()()
 {
   // Create the requested disk-output directory before phase processing.
-  if(m_InputValues->WriteImageToDisk)
+  if(m_InputValues->write_image_to_disk)
   {
-    if(!fs::exists(m_InputValues->OutputPath))
+    if(!fs::exists(m_InputValues->output_path))
     {
-      if(!fs::create_directories(m_InputValues->OutputPath))
+      if(!fs::create_directories(m_InputValues->output_path))
       {
-        return MakeErrorResult(-67020, fmt::format("Unable to create output directory {}", m_InputValues->OutputPath.string()));
+        return MakeErrorResult(-67020, fmt::format("Unable to create output directory {}", m_InputValues->output_path.string()));
       }
     }
   }
 
   const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  const nx::core::Float32ArrayType& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path);
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
 
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->material_name_array_path);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
-  if(m_InputValues->UseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare = nullptr;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range& exception)
     {
       // Direct callers can bypass preflight, so return an invalid mask as a Result.
-      return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString()));
     }
   }
 
@@ -228,10 +228,10 @@ Result<> WritePoleFigure::operator()()
   const usize numPhases = crystalStructures.getNumberOfTuples();
 
   // Initialize output geometry to one figure. A composite can resize it later.
-  ShapeType tupleShape = {1, static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize)};
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->OutputImageGeometryPath);
+  ShapeType tupleShape = {1, static_cast<usize>(m_InputValues->image_size), static_cast<usize>(m_InputValues->image_size)};
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->output_image_geometry_path);
   auto cellAttrMatPath = imageGeom.getCellDataPath();
-  imageGeom.setDimensions({static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize), 1});
+  imageGeom.setDimensions({static_cast<usize>(m_InputValues->image_size), static_cast<usize>(m_InputValues->image_size), 1});
   if(Result<> resizeResult = imageGeom.getCellData()->resizeTuples(tupleShape); resizeResult.invalid())
   {
     return ConvertResult(std::move(resizeResult));
@@ -262,7 +262,7 @@ Result<> WritePoleFigure::operator()()
         if(phaseChunk[i] == static_cast<int32>(phase))
         {
           const usize globalIdx = chunkStart + i;
-          if(!m_InputValues->UseMask || maskCompare->isTrue(globalIdx))
+          if(!m_InputValues->use_mask || maskCompare->isTrue(globalIdx))
           {
             count++;
           }
@@ -292,7 +292,7 @@ Result<> WritePoleFigure::operator()()
         if(phaseChunk[i] == static_cast<int32>(phase))
         {
           const usize globalIdx = chunkStart + i;
-          if(!m_InputValues->UseMask || maskCompare->isTrue(globalIdx))
+          if(!m_InputValues->use_mask || maskCompare->isTrue(globalIdx))
           {
             subEulerAngles[count * 3] = eulerChunk[i * 3];
             subEulerAngles[count * 3 + 1] = eulerChunk[i * 3 + 1];
@@ -309,54 +309,54 @@ Result<> WritePoleFigure::operator()()
 
     ebsdlib::PoleFigureConfiguration_t config;
     config.eulers = subEulerAnglesPtr.get();
-    config.imageDim = m_InputValues->ImageSize;
-    config.lambertDim = m_InputValues->LambertSize;
-    config.numColors = m_InputValues->NumColors;
-    config.discrete = (static_cast<WritePoleFigure::Algorithm>(m_InputValues->GenerationAlgorithm) == WritePoleFigure::Algorithm::Discrete);
+    config.imageDim = m_InputValues->image_size;
+    config.lambertDim = m_InputValues->lambert_size;
+    config.numColors = m_InputValues->num_colors;
+    config.discrete = (static_cast<WritePoleFigure::Algorithm>(m_InputValues->generation_algorithm) == WritePoleFigure::Algorithm::Discrete);
     config.discreteHeatMap = k_UseDiscreteHeatMap;
-    config.hexConvention = m_InputValues->HexConvention;
-    config.flipFinalImage = m_InputValues->FlipFinalImage;
+    config.hexConvention = m_InputValues->hex_convention;
+    config.flipFinalImage = m_InputValues->flip_final_image;
     config.axisNames = std::vector<std::string>{"A1", "A2", "A3"};
 
     m_MessageHandler.sendInfoMessage(fmt::format("Generating Pole Figures for Phase {}", phase));
-    if(m_InputValues->SaveIntensityData)
+    if(m_InputValues->save_intensity_data)
     {
       std::vector<ebsdlib::DoubleArrayType::Pointer> intensityImages;
 
       switch(crystalStructures[phase])
       {
       case ebsdlib::CrystalStructure::Cubic_High:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Cubic_Low:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Hexagonal_High:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Hexagonal_Low:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Trigonal_High:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Trigonal_Low:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Tetragonal_High:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Tetragonal_Low:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::OrthoRhombic:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Monoclinic:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->normalize_to_mrd);
         break;
       case ebsdlib::CrystalStructure::Triclinic:
-        intensityImages = CreateIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
+        intensityImages = CreateIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->normalize_to_mrd);
         break;
       default:
         m_MessageHandler.sendWarningMessage(
@@ -366,36 +366,36 @@ Result<> WritePoleFigure::operator()()
 
       if(intensityImages.size() == 3)
       {
-        DataPath amPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_ImageAttrMatName);
+        DataPath amPath = m_InputValues->intensity_geometry_data_path.createChildPath(write_pole_figure::k_ImageAttrMatName);
         // Preflight creates phase-one arrays. Later phases create their arrays here.
         if(phase > 1)
         {
           const ShapeType intensityImageDims = m_DataStructure.getDataRefAs<AttributeMatrix>(amPath).getShape();
-          DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name));
-          Result<> creationResult = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+          DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->intensity_plot1_name));
+          Result<> creationResult = array_creation_utilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
           if(creationResult.invalid())
           {
             return ConvertResult(std::move(creationResult));
           }
 
-          arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name));
-          creationResult = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+          arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->intensity_plot2_name));
+          creationResult = array_creation_utilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
           if(creationResult.invalid())
           {
             return ConvertResult(std::move(creationResult));
           }
 
-          arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name));
-          creationResult = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+          arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->intensity_plot3_name));
+          creationResult = array_creation_utilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
           if(creationResult.invalid())
           {
             return ConvertResult(std::move(creationResult));
           }
         }
 
-        auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name)));
-        auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name)));
-        auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name)));
+        auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64ArrayType>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->intensity_plot1_name)));
+        auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64ArrayType>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->intensity_plot2_name)));
+        auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64ArrayType>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->intensity_plot3_name)));
 
         std::vector<size_t> compDims = {1ULL};
         for(auto& intensityImage : intensityImages)
@@ -426,7 +426,7 @@ Result<> WritePoleFigure::operator()()
           }
         }
 
-        DataPath metaDataPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_MetaDataName);
+        DataPath metaDataPath = m_InputValues->intensity_geometry_data_path.createChildPath(write_pole_figure::k_MetaDataName);
         auto metaDataArrayRef = m_DataStructure.getDataRefAs<StringArray>(metaDataPath);
         if(metaDataArrayRef.getNumberOfTuples() != numPhases)
         {
@@ -445,31 +445,31 @@ Result<> WritePoleFigure::operator()()
       }
     }
 
-    if(m_InputValues->SaveAsImageGeometry || m_InputValues->WriteImageToDisk)
+    if(m_InputValues->save_as_image_geometry || m_InputValues->write_image_to_disk)
     {
       ebsdlib::CompositePoleFigureConfiguration_t compositeConfig;
       compositeConfig.eulers = subEulerAnglesPtr.get();
-      compositeConfig.imageDim = m_InputValues->ImageSize;
-      compositeConfig.lambertDim = m_InputValues->LambertSize;
-      compositeConfig.numColors = m_InputValues->NumColors;
+      compositeConfig.imageDim = m_InputValues->image_size;
+      compositeConfig.lambertDim = m_InputValues->lambert_size;
+      compositeConfig.numColors = m_InputValues->num_colors;
       compositeConfig.minScale = config.minScale;
       compositeConfig.maxScale = config.maxScale;
       compositeConfig.sphereRadius = config.sphereRadius;
       compositeConfig.discrete = config.discrete;
       compositeConfig.discreteHeatMap = config.discreteHeatMap;
-      compositeConfig.markerStyle.radiusFraction = m_InputValues->DiscreteMarkerRadius;
+      compositeConfig.markerStyle.radiusFraction = m_InputValues->discrete_marker_radius;
       compositeConfig.colorMap = config.colorMap;
       compositeConfig.poleFigureNames = config.labels;
       compositeConfig.order = config.order;
       compositeConfig.axisNames = config.axisNames;
 
       compositeConfig.flipFinalImage = config.flipFinalImage;
-      compositeConfig.layoutType = static_cast<ebsdlib::PoleFigureLayoutType>(m_InputValues->ImageLayout);
+      compositeConfig.layoutType = static_cast<ebsdlib::PoleFigureLayoutType>(m_InputValues->image_layout);
       compositeConfig.laueOpsIndex = crystalStructures[phase];
       compositeConfig.phaseName = materialNames[phase];
       compositeConfig.phaseNumber = static_cast<int32>(phase);
-      compositeConfig.title = m_InputValues->Title;
-      compositeConfig.hexConvention = m_InputValues->HexConvention;
+      compositeConfig.title = m_InputValues->title;
+      compositeConfig.hexConvention = m_InputValues->hex_convention;
 
       // Discrete figures use the marker renderer. Other figures use the raster compositor.
       ebsdlib::CompositePoleFigureResult compositeResult = ebsdlib::GeneratePoleFigureComposite(compositeConfig);
@@ -482,7 +482,7 @@ Result<> WritePoleFigure::operator()()
       const int32 pageWidth = compositeResult.width;
       const int32 pageHeight = compositeResult.height;
 
-      if(m_InputValues->SaveAsImageGeometry)
+      if(m_InputValues->save_as_image_geometry)
       {
         // Match the output geometry to the composite page.
         imageGeom.setDimensions({static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1});
@@ -494,14 +494,14 @@ Result<> WritePoleFigure::operator()()
         tupleShape[1] = pageHeight;
         tupleShape[2] = pageWidth;
         auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("Phase_{}", phase));
-        auto arrayCreationResult = ArrayCreationUtilities::CreateArray<uint8>(m_DataStructure, tupleShape, {3ULL}, imageArrayPath, IDataAction::Mode::Execute);
+        auto arrayCreationResult = array_creation_utilities::CreateArray<uint8>(m_DataStructure, tupleShape, {3ULL}, imageArrayPath, IDataAction::Mode::Execute);
         if(arrayCreationResult.invalid())
         {
           return arrayCreationResult;
         }
 
         // Pack RGB components from the RGBA composite and use one destination transfer.
-        auto& imageData = m_DataStructure.getDataRefAs<UInt8Array>(imageArrayPath);
+        auto& imageData = m_DataStructure.getDataRefAs<UInt8ArrayType>(imageArrayPath);
         imageData.fill(0);
         const usize tupleCount = static_cast<usize>(pageHeight) * pageWidth;
         const uint8_t* rgbaPtr = compositeResult.image->getPointer(0);
@@ -518,10 +518,10 @@ Result<> WritePoleFigure::operator()()
         }
       }
 
-      if(m_InputValues->WriteImageToDisk)
+      if(m_InputValues->write_image_to_disk)
       {
         // Disk output is PNG regardless of the retained ImageFormat setting.
-        const std::string filename = fmt::format("{}/{}{}.png", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
+        const std::string filename = fmt::format("{}/{}{}.png", m_InputValues->output_path.string(), m_InputValues->image_prefix, phase);
         auto result = PngWriter::WriteColorImage(filename, pageWidth, pageHeight, 4, compositeResult.image->getPointer(0));
         if(result.first < 0)
         {

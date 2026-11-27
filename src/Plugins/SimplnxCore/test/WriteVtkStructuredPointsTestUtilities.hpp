@@ -28,7 +28,7 @@
  * @namespace WriteVtkStructuredPointsTest
  * @brief Checks the same ASCII file contract for resident and disk-backed inputs.
  */
-namespace WriteVtkStructuredPointsTest
+namespace write_vtk_structured_points_test
 {
 /**
  * @brief Writes two arrays and checks every output field and unchanged input value.
@@ -60,16 +60,16 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto signedStore = DataStoreUtilities::CreateDataStore<int8>(dataStructure, signedPath, tupleShape, {2});
+  auto signedStore = data_store_utilities::CreateDataStore<int8>(dataStructure, signedPath, tupleShape, {2});
   REQUIRE(signedStore != nullptr);
-  auto* signedArrayPtr = Int8Array::Create(dataStructure, "Signed Components", signedStore, cellDataPtr->getId());
+  auto* signedArrayPtr = Int8ArrayType::Create(dataStructure, "Signed Components", signedStore, cellDataPtr->getId());
   REQUIRE(signedArrayPtr != nullptr);
   const auto signedWrite = signedStore->copyFromBuffer(0, nonstd::span<const int8>(k_ExpectedSignedValues.data(), k_ExpectedSignedValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(signedWrite);
 
-  auto floatStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, floatPath, tupleShape, {1});
+  auto floatStore = data_store_utilities::CreateDataStore<float32>(dataStructure, floatPath, tupleShape, {1});
   REQUIRE(floatStore != nullptr);
-  auto* floatArrayPtr = Float32Array::Create(dataStructure, "Float Scalars", floatStore, cellDataPtr->getId());
+  auto* floatArrayPtr = Float32ArrayType::Create(dataStructure, "Float Scalars", floatStore, cellDataPtr->getId());
   REQUIRE(floatArrayPtr != nullptr);
   const auto floatWrite = floatStore->copyFromBuffer(0, nonstd::span<const float32>(k_ExpectedFloatValues.data(), k_ExpectedFloatValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(floatWrite);
@@ -154,12 +154,12 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
   SIMPLNX_RESULT_REQUIRE_VALID(floatRead);
   REQUIRE(actualFloatValues == k_ExpectedFloatValues);
 
-  const SizeVec3 expectedDims = {2, 2, 1};
-  const FloatVec3 expectedOrigin = {-1.0F, 2.0F, 3.0F};
-  const FloatVec3 expectedSpacing = {0.5F, 1.5F, 2.0F};
+  const SizeVec3Type expectedDims = {2, 2, 1};
+  const FloatVec3Type expectedOrigin = {-1.0F, 2.0F, 3.0F};
+  const FloatVec3Type expectedSpacing = {0.5F, 1.5F, 2.0F};
   REQUIRE(imageGeomPtr->getDimensions() == expectedDims);
   REQUIRE(imageGeomPtr->getOrigin() == expectedOrigin);
   REQUIRE(imageGeomPtr->getSpacing() == expectedSpacing);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace WriteVtkStructuredPointsTest

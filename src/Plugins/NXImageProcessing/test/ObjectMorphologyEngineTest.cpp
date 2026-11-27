@@ -152,8 +152,8 @@ std::vector<T> RunBoundedGather(const std::vector<T>& input, usize dimX, usize d
                                 usize targetBytes)
 {
   DataStructure dataStructure;
-  auto* inputArrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "input", {1, dimY, dimX}, {1});
-  auto* outputArrayPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "output", {1, dimY, dimX}, {1});
+  auto* inputArrayPtr = unit_test::CreateTestDataArray<T>(dataStructure, "input", {1, dimY, dimX}, {1});
+  auto* outputArrayPtr = unit_test::CreateTestDataArray<T>(dataStructure, "output", {1, dimY, dimX}, {1});
   REQUIRE(inputArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const T>(input.data(), input.size())).valid());
 
   const StructuringElement structuringElement = MakeStructuringElement(kernelType, radius);
@@ -162,7 +162,7 @@ std::vector<T> RunBoundedGather(const std::vector<T>& input, usize dimX, usize d
   IFilter::MessageHandler messageHandler{};
   ObjectMorphGather<T> gather{inputArrayPtr->getDataStoreRef(),
                               outputArrayPtr->getDataStoreRef(),
-                              SizeVec3{dimX, dimY, 1},
+                              SizeVec3Type{dimX, dimY, 1},
                               structuringElement,
                               boxOffsets,
                               op,
@@ -257,7 +257,7 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: 3D Gather reads each input
   const std::vector<SEOffset> boxOffsets = ImageProcessing::detail::MakeFullBoxNeighborOffsets();
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  ObjectMorphGather<int16> gather{inputStore,   outputStore,   SizeVec3{k_DimX, k_DimY, k_DimZ}, structuringElement, boxOffsets, ObjectMorphOp::Erode, k_ObjectValue, k_BackgroundValue,
+  ObjectMorphGather<int16> gather{inputStore,   outputStore,   SizeVec3Type{k_DimX, k_DimY, k_DimZ}, structuringElement, boxOffsets, ObjectMorphOp::Erode, k_ObjectValue, k_BackgroundValue,
                                   shouldCancel, messageHandler};
   REQUIRE(gather().valid());
 
@@ -281,7 +281,7 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: adaptive 3D batches preser
   constexpr int16 k_BackgroundValue = 2;
   constexpr std::array<int32, 3> k_Radius = {2, 2, 2};
   constexpr usize k_AdaptiveTargetBytes = 5000;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int16> input = MakeObjectPattern<int16>(k_DimX, k_DimY, k_DimZ, k_ObjectValue, int16{0});
   const StructuringElement structuringElement = MakeStructuringElement(KernelType::Ball, k_Radius);
   const std::vector<SEOffset> boxOffsets = ImageProcessing::detail::MakeFullBoxNeighborOffsets();
@@ -289,11 +289,11 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: adaptive 3D batches preser
   auto planResult = ImageProcessing::detail::CreateObjectMorphology3DPlan<int16>(dims, static_cast<usize>(k_Radius[2]), k_AdaptiveTargetBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
-  REQUIRE(plan.outputBatchDepth > 1);
-  REQUIRE(plan.outputBatchDepth == 3);
-  REQUIRE(plan.computeBatchDepth == plan.outputBatchDepth);
-  REQUIRE(plan.residentBytes == 2 * (plan.outputBatchDepth + 2 * static_cast<usize>(k_Radius[2])) * k_SliceValues * sizeof(int16));
-  REQUIRE(plan.residentBytes <= k_AdaptiveTargetBytes);
+  REQUIRE(plan.output_batch_depth > 1);
+  REQUIRE(plan.output_batch_depth == 3);
+  REQUIRE(plan.compute_batch_depth == plan.output_batch_depth);
+  REQUIRE(plan.resident_bytes == 2 * (plan.output_batch_depth + 2 * static_cast<usize>(k_Radius[2])) * k_SliceValues * sizeof(int16));
+  REQUIRE(plan.resident_bytes <= k_AdaptiveTargetBytes);
 
   for(const ObjectMorphOp op : {ObjectMorphOp::Dilate, ObjectMorphOp::Erode})
   {
@@ -326,7 +326,7 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: adaptive 3D batches preser
 
   auto boundedPlanResult = ImageProcessing::detail::CreateObjectMorphology3DPlan<int16>(dims, static_cast<usize>(k_Radius[2]), /*targetBytes=*/3003);
   SIMPLNX_RESULT_REQUIRE_VALID(boundedPlanResult);
-  REQUIRE(boundedPlanResult.value().outputBatchDepth == 1);
+  REQUIRE(boundedPlanResult.value().output_batch_depth == 1);
 }
 
 TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: resident state requires a complete dataset-scaled reservation", "[NXImageProcessing][ObjectMorphologyEngine][WorkingMemory]")
@@ -336,19 +336,19 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: resident state requires a 
   constexpr usize k_DimZ = 128;
   constexpr usize k_ValueCount = k_DimX * k_DimY * k_DimZ;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
 
   auto requiredResult = ImageProcessing::detail::CalculateObjectMorphologyResidentWorkingMemoryBytes<int16>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == k_ValueCount * 2 * sizeof(int16));
   REQUIRE(requiredResult.value() == 128 * k_MiB);
-  Result<usize> overflowDimsResult = ImageProcessing::detail::CalculateObjectMorphologyResidentWorkingMemoryBytes<int32>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  Result<usize> overflowDimsResult = ImageProcessing::detail::CalculateObjectMorphologyResidentWorkingMemoryBytes<int32>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowDimsResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseObjectMorphologyResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseObjectMorphologyResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseObjectMorphologyResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(384 * k_MiB);
@@ -380,7 +380,7 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: real-OOC selector uses res
   constexpr int16 k_BackgroundValue = 2;
   constexpr uint64 k_PartialBudgetBytes = 4096;
   constexpr uint64 k_CompleteBudgetBytes = 8192;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::array<int32, 3> radius = {1, 1, 1};
   const std::vector<int16> input = MakeObjectPattern<int16>(k_DimX, k_DimY, k_DimZ, k_ObjectValue, int16{0});
   const std::vector<int16> expected = ObjectMorphologyOracle<int16>(input, k_DimX, k_DimY, k_DimZ, KernelType::Box, radius, ObjectMorphOp::Erode, k_ObjectValue, k_BackgroundValue);
@@ -388,10 +388,10 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: real-OOC selector uses res
   const std::vector<SEOffset> boxOffsets = ImageProcessing::detail::MakeFullBoxNeighborOffsets();
 
   DataStructure dispatchDataStructure;
-  auto* dispatchInputPtr = UnitTest::CreateTestDataArray<int16>(dispatchDataStructure, "dispatch input", {k_DimZ, k_DimY, k_DimX}, {1});
-  auto* dispatchOutputPtr = UnitTest::CreateTestDataArray<int16>(dispatchDataStructure, "dispatch output", {k_DimZ, k_DimY, k_DimX}, {1});
+  auto* dispatchInputPtr = unit_test::CreateTestDataArray<int16>(dispatchDataStructure, "dispatch input", {k_DimZ, k_DimY, k_DimX}, {1});
+  auto* dispatchOutputPtr = unit_test::CreateTestDataArray<int16>(dispatchDataStructure, "dispatch output", {k_DimZ, k_DimY, k_DimX}, {1});
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
 
   auto run = [&](uint64 budgetBytes) {
@@ -425,8 +425,8 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: real-OOC selector uses res
   const auto& partialPlan = partialPlanResult.value();
   REQUIRE(partialTransfers[0] > 1);
   REQUIRE(partialTransfers[1] <= 3 * k_DimX * k_DimY);
-  REQUIRE(partialTransfers[2] == (k_DimZ + partialPlan.outputBatchDepth - 1) / partialPlan.outputBatchDepth);
-  REQUIRE(partialTransfers[3] == (partialPlan.outputBatchDepth + static_cast<usize>(radius[2])) * k_DimX * k_DimY);
+  REQUIRE(partialTransfers[2] == (k_DimZ + partialPlan.output_batch_depth - 1) / partialPlan.output_batch_depth);
+  REQUIRE(partialTransfers[3] == (partialPlan.output_batch_depth + static_cast<usize>(radius[2])) * k_DimX * k_DimY);
 
   auto undersizedPlanResult = ImageProcessing::detail::CreateObjectMorphology3DPlan<int16>(dims, static_cast<usize>(radius[2]), /*targetBytes=*/671);
   SIMPLNX_RESULT_REQUIRE_INVALID(undersizedPlanResult);
@@ -455,10 +455,10 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: bounded 2D planner account
     const auto result = CreateObjectMorphology2DPlan(/*dimX=*/7, /*dimY=*/11, /*radiusX=*/2, /*radiusY=*/1, /*valueBytes=*/2, /*targetBytes=*/175);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 3);
-    REQUIRE(plan.coreColumns == 7);
-    REQUIRE(plan.residentBytes == 175);
+    REQUIRE(plan.full_width);
+    REQUIRE(plan.core_rows == 3);
+    REQUIRE(plan.core_columns == 7);
+    REQUIRE(plan.resident_bytes == 175);
   }
 
   SECTION("overwide X tiles")
@@ -466,10 +466,10 @@ TEST_CASE("NXImageProcessing::ObjectMorphologyEngine: bounded 2D planner account
     const auto result = CreateObjectMorphology2DPlan(/*dimX=*/31, /*dimY=*/4, /*radiusX=*/2, /*radiusY=*/1, /*valueBytes=*/2, /*targetBytes=*/132);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE_FALSE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 1);
-    REQUIRE(plan.coreColumns == 4);
-    REQUIRE(plan.residentBytes == 132);
+    REQUIRE_FALSE(plan.full_width);
+    REQUIRE(plan.core_rows == 1);
+    REQUIRE(plan.core_columns == 4);
+    REQUIRE(plan.resident_bytes == 132);
   }
 
   SECTION("insufficient and overflowing budgets are rejected")

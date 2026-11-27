@@ -51,10 +51,10 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
         {
           if(inBounds(x + neighbor.offset.dx, y + neighbor.offset.dy, z + neighbor.offset.dz))
           {
-            value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+            value = TraitsType::Fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
           }
         }
-        work[position] = TraitsType::clampToMask(value, mask[position]);
+        work[position] = TraitsType::ClampToMask(value, mask[position]);
       }
     }
   }
@@ -75,10 +75,10 @@ bool ReconstructSweep<T, UseTemporaryWork>::runResidentFrontier(T* work, const T
         {
           if(inBounds(x + neighbor.offset.dx, y + neighbor.offset.dy, z + neighbor.offset.dz))
           {
-            value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+            value = TraitsType::Fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
           }
         }
-        value = TraitsType::clampToMask(value, mask[position]);
+        value = TraitsType::ClampToMask(value, mask[position]);
         work[position] = value;
         for(const NeighborDelta& neighbor : laterNeighbors)
         {
@@ -208,30 +208,30 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize 
             {
               if(z > 0)
               {
-                value = TraitsType::fold(value, work[position - sliceValues]);
+                value = TraitsType::Fold(value, work[position - sliceValues]);
               }
               if(y > 0)
               {
-                value = TraitsType::fold(value, work[position - dimX]);
+                value = TraitsType::Fold(value, work[position - dimX]);
               }
               if(x > 0)
               {
-                value = TraitsType::fold(value, work[position - 1]);
+                value = TraitsType::Fold(value, work[position - 1]);
               }
             }
             else
             {
               if(x + 1 < dimX)
               {
-                value = TraitsType::fold(value, work[position + 1]);
+                value = TraitsType::Fold(value, work[position + 1]);
               }
               if(y + 1 < dimY)
               {
-                value = TraitsType::fold(value, work[position + dimX]);
+                value = TraitsType::Fold(value, work[position + dimX]);
               }
               if(z + 1 < dimZ)
               {
-                value = TraitsType::fold(value, work[position + sliceValues]);
+                value = TraitsType::Fold(value, work[position + sliceValues]);
               }
             }
           }
@@ -244,11 +244,11 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runResident3D(usize dimX, usize 
               const int64 neighborZ = static_cast<int64>(z) + offset.dz;
               if(inBounds(neighborX, neighborY, neighborZ))
               {
-                value = TraitsType::fold(value, work[flat(static_cast<usize>(neighborX), static_cast<usize>(neighborY), static_cast<usize>(neighborZ))]);
+                value = TraitsType::Fold(value, work[flat(static_cast<usize>(neighborX), static_cast<usize>(neighborY), static_cast<usize>(neighborZ))]);
               }
             }
           }
-          const T newValue = TraitsType::clampToMask(value, mask[position]);
+          const T newValue = TraitsType::ClampToMask(value, mask[position]);
           if(newValue != work[position])
           {
             work[position] = newValue;
@@ -373,38 +373,38 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY
               {
                 if(localZ > 0)
                 {
-                  v = TraitsType::fold(v, workSlab[p - sliceValues]);
+                  v = TraitsType::Fold(v, workSlab[p - sliceValues]);
                 }
                 else if(haveAdjacent)
                 {
-                  v = TraitsType::fold(v, adjacent[p2d]);
+                  v = TraitsType::Fold(v, adjacent[p2d]);
                 }
                 if(y > 0)
                 {
-                  v = TraitsType::fold(v, workSlab[p - dimX]);
+                  v = TraitsType::Fold(v, workSlab[p - dimX]);
                 }
                 if(x > 0)
                 {
-                  v = TraitsType::fold(v, workSlab[p - 1]);
+                  v = TraitsType::Fold(v, workSlab[p - 1]);
                 }
               }
               else
               {
                 if(x + 1 < nX)
                 {
-                  v = TraitsType::fold(v, workSlab[p + 1]);
+                  v = TraitsType::Fold(v, workSlab[p + 1]);
                 }
                 if(y + 1 < nY)
                 {
-                  v = TraitsType::fold(v, workSlab[p + dimX]);
+                  v = TraitsType::Fold(v, workSlab[p + dimX]);
                 }
                 if(localZ + 1 < currentSlabPlanes)
                 {
-                  v = TraitsType::fold(v, workSlab[p + sliceValues]);
+                  v = TraitsType::Fold(v, workSlab[p + sliceValues]);
                 }
                 else if(haveAdjacent)
                 {
-                  v = TraitsType::fold(v, adjacent[p2d]);
+                  v = TraitsType::Fold(v, adjacent[p2d]);
                 }
               }
             }
@@ -421,7 +421,7 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY
                 const usize neighbor2d = flat2d(nx, ny);
                 if(o.dz == 0)
                 {
-                  v = TraitsType::fold(v, workSlab[planeOffset + neighbor2d]);
+                  v = TraitsType::Fold(v, workSlab[planeOffset + neighbor2d]);
                 }
                 else
                 {
@@ -429,16 +429,16 @@ Result<> ReconstructSweep<T, UseTemporaryWork>::runDirect(usize dimX, usize dimY
                   if(neighborInsideSlab)
                   {
                     const usize neighborPlaneOffset = forward ? (planeOffset - sliceValues) : (planeOffset + sliceValues);
-                    v = TraitsType::fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
+                    v = TraitsType::Fold(v, workSlab[neighborPlaneOffset + neighbor2d]);
                   }
                   else if(haveAdjacent)
                   {
-                    v = TraitsType::fold(v, adjacent[neighbor2d]);
+                    v = TraitsType::Fold(v, adjacent[neighbor2d]);
                   }
                 }
               }
             }
-            const T newVal = TraitsType::clampToMask(v, maskSlab[p]);
+            const T newVal = TraitsType::ClampToMask(v, maskSlab[p]);
             if(newVal != workSlab[p])
             {
               workSlab[p] = newVal;

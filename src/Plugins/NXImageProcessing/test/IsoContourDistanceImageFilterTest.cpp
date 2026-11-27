@@ -21,7 +21,7 @@ namespace
 {
 using IsoFilterType = IsoContourDistanceImageFilter;
 
-void RunIso(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 levelSetValue, float64 farValue, UnitTest::AlgorithmTestScope* scope = nullptr,
+void RunIso(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 levelSetValue, float64 farValue, unit_test::AlgorithmTestScope* scope = nullptr,
             const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -32,7 +32,7 @@ void RunIso(IFilter& filter, DataStructure& dataStructure, const DataPath& input
   args.insertOrAssign(IsoFilterType::k_LevelSetValue_Key, std::make_any<float64>(levelSetValue));
   args.insertOrAssign(IsoFilterType::k_FarValue_Key, std::make_any<float64>(farValue));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -44,15 +44,15 @@ void RunIso(IFilter& filter, DataStructure& dataStructure, const DataPath& input
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: hand-computed 1D crossing", "[NXImageProcessing][IsoContourDistanceImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 5;
   constexpr usize k_Dy = 1;
   constexpr usize k_Dz = 1;
   const std::vector<int32> field = {0, 1, 2, 3, 4};
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, field);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
@@ -72,8 +72,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: hand-computed 1D cr
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: preflight accepts float, rejects non-scalar", "[NXImageProcessing][IsoContourDistanceImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   auto runPreflight = [](DataStructure& dataStructure, const DataPath& inputPath) {
     const DataPath geomPath = inputPath.getParent().getParent();
@@ -91,26 +91,26 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: preflight accepts f
   {
     DataStructure dataStructure;
     const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 1.0f));
-    REQUIRE(runPreflight(dataStructure, inputPath).outputActions.valid());
+    REQUIRE(runPreflight(dataStructure, inputPath).output_actions.valid());
   }
   SECTION("float64 accepted")
   {
     DataStructure dataStructure;
     const DataPath inputPath = rt::BuildImageFromPattern<float64>(dataStructure, 6, 6, 1, std::vector<float64>(36, 1.0));
-    REQUIRE(runPreflight(dataStructure, inputPath).outputActions.valid());
+    REQUIRE(runPreflight(dataStructure, inputPath).output_actions.valid());
   }
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0)); // creates the geometry + CellData
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
 
     auto result = runPreflight(dataStructure, vecPath);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("tuple mismatch rejected")
   {
@@ -119,11 +119,11 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: preflight accepts f
     const auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputPath.getParent().getParent());
     auto* wrongAmPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, geom.getId());
     const DataPath wrongPath({"Image Geometry", "WrongCellData", "Short"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, wrongPath, {35}, {1});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, wrongPath, {35}, {1});
     DataArray<int32>::Create(dataStructure, "Short", store, wrongAmPtr->getId());
     const auto result = runPreflight(dataStructure, wrongPath);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8001);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8001);
   }
 }
 
@@ -155,8 +155,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: FromSIMPLJson", "[N
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::IsoContourDistanceImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][IsoContourDistanceImageFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   rt::RunDistanceMapItkGoldenBaseline<IsoContourDistanceImageFilter>(
       "2th_cthead1.png", "BasicFilters_IsoContourDistanceImageFilter_default.nrrd", 0.0001,
       [](Arguments& args) { args.insertOrAssign(IsoContourDistanceImageFilter::k_LevelSetValue_Key, std::make_any<float64>(50.0)); }, &scope);

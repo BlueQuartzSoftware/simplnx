@@ -29,12 +29,12 @@ const std::atomic_bool& IdentifyDuplicateVertices::getCancel()
 // -----------------------------------------------------------------------------
 Result<> IdentifyDuplicateVertices::operator()()
 {
-  const auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath);
-  const INodeGeometry2D::SharedVertexList::StoreType& verts = geom.getVertices()->getDataStoreRef();
+  const auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->target_geometry_path);
+  const INodeGeometry2D::SharedVertexListType::StoreType& verts = geom.getVertices()->getDataStoreRef();
 
   // Sort Vertices
-  MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
-  if(!MeshingUtilities::HasDuplicateVertices(geom.getVertices()->getDataStoreRef(), sortedVerticesList))
+  meshing_utilities::SortedVerticesList sortedVerticesList = meshing_utilities::OrderSharedVertices(m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->target_geometry_path), m_ShouldCancel);
+  if(!meshing_utilities::HasDuplicateVertices(geom.getVertices()->getDataStoreRef(), sortedVerticesList))
   {
     // no duplicates found
     return {};
@@ -44,23 +44,23 @@ Result<> IdentifyDuplicateVertices::operator()()
   std::array<IGeometry::MeshIndexType, 3> offset{};
   switch(sortedVerticesList.axis)
   {
-  case MeshingUtilities::AxialAlignment::X: {
+  case meshing_utilities::AxialAlignment::X: {
     offset = {0, 1, 2};
     break;
   }
-  case MeshingUtilities::AxialAlignment::Y: {
+  case meshing_utilities::AxialAlignment::Y: {
     offset = {1, 2, 0};
     break;
   }
-  case MeshingUtilities::AxialAlignment::Z: {
+  case meshing_utilities::AxialAlignment::Z: {
     offset = {2, 1, 0};
     break;
   }
   }
 
-  auto& duplicatesMask = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->DuplicatesMaskPath)->getDataStoreRef();
+  auto& duplicatesMask = m_DataStructure.getDataAs<UInt8ArrayType>(m_InputValues->duplicates_mask_path)->getDataStoreRef();
   duplicatesMask.fill(0);
-  using VertTType = INodeGeometry0D::SharedVertexList::value_type;
+  using VertTType = INodeGeometry0D::SharedVertexListType::value_type;
   for(usize i = 1; i < sortedVerticesList.ordering.size(); i++)
   {
     const IGeometry::MeshIndexType prevIndex = sortedVerticesList.ordering[i - 1] * 3;

@@ -151,7 +151,7 @@ template <typename T>
 class ComputeKMeansTemplate
 {
 public:
-  ComputeKMeansTemplate(ComputeKMeansScanline& filter, const IDataArray& inputArray, IDataArray& meansArray, const IDataArray* maskArray, Int32AbstractDataStore& featureIds,
+  ComputeKMeansTemplate(ComputeKMeansScanline& filter, const IDataArray& inputArray, IDataArray& meansArray, const IDataArray* maskArray, Int32AbstractDataStoreType& featureIds,
                         const ComputeKMeansInputValues& inputValues)
   : m_Filter(filter)
   , m_Input(inputArray.getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -175,7 +175,7 @@ public:
   {
     const usize tupleCount = m_Input.getNumberOfTuples();
     const usize components = m_Input.getNumberOfComponents();
-    const usize clusters = m_InputValues.InitClusters;
+    const usize clusters = m_InputValues.init_clusters;
     if(tupleCount == 0 || components == 0 || clusters == 0)
     {
       return MakeErrorResult(-54061, "Compute K Means requires at least one tuple, component, and cluster.");
@@ -196,7 +196,7 @@ public:
       return MakeErrorResult(-54063, "Compute K Means cannot initialize clusters because the mask contains no selected tuples.");
     }
 
-    std::mt19937_64 generator(m_InputValues.Seed);
+    std::mt19937_64 generator(m_InputValues.seed);
     std::uniform_int_distribution<usize> distribution(0, tupleCount - 1);
     std::vector<usize> centroidIndices(clusters);
     usize selected = 0;
@@ -315,7 +315,7 @@ private:
    */
   Result<> findClusters(usize tupleCount, usize components, ChunkMaskReader& maskReader)
   {
-    const usize meansSize = (m_InputValues.InitClusters + 1) * components;
+    const usize meansSize = (m_InputValues.init_clusters + 1) * components;
     std::vector<float64> means(meansSize);
     auto result = m_Means.copyIntoBuffer(0, nonstd::span<float64>(means.data(), meansSize));
     if(result.invalid())
@@ -352,9 +352,9 @@ private:
         if(maskReader.value(offset + local))
         {
           float64 minimum = std::numeric_limits<float64>::max();
-          for(usize cluster = 0; cluster < m_InputValues.InitClusters; cluster++)
+          for(usize cluster = 0; cluster < m_InputValues.init_clusters; cluster++)
           {
-            const float64 distance = ClusterUtilities::GetDistance(input.get(), local * components, means, (cluster + 1) * components, components, m_InputValues.DistanceMetric);
+            const float64 distance = cluster_utilities::GetDistance(input.get(), local * components, means, (cluster + 1) * components, components, m_InputValues.distance_metric);
             if(distance < minimum)
             {
               minimum = distance;
@@ -383,9 +383,9 @@ private:
    */
   Result<> findMeans(usize tupleCount, usize components)
   {
-    const usize meansSize = (m_InputValues.InitClusters + 1) * components;
+    const usize meansSize = (m_InputValues.init_clusters + 1) * components;
     std::vector<float64> sums(meansSize, 0.0);
-    std::vector<usize> counts(m_InputValues.InitClusters + 1, 0);
+    std::vector<usize> counts(m_InputValues.init_clusters + 1, 0);
     const usize tuplesPerChunk = std::max<usize>(1, k_ChunkValues / components);
     auto input = std::make_unique<T[]>(tuplesPerChunk * components);
     auto featureIds = std::make_unique<int32[]>(tuplesPerChunk);
@@ -409,7 +409,7 @@ private:
       for(usize local = 0; local < count; local++)
       {
         const usize feature = static_cast<usize>(featureIds[local]);
-        if(feature > m_InputValues.InitClusters)
+        if(feature > m_InputValues.init_clusters)
         {
           return MakeErrorResult(-54064, "Compute K Means encountered a cluster id outside the configured cluster range.");
         }
@@ -420,7 +420,7 @@ private:
         counts[feature]++;
       }
     }
-    for(usize feature = 0; feature <= m_InputValues.InitClusters; feature++)
+    for(usize feature = 0; feature <= m_InputValues.init_clusters; feature++)
     {
       for(usize component = 0; component < components; component++)
       {
@@ -435,7 +435,7 @@ private:
   const AbstractDataStore<T>& m_Input;
   AbstractDataStore<float64>& m_Means;
   const IDataArray* m_Mask = nullptr;
-  Int32AbstractDataStore& m_FeatureIds;
+  Int32AbstractDataStoreType& m_FeatureIds;
   const ComputeKMeansInputValues& m_InputValues;
 };
 
@@ -457,7 +457,7 @@ struct ExecuteKMeansFunctor
    * @return Result from the typed implementation.
    */
   template <typename T>
-  Result<> operator()(ComputeKMeansScanline& filter, const IDataArray& input, IDataArray& means, const IDataArray* mask, Int32AbstractDataStore& featureIds,
+  Result<> operator()(ComputeKMeansScanline& filter, const IDataArray& input, IDataArray& means, const IDataArray* mask, Int32AbstractDataStoreType& featureIds,
                       const ComputeKMeansInputValues& inputValues) const
   {
     return ComputeKMeansTemplate<T>(filter, input, means, mask, featureIds, inputValues)();
@@ -486,14 +486,14 @@ const std::atomic_bool& ComputeKMeansScanline::getCancel()
 
 Result<> ComputeKMeansScanline::operator()()
 {
-  if(m_InputValues->InitClusters == 0)
+  if(m_InputValues->init_clusters == 0)
   {
-    return MakeErrorResult(-54061, fmt::format("Number of Clusters ({}) for array '{}' must be greater than zero.", m_InputValues->InitClusters, m_InputValues->ClusteringArrayPath.toString()));
+    return MakeErrorResult(-54061, fmt::format("Number of Clusters ({}) for array '{}' must be greater than zero.", m_InputValues->init_clusters, m_InputValues->clustering_array_path.toString()));
   }
 
-  const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  const IDataArray* maskArrayPtr = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  auto& meansArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MeansArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
+  const IDataArray* maskArrayPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
+  auto& meansArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->means_array_path);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
   return ExecuteDataFunctionNoBool(ExecuteKMeansFunctor{}, clusteringArray.getDataType(), *this, clusteringArray, meansArray, maskArrayPtr, featureIds, *m_InputValues);
 }

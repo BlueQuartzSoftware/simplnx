@@ -24,7 +24,7 @@ using namespace nx::core;
 const fs::path k_VgiSrcFile = fs::path(nx::core::unit_test::k_DREAM3DDataDir.str()) / "TestFiles" / "volume_graphics_test.vgi";
 const fs::path k_VolFile = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.str()) / "VolumeGraphicsTest.vol";
 const fs::path k_VgiDestFile = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.str()) / "VolumeGraphicsTest.vgi";
-const SizeVec3 k_Dimensions = {50, 20, 80};
+const SizeVec3Type k_Dimensions = {50, 20, 80};
 
 // -----------------------------------------------------------------------------
 static void WriteVolTestFile()
@@ -45,9 +45,9 @@ static void WriteVolTestFile()
 
 TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ReadVolumeGraphicsFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const ReadVolumeGraphicsFileFilter filter;
@@ -60,14 +60,14 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execut
   {
     args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_VgiDestFile));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     DataPath dap = DataPath({"VolumeGraphics"});
     const ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(dap);
-    SizeVec3 dims = imageGeom.getDimensions();
+    SizeVec3Type dims = imageGeom.getDimensions();
     REQUIRE(dims[0] == 50);
     REQUIRE(dims[1] == 20);
     REQUIRE(dims[2] == 80);
@@ -76,7 +76,7 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execut
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(dap));
 
     dap = dap.createChildPath("Density");
-    const Float32Array& data = dataStructure.getDataRefAs<Float32Array>(dap);
+    const Float32ArrayType& data = dataStructure.getDataRefAs<Float32ArrayType>(dap);
 
     const size_t numTuples = data.getNumberOfTuples();
     for(size_t i = 0; i < numTuples; i++)
@@ -85,13 +85,13 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter - Valid filter execut
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter: SIMPL Backwards Compatibility", "[NXImageProcessing][ReadVolumeGraphicsFileFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -175,11 +175,11 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter rejects unsupported v
   Arguments args;
   args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(vgiFile));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  CHECK(preflightResult.outputActions.errors()[0].code == -91505);
-  CHECK(preflightResult.outputActions.errors()[0].message.find("Datatype '" + (bits == 64 ? std::string("float") : std::string("unsigned")) + "'") != std::string::npos);
-  CHECK(preflightResult.outputActions.errors()[0].message.find("BitsPerElement " + std::to_string(bits)) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  CHECK(preflightResult.output_actions.errors()[0].code == -91505);
+  CHECK(preflightResult.output_actions.errors()[0].message.find("Datatype '" + (bits == 64 ? std::string("float") : std::string("unsigned")) + "'") != std::string::npos);
+  CHECK(preflightResult.output_actions.errors()[0].message.find("BitsPerElement " + std::to_string(bits)) != std::string::npos);
 }
 
 TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 defaults", "[NXImageProcessing][ReadVolumeGraphicsFileFilter]")
@@ -219,8 +219,8 @@ TEST_CASE("NXImageProcessing::ReadVolumeGraphicsFileFilter preserves float32 def
   args.insertOrAssign(ReadVolumeGraphicsFileFilter::k_VGHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(vgiFile));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"VolumeGraphics", "CT Data", "Density"})));
-  const auto& density = dataStructure.getDataRefAs<Float32Array>(DataPath({"VolumeGraphics", "CT Data", "Density"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"VolumeGraphics", "CT Data", "Density"})));
+  const auto& density = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"VolumeGraphics", "CT Data", "Density"}));
   REQUIRE(density.getSize() == values.size());
   for(usize index = 0; index < values.size(); index++)
   {
@@ -267,11 +267,11 @@ unit = mm
   CAPTURE(resolution);
   if(resolution == "1e40 3 4")
   {
-    args.insertOrAssign(ImageIO::k_ChangeOrigin, true);
+    args.insertOrAssign(image_io::k_ChangeOrigin, true);
     DataStructure dataStructure;
     const auto strict = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-    const auto& diagnostic = strict.outputActions.errors().front();
+    SIMPLNX_RESULT_REQUIRE_INVALID(strict.output_actions);
+    const auto& diagnostic = strict.output_actions.errors().front();
     INFO(diagnostic.message);
     CHECK(diagnostic.code == -91503);
     CHECK(diagnostic.message.find(header.string()) != std::string::npos);
@@ -281,8 +281,8 @@ unit = mm
   }
   else
   {
-    UnitTest::RequireBadReaderMetadata(filter, args, header, true);
+    unit_test::RequireBadReaderMetadata(filter, args, header, true);
   }
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  UnitTest::RequireReaderGeometryExecution(filter, args, DataPath({"VolumeGraphics"}), {4, -3, 8}, {2, 3, 4});
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, DataPath({"VolumeGraphics"}), {4, -3, 8}, {2, 3, 4});
 }

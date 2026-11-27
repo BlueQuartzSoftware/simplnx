@@ -21,16 +21,16 @@ void DataStructObserver::onNotify(DataStructure* /*target*/, const std::shared_p
 {
   switch(msg->getMsgType())
   {
-  case DataAddedMessage::MsgType:
+  case DataAddedMessage::k_MsgType:
     m_AddedCount++;
     break;
-  case DataRemovedMessage::MsgType:
+  case DataRemovedMessage::k_MsgType:
     m_RemovedCount++;
     break;
-  case DataRenamedMessage::MsgType:
+  case DataRenamedMessage::k_MsgType:
     m_RenamedCount++;
     break;
-  case DataReparentedMessage::MsgType:
+  case DataReparentedMessage::k_MsgType:
     m_ReparentedCount++;
     break;
   }

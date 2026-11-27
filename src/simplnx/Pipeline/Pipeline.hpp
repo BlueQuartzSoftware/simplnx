@@ -192,7 +192,7 @@ public:
    * @param allowRenaming = false
    * @return bool
    */
-  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming = false) override;
+  bool preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming = false) override;
 
   /**
    * @brief Executes the pipeline segment using the provided DataStructure.
@@ -226,7 +226,7 @@ public:
    * @param renamedPaths
    * @return bool
    */
-  bool preflightFrom(index_type index, DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
+  bool preflightFrom(index_type index, DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -237,7 +237,7 @@ public:
    * @param index
    * @return bool
    */
-  bool preflightFrom(index_type index, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false);
+  bool preflightFrom(index_type index, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the

@@ -32,7 +32,7 @@ ComputeAvgCAxes::ComputeAvgCAxes(DataStructure& dataStructure, const IFilter::Me
 Result<> ComputeAvgCAxes::operator()()
 {
   // The local ensemble cache avoids cell-loop store access.
-  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStoreRef.getSize();
   auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
   if(Result<> ioResult = crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures)); ioResult.invalid())
@@ -64,10 +64,10 @@ Result<> ComputeAvgCAxes::operator()()
   auto mergeWarnings = [&result](Result<> ioResult) { return MergeResults(std::move(result), std::move(ioResult)); };
 
   // Cell data uses chunked bulk I/O to avoid per-element OOC access.
-  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
-  const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
-  auto& avgCAxesStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath).getDataStoreRef();
+  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path).getDataStoreRef();
+  const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+  auto& avgCAxesStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_c_axes_array_path).getDataStoreRef();
 
   const usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
   const usize totalFeatures = avgCAxesStoreRef.getNumberOfTuples();
@@ -121,7 +121,7 @@ Result<> ComputeAvgCAxes::operator()()
         if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
         {
           return MakeErrorResult(-76404, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                     m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                     m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                      numCrystalStructures, numCrystalStructures));
         }
         const auto crystalStructureType = crystalStructuresCache[currentPhaseIdx];
@@ -151,7 +151,7 @@ Result<> ComputeAvgCAxes::operator()()
         curCAxis.normalize();
 
         // Antiparallel c axes represent the same hexagonal direction.
-        float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
+        float64 w = image_rotation_utilities::CosBetweenVectors(c1, curCAxis);
         if(w < 0.0)
         {
           c1 *= -1.0f;

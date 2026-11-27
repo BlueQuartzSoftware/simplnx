@@ -17,13 +17,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT AddBadDataInputValues
 {
-  bool PoissonNoise{};
-  float32 PoissonVolFraction{};
-  bool BoundaryNoise{};
-  float32 BoundaryVolFraction{};
-  DataPath GBEuclideanDistancesArrayPath;
-  DataPath ImageGeometryPath;
-  uint64 SeedValue{};
+  bool poisson_noise{};
+  float32 poisson_vol_fraction{};
+  bool boundary_noise{};
+  float32 boundary_vol_fraction{};
+  DataPath gb_euclidean_distances_array_path;
+  DataPath image_geometry_path;
+  uint64 seed_value{};
 };
 
 /**

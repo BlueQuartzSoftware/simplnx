@@ -138,9 +138,9 @@ public:
     auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore, warnings);
 
     Result<> result;
-    result.m_Warnings = std::move(warnings);
+    result.m_warnings = std::move(warnings);
 
-    if(listStorePtr == nullptr && !result.m_Warnings.empty())
+    if(listStorePtr == nullptr && !result.m_warnings.empty())
     {
       // A recovery placeholder cannot materialize a NeighborList.
       return result;
@@ -190,7 +190,7 @@ public:
     Result<> result;
     for(auto&& warning : numNeighborsResult.warnings())
     {
-      result.m_Warnings.push_back(std::move(warning));
+      result.m_warnings.push_back(std::move(warning));
     }
     if(numNeighborsResult.value() == nullptr)
     {
@@ -251,7 +251,7 @@ public:
     // Store list lengths separately so the reader can rebuild ragged vectors.
     const auto neighborData = neighborList.getVectors();
     const usize arraySize = neighborData.size();
-    auto* numNeighborsArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
+    auto* numNeighborsArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
     auto& numNeighborsStore = numNeighborsArrayPtr->getDataStoreRef();
     usize totalItems = 0;
     for(usize i = 0; i < arraySize; i++)
@@ -288,7 +288,7 @@ public:
     // Neighbor values can be large. Apply the configured compression level to
     // the packed array as well as the companion counts.
     auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
-    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
+    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compression_level);
     result = data_store_io::WriteDataStore<T>(datasetWriter, flattenedData);
     if(result.invalid())
     {
@@ -330,17 +330,17 @@ public:
   NeighborListIO& operator=(NeighborListIO&& rhs) = delete;
 };
 
-using Int8NeighborIO = NeighborListIO<int8>;
-using Int16NeighborIO = NeighborListIO<int16>;
-using Int32NeighborIO = NeighborListIO<int32>;
-using Int64NeighborIO = NeighborListIO<int64>;
+using Int8NeighborIoType = NeighborListIO<int8>;
+using Int16NeighborIoType = NeighborListIO<int16>;
+using Int32NeighborIoType = NeighborListIO<int32>;
+using Int64NeighborIoType = NeighborListIO<int64>;
 
-using UInt8NeighborIO = NeighborListIO<uint8>;
-using UInt16NeighborIO = NeighborListIO<uint16>;
-using UInt32NeighborIO = NeighborListIO<uint32>;
-using UInt64NeighborIO = NeighborListIO<uint64>;
+using UInt8NeighborIoType = NeighborListIO<uint8>;
+using UInt16NeighborIoType = NeighborListIO<uint16>;
+using UInt32NeighborIoType = NeighborListIO<uint32>;
+using UInt64NeighborIoType = NeighborListIO<uint64>;
 
 // using BoolNeighborIO = NeighborListIO<bool>;
-using Float32NeighborIO = NeighborListIO<float32>;
-using Float64NeighborIO = NeighborListIO<float64>;
+using Float32NeighborIoType = NeighborListIO<float32>;
+using Float64NeighborIoType = NeighborListIO<float64>;
 } // namespace nx::core::hdf5

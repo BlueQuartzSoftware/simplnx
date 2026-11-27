@@ -16,7 +16,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nx::core::FeatureRemovalTest
+namespace nx::core::feature_removal_test
 {
 constexpr usize k_Dim = 200;
 constexpr usize k_SliceTuples = k_Dim * k_Dim;
@@ -38,7 +38,7 @@ inline const DataPath k_FeatureMarkerPath = k_FeatureDataPath.createChildPath("F
 template <typename T>
 DataArray<T>& CreateArray(DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId)
 {
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
   return *DataArray<T>::Create(dataStructure, path.getTargetName(), std::move(store), parentId);
 }
 

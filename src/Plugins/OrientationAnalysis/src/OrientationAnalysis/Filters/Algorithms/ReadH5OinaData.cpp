@@ -88,7 +88,7 @@ Result<> CopyRawData(const ReadH5DataInputValues* inputValues, usize count, Data
                      const std::atomic_bool& shouldCancel)
 {
   using ArrayType = DataArray<T>;
-  auto& dataRef = dataStructure.getDataRefAs<ArrayType>(inputValues->CellAttributeMatrixPath.createChildPath(name));
+  auto& dataRef = dataStructure.getDataRefAs<ArrayType>(inputValues->cell_attribute_matrix_path.createChildPath(name));
   const auto* rawDataPtr = reinterpret_cast<const T*>(reader.getPointerByName(name));
   constexpr usize k_ValuesPerBatch = 65536;
   for(usize localOffset = 0; localOffset < count; localOffset += k_ValuesPerBatch)
@@ -123,7 +123,7 @@ Result<> ConvertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize to
 {
   using ArrayType = DataArray<T>;
 
-  const auto& crystalStructuresRef = dataStructure.getDataRefAs<UInt32Array>(inputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
+  const auto& crystalStructuresRef = dataStructure.getDataRefAs<UInt32ArrayType>(inputValues->cell_ensemble_attribute_matrix_path.createChildPath(ebsdlib::AngFile::CrystalStructures));
   const auto& crystalStructuresDSRef = crystalStructuresRef.getDataStoreRef();
   std::vector<uint32> crystalStructures(crystalStructuresDSRef.getNumberOfTuples());
   Result<> result = crystalStructuresDSRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size()));
@@ -132,10 +132,10 @@ Result<> ConvertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize to
     return result;
   }
 
-  const auto& cellPhasesRef = dataStructure.getDataRefAs<ArrayType>(inputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5OINA::Phase));
+  const auto& cellPhasesRef = dataStructure.getDataRefAs<ArrayType>(inputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5OINA::Phase));
   const auto& cellPhasesDSRef = cellPhasesRef.getDataStoreRef();
 
-  auto& eulerRef = dataStructure.getDataRefAs<Float32Array>(inputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5OINA::Euler));
+  auto& eulerRef = dataStructure.getDataRefAs<Float32ArrayType>(inputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5OINA::Euler));
   auto& eulerDataStoreRef = eulerRef.getDataStoreRef();
 
   constexpr usize k_TuplesPerBatch = 65536;
@@ -161,11 +161,11 @@ Result<> ConvertHexEulerAngle(const ReadH5DataInputValues* inputValues, usize to
     for(usize index = 0; index < count; index++)
     {
       const usize phase = static_cast<usize>(phases[index]);
-      if(EbsdReaderUtilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
+      if(ebsd_reader_utilities::IsHexagonalCrystalStructure(crystalStructures[phase]))
       {
         const auto phi2 = static_cast<float64>(eulers[index * 3 + 2]);
         // H5OINA stores radians. The float64 intermediate preserves correct rounding when the shifted value is stored as float32.
-        eulers[index * 3 + 2] = static_cast<float32>(phi2 + EbsdReaderUtilities::k_HexagonalAlignmentRadiansD);
+        eulers[index * 3 + 2] = static_cast<float32>(phi2 + ebsd_reader_utilities::k_HexagonalAlignmentRadiansD);
       }
     }
     result = eulerDataStoreRef.copyFromBuffer((tupleOffset + localOffset) * 3, nonstd::span<const float32>(eulers.data(), count * 3));
@@ -189,7 +189,7 @@ ReadH5OinaData::~ReadH5OinaData() noexcept = default;
 
 Result<> ReadH5OinaData::operator()()
 {
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
 
   // The scan loop is kept here rather than in IEbsdOemReader::execute() so that the
@@ -199,8 +199,8 @@ Result<> ReadH5OinaData::operator()()
   // The stacking order chooses which end of the selection list lands in tuple slab 0:
   // Low-to-High reads the scans in the order they are listed, High-to-Low reads them in
   // the reverse of that order, so the last selected scan occupies slab 0.
-  std::vector<std::string> orderedScanNames(m_InputValues->SelectedScanNames.scanNames.cbegin(), m_InputValues->SelectedScanNames.scanNames.cend());
-  if(m_InputValues->SelectedScanNames.stackingOrder == RefFrameZDir::k_HightoLow)
+  std::vector<std::string> orderedScanNames(m_InputValues->selected_scan_names.scan_names.cbegin(), m_InputValues->selected_scan_names.scan_names.cend());
+  if(m_InputValues->selected_scan_names.stacking_order == ref_frame_z_dir::k_HightoLow)
   {
     std::reverse(orderedScanNames.begin(), orderedScanNames.end());
   }
@@ -247,14 +247,14 @@ Result<> ReadH5OinaData::operator()()
 // -----------------------------------------------------------------------------
 Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   const usize totalPoints = imageGeom.getNumXCells() * imageGeom.getNumYCells();
   // Scan `scanIndex` occupies the tuple slab [scanIndex * totalPoints, (scanIndex + 1) * totalPoints).
   const usize tupleOffset = static_cast<usize>(scanIndex) * totalPoints;
 
   const std::string& scanName = m_CurrentScanName;
 
-  if(Result<> extentResults = ValidateDataSetExtents(m_InputValues->SelectedScanNames.inputFilePath, scanName, totalPoints); extentResults.invalid())
+  if(Result<> extentResults = ValidateDataSetExtents(m_InputValues->selected_scan_names.input_file_path, scanName, totalPoints); extentResults.invalid())
   {
     return extentResults;
   }
@@ -299,7 +299,7 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
   // loop below and in every downstream filter, so it is range checked before it is
   // stored. The valid range is [0, phase count]: 0 is the reserved Invalid Phase slot.
   {
-    const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
+    const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->cell_ensemble_attribute_matrix_path.createChildPath(ebsdlib::AngFile::CrystalStructures));
     const usize ensembleTupleCount = crystalStructures.getNumberOfTuples();
     const nonstd::span<uint8> rawPhaseSpan(reinterpret_cast<uint8*>(m_Reader->getPointerByName(ebsdlib::H5OINA::Phase)), totalPoints);
     for(usize tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
@@ -307,15 +307,15 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
       if(static_cast<usize>(rawPhaseSpan[tupleIdx]) >= ensembleTupleCount)
       {
         return MakeErrorResult(-34972, fmt::format("Scan point {} of scan '{}' in '{}' carries phase value {}, which is outside the valid range [0, {}] established by the file's phase definitions.",
-                                                   tupleIdx, scanName, m_InputValues->SelectedScanNames.inputFilePath.string(), rawPhaseSpan[tupleIdx], ensembleTupleCount - 1));
+                                                   tupleIdx, scanName, m_InputValues->selected_scan_names.input_file_path.string(), rawPhaseSpan[tupleIdx], ensembleTupleCount - 1));
       }
     }
   }
 
-  if(m_InputValues->ConvertPhaseToInt32)
+  if(m_InputValues->convert_phase_to_int32)
   {
     const nonstd::span<uint8> rawDataSpan(reinterpret_cast<uint8*>(m_Reader->getPointerByName(ebsdlib::H5OINA::Phase)), totalPoints);
-    auto& dataRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5OINA::Phase));
+    auto& dataRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5OINA::Phase));
     constexpr usize k_TuplesPerBatch = 65536;
     std::vector<int32> phaseBuffer(k_TuplesPerBatch);
     for(usize localOffset = 0; localOffset < totalPoints; localOffset += k_TuplesPerBatch)
@@ -360,9 +360,9 @@ Result<> ReadH5OinaData::copyRawEbsdData(int scanIndex)
     return {};
   }
 
-  if(m_InputValues->EdaxHexagonalAlignment)
+  if(m_InputValues->edax_hexagonal_alignment)
   {
-    if(m_InputValues->ConvertPhaseToInt32)
+    if(m_InputValues->convert_phase_to_int32)
     {
       result = ConvertHexEulerAngle<int32>(m_InputValues, totalPoints, tupleOffset, m_DataStructure, m_ShouldCancel);
     }

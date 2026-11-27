@@ -14,15 +14,15 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeBoundaryStrengthsInputValues
 {
-  VectorFloat64ParameterType::ValueType Loading;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath SurfaceMeshF1sArrayName;
-  DataPath SurfaceMeshF1sptsArrayName;
-  DataPath SurfaceMeshF7sArrayName;
-  DataPath SurfaceMeshmPrimesArrayName;
+  VectorFloat64ParameterType::ValueType loading;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath surface_mesh_f1s_array_name;
+  DataPath surface_mesh_f1spts_array_name;
+  DataPath surface_mesh_f7s_array_name;
+  DataPath surface_meshm_primes_array_name;
 };
 
 /**

@@ -93,7 +93,7 @@ AbstractPlugin::IOManagersContainerType AbstractPlugin::getDataIOManagers() cons
   return m_IOManagers;
 }
 
-void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
+void AbstractPlugin::addDataIOManager(const IoManagerPointerType& ioManager)
 {
   m_IOManagers.push_back(ioManager);
 }

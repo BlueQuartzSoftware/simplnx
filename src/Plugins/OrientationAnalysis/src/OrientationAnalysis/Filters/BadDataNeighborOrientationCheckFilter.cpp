@@ -66,18 +66,18 @@ Parameters BadDataNeighborOrientationCheckFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input/Output Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Used to define Cells as good or bad", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each phase",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -125,14 +125,14 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pMaskArrayPathValue}, -6810); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  resultOutputActions.value().modifiedActions.emplace_back(DataObjectModification{
-      .modifiedPath = pMaskArrayPathValue, .modifiedType = DataObjectModification::ModifiedType::Modified, .dataObjectType = dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
+  resultOutputActions.value().modified_actions.emplace_back(DataObjectModification{
+      .modified_path = pMaskArrayPathValue, .modified_type = DataObjectModification::ModifiedType::Modified, .data_object_type = dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -141,13 +141,13 @@ Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataS
 {
   BadDataNeighborOrientationCheckInputValues inputValues;
 
-  inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  inputValues.NumberOfNeighbors = filterArgs.value<int32>(k_NumberOfNeighbors_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.misorientation_tolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);
+  inputValues.number_of_neighbors = filterArgs.value<int32>(k_NumberOfNeighbors_Key);
+  inputValues.image_geom_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.quats_array_path = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   return BadDataNeighborOrientationCheck(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

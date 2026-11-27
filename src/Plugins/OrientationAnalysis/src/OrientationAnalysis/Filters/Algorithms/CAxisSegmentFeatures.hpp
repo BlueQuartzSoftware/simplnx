@@ -22,18 +22,18 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
 {
-  float32 MisorientationTolerance = 0.0f;
-  bool UseMask = false;
-  bool RandomizeFeatureIds = false;
-  SegmentFeatures::NeighborScheme NeighborScheme{};
-  DataPath ImageGeometryPath;
-  DataPath QuatsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath MaskArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellFeatureAttributeMatrixPath;
-  DataPath ActiveArrayPath;
+  float32 misorientation_tolerance = 0.0f;
+  bool use_mask = false;
+  bool randomize_feature_ids = false;
+  SegmentFeatures::NeighborScheme neighbor_scheme{};
+  DataPath image_geometry_path;
+  DataPath quats_array_path;
+  DataPath cell_phases_array_path;
+  DataPath mask_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath feature_ids_array_path;
+  DataPath cell_feature_attribute_matrix_path;
+  DataPath active_array_path;
 };
 
 /**
@@ -116,10 +116,10 @@ protected:
 private:
   const CAxisSegmentFeaturesInputValues* m_InputValues = nullptr;
 
-  Float32Array* m_QuatsArray = nullptr;
-  Int32Array* m_CellPhases = nullptr;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
-  Int32Array* m_FeatureIdsArray = nullptr;
+  Float32ArrayType* m_QuatsArray = nullptr;
+  Int32ArrayType* m_CellPhases = nullptr;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> m_GoodVoxelsArray = nullptr;
+  Int32ArrayType* m_FeatureIdsArray = nullptr;
 
   /**
    * @brief Allocates two local X-Y slice buffers.

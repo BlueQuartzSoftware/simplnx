@@ -21,14 +21,14 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 {
-  VectorInt32ParameterType::ValueType KernelSize;
-  bool UseFeatureIds = true;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath QuatsArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath KernelAverageMisorientationsArrayName;
-  DataPath InputImageGeometry;
+  VectorInt32ParameterType::ValueType kernel_size;
+  bool use_feature_ids = true;
+  DataPath feature_ids_array_path;
+  DataPath cell_phases_array_path;
+  DataPath quats_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath kernel_average_misorientations_array_name;
+  DataPath input_image_geometry;
 };
 
 /**

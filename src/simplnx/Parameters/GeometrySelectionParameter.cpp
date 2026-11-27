@@ -24,7 +24,7 @@ Uuid GeometrySelectionParameter::uuid() const
   return ParameterTraits<GeometrySelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes GeometrySelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType GeometrySelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -53,7 +53,7 @@ Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& 
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string));
   }
   return {{std::move(*path)}};
 }
@@ -91,13 +91,13 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Geometry Path cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}Geometry Path cannot be empty", prefix));
   }
 
   const DataObject* objectPtr = dataStructure.getData(value);
   if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateDoesNotExist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
   const IGeometry* geometryPtr = dynamic_cast<const IGeometry*>(objectPtr);
@@ -113,7 +113,7 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
   }
 
   return nx::core::MakeErrorResult(
-      nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
+      nx::core::filter_parameter::constants::k_ValidateAllowedTypeError,
       fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometryPtr->getTypeName(), IGeometry::StringListFromGeometryType(m_AllowedTypes)));
 }
 

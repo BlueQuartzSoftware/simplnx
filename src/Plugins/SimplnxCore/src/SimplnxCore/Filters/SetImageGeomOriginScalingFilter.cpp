@@ -63,11 +63,11 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", true));
   params.insert(
       std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0f, 0.0f, 0.0f},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0f, 0.0f, 0.0f},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", true));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0f, 1.0f, 1.0f},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0f, 1.0f, 1.0f},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
@@ -99,12 +99,12 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   auto origin = filterArgs.value<std::vector<float32>>(k_Origin_Key);
   auto spacing = filterArgs.value<std::vector<float32>>(k_Spacing_Key);
 
-  std::optional<FloatVec3> optOrigin;
-  std::optional<FloatVec3> optSpacing;
+  std::optional<FloatVec3Type> optOrigin;
+  std::optional<FloatVec3Type> optSpacing;
 
   const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  FloatVec3 originVec = srcImageGeomPtr->getOrigin();
-  FloatVec3 spacingVec = srcImageGeomPtr->getSpacing();
+  FloatVec3Type originVec = srcImageGeomPtr->getOrigin();
+  FloatVec3Type spacingVec = srcImageGeomPtr->getSpacing();
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -113,10 +113,10 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   bool centerOrigin = false;
   if(shouldChangeOrigin)
   {
-    auto validation = GeometryUtilities::ValidateFiniteVector(origin, "Origin", k_OriginDomain);
+    auto validation = geometry_utilities::ValidateFiniteVector(origin, "Origin", k_OriginDomain);
     if(validation.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
     originVec = {origin[0], origin[1], origin[2]};
     optOrigin = originVec;
@@ -124,10 +124,10 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   }
   if(shouldChangeSpacing)
   {
-    auto validation = GeometryUtilities::ValidatePositiveFiniteVector(spacing, "Spacing", k_SpacingDomain);
+    auto validation = geometry_utilities::ValidatePositiveFiniteVector(spacing, "Spacing", k_SpacingDomain);
     if(validation.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
     spacingVec = {spacing[0], spacing[1], spacing[2]};
     optSpacing = spacingVec;
@@ -140,7 +140,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   if(centerOrigin)
   {
     const auto dims = srcImageGeomPtr->getDimensions();
-    const BoundingBox3Df bounds(
+    const BoundingBox3DfType bounds(
         std::array<float32, 6>{originVec[0], originVec[1], originVec[2], originVec[0] + dims[0] * spacingVec[0], originVec[1] + dims[1] * spacingVec[1], originVec[2] + dims[2] * spacingVec[2]});
     const auto center = bounds.center();
     const auto& min = bounds.getMinPoint();
@@ -159,13 +159,13 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
-  preflightUpdatedValues.push_back({"Input Geometry  [Before Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+  preflightUpdatedValues.push_back({"Input Geometry  [Before Update]", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
                                                                                                                                     srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
   preflightUpdatedValues.push_back(
-      {"Image Geometry [After Update]", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), spacingVec, originVec, srcImageGeomPtr->getUnits())});
+      {"Image Geometry [After Update]", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), spacingVec, originVec, srcImageGeomPtr->getUnits())});
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -196,13 +196,13 @@ Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann:
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ChangeOriginKey, k_ChangeOrigin_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_OriginKey, k_Origin_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ChangeResolutionKey, k_ChangeSpacing_Key));
-  Result<> spacingResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
+  Result<> spacingResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
   {
     // 6.5 key for spacing was named resolution
-    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {

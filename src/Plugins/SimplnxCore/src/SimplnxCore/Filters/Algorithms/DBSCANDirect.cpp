@@ -34,7 +34,7 @@ namespace
  *
  * The adapter avoids allocating one mask value for each coordinate tuple.
  */
-class AllTrueMaskCompare final : public MaskCompareUtilities::MaskCompare
+class AllTrueMaskCompare final : public mask_compare_utilities::MaskCompare
 {
 public:
   /**
@@ -214,7 +214,7 @@ public:
    */
   template <typename T>
   HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -239,7 +239,7 @@ public:
       auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
       auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
       auto zVal = static_cast<float32>(inputArray[tup * numComps + 2]);
-      Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<3>(arrayPath, tup, {xVal, yVal, zVal});
+      Result<> finiteResult = dbscan_common::CheckFiniteCoordinates<3>(arrayPath, tup, {xVal, yVal, zVal});
       if(finiteResult.invalid())
       {
         m_InitializationResult = std::move(finiteResult);
@@ -271,7 +271,7 @@ public:
     origin[1] = bounds[1] - buffer;
     origin[2] = bounds[2] - buffer;
 
-    Result<std::array<usize, 3>> dimsResult = DBSCANCommon::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
+    Result<std::array<usize, 3>> dimsResult = dbscan_common::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
     if(dimsResult.invalid())
     {
       m_InitializationResult = ConvertResult(std::move(dimsResult));
@@ -439,7 +439,7 @@ public:
    */
   template <typename T>
   HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -463,7 +463,7 @@ public:
 
       auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
       auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
-      Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<2>(arrayPath, tup, {xVal, yVal});
+      Result<> finiteResult = dbscan_common::CheckFiniteCoordinates<2>(arrayPath, tup, {xVal, yVal});
       if(finiteResult.invalid())
       {
         m_InitializationResult = std::move(finiteResult);
@@ -492,7 +492,7 @@ public:
     origin[0] = bounds[0] - buffer;
     origin[1] = bounds[1] - buffer;
 
-    Result<std::array<usize, 2>> dimsResult = DBSCANCommon::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
+    Result<std::array<usize, 2>> dimsResult = dbscan_common::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
     if(dimsResult.invalid())
     {
       m_InitializationResult = ConvertResult(std::move(dimsResult));
@@ -851,7 +851,7 @@ public:
    * @param distMetric Distance metric for pairwise tests.
    */
   GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-       const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, ClusterUtilities::DistanceMetric distMetric)
+       const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, cluster_utilities::DistanceMetric distMetric)
   : m_HyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, arrayPath, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
@@ -1090,7 +1090,7 @@ private:
 
   float32 m_Epsilon = 0.0f;
   const AbstractDataStore<T>& m_InputDataStore;
-  ClusterUtilities::DistanceMetric m_DistMetric;
+  cluster_utilities::DistanceMetric m_DistMetric;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
@@ -1173,7 +1173,7 @@ private:
       }
       for(usize qPointId : m_HyperGridBitMap.grid_voxels[qGridId])
       {
-        float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (HGBPT::Dimensions * pPointId), m_InputDataStore, (HGBPT::Dimensions * qPointId), HGBPT::Dimensions, m_DistMetric);
+        float64 dist = cluster_utilities::GetDistance(m_InputDataStore, (HGBPT::Dimensions * pPointId), m_InputDataStore, (HGBPT::Dimensions * qPointId), HGBPT::Dimensions, m_DistMetric);
         if(dist < m_Epsilon)
         {
           return true;
@@ -1197,11 +1197,11 @@ private:
  * @return Warning, error, or success from grid construction, clustering, and labeling.
  */
 template <class AlgorithmT, typename T>
-Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, Int32ArrayType& featureIds,
                       const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   messageHandler.sendInfoMessage("Partitioning Input Data:");
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->ClusteringArrayPath, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->clustering_array_path, inputValues->epsilon, mask, inputValues->distance_metric);
 
   Result<> initializationResult = algorithm.takeInitializationResult();
   if(initializationResult.invalid())
@@ -1215,7 +1215,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
   }
 
   messageHandler.sendInfoMessage("Clustering:");
-  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
+  Result<> result = algorithm.cluster(inputValues->min_points, static_cast<DBSCAN::ParseOrder>(inputValues->parse_order), inputValues->seed);
   if(result.invalid())
   {
     return result;
@@ -1252,7 +1252,7 @@ struct DBSCANDirectFunctor
    * @return Result from the selected specialization, or an error for another component count.
    */
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, Int32ArrayType& featureIds,
                       const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
@@ -1284,18 +1284,18 @@ Result<> DBSCANDirect::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
-  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  if(m_InputValues->UseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range& exception)
     {
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
       return MakeErrorResult(-54060, message);
     }
   }
@@ -1318,7 +1318,7 @@ Result<> DBSCANDirect::operator()()
   messageHandler.sendInfoMessage("Resizing clustering Attribute Matrix:");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
-  Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
+  Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->feature_am)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
   if(resizeResult.invalid())
   {
     return resizeResult;

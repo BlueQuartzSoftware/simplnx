@@ -19,8 +19,8 @@ using namespace nx::core;
 // requireScalar=false multi-component path once via Abs; it is identical for ALL the pointwise filters.
 TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is processed per-component", "[NXImageProcessing][AbsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
@@ -30,7 +30,7 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is 
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {3});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {3});
   auto* inArrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& inRef = inArrayPtr->getDataStoreRef();
   // 2 tuples x 3 components = 6 values, mixed signs so abs is non-trivial on every component.
@@ -57,8 +57,8 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is 
 // The integer-domain abs returns the exact 2^53 + 1.
 TEST_CASE("NXImageProcessing::AbsImageFilter: int64 abs is exact in the integer domain", "[NXImageProcessing][AbsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr int64 k_Neg = -9007199254740993LL;     // -(2^53 + 1)
   constexpr int64 k_Expected = 9007199254740993LL; // 2^53 + 1 (unrepresentable in float64)
@@ -70,7 +70,7 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: int64 abs is exact in the integer 
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<int64>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<int64>(dataStructure, inputPath, cellShape, {1});
   auto* inArrayPtr = DataArray<int64>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   inArrayPtr->getDataStoreRef().setValue(0, k_Neg);
   inArrayPtr->getDataStoreRef().setValue(1, int64{-5});
@@ -99,8 +99,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunAbsItkGolden(const std::string& inputFile, const std::string& baselineFile)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -116,7 +116,7 @@ void RunAbsItkGolden(const std::string& inputFile, const std::string& baselineFi
   args.insertOrAssign(AbsImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   AbsImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -128,7 +128,7 @@ void RunAbsItkGolden(const std::string& inputFile, const std::string& baselineFi
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -150,8 +150,8 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: ITK real-image golden (short)", "[
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose tuple count != geometry cell count", "[NXImageProcessing][AbsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
@@ -163,7 +163,7 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose t
   const ShapeType mismatchedShape = {8};
   auto* amPtr = AttributeMatrix::Create(dataStructure, "Data", ShapeType(mismatchedShape.cbegin(), mismatchedShape.cend()));
   const DataPath inputPath({"Data", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, mismatchedShape, {1});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, mismatchedShape, {1});
   DataArray<float32>::Create(dataStructure, "Input", store, amPtr->getId());
 
   AbsImageFilter filter;
@@ -173,6 +173,6 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose t
   args.insertOrAssign(AbsImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_GeometryMismatch);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_GeometryMismatch);
 }

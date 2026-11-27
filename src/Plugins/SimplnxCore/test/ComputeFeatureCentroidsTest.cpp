@@ -35,7 +35,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 // =============================================================================
 // V&V Class 1 (Analytical) + Class 4 (Invariant) oracle support — added 2026-07-07.
@@ -111,7 +111,7 @@ public:
   Result<> copyIntoBuffer(usize offset, nonstd::span<int32> buffer) const override
   {
     m_ReadCount++;
-    m_MaxWorkingReserved = std::max(m_MaxWorkingReserved, CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes());
+    m_MaxWorkingReserved = std::max(m_MaxWorkingReserved, CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes());
     if(m_ReadCount == m_FailOnRead)
     {
       return MakeErrorResult(-91912, "Injected periodic centroid read failure");
@@ -151,7 +151,7 @@ class CentroidsBudgetSentinel
 {
 public:
   explicit CentroidsBudgetSentinel(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   , m_PreviousReserved(m_Manager.reservedWorkingMemoryBytes())
   {
@@ -228,8 +228,8 @@ inline static std::shared_ptr<CentroidsObservedReadStore> ObserveIds(Scaffold& s
   {
     (*observed)[index] = values[index];
   }
-  REQUIRE_NOTHROW(s.ds.getDataRefAs<Int32Array>(s.featureIdsPath));
-  auto& array = s.ds.getDataRefAs<Int32Array>(s.featureIdsPath);
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<Int32ArrayType>(s.featureIdsPath));
+  auto& array = s.ds.getDataRefAs<Int32ArrayType>(s.featureIdsPath);
   auto result = array.setDataStore(observed);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   return observed;
@@ -252,19 +252,19 @@ inline static void PrepareSentinelOutput(Scaffold& s, usize featureCount)
 inline static Result<> RunDirect(Scaffold& s, const std::atomic_bool& cancel)
 {
   ComputeFeatureCentroidsInputValues inputs;
-  inputs.FeatureIdsArrayPath = s.featureIdsPath;
-  inputs.CentroidsArrayPath = s.centroids_path;
-  inputs.ImageGeometryPath = s.geomPath;
-  inputs.FeatureAttributeMatrixPath = s.feature_am_path;
-  inputs.IsPeriodic = true;
+  inputs.feature_ids_array_path = s.featureIdsPath;
+  inputs.centroids_array_path = s.centroids_path;
+  inputs.image_geometry_path = s.geomPath;
+  inputs.feature_attribute_matrix_path = s.feature_am_path;
+  inputs.is_periodic = true;
   const IFilter::MessageHandler handler{};
   return ComputeFeatureCentroids(s.ds, handler, cancel, &inputs)();
 }
 
 inline static void RequireUnpublished(const Scaffold& s)
 {
-  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroids_path));
-  const auto& output = s.ds.getDataRefAs<Float32Array>(s.centroids_path);
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32ArrayType>(s.centroids_path));
+  const auto& output = s.ds.getDataRefAs<Float32ArrayType>(s.centroids_path);
   for(usize index = 0; index < output.getSize(); index++)
   {
     REQUIRE(output[index] == k_UnpublishedSentinel);
@@ -362,13 +362,13 @@ inline static std::vector<float32> Run(Scaffold& s, bool isPeriodic)
   Arguments args = MakeArguments(s, isPeriodic);
 
   auto preflightResult = filter.preflight(s.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(s.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroids_path));
-  const auto& centroids = s.ds.getDataRefAs<Float32Array>(s.centroids_path);
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32ArrayType>(s.centroids_path));
+  const auto& centroids = s.ds.getDataRefAs<Float32ArrayType>(s.centroids_path);
   std::vector<float32> out(centroids.getSize());
   for(usize i = 0; i < centroids.getSize(); ++i)
   {
@@ -387,7 +387,7 @@ inline static void RequireCentroid(const std::vector<float32>& c, usize featureI
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tail oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool periodic = GENERATE(false, true);
   CAPTURE(periodic);
@@ -397,42 +397,42 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 65536-block tai
   featureIds[k_BlockTuples - 1] = 1;
   featureIds[k_BlockTuples] = 1;
   auto fixture = centroid_toy::Build(k_BlockTuples + 1, 1, 1, {2.0F, 3.0F, 4.0F}, {10.0F, -2.0F, 7.0F}, 3, featureIds);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath));
-  auto& idsArray = fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath);
-  auto store = DataStoreUtilities::ConvertDataStore<int32>(idsArray.getDataStoreRef(), "HDF5-OOC");
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32ArrayType>(fixture.featureIdsPath));
+  auto& idsArray = fixture.ds.getDataRefAs<Int32ArrayType>(fixture.featureIdsPath);
+  auto store = data_store_utilities::ConvertDataStore<int32>(idsArray.getDataStoreRef(), "HDF5-OOC");
   REQUIRE(store != nullptr);
   auto replaceResult = idsArray.setDataStore(store);
   SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
   REQUIRE(idsArray.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const auto centroids = centroid_toy::Run(fixture, periodic);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path));
-  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(fixture.centroids_path));
+  REQUIRE(fixture.ds.getDataRefAs<Float32ArrayType>(fixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   // The two feature-one centers are x=131081 and x=131083. Neither feature wraps.
   const std::vector<float32> expected = {65545.0F, -0.5F, 9.0F, 131082.0F, -0.5F, 9.0F, 0.0F, 0.0F, 0.0F};
   REQUIRE(centroids == expected);
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighted oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][.OocStoreContract]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   const std::vector<int32> ids = {1, 2, 2, 1, 1, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2};
   auto fixture = Build(5, 3, 1, {1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 0.0F}, 3, ids);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath));
-  auto& idsArray = fixture.ds.getDataRefAs<Int32Array>(fixture.featureIdsPath);
-  auto store = DataStoreUtilities::ConvertDataStore<int32>(idsArray.getDataStoreRef(), "HDF5-OOC");
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Int32ArrayType>(fixture.featureIdsPath));
+  auto& idsArray = fixture.ds.getDataRefAs<Int32ArrayType>(fixture.featureIdsPath);
+  auto store = data_store_utilities::ConvertDataStore<int32>(idsArray.getDataStoreRef(), "HDF5-OOC");
   REQUIRE(store != nullptr);
   auto replaceResult = idsArray.setDataStore(store);
   SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
   REQUIRE(idsArray.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const auto actual = Run(fixture, true);
-  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path));
-  REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(fixture.centroids_path));
+  REQUIRE(fixture.ds.getDataRefAs<Float32ArrayType>(fixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   RequireCentroid(actual, 1, 4.7F, 0.9F, 0.5F);
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 
   if(std::getenv("SIMPLNX_CENTROID_TIMING") != nullptr)
   {
@@ -454,7 +454,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
     expected[(k_DimY + 1) * 3 + 2] = 0.5F;
 
     CentroidsBudgetSentinel budget(256 * k_MiB);
-    auto& manager = CacheMemoryBudgetManager::instance();
+    auto& manager = CacheMemoryBudgetManager::Instance();
     REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
     for(const uint64 headroom : std::array<uint64, 5>{uint64{8} * k_MiB, uint64{32} * k_MiB, uint64{64} * k_MiB, uint64{64} * 1024ULL, uint64{8} * 1024ULL})
     {
@@ -463,9 +463,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
         const PreferencesSentinel buildResident(DataStorageMode::ForceInCore, 0);
         return Build(k_DimX, k_DimY, 1, {1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 0.0F}, k_DimY + 2, timingIds);
       }();
-      auto& timingIdsArray = timingFixture.ds.getDataRefAs<Int32Array>(timingFixture.featureIdsPath);
+      auto& timingIdsArray = timingFixture.ds.getDataRefAs<Int32ArrayType>(timingFixture.featureIdsPath);
       REQUIRE(timingIdsArray.getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
-      auto hdf5Store = DataStoreUtilities::ConvertDataStore<int32>(timingIdsArray.getDataStoreRef(), "HDF5-OOC");
+      auto hdf5Store = data_store_utilities::ConvertDataStore<int32>(timingIdsArray.getDataStoreRef(), "HDF5-OOC");
       REQUIRE(hdf5Store != nullptr);
       auto replaceTimingStoreResult = timingIdsArray.setDataStore(hdf5Store);
       SIMPLNX_RESULT_REQUIRE_VALID(replaceTimingStoreResult);
@@ -479,8 +479,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
       const auto started = std::chrono::steady_clock::now();
       const auto timedActual = Run(timingFixture, true);
       const auto elapsedMs = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
-      REQUIRE(timingFixture.ds.getDataRefAs<Float32Array>(timingFixture.centroids_path).getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
-      REQUIRE(timingFixture.ds.getDataRefAs<Float32Array>(timingFixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+      REQUIRE(timingFixture.ds.getDataRefAs<Float32ArrayType>(timingFixture.centroids_path).getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
+      REQUIRE(timingFixture.ds.getDataRefAs<Float32ArrayType>(timingFixture.centroids_path).getDataStoreRef().getDataFormat() == "HDF5-OOC");
       REQUIRE(timedActual.size() == expected.size());
       for(usize index = 0; index < expected.size(); index++)
       {
@@ -498,7 +498,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: real HDF5 wrapped weighte
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1 - Analytical Centroids", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("Fixture A - single multi-cell feature + empty background")
   {
@@ -530,13 +530,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1 - Analytical Cent
     RequireCentroid(c, 2, 1.0f, 1.0f, 1.5f); // z index 1
   }
 
-  UnitTest::CheckArraysInheritTupleDims(Build(3, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {1, 1, 1}).ds);
+  unit_test::CheckArraysInheritTupleDims(Build(3, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {1, 1, 1}).ds);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boundary", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("weighted asymmetric boundary uses largest-gap unwrapped arithmetic")
   {
@@ -551,7 +551,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
     auto periodic = Run(periodicFixture, true);
     RequireCentroid(periodic, 1, 4.7F, 0.9F, 0.5F);
     RequireCentroid(periodic, 0, 0.0F, 0.0F, 0.0F);
-    UnitTest::CheckArraysInheritTupleDims(periodicFixture.ds);
+    unit_test::CheckArraysInheritTupleDims(periodicFixture.ds);
   }
 
   SECTION("the asymmetric boundary correction works on each axis")
@@ -687,7 +687,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: sorted-coordinate periodic oracle", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   std::mt19937 generator(19077);
   std::uniform_int_distribution<int32> labels(0, 3);
   const std::array<float32, 3> origin = {10.0F, -3.0F, 7.0F};
@@ -715,7 +715,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: sorted-coordinate periodi
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans and failures", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const PreferencesSentinel resident(DataStorageMode::ForceInCore, 0);
 
   SECTION("no wrapped pair avoids both occupancy and correction scans")
@@ -846,7 +846,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
       auto fixture = Build(5, 1, 1, {1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 0.0F}, 3, ids);
       PrepareSentinelOutput(fixture, 3);
       auto observed = ObserveIds(fixture, ids, failOnRead, nullptr, 0, failOnRead == 4 ? usize{3} : usize{0});
-      const uint64 previousReservation = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+      const uint64 previousReservation = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
       const std::atomic_bool cancel = false;
       const auto result = RunDirect(fixture, cancel);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -854,7 +854,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
       REQUIRE(observed->readCount() == failOnRead);
       REQUIRE(result.warnings().size() == (failOnRead == 4 ? 1 : 0));
       RequireUnpublished(fixture);
-      REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == previousReservation);
+      REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == previousReservation);
     }
   }
 
@@ -867,13 +867,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
       PrepareSentinelOutput(fixture, 3);
       std::atomic_bool cancel = false;
       auto observed = ObserveIds(fixture, ids, 0, &cancel, cancelOnRead, cancelOnRead);
-      const uint64 previousReservation = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+      const uint64 previousReservation = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
       const auto result = RunDirect(fixture, cancel);
       REQUIRE(cancel);
       REQUIRE(observed->readCount() == cancelOnRead);
       REQUIRE(result.warnings().size() == 1);
       RequireUnpublished(fixture);
-      REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == previousReservation);
+      REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == previousReservation);
     }
   }
 
@@ -890,8 +890,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
       REQUIRE(executeResult.result.warnings().size() == 1);
       REQUIRE(executeResult.result.warnings().front().code == -91913);
       REQUIRE(observed->readCount() == 4);
-      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path));
-      REQUIRE(fixture.ds.getDataRefAs<Float32Array>(fixture.centroids_path)[3] == Approx(4.5F));
+      REQUIRE_NOTHROW(fixture.ds.getDataRefAs<Float32ArrayType>(fixture.centroids_path));
+      REQUIRE(fixture.ds.getDataRefAs<Float32ArrayType>(fixture.centroids_path)[3] == Approx(4.5F));
     }
   }
 
@@ -910,7 +910,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
         ids[y * k_DimX + k_DimX - 1] = static_cast<int32>(y + 1);
       }
       CentroidsBudgetSentinel budget(256 * k_MiB); // fixed cache budget, 64 MiB maximum working allowance
-      auto& manager = CacheMemoryBudgetManager::instance();
+      auto& manager = CacheMemoryBudgetManager::Instance();
       REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
       std::vector<float32> reference;
       for(const uint64 headroom : std::array<uint64, 5>{uint64{8} * k_MiB, uint64{32} * k_MiB, uint64{64} * k_MiB, uint64{64} * 1024ULL, uint64{8} * 1024ULL})
@@ -951,7 +951,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: bounded periodic scans an
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const PreferencesSentinel resident(DataStorageMode::ForceInCore, 0);
   const std::atomic_bool cancel = false;
 
@@ -963,7 +963,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "
     SIMPLNX_RESULT_REQUIRE_VALID(plannedStore);
     REQUIRE_NOTHROW(fixture.ds.getDataRefAs<AttributeMatrix>(fixture.feature_am_path));
     const auto& featureAM = fixture.ds.getDataRefAs<AttributeMatrix>(fixture.feature_am_path);
-    auto* outputPtr = Float32Array::Create(fixture.ds, k_CentroidsName, std::shared_ptr<AbstractDataStore<float32>>(std::move(plannedStore.value())), featureAM.getId());
+    auto* outputPtr = Float32ArrayType::Create(fixture.ds, k_CentroidsName, std::shared_ptr<AbstractDataStore<float32>>(std::move(plannedStore.value())), featureAM.getId());
     REQUIRE(outputPtr != nullptr);
     const auto result = RunDirect(fixture, cancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -972,7 +972,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "
 
   SECTION("geometry XY and XYZ products fail before voxel scans")
   {
-    for(const SizeVec3& dimensions : {SizeVec3{std::numeric_limits<usize>::max(), 2, 1}, SizeVec3{std::numeric_limits<usize>::max() / 2, 2, 2}})
+    for(const SizeVec3Type& dimensions : {SizeVec3Type{std::numeric_limits<usize>::max(), 2, 1}, SizeVec3Type{std::numeric_limits<usize>::max() / 2, 2, 2}})
     {
       auto fixture = Build(1, 1, 1, {1.0F, 1.0F, 1.0F}, {0.0F, 0.0F, 0.0F}, 2, {0});
       PrepareSentinelOutput(fixture, 2);
@@ -989,7 +989,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: checked working sizes", "
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds Feature AM", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 2x1x1 with FeatureIds {0, 5} but only 2 feature tuples -> id 5 >= numFeatures -> error -5351.
   auto s = Build(2, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {0, 5});
@@ -1009,7 +1009,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure propagation", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
 {
   using namespace centroid_toy;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_CellCount = 65537;
   const std::array<float32, 3> kSpacing = {2.0F, 3.0F, 4.0F};
   const std::array<float32, 3> kOrigin = {10.0F, -2.0F, 1.0F};
@@ -1027,7 +1027,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure
     RequireCentroid(centroids, 1, 65547.0F, -0.5F, 3.0F);
     // Feature 2 contains the contiguous interior [1, 65535]. Its independently derived mean is also 65547.
     RequireCentroid(centroids, 2, 65547.0F, -0.5F, 3.0F);
-    UnitTest::CheckArraysInheritTupleDims(scaffold.ds);
+    unit_test::CheckArraysInheritTupleDims(scaffold.ds);
   }
 
   SECTION("second page FeatureIds failure leaves the final centroid publication untouched")
@@ -1040,7 +1040,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure
     {
       (*failingStore)[cellIdx] = 1;
     }
-    auto setStoreResult = scaffold.ds.getDataRefAs<Int32Array>(scaffold.featureIdsPath).setDataStore(failingStore);
+    auto setStoreResult = scaffold.ds.getDataRefAs<Int32ArrayType>(scaffold.featureIdsPath).setDataStore(failingStore);
     SIMPLNX_RESULT_REQUIRE_VALID(setStoreResult);
 
     ComputeFeatureCentroidsFilter filter;
@@ -1054,8 +1054,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure
     const auto executeResult = filter.execute(scaffold.ds, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
     REQUIRE(executeResult.result.errors().front().code == k_ReadError);
-    REQUIRE_NOTHROW(scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroids_path));
-    const auto& centroids = scaffold.ds.getDataRefAs<Float32Array>(scaffold.centroids_path);
+    REQUIRE_NOTHROW(scaffold.ds.getDataRefAs<Float32ArrayType>(scaffold.centroids_path));
+    const auto& centroids = scaffold.ds.getDataRefAs<Float32ArrayType>(scaffold.centroids_path);
     REQUIRE(centroids[3] == 0.0F);
   }
 }
@@ -1063,7 +1063,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Bulk boundary and failure
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureCentroidsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -1131,13 +1131,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Geometry cell tuple count
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -12701);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);

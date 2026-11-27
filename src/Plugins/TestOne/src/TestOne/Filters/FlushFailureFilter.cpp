@@ -188,7 +188,7 @@ IFilter::PreflightResult FlushFailureFilter::preflightImpl([[maybe_unused]] cons
     return MakePreflightErrorResult(-76409, fmt::format("Completion Test Mode {} is outside the fixture range [0, 6].", mode));
   }
   PreflightResult result{};
-  result.outputValues.push_back({.name = "Completion value", .value = "preserved"});
+  result.output_values.push_back({.name = "Completion value", .value = "preserved"});
   return result;
 }
 

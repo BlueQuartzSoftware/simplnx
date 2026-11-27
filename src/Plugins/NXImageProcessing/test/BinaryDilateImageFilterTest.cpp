@@ -23,8 +23,8 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // values in [0,199] -> NOT binary
@@ -58,7 +58,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Rejects non-binary input 
   args.insertOrAssign(BinaryDilateImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // fg/bg are in range -> preflight is clean
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // fg/bg are in range -> preflight is clean
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid()); // non-binary input rejected at execute
   REQUIRE_FALSE(executeResult.result.errors().empty());
@@ -90,11 +90,11 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Empty-SE passthrough (Ann
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 32;
   constexpr uint8 k_Fg = 1;
@@ -167,7 +167,7 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -177,8 +177,8 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Computed-expected (both a
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryDilateImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // uint8 input, range [0, 255]
@@ -199,16 +199,16 @@ TEST_CASE("NXImageProcessing::BinaryDilateImageFilter: Preflight rejects non-fin
   BinaryDilateImageFilter filter;
 
   // Foreground out of uint8 range (255 max) -> undefined cast -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).output_actions.valid());
   // Background out of range on the negative side -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).output_actions.valid());
   // Non-finite (NaN) foreground -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).output_actions.valid());
   // Non-finite (Inf) background -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).output_actions.valid());
   // In-range integer values still preflight cleanly.
   auto preflightResult = filter.preflight(dataStructure, makeArgs(5.0, 0.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 }
 
 // -----------------------------------------------------------------------------

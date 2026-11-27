@@ -28,18 +28,18 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT ReadImageSubFilterConfig
 {
-  std::filesystem::path filePath;
-  DataPath imageGeometryPath;
-  std::string cellDataName;
-  std::string imageDataArrayName;
-  bool changeOrigin = false;
-  bool changeSpacing = false;
-  VectorFloat32Parameter::ValueType origin;
-  VectorFloat32Parameter::ValueType spacing;
-  OriginSpacingProcessing originSpacingProcessing = OriginSpacingProcessing::Postprocessed;
-  bool changeDataType = false;
-  DataType imageDataType = DataType::uint8;
-  CropGeometryParameter::ValueType croppingOptions;
+  std::filesystem::path file_path;
+  DataPath image_geometry_path;
+  std::string cell_data_name;
+  std::string image_data_array_name;
+  bool change_origin = false;
+  bool change_spacing = false;
+  VectorFloat32ParameterType::ValueType origin;
+  VectorFloat32ParameterType::ValueType spacing;
+  OriginSpacingProcessing origin_spacing_processing = OriginSpacingProcessing::Postprocessed;
+  bool change_data_type = false;
+  DataType image_data_type = DataType::uint8;
+  CropGeometryParameter::ValueType cropping_options;
 };
 
 /**
@@ -60,24 +60,24 @@ NXIMAGEPROCESSING_EXPORT Arguments BuildReadImageFilterArgs(const ReadImageSubFi
  */
 struct NXIMAGEPROCESSING_EXPORT ReadImageStackInputValues
 {
-  std::vector<std::string> fileList;
-  DataPath imageGeometryPath;
-  std::string imageDataArrayName;
-  std::string cellDataName;
-  bool changeOrigin = false;
-  VectorFloat32Parameter::ValueType origin;
-  bool changeSpacing = false;
-  VectorFloat32Parameter::ValueType spacing;
-  OriginSpacingProcessing originSpacingProcessing = OriginSpacingProcessing::Postprocessed;
-  ImageFlipTransform imageTransform = ImageFlipTransform::None;
-  bool convertToGrayScale = false;
-  VectorFloat32Parameter::ValueType colorWeights;
-  usize resampleImagesChoice = 0;
+  std::vector<std::string> file_list;
+  DataPath image_geometry_path;
+  std::string image_data_array_name;
+  std::string cell_data_name;
+  bool change_origin = false;
+  VectorFloat32ParameterType::ValueType origin;
+  bool change_spacing = false;
+  VectorFloat32ParameterType::ValueType spacing;
+  OriginSpacingProcessing origin_spacing_processing = OriginSpacingProcessing::Postprocessed;
+  ImageFlipTransform image_transform = ImageFlipTransform::None;
+  bool convert_to_gray_scale = false;
+  VectorFloat32ParameterType::ValueType color_weights;
+  usize resample_images_choice = 0;
   float32 scaling = 100.0f;
-  VectorUInt64ParameterType::ValueType exactXYDimensions;
-  bool changeDataType = false;
-  DataType imageDataType = DataType::uint8;
-  CropGeometryParameter::ValueType croppingOptions;
+  VectorUInt64ParameterType::ValueType exact_xy_dimensions;
+  bool change_data_type = false;
+  DataType image_data_type = DataType::uint8;
+  CropGeometryParameter::ValueType cropping_options;
 };
 
 /**

@@ -34,7 +34,7 @@ TEST_CASE("simplnx::GridMontage: resize stride", "[simplnx][GridMontage]")
 
 namespace
 {
-void CheckMontageReverseLookup(usize rows, usize columns, usize depth, const SizeVec3& position)
+void CheckMontageReverseLookup(usize rows, usize columns, usize depth, const SizeVec3Type& position)
 {
   DataStructure dataStructure;
   auto* montagePtr = GridMontage::Create(dataStructure, "Grid");
@@ -109,5 +109,5 @@ TEST_CASE("GridMontage")
   REQUIRE(montagePtr->getGeometry(&index10) == tile2Ptr);
   REQUIRE(montagePtr->getGeometry({0, 1, 0}) == tile3Ptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

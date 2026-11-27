@@ -21,10 +21,10 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ConvertQuaternionInputValues
 {
-  DataPath QuaternionDataArrayPath;
-  DataPath OutputDataArrayPath;
-  bool DeleteOriginalData{};
-  ChoicesParameter::ValueType ConversionType{};
+  DataPath quaternion_data_array_path;
+  DataPath output_data_array_path;
+  bool delete_original_data{};
+  ChoicesParameter::ValueType conversion_type{};
 };
 
 /**

@@ -23,21 +23,21 @@ constexpr StringLiteralType k_VertexListName = "SharedVertexList";
 constexpr StringLiteralType k_TriangleListName = "SharedTriList";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
-const DataPath k_MaskPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(Constants::k_Mask);
-const DataPath k_RegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
-const DataPath k_FaceNormalsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_FaceNormalsName);
+const DataPath k_MaskPath = k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(constants::k_Mask);
+const DataPath k_RegionIdsPath = k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
+const DataPath k_FaceNormalsPath = k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(k_FaceNormalsName);
 const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
 } // namespace
 
 TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[SimplnxCore][RemoveFlaggedTrianglesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
-  DataStructure dataStructure = UnitTest::LoadDataStructure(KBaseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(KBaseDataFilePath);
 
   {
     // Instantiate the filter and an Arguments Object
@@ -54,7 +54,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[Simplnx
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -62,40 +62,40 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[Simplnx
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_RegionIdsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_RegionIdsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(::k_RegionIdsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(::k_RegionIdsName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_FaceNormalsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_FaceNormalsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(::k_FaceNormalsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(constants::k_FaceDataWithSpaces).createChildPath(::k_FaceNormalsName);
 
-    UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<float64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_VertexListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_VertexListName);
 
-    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_TriangleListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_TriangleListName);
 
-    UnitTest::CompareDataArrays<uint64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    unit_test::CompareDataArrays<uint64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RemoveFlaggedTrianglesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -138,7 +138,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   DataStructure dataStructure;
   auto* geomPtr = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(geomPtr != nullptr);
-  auto* verticesPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", {3}, {3}, geomPtr->getId());
+  auto* verticesPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", {3}, {3}, geomPtr->getId());
   geomPtr->setVertices(*verticesPtr);
   geomPtr->setVertexCoordinate(0, {0, 0, 0});
   geomPtr->setVertexCoordinate(1, {2, 0, 0});
@@ -150,9 +150,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   geomPtr->setFaceList(*facesPtr);
   auto* faceAmPtr = AttributeMatrix::Create(dataStructure, "FacesCustom", {1}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAmPtr);
-  auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Value", {1}, {1}, faceAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Value", {1}, {1}, faceAmPtr->getId());
   (*valuesPtr)[0] = 17;
-  auto* maskPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {1}, {1}, faceAmPtr->getId());
+  auto* maskPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {1}, {1}, faceAmPtr->getId());
   (*maskPtr)[0] = false;
   if(withEdges)
   {
@@ -178,9 +178,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Reduced geometry preserves
   const auto* outputAmPtr = dataStructure.getDataAs<AttributeMatrix>(outputPath.createChildPath("FacesCustom"));
   REQUIRE(outputAmPtr != nullptr);
   CHECK(reducedPtr->getFaceAttributeMatrix() == outputAmPtr);
-  const auto* outputPtr = dataStructure.getDataAs<Int32Array>(outputPath.createChildPath("FacesCustom").createChildPath("Value"));
+  const auto* outputPtr = dataStructure.getDataAs<Int32ArrayType>(outputPath.createChildPath("FacesCustom").createChildPath("Value"));
   REQUIRE(outputPtr != nullptr);
   // A false removal mask retains the single face and its scalar value 17.
   CHECK((*outputPtr)[0] == 17);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

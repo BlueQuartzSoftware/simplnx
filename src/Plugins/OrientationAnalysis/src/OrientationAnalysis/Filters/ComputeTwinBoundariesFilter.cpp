@@ -58,27 +58,27 @@ Parameters ComputeTwinBoundariesFilter::parameters() const
   params.insert(std::make_unique<Float32ParameterType>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)", "Degree of tolerance for angular deviation from 60 degrees", 0.0f));
   params.insert(std::make_unique<ChoicesParameter>(k_BoundariesArrayType_Key, "Output Type for Twin Boundaries Array",
                                                    "The Twin Boundaries Array is essentially a mask; This allows for determining how the mask is stored; uint8 recommended.", 0ULL,
-                                                   ChoicesParameter::Choices{"boolean", "uint8"}));
+                                                   ChoicesParameter::ChoicesType{"boolean", "uint8"}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "Specifies to which Feature each Face of Triangle belongs to",
                                                           DataPath({"Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsArrayPath_Key, "Face Normals", "Specifies the Normal of each face. Only required if Find Coherence is checked",
                                                           DataPath({"Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of the Feature in quaternion representation",
                                                           DataPath({"Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath({"Feature Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Specifies the crystal structure for each phase (in enumeration representation)",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_TwinBoundariesName_Key, "Twin Boundaries Array name",
@@ -148,7 +148,7 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
       {-93214, "Finding the twin boundaries requires Cubic-Low m-3 or Cubic-High m-3m type crystal structures. Make sure your data is of one of these two types."});
 
   // Return both the resultOutputActions via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -157,19 +157,19 @@ Result<> ComputeTwinBoundariesFilter::executeImpl(DataStructure& dataStructure, 
 {
   ComputeTwinBoundariesInputValues inputValues;
 
-  inputValues.FindCoherence = filterArgs.value<BoolParameter::ValueType>(k_FindCoherence_Key);
-  inputValues.AxisTolerance = filterArgs.value<Float32ParameterType::ValueType>(k_AxisTolerance_Key);
-  inputValues.AngleTolerance = filterArgs.value<Float32ParameterType::ValueType>(k_AngleTolerance_Key);
-  inputValues.FaceLabelsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceLabelsArrayPath_Key);
-  inputValues.FaceNormalsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceNormalsArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
+  inputValues.find_coherence = filterArgs.value<BoolParameter::ValueType>(k_FindCoherence_Key);
+  inputValues.axis_tolerance = filterArgs.value<Float32ParameterType::ValueType>(k_AxisTolerance_Key);
+  inputValues.angle_tolerance = filterArgs.value<Float32ParameterType::ValueType>(k_AngleTolerance_Key);
+  inputValues.face_labels_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceLabelsArrayPath_Key);
+  inputValues.face_normals_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceNormalsArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
 
-  const DataPath parentPath = inputValues.FaceLabelsArrayPath.getParent();
+  const DataPath parentPath = inputValues.face_labels_array_path.getParent();
 
-  inputValues.TwinBoundariesArrayPath = parentPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesName_Key));
-  inputValues.TwinBoundaryIncoherenceArrayPath = parentPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesIncoherenceName_Key));
+  inputValues.twin_boundaries_array_path = parentPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesName_Key));
+  inputValues.twin_boundary_incoherence_array_path = parentPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_TwinBoundariesIncoherenceName_Key));
 
   return ComputeTwinBoundaries(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

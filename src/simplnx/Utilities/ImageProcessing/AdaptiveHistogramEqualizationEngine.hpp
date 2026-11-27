@@ -65,40 +65,40 @@ template <class T>
 struct AdaptiveHistogramEqualizationPlaneBody
 {
   const T* slab; // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* outPlane;   // output plane, dimX*dimY
-  usize dimX;
-  usize dimY;
-  usize dimZ;
+  T* out_plane;   // output plane, dimX*dimY
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
   usize rx;
   usize ry;
   usize rz;
-  usize zLo;        // slab's first Z index
+  usize z_lo;        // slab's first Z index
   usize z;          // output plane's Z index
-  float64 minValue; // global image minimum (as double)
+  float64 min_value; // global image minimum (as double)
   float64 iscale;   // global (max - min) as double, > 0
   float32 alpha;
   float32 beta;
 
   void operator()(const Range& range) const
   {
-    const usize sliceValues = dimX * dimY;
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
-    const int64 dimZi = static_cast<int64>(dimZ);
+    const usize sliceValues = dim_x * dim_y;
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
+    const int64 dimZi = static_cast<int64>(dim_z);
     const int64 rxi = static_cast<int64>(rx);
     const int64 ryi = static_cast<int64>(ry);
     const int64 rzi = static_cast<int64>(rz);
 
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize x = tuple % dimX;
-      const usize y = tuple / dimX;
+      const usize x = tuple % dim_x;
+      const usize y = tuple / dim_x;
       const int64 xi = static_cast<int64>(x);
       const int64 yi = static_cast<int64>(y);
       const int64 zi = static_cast<int64>(z);
 
-      const usize centerSlab = (z - zLo) * sliceValues + y * dimX + x;
-      const float u = static_cast<float>((static_cast<float64>(slab[centerSlab]) - minValue) / iscale - 0.5);
+      const usize centerSlab = (z - z_lo) * sliceValues + y * dim_x + x;
+      const float u = static_cast<float>((static_cast<float64>(slab[centerSlab]) - min_value) / iscale - 0.5);
       // Loop-invariant terms of the cumulative function (u is fixed for this voxel). Hoisting is arithmetically
       // identical to the per-neighbor form (same multiply, same left-to-right association); any few-ULP
       // FMA-contraction drift is absorbed by the tolerant comparator. Trims the hot loop.
@@ -118,15 +118,15 @@ struct AdaptiveHistogramEqualizationPlaneBody
       for(int64 dz = dzLo; dz <= dzHi; ++dz)
       {
         const int64 nz = zi + dz;
-        const usize slabZBase = (static_cast<usize>(nz) - zLo) * sliceValues; // nz in [zLo, zHi] once in-bounds
+        const usize slabZBase = (static_cast<usize>(nz) - z_lo) * sliceValues; // nz in [zLo, zHi] once in-bounds
         for(int64 dy = dyLo; dy <= dyHi; ++dy)
         {
           const int64 ny = yi + dy;
-          const usize rowBase = slabZBase + static_cast<usize>(ny) * dimX;
+          const usize rowBase = slabZBase + static_cast<usize>(ny) * dim_x;
           for(int64 dx = dxLo; dx <= dxHi; ++dx)
           {
             const int64 nx = xi + dx;
-            const float v = static_cast<float>((static_cast<float64>(slab[rowBase + static_cast<usize>(nx)]) - minValue) / iscale - 0.5);
+            const float v = static_cast<float>((static_cast<float64>(slab[rowBase + static_cast<usize>(nx)]) - min_value) / iscale - 0.5);
             const float sF = static_cast<float>(AdaptiveEqualizationSgn(u - v));
             const float ad = static_cast<float>(std::fabs(2.0 * static_cast<double>(u - v)));
             const float cf = 0.5f * sF * std::pow(ad, alpha) - betaHalf * sF * ad + betaU;
@@ -135,8 +135,8 @@ struct AdaptiveHistogramEqualizationPlaneBody
           }
         }
       }
-      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
-      outPlane[tuple] = static_cast<T>(result);
+      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + min_value;
+      out_plane[tuple] = static_cast<T>(result);
     }
   }
 };
@@ -161,43 +161,43 @@ template <class T>
 struct AdaptiveHistogramEqualizationLutPlaneBody
 {
   const T* slab; // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* outPlane;   // output plane, dimX*dimY
-  usize dimX;
-  usize dimY;
-  usize dimZ;
+  T* out_plane;   // output plane, dimX*dimY
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
   usize rx;
   usize ry;
   usize rz;
-  usize zLo;         // slab's first Z index
+  usize z_lo;         // slab's first Z index
   usize z;           // output plane's Z index
-  float64 minValue;  // global image minimum (as double)
+  float64 min_value;  // global image minimum (as double)
   float64 iscale;    // global (max - min) as double, > 0
   float32 beta;      // alpha is baked into gLut; only beta's per-voxel term survives here
-  const float* gLut; // difference-keyed neighbor term g(d), read-only, shared across the plane
-  int64 dMin;        // = -span; the LUT index for difference d is (d - dMin), in [0, 2*span]
-  usize lutSize;     // gLut length (2*span + 1); used only by the bounds assert
+  const float* g_lut; // difference-keyed neighbor term g(d), read-only, shared across the plane
+  int64 d_min;        // = -span; the LUT index for difference d is (d - dMin), in [0, 2*span]
+  usize lut_size;     // gLut length (2*span + 1); used only by the bounds assert
 
   void operator()(const Range& range) const
   {
-    const usize sliceValues = dimX * dimY;
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
-    const int64 dimZi = static_cast<int64>(dimZ);
+    const usize sliceValues = dim_x * dim_y;
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
+    const int64 dimZi = static_cast<int64>(dim_z);
     const int64 rxi = static_cast<int64>(rx);
     const int64 ryi = static_cast<int64>(ry);
     const int64 rzi = static_cast<int64>(rz);
 
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize x = tuple % dimX;
-      const usize y = tuple / dimX;
+      const usize x = tuple % dim_x;
+      const usize y = tuple / dim_x;
       const int64 xi = static_cast<int64>(x);
       const int64 yi = static_cast<int64>(y);
       const int64 zi = static_cast<int64>(z);
 
-      const usize centerSlab = (z - zLo) * sliceValues + y * dimX + x;
+      const usize centerSlab = (z - z_lo) * sliceValues + y * dim_x + x;
       const T centerValue = slab[centerSlab];
-      const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
+      const float u = static_cast<float>((static_cast<float64>(centerValue) - min_value) / iscale - 0.5);
       // Center-only cumulative-function term (independent of the neighbor difference); folded into every
       // neighbor contribution below, exactly as the sibling body's per-voxel betaU.
       const float betaU = beta * u;
@@ -215,26 +215,26 @@ struct AdaptiveHistogramEqualizationLutPlaneBody
       for(int64 dz = dzLo; dz <= dzHi; ++dz)
       {
         const int64 nz = zi + dz;
-        const usize slabZBase = (static_cast<usize>(nz) - zLo) * sliceValues; // nz in [zLo, zHi] once in-bounds
+        const usize slabZBase = (static_cast<usize>(nz) - z_lo) * sliceValues; // nz in [zLo, zHi] once in-bounds
         for(int64 dy = dyLo; dy <= dyHi; ++dy)
         {
           const int64 ny = yi + dy;
-          const usize rowBase = slabZBase + static_cast<usize>(ny) * dimX;
+          const usize rowBase = slabZBase + static_cast<usize>(ny) * dim_x;
           for(int64 dx = dxLo; dx <= dxHi; ++dx)
           {
             const int64 nx = xi + dx;
             // Promote to int64 BEFORE subtracting: for unsigned T a T - T subtraction would underflow. The
             // gate in ApplyAdaptiveHistogramEqualization guarantees this difference does not overflow int64.
             const int64 d = static_cast<int64>(centerValue) - static_cast<int64>(slab[rowBase + static_cast<usize>(nx)]);
-            const usize lutIndex = static_cast<usize>(d - dMin); // in [0, 2*span] by construction
+            const usize lutIndex = static_cast<usize>(d - d_min); // in [0, 2*span] by construction
             assert(lutIndex < lutSize);
-            localSum += static_cast<float64>(gLut[lutIndex] + betaU);
+            localSum += static_cast<float64>(g_lut[lutIndex] + betaU);
             ++inBounds;
           }
         }
       }
-      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
-      outPlane[tuple] = static_cast<T>(result);
+      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + min_value;
+      out_plane[tuple] = static_cast<T>(result);
     }
   }
 };
@@ -246,17 +246,17 @@ inline constexpr usize k_AdaptiveHistogramEqualizationMaximumLutEntries = usize{
 
 struct AdaptiveHistogramEqualization2DPlan
 {
-  bool fullWidth = false;
-  bool fixedOutput = false;
-  usize totalValues = 0;
-  usize coreRows = 0;
-  usize coreColumns = 0;
-  usize maximumInputRows = 0;
-  usize maximumInputColumns = 0;
-  usize inputBufferValues = 0;
-  usize horizontalBufferValues = 0;
-  usize outputBufferValues = 0;
-  usize residentBytes = 0;
+  bool full_width = false;
+  bool fixed_output = false;
+  usize total_values = 0;
+  usize core_rows = 0;
+  usize core_columns = 0;
+  usize maximum_input_rows = 0;
+  usize maximum_input_columns = 0;
+  usize input_buffer_values = 0;
+  usize horizontal_buffer_values = 0;
+  usize output_buffer_values = 0;
+  usize resident_bytes = 0;
 };
 
 inline bool TryMultiplyAdaptiveHistogramSize(usize left, usize right, usize& product)
@@ -282,21 +282,21 @@ inline bool TryAddAdaptiveHistogramSize(usize left, usize right, usize& sum)
 struct AdaptiveHistogramEqualizationResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseAdaptiveHistogramEqualizationResidentState(const SizeVec3& dims)
+inline bool ShouldUseAdaptiveHistogramEqualizationResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(const SizeVec3& dims, const std::array<usize, 3>& radius, bool useLinearUint8)
+Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(const SizeVec3Type& dims, const std::array<usize, 3>& radius, bool useLinearUint8)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -318,7 +318,7 @@ Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(c
      !TryMultiplyAdaptiveHistogramSize(sliceValues, sizeof(T), outputPlaneBytes))
   {
     return MakeErrorResult<usize>(-8766, fmt::format("Adaptive histogram equalization dimensions ({}) and {}-byte input values overflow while sizing the resident volume and plane state.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   if constexpr(std::is_integral_v<T>)
   {
@@ -334,7 +334,7 @@ Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(c
     if(!TryMultiplyAdaptiveHistogramSize(radius[2], usize{2}, bufferDepth) || !TryAddAdaptiveHistogramSize(bufferDepth, usize{1}, bufferDepth))
     {
       return MakeErrorResult<usize>(-8766, fmt::format("Adaptive histogram equalization Z radius ({}) overflows while sizing resident execution buffers for dimensions {}.", radius[2],
-                                                       StringUtilities::formatDimensions3D(dims)));
+                                                       string_utilities::FormatDimensions3D(dims)));
     }
   }
 
@@ -351,7 +351,7 @@ Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(c
        !TryAddAdaptiveHistogramSize(executionBytes, aggregateSumBytes, executionBytes) || !TryAddAdaptiveHistogramSize(executionBytes, lookupBytes, executionBytes))
     {
       return MakeErrorResult<usize>(-8766, fmt::format("Adaptive histogram equalization dimensions ({}) and radius {} overflow while sizing resident linear execution buffers.",
-                                                       StringUtilities::formatDimensions3D(dims), radius[2]));
+                                                       string_utilities::FormatDimensions3D(dims), radius[2]));
     }
   }
   else
@@ -362,7 +362,7 @@ Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(c
        !TryAddAdaptiveHistogramSize(outputPlaneBytes, slabBytes, executionBytes) || !TryAddAdaptiveHistogramSize(executionBytes, lookupBytes, executionBytes))
     {
       return MakeErrorResult<usize>(-8766, fmt::format("Adaptive histogram equalization dimensions ({}) and radius {} overflow while sizing resident slab execution buffers.",
-                                                       StringUtilities::formatDimensions3D(dims), radius[2]));
+                                                       string_utilities::FormatDimensions3D(dims), radius[2]));
     }
   }
 
@@ -371,13 +371,13 @@ Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(c
   if(!TryAddAdaptiveHistogramSize(stagedBytes, statisticsBytes, requiredBytes) || !TryAddAdaptiveHistogramSize(requiredBytes, executionBytes, requiredBytes))
   {
     return MakeErrorResult<usize>(
-        -8766, fmt::format("Adaptive histogram equalization dimensions ({}) overflow while totaling resident staged, statistics, and execution state.", StringUtilities::formatDimensions3D(dims)));
+        -8766, fmt::format("Adaptive histogram equalization dimensions ({}) overflow while totaling resident staged, statistics, and execution state.", string_utilities::FormatDimensions3D(dims)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<AdaptiveHistogramEqualizationResidentMemoryAllocation> ReserveAdaptiveHistogramEqualizationResidentWorkingMemory(const SizeVec3& dims, const std::array<usize, 3>& radius, bool useLinearUint8)
+Result<AdaptiveHistogramEqualizationResidentMemoryAllocation> ReserveAdaptiveHistogramEqualizationResidentWorkingMemory(const SizeVec3Type& dims, const std::array<usize, 3>& radius, bool useLinearUint8)
 {
   auto requiredResult = CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes<T>(dims, radius, useLinearUint8);
   if(requiredResult.invalid())
@@ -397,7 +397,7 @@ Result<AdaptiveHistogramEqualizationResidentMemoryAllocation> ReserveAdaptiveHis
 struct AdaptiveHistogramEqualizationRingBandPlan
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation; // kept alive for the ring's lifetime; backs planesPerBand's extra buffers
-  usize planesPerBand = 1;                                        // consecutive Z-planes per band read/write
+  usize planes_per_band = 1;                                        // consecutive Z-planes per band read/write
 };
 
 /**
@@ -427,7 +427,7 @@ inline Result<AdaptiveHistogramEqualizationRingBandPlan> ReserveAdaptiveHistogra
   auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
   usize planesPerBand = perBandUnitBytes == 0 ? usize{1} : std::max<usize>(usize{1}, reservation.sizeBytes() / perBandUnitBytes);
   planesPerBand = std::min(planesPerBand, std::max<usize>(dimZ, usize{1}));
-  return {AdaptiveHistogramEqualizationRingBandPlan{.reservation = std::move(reservation), .planesPerBand = planesPerBand}};
+  return {AdaptiveHistogramEqualizationRingBandPlan{.reservation = std::move(reservation), .planes_per_band = planesPerBand}};
 }
 
 inline bool TryComputeAdaptiveHistogramEqualization2DLayout(usize inputRows, usize inputColumns, usize outputColumns, usize valueBytes, usize outputAllocationValues, usize fixedScratchBytes,
@@ -468,7 +468,7 @@ inline Result<AdaptiveHistogramEqualization2DPlan> CreateAdaptiveHistogramEquali
   }
 
   AdaptiveHistogramEqualization2DPlan plan;
-  if(!TryMultiplyAdaptiveHistogramSize(dimX, dimY, plan.totalValues))
+  if(!TryMultiplyAdaptiveHistogramSize(dimX, dimY, plan.total_values))
   {
     return MakeErrorResult<AdaptiveHistogramEqualization2DPlan>(-8545,
                                                                 fmt::format("Adaptive histogram equalization 2D dimensions overflow the addressable value count. Dimensions: {} x {}.", dimX, dimY));
@@ -517,9 +517,9 @@ inline Result<AdaptiveHistogramEqualization2DPlan> CreateAdaptiveHistogramEquali
           upper = midpoint - 1;
         }
       }
-      plan.fullWidth = true;
-      plan.coreRows = lower;
-      plan.coreColumns = dimX;
+      plan.full_width = true;
+      plan.core_rows = lower;
+      plan.core_columns = dimX;
     }
     else if(layoutFits(1, 1, false))
     {
@@ -537,35 +537,35 @@ inline Result<AdaptiveHistogramEqualization2DPlan> CreateAdaptiveHistogramEquali
           upper = midpoint - 1;
         }
       }
-      plan.fullWidth = false;
-      plan.coreRows = 1;
-      plan.coreColumns = lower;
+      plan.full_width = false;
+      plan.core_rows = 1;
+      plan.core_columns = lower;
     }
     else
     {
       return false;
     }
 
-    plan.fixedOutput = fixedOutput;
-    plan.maximumInputRows = plan.fullWidth ? maximumInputExtent(plan.coreRows, haloY, dimY) : maximumInputExtent(1, haloY, dimY);
-    plan.maximumInputColumns = plan.fullWidth ? dimX : maximumInputExtent(plan.coreColumns, haloX, dimX);
+    plan.fixed_output = fixedOutput;
+    plan.maximum_input_rows = plan.full_width ? maximumInputExtent(plan.core_rows, haloY, dimY) : maximumInputExtent(1, haloY, dimY);
+    plan.maximum_input_columns = plan.full_width ? dimX : maximumInputExtent(plan.core_columns, haloX, dimX);
     usize outputValues = 0;
-    if(!TryMultiplyAdaptiveHistogramSize(plan.coreRows, plan.coreColumns, outputValues))
+    if(!TryMultiplyAdaptiveHistogramSize(plan.core_rows, plan.core_columns, outputValues))
     {
       return false;
     }
-    plan.outputBufferValues = fixedOutput ? fixedOutputValues : outputValues;
-    return TryComputeAdaptiveHistogramEqualization2DLayout(plan.maximumInputRows, plan.maximumInputColumns, plan.coreColumns, valueBytes, plan.outputBufferValues, fixedScratchBytes, useHorizontalSums,
-                                                           plan.inputBufferValues, plan.horizontalBufferValues, plan.residentBytes);
+    plan.output_buffer_values = fixedOutput ? fixedOutputValues : outputValues;
+    return TryComputeAdaptiveHistogramEqualization2DLayout(plan.maximum_input_rows, plan.maximum_input_columns, plan.core_columns, valueBytes, plan.output_buffer_values, fixedScratchBytes, useHorizontalSums,
+                                                           plan.input_buffer_values, plan.horizontal_buffer_values, plan.resident_bytes);
   };
 
-  const bool fixedOutputEligible = preferFixedOutput && targetBytes == k_AdaptiveHistogramEqualization2DTargetBytes && plan.totalValues <= fixedOutputCapacityValues;
+  const bool fixedOutputEligible = preferFixedOutput && targetBytes == k_AdaptiveHistogramEqualization2DTargetBytes && plan.total_values <= fixedOutputCapacityValues;
   if(fixedOutputEligible && selectRoute(true))
   {
     return {plan};
   }
   plan = {};
-  if(!TryMultiplyAdaptiveHistogramSize(dimX, dimY, plan.totalValues) || !selectRoute(false))
+  if(!TryMultiplyAdaptiveHistogramSize(dimX, dimY, plan.total_values) || !selectRoute(false))
   {
     return MakeErrorResult<AdaptiveHistogramEqualization2DPlan>(-8545, fmt::format("Adaptive histogram equalization 2D target ({} bytes) cannot hold one output value, its clipped {} x {} halo, {} "
                                                                                    "bytes of fixed scratch, and the selected local sums for dimensions {} x {} and value size {} bytes.",
@@ -575,22 +575,22 @@ inline Result<AdaptiveHistogramEqualization2DPlan> CreateAdaptiveHistogramEquali
 }
 
 template <class T, class BlockFunction>
-Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3& dims, const std::array<usize, 3>& radius,
+Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3Type& dims, const std::array<usize, 3>& radius,
                                                 const AdaptiveHistogramEqualization2DPlan& plan, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle,
                                                 BlockFunction&& blockFunction)
 {
-  auto inputBuffer = std::make_unique<T[]>(plan.inputBufferValues);
+  auto inputBuffer = std::make_unique<T[]>(plan.input_buffer_values);
   std::unique_ptr<uint64[]> horizontalBuffer;
-  if(plan.horizontalBufferValues > 0)
+  if(plan.horizontal_buffer_values > 0)
   {
-    horizontalBuffer = std::make_unique<uint64[]>(plan.horizontalBufferValues);
+    horizontalBuffer = std::make_unique<uint64[]>(plan.horizontal_buffer_values);
   }
-  auto outputBuffer = std::make_unique<T[]>(plan.outputBufferValues);
+  auto outputBuffer = std::make_unique<T[]>(plan.output_buffer_values);
   const usize dimX = dims[0];
   const usize dimY = dims[1];
   progressThrottle.reset(dimX * dimY, "Computing 2D adaptive histogram equalization");
-  const usize yStep = plan.fullWidth ? plan.coreRows : 1;
-  const usize xStep = plan.fullWidth ? dimX : plan.coreColumns;
+  const usize yStep = plan.full_width ? plan.core_rows : 1;
+  const usize xStep = plan.full_width ? dimX : plan.core_columns;
   for(usize outputYBegin = 0; outputYBegin < dimY; outputYBegin += yStep)
   {
     const usize outputRows = std::min(yStep, dimY - outputYBegin);
@@ -609,7 +609,7 @@ Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inpu
       const usize inputYEnd = outputYEnd + std::min(radius[1], dimY - outputYEnd);
       const usize inputWidth = inputXEnd - inputXBegin;
       const usize inputRows = inputYEnd - inputYBegin;
-      if(plan.fullWidth)
+      if(plan.full_width)
       {
         const usize inputValues = inputRows * dimX;
         if(Result<> result = inputStore.copyIntoBuffer(inputYBegin * dimX, nonstd::span<T>(inputBuffer.get(), inputValues)); result.invalid())
@@ -637,15 +637,15 @@ Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inpu
       }
 
       const usize outputStart = outputYBegin * dimX + outputXBegin;
-      T* blockOutputPtr = plan.fixedOutput ? outputBuffer.get() + outputStart : outputBuffer.get();
+      T* blockOutputPtr = plan.fixed_output ? outputBuffer.get() + outputStart : outputBuffer.get();
       blockFunction(inputBuffer.get(), blockOutputPtr, horizontalBuffer.get(), inputXBegin, inputYBegin, inputWidth, inputRows, outputXBegin, outputYBegin, outputColumns, outputRows);
       if(shouldCancel)
       {
         return {};
       }
-      if(!plan.fixedOutput)
+      if(!plan.fixed_output)
       {
-        const usize outputValues = plan.fullWidth ? outputRows * dimX : outputColumns;
+        const usize outputValues = plan.full_width ? outputRows * dimX : outputColumns;
         if(Result<> result = outputStore.copyFromBuffer(outputStart, nonstd::span<const T>(outputBuffer.get(), outputValues)); result.invalid())
         {
           return result;
@@ -654,13 +654,13 @@ Result<> ExecuteAdaptiveHistogramEqualization2D(const AbstractDataStore<T>& inpu
       progressThrottle.incrementPercent(outputRows * outputColumns);
     }
   }
-  if(plan.fixedOutput)
+  if(plan.fixed_output)
   {
     if(shouldCancel)
     {
       return {};
     }
-    return outputStore.copyFromBuffer(0, nonstd::span<const T>(outputBuffer.get(), plan.totalValues));
+    return outputStore.copyFromBuffer(0, nonstd::span<const T>(outputBuffer.get(), plan.total_values));
   }
   return {};
 }
@@ -670,46 +670,46 @@ struct AdaptiveHistogramEqualization2DBlockBody
 {
   const T* input;
   T* output;
-  usize dimX;
-  usize dimY;
-  usize radiusX;
-  usize radiusY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
-  float64 minValue;
+  usize dim_x;
+  usize dim_y;
+  usize radius_x;
+  usize radius_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
+  float64 min_value;
   float64 iscale;
   float32 alpha;
   float32 beta;
-  const std::atomic_bool& shouldCancel;
+  const std::atomic_bool& should_cancel;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
-    const int64 radiusXi = static_cast<int64>(radiusX);
-    const int64 radiusYi = static_cast<int64>(radiusY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
+    const int64 radiusXi = static_cast<int64>(radius_x);
+    const int64 radiusYi = static_cast<int64>(radius_y);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+      if(((tuple - range.min()) & 4095ULL) == 0 && should_cancel)
       {
         return;
       }
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
       const int64 signedX = static_cast<int64>(x);
       const int64 signedY = static_cast<int64>(y);
       const int64 dyLo = std::max(-radiusYi, -signedY);
       const int64 dyHi = std::min(radiusYi, dimYi - 1 - signedY);
       const int64 dxLo = std::max(-radiusXi, -signedX);
       const int64 dxHi = std::min(radiusXi, dimXi - 1 - signedX);
-      const T centerValue = input[(y - inputYBegin) * inputWidth + x - inputXBegin];
-      const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
+      const T centerValue = input[(y - input_y_begin) * input_width + x - input_x_begin];
+      const float u = static_cast<float>((static_cast<float64>(centerValue) - min_value) / iscale - 0.5);
       const float betaU = beta * u;
       const float betaHalf = beta * 0.5f;
       float64 localSum = 0.0;
@@ -717,11 +717,11 @@ struct AdaptiveHistogramEqualization2DBlockBody
       for(int64 dy = dyLo; dy <= dyHi; ++dy)
       {
         const int64 neighborY = static_cast<int64>(y) + dy;
-        const usize inputRow = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth;
+        const usize inputRow = (static_cast<usize>(neighborY) - input_y_begin) * input_width;
         for(int64 dx = dxLo; dx <= dxHi; ++dx)
         {
           const int64 neighborX = static_cast<int64>(x) + dx;
-          const float v = static_cast<float>((static_cast<float64>(input[inputRow + static_cast<usize>(neighborX) - inputXBegin]) - minValue) / iscale - 0.5);
+          const float v = static_cast<float>((static_cast<float64>(input[inputRow + static_cast<usize>(neighborX) - input_x_begin]) - min_value) / iscale - 0.5);
           const float sign = static_cast<float>(AdaptiveEqualizationSgn(u - v));
           const float absoluteDifference = static_cast<float>(std::fabs(2.0 * static_cast<double>(u - v)));
           const float cumulative = 0.5f * sign * std::pow(absoluteDifference, alpha) - betaHalf * sign * absoluteDifference + betaU;
@@ -729,7 +729,7 @@ struct AdaptiveHistogramEqualization2DBlockBody
           ++inBounds;
         }
       }
-      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
+      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + min_value;
       output[tuple] = static_cast<T>(result);
     }
   }
@@ -740,66 +740,66 @@ struct AdaptiveHistogramEqualizationLut2DBlockBody
 {
   const T* input;
   T* output;
-  usize dimX;
-  usize dimY;
-  usize radiusX;
-  usize radiusY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
-  float64 minValue;
+  usize dim_x;
+  usize dim_y;
+  usize radius_x;
+  usize radius_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
+  float64 min_value;
   float64 iscale;
   float32 beta;
-  const float* lookupTable;
-  int64 differenceMinimum;
-  usize lookupTableSize;
-  const std::atomic_bool& shouldCancel;
+  const float* lookup_table;
+  int64 difference_minimum;
+  usize lookup_table_size;
+  const std::atomic_bool& should_cancel;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
-    const int64 radiusXi = static_cast<int64>(radiusX);
-    const int64 radiusYi = static_cast<int64>(radiusY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
+    const int64 radiusXi = static_cast<int64>(radius_x);
+    const int64 radiusYi = static_cast<int64>(radius_y);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      if(((tuple - range.min()) & 4095ULL) == 0 && shouldCancel)
+      if(((tuple - range.min()) & 4095ULL) == 0 && should_cancel)
       {
         return;
       }
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
       const int64 signedX = static_cast<int64>(x);
       const int64 signedY = static_cast<int64>(y);
       const int64 dyLo = std::max(-radiusYi, -signedY);
       const int64 dyHi = std::min(radiusYi, dimYi - 1 - signedY);
       const int64 dxLo = std::max(-radiusXi, -signedX);
       const int64 dxHi = std::min(radiusXi, dimXi - 1 - signedX);
-      const T centerValue = input[(y - inputYBegin) * inputWidth + x - inputXBegin];
-      const float u = static_cast<float>((static_cast<float64>(centerValue) - minValue) / iscale - 0.5);
+      const T centerValue = input[(y - input_y_begin) * input_width + x - input_x_begin];
+      const float u = static_cast<float>((static_cast<float64>(centerValue) - min_value) / iscale - 0.5);
       const float betaU = beta * u;
       float64 localSum = 0.0;
       usize inBounds = 0;
       for(int64 dy = dyLo; dy <= dyHi; ++dy)
       {
         const int64 neighborY = static_cast<int64>(y) + dy;
-        const usize inputRow = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth;
+        const usize inputRow = (static_cast<usize>(neighborY) - input_y_begin) * input_width;
         for(int64 dx = dxLo; dx <= dxHi; ++dx)
         {
           const int64 neighborX = static_cast<int64>(x) + dx;
-          const int64 difference = static_cast<int64>(centerValue) - static_cast<int64>(input[inputRow + static_cast<usize>(neighborX) - inputXBegin]);
-          const usize lookupIndex = static_cast<usize>(difference - differenceMinimum);
+          const int64 difference = static_cast<int64>(centerValue) - static_cast<int64>(input[inputRow + static_cast<usize>(neighborX) - input_x_begin]);
+          const usize lookupIndex = static_cast<usize>(difference - difference_minimum);
           assert(lookupIndex < lookupTableSize);
-          localSum += static_cast<float64>(lookupTable[lookupIndex] + betaU);
+          localSum += static_cast<float64>(lookup_table[lookupIndex] + betaU);
           ++inBounds;
         }
       }
-      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + minValue;
+      const float64 result = iscale * (localSum / static_cast<float64>(inBounds) + 0.5) + min_value;
       output[tuple] = static_cast<T>(result);
     }
   }
@@ -942,7 +942,7 @@ inline void CalculateAdaptiveHistogramEqualizationLinear2DBlock(const uint8* inp
  *       the same implementation-defined/undefined value ITK produces.
  */
 template <class T>
-Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const std::array<usize, 3>& radius, float32 alpha, float32 beta,
+Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const std::array<usize, 3>& radius, float32 alpha, float32 beta,
                                             const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                                             usize target2DBytes = detail::k_AdaptiveHistogramEqualization2DTargetBytes)
 {
@@ -1215,7 +1215,7 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
         return ConvertInvalidResult<void>(std::move(ringBandResult));
       }
       auto ringBand = std::move(ringBandResult.value());
-      const usize planesPerBand = ringBand.planesPerBand;
+      const usize planesPerBand = ringBand.planes_per_band;
 
       // Raw-plane ring, flattened into one buffer so that a band of planesPerBand consecutive Z-planes is
       // contiguous in memory (modulo rawRingCapacity) and can be filled by a single store call. Sized
@@ -1506,23 +1506,23 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
             {
               parallelAlgorithm.execute(detail::AdaptiveHistogramEqualizationLut2DBlockBody<T>{.input = inputBlock,
                                                                                                .output = outputBlock,
-                                                                                               .dimX = dimX,
-                                                                                               .dimY = dimY,
-                                                                                               .radiusX = rx,
-                                                                                               .radiusY = ry,
-                                                                                               .inputXBegin = inputXBegin,
-                                                                                               .inputYBegin = inputYBegin,
-                                                                                               .inputWidth = inputWidth,
-                                                                                               .outputXBegin = outputXBegin,
-                                                                                               .outputYBegin = outputYBegin,
-                                                                                               .outputWidth = outputWidth,
-                                                                                               .minValue = minValue,
+                                                                                               .dim_x = dimX,
+                                                                                               .dim_y = dimY,
+                                                                                               .radius_x = rx,
+                                                                                               .radius_y = ry,
+                                                                                               .input_x_begin = inputXBegin,
+                                                                                               .input_y_begin = inputYBegin,
+                                                                                               .input_width = inputWidth,
+                                                                                               .output_x_begin = outputXBegin,
+                                                                                               .output_y_begin = outputYBegin,
+                                                                                               .output_width = outputWidth,
+                                                                                               .min_value = minValue,
                                                                                                .iscale = iscale,
                                                                                                .beta = beta,
-                                                                                               .lookupTable = gLut.data(),
-                                                                                               .differenceMinimum = dMin,
-                                                                                               .lookupTableSize = gLut.size(),
-                                                                                               .shouldCancel = shouldCancel});
+                                                                                               .lookup_table = gLut.data(),
+                                                                                               .difference_minimum = dMin,
+                                                                                               .lookup_table_size = gLut.size(),
+                                                                                               .should_cancel = shouldCancel});
               executed = true;
             }
           }
@@ -1530,21 +1530,21 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
           {
             parallelAlgorithm.execute(detail::AdaptiveHistogramEqualization2DBlockBody<T>{.input = inputBlock,
                                                                                           .output = outputBlock,
-                                                                                          .dimX = dimX,
-                                                                                          .dimY = dimY,
-                                                                                          .radiusX = rx,
-                                                                                          .radiusY = ry,
-                                                                                          .inputXBegin = inputXBegin,
-                                                                                          .inputYBegin = inputYBegin,
-                                                                                          .inputWidth = inputWidth,
-                                                                                          .outputXBegin = outputXBegin,
-                                                                                          .outputYBegin = outputYBegin,
-                                                                                          .outputWidth = outputWidth,
-                                                                                          .minValue = minValue,
+                                                                                          .dim_x = dimX,
+                                                                                          .dim_y = dimY,
+                                                                                          .radius_x = rx,
+                                                                                          .radius_y = ry,
+                                                                                          .input_x_begin = inputXBegin,
+                                                                                          .input_y_begin = inputYBegin,
+                                                                                          .input_width = inputWidth,
+                                                                                          .output_x_begin = outputXBegin,
+                                                                                          .output_y_begin = outputYBegin,
+                                                                                          .output_width = outputWidth,
+                                                                                          .min_value = minValue,
                                                                                           .iscale = iscale,
                                                                                           .alpha = alpha,
                                                                                           .beta = beta,
-                                                                                          .shouldCancel = shouldCancel});
+                                                                                          .should_cancel = shouldCancel});
           }
         });
   }
@@ -1599,37 +1599,37 @@ Result<> ApplyAdaptiveHistogramEqualization(const AbstractDataStore<T>& in, Abst
       if(!gLut.empty())
       {
         executePlane(detail::AdaptiveHistogramEqualizationLutPlaneBody<T>{.slab = slab.get(),
-                                                                          .outPlane = outPlane.get(),
-                                                                          .dimX = dimX,
-                                                                          .dimY = dimY,
-                                                                          .dimZ = dimZ,
+                                                                          .out_plane = outPlane.get(),
+                                                                          .dim_x = dimX,
+                                                                          .dim_y = dimY,
+                                                                          .dim_z = dimZ,
                                                                           .rx = rx,
                                                                           .ry = ry,
                                                                           .rz = rz,
-                                                                          .zLo = zLo,
+                                                                          .z_lo = zLo,
                                                                           .z = z,
-                                                                          .minValue = minValue,
+                                                                          .min_value = minValue,
                                                                           .iscale = iscale,
                                                                           .beta = beta,
-                                                                          .gLut = gLut.data(),
-                                                                          .dMin = dMin,
-                                                                          .lutSize = gLut.size()});
+                                                                          .g_lut = gLut.data(),
+                                                                          .d_min = dMin,
+                                                                          .lut_size = gLut.size()});
         executed = true;
       }
     }
     if(!executed)
     {
       executePlane(detail::AdaptiveHistogramEqualizationPlaneBody<T>{.slab = slab.get(),
-                                                                     .outPlane = outPlane.get(),
-                                                                     .dimX = dimX,
-                                                                     .dimY = dimY,
-                                                                     .dimZ = dimZ,
+                                                                     .out_plane = outPlane.get(),
+                                                                     .dim_x = dimX,
+                                                                     .dim_y = dimY,
+                                                                     .dim_z = dimZ,
                                                                      .rx = rx,
                                                                      .ry = ry,
                                                                      .rz = rz,
-                                                                     .zLo = zLo,
+                                                                     .z_lo = zLo,
                                                                      .z = z,
-                                                                     .minValue = minValue,
+                                                                     .min_value = minValue,
                                                                      .iscale = iscale,
                                                                      .alpha = alpha,
                                                                      .beta = beta});

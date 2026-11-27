@@ -81,7 +81,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 {
   auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
   auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
-  auto inputFile = pImportHDF5FileValue.inputFile;
+  auto inputFile = pImportHDF5FileValue.input_file;
   auto datasetImportInfoList = pImportHDF5FileValue.datasets;
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -121,7 +121,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
-    std::string datasetPath = datasetImportInfo.dataSetPath;
+    std::string datasetPath = datasetImportInfo.data_set_path;
     if(datasetPath.empty())
     {
       return MakePreflightErrorResult(-20007, "Cannot import an empty dataset path");
@@ -138,7 +138,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       return MakePreflightErrorResult(-20008, fmt::format("Error reading dimensions from dataset with path '{}'", datasetPath));
     }
 
-    std::string cDimsStr = datasetImportInfo.componentDimensions;
+    std::string cDimsStr = datasetImportInfo.component_dimensions;
     if(cDimsStr.empty())
     {
       return MakePreflightErrorResult(
@@ -149,14 +149,14 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     auto componentDimensions = ConvertDimensions(cDimsStr, fmt::format("Component for dataset '{}'", datasetPath), ZeroDimensionPolicy::Reject, -20010);
     if(componentDimensions.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
     }
     ShapeType cDims = std::move(componentDimensions.value());
 
     ShapeType tDims;
     if(parentAmPtr == nullptr)
     {
-      std::string tDimsStr = datasetImportInfo.tupleDimensions;
+      std::string tDimsStr = datasetImportInfo.tuple_dimensions;
       if(tDimsStr.empty())
       {
         return MakePreflightErrorResult(
@@ -166,7 +166,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
       auto tupleDimensions = ConvertDimensions(tDimsStr, fmt::format("Tuple for dataset '{}'", datasetPath), ZeroDimensionPolicy::Allow, -20012);
       if(tupleDimensions.invalid())
       {
-        return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleDimensions))};
+        return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(tupleDimensions))};
       }
       tDims = std::move(tupleDimensions.value());
     }
@@ -178,18 +178,18 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     auto tupleCount = ComputeDimensionProduct(tDims, fmt::format("Tuple for dataset '{}'", datasetPath));
     if(tupleCount.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
     }
     auto componentCount = ComputeDimensionProduct(cDims, fmt::format("Component for dataset '{}'", datasetPath));
     if(componentCount.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentCount))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(componentCount))};
     }
     const usize numOfTuples = tupleCount.value();
     const usize totalComponents = componentCount.value();
     if(numOfTuples != 0 && totalComponents > std::numeric_limits<usize>::max() / numOfTuples)
     {
-      return MakePreflightErrorResult(DimensionConversion::k_ElementCountOverflow, fmt::format("Tuple count {} times component count {} for dataset '{}' exceeds {} elements. Use smaller dimensions.",
+      return MakePreflightErrorResult(dimension_conversion::k_ElementCountOverflow, fmt::format("Tuple count {} times component count {} for dataset '{}' exceeds {} elements. Use smaller dimensions.",
                                                                                                numOfTuples, totalComponents, datasetPath, std::numeric_limits<usize>::max()));
     }
     const usize userEnteredTotalElements = numOfTuples * totalComponents;
@@ -197,9 +197,9 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     const usize hdf5TotalElements = std::accumulate(dims.begin(), dims.end(), usize{1}, std::multiplies<>());
     std::stringstream stream;
     stream << fmt::format("HDF5 File Path: '{}'\nHDF5 Dataset Path: '{}'\n", inputFile, datasetPath);
-    stream << fmt::format("HDF5 dimensions: [{}], element count: {}\n", StringUtilities::formatDimensions(dims), hdf5TotalElements);
-    stream << fmt::format("Tuple dimensions: [{}], tuple count: {}\n", StringUtilities::formatDimensions(tDims), numOfTuples);
-    stream << fmt::format("Component dimensions: [{}], component count: {}\n", StringUtilities::formatDimensions(cDims), totalComponents);
+    stream << fmt::format("HDF5 dimensions: [{}], element count: {}\n", string_utilities::FormatDimensions(dims), hdf5TotalElements);
+    stream << fmt::format("Tuple dimensions: [{}], tuple count: {}\n", string_utilities::FormatDimensions(tDims), numOfTuples);
+    stream << fmt::format("Component dimensions: [{}], component count: {}\n", string_utilities::FormatDimensions(cDims), totalComponents);
 
     if(hdf5TotalElements != userEnteredTotalElements)
     {
@@ -207,8 +207,8 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
                             "tuples and '{}' components per tuple equals '{}' total elements, and"
                             " that does not match the total HDF5 dataset element count of '{}'.\n"
                             "'{}' =/= '{}'",
-                            datasetPath, StringUtilities::number(numOfTuples), StringUtilities::number(totalComponents), StringUtilities::number(numOfTuples * totalComponents),
-                            StringUtilities::number(hdf5TotalElements), StringUtilities::number(numOfTuples * totalComponents), StringUtilities::number(hdf5TotalElements));
+                            datasetPath, string_utilities::Number(numOfTuples), string_utilities::Number(totalComponents), string_utilities::Number(numOfTuples * totalComponents),
+                            string_utilities::Number(hdf5TotalElements), string_utilities::Number(numOfTuples * totalComponents), string_utilities::Number(hdf5TotalElements));
       return MakePreflightErrorResult(-20013, stream.str());
     }
 
@@ -229,7 +229,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     Result<DataType> typeResult = datasetReader.getDataType();
     if(typeResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(typeResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(typeResult))};
     }
     DataType dataType = typeResult.value();
     auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
@@ -237,7 +237,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 
   } // End For Loop over dataset import info list
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -245,7 +245,7 @@ Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const 
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadHDF5DatasetInputValues inputValues;
-  inputValues.ImportHdf5Object = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
+  inputValues.import_hdf5_object = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
 
   return ReadHDF5Dataset(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

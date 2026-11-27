@@ -19,15 +19,15 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  float32 Weight{};
-  int32 Sigma{};
-  ChoicesParameter::ValueType Delimiter{};
-  bool ConvertToDegrees{};
-  bool UseMask{};
-  DataPath CellEulerAnglesArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath MaskArrayPath;
+  FileSystemPathParameter::ValueType output_file;
+  float32 weight{};
+  int32 sigma{};
+  ChoicesParameter::ValueType delimiter{};
+  bool convert_to_degrees{};
+  bool use_mask{};
+  DataPath cell_euler_angles_array_path;
+  DataPath cell_phases_array_path;
+  DataPath mask_array_path;
 };
 
 /**
@@ -84,7 +84,7 @@ public:
    * @throws std::invalid_argument If mask does not match the configured mask type.
    * @throws std::runtime_error If a source bulk read fails.
    */
-  int determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, usize totalPoints, int32 phase) const;
+  int determineOutputLineCount(const Int32ArrayType& cellPhases, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, usize totalPoints, int32 phase) const;
 
   /**
    * @brief Writes one phase header and body through bounded source reads.
@@ -98,7 +98,7 @@ public:
    *
    * This compatibility method does not inspect cancellation or output stream state.
    */
-  Result<> writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const;
+  Result<> writeOutputFile(std::ofstream& out, const Int32ArrayType& cellPhases, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const;
 
 private:
   DataStructure& m_DataStructure;

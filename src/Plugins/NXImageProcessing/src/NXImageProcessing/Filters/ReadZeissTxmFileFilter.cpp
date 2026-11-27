@@ -27,16 +27,16 @@ namespace
 ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, const DataPath& outputGeometryPath, const CropGeometryParameter::ValueType& croppingOptions)
 {
   ImageGeometryCropOptions options;
-  options.inputImageGeometryPath = inputGeometryPath;
-  options.outputImageGeometryPath = outputGeometryPath;
-  options.usePhysicalBounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  options.cropX = croppingOptions.cropX;
-  options.cropY = croppingOptions.cropY;
-  options.cropZ = croppingOptions.cropZ;
-  options.minVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]), static_cast<uint64>(croppingOptions.zBoundVoxels[0])};
-  options.maxVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]), static_cast<uint64>(croppingOptions.zBoundVoxels[1])};
-  options.minCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]), static_cast<float64>(croppingOptions.zBoundPhysical[0])};
-  options.maxCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]), static_cast<float64>(croppingOptions.zBoundPhysical[1])};
+  options.input_image_geometry_path = inputGeometryPath;
+  options.output_image_geometry_path = outputGeometryPath;
+  options.use_physical_bounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  options.crop_x = croppingOptions.crop_x;
+  options.crop_y = croppingOptions.crop_y;
+  options.crop_z = croppingOptions.crop_z;
+  options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
+  options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]), static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]), static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 
@@ -108,7 +108,7 @@ Parameters ReadZeissTxmFileFilter::parameters() const
       CropGeometryParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"Zeiss CT"})));
@@ -155,9 +155,9 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   {
     std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
     auto& cached = SHeaderCache[m_InstanceId];
-    if(pInputFilePathValue == cached.inputFile && cached.timeStamp >= currentTimeStamp)
+    if(pInputFilePathValue == cached.input_file && cached.time_stamp >= currentTimeStamp)
     {
-      metadata = cached.metaData;
+      metadata = cached.meta_data;
       cacheValid = true;
     }
   }
@@ -167,25 +167,25 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
     Result<ZeissTxmHeaderMetadata> metadataResult = ReadHeaderMetaData(pInputFilePathValue.string());
     if(metadataResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
     metadata = metadataResult.value();
 
     std::lock_guard<std::mutex> lock(SHeaderCacheMutex);
     auto& cached = SHeaderCache[m_InstanceId];
-    cached.inputFile = pInputFilePathValue.string();
-    cached.timeStamp = currentTimeStamp;
-    cached.metaData = metadata;
+    cached.input_file = pInputFilePathValue.string();
+    cached.time_stamp = currentTimeStamp;
+    cached.meta_data = metadata;
   }
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePathValue, metadata.Origin, metadata.Spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePathValue, metadata.origin, metadata.spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
-  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(metadata.Dimensions, metadata.Spacing, metadata.Origin, metadata.Units)});
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::geometry_helpers::description::GenerateGeometryInfo(metadata.dimensions, metadata.spacing, metadata.origin, metadata.units)});
 
-  CreateImageGeometryAction::DimensionType dims = metadata.Dimensions;
-  CreateImageGeometryAction::OriginType origin = metadata.Origin;
-  CreateImageGeometryAction::SpacingType spacing = metadata.Spacing;
+  CreateImageGeometryAction::DimensionType dims = metadata.dimensions;
+  CreateImageGeometryAction::OriginType origin = metadata.origin;
+  CreateImageGeometryAction::SpacingType spacing = metadata.spacing;
 
   DataStructure tmpDs;
   OutputActions tmpActions;
@@ -197,17 +197,17 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   const DataPath dap = pNewImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   CreateImageGeometryAction::DimensionType revDims = {dims[2], dims[1], dims[0]};
 
-  if(metadata.DataType == ZeissTxmDataType::FLOAT_TYPE)
+  if(metadata.data_type == ZeissTxmDataType::FLOAT_TYPE)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, revDims, std::vector<usize>{1}, dap);
     tmpActions.appendAction(std::move(createArrayAction));
   }
-  if(metadata.DataType == ZeissTxmDataType::INT16_TYPE)
+  if(metadata.data_type == ZeissTxmDataType::INT16_TYPE)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, revDims, std::vector<usize>{1}, dap);
     tmpActions.appendAction(std::move(createArrayAction));
   }
-  if(metadata.DataType == ZeissTxmDataType::UCHAR_TYPE)
+  if(metadata.data_type == ZeissTxmDataType::UCHAR_TYPE)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, revDims, std::vector<usize>{1}, dap);
     tmpActions.appendAction(std::move(createArrayAction));
@@ -216,7 +216,7 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
   if(tmpActionsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
   }
 
   if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
@@ -225,15 +225,15 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
     const ImageGeometryCropOptions cropOptions = CreateCropOptions(pNewImageGeometryPathValue, croppedGeomPath, pCroppingOptions);
     ImageGeometryCropBounds cropBounds;
     PreflightResult cropImageResult = PreflightImageGeometryCrop(tmpDs, cropOptions, cropBounds);
-    if(cropImageResult.outputActions.invalid())
+    if(cropImageResult.output_actions.invalid())
     {
       return cropImageResult;
     }
 
-    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    Result<> actionsResult = cropImageResult.output_actions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     auto croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
@@ -248,25 +248,25 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   // Create the input data array
   revDims = {dims[2], dims[1], dims[0]};
 
-  if(metadata.DataType == ZeissTxmDataType::FLOAT_TYPE)
+  if(metadata.data_type == ZeissTxmDataType::FLOAT_TYPE)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, revDims, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
-  if(metadata.DataType == ZeissTxmDataType::INT16_TYPE)
+  if(metadata.data_type == ZeissTxmDataType::INT16_TYPE)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, revDims, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
-  if(metadata.DataType == ZeissTxmDataType::UCHAR_TYPE)
+  if(metadata.data_type == ZeissTxmDataType::UCHAR_TYPE)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, revDims, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, metadata.Units)});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, metadata.units)});
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = preflightUpdatedValues};
+  return {.output_actions = std::move(resultOutputActions), .output_values = preflightUpdatedValues};
 }
 
 //------------------------------------------------------------------------------
@@ -274,13 +274,13 @@ Result<> ReadZeissTxmFileFilter::executeImpl(DataStructure& dataStructure, const
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadZeissTxmFileInputValues inputValues;
-  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  inputValues.geometry_overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
 
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.DensityArrayName = filterArgs.value<std::string>(k_CTDataArrayName_Key);
-  inputValues.TxmDataFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxmInputFilePath_Key);
-  inputValues.CroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.density_array_name = filterArgs.value<std::string>(k_CTDataArrayName_Key);
+  inputValues.txm_data_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxmInputFilePath_Key);
+  inputValues.cropping_options = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   return ReadZeissTxmFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -24,7 +24,7 @@ ComputeFeatureNeighborCAxisMisalignments::ComputeFeatureNeighborCAxisMisalignmen
 
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {
-  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStoreRef.getNumberOfTuples();
   std::vector<uint32> crystalStructuresCache(numCrystalStructures);
   if(Result<> ioResult = crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), numCrystalStructures)); ioResult.invalid())
@@ -54,7 +54,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   }
 
   // The neighbor traversal accesses feature data in random order.
-  const auto& featurePhasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath).getDataStoreRef();
+  const auto& featurePhasesStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path).getDataStoreRef();
   const usize totalFeatures = featurePhasesStoreRef.getNumberOfTuples();
   std::vector<int32> featurePhasesCache(totalFeatures);
   if(Result<> ioResult = featurePhasesStoreRef.copyIntoBuffer(0, nonstd::span<int32>(featurePhasesCache.data(), totalFeatures)); ioResult.invalid())
@@ -62,7 +62,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     return MergeResults(std::move(result), std::move(ioResult));
   }
 
-  const auto& avgQuatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath).getDataStoreRef();
+  const auto& avgQuatsStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path).getDataStoreRef();
   const usize numQuatComps = avgQuatsStoreRef.getNumberOfComponents();
   const usize quatSize = totalFeatures * numQuatComps;
   std::vector<float32> featureAvgQuat(quatSize);
@@ -71,14 +71,14 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     return MergeResults(std::move(result), std::move(ioResult));
   }
 
-  auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
-  auto& cAxisMisalignmentList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->CAxisMisalignmentListArrayName);
+  auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->neighbor_list_array_path);
+  auto& cAxisMisalignmentList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->c_axis_misalignment_list_array_name);
 
-  Float32Array* avgCAxisMisalignmentPtr = nullptr;
+  Float32ArrayType* avgCAxisMisalignmentPtr = nullptr;
   std::vector<float32> avgCAxisBuf;
-  if(m_InputValues->FindAvgMisals)
+  if(m_InputValues->find_avg_misals)
   {
-    avgCAxisMisalignmentPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgCAxisMisalignmentsArrayName);
+    avgCAxisMisalignmentPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->avg_c_axis_misalignments_array_name);
     avgCAxisBuf.resize(totalFeatures, 0.0f);
   }
 
@@ -95,7 +95,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
     {
       return MakeErrorResult(-1564, fmt::format("Feature Phases array '{}' has value {} at feature index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, featureIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, featureIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                 numCrystalStructures, numCrystalStructures));
     }
     const uint32 currentCrystalStructure = crystalStructuresCache[currentPhaseIdx];
@@ -120,7 +120,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
       if(neighborFeaturePhaseIdx < 0 || static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-1564, fmt::format("Feature Phases array '{}' has value {} at feature index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                  m_InputValues->FeaturePhasesArrayPath.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                  m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                   numCrystalStructures, numCrystalStructures));
       }
       const uint32 neighborCrystalStructure = crystalStructuresCache[neighborFeaturePhaseIdx];
@@ -136,24 +136,24 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         Eigen::Vector3d c2 = oMatrix2.transpose() * cAxis;
         c2.normalize();
 
-        float64 w = ImageRotationUtilities::CosBetweenVectors(c1, c2);
+        float64 w = image_rotation_utilities::CosBetweenVectors(c1, c2);
         w = std::clamp(w, -1.0, 1.0);
         w = std::acos(w);
-        if(w > Constants::k_PiOver2D)
+        if(w > constants::k_PiOver2D)
         {
-          w = Constants::k_PiD - w;
+          w = constants::k_PiD - w;
         }
 
-        currentMisalignmentList[neighborListIdx] = static_cast<float32>(w * Constants::k_180OverPiD);
+        currentMisalignmentList[neighborListIdx] = static_cast<float32>(w * constants::k_180OverPiD);
 
-        if(m_InputValues->FindAvgMisals)
+        if(m_InputValues->find_avg_misals)
         {
           avgCAxisBuf[featureIdx] += currentMisalignmentList[neighborListIdx];
         }
       }
       else
       {
-        if(m_InputValues->FindAvgMisals)
+        if(m_InputValues->find_avg_misals)
         {
           hexNeighborListSize--;
         }
@@ -161,7 +161,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
       }
     }
 
-    if(m_InputValues->FindAvgMisals)
+    if(m_InputValues->find_avg_misals)
     {
       if(hexNeighborListSize > 0)
       {
@@ -176,7 +176,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     cAxisMisalignmentList.setList(featureIdx, {currentMisalignmentList.begin(), currentMisalignmentList.end()});
   }
 
-  if(m_InputValues->FindAvgMisals)
+  if(m_InputValues->find_avg_misals)
   {
     if(Result<> ioResult = avgCAxisMisalignmentPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(avgCAxisBuf.data(), totalFeatures)); ioResult.invalid())
     {

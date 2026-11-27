@@ -33,7 +33,7 @@ void RunCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inputP
   args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -83,15 +83,15 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", "[NXImageProcessing][ConnectedComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -102,8 +102,8 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
     args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("float input rejected")
   {
@@ -117,7 +117,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
     args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+    REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
   }
   SECTION("scalar integer input creates a uint32 output")
   {

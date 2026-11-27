@@ -12,11 +12,11 @@ namespace nx::core
 class SIMPLNX_EXPORT ChoicesParameter : public ValueParameter
 {
 public:
-  using Choices = std::vector<std::string>;
+  using ChoicesType = std::vector<std::string>;
   using ValueType = uint64;
 
   ChoicesParameter() = delete;
-  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices choices);
+  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ChoicesType choices);
   ~ChoicesParameter() override = default;
 
   ChoicesParameter(const ChoicesParameter&) = delete;
@@ -35,7 +35,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
@@ -81,7 +81,7 @@ public:
    * @brief
    * @return
    */
-  Choices choices() const;
+  ChoicesType choices() const;
 
   /**
    * @brief Checks whether another parameter would be active when this parameter has the given value.
@@ -106,7 +106,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  Choices m_Choices;
+  ChoicesType m_Choices;
 };
 
 namespace simpl_conversion

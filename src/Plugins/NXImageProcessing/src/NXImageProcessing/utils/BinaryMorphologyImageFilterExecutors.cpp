@@ -26,7 +26,7 @@ struct BinaryMorphologyExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   MorphOp op;
   float64 foreground;
@@ -63,7 +63,7 @@ struct BinaryMorphologyCompositeExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   BinaryCompositeOp op;
   float64 foreground;
@@ -141,7 +141,7 @@ struct BinaryMorphologyCompositeExecuteFn
       // Opening = erode(boundaryToForeground=true) -> dilate(boundaryToForeground=false). No padding. ONE
       // same-extent scratch: erode(in) -> scratch; dilate(scratch) -> out. Each pass reads a store distinct
       // from the one it writes.
-      auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto scratch = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
       if(Result<> r = ApplyBinaryMorphology<T>(inStore, *scratch, dims, se, MorphOp::Erode, fgT, bgT, /*boundaryToForeground=*/true, inArray, outArray, should_cancel, message_handler); r.invalid())
       {
         return r;
@@ -157,7 +157,7 @@ struct BinaryMorphologyCompositeExecuteFn
     if(!safe_border)
     {
       // SafeBorder == false: plain two-pass composition on the original extent. ONE same-extent scratch.
-      auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto scratch = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
       if(Result<> r = ApplyBinaryMorphology<T>(inStore, *scratch, dims, se, MorphOp::Dilate, fgT, bgT, /*boundaryToForeground=*/false, inArray, outArray, should_cancel, message_handler); r.invalid())
       {
         return r;
@@ -171,11 +171,11 @@ struct BinaryMorphologyCompositeExecuteFn
     // the cropped region, so the boundary flags do not affect the cropped result -- reproducing ITK's
     // Pad/dilate/erode/Crop exactly. Two padded ping-pong scratches (see the grayscale SafeBorder path).
     const std::array<usize, 3> r = SafeBorderPadRadius(se, dims);
-    const SizeVec3 pdims = {dims[0] + 2 * r[0], dims[1] + 2 * r[1], dims[2] + 2 * r[2]};
+    const SizeVec3Type pdims = {dims[0] + 2 * r[0], dims[1] + 2 * r[1], dims[2] + 2 * r[2]};
     const std::vector<usize> paddedShape = {pdims[2], pdims[1], pdims[0]}; // ZYX tuple shape
 
-    auto paddedIn = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto paddedTmp = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto paddedIn = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto paddedTmp = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
 
     // Boundary flags (dilate false, erode true) match the non-padded path; over the cropped region they do not
     // affect the result (the padded neighborhoods never reach the padded edge there), as noted above.
@@ -207,7 +207,7 @@ Result<> ExecuteBinaryMorphologyImageFilter(DataStructure& dataStructure, const 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -224,7 +224,7 @@ Result<> ExecuteBinaryMorphologyImageFilter(DataStructure& dataStructure, const 
                                               .boundary_to_foreground = boundaryToForeground,
                                               .should_cancel = shouldCancel,
                                               .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -236,7 +236,7 @@ Result<> ExecuteBinaryMorphologyCompositeImageFilter(DataStructure& dataStructur
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder && op == BinaryCompositeOp::Closing, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -253,7 +253,7 @@ Result<> ExecuteBinaryMorphologyCompositeImageFilter(DataStructure& dataStructur
                                                        .safe_border = safeBorder,
                                                        .should_cancel = shouldCancel,
                                                        .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

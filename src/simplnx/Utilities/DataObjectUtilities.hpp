@@ -210,22 +210,22 @@ constexpr StringLiteralType DataObjectTypeToString(DataObject::Type dataObjType)
     return nx::core::IDataArray::k_TypeName;
   }
   case nx::core::DataObject::Type::DataArray: {
-    return nx::core::DataArrayConstants::k_TypeName;
+    return nx::core::data_array_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::INeighborList: {
     return nx::core::INeighborList::k_TypeName;
   }
   case nx::core::DataObject::Type::NeighborList: {
-    return nx::core::NeighborListConstants::k_TypeName;
+    return nx::core::neighbor_list_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::ScalarData: {
-    return nx::core::ScalarDataConstants::k_TypeName;
+    return nx::core::scalar_data_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::StringArray: {
     return nx::core::StringArray::k_TypeName;
   }
   case nx::core::DataObject::Type::DynamicListArray: {
-    return nx::core::DynamicListArrayConstants::k_TypeName;
+    return nx::core::dynamic_list_array_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::AbstractMontage: {
     return nx::core::AbstractMontage::k_TypeName;

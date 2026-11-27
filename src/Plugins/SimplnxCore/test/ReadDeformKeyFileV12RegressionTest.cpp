@@ -73,7 +73,7 @@ void CheckDeformValues(const DataStructure& dataStructure, usize failedRecord)
 {
   for(usize variable = 0; variable < 12; variable++)
   {
-    const auto* valuesPtr = dataStructure.getDataAs<Float32Array>(k_RegressionVertexPath.createChildPath(fmt::format("U{}", variable + 1)));
+    const auto* valuesPtr = dataStructure.getDataAs<Float32ArrayType>(k_RegressionVertexPath.createChildPath(fmt::format("U{}", variable + 1)));
     REQUIRE(valuesPtr != nullptr);
     REQUIRE(valuesPtr->getNumberOfTuples() == 4);
     REQUIRE(valuesPtr->getNumberOfComponents() == 1);
@@ -102,7 +102,7 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: USRNOD maps every variable a
   REQUIRE(geometryPtr != nullptr);
   CHECK(geometryPtr->getNumberOfVertices() == 4);
   CHECK(geometryPtr->getNumberOfFaces() == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: USRNOD stops at the first failed scalar", "[SimplnxCore][ReadDeformKeyFileV12Filter]")
@@ -122,5 +122,5 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: USRNOD stops at the first fa
   CHECK(result.result.errors()[0].message.find("U2") != std::string::npos);
   CHECK(result.result.errors()[0].message.find(fmt::format("record {}", failedRecord)) != std::string::npos);
   CheckDeformValues(dataStructure, failedRecord);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

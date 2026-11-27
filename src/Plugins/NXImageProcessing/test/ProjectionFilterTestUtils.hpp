@@ -104,8 +104,8 @@ template <class NewFilterT>
 inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataStructure&)>& buildImage, const std::function<float64(uint32 projDim, usize slot)>& expectedForSlot,
                                               float64 absTol = 1.0e-6, float64 relTol = 1.0e-9)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const std::string kOutputArrayName = "Output";
   const std::string kOutputGeomName = "Projected Image";
@@ -132,7 +132,7 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
         args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(kOutputArrayName));
 
         auto preflightResult = filter.preflight(dataStructure, args);
-        SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+        SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
         auto executeResult = filter.execute(dataStructure, args);
         SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -172,7 +172,7 @@ inline void RunProjectionComputedExpectedGrid(const std::function<DataPath(DataS
           UNSCOPED_INFO(fmt::format("projDim={} slot={} got={} expected={}", projDim, badSlot, badGot, badExp));
         }
         REQUIRE(allMatch);
-        UnitTest::CheckArraysInheritTupleDims(dataStructure);
+        unit_test::CheckArraysInheritTupleDims(dataStructure);
       }
     }
   }
@@ -191,8 +191,8 @@ template <class FilterT>
 inline void RunProjectionMd5ItkGolden(
     const std::string& inputFile, uint32 projectionDimension, bool removeOriginalGeometry, const std::string& committedMd5, const std::function<void(Arguments&)>& setExtraParams = [](Arguments&) {})
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -221,7 +221,7 @@ inline void RunProjectionMd5ItkGolden(
   const Arguments args = makeArgs();
   FilterT filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -230,7 +230,7 @@ inline void RunProjectionMd5ItkGolden(
   INFO(fmt::format("projection md5: ours='{}' committed='{}' (input={} projDim={} inPlace={})", ourMd5, committedMd5, inputFile, projectionDimension, removeOriginalGeometry));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // baseline-golden projection case (Float64 reducers Mean/Sum/StandardDeviation). Reads @p inputFile, projects
@@ -241,8 +241,8 @@ inline void RunProjectionMd5ItkGolden(
 template <class FilterT>
 inline void RunProjectionBaselineItkGolden(const std::string& inputFile, const std::string& baselineFile, uint32 projectionDimension, float64 tolerance)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -268,7 +268,7 @@ inline void RunProjectionBaselineItkGolden(const std::string& inputFile, const s
   const Arguments args = makeArgs();
   FilterT filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -280,6 +280,6 @@ inline void RunProjectionBaselineItkGolden(const std::string& inputFile, const s
   const Result<> compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace projection_test

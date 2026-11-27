@@ -107,12 +107,12 @@ private:
 TEST_CASE("TemporaryRecordStore configuration retains 64-bit fixed-record limits", "[TemporaryRecordStore]")
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = 8;
-  config.maxRecordsPerBatch = 3;
-  config.initialRecordCount = uint64{1} << 40;
+  config.record_size = 8;
+  config.max_records_per_batch = 3;
+  config.initial_record_count = uint64{1} << 40;
 
-  REQUIRE(config.recordSize == 8);
-  REQUIRE(config.initialRecordCount == (uint64{1} << 40));
+  REQUIRE(config.record_size == 8);
+  REQUIRE(config.initial_record_count == (uint64{1} << 40));
 }
 
 TEST_CASE("Result assertion macros evaluate expressions once", "[TemporaryRecordStore]")
@@ -135,9 +135,9 @@ TEST_CASE("Result assertion macros evaluate expressions once", "[TemporaryRecord
 TEST_CASE("ExternalEquivalence resolves ordered unions and isolated labels", "[TemporaryRecordStore]")
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(ExternalEquivalence::Node);
-  config.maxRecordsPerBatch = 8;
-  config.initialRecordCount = 128;
+  config.record_size = sizeof(ExternalEquivalence::Node);
+  config.max_records_per_batch = 8;
+  config.initial_record_count = 128;
   auto storeResult = InMemoryTemporaryRecordStore::Create(config);
   SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
   auto equivalenceResult = ExternalEquivalence::Create(std::move(storeResult.value()), 4, 2);
@@ -160,9 +160,9 @@ TEST_CASE("ExternalEquivalence resolves ordered unions and isolated labels", "[T
 TEST_CASE("InMemoryTemporaryRecordStore enforces bounded bulk contracts", "[TemporaryRecordStore]")
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(uint64);
-  config.maxRecordsPerBatch = 2;
-  config.initialRecordCount = 4;
+  config.record_size = sizeof(uint64);
+  config.max_records_per_batch = 2;
+  config.initial_record_count = 4;
   const std::atomic_bool active = false;
   const std::atomic_bool cancelled = true;
   auto storeResult = InMemoryTemporaryRecordStore::Create(config);
@@ -219,9 +219,9 @@ TEST_CASE("DataIOCollection discovers a temporary record-store provider", "[Temp
 
   DataIOCollection collection;
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(uint64);
-  config.maxRecordsPerBatch = 2;
-  config.initialRecordCount = 4;
+  config.record_size = sizeof(uint64);
+  config.max_records_per_batch = 2;
+  config.initial_record_count = 4;
   REQUIRE_FALSE(collection.hasTemporaryRecordStoreCapability());
   auto temporaryStoreCreationResult = collection.createTemporaryRecordStore(config);
   SIMPLNX_RESULT_REQUIRE_INVALID(temporaryStoreCreationResult);
@@ -306,9 +306,9 @@ TEST_CASE("DataIOCollection forwards datastore chunk-shape hints and CreateArray
 TEST_CASE("ExternalEquivalence handles chains, sparse labels, duplicates, cancellation, and flush", "[TemporaryRecordStore]")
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(ExternalEquivalence::Node);
-  config.maxRecordsPerBatch = 4;
-  config.initialRecordCount = 128;
+  config.record_size = sizeof(ExternalEquivalence::Node);
+  config.max_records_per_batch = 4;
+  config.initial_record_count = 128;
   const std::atomic_bool active = false;
   const std::atomic_bool cancelled = true;
   auto storeResult = InMemoryTemporaryRecordStore::Create(config);
@@ -455,9 +455,9 @@ TEST_CASE("ExternalEquivalence compresses a 4096-node chain without resident pat
 {
   constexpr uint64 k_Count = 4096;
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(ExternalEquivalence::Node);
-  config.maxRecordsPerBatch = 64;
-  config.initialRecordCount = k_Count;
+  config.record_size = sizeof(ExternalEquivalence::Node);
+  config.max_records_per_batch = 64;
+  config.initial_record_count = k_Count;
   auto store = std::make_unique<SpyTemporaryRecordStore>(k_Count, sizeof(ExternalEquivalence::Node), 64);
   auto* spyPtr = store.get();
   for(uint64 label = 0; label < k_Count; ++label)
@@ -514,7 +514,7 @@ TEST_CASE("ExternalEquivalence propagates backing-store failures and size overfl
 
 TEST_CASE("InMemoryTemporaryRecordStore fills across batches and preserves invalid ranges", "[TemporaryRecordStore]")
 {
-  TemporaryRecordStoreConfig config{.recordSize = sizeof(uint64), .maxRecordsPerBatch = 2, .initialRecordCount = 6};
+  TemporaryRecordStoreConfig config{.record_size = sizeof(uint64), .max_records_per_batch = 2, .initial_record_count = 6};
   auto storeResult = InMemoryTemporaryRecordStore::Create(config);
   SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
   auto store = std::move(storeResult.value());
@@ -540,7 +540,7 @@ TEST_CASE("InMemoryTemporaryRecordStore fills across batches and preserves inval
   auto pastEndReadResult = store->read(1, 1, bytes.first(sizeof(uint64)), active);
   SIMPLNX_RESULT_REQUIRE_INVALID(pastEndReadResult);
 
-  config.readOnly = true;
+  config.read_only = true;
   auto readOnlyResult = InMemoryTemporaryRecordStore::Create(config);
   SIMPLNX_RESULT_REQUIRE_VALID(readOnlyResult);
   auto readOnlyStoreFillResult = readOnlyResult.value()->fill(0, 1, record, active);

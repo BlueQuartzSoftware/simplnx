@@ -13,8 +13,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT TriangleCentroidInputValues
 {
-  DataPath TriangleGeometryDataPath;
-  DataObjectNameParameter::ValueType CentroidsArrayName;
+  DataPath triangle_geometry_data_path;
+  DataObjectNameParameter::ValueType centroids_array_name;
 };
 
 /**

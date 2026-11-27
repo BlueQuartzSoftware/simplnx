@@ -24,7 +24,7 @@ struct fmt::formatter<nx::core::Error>
 
 namespace nx::core
 {
-ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, Choices choices)
+ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ChoicesType choices)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_Choices(std::move(choices))
@@ -36,7 +36,7 @@ Uuid ChoicesParameter::uuid() const
   return ParameterTraits<ChoicesParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ChoicesParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ChoicesParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -92,14 +92,14 @@ Result<> ChoicesParameter::validateIndex(ValueType index) const
 
   if(index >= m_Choices.size())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error,
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateOutOfRangeError,
                                      fmt::format("{}Value '{}' must be less than {}. Valid choices are: [{}]", prefix, index, m_Choices.size(), fmt::join(m_Choices, ", ")));
   }
 
   return {};
 }
 
-ChoicesParameter::Choices ChoicesParameter::choices() const
+ChoicesParameter::ChoicesType ChoicesParameter::choices() const
 {
   return m_Choices;
 }

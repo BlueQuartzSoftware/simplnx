@@ -74,7 +74,7 @@ T SaturateReconstructionMarkerValue(float64 value)
 }
 
 template <class T>
-void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const SizeVec3& dims, const ReconstructionMarkerOptions& options)
+void ApplyReconstructionMarkerOptions(nonstd::span<T> values, usize start, const SizeVec3Type& dims, const ReconstructionMarkerOptions& options)
 {
   if(options.source == ReconstructionMarkerSource::Provided)
   {
@@ -129,7 +129,7 @@ struct ReconTraits
       return a < b;
     }
   }
-  static T fold(T acc, T v)
+  static T Fold(T acc, T v)
   {
     if constexpr(Dilation)
     {
@@ -140,7 +140,7 @@ struct ReconTraits
       return (v < acc) ? v : acc;
     }
   }
-  static T clampToMask(T value, T mask)
+  static T ClampToMask(T value, T mask)
   {
     if constexpr(Dilation)
     {
@@ -214,11 +214,11 @@ private:
 
 struct ReconstructionWorkingMemoryPlan
 {
-  usize maxSlabValues = 0;
-  usize fixedWorkValues = 0;
-  usize fixedBufferValues = 0;
-  usize residentBytes = 0;
-  bool useResidentFullSweep = false;
+  usize max_slab_values = 0;
+  usize fixed_work_values = 0;
+  usize fixed_buffer_values = 0;
+  usize resident_bytes = 0;
+  bool use_resident_full_sweep = false;
 };
 
 struct ReconstructionWorkingMemoryAllocation
@@ -229,9 +229,9 @@ struct ReconstructionWorkingMemoryAllocation
 
 struct ReconstructionPersistentPrefixPlan
 {
-  usize residentPlanes = 0;
-  usize residentValues = 0;
-  usize residentBytes = 0;
+  usize resident_planes = 0;
+  usize resident_values = 0;
+  usize resident_bytes = 0;
 };
 
 inline constexpr uint32 k_ReconstructionPreferredUsefulNumerator = 1;
@@ -245,7 +245,7 @@ struct ReconstructionWorkingMemoryFraction
   uint32 denominator = k_ReconstructionPreferredUsefulDenominator;
 };
 
-inline ReconstructionWorkingMemoryFraction SelectReconstructionWorkingMemoryFraction(const SizeVec3& dims, ReconstructionMarkerSource source)
+inline ReconstructionWorkingMemoryFraction SelectReconstructionWorkingMemoryFraction(const SizeVec3Type& dims, ReconstructionMarkerSource source)
 {
   if(dims[2] > 1 && (source == ReconstructionMarkerSource::MaskMinusHeight || source == ReconstructionMarkerSource::MaskPlusHeight))
   {
@@ -274,13 +274,13 @@ inline bool TryAddReconstructionSize(usize left, usize right, usize& sum)
   return true;
 }
 
-inline Result<usize> CalculateReconstructionFrontierWorkingMemoryBytes(const SizeVec3& dims)
+inline Result<usize> CalculateReconstructionFrontierWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   usize planeValues = 0;
   usize volumeValues = 0;
   if(!TryMultiplyReconstructionSize(dims[0], dims[1], planeValues) || !TryMultiplyReconstructionSize(planeValues, dims[2], volumeValues))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the bounded frontier queue.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the bounded frontier queue.", string_utilities::FormatDimensions3D(dims)));
   }
   if(volumeValues == 0)
   {
@@ -294,19 +294,19 @@ inline Result<usize> CalculateReconstructionFrontierWorkingMemoryBytes(const Siz
   usize frontierBytes = 0;
   if(!TryMultiplyReconstructionSize(frontierValues, sizeof(uint64), frontierBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the bounded frontier queue.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the bounded frontier queue.", string_utilities::FormatDimensions3D(dims)));
   }
   return {frontierBytes};
 }
 
 template <class T>
-Result<ReconstructionPersistentPrefixPlan> CreateReconstructionPersistentPrefixPlan(const SizeVec3& dims, usize maxSlabValues)
+Result<ReconstructionPersistentPrefixPlan> CreateReconstructionPersistentPrefixPlan(const SizeVec3Type& dims, usize maxSlabValues)
 {
   usize planeValues = 0;
   if(!TryMultiplyReconstructionSize(dims[0], dims[1], planeValues))
   {
     return MakeErrorResult<ReconstructionPersistentPrefixPlan>(
-        -8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the persistent work region.", StringUtilities::formatDimensions3D(dims)));
+        -8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the persistent work region.", string_utilities::FormatDimensions3D(dims)));
   }
   if(planeValues == 0 || dims[2] <= 1)
   {
@@ -324,24 +324,24 @@ Result<ReconstructionPersistentPrefixPlan> CreateReconstructionPersistentPrefixP
   {
     return MakeErrorResult<ReconstructionPersistentPrefixPlan>(
         -8643, fmt::format("Morphological reconstruction's slab capacity ({} planes) overflowed while sizing the persistent work region for dimensions ({}).", slabPlanes,
-                           StringUtilities::formatDimensions3D(dims)));
+                           string_utilities::FormatDimensions3D(dims)));
   }
 
   ReconstructionPersistentPrefixPlan plan;
-  plan.residentPlanes = std::min(dims[2] - 1, doubledSlabPlanes - 2);
+  plan.resident_planes = std::min(dims[2] - 1, doubledSlabPlanes - 2);
   usize totalBufferPlanes = 0;
   usize totalBufferValues = 0;
-  if(!TryMultiplyReconstructionSize(plan.residentPlanes, planeValues, plan.residentValues) || !TryAddReconstructionSize(plan.residentPlanes, usize{3}, totalBufferPlanes) ||
-     !TryMultiplyReconstructionSize(totalBufferPlanes, planeValues, totalBufferValues) || !TryMultiplyReconstructionSize(totalBufferValues, sizeof(T), plan.residentBytes))
+  if(!TryMultiplyReconstructionSize(plan.resident_planes, planeValues, plan.resident_values) || !TryAddReconstructionSize(plan.resident_planes, usize{3}, totalBufferPlanes) ||
+     !TryMultiplyReconstructionSize(totalBufferPlanes, planeValues, totalBufferValues) || !TryMultiplyReconstructionSize(totalBufferValues, sizeof(T), plan.resident_bytes))
   {
     return MakeErrorResult<ReconstructionPersistentPrefixPlan>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing {} persistent planes and three streaming planes.",
-                                                                                  StringUtilities::formatDimensions3D(dims), plan.residentPlanes));
+                                                                                  string_utilities::FormatDimensions3D(dims), plan.resident_planes));
   }
   return {plan};
 }
 
 template <class T>
-Result<usize> CalculateReconstructionUsefulWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateReconstructionUsefulWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -356,7 +356,7 @@ Result<usize> CalculateReconstructionUsefulWorkingMemoryBytes(const SizeVec3& di
   usize volumeBytes = 0;
   if(!TryMultiplyReconstructionSize(dimX, dimY, planeValues) || !TryMultiplyReconstructionSize(planeValues, dimZ, volumeValues) || !TryMultiplyReconstructionSize(volumeValues, sizeof(T), volumeBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing useful working memory.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing useful working memory.", string_utilities::FormatDimensions3D(dims)));
   }
 
   if(dimZ == 1)
@@ -368,7 +368,7 @@ Result<usize> CalculateReconstructionUsefulWorkingMemoryBytes(const SizeVec3& di
     if(!TryAddReconstructionSize(volumeValues, dimX, fullBufferValues) || !TryMultiplyReconstructionSize(fullBufferValues, sizeof(T), fullBufferBytes) ||
        !TryMultiplyReconstructionSize(fullBufferBytes, usize{2}, bothBufferBytes) || !TryAddReconstructionSize(volumeBytes, bothBufferBytes, usefulBytes))
     {
-      return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing useful 2-D working memory.", StringUtilities::formatDimensions3D(dims)));
+      return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing useful 2-D working memory.", string_utilities::FormatDimensions3D(dims)));
     }
     return {usefulBytes};
   }
@@ -379,13 +379,13 @@ Result<usize> CalculateReconstructionUsefulWorkingMemoryBytes(const SizeVec3& di
   if(!TryMultiplyReconstructionSize(planeValues, sizeof(T), planeBytes) || !TryMultiplyReconstructionSize(volumeBytes, usize{2}, bothVolumeBytes) ||
      !TryAddReconstructionSize(bothVolumeBytes, planeBytes, usefulBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing useful 3-D working memory.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing useful 3-D working memory.", string_utilities::FormatDimensions3D(dims)));
   }
   return {usefulBytes};
 }
 
 template <class T>
-Result<ReconstructionWorkingMemoryPlan> CreateReconstructionWorkingMemoryPlan(const SizeVec3& dims, usize targetBytes)
+Result<ReconstructionWorkingMemoryPlan> CreateReconstructionWorkingMemoryPlan(const SizeVec3Type& dims, usize targetBytes)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -408,7 +408,7 @@ Result<ReconstructionWorkingMemoryPlan> CreateReconstructionWorkingMemoryPlan(co
   if(!TryMultiplyReconstructionSize(dimX, dimY, planeValues) || !TryMultiplyReconstructionSize(planeValues, dimZ, volumeValues) || !TryMultiplyReconstructionSize(volumeValues, sizeof(T), volumeBytes))
   {
     return MakeErrorResult<ReconstructionWorkingMemoryPlan>(
-        -8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while creating a {}-byte working-memory plan.", StringUtilities::formatDimensions3D(dims), targetBytes));
+        -8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while creating a {}-byte working-memory plan.", string_utilities::FormatDimensions3D(dims), targetBytes));
   }
 
   ReconstructionWorkingMemoryPlan plan;
@@ -418,44 +418,44 @@ Result<ReconstructionWorkingMemoryPlan> CreateReconstructionWorkingMemoryPlan(co
     if(!TryAddReconstructionSize(volumeValues, dimX, fullUsefulBufferValues))
     {
       return MakeErrorResult<ReconstructionWorkingMemoryPlan>(
-          -8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the 2-D full-width buffer.", StringUtilities::formatDimensions3D(dims)));
+          -8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the 2-D full-width buffer.", string_utilities::FormatDimensions3D(dims)));
     }
 
     if(targetBytes > volumeBytes)
     {
       const usize fixedBufferValues = std::min(fullUsefulBufferValues, ((targetBytes - volumeBytes) / 2) / sizeof(T));
       auto fixedPlanResult = CreateSweep2DPlan(dimX, dimY, fixedBufferValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
-      if(fixedPlanResult.valid() && fixedPlanResult.value().fullWidth)
+      if(fixedPlanResult.valid() && fixedPlanResult.value().full_width)
       {
-        plan.maxSlabValues = fixedBufferValues;
-        plan.fixedWorkValues = volumeValues;
-        plan.fixedBufferValues = fixedBufferValues;
-        plan.residentBytes = volumeBytes + 2 * fixedBufferValues * sizeof(T);
+        plan.max_slab_values = fixedBufferValues;
+        plan.fixed_work_values = volumeValues;
+        plan.fixed_buffer_values = fixedBufferValues;
+        plan.resident_bytes = volumeBytes + 2 * fixedBufferValues * sizeof(T);
         return {plan};
       }
     }
 
     const usize fullWidthBufferValues = std::min(fullUsefulBufferValues, (targetBytes / 2) / sizeof(T));
     auto fullWidthPlanResult = CreateSweep2DPlan(dimX, dimY, fullWidthBufferValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
-    if(fullWidthPlanResult.valid() && fullWidthPlanResult.value().fullWidth)
+    if(fullWidthPlanResult.valid() && fullWidthPlanResult.value().full_width)
     {
-      const usize maximumReadRows = std::min(dimY, fullWidthPlanResult.value().coreRows + 1);
-      plan.maxSlabValues = fullWidthBufferValues;
-      plan.residentBytes = (maximumReadRows + fullWidthPlanResult.value().coreRows) * dimX * sizeof(T);
+      const usize maximumReadRows = std::min(dimY, fullWidthPlanResult.value().core_rows + 1);
+      plan.max_slab_values = fullWidthBufferValues;
+      plan.resident_bytes = (maximumReadRows + fullWidthPlanResult.value().core_rows) * dimX * sizeof(T);
       return {plan};
     }
 
     const usize targetValues = targetBytes / sizeof(T);
     const usize tiledBufferValues = std::min(fullUsefulBufferValues, targetValues / 3 + ((targetValues % 3) + 4) / 3);
     auto tiledPlanResult = CreateSweep2DPlan(dimX, dimY, tiledBufferValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
-    if(tiledPlanResult.invalid() || tiledPlanResult.value().fullWidth)
+    if(tiledPlanResult.invalid() || tiledPlanResult.value().full_width)
     {
       return MakeErrorResult<ReconstructionWorkingMemoryPlan>(
           -8643, fmt::format("Morphological reconstruction's {}-byte working-memory grant cannot hold one valid 2-D row block or tile for dimensions ({}).", targetBytes,
-                             StringUtilities::formatDimensions3D(dims)));
+                             string_utilities::FormatDimensions3D(dims)));
     }
-    plan.maxSlabValues = tiledBufferValues;
-    plan.residentBytes = (3 * tiledPlanResult.value().coreColumns + 2) * sizeof(T);
+    plan.max_slab_values = tiledBufferValues;
+    plan.resident_bytes = (3 * tiledPlanResult.value().core_columns + 2) * sizeof(T);
     return {plan};
   }
 
@@ -465,19 +465,19 @@ Result<ReconstructionWorkingMemoryPlan> CreateReconstructionWorkingMemoryPlan(co
   {
     return MakeErrorResult<ReconstructionWorkingMemoryPlan>(
         -8643, fmt::format("Morphological reconstruction's {}-byte working-memory grant cannot hold two working planes and one boundary plane for dimensions ({}).", targetBytes,
-                           StringUtilities::formatDimensions3D(dims)));
+                           string_utilities::FormatDimensions3D(dims)));
   }
 
   const usize bytesPerSlab = (targetBytes - planeBytes) / 2;
   const usize slabPlanes = std::min(dimZ, bytesPerSlab / planeBytes);
-  plan.maxSlabValues = slabPlanes * planeValues;
-  plan.residentBytes = (2 * plan.maxSlabValues + planeValues) * sizeof(T);
-  plan.useResidentFullSweep = plan.maxSlabValues == volumeValues;
+  plan.max_slab_values = slabPlanes * planeValues;
+  plan.resident_bytes = (2 * plan.max_slab_values + planeValues) * sizeof(T);
+  plan.use_resident_full_sweep = plan.max_slab_values == volumeValues;
   return {plan};
 }
 
 template <class T>
-Result<usize> CalculateReconstructionMinimumWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateReconstructionMinimumWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   auto usefulResult = CalculateReconstructionUsefulWorkingMemoryBytes<T>(dims);
   if(usefulResult.invalid() || usefulResult.value() == 0)
@@ -490,7 +490,7 @@ Result<usize> CalculateReconstructionMinimumWorkingMemoryBytes(const SizeVec3& d
     if(!TryMultiplyReconstructionSize(usize{5}, sizeof(T), minimumBytes))
     {
       return MakeErrorResult<usize>(-8643,
-                                    fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum 2-D working-memory plan.", StringUtilities::formatDimensions3D(dims)));
+                                    fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum 2-D working-memory plan.", string_utilities::FormatDimensions3D(dims)));
     }
     return {std::min(minimumBytes, usefulResult.value())};
   }
@@ -499,18 +499,18 @@ Result<usize> CalculateReconstructionMinimumWorkingMemoryBytes(const SizeVec3& d
   usize planeBytes = 0;
   if(!TryMultiplyReconstructionSize(dims[0], dims[1], planeValues) || !TryMultiplyReconstructionSize(planeValues, sizeof(T), planeBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
   }
   usize minimumBytes = 0;
   if(!TryMultiplyReconstructionSize(planeBytes, usize{3}, minimumBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
   }
   return {std::min(minimumBytes, usefulResult.value())};
 }
 
 template <class T>
-Result<ReconstructionWorkingMemoryAllocation> ReserveReconstructionWorkingMemoryPlan(const SizeVec3& dims, uint32 preferredNumerator = 0, uint32 preferredDenominator = 0)
+Result<ReconstructionWorkingMemoryAllocation> ReserveReconstructionWorkingMemoryPlan(const SizeVec3Type& dims, uint32 preferredNumerator = 0, uint32 preferredDenominator = 0)
 {
   auto usefulResult = CalculateReconstructionUsefulWorkingMemoryBytes<T>(dims);
   if(usefulResult.invalid())
@@ -538,7 +538,7 @@ Result<ReconstructionWorkingMemoryAllocation> ReserveReconstructionWorkingMemory
   {
     return MakeErrorResult<ReconstructionWorkingMemoryAllocation>(
         -8643, fmt::format("Morphological reconstruction could not reserve working memory for dimensions ({}). Useful bytes: {}; minimum bytes: {}; granted bytes: {}.",
-                           StringUtilities::formatDimensions3D(dims), usefulResult.value(), minimumResult.value(), reservation.sizeBytes()));
+                           string_utilities::FormatDimensions3D(dims), usefulResult.value(), minimumResult.value(), reservation.sizeBytes()));
   }
   auto planResult = CreateReconstructionWorkingMemoryPlan<T>(dims, static_cast<usize>(reservation.sizeBytes()));
   if(planResult.invalid())
@@ -568,7 +568,7 @@ template <class T>
 class ReconstructVincent
 {
 public:
-  ReconstructVincent(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op, bool fullyConnected,
+  ReconstructVincent(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, ReconstructOp op, bool fullyConnected,
                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, ReconstructionMarkerOptions markerOptions = {},
                      usize frontierCapacity = std::numeric_limits<usize>::max())
   : m_Marker(markerStore)
@@ -600,7 +600,7 @@ private:
   const AbstractDataStore<T>& m_Marker;
   const AbstractDataStore<T>& m_Mask;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   ReconstructOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -618,7 +618,7 @@ template <class T>
 class ReconstructSweepWithMarkerOptions
 {
 public:
-  ReconstructSweepWithMarkerOptions(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op,
+  ReconstructSweepWithMarkerOptions(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, ReconstructOp op,
                                     bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, ReconstructionMarkerOptions markerOptions)
   : m_Marker(markerStore)
   , m_Mask(maskStore)
@@ -645,7 +645,7 @@ public:
     CacheMemoryBudgetManager::WorkingMemoryReservation frontierReservation;
     usize frontierCapacity = 0;
     const bool useBorderFrontier = m_MarkerOptions.source == ReconstructionMarkerSource::MaskWithMinimumInterior || m_MarkerOptions.source == ReconstructionMarkerSource::MaskWithMaximumInterior;
-    if(plan.useResidentFullSweep && useBorderFrontier)
+    if(plan.use_resident_full_sweep && useBorderFrontier)
     {
       auto frontierBytesResult = detail::CalculateReconstructionFrontierWorkingMemoryBytes(m_Dims);
       if(frontierBytesResult.invalid())
@@ -671,12 +671,12 @@ public:
                                      m_FullyConnected,
                                      m_ShouldCancel,
                                      m_MessageHandler,
-                                     plan.maxSlabValues,
+                                     plan.max_slab_values,
                                      std::numeric_limits<usize>::max(),
                                      m_MarkerOptions,
-                                     plan.fixedWorkValues,
-                                     plan.fixedBufferValues,
-                                     plan.useResidentFullSweep,
+                                     plan.fixed_work_values,
+                                     plan.fixed_buffer_values,
+                                     plan.use_resident_full_sweep,
                                      frontierCapacity}();
   }
 
@@ -684,7 +684,7 @@ private:
   const AbstractDataStore<T>& m_Marker;
   const AbstractDataStore<T>& m_Mask;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   ReconstructOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -743,7 +743,7 @@ public:
   static constexpr usize k_DefaultFixed2DWorkValues = std::max<usize>(1, (48ULL * 1024ULL * 1024ULL) / sizeof(T));
   static constexpr usize k_DefaultFixed2DBufferValues = std::max<usize>(1, (8ULL * 1024ULL * 1024ULL) / sizeof(T));
 
-  ReconstructSweep(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op, bool fullyConnected,
+  ReconstructSweep(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, ReconstructOp op, bool fullyConnected,
                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize maxSlabValues = k_DefaultSlabValues,
                    usize maxSweepPairs = std::numeric_limits<usize>::max(), ReconstructionMarkerOptions markerOptions = {}, usize fixed2DWorkValues = k_DefaultFixed2DWorkValues,
                    usize fixed2DBufferValues = k_DefaultFixed2DBufferValues, bool useResidentFullSweep = false, usize residentFrontierValues = 0)
@@ -902,7 +902,7 @@ private:
   const AbstractDataStore<T>& m_Marker;
   const AbstractDataStore<T>& m_Mask;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   ReconstructOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -922,7 +922,7 @@ template <class T, bool UseTemporaryWork = false>
 class ReconstructSweepWithWorkingMemory
 {
 public:
-  ReconstructSweepWithWorkingMemory(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3 dims, ReconstructOp op,
+  ReconstructSweepWithWorkingMemory(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, ReconstructOp op,
                                     bool fullyConnected, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_Marker(markerStore)
   , m_Mask(maskStore)
@@ -952,12 +952,12 @@ public:
                                                  m_FullyConnected,
                                                  m_ShouldCancel,
                                                  m_MessageHandler,
-                                                 plan.maxSlabValues,
+                                                 plan.max_slab_values,
                                                  std::numeric_limits<usize>::max(),
                                                  {},
-                                                 plan.fixedWorkValues,
-                                                 plan.fixedBufferValues,
-                                                 plan.useResidentFullSweep,
+                                                 plan.fixed_work_values,
+                                                 plan.fixed_buffer_values,
+                                                 plan.use_resident_full_sweep,
                                                  0}();
   }
 
@@ -965,7 +965,7 @@ private:
   const AbstractDataStore<T>& m_Marker;
   const AbstractDataStore<T>& m_Mask;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   ReconstructOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -1020,7 +1020,7 @@ extern template class ReconstructSweep<float64, true>;
  * direction precondition. @tparam T scalar type.
  */
 template <class T>
-Result<> ApplyMorphologicalReconstruction(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, ReconstructOp op,
+Result<> ApplyMorphologicalReconstruction(const AbstractDataStore<T>& markerStore, const AbstractDataStore<T>& maskStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, ReconstructOp op,
                                           bool fullyConnected, const IDataArray& maskArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                           const IFilter::MessageHandler& messageHandler, bool useTemporaryWork = false, ReconstructionMarkerOptions markerOptions = {})
 {

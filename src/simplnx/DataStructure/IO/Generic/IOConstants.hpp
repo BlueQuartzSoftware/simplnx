@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/StringLiteral.hpp"
 
-namespace nx::core::IOConstants
+namespace nx::core::io_constants
 {
 // DataArray
 inline constexpr StringLiteralType k_TupleShapeTag = "TupleDimensions";
@@ -18,7 +18,7 @@ inline constexpr StringLiteralType k_DepthCountTag = "Depth Count";
 
 // IGeometry
 inline constexpr StringLiteralType k_ElementSizesTag = "Element Sizes ID";
-inline constexpr StringLiteralType k_H5_UNITS = "Units";
+inline constexpr StringLiteralType k_H5Units = "Units";
 
 // INodeGeometry0D
 inline constexpr StringLiteralType k_VertexListTag = "Vertex List ID";
@@ -45,9 +45,9 @@ inline constexpr StringLiteralType k_UnsharedFaceListTag = "Unshared Face List I
 inline constexpr StringLiteralType k_CellDataTag = "Cell Data ID";
 
 // Image Geometry
-inline constexpr StringLiteralType k_H5_DIMENSIONS = "_DIMENSIONS";
-inline constexpr StringLiteralType k_H5_ORIGIN = "_ORIGIN";
-inline constexpr StringLiteralType k_H5_SPACING = "_SPACING";
+inline constexpr StringLiteralType k_H5Dimensions = "_DIMENSIONS";
+inline constexpr StringLiteralType k_H5Origin = "_ORIGIN";
+inline constexpr StringLiteralType k_H5Spacing = "_SPACING";
 inline constexpr StringLiteralType k_VoxelSizesTag = "Voxel Sizes ID";
 
 // Rectilinear Geometry

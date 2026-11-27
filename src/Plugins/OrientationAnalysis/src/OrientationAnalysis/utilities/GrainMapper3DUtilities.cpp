@@ -139,7 +139,7 @@ std::map<std::string, DataType> GrainMapperReader::getNameToDataTypeMap() const
   return m_NameToDataTypeMap;
 }
 
-std::map<std::string, size_t> GrainMapperReader::getNameToCompDimMap()
+std::map<std::string, size_t> GrainMapperReader::GetNameToCompDimMap()
 {
   return grain_mapper_3d_utilities::k_NameToCompDimMap;
 }
@@ -149,7 +149,7 @@ std::vector<std::string> GrainMapperReader::getDctDatasetNames() const
   return m_AvailableDCTDatasets;
 }
 
-std::vector<GrainMapperReader::GrainMapperPhase> GrainMapperReader::getPhaseVector() const
+std::vector<GrainMapperReader::GrainMapperPhaseType> GrainMapperReader::getPhaseVector() const
 {
   return m_PhaseInfos;
 }
@@ -394,27 +394,27 @@ herr_t GrainMapperReader::readPhaseInfo(hid_t parentId)
     hid_t phaseGid = H5Gopen(phaseInfoGid, phaseName.c_str(), H5P_DEFAULT);
     auto phaseDGidSentinel = H5Support::H5ScopedGroupSentinel(phaseGid, true);
 
-    GrainMapperPhase phase;
-    phase.PhaseIndex = i;
-    error = H5Lite::readStringDataset(phaseGid, constants::k_Name, phase.Name);
+    GrainMapperPhaseType phase;
+    phase.phase_index = i;
+    error = H5Lite::readStringDataset(phaseGid, constants::k_Name, phase.name);
     if(error < 0)
     {
       return error;
     }
 
-    error = H5Lite::readStringDataset(phaseGid, constants::k_UniversalHermannMauguinName, phase.UniversalHermannMauguin);
+    error = H5Lite::readStringDataset(phaseGid, constants::k_UniversalHermannMauguinName, phase.universal_hermann_mauguin);
     if(error < 0)
     {
       return error;
     }
 
-    error = H5Lite::readScalarDataset(phaseGid, constants::k_SpaceGroupName, phase.SpaceGroup);
+    error = H5Lite::readScalarDataset(phaseGid, constants::k_SpaceGroupName, phase.space_group);
     if(error < 0)
     {
       return error;
     }
 
-    error = H5Lite::readVectorDataset(phaseGid, constants::k_UnitCellName, phase.UnitCell);
+    error = H5Lite::readVectorDataset(phaseGid, constants::k_UnitCellName, phase.unit_cell);
     if(error < 0)
     {
       return error;

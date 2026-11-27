@@ -60,11 +60,11 @@ Parameters ComputeBiasedFeaturesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features", "Flag of 1 if Feature touches an outer surface or of 0 if it does not", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Feature belongs. Only required if Apply Phase by Phase is checked",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_BiasedFeaturesArrayName_Key, "Biased Features", "Flag of 1 if Feature is biased or of 0 if it is not", "BiasedFeatures"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -108,7 +108,7 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -117,7 +117,7 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
       std::make_unique<CreateArrayAction>(DataType::boolean, surfaceFeaturesMaskArray.getTupleShape(), std::vector<usize>{1}, pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -126,12 +126,12 @@ Result<> ComputeBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
 {
   ComputeBiasedFeaturesInputValues inputValues;
 
-  inputValues.CalcByPhase = filterArgs.value<bool>(k_CalcByPhase_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.SurfaceFeaturesArrayPath = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
-  inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.replaceName(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
+  inputValues.calc_by_phase = filterArgs.value<bool>(k_CalcByPhase_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.centroids_array_path = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  inputValues.surface_features_array_path = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
+  inputValues.phases_array_path = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
+  inputValues.biased_features_array_name = inputValues.centroids_array_path.replaceName(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
 
   return ComputeBiasedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

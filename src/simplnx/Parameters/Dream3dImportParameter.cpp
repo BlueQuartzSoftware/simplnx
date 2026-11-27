@@ -49,7 +49,7 @@ Uuid Dream3dImportParameter::uuid() const
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
+IParameter::AcceptedTypesType Dream3dImportParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -64,8 +64,8 @@ IParameter::VersionType Dream3dImportParameter::getVersion() const
 std::any Dream3dImportParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   auto value = args.value<ValueType>(name());
-  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.FilePath);
-  value.FilePath = absolutePath;
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.file_path);
+  value.file_path = absolutePath;
   return value;
 }
 
@@ -75,17 +75,17 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
   const auto& importData = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   // File path
-  json[k_FilePathKey] = importData.FilePath.string();
+  json[k_FilePathKey] = importData.file_path.string();
 
   // DataPaths
   nlohmann::json dataPathsJson = nlohmann::json::array();
-  for(const auto& dataPath : importData.DataPaths)
+  for(const auto& dataPath : importData.data_paths)
   {
     dataPathsJson.push_back(dataPath.toString());
   }
   json[k_DataPathsKey] = std::move(dataPathsJson);
 
-  json[k_PathImportPolicyKey] = importData.ImportPolicy;
+  json[k_PathImportPolicyKey] = importData.import_policy;
 
   return json;
 }
@@ -131,7 +131,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
       std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
       if(!dataPath.has_value())
       {
-        errors.push_back(Error{.code = FilterParameter::Constants::k_Json_Value_Not_Value_Type, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), dataPathString)});
+        errors.push_back(Error{.code = filter_parameter::constants::k_JsonValueNotValueType, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), dataPathString)});
         continue;
       }
       dataPaths.push_back(std::move(*dataPath));
@@ -178,15 +178,15 @@ std::any Dream3dImportParameter::defaultValue() const
 Result<> Dream3dImportParameter::validate(const std::any& value) const
 {
   const auto& importData = GetAnyRef<ValueType>(value);
-  return validatePath(importData);
+  return ValidatePath(importData);
 }
 
 //-----------------------------------------------------------------------------
-Result<> Dream3dImportParameter::validatePath(const ValueType& importData)
+Result<> Dream3dImportParameter::ValidatePath(const ValueType& importData)
 {
   try
   {
-    std::filesystem::path path = importData.FilePath;
+    std::filesystem::path path = importData.file_path;
     if(!fs::exists(path))
     {
       return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));

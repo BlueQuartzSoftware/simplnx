@@ -45,27 +45,27 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CreateGeometryInputValues
 {
-  ChoicesParameter::ValueType ArrayHandlingIndex{};
-  DataObjectNameParameter::ValueType CellAttributeMatrixName;
-  VectorUInt64ParameterType::ValueType Dimensions;
-  DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
-  ArraySelectionParameter::ValueType EdgeListPath;
-  DataObjectNameParameter::ValueType FaceAttributeMatrixName;
-  ChoicesParameter::ValueType GeometryTypeIndex{};
-  ArraySelectionParameter::ValueType HexahedralListPath;
-  ChoicesParameter::ValueType LengthUnitIndex{};
-  VectorFloat32Parameter::ValueType Origin;
-  DataGroupCreationParameter::ValueType OutputGeometryPath;
-  ArraySelectionParameter::ValueType QuadrilateralListPath;
-  VectorFloat32Parameter::ValueType Spacing;
-  ArraySelectionParameter::ValueType TetrahedralListPath;
-  ArraySelectionParameter::ValueType TriangleListPath;
-  DataObjectNameParameter::ValueType VertexAttributeMatrixName;
-  ArraySelectionParameter::ValueType VertexListPath;
-  BoolParameter::ValueType WarningsAsErrors{};
-  ArraySelectionParameter::ValueType XBoundsPath;
-  ArraySelectionParameter::ValueType YBoundsPath;
-  ArraySelectionParameter::ValueType ZBoundsPath;
+  ChoicesParameter::ValueType array_handling_index{};
+  DataObjectNameParameter::ValueType cell_attribute_matrix_name;
+  VectorUInt64ParameterType::ValueType dimensions;
+  DataObjectNameParameter::ValueType edge_attribute_matrix_name;
+  ArraySelectionParameter::ValueType edge_list_path;
+  DataObjectNameParameter::ValueType face_attribute_matrix_name;
+  ChoicesParameter::ValueType geometry_type_index{};
+  ArraySelectionParameter::ValueType hexahedral_list_path;
+  ChoicesParameter::ValueType length_unit_index{};
+  VectorFloat32ParameterType::ValueType origin;
+  DataGroupCreationParameter::ValueType output_geometry_path;
+  ArraySelectionParameter::ValueType quadrilateral_list_path;
+  VectorFloat32ParameterType::ValueType spacing;
+  ArraySelectionParameter::ValueType tetrahedral_list_path;
+  ArraySelectionParameter::ValueType triangle_list_path;
+  DataObjectNameParameter::ValueType vertex_attribute_matrix_name;
+  ArraySelectionParameter::ValueType vertex_list_path;
+  BoolParameter::ValueType warnings_as_errors{};
+  ArraySelectionParameter::ValueType x_bounds_path;
+  ArraySelectionParameter::ValueType y_bounds_path;
+  ArraySelectionParameter::ValueType z_bounds_path;
 };
 
 /**

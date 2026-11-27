@@ -22,37 +22,37 @@ Result<> ReadH5EspritData::operator()()
 
 Result<> ReadH5EspritData::copyRawEbsdData(int index)
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   const usize totalPoints = imageGeom.getNumXCells() * imageGeom.getNumYCells();
   const usize offset = index * totalPoints;
 
   {
-    const float32 degToRad = m_EspritInputValues->DegreesToRadians ? nx::core::Constants::k_PiOver180F : 1.0f;
+    const float32 degToRad = m_EspritInputValues->degrees_to_radians ? nx::core::constants::k_PiOver180F : 1.0f;
     const auto* phi1Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::phi1));
     const auto* phiPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::PHI));
     const auto* phi2Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::phi2));
-    auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Esprit::EulerAngles));
+    auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::Esprit::EulerAngles));
 
     const auto* m1Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::MAD));
-    auto& mad = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::MAD));
+    auto& mad = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::MAD));
 
     const auto* nIndBandsPtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::NIndexedBands));
-    auto& nIndexBands = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::NIndexedBands));
+    auto& nIndexBands = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::NIndexedBands));
 
     const auto* p1Ptr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::Phase));
-    auto& phase = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::Phase));
+    auto& phase = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::Phase));
 
     const auto* radBandCntPtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::RadonBandCount));
-    auto& radonBandCount = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::RadonBandCount));
+    auto& radonBandCount = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::RadonBandCount));
 
     const auto* radQualPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::RadonQuality));
-    auto& radonQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::RadonQuality));
+    auto& radonQuality = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::RadonQuality));
 
     const auto* xBmPtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::XBEAM));
-    auto& xBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::XBEAM));
+    auto& xBeam = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::XBEAM));
 
     const auto* yBmPtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::YBEAM));
-    auto& yBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::YBEAM));
+    auto& yBeam = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::YBEAM));
 
     // Interleave Euler channels and apply the unit conversion in bounded pages.
     {
@@ -106,7 +106,7 @@ Result<> ReadH5EspritData::copyRawEbsdData(int index)
     }
   }
 
-  if(m_InputValues->ReadPatternData)
+  if(m_InputValues->read_pattern_data)
   {
     const uint8* patternDataPtr = m_Reader->getPatternData();
     if(patternDataPtr == nullptr)
@@ -120,7 +120,7 @@ Result<> ReadH5EspritData::copyRawEbsdData(int index)
       std::vector<usize> pDimsV(2);
       pDimsV[0] = pDims[0];
       pDimsV[1] = pDims[1];
-      auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::RawPatterns));
+      auto& patternData = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::H5Esprit::RawPatterns));
       const usize numComponents = patternData.getNumberOfComponents();
       if(Result<> ioResult = patternData.getDataStoreRef().copyFromBuffer(offset * numComponents, nonstd::span<const uint8>(patternDataPtr, totalPoints * numComponents)); ioResult.invalid())
       {

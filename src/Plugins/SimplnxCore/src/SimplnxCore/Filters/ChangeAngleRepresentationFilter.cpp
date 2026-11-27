@@ -49,7 +49,7 @@ Parameters ChangeAngleRepresentationFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "Tells the Filter which conversion is being made", 0,
-                                                   ChoicesParameter::Choices{"Degrees to Radians", "Radians to Degrees"}));
+                                                   ChoicesParameter::ChoicesType{"Degrees to Radians", "Radians to Degrees"}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AnglesArrayPath_Key, "Angles", "The DataArray containing the angles to be converted.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
 
@@ -78,7 +78,7 @@ IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const Da
 
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pAnglesDataPathValue);
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -86,8 +86,8 @@ Result<> ChangeAngleRepresentationFilter::executeImpl(DataStructure& dataStructu
                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ChangeAngleRepresentationInputValues inputValues;
-  inputValues.ConversionTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
-  inputValues.AnglesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AnglesArrayPath_Key);
+  inputValues.conversion_type_index = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
+  inputValues.angles_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_AnglesArrayPath_Key);
 
   return ChangeAngleRepresentation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

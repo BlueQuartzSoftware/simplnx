@@ -187,7 +187,7 @@ struct StdDevReduce
   struct State
   {
     float64 mean = 0.0;
-    float64 sumSquaredDeviations = 0.0;
+    float64 sum_squared_deviations = 0.0;
     usize count = 0;
   };
 
@@ -199,7 +199,7 @@ struct StdDevReduce
     // Welford's update uses deviations from the old and new means, without subtracting large squared sums.
     const float64 delta = dv - state.mean;
     state.mean += delta / static_cast<float64>(state.count);
-    state.sumSquaredDeviations += delta * (dv - state.mean);
+    state.sum_squared_deviations += delta * (dv - state.mean);
   }
 
   template <class TOut>
@@ -210,7 +210,7 @@ struct StdDevReduce
     {
       return TOut{};
     }
-    float64 variance = state.sumSquaredDeviations / static_cast<float64>(state.count - 1);
+    float64 variance = state.sum_squared_deviations / static_cast<float64>(state.count - 1);
     // Guard against a negative variance from rounding before taking the square root.
     variance = std::max(variance, 0.0);
     return static_cast<TOut>(std::sqrt(variance));
@@ -248,13 +248,13 @@ struct BinaryReduce
 {
   static constexpr bool k_IsAssociative = true;
 
-  float64 foregroundValue = 1.0;
-  float64 backgroundValue = 0.0;
+  float64 foreground_value = 1.0;
+  float64 background_value = 0.0;
 
   template <class TOut>
   struct State
   {
-    bool seenForeground = false; // init state: no foreground pixel folded in yet (slot starts as background)
+    bool seen_foreground = false; // init state: no foreground pixel folded in yet (slot starts as background)
   };
 
   template <class TIn, class TOut>
@@ -262,9 +262,9 @@ struct BinaryReduce
   {
     // ITK's BinaryAccumulator compares each input pixel against the foreground value in the INPUT pixel
     // type: `if(input == m_ForegroundValue) m_IsForeground = true;`. Match that exactly.
-    if(value == static_cast<TIn>(foregroundValue))
+    if(value == static_cast<TIn>(foreground_value))
     {
-      state.seenForeground = true;
+      state.seen_foreground = true;
     }
   }
 
@@ -272,7 +272,7 @@ struct BinaryReduce
   TOut finalize(const State<TOut>& state) const
   {
     // ITK returns (TOutputPixel)m_ForegroundValue when any foreground pixel was seen, else m_BackgroundValue.
-    return state.seenForeground ? static_cast<TOut>(foregroundValue) : static_cast<TOut>(backgroundValue);
+    return state.seen_foreground ? static_cast<TOut>(foreground_value) : static_cast<TOut>(background_value);
   }
 };
 } // namespace nx::core::ImageProcessing

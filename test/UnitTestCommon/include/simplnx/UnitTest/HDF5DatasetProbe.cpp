@@ -8,7 +8,7 @@
 #include <mutex>
 #include <optional>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 namespace
 {
@@ -79,8 +79,8 @@ std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& fi
     const H5Z_filter_t filterId = H5Pget_filter2(dcplId, static_cast<unsigned int>(i), &flags, &cdCapacity, cdValues.data(), filterName.size(), filterName.data(), &filterConfig);
     if(filterId == H5Z_FILTER_DEFLATE)
     {
-      info.hasDeflate = true;
-      info.deflateLevel = static_cast<std::int32_t>(cdValues[0]);
+      info.has_deflate = true;
+      info.deflate_level = static_cast<std::int32_t>(cdValues[0]);
       break;
     }
   }

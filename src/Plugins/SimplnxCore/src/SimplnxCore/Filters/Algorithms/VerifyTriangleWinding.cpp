@@ -112,8 +112,8 @@ bool MergeWindingTransfer(Result<>& result, WindingTransferWarnings& warnings, R
  * @note The working reservation bounds block buffers; the dense feature-volume array scales with the largest feature ID.
  * Cancellation discards incomplete volume sums. Completed reversal blocks remain written.
  */
-Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStore& vertices,
-                                           const Int32AbstractDataStore& idsStore, const std::string& geometryPath, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStoreType& vertices,
+                                           const Int32AbstractDataStoreType& idsStore, const std::string& geometryPath, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   Result<> result;
   const usize triangleCount = triangles.getNumberOfTuples();
@@ -136,7 +136,7 @@ Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, Ab
   // Face values, corner permutation, gathered XYZ, at most 3B vertex tuples, and IDs.
   // The existing dense feature accumulator is separate from this new bounded payload.
   const usize bytesPerTriangle = (3 * sizeof(MeshIndexType)) + (3 * sizeof(usize)) + (18 * sizeof(float32)) + (idComponents * sizeof(int32));
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   const usize requestedCapacity = static_cast<usize>(std::min<uint64>({triangleCount, maxSize / bytesPerTriangle, budget.maximumWorkingMemoryBytes() / bytesPerTriangle}));
   const usize requestedBytes = requestedCapacity * bytesPerTriangle;
   auto reservation = budget.reserveWorkingMemory(requestedBytes);
@@ -334,7 +334,7 @@ Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, Ab
   }
 }
 
-Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, const Int32AbstractDataStore& idsStore, const std::string& geometryPath,
+Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStoreType& vertices, const Int32AbstractDataStoreType& idsStore, const std::string& geometryPath,
                                        const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   WindingTransferWarnings warnings;
@@ -392,8 +392,8 @@ void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry,
 class ReverseWindingImpl
 {
 public:
-  using TriStoreType = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
-  ReverseWindingImpl(TriStoreType& triangles, const Int32AbstractDataStore& idsStore, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
+  using TriStoreType = AbstractDataStore<TriangleGeom::SharedFaceListType::value_type>;
+  ReverseWindingImpl(TriStoreType& triangles, const Int32AbstractDataStoreType& idsStore, const std::vector<usize>& reversalTargets, const std::atomic_bool& shouldCancel)
   : m_Triangles(triangles)
   , m_IdsStore(idsStore)
   , m_ReversalTargets(reversalTargets)
@@ -469,7 +469,7 @@ public:
 
 private:
   TriStoreType& m_Triangles;
-  const Int32AbstractDataStore& m_IdsStore;
+  const Int32AbstractDataStoreType& m_IdsStore;
   const std::vector<usize>& m_ReversalTargets;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -496,55 +496,55 @@ Result<> VerifyTriangleWinding::operator()()
 {
 
   // Sort Vertices For Merging
-  Result<> result = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath).validate();
+  Result<> result = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->target_geometry_path).validate();
   if(result.invalid())
   {
     return result;
   }
 
   m_MessageHandler.sendInfoMessage("Checking for duplicates - sorting vertices");
-  const MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
+  const meshing_utilities::SortedVerticesList sortedVerticesList = meshing_utilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->target_geometry_path), m_ShouldCancel);
 
   m_MessageHandler.sendInfoMessage("Checking for duplicates - validating");
-  auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TargetGeometryPath);
-  if(MeshingUtilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
+  auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->target_geometry_path);
+  if(meshing_utilities::HasDuplicateVertices(triGeom.getVertices()->getDataStoreRef(), sortedVerticesList))
   {
     // Remove duplicates
     return MakeErrorResult(-56320, "Duplicate vertices found in mesh, please use cleanup filters to flag and remove these before rerunning.");
   }
 
-  TriangleGeom::SharedFaceList::StoreType& triangles = triGeom.getFaces()->getDataStoreRef();
+  TriangleGeom::SharedFaceListType::StoreType& triangles = triGeom.getFaces()->getDataStoreRef();
 
   // Load mesh grouping (face labels or regions)
-  const Int32AbstractDataStore& idsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->LabelsPath)->getDataStoreRef();
+  const Int32AbstractDataStoreType& idsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->labels_path)->getDataStoreRef();
 
   // Cleanup removes only invocation-created connectivity before volume assessment.
   Result<> windingResult = {};
   {
     const std::array entryIds = {triGeom.getElementNeighborsId(), triGeom.getElementContainingVertId()};
-    const std::array childExisted = {m_DataStructure.getData(m_InputValues->TargetGeometryPath.createChildPath(TriangleGeom::k_EltNeighbors)) != nullptr,
-                                     m_DataStructure.getData(m_InputValues->TargetGeometryPath.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr};
+    const std::array childExisted = {m_DataStructure.getData(m_InputValues->target_geometry_path.createChildPath(TriangleGeom::k_EltNeighbors)) != nullptr,
+                                     m_DataStructure.getData(m_InputValues->target_geometry_path.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr};
     // Generate Connectivity
     m_MessageHandler.sendInfoMessage("Generating Connectivity and Triangle Neighbors...");
     triGeom.findElementNeighbors(true);
     const auto optionalId = triGeom.getElementNeighborsId();
     if(!optionalId.has_value())
     {
-      CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->TargetGeometryPath, entryIds, childExisted);
+      CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->target_geometry_path, entryIds, childExisted);
       return MakeErrorResult(-56321, fmt::format("Unable to generate the connectivity list for {} geometry.", triGeom.getName()));
     }
-    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
 
     m_MessageHandler.sendInfoMessage("Repairing Windings...");
     // This is reused since it may contain warnings
-    windingResult = MeshingUtilities::RepairTriangleWinding(triangles, connectivity, idsStore, m_ShouldCancel, m_MessageHandler);
+    windingResult = meshing_utilities::RepairTriangleWinding(triangles, connectivity, idsStore, m_ShouldCancel, m_MessageHandler);
     if(windingResult.invalid())
     {
-      CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->TargetGeometryPath, entryIds, childExisted);
+      CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->target_geometry_path, entryIds, childExisted);
       return windingResult;
     }
 
-    CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->TargetGeometryPath, entryIds, childExisted);
+    CleanupCreatedSupport(m_DataStructure, triGeom, m_InputValues->target_geometry_path, entryIds, childExisted);
   }
 
   m_MessageHandler.sendInfoMessage("Assessing reversal - calculating feature volumes");
@@ -555,7 +555,7 @@ Result<> VerifyTriangleWinding::operator()()
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
   if(useOutOfCoreAlgorithm)
   {
-    auto volumeResult = ReverseNegativeVolumesBounded(triangles, vertices, idsStore, m_InputValues->TargetGeometryPath.toString(), m_ShouldCancel, m_MessageHandler);
+    auto volumeResult = ReverseNegativeVolumesBounded(triangles, vertices, idsStore, m_InputValues->target_geometry_path.toString(), m_ShouldCancel, m_MessageHandler);
     if(volumeResult.invalid())
     {
       EnrichWindingError(
@@ -577,8 +577,8 @@ Result<> VerifyTriangleWinding::operator()()
       maxFeature = std::max(idsStore[i], maxFeature);
     }
 
-    std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature + 1);
-    auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), idsStore, volumes, m_ShouldCancel);
+    std::vector<IGeometry::SharedVertexListType::value_type> volumes(maxFeature + 1);
+    auto volumeResult = meshing_utilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), idsStore, volumes, m_ShouldCancel);
     if(volumeResult.invalid())
     {
       return volumeResult;
@@ -605,12 +605,12 @@ Result<> VerifyTriangleWinding::operator()()
     }
   }
 
-  if(m_InputValues->RepairNormals)
+  if(m_InputValues->repair_normals)
   {
     m_MessageHandler.sendInfoMessage("Recalculating normals");
-    auto& normals = m_DataStructure.getDataAs<Float64Array>(m_InputValues->TriangleNormalsPath)->getDataStoreRef();
+    auto& normals = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->triangle_normals_path)->getDataStoreRef();
 
-    windingResult = MergeResults(std::move(windingResult), MeshingUtilities::CalculateNormals(*triGeom.getFaces(), *triGeom.getVertices(), normals, m_ShouldCancel));
+    windingResult = MergeResults(std::move(windingResult), meshing_utilities::CalculateNormals(*triGeom.getFaces(), *triGeom.getVertices(), normals, m_ShouldCancel));
   }
 
   return windingResult;

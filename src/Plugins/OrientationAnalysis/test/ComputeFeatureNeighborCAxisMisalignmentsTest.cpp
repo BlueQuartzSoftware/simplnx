@@ -23,8 +23,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 namespace
 {
 namespace analytical_fixtures
@@ -62,12 +62,12 @@ struct FixtureData
   AttributeMatrix* cell_am = nullptr;
   AttributeMatrix* feature_am = nullptr;
   AttributeMatrix* ensemble_am = nullptr;
-  Int32Array* feature_ids = nullptr;
-  Int32Array* cell_phases = nullptr;
-  Int32Array* feature_phases = nullptr;
-  Float32Array* avg_quats = nullptr;
+  Int32ArrayType* feature_ids = nullptr;
+  Int32ArrayType* cell_phases = nullptr;
+  Int32ArrayType* feature_phases = nullptr;
+  Float32ArrayType* avg_quats = nullptr;
   NeighborList<int32>* neighbor_list = nullptr;
-  UInt32Array* crystal_structures = nullptr;
+  UInt32ArrayType* crystal_structures = nullptr;
   usize total_cells = 0;
   usize total_features = 0;
 };
@@ -93,17 +93,17 @@ FixtureData CreateScaffold(usize nX, usize ny, usize nz, usize numFeatures, usiz
   td.ensemble_am = AttributeMatrix::Create(td.ds, "CellEnsembleData", ShapeType{numCrystalStructures}, td.geom->getId());
 
   const ShapeType cellTupleShape = {nz, ny, nX};
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
-  td.feature_ids = Int32Array::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
-  auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_CellPhasesName), cellTupleShape, {1});
-  td.cell_phases = Int32Array::Create(td.ds, k_CellPhasesName, cellPhasesStore, td.cell_am->getId());
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, k_FeatureDataPath.createChildPath(k_FeaturePhasesName), {numFeatures}, {1});
-  td.feature_phases = Int32Array::Create(td.ds, k_FeaturePhasesName, featurePhasesStore, td.feature_am->getId());
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, k_FeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
-  td.avg_quats = Float32Array::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.feature_am->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_FeatureIdsName), cellTupleShape, {1});
+  td.feature_ids = Int32ArrayType::Create(td.ds, k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
+  auto cellPhasesStore = data_store_utilities::CreateDataStore<int32>(td.ds, k_CellDataPath.createChildPath(k_CellPhasesName), cellTupleShape, {1});
+  td.cell_phases = Int32ArrayType::Create(td.ds, k_CellPhasesName, cellPhasesStore, td.cell_am->getId());
+  auto featurePhasesStore = data_store_utilities::CreateDataStore<int32>(td.ds, k_FeatureDataPath.createChildPath(k_FeaturePhasesName), {numFeatures}, {1});
+  td.feature_phases = Int32ArrayType::Create(td.ds, k_FeaturePhasesName, featurePhasesStore, td.feature_am->getId());
+  auto avgQuatsStore = data_store_utilities::CreateDataStore<float32>(td.ds, k_FeatureDataPath.createChildPath(k_AvgQuatsName), {numFeatures}, {4});
+  td.avg_quats = Float32ArrayType::Create(td.ds, k_AvgQuatsName, avgQuatsStore, td.feature_am->getId());
   td.neighbor_list = NeighborList<int32>::Create(td.ds, k_NeighborListName, ShapeType{numFeatures}, td.feature_am->getId());
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, k_EnsembleDataPath.createChildPath(k_CrystalStructuresName), {numCrystalStructures}, {1});
-  td.crystal_structures = UInt32Array::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensemble_am->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(td.ds, k_EnsembleDataPath.createChildPath(k_CrystalStructuresName), {numCrystalStructures}, {1});
+  td.crystal_structures = UInt32ArrayType::Create(td.ds, k_CrystalStructuresName, crystalStructuresStore, td.ensemble_am->getId());
 
   for(usize i = 0; i < td.total_cells; ++i)
   {
@@ -174,10 +174,10 @@ const NeighborList<float32>& GetOutputMisalignmentList(const DataStructure& data
   return dataStructure.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName));
 }
 
-const Float32Array& GetOutputAvgMisalignments(const DataStructure& dataStructure)
+const Float32ArrayType& GetOutputAvgMisalignments(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName)));
-  return dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName)));
+  return dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName));
 }
 
 // Helper to construct the 10x10x1 realistic-microstructure scaffold used by Fixtures B and D.
@@ -276,7 +276,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
           "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -327,7 +327,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Class 1 - Simple Hex Pair", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 3 features total: 0=sentinel, 1=Hex Phi=0deg, 2=Hex Phi=10deg.
   // Neighbor lists: F1 <-> F2 (single hex-hex pair, no mismatches).
@@ -344,7 +344,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -361,7 +361,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Class 1 - Realistic Microstructure (exposes divisor bug)",
           "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 10x10x1 image, 6 features arranged in 2 rows of 3 grains each. F3 is Cubic (non-hex); the rest
   // are Hex with pure-Phi tilts [0, 5, _, 15, 20, 25] degrees. Neighbor lists are derived from the
@@ -385,7 +385,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -434,12 +434,12 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   REQUIRE(misoList.at(6)[1] == Approx(5.0f).margin(1e-3f));
   REQUIRE(avg[6] == Approx(5.0f).margin(1e-3f));
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Class 1 - Mismatch Last Order", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 5 features: 0=sentinel, 1=Hex 0deg, 2=Hex 5deg, 3=Hex 10deg, 4=Cubic (non-hex).
   // F1's NeighborList = [F2, F3, F4] — order [match, match, mismatch].
@@ -462,7 +462,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -477,8 +477,8 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Averages Disabled - Resident Lists", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
 
   analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/5, /*numCrystalStructures=*/3);
   analytical_fixtures::PopulateMixedHexNeighbors(fixture);
@@ -494,7 +494,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   const Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/false);
   auto preflightResult = filter.preflight(fixture.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(fixture.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(std::any_of(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == -1563; }));
@@ -516,20 +516,20 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   REQUIRE(fixture.ds.getData(analytical_fixtures::k_FeatureDataPath.createChildPath(analytical_fixtures::k_AvgCAxisMisalignmentsOutName)) == nullptr);
   REQUIRE(fixture.neighbor_list->getVectors() == inputLists);
 
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Averages Disabled - HDF5 Lists",
           "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/5, /*numCrystalStructures=*/3);
   REQUIRE(fixture.neighbor_list != nullptr);
   const DataPath neighborListPath = analytical_fixtures::k_FeatureDataPath.createChildPath(analytical_fixtures::k_NeighborListName);
-  auto neighborListStore = DataStoreUtilities::CreateListStore<int32>(fixture.ds, neighborListPath, {5}, IDataAction::Mode::Execute, "HDF5-OOC");
+  auto neighborListStore = data_store_utilities::CreateListStore<int32>(fixture.ds, neighborListPath, {5}, IDataAction::Mode::Execute, "HDF5-OOC");
   REQUIRE(neighborListStore != nullptr);
   // The scaffold creates a resident list store, so replace the store before list population.
   fixture.neighbor_list->setStore(neighborListStore);
@@ -546,7 +546,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   const Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/false);
   auto preflightResult = filter.preflight(fixture.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(fixture.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(std::any_of(executeResult.result.warnings().begin(), executeResult.result.warnings().end(), [](const Warning& warning) { return warning.code == -1563; }));
@@ -568,12 +568,12 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   REQUIRE(fixture.ds.getData(analytical_fixtures::k_FeatureDataPath.createChildPath(analytical_fixtures::k_AvgCAxisMisalignmentsOutName)) == nullptr);
   REQUIRE(fixture.neighbor_list->getVectors() == inputLists);
 
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Class 4 - Invariants", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Class 4 invariants asserted on the realistic 10x10x1 microstructure. These invariants are
   // oracle-agnostic — they hold for any input regardless of the specific quaternion values, so
@@ -588,7 +588,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -652,7 +652,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Preflight Error - Feature array tuple count mismatch (-1560)",
           "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // The filter requires equal tuple counts for NeighborList, AvgQuats, and FeaturePhases.
   // FeaturePhases uses a separate AttributeMatrix with seven tuples instead of eight.
@@ -684,14 +684,14 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgCAxisMisalignmentsArrayName_Key, std::make_any<std::string>("AvgCAxisMisalignments"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -1560);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -1560);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: genuine HDF5 1MiB-chunk tail oracle",
           "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
 
   // Each four-component float32 quaternion tuple is 16 bytes. The 1 MiB HDF5
@@ -701,7 +701,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   constexpr usize k_LastFullChunkTuple = k_ChunkTuples - 1;
   constexpr usize k_TailTuple = k_ChunkTuples;
 
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   DataStructure dataStructure;
   auto* dataGroupPtr = DataGroup::Create(dataStructure, analytical_fixtures::k_GeomName);
@@ -718,13 +718,13 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   const DataPath misalignmentListPath = analytical_fixtures::k_FeatureDataPath.createChildPath(analytical_fixtures::k_CAxisMisalignmentListOutName);
   const DataPath avgMisalignmentsPath = analytical_fixtures::k_FeatureDataPath.createChildPath(analytical_fixtures::k_AvgCAxisMisalignmentsOutName);
 
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featurePhasesPath, {k_FeatureTuples}, {1});
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, avgQuatsPath, {k_FeatureTuples}, {4});
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
-  auto* featurePhasesPtr = Int32Array::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, featureDataPtr->getId());
-  auto* avgQuatsPtr = Float32Array::Create(dataStructure, avgQuatsPath.getTargetName(), avgQuatsStore, featureDataPtr->getId());
+  auto featurePhasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featurePhasesPath, {k_FeatureTuples}, {1});
+  auto avgQuatsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, avgQuatsPath, {k_FeatureTuples}, {4});
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+  auto* featurePhasesPtr = Int32ArrayType::Create(dataStructure, featurePhasesPath.getTargetName(), featurePhasesStore, featureDataPtr->getId());
+  auto* avgQuatsPtr = Float32ArrayType::Create(dataStructure, avgQuatsPath.getTargetName(), avgQuatsStore, featureDataPtr->getId());
   auto* neighborListPtr = NeighborList<int32>::Create(dataStructure, neighborListPath.getTargetName(), {k_FeatureTuples}, featureDataPtr->getId());
-  auto* crystalStructuresPtr = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleDataPtr->getId());
+  auto* crystalStructuresPtr = UInt32ArrayType::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleDataPtr->getId());
   REQUIRE(featurePhasesPtr != nullptr);
   REQUIRE(avgQuatsPtr != nullptr);
   REQUIRE(neighborListPtr != nullptr);
@@ -762,15 +762,15 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(executeResult.result.warnings().empty());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(misalignmentListPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgMisalignmentsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(avgMisalignmentsPath));
   const auto& misalignmentList = dataStructure.getDataRefAs<NeighborList<float32>>(misalignmentListPath);
-  const auto& avgMisalignments = dataStructure.getDataRefAs<Float32Array>(avgMisalignmentsPath);
+  const auto& avgMisalignments = dataStructure.getDataRefAs<Float32ArrayType>(avgMisalignmentsPath);
   REQUIRE(avgMisalignments.getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   const auto lastFullChunkValues = misalignmentList.at(k_LastFullChunkTuple);
@@ -783,16 +783,16 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   REQUIRE(tailValues[0] == Approx(30.0F).margin(1.0E-3F));
   REQUIRE(avgMisalignments[k_TailTuple] == Approx(30.0F).margin(1.0E-3F));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const int32 invalidPhaseIdx = GENERATE(-1, 2);
   CAPTURE(invalidPhaseIdx);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/3, /*numCrystalStructures=*/2);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
@@ -830,5 +830,5 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }

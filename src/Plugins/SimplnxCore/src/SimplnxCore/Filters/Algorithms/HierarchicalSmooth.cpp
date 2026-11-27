@@ -811,11 +811,11 @@ HierarchicalSmooth::HierarchicalSmooth(DataStructure& dataStructure, const IFilt
 Result<> HierarchicalSmooth::operator()()
 {
   // Get the triangle geometry
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeometryDataPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_data_path);
 
   // Get data arrays
-  const auto& nodeTypeArray = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->nodeTypeArrayPath);
-  const auto& faceLabelsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->faceLabelsArrayPath);
+  const auto& nodeTypeArray = m_DataStructure.getDataRefAs<Int8ArrayType>(m_InputValues->node_type_array_path);
+  const auto& faceLabelsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_array_path);
 
   // Get vertex and face data
   auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
@@ -864,7 +864,7 @@ Result<> HierarchicalSmooth::operator()()
 
   // Initialize solver and run (move Eigen matrices to avoid copies)
   VolumeSolverData vs;
-  InitVolumeSolver(vs, std::move(faces), std::move(vertices), std::move(fLabels), std::move(nType), m_InputValues->maxIterations, m_InputValues->errorThreshold);
+  InitVolumeSolver(vs, std::move(faces), std::move(vertices), std::move(fLabels), std::move(nType), m_InputValues->max_iterations, m_InputValues->error_threshold);
 
   Result<> result = RunHierarchicalSmooth(vs, m_ShouldCancel, m_MessageHandler);
   if(result.invalid())

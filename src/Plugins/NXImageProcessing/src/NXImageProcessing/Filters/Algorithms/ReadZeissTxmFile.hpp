@@ -33,12 +33,12 @@ enum class ZeissTxmDataType : int32
 
 struct NXIMAGEPROCESSING_EXPORT ReadZeissTxmFileInputValues
 {
-  DataPath ImageGeometryPath;
-  std::string CellAttributeMatrixName;
-  std::string DensityArrayName;
-  std::filesystem::path TxmDataFile;
-  CropGeometryParameter::ValueType CroppingOptions;
-  ImageIO::GeometryOverrides GeometryOverrides;
+  DataPath image_geometry_path;
+  std::string cell_attribute_matrix_name;
+  std::string density_array_name;
+  std::filesystem::path txm_data_file;
+  CropGeometryParameter::ValueType cropping_options;
+  image_io::GeometryOverrides geometry_overrides;
 };
 
 /**
@@ -46,20 +46,20 @@ struct NXIMAGEPROCESSING_EXPORT ReadZeissTxmFileInputValues
  */
 struct ZeissTxmHeaderMetadata
 {
-  CreateImageGeometryAction::DimensionType Dimensions = {0, 0, 0};
-  CreateImageGeometryAction::SpacingType Spacing = {0.0f, 0.0f, 0.0f};
-  CreateImageGeometryAction::OriginType Origin = {0.0f, 0.0f, 0.0f};
-  IGeometry::LengthUnit Units = IGeometry::LengthUnit::Micrometer;
-  std::string DataFilePath;
-  ZeissTxmDataType DataType = ZeissTxmDataType::FLOAT_TYPE;
+  CreateImageGeometryAction::DimensionType dimensions = {0, 0, 0};
+  CreateImageGeometryAction::SpacingType spacing = {0.0f, 0.0f, 0.0f};
+  CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
+  IGeometry::LengthUnit units = IGeometry::LengthUnit::Micrometer;
+  std::string data_file_path;
+  ZeissTxmDataType data_type = ZeissTxmDataType::FLOAT_TYPE;
   void clear()
   {
-    Dimensions = {0, 0, 0};
-    Spacing = {0.0f, 0.0f, 0.0f};
-    Origin = {0.0f, 0.0f, 0.0f};
-    Units = IGeometry::LengthUnit::Micrometer;
-    DataFilePath = {};
-    DataType = ZeissTxmDataType::FLOAT_TYPE;
+    dimensions = {0, 0, 0};
+    spacing = {0.0f, 0.0f, 0.0f};
+    origin = {0.0f, 0.0f, 0.0f};
+    units = IGeometry::LengthUnit::Micrometer;
+    data_file_path = {};
+    data_type = ZeissTxmDataType::FLOAT_TYPE;
   }
 };
 
@@ -68,14 +68,14 @@ struct ZeissTxmHeaderMetadata
  */
 struct NXIMAGEPROCESSING_EXPORT ReadZeissTxmFilterFileCache
 {
-  fs::path inputFile;
-  fs::file_time_type timeStamp;
-  ZeissTxmHeaderMetadata metaData;
+  fs::path input_file;
+  fs::file_time_type time_stamp;
+  ZeissTxmHeaderMetadata meta_data;
   void flush()
   {
-    inputFile.clear();
-    metaData.clear();
-    timeStamp = fs::file_time_type();
+    input_file.clear();
+    meta_data.clear();
+    time_stamp = fs::file_time_type();
   }
 };
 

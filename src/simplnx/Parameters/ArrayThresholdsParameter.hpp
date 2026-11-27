@@ -14,10 +14,10 @@ class SIMPLNX_EXPORT ArrayThresholdsParameter : public MutableDataParameter
 {
 public:
   using ValueType = ArrayThresholdSet;
-  using AllowedComponentShapes = std::vector<ShapeType>;
+  using AllowedComponentShapesType = std::vector<ShapeType>;
 
   ArrayThresholdsParameter() = delete;
-  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapes requiredComps = {});
+  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapesType requiredComps = {});
   ~ArrayThresholdsParameter() override = default;
 
   ArrayThresholdsParameter(const ArrayThresholdsParameter&) = delete;
@@ -36,7 +36,7 @@ public:
    * @brief
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
@@ -68,7 +68,7 @@ public:
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  AllowedComponentShapes requiredComponentShapes() const;
+  AllowedComponentShapesType requiredComponentShapes() const;
 
   /**
    * @brief
@@ -116,7 +116,7 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedComponentShapes m_RequiredComponentShapes;
+  AllowedComponentShapesType m_RequiredComponentShapes;
 };
 
 namespace simpl_conversion

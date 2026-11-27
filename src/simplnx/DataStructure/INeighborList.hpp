@@ -6,7 +6,7 @@
 
 namespace nx::core
 {
-namespace NeighborListConstants
+namespace neighbor_list_constants
 {
 inline constexpr StringLiteralType k_TypeName = "NeighborList<T>";
 }

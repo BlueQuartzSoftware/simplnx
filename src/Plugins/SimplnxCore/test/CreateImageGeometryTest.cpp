@@ -13,7 +13,7 @@
 #include <limits>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace fs = std::filesystem;
 
@@ -27,7 +27,7 @@ const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -37,7 +37,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 
   VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataStructure = nx::core::UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = nx::core::unit_test::CreateAllPrimitiveTypes(imageDims);
   //  DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Complexk_LevelZero);
   //  DataGroup* levelOneGroup = DataGroup::Create(dataStructure, Complexk_LevelOne, levelZeroGroup->getId());
   const std::string kImageGeometryName("[Image Geometry]");
@@ -46,14 +46,14 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
   // Create default Parameters for the filter.
   args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
   args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(inputDims));
-  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
-  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(imageOrigin));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(imageSpacing));
 
   CreateImageGeometryFilter filter;
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -77,13 +77,13 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
   REQUIRE(err >= 0);
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateImageGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -132,12 +132,12 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "
   args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
 
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
-  const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
+  const std::vector<VectorFloat32ParameterType::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
   args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, spacings[row]);
-  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32ParameterType::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86010 : -86009));
-  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == (row == 3 ? -86010 : -86009));
+  CHECK(result.output_actions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
 }

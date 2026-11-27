@@ -25,9 +25,9 @@ const std::atomic_bool& NearestPointFuseRegularGrids::getCancel()
 
 Result<> NearestPointFuseRegularGrids::operator()()
 {
-  auto& refImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ReferenceGeometryPath);
-  auto& sampleImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SamplingGeometryPath);
-  auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SamplingCellAttributeMatrixPath);
+  auto& refImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->reference_geometry_path);
+  auto& sampleImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->sampling_geometry_path);
+  auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->sampling_cell_attribute_matrix_path);
   Vec3<float32> sampleRes = sampleImageGeom.getSpacing();
 
   // Coordinate mapping divides by sampling spacing. Reject zero spacing before dispatch.
@@ -35,7 +35,7 @@ Result<> NearestPointFuseRegularGrids::operator()()
   if(resHasZero)
   {
     return MakeErrorResult(-5555, fmt::format("A component of the resolution for the Image Geometry associated with DataContainer '{}' is 0. This would result in a division by 0 operation",
-                                              m_InputValues->SamplingGeometryPath.toString()));
+                                              m_InputValues->sampling_geometry_path.toString()));
   }
 
   std::vector<const IArray*> targets;
@@ -47,7 +47,7 @@ Result<> NearestPointFuseRegularGrids::operator()()
     {
       continue;
     }
-    auto& refAMArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->ReferenceCellAttributeMatrixPath.createChildPath(array->getName()));
+    auto& refAMArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->reference_cell_attribute_matrix_path.createChildPath(array->getName()));
     targets.push_back(array.get());
     targets.push_back(&refAMArray);
   }

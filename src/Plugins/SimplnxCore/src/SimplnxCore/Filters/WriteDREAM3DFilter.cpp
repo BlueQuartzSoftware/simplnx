@@ -103,11 +103,11 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteDREAM3DInputValues inputValues;
-  inputValues.ExportFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath);
-  inputValues.WriteXdmfFile = filterArgs.value<BoolParameter::ValueType>(k_WriteXdmf);
-  inputValues.UseCompression = filterArgs.value<BoolParameter::ValueType>(k_UseCompression);
-  inputValues.CompressionLevel = filterArgs.value<Int32ParameterType::ValueType>(k_CompressionLevel);
-  inputValues.PipelineNode = pipelineNode;
+  inputValues.export_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath);
+  inputValues.write_xdmf_file = filterArgs.value<BoolParameter::ValueType>(k_WriteXdmf);
+  inputValues.use_compression = filterArgs.value<BoolParameter::ValueType>(k_UseCompression);
+  inputValues.compression_level = filterArgs.value<Int32ParameterType::ValueType>(k_CompressionLevel);
+  inputValues.pipeline_node = pipelineNode;
 
   return WriteDREAM3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

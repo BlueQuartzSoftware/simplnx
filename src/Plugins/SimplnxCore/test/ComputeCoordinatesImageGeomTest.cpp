@@ -34,12 +34,12 @@ const DataPath k_ComputedIndicesPath({"Computed Indices"});
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Physical", "[SimplnxCore][ComputeCoordinatesImageGeom]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
   {
     // Configure the filter arguments.
     ComputeCoordinatesImageGeomFilter filter;
@@ -50,25 +50,25 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Physical", "[SimplnxCore][C
     args.insertOrAssign(ComputeCoordinatesImageGeomFilter::k_CoordsArrayPath_Key, std::make_any<DataPath>(k_ComputedCoordsPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedCoordsPath), dataStructure.getDataRefAs<IDataArray>(k_PhysicalArrayPath));
+  unit_test::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedCoordsPath), dataStructure.getDataRefAs<IDataArray>(k_PhysicalArrayPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Indices", "[SimplnxCore][ComputeCoordinatesImageGeom]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
   {
     // Configure the filter arguments.
     ComputeCoordinatesImageGeomFilter filter;
@@ -79,25 +79,25 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Indices", "[SimplnxCore][Co
     args.insertOrAssign(ComputeCoordinatesImageGeomFilter::k_IndicesArrayPath_Key, std::make_any<DataPath>(k_ComputedIndicesPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedIndicesPath), dataStructure.getDataRefAs<IDataArray>(k_IndexArrayPath));
+  unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedIndicesPath), dataStructure.getDataRefAs<IDataArray>(k_IndexArrayPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Both", "[SimplnxCore][ComputeCoordinatesImageGeom]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
   {
     // Configure the filter arguments.
     ComputeCoordinatesImageGeomFilter filter;
@@ -109,14 +109,14 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Both", "[SimplnxCore][Compu
     args.insertOrAssign(ComputeCoordinatesImageGeomFilter::k_IndicesArrayPath_Key, std::make_any<DataPath>(k_ComputedIndicesPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedCoordsPath), dataStructure.getDataRefAs<IDataArray>(k_PhysicalArrayPath));
-  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedIndicesPath), dataStructure.getDataRefAs<IDataArray>(k_IndexArrayPath));
+  unit_test::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedCoordsPath), dataStructure.getDataRefAs<IDataArray>(k_PhysicalArrayPath));
+  unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(k_ComputedIndicesPath), dataStructure.getDataRefAs<IDataArray>(k_IndexArrayPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

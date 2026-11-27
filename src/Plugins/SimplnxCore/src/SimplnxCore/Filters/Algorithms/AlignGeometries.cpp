@@ -16,7 +16,7 @@ using namespace nx::core;
 
 namespace
 {
-FloatVec3 ExtractOrigin(const IGeometry& geometry)
+FloatVec3Type ExtractOrigin(const IGeometry& geometry)
 {
   auto geomType = geometry.getGeomType();
   switch(geomType)
@@ -30,7 +30,7 @@ FloatVec3 ExtractOrigin(const IGeometry& geometry)
     const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
     const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
     const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
       origin[0] = std::min(xBounds[i], origin[0]);
@@ -48,7 +48,7 @@ FloatVec3 ExtractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Vertex: {
     const auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
     const auto& vertices = vertex.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
     {
@@ -62,7 +62,7 @@ FloatVec3 ExtractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Edge: {
     const auto& edge = dynamic_cast<const EdgeGeom&>(geometry);
     const auto& vertices = edge.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
     {
@@ -79,7 +79,7 @@ FloatVec3 ExtractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Quad: {
     const auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
     const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
     {
@@ -96,7 +96,7 @@ FloatVec3 ExtractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Tetrahedral: {
     const auto& geometry3d = dynamic_cast<const INodeGeometry3D&>(geometry);
     const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
     {
@@ -111,20 +111,20 @@ FloatVec3 ExtractOrigin(const IGeometry& geometry)
     break;
   }
 
-  FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+  FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
   return origin;
 }
 
-FloatVec3 ExtractCentroid(const IGeometry& geometry)
+FloatVec3Type ExtractCentroid(const IGeometry& geometry)
 {
-  FloatVec3 centroid(0.0f, 0.0f, 0.0f);
+  FloatVec3Type centroid(0.0f, 0.0f, 0.0f);
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Image: {
     const auto& image = dynamic_cast<const ImageGeom&>(geometry);
-    SizeVec3 dims = image.getDimensions();
-    FloatVec3 origin = image.getOrigin();
-    FloatVec3 res = image.getSpacing();
+    SizeVec3Type dims = image.getDimensions();
+    FloatVec3Type origin = image.getOrigin();
+    FloatVec3Type res = image.getSpacing();
 
     centroid[0] = (static_cast<float>(dims[0]) * res[0] / 2.0f) + origin[0];
     centroid[1] = (static_cast<float>(dims[1]) * res[1] / 2.0f) + origin[1];
@@ -237,13 +237,13 @@ FloatVec3 ExtractCentroid(const IGeometry& geometry)
   return centroid;
 }
 
-Result<> TranslateGeometry(IGeometry& geometry, const FloatVec3& translation)
+Result<> TranslateGeometry(IGeometry& geometry, const FloatVec3Type& translation)
 {
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Image: {
     auto& image = dynamic_cast<ImageGeom&>(geometry);
-    FloatVec3 origin = image.getOrigin();
+    FloatVec3Type origin = image.getOrigin();
     origin[0] += translation[0];
     origin[1] += translation[1];
     origin[2] += translation[2];
@@ -251,7 +251,7 @@ Result<> TranslateGeometry(IGeometry& geometry, const FloatVec3& translation)
   }
   case IGeometry::Type::RectGrid: {
     auto& rectGrid = dynamic_cast<RectGridGeom&>(geometry);
-    std::array<Float32Array*, 3> bounds{rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds()};
+    std::array<Float32ArrayType*, 3> bounds{rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds()};
     std::array<AbstractDataStore<float32>*, 3> stores{};
     constexpr std::array<char, 3> k_Axes{'X', 'Y', 'Z'};
     for(usize axis = 0; axis < bounds.size(); ++axis)
@@ -373,21 +373,21 @@ AlignGeometries::AlignGeometries(DataStructure& dataStructure, const IFilter::Me
 Result<> AlignGeometries::operator()()
 {
 
-  auto movingGeometryPath = m_InputValues->InputMovingGeometryPath;
-  auto targetGeometryPath = m_InputValues->InputTargetGeometryPath;
-  auto alignmentType = m_InputValues->AlignmentTypeIndex;
+  auto movingGeometryPath = m_InputValues->input_moving_geometry_path;
+  auto targetGeometryPath = m_InputValues->input_target_geometry_path;
+  auto alignmentType = m_InputValues->alignment_type_index;
 
   auto& moving = m_DataStructure.getDataRefAs<IGeometry>(movingGeometryPath);
   auto& target = m_DataStructure.getDataRefAs<IGeometry>(targetGeometryPath);
 
   if(alignmentType == 0)
   {
-    FloatVec3 movingOrigin = ExtractOrigin(moving);
+    FloatVec3Type movingOrigin = ExtractOrigin(moving);
     if(m_ShouldCancel)
     {
       return {};
     }
-    FloatVec3 targetOrigin = ExtractOrigin(target);
+    FloatVec3Type targetOrigin = ExtractOrigin(target);
     if(m_ShouldCancel)
     {
       return {};
@@ -398,12 +398,12 @@ Result<> AlignGeometries::operator()()
   }
   if(alignmentType == 1)
   {
-    FloatVec3 movingCentroid = ExtractCentroid(moving);
+    FloatVec3Type movingCentroid = ExtractCentroid(moving);
     if(m_ShouldCancel)
     {
       return {};
     }
-    FloatVec3 targetCentroid = ExtractCentroid(target);
+    FloatVec3Type targetCentroid = ExtractCentroid(target);
     if(m_ShouldCancel)
     {
       return {};

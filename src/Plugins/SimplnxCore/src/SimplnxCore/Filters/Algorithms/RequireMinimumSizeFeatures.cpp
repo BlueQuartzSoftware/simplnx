@@ -31,19 +31,19 @@ RequireMinimumSizeFeatures::RequireMinimumSizeFeatures(DataStructure& dataStruct
 
 Result<> RequireMinimumSizeFeatures::operator()()
 {
-  auto& featureIdsStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  auto& featureNumCellsStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureNumCellsPath).getDataStoreRef();
+  auto& featureIdsStoreRef = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
+  auto& featureNumCellsStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_num_cells_path).getDataStoreRef();
 
   // Fail early when the selected phase has no feature. The feature scan occurs
   // before cell data changes.
-  auto* featurePhasesPtr = m_InputValues->ApplySinglePhase ? m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStore() : nullptr;
-  if(m_InputValues->ApplySinglePhase && featurePhasesPtr != nullptr)
+  auto* featurePhasesPtr = m_InputValues->apply_single_phase ? m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_path)->getDataStore() : nullptr;
+  if(m_InputValues->apply_single_phase && featurePhasesPtr != nullptr)
   {
     usize numFeatures = featurePhasesPtr->getNumberOfTuples();
     bool unavailablePhase = true;
     for(usize i = 0; i < numFeatures; i++)
     {
-      if(featurePhasesPtr->getValue(i) == m_InputValues->PhaseNumber)
+      if(featurePhasesPtr->getValue(i) == m_InputValues->phase_number)
       {
         unavailablePhase = false;
         break;
@@ -52,14 +52,14 @@ Result<> RequireMinimumSizeFeatures::operator()()
 
     if(unavailablePhase)
     {
-      std::string ss = fmt::format("The phase number {} is not available in the supplied Feature phases array with path {}", m_InputValues->PhaseNumber, m_InputValues->FeaturePhasesPath.toString());
+      std::string ss = fmt::format("The phase number {} is not available in the supplied Feature phases array with path {}", m_InputValues->phase_number, m_InputValues->feature_phases_path.toString());
       return MakeErrorResult(-5555, ss);
     }
   }
 
   Error errorReturn = {.code = 0, .message = ""};
-  Result<std::vector<bool>> activeObjectsResult = removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhasesPtr, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase,
-                                                                      m_InputValues->MinAllowedFeaturesSize, errorReturn);
+  Result<std::vector<bool>> activeObjectsResult = removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhasesPtr, m_InputValues->phase_number, m_InputValues->apply_single_phase,
+                                                                      m_InputValues->min_allowed_features_size, errorReturn);
   if(activeObjectsResult.invalid())
   {
     return ConvertResult(std::move(activeObjectsResult));
@@ -75,7 +75,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
     return {};
   }
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry_path);
   Result<> assignResult = assignBadVoxels(imageGeom.getDimensions());
   if(assignResult.invalid())
   {
@@ -86,7 +86,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
   {
     return {};
   }
-  DataPath cellFeatureGroupPath = m_InputValues->FeatureNumCellsPath.getParent();
+  DataPath cellFeatureGroupPath = m_InputValues->feature_num_cells_path.getParent();
   usize currentFeatureCount = featureNumCellsStoreRef.getNumberOfTuples();
 
   int32 count = 0;
@@ -113,13 +113,13 @@ Result<> RequireMinimumSizeFeatures::operator()()
   return {};
 }
 
-Result<> RequireMinimumSizeFeatures::assignBadVoxels(const SizeVec3& dimensions)
+Result<> RequireMinimumSizeFeatures::assignBadVoxels(const SizeVec3Type& dimensions)
 {
-  return FillBadVoxels(m_DataStructure, m_InputValues->FeatureIdsPath, dimensions, {}, std::nullopt, m_MessageHandler, m_ShouldCancel);
+  return FillBadVoxels(m_DataStructure, m_InputValues->feature_ids_path, dimensions, {}, std::nullopt, m_MessageHandler, m_ShouldCancel);
 }
 
-Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractDataStore& featureIdsStoreRef, const Int32AbstractDataStore& featureNumCellsStoreRef,
-                                                                          const Int32AbstractDataStore* featurePhases, int32 phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize,
+Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractDataStoreType& featureIdsStoreRef, const Int32AbstractDataStoreType& featureNumCellsStoreRef,
+                                                                          const Int32AbstractDataStoreType* featurePhases, int32 phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize,
                                                                           Error& errorReturn)
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
@@ -170,7 +170,7 @@ Result<std::vector<bool>> RequireMinimumSizeFeatures::removeSmallFeatures(Int32A
 
   // Use the same stable mapping that later compacts feature arrays.
   const FeatureRenumbering renumbering = ComputeFeatureRenumbering(activeObjects);
-  const std::vector<size_t>& newNames = renumbering.newNames;
+  const std::vector<size_t>& newNames = renumbering.new_names;
 
   // Fuse marking and renumbering because both operations require the same cell read. Write only chunks that change.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);

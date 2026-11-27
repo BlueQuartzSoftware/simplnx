@@ -21,7 +21,7 @@ Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPa
   auto* castInputArrayPtr = dynamic_cast<DataArray<T>*>(inputDataArray);
   ShapeType tupleShape = castInputArrayPtr->getDataStore()->getTupleShape();
   ShapeType componentShape = castInputArrayPtr->getDataStore()->getComponentShape();
-  return ArrayCreationUtilities::CreateArray<T>(dataStructure, tupleShape, componentShape, path, mode);
+  return array_creation_utilities::CreateArray<T>(dataStructure, tupleShape, componentShape, path, mode);
 }
 } // namespace
 
@@ -39,47 +39,47 @@ Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode)
 {
   auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(m_SelectedDataPath);
 
-  if(template_helpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float32ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<float32>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float64ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<float64>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int8ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<int8>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt8ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint8>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int16ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<int16>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt16ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint16>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int32ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<int32>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt32ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint32>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int64ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<int64>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt64ArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint64>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(template_helpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<BoolArrayType>()(inputDataArrayPtr))
   {
     return ::DoCopy<bool>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }

@@ -26,7 +26,7 @@ struct ExecuteFlyingEdgesFunctor
    * @return Success, or a source bulk-read error from pass 1, 2, or 4.
    */
   template <typename T>
-  Result<> operator()(const ImageGeom& image, const IDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals, AttributeMatrix& normAM)
+  Result<> operator()(const ImageGeom& image, const IDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStoreType& normals, AttributeMatrix& normAM)
   {
     FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), static_cast<T>(isoVal), triangleGeom, normals);
     if(Result<> result = flyingEdges.pass1(); result.invalid())
@@ -81,14 +81,14 @@ const std::atomic_bool& FlyingEdges3D::getCancel()
 // -----------------------------------------------------------------------------
 Result<> FlyingEdges3D::operator()()
 {
-  const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
-  float64 isoVal = m_InputValues->isoVal;
-  const auto* iDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);
-  auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
-  auto& normalsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->normalsArrayPath)->getDataStoreRef();
+  const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
+  float64 isoVal = m_InputValues->iso_val;
+  const auto* iDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouring_array_path);
+  auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geom_path);
+  auto& normalsStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->normals_array_path)->getDataStoreRef();
 
   // Preflight creates normals under an AttributeMatrix.
-  DataPath normAMPath = m_InputValues->normalsArrayPath.getParent();
+  DataPath normAMPath = m_InputValues->normals_array_path.getParent();
 
   auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
 

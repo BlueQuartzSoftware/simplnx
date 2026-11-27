@@ -20,14 +20,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeKMeansInputValues
 {
-  uint64 InitClusters{};
-  ClusterUtilities::DistanceMetric DistanceMetric;
-  bool UseMask = false;
-  DataPath ClusteringArrayPath;
-  DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath MeansArrayPath;
-  uint64 Seed{};
+  uint64 init_clusters{};
+  cluster_utilities::DistanceMetric distance_metric;
+  bool use_mask = false;
+  DataPath clustering_array_path;
+  DataPath mask_array_path;
+  DataPath feature_ids_array_path;
+  DataPath means_array_path;
+  uint64 seed{};
 };
 
 /**

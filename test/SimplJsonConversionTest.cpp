@@ -21,9 +21,9 @@ using namespace nx::core;
 
 TEST_CASE("nx::core::Test SIMPL Json Conversion", "[simplnx][Filter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "simpl_json_exemplars.tar.gz", "simpl_json_exemplars");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "simpl_json_exemplars.tar.gz", "simpl_json_exemplars");
   // Read Exemplar DREAM3D File Filter
   auto exemplarDirPath = fs::path(fmt::format("{}/simpl_json_exemplars/uuid", unit_test::k_TestFilesDir));
 
@@ -35,7 +35,7 @@ TEST_CASE("nx::core::Test SIMPL Json Conversion", "[simplnx][Filter]")
   {
     for(const auto& [simplID, conversionData] : pluginPtr->getSimplToSimplnxMap())
     {
-      IFilter::UniquePointerType filter = filterListPtr->createFilter(conversionData.simplnxUuid);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(conversionData.simplnx_uuid);
       REQUIRE(filter != nullptr);
       fs::path simplJsonFilePath = exemplarDirPath / fmt::format("{}.json", simplID.str());
       if(std::filesystem::exists(simplJsonFilePath))

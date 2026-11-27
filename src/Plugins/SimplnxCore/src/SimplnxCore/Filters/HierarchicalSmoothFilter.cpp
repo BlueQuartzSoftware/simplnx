@@ -62,9 +62,9 @@ Parameters HierarchicalSmoothFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "The complete path to the array specifying the grain IDs on either side of each face",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   return params;
 }
@@ -90,9 +90,9 @@ IFilter::PreflightResult HierarchicalSmoothFilter::preflightImpl(const DataStruc
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Inform users that the geometry vertex coordinates are going to be modified in place
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriangleGeomPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pTriangleGeomPath, {});
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -101,11 +101,11 @@ Result<> HierarchicalSmoothFilter::executeImpl(DataStructure& dataStructure, con
 {
   HierarchicalSmoothInputValues inputValues;
 
-  inputValues.triangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
-  inputValues.nodeTypeArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
-  inputValues.faceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.maxIterations = filterArgs.value<int32>(k_MaxIterations_Key);
-  inputValues.errorThreshold = filterArgs.value<float64>(k_ErrorThreshold_Key);
+  inputValues.triangle_geometry_data_path = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
+  inputValues.node_type_array_path = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
+  inputValues.face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.max_iterations = filterArgs.value<int32>(k_MaxIterations_Key);
+  inputValues.error_threshold = filterArgs.value<float64>(k_ErrorThreshold_Key);
 
   return HierarchicalSmooth(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -42,17 +42,17 @@ template <typename T>
 DistanceStoreArrayType<T> GetDistanceStores(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues& inputValues)
 {
   DistanceStoreArrayType<T> stores = {nullptr, nullptr, nullptr};
-  if(inputValues.DoBoundaries)
+  if(inputValues.do_boundaries)
   {
-    stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::FeatureBoundary)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.GBDistancesArrayPath).getDataStore();
+    stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::FeatureBoundary)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.gb_distances_array_path).getDataStore();
   }
-  if(inputValues.DoTripleLines)
+  if(inputValues.do_triple_lines)
   {
-    stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::TripleJunction)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.TJDistancesArrayPath).getDataStore();
+    stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::TripleJunction)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.tj_distances_array_path).getDataStore();
   }
-  if(inputValues.DoQuadPoints)
+  if(inputValues.do_quad_points)
   {
-    stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::QuadPoint)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.QPDistancesArrayPath).getDataStore();
+    stores[static_cast<usize>(ComputeEuclideanDistMap::MapType::QuadPoint)] = dataStructure.getDataRefAs<DataArray<T>>(inputValues.qp_distances_array_path).getDataStore();
   }
   return stores;
 }
@@ -88,7 +88,7 @@ void AddUniqueNeighbor(std::array<int32, 6>& coordination, usize& coordinationCo
  * Three Feature ID slices bound resident source memory. Completed seed slices remain after cancellation.
  */
 template <typename T>
-Result<> InitializeSeeds(const Int32AbstractDataStore& featureIds, const DistanceStoreArrayType<T>& distanceStores, const SizeVec3& dims, const std::atomic_bool& shouldCancel, bool& hasBlockedCells)
+Result<> InitializeSeeds(const Int32AbstractDataStoreType& featureIds, const DistanceStoreArrayType<T>& distanceStores, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel, bool& hasBlockedCells)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -251,7 +251,7 @@ void ConsiderDistance(T neighborDistance, T& currentDistance)
  * The sweeps retain two slices.
  */
 template <typename T>
-Result<> TransformDistanceWithoutObstacles(AbstractDataStore<T>& distances, const SizeVec3& dims, const std::atomic_bool& shouldCancel)
+Result<> TransformDistanceWithoutObstacles(AbstractDataStore<T>& distances, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -429,7 +429,7 @@ Result<> InitializeNearestSeeds(const AbstractDataStore<T>& distances, AbstractD
  *
  */
 template <typename T>
-Result<> TransformLabeledDistanceWithoutObstacles(AbstractDataStore<T>& distances, AbstractDataStore<int64>& nearestSeeds, const SizeVec3& dims, const std::atomic_bool& shouldCancel)
+Result<> TransformLabeledDistanceWithoutObstacles(AbstractDataStore<T>& distances, AbstractDataStore<int64>& nearestSeeds, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -569,7 +569,7 @@ Result<> TransformLabeledDistanceWithoutObstacles(AbstractDataStore<T>& distance
  * Layer-synchronous propagation prevents distances from crossing blocked cells.
  */
 template <typename T>
-Result<> PropagateAroundBlockedCells(AbstractDataStore<T>& distances, AbstractDataStore<int64>* nearestSeeds, const Int32AbstractDataStore& featureIds, const SizeVec3& dims,
+Result<> PropagateAroundBlockedCells(AbstractDataStore<T>& distances, AbstractDataStore<int64>* nearestSeeds, const Int32AbstractDataStoreType& featureIds, const SizeVec3Type& dims,
                                      const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
@@ -759,7 +759,7 @@ Result<> PropagateAroundBlockedCells(AbstractDataStore<T>& distances, AbstractDa
  * @return The first bulk-I/O error. Cancellation returns success.
  *
  */
-Result<> ConvertToEuclideanDistances(Float32AbstractDataStore& distances, const AbstractDataStore<int64>& nearestSeeds, const SizeVec3& dims, const FloatVec3& spacing,
+Result<> ConvertToEuclideanDistances(Float32AbstractDataStoreType& distances, const AbstractDataStore<int64>& nearestSeeds, const SizeVec3Type& dims, const FloatVec3Type& spacing,
                                      const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
@@ -836,11 +836,11 @@ Result<> ConvertToEuclideanDistances(Float32AbstractDataStore& distances, const 
 template <typename T>
 Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues& inputValues, const std::atomic_bool& shouldCancel)
 {
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.input_image_geometry);
+  const SizeVec3Type dims = imageGeom.getDimensions();
   const usize sliceSize = dims[0] * dims[1];
   const usize totalVoxels = sliceSize * dims[2];
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.feature_ids_array_path).getDataStoreRef();
   DistanceStoreArrayType<T> distanceStores = GetDistanceStores<T>(dataStructure, inputValues);
 
   bool hasBlockedCells = false;
@@ -894,8 +894,8 @@ Result<> ExecuteScanline(DataStructure& dataStructure, const ComputeEuclideanDis
     }
     else
     {
-      const DataPath scratchPath = inputValues.FeatureIdsArrayPath.getParent().createChildPath("__ComputeEuclideanDistMapNearestSeedScratch");
-      auto nearestSeeds = DataStoreUtilities::CreateDataStore<int64>(dataStructure, scratchPath, featureIds.getTupleShape(), {1});
+      const DataPath scratchPath = inputValues.feature_ids_array_path.getParent().createChildPath("__ComputeEuclideanDistMapNearestSeedScratch");
+      auto nearestSeeds = data_store_utilities::CreateDataStore<int64>(dataStructure, scratchPath, featureIds.getTupleShape(), {1});
       operationResult = InitializeNearestSeeds(*distanceStorePtr, *nearestSeeds, totalVoxels, sliceSize, shouldCancel);
       if(operationResult.invalid())
       {
@@ -952,7 +952,7 @@ ComputeEuclideanDistMapScanline::ComputeEuclideanDistMapScanline(DataStructure& 
 
 Result<> ComputeEuclideanDistMapScanline::operator()()
 {
-  if(m_InputValues->CalcManhattanDist)
+  if(m_InputValues->calc_manhattan_dist)
   {
     return ExecuteScanline<int32>(m_DataStructure, *m_InputValues, m_ShouldCancel);
   }

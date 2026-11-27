@@ -34,16 +34,16 @@ Result<> ComputeBoundaryStrengths::operator()()
 {
   auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const auto& surfaceMeshFaceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& surfaceMeshFaceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_array_path);
+  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path);
+  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   const usize numCrystalStructures = crystalStructuresArrayRef.getNumberOfTuples();
 
-  auto& mPrimes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshmPrimesArrayName);
-  auto& f1s = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshF1sArrayName);
-  auto& f1sPts = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshF1sptsArrayName);
-  auto& f7s = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshF7sArrayName);
+  auto& mPrimes = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->surface_meshm_primes_array_name);
+  auto& f1s = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->surface_mesh_f1s_array_name);
+  auto& f1sPts = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->surface_mesh_f1spts_array_name);
+  auto& f7s = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->surface_mesh_f7s_array_name);
 
   const usize numTriangles = surfaceMeshFaceLabelsArrayRef.getNumberOfTuples();
 
@@ -56,7 +56,7 @@ Result<> ComputeBoundaryStrengths::operator()()
   float32 f71 = NAN;
   float32 f72 = NAN;
 
-  nx::core::Vec3<float64> ld = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
+  nx::core::Vec3<float64> ld = {m_InputValues->loading[0], m_InputValues->loading[1], m_InputValues->loading[2]};
   ld = ld.normalize();
 
   bool emitLaueClassWarning = false;
@@ -82,7 +82,7 @@ Result<> ComputeBoundaryStrengths::operator()()
         return MakeErrorResult(-94740,
                                fmt::format("Feature Phases array '{}' has value {} at feature index {} for face index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                            "[0, {}).",
-                                           m_InputValues->FeaturePhasesArrayPath.toString(), feature1PhaseIdx, feature1Idx, faceIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                           m_InputValues->feature_phases_array_path.toString(), feature1PhaseIdx, feature1Idx, faceIdx, m_InputValues->crystal_structures_array_path.toString(),
                                            numCrystalStructures, numCrystalStructures));
       }
       if(feature2PhaseIdx < 0 || static_cast<usize>(feature2PhaseIdx) >= numCrystalStructures)
@@ -90,7 +90,7 @@ Result<> ComputeBoundaryStrengths::operator()()
         return MakeErrorResult(-94740,
                                fmt::format("Feature Phases array '{}' has value {} at feature index {} for face index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                            "[0, {}).",
-                                           m_InputValues->FeaturePhasesArrayPath.toString(), feature2PhaseIdx, feature2Idx, faceIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                           m_InputValues->feature_phases_array_path.toString(), feature2PhaseIdx, feature2Idx, faceIdx, m_InputValues->crystal_structures_array_path.toString(),
                                            numCrystalStructures, numCrystalStructures));
       }
       const uint32 currentLaueIndex = crystalStructuresArrayRef[feature1PhaseIdx];
@@ -106,7 +106,7 @@ Result<> ComputeBoundaryStrengths::operator()()
           return MakeErrorResult(-94741,
                                  fmt::format("Crystal Structures array '{}' has value {} at Phase index {} for face index {}, but only {} Laue operations are available. Valid Laue indices are in "
                                              "[0, {}).",
-                                             m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, feature1PhaseIdx, faceIdx, orientationOps.size(), orientationOps.size()));
+                                             m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, feature1PhaseIdx, faceIdx, orientationOps.size(), orientationOps.size()));
         }
         const ebsdlib::LaueOps::Pointer& laueClass = orientationOps[currentLaueIndex];
         mPrime1 = static_cast<float32>(laueClass->getmPrime(q1, q2, ld.data()));
@@ -155,7 +155,7 @@ Result<> ComputeBoundaryStrengths::operator()()
   if(emitLaueClassWarning)
   {
     return MakeWarningVoidResult(-94739, fmt::format("Compute Boundary Strengths supports Cubic m-3m. A same-phase boundary uses another crystal structure. Check the Crystal Structures array '{}'.",
-                                                     m_InputValues->CrystalStructuresArrayPath.toString()));
+                                                     m_InputValues->crystal_structures_array_path.toString()));
   }
 
   return {};

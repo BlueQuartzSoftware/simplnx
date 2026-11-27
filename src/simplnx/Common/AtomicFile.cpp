@@ -136,7 +136,7 @@ Result<AtomicFile> AtomicFile::Create(fs::path filename)
 
   // Validate write permissions.
   {
-    auto result = FileUtilities::ValidateDirectoryWritePermission(atomicFile.m_FilePath, true);
+    auto result = file_utilities::ValidateDirectoryWritePermission(atomicFile.m_FilePath, true);
     if(result.invalid())
     {
       return ConvertInvalidResult<AtomicFile>(std::move(result));
@@ -231,7 +231,7 @@ Result<> AtomicFile::commit()
   }
 
   const auto outcome = InstallReplacementFile(m_TempFilePath, m_FilePath, FileReplacementDurability::WriteThrough);
-  if(outcome.Error)
+  if(outcome.error)
   {
     return MakeErrorResult(-15782, DescribeFileReplacementFailure(outcome, m_FilePath));
   }

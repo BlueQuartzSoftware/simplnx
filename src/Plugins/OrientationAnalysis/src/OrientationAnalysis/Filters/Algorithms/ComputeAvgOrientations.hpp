@@ -23,28 +23,28 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeAvgOrientationsInputValues
 {
-  DataPath cellFeatureIdsArrayPath;
-  DataPath cellPhasesArrayPath;
-  DataPath cellQuatsArrayPath;
-  DataPath crystalStructuresArrayPath;
+  DataPath cell_feature_ids_array_path;
+  DataPath cell_phases_array_path;
+  DataPath cell_quats_array_path;
+  DataPath crystal_structures_array_path;
 
-  bool useRodriguesAverage{};
-  bool useVonMisesAverage{};
-  bool useWatsonAverage{};
-  DataPath avgQuatsArrayPath;
-  DataPath avgEulerAnglesArrayPath;
+  bool use_rodrigues_average{};
+  bool use_von_mises_average{};
+  bool use_watson_average{};
+  DataPath avg_quats_array_path;
+  DataPath avg_euler_angles_array_path;
 
-  DataPath VMFQuatsArrayPath;
-  DataPath VMFEulerAnglesArrayPath;
-  DataPath VMFKappaArrayPath;
+  DataPath vmf_quats_array_path;
+  DataPath vmf_euler_angles_array_path;
+  DataPath vmf_kappa_array_path;
 
-  DataPath WatsonQuatsArrayPath;
-  DataPath WatsonEulerAnglesArrayPath;
-  DataPath WatsonKappaArrayPath;
+  DataPath watson_quats_array_path;
+  DataPath watson_euler_angles_array_path;
+  DataPath watson_kappa_array_path;
 
-  uint32 RandomSeed = 43514;
-  int32 NumEMIterations = 5;
-  int32 NumIterations = 10;
+  uint32 random_seed = 43514;
+  int32 num_em_iterations = 5;
+  int32 num_iterations = 10;
 };
 
 /**

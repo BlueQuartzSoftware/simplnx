@@ -67,8 +67,8 @@ const DataPath k_InputPath({"Input"});
 const DataPath k_OutputPath({"Output"});
 
 // Build an ImageGeom whose single Int32 cell array is filled 1..N in ZYX order.
-ImageGeom* CreateSequentialImageGeom(DataStructure& dataStructure, const std::string& name, const SizeVec3& dims, const FloatVec3& spacing = FloatVec3{1.0f, 1.0f, 1.0f},
-                                     const FloatVec3& origin = FloatVec3{0.0f, 0.0f, 0.0f})
+ImageGeom* CreateSequentialImageGeom(DataStructure& dataStructure, const std::string& name, const SizeVec3Type& dims, const FloatVec3Type& spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                     const FloatVec3Type& origin = FloatVec3Type{0.0f, 0.0f, 0.0f})
 {
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, name);
   imageGeomPtr->setDimensions(dims);
@@ -78,7 +78,7 @@ ImageGeom* CreateSequentialImageGeom(DataStructure& dataStructure, const std::st
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  Int32Array* valuesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ValuesName, {dims[2], dims[1], dims[0]}, {1}, cellAmPtr->getId());
+  Int32ArrayType* valuesPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ValuesName, {dims[2], dims[1], dims[0]}, {1}, cellAmPtr->getId());
   auto& valuesStore = valuesPtr->getDataStoreRef();
   for(usize i = 0; i < valuesStore.getNumberOfTuples(); i++)
   {
@@ -107,7 +107,7 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
 }
 
 // Base arguments common to every run (axis-angle representation).
-Arguments MakeAxisAngleArgs(const DataPath& inputPath, const DataPath& outputPath, const VectorFloat32Parameter::ValueType& axisAngle, bool sliceBySlice = false, bool keepOrigin = false)
+Arguments MakeAxisAngleArgs(const DataPath& inputPath, const DataPath& outputPath, const VectorFloat32ParameterType::ValueType& axisAngle, bool sliceBySlice = false, bool keepOrigin = false)
 {
   Arguments args;
   args.insertOrAssign(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<BoolParameter::ValueType>(false));
@@ -115,7 +115,7 @@ Arguments MakeAxisAngleArgs(const DataPath& inputPath, const DataPath& outputPat
   args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputPath));
-  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(axisAngle));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32ParameterType::ValueType>(axisAngle));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RotateSliceBySlice_Key, std::make_any<bool>(sliceBySlice));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(keepOrigin));
   return args;
@@ -124,7 +124,7 @@ Arguments MakeAxisAngleArgs(const DataPath& inputPath, const DataPath& outputPat
 // Read the output Int32 "Values" array (ZYX order) into a vector.
 std::vector<int32> ReadOutputValues(const DataStructure& dataStructure, const DataPath& geomPath)
 {
-  const auto* valuesPtr = dataStructure.getDataAs<Int32Array>(geomPath.createChildPath(k_CellDataName).createChildPath(k_ValuesName));
+  const auto* valuesPtr = dataStructure.getDataAs<Int32ArrayType>(geomPath.createChildPath(k_CellDataName).createChildPath(k_ValuesName));
   REQUIRE(valuesPtr != nullptr);
   const auto& store = valuesPtr->getDataStoreRef();
   std::vector<int32> out(store.getNumberOfTuples());
@@ -162,10 +162,10 @@ void RequireValueBijection(const std::vector<int32>& output, usize inputCount)
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a slice", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 dims = {3, 2, 1}; // 6 cells: [1 2 3 / 4 5 6]
+  const SizeVec3Type dims = {3, 2, 1}; // 6 cells: [1 2 3 / 4 5 6]
   const std::vector<int32> expected = {6, 5, 4, 3, 2, 1};
 
   RotateSampleRefFrameFilter filter;
@@ -174,16 +174,16 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
   {
     DataStructure dataStructure;
     CreateSequentialImageGeom(dataStructure, "Input", dims);
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f});
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 180.0f});
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Rotation-Matrix representation")
@@ -191,20 +191,20 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
     DataStructure dataStructure;
     CreateSequentialImageGeom(dataStructure, "Input", dims);
 
-    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(180.0f * (numbers::pi_v<float> / 180.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f)).toRotationMatrix();
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f});
+    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(180.0f * (numbers::k_PiV<float> / 180.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f)).toRotationMatrix();
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 180.0f});
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertMatrixToTable(rotationMatrix)));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -228,13 +228,13 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutation pins chirality", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   auto [label, inDims, axisAngle, expectedDims, expected] =
-      GENERATE(std::make_tuple("90 about Z", SizeVec3{3, 2, 1}, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{2, 3, 1}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
-               std::make_tuple("90 about X", SizeVec3{1, 3, 2}, VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{1, 2, 3}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
-               std::make_tuple("90 about Y", SizeVec3{3, 1, 2}, VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3{2, 1, 3}, std::vector<int32>{3, 6, 2, 5, 1, 4}));
+      GENERATE(std::make_tuple("90 about Z", SizeVec3Type{3, 2, 1}, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3Type{2, 3, 1}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
+               std::make_tuple("90 about X", SizeVec3Type{1, 3, 2}, VectorFloat32ParameterType::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3Type{1, 2, 3}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
+               std::make_tuple("90 about Y", SizeVec3Type{3, 1, 2}, VectorFloat32ParameterType::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3Type{2, 1, 3}, std::vector<int32>{3, 6, 2, 5, 1, 4}));
 
   RotateSampleRefFrameFilter filter;
 
@@ -245,8 +245,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutat
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -254,7 +254,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutat
     REQUIRE(outputGeomPtr != nullptr);
     REQUIRE(outputGeomPtr->getDimensions() == expectedDims);
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -266,27 +266,27 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutat
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing permutes with the axes", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   DataStructure dataStructure;
-  CreateSequentialImageGeom(dataStructure, "Input", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 5.0f, 1.0f});
+  CreateSequentialImageGeom(dataStructure, "Input", SizeVec3Type{2, 2, 1}, FloatVec3Type{2.0f, 5.0f, 1.0f});
   RotateSampleRefFrameFilter filter;
-  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f});
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0f});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto* outputGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
   REQUIRE(outputGeomPtr != nullptr);
-  const FloatVec3 outSpacing = outputGeomPtr->getSpacing();
+  const FloatVec3Type outSpacing = outputGeomPtr->getSpacing();
   REQUIRE(outSpacing[0] == Approx(5.0f));
   REQUIRE(outSpacing[1] == Approx(2.0f));
   REQUIRE(outSpacing[2] == Approx(1.0f));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -300,25 +300,25 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing perm
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about (111)", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 inDims = {2, 3, 4};
+  const SizeVec3Type inDims = {2, 3, 4};
   const usize inCount = 2 * 3 * 4;
 
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", inDims);
   RotateSampleRefFrameFilter filter;
-  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{1.0f, 1.0f, 1.0f, 120.0f});
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{1.0f, 1.0f, 1.0f, 120.0f});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -333,11 +333,11 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 dims = {3, 2, 1};
-  const FloatVec3 inputOrigin = {10.0f, 20.0f, 0.0f};
+  const SizeVec3Type dims = {3, 2, 1};
+  const FloatVec3Type inputOrigin = {10.0f, 20.0f, 0.0f};
   const std::vector<int32> expectedValues = {4, 1, 5, 2, 6, 3}; // same permutation as the origin-0 90-about-Z case
 
   RotateSampleRefFrameFilter filter;
@@ -345,45 +345,45 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", 
   SECTION("transform-derived origin (Keep Input Origin OFF)")
   {
     DataStructure dataStructure;
-    CreateSequentialImageGeom(dataStructure, "Input", dims, FloatVec3{1.0f, 1.0f, 1.0f}, inputOrigin);
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f});
+    CreateSequentialImageGeom(dataStructure, "Input", dims, FloatVec3Type{1.0f, 1.0f, 1.0f}, inputOrigin);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0f});
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
     REQUIRE(outputGeomPtr != nullptr);
-    const FloatVec3 outOrigin = outputGeomPtr->getOrigin();
+    const FloatVec3Type outOrigin = outputGeomPtr->getOrigin();
     REQUIRE(outOrigin[0] == Approx(-22.0f));
     REQUIRE(outOrigin[1] == Approx(10.0f));
     REQUIRE(outOrigin[2] == Approx(0.0f));
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expectedValues);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Keep Input Geometry Origin ON preserves the input origin")
   {
     DataStructure dataStructure;
-    CreateSequentialImageGeom(dataStructure, "Input", dims, FloatVec3{1.0f, 1.0f, 1.0f}, inputOrigin);
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, false, true);
+    CreateSequentialImageGeom(dataStructure, "Input", dims, FloatVec3Type{1.0f, 1.0f, 1.0f}, inputOrigin);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, false, true);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto* outputGeomPtr = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
     REQUIRE(outputGeomPtr != nullptr);
-    const FloatVec3 outOrigin = outputGeomPtr->getOrigin();
+    const FloatVec3Type outOrigin = outputGeomPtr->getOrigin();
     REQUIRE(outOrigin[0] == Approx(inputOrigin[0]));
     REQUIRE(outOrigin[1] == Approx(inputOrigin[1]));
     REQUIRE(outOrigin[2] == Approx(inputOrigin[2]));
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expectedValues);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -395,22 +395,22 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations are lossless permutations", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 inDims = {4, 3, 2};
+  const SizeVec3Type inDims = {4, 3, 2};
   const usize inCount = 4 * 3 * 2;
 
   // {label, axis-angle, expected output dims}
-  auto [label, axisAngle, expectedDims] = GENERATE(std::make_tuple("90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{3, 4, 2}),
-                                                   std::make_tuple("180 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, SizeVec3{4, 3, 2}),
-                                                   std::make_tuple("270 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 270.0f}, SizeVec3{3, 4, 2}),
-                                                   std::make_tuple("90 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{4, 2, 3}),
-                                                   std::make_tuple("180 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
-                                                   std::make_tuple("270 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 270.0f}, SizeVec3{4, 2, 3}),
-                                                   std::make_tuple("90 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3{2, 3, 4}),
-                                                   std::make_tuple("180 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
-                                                   std::make_tuple("270 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 270.0f}, SizeVec3{2, 3, 4}));
+  auto [label, axisAngle, expectedDims] = GENERATE(std::make_tuple("90 about Z", VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3Type{3, 4, 2}),
+                                                   std::make_tuple("180 about Z", VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, SizeVec3Type{4, 3, 2}),
+                                                   std::make_tuple("270 about Z", VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 270.0f}, SizeVec3Type{3, 4, 2}),
+                                                   std::make_tuple("90 about X", VectorFloat32ParameterType::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3Type{4, 2, 3}),
+                                                   std::make_tuple("180 about X", VectorFloat32ParameterType::ValueType{1.0f, 0.0f, 0.0f, 180.0f}, SizeVec3Type{4, 3, 2}),
+                                                   std::make_tuple("270 about X", VectorFloat32ParameterType::ValueType{1.0f, 0.0f, 0.0f, 270.0f}, SizeVec3Type{4, 2, 3}),
+                                                   std::make_tuple("90 about Y", VectorFloat32ParameterType::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3Type{2, 3, 4}),
+                                                   std::make_tuple("180 about Y", VectorFloat32ParameterType::ValueType{0.0f, 1.0f, 0.0f, 180.0f}, SizeVec3Type{4, 3, 2}),
+                                                   std::make_tuple("270 about Y", VectorFloat32ParameterType::ValueType{0.0f, 1.0f, 0.0f, 270.0f}, SizeVec3Type{2, 3, 4}));
 
   RotateSampleRefFrameFilter filter;
 
@@ -421,8 +421,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -430,7 +430,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
     REQUIRE(outputGeomPtr != nullptr);
     REQUIRE(outputGeomPtr->getDimensions() == expectedDims);
     RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   DYNAMIC_SECTION(label << " (Rotation-Matrix)")
@@ -439,15 +439,15 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
     CreateSequentialImageGeom(dataStructure, "Input", inDims);
 
     Eigen::Vector3f axis(axisAngle[0], axisAngle[1], axisAngle[2]);
-    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(axisAngle[3] * (numbers::pi_v<float> / 180.0f), axis).toRotationMatrix();
+    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(axisAngle[3] * (numbers::k_PiV<float> / 180.0f), axis).toRotationMatrix();
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle);
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertMatrixToTable(rotationMatrix)));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -455,7 +455,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
     REQUIRE(outputGeomPtr != nullptr);
     REQUIRE(outputGeomPtr->getDimensions() == expectedDims);
     RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -466,15 +466,15 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition is identity", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 inDims = {4, 3, 2};
+  const SizeVec3Type inDims = {4, 3, 2};
 
-  auto [label, axisAngle, repeats] = GENERATE(std::make_tuple("four 90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, 4),
-                                              std::make_tuple("two 180 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, 2),
-                                              std::make_tuple("four 90 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, 4),
-                                              std::make_tuple("four 90 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, 4));
+  auto [label, axisAngle, repeats] = GENERATE(std::make_tuple("four 90 about Z", VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, 4),
+                                              std::make_tuple("two 180 about Z", VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, 2),
+                                              std::make_tuple("four 90 about X", VectorFloat32ParameterType::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, 4),
+                                              std::make_tuple("four 90 about Y", VectorFloat32ParameterType::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, 4));
 
   DYNAMIC_SECTION(label)
   {
@@ -489,8 +489,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
       DataPath stepOutput({fmt::format("Step_{}", step)});
       Arguments args = MakeAxisAngleArgs(currentInput, stepOutput, axisAngle);
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+      unit_test::AlgorithmTestScope algorithmTestScope(scenario);
       auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
       currentInput = stepOutput;
@@ -500,7 +500,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
     REQUIRE(finalGeomPtr != nullptr);
     REQUIRE(finalGeomPtr->getDimensions() == inDims);
     REQUIRE(ReadOutputValues(dataStructure, currentInput) == original);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -513,11 +513,11 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls output origin", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 inDims = {4, 3, 2};
-  const VectorFloat32Parameter::ValueType axisAngle{0.0f, 0.0f, 1.0f, 90.0f};
+  const SizeVec3Type inDims = {4, 3, 2};
+  const VectorFloat32ParameterType::ValueType axisAngle{0.0f, 0.0f, 1.0f, 90.0f};
   RotateSampleRefFrameFilter filter;
 
   SECTION("Keep input origin -> (0,0,0)")
@@ -526,8 +526,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls o
     CreateSequentialImageGeom(dataStructure, "Input", inDims);
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle, /*sliceBySlice=*/false, /*keepOrigin=*/true);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto origin = dataStructure.getDataAs<ImageGeom>(k_OutputPath)->getOrigin();
@@ -542,8 +542,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls o
     CreateSequentialImageGeom(dataStructure, "Input", inDims);
     Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle, /*sliceBySlice=*/false, /*keepOrigin=*/false);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto origin = dataStructure.getDataAs<ImageGeom>(k_OutputPath)->getOrigin();
@@ -561,12 +561,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls o
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lossless per-slice flip", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  const SizeVec3 inDims = {4, 3, 2};
+  const SizeVec3Type inDims = {4, 3, 2};
   const usize inCount = 4 * 3 * 2;
-  const VectorFloat32Parameter::ValueType axisAngle{0.0f, 1.0f, 0.0f, 180.0f};
+  const VectorFloat32ParameterType::ValueType axisAngle{0.0f, 1.0f, 0.0f, 180.0f};
 
   RotateSampleRefFrameFilter filter;
 
@@ -578,12 +578,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
   {
     Arguments args = MakeAxisAngleArgs(k_InputPath, slicePath, axisAngle, /*sliceBySlice=*/true);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireValueBijection(ReadOutputValues(dataStructure, slicePath), inCount);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // True 3D rotation (reverses slice order)
@@ -591,17 +591,17 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
   {
     Arguments args = MakeAxisAngleArgs(k_InputPath, fullPath, axisAngle, /*sliceBySlice=*/false);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::AlgorithmTestScope algorithmTestScope(scenario);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireValueBijection(ReadOutputValues(dataStructure, fullPath), inCount);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // The two modes produce genuinely different permutations (slice order preserved vs reversed).
   REQUIRE(ReadOutputValues(dataStructure, slicePath) != ReadOutputValues(dataStructure, fullPath));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -611,41 +611,41 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: rejects non-principal-90 rotations", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const SizeVec3 inDims = {4, 3, 2};
+  const SizeVec3Type inDims = {4, 3, 2};
   RotateSampleRefFrameFilter filter;
 
   SECTION("45 degrees about Z (Axis-Angle)")
   {
     DataStructure dataStructure;
     CreateSequentialImageGeom(dataStructure, "Input", inDims);
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 45.0f});
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 45.0f});
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
-    REQUIRE(preflightResult.outputActions.errors().at(0).code == -6850);
+    REQUIRE(preflightResult.output_actions.invalid());
+    REQUIRE(preflightResult.output_actions.errors().at(0).code == -6850);
   }
 
   SECTION("90 degrees about a non-principal axis (Axis-Angle)")
   {
     DataStructure dataStructure;
     CreateSequentialImageGeom(dataStructure, "Input", inDims);
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{1.0f, 1.0f, 1.0f, 90.0f});
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{1.0f, 1.0f, 1.0f, 90.0f});
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
-    REQUIRE(preflightResult.outputActions.errors().at(0).code == -6850);
+    REQUIRE(preflightResult.output_actions.invalid());
+    REQUIRE(preflightResult.output_actions.errors().at(0).code == -6850);
   }
 
   SECTION("Arbitrary (45 degree) Rotation Matrix")
   {
     DataStructure dataStructure;
     CreateSequentialImageGeom(dataStructure, "Input", inDims);
-    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(45.0f * (numbers::pi_v<float> / 180.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f)).toRotationMatrix();
-    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 45.0f});
+    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(45.0f * (numbers::k_PiV<float> / 180.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f)).toRotationMatrix();
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 45.0f});
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertMatrixToTable(rotationMatrix)));
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
-    REQUIRE(preflightResult.outputActions.errors().at(0).code == -6850);
+    REQUIRE(preflightResult.output_actions.invalid());
+    REQUIRE(preflightResult.output_actions.errors().at(0).code == -6850);
   }
 }
 
@@ -655,23 +655,23 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: rejects non-principal-90 rotations
 // -----------------------------------------------------------------------------
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: rejects slice-by-slice with a slice-reordering rotation", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const SizeVec3 inDims = {4, 3, 2};
+  const SizeVec3Type inDims = {4, 3, 2};
   RotateSampleRefFrameFilter filter;
 
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", inDims);
-  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, /*sliceBySlice=*/true);
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32ParameterType::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, /*sliceBySlice=*/true);
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().at(0).code == -6851);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().at(0).code == -6851);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: real HDF5 1MiB-page permutation oracle", "[SimplnxCore][RotateSampleRefFrameFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool sliceBySlice = GENERATE(false, true);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_PlaneTuples = 257 * 257;
   constexpr usize k_CellTuples = 4 * k_PlaneTuples;
   static_assert(k_CellTuples > (1024 * 1024) / sizeof(int32));
@@ -688,11 +688,11 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: real HDF5 1MiB-page permutation or
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto after = GetAlgorithmPathExecutionCounts();
-  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(after.out_of_core_on_out_of_core_store == before.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(after.in_core == before.in_core);
   const auto outputValuesPath = k_OutputPath.createChildPath(k_CellDataName).createChildPath(k_ValuesName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputValuesPath));
-  const auto& output = dataStructure.getDataRefAs<Int32Array>(outputValuesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputValuesPath));
+  const auto& output = dataStructure.getDataRefAs<Int32ArrayType>(outputValuesPath);
   REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(output.getNumberOfTuples() == k_CellTuples);
   std::vector<int32> values(k_CellTuples);
@@ -706,13 +706,13 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: real HDF5 1MiB-page permutation or
     const usize inPlane = voxelIdx % k_PlaneTuples;
     REQUIRE(values[voxelIdx] == static_cast<int32>(plane * k_PlaneTuples + k_PlaneTuples - inPlane));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RotateSampleRefFrameFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -754,14 +754,14 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibilit
       CreateSequentialImageGeom(dataStructure, "DataContainer", {2, 3, 1});
       REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({"DataContainer", "Cell Feature Data"})) == nullptr);
       CHECK(pipeline.preflight(dataStructure, false));
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometry name are kept", "[SimplnxCore][RotateSampleRefFrame]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath srcGeomPath({"Geom"});
   const DataPath destGeomPath({"Geom Out"});
@@ -774,14 +774,14 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);
   auto* dataPtr =
-      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+      Int32ArrayType::Create(dataStructure, "Data", data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
                          elementAmPtr->getId());
   REQUIRE(dataPtr != nullptr);
   dataPtr->fill(7);
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
-                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Geom Values",
+                                       data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(42);
   RotateSampleRefFrameFilter filter;
@@ -791,7 +791,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(destGeomPath));
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
   const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
   const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
@@ -799,7 +799,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   SECTION("Declared recursive paths keep child names")
   {
     const CopyDataObjectAction* copyActionPtr = nullptr;
-    for(const auto& action : preflightResult.outputActions.value().actions)
+    for(const auto& action : preflightResult.output_actions.value().actions)
     {
       const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
       if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
@@ -818,18 +818,18 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(copiedValuesPath) != nullptr);
     REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
-    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves the voxel grid", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", {2, 3, 4}, {2.0F, 3.0F, 5.0F});
   RotateSampleRefFrameFilter filter;
@@ -838,15 +838,15 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves 
   // spacing (2,3,5) become (4,2,3) and (5,2,3). Output (i,j,k) samples
   // input (j,k,i), whose sequential value is 1 + j + 2*k + 6*i.
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const ImageGeom* outputPtr = nullptr;
   REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<ImageGeom>(k_OutputPath));
-  CHECK(outputPtr->getDimensions() == SizeVec3{4, 2, 3});
+  CHECK(outputPtr->getDimensions() == SizeVec3Type{4, 2, 3});
   for(usize axis = 0; axis < 3; axis++)
   {
-    CHECK(outputPtr->getSpacing()[axis] == Approx(FloatVec3{5.0F, 2.0F, 3.0F}[axis]));
+    CHECK(outputPtr->getSpacing()[axis] == Approx(FloatVec3Type{5.0F, 2.0F, 3.0F}[axis]));
   }
   const auto values = ReadOutputValues(dataStructure, k_OutputPath);
   REQUIRE(values.size() == 24);
@@ -860,7 +860,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: anisotropic three-cycle preserves 
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Axis domain regression", "[SimplnxCore][RotateSampleRefFrameFilter][NumericDomainRed]")
@@ -870,22 +870,22 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Axis domain regression", "[Simplnx
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args =
-      MakeAxisAngleArgs(k_InputPath, k_OutputPath, row == 0 ? VectorFloat32Parameter::ValueType{0, 0, 0, 90} : VectorFloat32Parameter::ValueType{0, 0, 1, std::numeric_limits<float32>::quiet_NaN()});
+      MakeAxisAngleArgs(k_InputPath, k_OutputPath, row == 0 ? VectorFloat32ParameterType::ValueType{0, 0, 0, 90} : VectorFloat32ParameterType::ValueType{0, 0, 1, std::numeric_limits<float32>::quiet_NaN()});
   RotateSampleRefFrameFilter filter;
   auto pre = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(pre.outputActions);
-  REQUIRE(pre.outputActions.errors()[0].code == (row == 0 ? -86052 : -86053));
+  SIMPLNX_RESULT_REQUIRE_INVALID(pre.output_actions);
+  REQUIRE(pre.output_actions.errors()[0].code == (row == 0 ? -86052 : -86053));
 }
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Large axis regression", "[SimplnxCore][RotateSampleRefFrameFilter][NumericDomainRed]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 1e20f, 90});
   RotateSampleRefFrameFilter filter;
   auto pre = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.output_actions);
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CHECK(ReadOutputValues(dataStructure, k_OutputPath) == std::vector<int32>{4, 1, 5, 2, 6, 3});
@@ -898,13 +898,13 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Execute invalid axis preserves arr
   auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 1, 90});
   RotateSampleRefFrameFilter filter;
   auto pre = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto applied = pre.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.output_actions);
+  auto applied = pre.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
-  auto* destPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Output", "CellData", "Values"}));
+  auto* destPtr = dataStructure.getDataAs<Int32ArrayType>(DataPath({"Output", "CellData", "Values"}));
   REQUIRE(destPtr != nullptr);
   destPtr->fill(99);
-  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, VectorFloat32Parameter::ValueType{0, 0, 0, 90});
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, VectorFloat32ParameterType::ValueType{0, 0, 0, 90});
   args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, DataPath({"RejectedOutput"}));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
@@ -915,8 +915,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Execute invalid axis preserves arr
 }
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Inactive axis-angle values", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
   auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, {0, 0, 0, std::numeric_limits<float32>::quiet_NaN()});
@@ -944,7 +944,7 @@ DataStructure CreateFeatureRotateFixture()
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, {1, 2, 2}, geomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geomPtr->setCellData(*cellsPtr);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellsPtr->getShape(), {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellsPtr->getShape(), {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   (*idsPtr)[0] = 1;
   (*idsPtr)[1] = 1;
@@ -952,7 +952,7 @@ DataStructure CreateFeatureRotateFixture()
   (*idsPtr)[3] = 3;
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Cell Feature Data", {2, 2}, geomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
-  auto* countsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", featuresPtr->getShape(), {1}, featuresPtr->getId());
+  auto* countsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumElements", featuresPtr->getShape(), {1}, featuresPtr->getId());
   REQUIRE(countsPtr != nullptr);
   (*countsPtr)[0] = 0;
   (*countsPtr)[1] = 2;
@@ -965,7 +965,7 @@ DataStructure CreateFeatureRotateFixture()
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Names", featuresPtr->getShape(), {"Background", "One", "Unused", "Three"}, featuresPtr->getId()) != nullptr);
   auto* ensemblePtr = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", {2}, geomPtr->getId());
   REQUIRE(ensemblePtr != nullptr);
-  auto* structuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensemblePtr->getId());
+  auto* structuresPtr = unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensemblePtr->getId());
   REQUIRE(structuresPtr != nullptr);
   (*structuresPtr)[0] = 999;
   (*structuresPtr)[1] = 1;
@@ -982,7 +982,7 @@ Arguments MakeFeatureRotateArgs(bool clear)
 
 void CheckRotatedFeatureCellsAndEnsemble(const DataStructure& dataStructure, const DataPath& geomPath)
 {
-  const auto* idsPtr = dataStructure.getDataAs<Int32Array>(geomPath.createChildPath(k_CellDataName).createChildPath("FeatureIds"));
+  const auto* idsPtr = dataStructure.getDataAs<Int32ArrayType>(geomPath.createChildPath(k_CellDataName).createChildPath("FeatureIds"));
   REQUIRE(idsPtr != nullptr);
   REQUIRE(idsPtr->getNumberOfTuples() == 4);
   const std::vector<int32> expected = {3, 3, 1, 1};
@@ -994,7 +994,7 @@ void CheckRotatedFeatureCellsAndEnsemble(const DataStructure& dataStructure, con
   REQUIRE(ensemblePtr != nullptr);
   CHECK(ensemblePtr->getShape() == ShapeType{2});
   CHECK(ensemblePtr->getSize() == 1);
-  const auto* structuresPtr = dataStructure.getDataAs<UInt32Array>(geomPath.createChildPath("Cell Ensemble Data").createChildPath("CrystalStructures"));
+  const auto* structuresPtr = dataStructure.getDataAs<UInt32ArrayType>(geomPath.createChildPath("Cell Ensemble Data").createChildPath("CrystalStructures"));
   REQUIRE(structuresPtr != nullptr);
   REQUIRE(structuresPtr->getNumberOfTuples() == 2);
   CHECK((*structuresPtr)[0] == 999);
@@ -1008,7 +1008,7 @@ void CheckUnchangedFeatureData(const DataStructure& dataStructure, const DataPat
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{2, 2});
   CHECK(amPtr->getSize() == 3);
-  const auto* countsPtr = dataStructure.getDataAs<Int32Array>(path.createChildPath("NumElements"));
+  const auto* countsPtr = dataStructure.getDataAs<Int32ArrayType>(path.createChildPath("NumElements"));
   REQUIRE(countsPtr != nullptr);
   REQUIRE(countsPtr->getNumberOfTuples() == 4);
   const std::vector<int32> expectedCounts = {0, 2, 0, 2};
@@ -1046,9 +1046,9 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Preflight warns for unchange
   SECTION("Feature clearing leaves Ensemble data")
   {
     auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE(result.outputActions.warnings().size() == 1);
-    const auto& warning = result.outputActions.warnings().front();
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE(result.output_actions.warnings().size() == 1);
+    const auto& warning = result.output_actions.warnings().front();
     CHECK(warning.code == -4041);
     CHECK(warning.message.find("\n" + ensemblePath.toString() + "\n") != std::string::npos);
     CHECK(warning.message.find("\n" + featurePath.toString() + "\n") == std::string::npos);
@@ -1059,68 +1059,68 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Preflight warns for unchange
     REQUIRE(ds.removeData(featurePath));
     REQUIRE(ds.removeData(ensemblePath));
     auto result = filter.preflight(ds, MakeFeatureRotateArgs(false));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    CHECK(result.outputActions.warnings().empty());
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    CHECK(result.output_actions.warnings().empty());
   }
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON preflight", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRotateFixture();
   RotateSampleRefFrameFilter filter;
   CHECK(filter.parametersVersion() == 2);
   CHECK(filter.getDefaultArguments().value<BoolParameter::ValueType>(RotateSampleRefFrameFilter::k_ClearFeatureAttributeMatrix_Key));
   auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  CHECK(result.outputActions.warnings().front().code == -4041);
-  const auto info = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
-  REQUIRE(info != result.outputValues.end());
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  CHECK(result.output_actions.warnings().front().code == -4041);
+  const auto info = std::find_if(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
+  REQUIRE(info != result.output_values.end());
   CHECK(info->value.find("Input/Cell Feature Data/NumElements") != std::string::npos);
   CHECK(info->value.find("Input/Cell Feature Data/NeighborList") != std::string::npos);
   CHECK(info->value.find("Input/Cell Feature Data/Names") != std::string::npos);
   CHECK(info->value.find("Ensemble") == std::string::npos);
   CHECK(info->value.find("renumber") == std::string::npos);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
-  auto applied = result.outputActions.value().applyRegular(ds, IDataAction::Mode::Execute);
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
+  auto applied = result.output_actions.value().applyRegular(ds, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
   CheckClearedFeatureData(ds, k_OutputPath);
   CheckUnchangedFeatureData(ds, k_InputPath);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear OFF copies Feature AM unchanged", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto ds = CreateFeatureRotateFixture();
   RotateSampleRefFrameFilter filter;
   auto args = MakeFeatureRotateArgs(false);
   // The disabled selection is ignored, even when it points to a missing object.
   args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Missing"})));
   auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  REQUIRE(preflight.outputActions.warnings().size() == 1);
-  CHECK(preflight.outputActions.warnings().front().code == -4041);
-  CHECK(std::any_of(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
-  CHECK(std::none_of(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; }));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  REQUIRE(preflight.output_actions.warnings().size() == 1);
+  CHECK(preflight.output_actions.warnings().front().code == -4041);
+  CHECK(std::any_of(preflight.output_values.begin(), preflight.output_values.end(), [](const auto& value) { return value.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(preflight.output_values.begin(), preflight.output_values.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; }));
   auto result = scope.executeFilter(filter, ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   CheckUnchangedFeatureData(ds, k_OutputPath);
   CheckUnchangedFeatureData(ds, k_InputPath);
   CheckRotatedFeatureCellsAndEnsemble(ds, k_OutputPath);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON execute", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto ds = CreateFeatureRotateFixture();
   RotateSampleRefFrameFilter filter;
   auto result = scope.executeFilter(filter, ds, MakeFeatureRotateArgs(true));
@@ -1128,12 +1128,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON execute", "[SimplnxCore][
   CheckClearedFeatureData(ds, k_OutputPath);
   CheckUnchangedFeatureData(ds, k_InputPath);
   CheckRotatedFeatureCellsAndEnsemble(ds, k_OutputPath);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON requires a direct child Feature AM", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRotateFixture();
   RotateSampleRefFrameFilter filter;
   auto args = MakeFeatureRotateArgs(true);
@@ -1152,33 +1152,33 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON requires a direct child F
     args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Input", "Nested", "Features"})));
   }
   auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -67441);
-  CHECK(result.outputActions.errors()[0].message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -67441);
+  CHECK(result.output_actions.errors()[0].message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON rejects the Cell AM", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRotateFixture();
   RotateSampleRefFrameFilter filter;
   auto args = MakeFeatureRotateArgs(true);
   args.insertOrAssign(RotateSampleRefFrameFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(k_InputPath.createChildPath(k_CellDataName)));
   auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -67442);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -67442);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON accepts shared parent paths", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto ds = CreateFeatureRotateFixture();
   auto* aliasesPtr = DataGroup::Create(ds, "Aliases");
   REQUIRE(aliasesPtr != nullptr);
@@ -1194,15 +1194,15 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON accepts shared parent pat
   CheckUnchangedFeatureData(ds, k_InputPath);
   CheckUnchangedFeatureData(ds, DataPath({"Aliases"}));
   CheckRotatedFeatureCellsAndEnsemble(ds, k_OutputPath);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON in place", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   auto ds = CreateFeatureRotateFixture();
   auto args = MakeFeatureRotateArgs(true);
   args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<BoolParameter::ValueType>(true));
@@ -1213,16 +1213,16 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Clear ON in place", "[SimplnxCore]
   CheckRotatedFeatureCellsAndEnsemble(ds, k_InputPath);
   const auto* geomPtr = ds.getDataAs<ImageGeom>(k_InputPath);
   REQUIRE(geomPtr != nullptr);
-  CHECK(geomPtr->getDimensions() == SizeVec3{2, 2, 1});
+  CHECK(geomPtr->getDimensions() == SizeVec3Type{2, 2, 1});
   CHECK_FALSE(ds.containsData(k_OutputPath));
   CHECK_FALSE(ds.containsData(DataPath({".Input"})));
   CHECK_FALSE(ds.containsData(DataPath({".rotated_image_geometry"})));
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regression", "[SimplnxCore][RotateSampleRefFrameFilter][NestedFeatureAlias]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool clear = GENERATE(true, false);
   const bool selectNested = GENERATE(false, true);
   auto ds = CreateFeatureRotateFixture();
@@ -1234,7 +1234,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   const auto featureId = featuresPtr->getId();
   const auto shape = featuresPtr->getShape();
   const auto countsPath = featurePath.createChildPath("NumElements");
-  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
+  const auto& counts = ds.getDataRefAs<Int32ArrayType>(countsPath);
   std::vector<int32> originalCounts(counts.getSize());
   for(usize i = 0; i < originalCounts.size(); ++i)
   {
@@ -1242,7 +1242,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   }
   auto* nestedPtr = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
   REQUIRE(nestedPtr != nullptr);
-  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
+  auto* keepPtr = unit_test::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
   REQUIRE(keepPtr != nullptr);
   (*keepPtr)[0] = 123;
   REQUIRE(ds.setAdditionalParent(featureId, nestedPtr->getId()));
@@ -1257,10 +1257,10 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   }
   RotateSampleRefFrameFilter filter;
   auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool foundNestedCopy = false;
   const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
-  for(const auto& action : preflight.outputActions.value().actions)
+  for(const auto& action : preflight.output_actions.value().actions)
   {
     const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
     if(copyPtr != nullptr && copyPtr->path() == sourcePath.createChildPath("Misc"))
@@ -1284,7 +1284,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   REQUIRE(outputFeaturesPtr != nullptr);
   CHECK(outputFeaturesPtr->getSize() == (clear ? 0 : 3));
   CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
-  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
+  CHECK(ds.getDataRefAs<Int32ArrayType>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
   CHECK(ds.getData(featurePath)->getId() == featureId);
   CHECK(ds.getData(featurePath)->getParentIds() == parents);
   CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
@@ -1292,35 +1292,35 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Feature AM nested alias regr
   CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
   for(usize i = 0; i < originalCounts.size(); ++i)
   {
-    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
+    CHECK(ds.getDataRefAs<Int32ArrayType>(countsPath)[i] == originalCounts[i]);
     if(!clear)
     {
-      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
+      CHECK(ds.getDataRefAs<Int32ArrayType>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: Reject another geometry element Feature AM", "[SimplnxCore][RotateSampleRefFrameFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRotateFixture();
   const auto featurePath = DataPath({"Input", "Cell Feature Data"});
   const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = VertexGeom::Create(ds, "OtherGeometry");
   REQUIRE(otherPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   otherPtr->setVertices(*verticesPtr);
   REQUIRE(ds.setAdditionalParent(featuresPtr->getId(), otherPtr->getId()));
   otherPtr->setVertexAttributeMatrix(*featuresPtr);
   RotateSampleRefFrameFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRotateArgs(true));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -67460);
-  CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -67460);
+  CHECK(result.output_actions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find("OtherGeometry") != std::string::npos);
   CHECK(otherPtr->getVertexAttributeMatrix() == featuresPtr);
   CHECK(featuresPtr->getSize() > 0);
 }

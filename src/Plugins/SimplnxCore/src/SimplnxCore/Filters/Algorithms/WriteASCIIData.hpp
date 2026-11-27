@@ -31,14 +31,14 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT WriteASCIIDataInputValues
 {
-  ChoicesParameter::ValueType DelimiterIndex{};
-  StringParameter::ValueType FileExtension;
-  ChoicesParameter::ValueType HeaderOptionIndex{};
-  MultiArraySelectionParameter::ValueType InputDataArrayPaths;
-  Int32ParameterType::ValueType MaxValPerLine{};
-  FileSystemPathParameter::ValueType OutputDir;
-  FileSystemPathParameter::ValueType OutputPath;
-  ChoicesParameter::ValueType OutputStyleIndex{};
+  ChoicesParameter::ValueType delimiter_index{};
+  StringParameter::ValueType file_extension;
+  ChoicesParameter::ValueType header_option_index{};
+  MultiArraySelectionParameter::ValueType input_data_array_paths;
+  Int32ParameterType::ValueType max_val_per_line{};
+  FileSystemPathParameter::ValueType output_dir;
+  FileSystemPathParameter::ValueType output_path;
+  ChoicesParameter::ValueType output_style_index{};
 };
 
 /**

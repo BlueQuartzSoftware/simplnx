@@ -17,11 +17,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT WriteSPParksSitesInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellEulerAnglesArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath ImageGeomPath;
+  FileSystemPathParameter::ValueType output_file;
+  DataPath feature_ids_array_path;
+  DataPath cell_euler_angles_array_path;
+  DataPath cell_phases_array_path;
+  DataPath image_geom_path;
 };
 
 /**

@@ -150,12 +150,12 @@ const IDataStoreFormatResolver& DataStructure::formatResolver() const
   return *DefaultFormatResolverRef();
 }
 
-std::shared_ptr<const IDataStoreFormatResolver> DataStructure::getDefaultFormatResolver()
+std::shared_ptr<const IDataStoreFormatResolver> DataStructure::GetDefaultFormatResolver()
 {
   return DefaultFormatResolverRef();
 }
 
-void DataStructure::setDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver)
+void DataStructure::SetDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver)
 {
   if(resolver != nullptr)
   {
@@ -806,10 +806,10 @@ Result<> DataStructure::prepareImportPublicationRecords(DataStructure& prepared,
       occupiedIds = getOccupiedObjectIds();
     }
     ImportPublicationRecord record;
-    record.Owner = makeImportPublicationCopy(*object);
+    record.owner = MakeImportPublicationCopy(*object);
     record.Id = object->getId();
     record.Path = path;
-    if(record.Owner == nullptr || record.Id == 0 || record.Id == k_MaximumId || !occupiedIds->insert(record.Id).second)
+    if(record.owner == nullptr || record.Id == 0 || record.Id == k_MaximumId || !occupiedIds->insert(record.Id).second)
     {
       return MakeErrorResult(-6213, fmt::format("Cannot publish '{}' from '{}': identifier {} or its prepared owner is invalid.", path.toString(), sourceFile.string(), record.Id));
     }
@@ -822,17 +822,17 @@ Result<> DataStructure::prepareImportPublicationRecords(DataStructure& prepared,
       {
         return MakeErrorResult(-6202, fmt::format("Cannot publish '{}': destination parent '{}' is unavailable.", path.toString(), parentPath.toString()));
       }
-      record.ParentId = record.Parent->getId();
+      record.parent_id = record.Parent->getId();
     }
     // Distinct paths through parent aliases can refer to the same destination child name.
-    if(!selectedPlacements[record.Parent.get()].insert(record.Owner->getName()).second)
+    if(!selectedPlacements[record.Parent.get()].insert(record.owner->getName()).second)
     {
       return MakeErrorResult(-6203, fmt::format("Cannot publish '{}' from '{}': its destination placement is selected more than once. Select only one object named '{}' in that parent.",
-                                                path.toString(), sourceFile.string(), record.Owner->getName()));
+                                                path.toString(), sourceFile.string(), record.owner->getName()));
     }
-    record.RemovalMessage = std::make_shared<DataRemovedMessage>(this, record.Id, record.Owner->getName());
+    record.removal_message = std::make_shared<DataRemovedMessage>(this, record.Id, record.owner->getName());
     reservedNextId = std::max(reservedNextId, record.Id + 1);
-    if(auto group = std::dynamic_pointer_cast<BaseGroup>(record.Owner); group != nullptr)
+    if(auto group = std::dynamic_pointer_cast<BaseGroup>(record.owner); group != nullptr)
     {
       publicationGroups.emplace(path, std::move(group));
     }
@@ -849,41 +849,41 @@ bool DataStructure::rollbackImportPublication(std::vector<ImportPublicationRecor
   for(usize index = records.size(); index > 0; --index)
   {
     auto& record = records[index - 1];
-    if(record.Owner == nullptr)
+    if(record.owner == nullptr)
     {
       continue;
     }
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-    if(allowRefusal && testState != nullptr && testState->refuse_cleanup && index == 2 && record.Stage != ImportInsertionStage::None)
+    if(allowRefusal && testState != nullptr && testState->refuse_cleanup && index == 2 && record.stage != ImportInsertionStage::None)
     {
       testState->cleanup_consumed = true;
-      record.Cleanup = ImportCleanupStatus::Refused;
+      record.cleanup = ImportCleanupStatus::Refused;
       complete = false;
       continue;
     }
 #endif
-    record.Cleanup = rollbackImportedObject(record);
-    complete = complete && record.Cleanup == ImportCleanupStatus::Complete;
+    record.cleanup = rollbackImportedObject(record);
+    complete = complete && record.cleanup == ImportCleanupStatus::Complete;
   }
   for(auto& record : std::views::reverse(records))
   {
-    if(record.Cleanup == ImportCleanupStatus::Complete && record.NotifyRemoval && !record.NotificationAttempted)
+    if(record.cleanup == ImportCleanupStatus::Complete && record.notify_removal && !record.notification_attempted)
     {
-      record.NotificationAttempted = true;
+      record.notification_attempted = true;
       try
       {
-        notify(record.RemovalMessage);
+        notify(record.removal_message);
       } catch(...)
       {
-        record.NotificationFailed = true;
+        record.notification_failed = true;
       }
     }
   }
   for(auto& record : records)
   {
-    if(record.Cleanup == ImportCleanupStatus::Complete)
+    if(record.cleanup == ImportCleanupStatus::Complete)
     {
-      record.Owner.reset();
+      record.owner.reset();
       record.Parent.reset();
     }
   }
@@ -899,14 +899,14 @@ void DataStructure::AppendImportCleanupDiagnostics(Result<>& result, const std::
 {
   for(const auto& record : records)
   {
-    if(record.Cleanup != ImportCleanupStatus::Complete)
+    if(record.cleanup != ImportCleanupStatus::Complete)
     {
       result.errors().push_back(
           {.code = -6215,
            .message = fmt::format("Import rollback retained '{}' (identifier {}) from '{}': {}. The destination ID counter remains advanced.", record.Path.toString(), record.Id, sourceFile.string(),
-                                  record.Cleanup == ImportCleanupStatus::Children ? "selected children remain attached" : "exact placement cleanup did not complete")});
+                                  record.cleanup == ImportCleanupStatus::Children ? "selected children remain attached" : "exact placement cleanup did not complete")});
     }
-    if(record.NotificationFailed)
+    if(record.notification_failed)
     {
       result.errors().push_back({.code = -6216, .message = fmt::format("Import rollback removed '{}' (identifier {}), but a removal notification failed.", record.Path.toString(), record.Id)});
     }
@@ -982,7 +982,7 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
       if(testState != nullptr && insertionIndex == 1)
       {
-        testState->retained_owner = records[insertionIndex].Owner;
+        testState->retained_owner = records[insertionIndex].owner;
         if(testState->Fault == PublicationFaultType::AfterHierarchy)
         {
           failAfter = ImportInsertionStage::Hierarchy;
@@ -1026,8 +1026,8 @@ Result<> DataStructure::publishImportedObjectsImpl(DataStructure& prepared, cons
   {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
     if(testState != nullptr && insertionIndex < records.size() &&
-       ((testState->Fault == PublicationFaultType::AfterHierarchy && records[insertionIndex].Stage == ImportInsertionStage::Hierarchy) ||
-        (testState->Fault == PublicationFaultType::BeforeTracking && records[insertionIndex].Stage == ImportInsertionStage::Parent)))
+       ((testState->Fault == PublicationFaultType::AfterHierarchy && records[insertionIndex].stage == ImportInsertionStage::Hierarchy) ||
+        (testState->Fault == PublicationFaultType::BeforeTracking && records[insertionIndex].stage == ImportInsertionStage::Parent)))
     {
       testState->consumed = true;
       testState->Fault = PublicationFaultType::None;
@@ -1097,7 +1097,7 @@ Result<> DataStructure::ImportPublicationTestControl::cleanup(DataStructure& des
 }
 #endif
 
-std::shared_ptr<DataObject> DataStructure::makeImportPublicationCopy(DataObject& source)
+std::shared_ptr<DataObject> DataStructure::MakeImportPublicationCopy(DataObject& source)
 {
   auto* associationPtr = source.m_DataStructure;
   source.DataObject::setDataStructure(nullptr);
@@ -1118,42 +1118,42 @@ std::shared_ptr<DataObject> DataStructure::makeImportPublicationCopy(DataObject&
 
 bool DataStructure::insertImportedObject(ImportPublicationRecord& record, ImportInsertionStage failAfter, bool rejectBeforeInsert)
 {
-  if(rejectBeforeInsert || record.Owner == nullptr || record.Owner->getId() != record.Id || m_DataObjects.contains(record.Id))
+  if(rejectBeforeInsert || record.owner == nullptr || record.owner->getId() != record.Id || m_DataObjects.contains(record.Id))
   {
     return false;
   }
-  if(record.Parent != nullptr && (record.Parent->getId() != record.ParentId || !record.Parent->acceptsChild(record.Owner.get())))
+  if(record.Parent != nullptr && (record.Parent->getId() != record.parent_id || !record.Parent->acceptsChild(record.owner.get())))
   {
     return false;
   }
   auto& map = record.Parent == nullptr ? m_RootGroup : record.Parent->getDataMap();
-  if(map.find(record.Id) != map.end() || !map.insert(record.Owner))
+  if(map.find(record.Id) != map.end() || !map.insert(record.owner))
   {
     return false;
   }
-  record.Stage = ImportInsertionStage::Hierarchy;
-  if(failAfter == record.Stage)
+  record.stage = ImportInsertionStage::Hierarchy;
+  if(failAfter == record.stage)
   {
     throw std::runtime_error("injected import failure after hierarchy placement");
   }
   if(record.Parent != nullptr)
   {
-    record.Owner->addParent(record.Parent.get());
+    record.owner->addParent(record.Parent.get());
   }
-  record.Stage = ImportInsertionStage::Parent;
-  if(failAfter == record.Stage)
+  record.stage = ImportInsertionStage::Parent;
+  if(failAfter == record.stage)
   {
     throw std::runtime_error("injected import failure before weak-index registration");
   }
-  trackDataObject(record.Owner);
-  record.Stage = ImportInsertionStage::Registered;
+  trackDataObject(record.owner);
+  record.stage = ImportInsertionStage::Registered;
   return true;
 }
 
 DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportPublicationRecord& record) noexcept
 {
-  auto& object = *record.Owner;
-  if(object.getId() != record.Id || (record.Parent != nullptr && record.Parent->getId() != record.ParentId))
+  auto& object = *record.owner;
+  if(object.getId() != record.Id || (record.Parent != nullptr && record.Parent->getId() != record.parent_id))
   {
     return ImportCleanupStatus::Conflict;
   }
@@ -1165,7 +1165,7 @@ DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportP
   }
   for(const auto parentId : object.m_ParentList)
   {
-    if(record.Parent == nullptr || parentId != record.ParentId)
+    if(record.Parent == nullptr || parentId != record.parent_id)
     {
       return ImportCleanupStatus::Conflict;
     }
@@ -1194,13 +1194,13 @@ DataStructure::ImportCleanupStatus DataStructure::rollbackImportedObject(ImportP
   }
   if(record.Parent != nullptr)
   {
-    object.m_ParentList.remove(record.ParentId);
+    object.m_ParentList.remove(record.parent_id);
   }
   if(indexed != m_DataObjects.end())
   {
     m_DataObjects.erase(indexed);
   }
-  record.NotifyRemoval = object.m_DataStructure == this;
+  record.notify_removal = object.m_DataStructure == this;
   object.DataObject::setDataStructure(nullptr);
   return ImportCleanupStatus::Complete;
 }
@@ -1449,8 +1449,8 @@ void DataStructure::flush() const
 
 Result<> DataStructure::flushChecked() const
 {
-  ErrorCollection errors;
-  WarningCollection warnings;
+  ErrorCollectionType errors;
+  WarningCollectionType warnings;
   for(const auto& [id, weakObject] : m_DataObjects)
   {
     const auto object = weakObject.lock();
@@ -1567,7 +1567,7 @@ Result<> DataStructure::transferDataArraysOoc()
       continue;
     }
 
-    const std::string resolvedFormat = ArrayCreationUtilities::ResolveStorageFormat(*this, paths.front(), dataArrayPtr->getDataType(), dataArrayPtr->memoryUsage(), "");
+    const std::string resolvedFormat = array_creation_utilities::ResolveStorageFormat(*this, paths.front(), dataArrayPtr->getDataType(), dataArrayPtr->memoryUsage(), "");
 
     // An empty format selects in-core storage, so conversion is not required.
     if(resolvedFormat.empty())

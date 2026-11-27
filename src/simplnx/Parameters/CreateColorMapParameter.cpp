@@ -21,7 +21,7 @@ Uuid CreateColorMapParameter::uuid() const
   return ParameterTraits<CreateColorMapParameter>::uuid;
 }
 
-IParameter::AcceptedTypes CreateColorMapParameter::acceptedTypes() const
+IParameter::AcceptedTypesType CreateColorMapParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

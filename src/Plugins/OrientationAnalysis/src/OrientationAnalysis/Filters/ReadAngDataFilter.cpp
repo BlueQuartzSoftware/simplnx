@@ -69,7 +69,7 @@ Parameters ReadAngDataFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input .ang file path", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
@@ -109,17 +109,17 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& /
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ebsdlib::AngReader reader;
-  const auto xStep = EbsdStepMetadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::XStep);
-  const auto yStep = EbsdStepMetadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::YStep);
+  const auto xStep = ebsd_step_metadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::XStep);
+  const auto yStep = ebsd_step_metadata::Observe<ebsdlib::AngHeaderEntry<float32>>(reader, ebsdlib::Ang::YStep);
   reader.setFileName(pInputFileValue.string());
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
+    return {.output_actions = MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
   }
   if(reader.getGrid().empty())
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-19501, fmt::format("Input file '{}' is missing the GRID header key.", pInputFileValue.string()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-19501, fmt::format("Input file '{}' is missing the GRID header key.", pInputFileValue.string()))};
   }
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
@@ -127,13 +127,13 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& /
 
   CreateImageGeometryAction::SpacingType spacing = {xStep->storedOr(0.0F), yStep->storedOr(0.0F), 1.0F};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues, FloatVec3Type(spacing));
+  ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::AngReader>(reader, preflightUpdatedValues);
 
   // Define a custom class that generates the changes to the DataStructure.
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
@@ -219,11 +219,11 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& /
 
   if(reader.getGrid() == "HexGrid")
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-19500, "Ang file has HexGrid. AngReader ONLY knows how to read SquareGrid"), .outputValues = std::move(preflightUpdatedValues)};
+    return {.output_actions = MakeErrorResult<OutputActions>(-19500, "Ang file has HexGrid. AngReader ONLY knows how to read SquareGrid"), .output_values = std::move(preflightUpdatedValues)};
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -231,12 +231,12 @@ Result<> ReadAngDataFilter::executeImpl(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadAngDataInputValues inputValues;
-  inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;
+  inputValues.spacing_override = image_io::GeometryOverrides::FromArguments(filterArgs).Spacing;
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.data_container_name = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
   ReadAngData readAngData(dataStructure, messageHandler, shouldCancel, &inputValues);
   return readAngData();

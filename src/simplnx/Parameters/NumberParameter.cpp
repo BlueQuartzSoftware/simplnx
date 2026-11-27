@@ -22,7 +22,7 @@ Uuid NumberParameter<T>::uuid() const
 }
 
 template <class T>
-IParameter::AcceptedTypes NumberParameter<T>::acceptedTypes() const
+IParameter::AcceptedTypesType NumberParameter<T>::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

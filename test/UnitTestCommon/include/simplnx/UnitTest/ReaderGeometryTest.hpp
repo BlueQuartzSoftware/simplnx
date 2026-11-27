@@ -5,19 +5,19 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ImageIO/ReaderGeometryOverrides.hpp"
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
-inline void SetReaderGeometryOverrides(Arguments& args, const FloatVec3& origin, const FloatVec3& spacing)
+inline void SetReaderGeometryOverrides(Arguments& args, const FloatVec3Type& origin, const FloatVec3Type& spacing)
 {
-  args.insertOrAssign(ImageIO::k_ChangeOrigin, true);
-  args.insertOrAssign(ImageIO::k_Origin, origin.toContainer<std::vector<float32>>());
-  args.insertOrAssign(ImageIO::k_ChangeSpacing, true);
-  args.insertOrAssign(ImageIO::k_Spacing, spacing.toContainer<std::vector<float32>>());
+  args.insertOrAssign(image_io::k_ChangeOrigin, true);
+  args.insertOrAssign(image_io::k_Origin, origin.toContainer<std::vector<float32>>());
+  args.insertOrAssign(image_io::k_ChangeSpacing, true);
+  args.insertOrAssign(image_io::k_Spacing, spacing.toContainer<std::vector<float32>>());
 }
 
 void RequireBadReaderMetadata(const IFilter& filter, const Arguments& args, const std::filesystem::path& file, bool spacing);
 
-inline void RequireReaderGeometry(const DataStructure& dataStructure, const DataPath& path, const FloatVec3& origin, const FloatVec3& spacing)
+inline void RequireReaderGeometry(const DataStructure& dataStructure, const DataPath& path, const FloatVec3Type& origin, const FloatVec3Type& spacing)
 {
   const auto* geometryPtr = dataStructure.getDataAs<ImageGeom>(path);
   REQUIRE(geometryPtr != nullptr);
@@ -25,7 +25,7 @@ inline void RequireReaderGeometry(const DataStructure& dataStructure, const Data
   CHECK(geometryPtr->getSpacing() == spacing);
 }
 
-inline void RequireReaderGeometryExecution(const IFilter& filter, const Arguments& args, const DataPath& path, const FloatVec3& origin, const FloatVec3& spacing)
+inline void RequireReaderGeometryExecution(const IFilter& filter, const Arguments& args, const DataPath& path, const FloatVec3Type& origin, const FloatVec3Type& spacing)
 {
   DataStructure dataStructure;
   const auto result = filter.execute(dataStructure, args);

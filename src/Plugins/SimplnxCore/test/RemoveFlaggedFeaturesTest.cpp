@@ -31,8 +31,8 @@
 #include <vector>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 namespace fs = std::filesystem;
 
 /*
@@ -87,13 +87,13 @@ constexpr int32 k_EmptyFeatureSkippedWarning = -53905;
 
 struct FixtureSpec
 {
-  SizeVec3 dims;                  // (x, y, z)
+  SizeVec3Type dims;                  // (x, y, z)
   std::vector<int32> feature_ids; // x fastest, then y, then z
   usize num_features;             // tuple count of the Feature Attribute Matrix (index 0 is the unused feature)
   std::vector<bool> flagged;      // size numFeatures; true means remove/extract
 };
 
-std::vector<usize> TupleDims(const SizeVec3& dims)
+std::vector<usize> TupleDims(const SizeVec3Type& dims)
 {
   return {dims[2], dims[1], dims[0]};
 }
@@ -108,19 +108,19 @@ void BuildFixture(DataStructure& dataStructure, const FixtureSpec& spec)
 
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_DataContainer);
   imageGeomPtr->setDimensions(spec.dims);
-  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f}).valid());
-  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3Type{1.0f, 1.0f, 1.0f}).valid());
 
   const std::vector<usize> tupleDims = TupleDims(spec.dims);
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, tupleDims, {1});
-  auto cellValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellValuePath, tupleDims, {1});
-  auto ignoredValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_IgnoredValuePath, tupleDims, {1});
-  auto& featureIds = Int32Array::Create(dataStructure, k_FeatureIds, featureIdsStore, cellAmPtr->getId())->getDataStoreRef();
-  auto& cellValue = Int32Array::Create(dataStructure, k_CellValueName, cellValueStore, cellAmPtr->getId())->getDataStoreRef();
-  auto& ignoredValue = Int32Array::Create(dataStructure, k_IgnoredValueName, ignoredValueStore, cellAmPtr->getId())->getDataStoreRef();
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, tupleDims, {1});
+  auto cellValueStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_CellValuePath, tupleDims, {1});
+  auto ignoredValueStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_IgnoredValuePath, tupleDims, {1});
+  auto& featureIds = Int32ArrayType::Create(dataStructure, k_FeatureIds, featureIdsStore, cellAmPtr->getId())->getDataStoreRef();
+  auto& cellValue = Int32ArrayType::Create(dataStructure, k_CellValueName, cellValueStore, cellAmPtr->getId())->getDataStoreRef();
+  auto& ignoredValue = Int32ArrayType::Create(dataStructure, k_IgnoredValueName, ignoredValueStore, cellAmPtr->getId())->getDataStoreRef();
   for(usize i = 0; i < spec.feature_ids.size(); i++)
   {
     featureIds[i] = spec.feature_ids[i];
@@ -129,10 +129,10 @@ void BuildFixture(DataStructure& dataStructure, const FixtureSpec& spec)
   }
 
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {spec.num_features}, imageGeomPtr->getId());
-  auto flagsStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_FlaggedFeaturesPath, {spec.num_features}, {1});
-  auto featureValueStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureValuePath, {spec.num_features}, {1});
-  auto& flags = BoolArray::Create(dataStructure, k_ActiveName, flagsStore, featureAmPtr->getId())->getDataStoreRef();
-  auto& featureValue = Int32Array::Create(dataStructure, k_Int32DataSet, featureValueStore, featureAmPtr->getId())->getDataStoreRef();
+  auto flagsStore = data_store_utilities::CreateDataStore<bool>(dataStructure, k_FlaggedFeaturesPath, {spec.num_features}, {1});
+  auto featureValueStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureValuePath, {spec.num_features}, {1});
+  auto& flags = BoolArrayType::Create(dataStructure, k_ActiveName, flagsStore, featureAmPtr->getId())->getDataStoreRef();
+  auto& featureValue = Int32ArrayType::Create(dataStructure, k_Int32DataSet, featureValueStore, featureAmPtr->getId())->getDataStoreRef();
   for(usize i = 0; i < spec.num_features; i++)
   {
     flags[i] = spec.flagged[i];
@@ -155,8 +155,8 @@ Arguments MakeArgs(uint64 functionality, bool fill, const std::vector<DataPath>&
 
 std::vector<int32> ReadInt32(const DataStructure& dataStructure, const DataPath& path)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(path));
-  const auto& store = dataStructure.getDataRefAs<Int32Array>(path).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(path));
+  const auto& store = dataStructure.getDataRefAs<Int32ArrayType>(path).getDataStoreRef();
   std::vector<int32> values(store.getNumberOfTuples());
   for(usize i = 0; i < values.size(); i++)
   {
@@ -172,7 +172,7 @@ std::vector<int32> Sequence(int32 start, usize count)
   return values;
 }
 
-IFilter::ExecuteResult ExecuteDispatchedFilter(RemoveFlaggedFeaturesFilter& filter, DataStructure& dataStructure, const Arguments& args, UnitTest::AlgorithmTestScope& scope)
+IFilter::ExecuteResult ExecuteDispatchedFilter(RemoveFlaggedFeaturesFilter& filter, DataStructure& dataStructure, const Arguments& args, unit_test::AlgorithmTestScope& scope)
 {
   return scope.executeFilter(filter, dataStructure, args);
 }
@@ -180,11 +180,11 @@ IFilter::ExecuteResult ExecuteDispatchedFilter(RemoveFlaggedFeaturesFilter& filt
 /**
  * @brief Runs preflight and dispatched execution, requiring both to be valid.
  */
-IFilter::ExecuteResult RunValid(DataStructure& dataStructure, const Arguments& args, UnitTest::AlgorithmTestScope& scope)
+IFilter::ExecuteResult RunValid(DataStructure& dataStructure, const Arguments& args, unit_test::AlgorithmTestScope& scope)
 {
   RemoveFlaggedFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args, scope);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return executeResult;
@@ -193,11 +193,11 @@ IFilter::ExecuteResult RunValid(DataStructure& dataStructure, const Arguments& a
 /**
  * @brief Runs preflight and dispatched execution, requiring the expected execution error.
  */
-int32 RunExecuteError(DataStructure& dataStructure, const Arguments& args, UnitTest::AlgorithmTestScope& scope)
+int32 RunExecuteError(DataStructure& dataStructure, const Arguments& args, unit_test::AlgorithmTestScope& scope)
 {
   RemoveFlaggedFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args, scope);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(!executeResult.result.errors().empty());
@@ -221,7 +221,7 @@ bool HasWarningCode(const std::vector<Warning>& warnings, int32 code)
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureA()
 {
-  return {.dims = SizeVec3{5, 2, 1}, .feature_ids = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3}, .num_features = 5, .flagged = {false, false, true, true, false}};
+  return {.dims = SizeVec3Type{5, 2, 1}, .feature_ids = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3}, .num_features = 5, .flagged = {false, false, true, true, false}};
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -237,7 +237,7 @@ FixtureSpec FixtureA()
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureB()
 {
-  return {.dims = SizeVec3{4, 4, 1}, .feature_ids = {0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 3, 3, 0}, .num_features = 4, .flagged = {false, false, false, true}};
+  return {.dims = SizeVec3Type{4, 4, 1}, .feature_ids = {0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 3, 3, 0}, .num_features = 4, .flagged = {false, false, false, true}};
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -251,7 +251,7 @@ FixtureSpec FixtureB()
 // ---------------------------------------------------------------------------------------------------
 FixtureSpec FixtureE()
 {
-  return {.dims = SizeVec3{3, 3, 3},
+  return {.dims = SizeVec3Type{3, 3, 3},
           .feature_ids =
               {
                   4, 4, 1, 4, 2, 1, 1, 1, 1, // z = 0
@@ -271,8 +271,8 @@ void CheckFeatureArraysCompacted(const DataStructure& dataStructure, const std::
   const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath);
   REQUIRE(featureAM.getNumberOfTuples() == expectedFeatureValues.size());
   REQUIRE(ReadInt32(dataStructure, k_FeatureValuePath) == expectedFeatureValues);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_FlaggedFeaturesPath));
-  const auto& flags = dataStructure.getDataRefAs<BoolArray>(k_FlaggedFeaturesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(k_FlaggedFeaturesPath));
+  const auto& flags = dataStructure.getDataRefAs<BoolArrayType>(k_FlaggedFeaturesPath);
   REQUIRE(flags.getNumberOfTuples() == expectedFeatureValues.size());
 }
 void FillDataStructure(DataStructure& dataStructure)
@@ -288,7 +288,7 @@ void FillDataStructure(DataStructure& dataStructure)
 
   imageGeomPtr->setCellData(*attributeMatrixPtr);
 
-  Int32Array* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, tupleDims, {1}, attributeMatrixPtr->getId());
+  Int32ArrayType* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, tupleDims, {1}, attributeMatrixPtr->getId());
   auto& testFeatIdsDataStore = featureIdsPtr->getDataStoreRef();
   testFeatIdsDataStore[0] = 0;
   testFeatIdsDataStore[1] = 1;
@@ -307,8 +307,8 @@ void FillDataStructure(DataStructure& dataStructure)
   testFeatIdsDataStore[14] = 3;
   testFeatIdsDataStore[15] = 0;
 
-  auto* cellVectorPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_CellVectorPath.getTargetName(), tupleDims, {2}, attributeMatrixPtr->getId());
-  auto* cellBoolPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, k_CellBoolPath.getTargetName(), tupleDims, {1}, attributeMatrixPtr->getId());
+  auto* cellVectorPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_CellVectorPath.getTargetName(), tupleDims, {2}, attributeMatrixPtr->getId());
+  auto* cellBoolPtr = unit_test::CreateTestDataArray<bool>(dataStructure, k_CellBoolPath.getTargetName(), tupleDims, {1}, attributeMatrixPtr->getId());
   for(usize i = 0; i < testFeatIdsDataStore.getNumberOfTuples(); i++)
   {
     cellVectorPtr->getDataStoreRef()[i * 2] = static_cast<int32>(i);
@@ -317,13 +317,13 @@ void FillDataStructure(DataStructure& dataStructure)
   }
 
   auto* featureAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {4ULL}, imageGeomPtr->getId());
-  BoolArray* maskArrayPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {4}, {1}, featureAttributeMatrixPtr->getId());
+  BoolArrayType* maskArrayPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {4}, {1}, featureAttributeMatrixPtr->getId());
   auto& maskDataStore = maskArrayPtr->getDataStoreRef();
   maskDataStore[0] = false;
   maskDataStore[1] = false;
   maskDataStore[2] = false;
   maskDataStore[3] = true;
-  Int32Array* testArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_Int32DataSet, {4}, {1}, featureAttributeMatrixPtr->getId());
+  Int32ArrayType* testArrayPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_Int32DataSet, {4}, {1}, featureAttributeMatrixPtr->getId());
   auto& testStore = testArrayPtr->getDataStoreRef();
   testStore[0] = 0;
   testStore[1] = 4041;
@@ -363,7 +363,7 @@ Arguments MakeRemoveArgs()
 }
 
 template <bool RemoveV = true>
-void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& cellFeatureAMResult, const Int32Array& testArrayResult)
+void ValidateResults(const Int32ArrayType& featureIdsResult, const AttributeMatrix& cellFeatureAMResult, const Int32ArrayType& testArrayResult)
 {
   REQUIRE(featureIdsResult[0] == 0);
   REQUIRE(featureIdsResult[1] == 1);
@@ -409,7 +409,7 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   }
 }
 
-void ValidateNewGeom(const Int32Array& featureIdsResult)
+void ValidateNewGeom(const Int32ArrayType& featureIdsResult)
 {
   REQUIRE(featureIdsResult[0] == 3);
   REQUIRE(featureIdsResult[1] == 3);
@@ -422,10 +422,10 @@ void ValidateNewGeom(const Int32Array& featureIdsResult)
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Remove without fill", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   SECTION("Fixture A (5x2x1)")
   {
@@ -440,7 +440,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Remove wit
     REQUIRE(ReadInt32(dataStructure, k_IgnoredValuePath) == Sequence(500, 10));
     // Feature tuples 0, 1 and 4 are kept in order.
     CheckFeatureArraysCompacted(dataStructure, {1000, 1001, 1004});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Fixture B (4x4x1 with background)")
@@ -452,16 +452,16 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Remove wit
     REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == std::vector<int32>{0, 1, 1, 1, 1, 0, 2, 2, 2, 2, 0, 1, 2, 0, 0, 0});
     REQUIRE(ReadInt32(dataStructure, k_CellValuePath) == Sequence(100, 16));
     CheckFeatureArraysCompacted(dataStructure, {1000, 1001, 1002});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill from distinct first-sighting neighbors (issue #1698)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureA());
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Remove, true), scope));
@@ -487,15 +487,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill from 
   REQUIRE(ReadInt32(dataStructure, k_IgnoredValuePath) == Sequence(500, 10));
 
   CheckFeatureArraysCompacted(dataStructure, {1000, 1001, 1004});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill copies every non-ignored Cell array", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureA());
   // Empty ignore list: IgnoredValue must now follow the same copies as CellValue.
@@ -507,15 +507,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill copie
   expectedIgnored[9] = 508;
   expectedIgnored[4] = 502;
   REQUIRE(ReadInt32(dataStructure, k_IgnoredValuePath) == expectedIgnored);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Fill cannot ignore the Feature Ids array (-45438 warning)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureA());
   auto executeResult = RunValid(dataStructure, MakeArgs(k_Remove, true, {k_FeatureIdsPath, k_IgnoredValuePath}), scope);
@@ -529,15 +529,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Fill cannot ignore the Feat
   expectedCellValue[4] = 102;
   REQUIRE(ReadInt32(dataStructure, k_CellValuePath) == expectedCellValue);
   REQUIRE(ReadInt32(dataStructure, k_IgnoredValuePath) == Sequence(500, 10));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill treats FeatureId 0 as a source and never a target", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureB());
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Remove, true), scope));
@@ -558,15 +558,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill treat
   REQUIRE(ReadInt32(dataStructure, k_IgnoredValuePath) == Sequence(500, 16));
 
   CheckFeatureArraysCompacted(dataStructure, {1000, 1001, 1002});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill majority vote and second iteration (3x3x3)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureE());
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Remove, true), scope));
@@ -604,7 +604,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill major
   REQUIRE(ReadInt32(dataStructure, k_IgnoredValuePath) == Sequence(500, 27));
 
   CheckFeatureArraysCompacted(dataStructure, {1000, 1001, 1002});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // =====================================================================================================
@@ -613,10 +613,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Fill major
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - all features flagged (-45433)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   for(const bool fill : {false, true})
   {
     DYNAMIC_SECTION("Fill = " << fill)
@@ -635,10 +635,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - all feature
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - FeatureId out of range (-45435)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   SECTION("FeatureId equal to the feature tuple count")
   {
@@ -663,10 +663,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - FeatureId o
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - Feature Ids tuple count differs from the geometry (-45437)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureA());
 
@@ -683,15 +683,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - Feature Ids
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - no fill progress (-45436)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   // Feature 2 owns no cells but is not flagged, so the all-flagged guard passes. Every cell belongs to
   // the flagged feature 1, so after marking no cell has a non-negative face neighbor and the dilation
   // can never make progress.
-  BuildFixture(dataStructure, {.dims = SizeVec3{4, 1, 1}, .feature_ids = {1, 1, 1, 1}, .num_features = 3, .flagged = {false, true, false}});
+  BuildFixture(dataStructure, {.dims = SizeVec3Type{4, 1, 1}, .feature_ids = {1, 1, 1, 1}, .num_features = 3, .flagged = {false, true, false}});
   REQUIRE(RunExecuteError(dataStructure, MakeArgs(k_Remove, true), scope) == k_NoFillProgressError);
   // The marking pass has already run; the error reports that the array was modified.
   REQUIRE(ReadInt32(dataStructure, k_FeatureIdsPath) == std::vector<int32>{-1, -1, -1, -1});
@@ -703,19 +703,19 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Execute Error - no fill pro
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress completes", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureB());
   RemoveFlaggedFeaturesFilter filter;
   const auto args = MakeArgs(k_Extract, false);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   std::vector<IFilter::Message> messages;
-  const auto handler = UnitTest::RecordMessages(messages);
+  const auto handler = unit_test::RecordMessages(messages);
   auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, handler);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -739,26 +739,26 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress complet
   CHECK(sawSuccess);
   CHECK(ReadInt32(dataStructure, k_NewFeatureIdsPath) == std::vector<int32>{3, 3});
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does not complete after cancellation", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   // One non-background feature makes the first extraction iteration the final crop iteration.
-  BuildFixture(dataStructure, {.dims = SizeVec3{2, 1, 1}, .feature_ids = {0, 1}, .num_features = 2, .flagged = {false, true}});
+  BuildFixture(dataStructure, {.dims = SizeVec3Type{2, 1, 1}, .feature_ids = {0, 1}, .num_features = 2, .flagged = {false, true}});
   RemoveFlaggedFeaturesFilter filter;
   const auto args = MakeArgs(k_Extract, false);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   std::atomic_bool cancel{false};
   std::vector<IFilter::Message> messages;
-  const auto recordingHandler = UnitTest::RecordMessages(messages);
+  const auto recordingHandler = unit_test::RecordMessages(messages);
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
     recordingHandler.sendMessage(message);
     // reset() opens the throttle gate, so this callback deterministically precedes the last crop's preflight.
@@ -784,15 +784,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction progress does no
     CHECK(message.message != "All Features Successfully Extracted");
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract crops the bounding box of each flagged feature", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureB());
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Extract, false), scope));
@@ -807,9 +807,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract cr
   const DataPath newGeomPath({k_NewImgGeomPrefix + "-3"});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(newGeomPath));
   const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(newGeomPath);
-  REQUIRE(newGeom.getDimensions() == SizeVec3{2, 1, 1});
-  REQUIRE(newGeom.getOrigin() == FloatVec3{1.0f, 3.0f, 0.0f});
-  REQUIRE(newGeom.getSpacing() == FloatVec3{1.0f, 1.0f, 1.0f});
+  REQUIRE(newGeom.getDimensions() == SizeVec3Type{2, 1, 1});
+  REQUIRE(newGeom.getOrigin() == FloatVec3Type{1.0f, 3.0f, 0.0f});
+  REQUIRE(newGeom.getSpacing() == FloatVec3Type{1.0f, 1.0f, 1.0f});
 
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_FeatureIds)) == std::vector<int32>{3, 3});
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_CellValueName)) == std::vector<int32>{113, 114});
@@ -822,21 +822,21 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract cr
   REQUIRE(dataStructure.getData(k_FeatureAMPath.createChildPath("tempBounds")) == nullptr);
   REQUIRE(dataStructure.getData(newGeomPath.createChildPath(k_CellFeatureData).createChildPath("tempBounds")) == nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract zero-pads names and handles several features", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   // 12x1x1 with cell i belonging to feature i (cell 0 is background). 12 feature tuples -> two digits.
   std::vector<bool> flagged(12, false);
   flagged[3] = true;
   flagged[11] = true;
-  BuildFixture(dataStructure, {.dims = SizeVec3{12, 1, 1}, .feature_ids = Sequence(0, 12), .num_features = 12, .flagged = flagged});
+  BuildFixture(dataStructure, {.dims = SizeVec3Type{12, 1, 1}, .feature_ids = Sequence(0, 12), .num_features = 12, .flagged = flagged});
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_Extract, false), scope));
 
   for(const int32 featureId : {3, 11})
@@ -844,8 +844,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract ze
     const DataPath newGeomPath({fmt::format("{}-{:02d}", k_NewImgGeomPrefix, featureId)});
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(newGeomPath));
     const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(newGeomPath);
-    REQUIRE(newGeom.getDimensions() == SizeVec3{1, 1, 1});
-    REQUIRE(newGeom.getOrigin() == FloatVec3{static_cast<float32>(featureId), 0.0f, 0.0f});
+    REQUIRE(newGeom.getDimensions() == SizeVec3Type{1, 1, 1});
+    REQUIRE(newGeom.getOrigin() == FloatVec3Type{static_cast<float32>(featureId), 0.0f, 0.0f});
     REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_FeatureIds)) == std::vector<int32>{featureId});
     REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_CellValueName)) == std::vector<int32>{100 + featureId});
     REQUIRE(dataStructure.getData(newGeomPath.createChildPath(k_CellFeatureData)) == nullptr);
@@ -853,15 +853,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract ze
   // Unflagged features produce no geometry.
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-01"})) == nullptr);
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-1"})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extract - flagged feature with no cells is skipped with a warning", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   // Features 4 and 5 exist in the Feature Attribute Matrix but own no cell.
   FixtureSpec spec = FixtureB();
@@ -878,15 +878,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extract - flagged feature w
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-3"})) != nullptr);
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-4"})) == nullptr);
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeomPrefix + "-5"})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract then Remove with fill", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureB());
   static_cast<void>(RunValid(dataStructure, MakeArgs(k_ExtractThenRemove, true), scope));
@@ -895,8 +895,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract th
   const DataPath newGeomPath({k_NewImgGeomPrefix + "-3"});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(newGeomPath));
   const auto& newGeom = dataStructure.getDataRefAs<ImageGeom>(newGeomPath);
-  REQUIRE(newGeom.getDimensions() == SizeVec3{2, 1, 1});
-  REQUIRE(newGeom.getOrigin() == FloatVec3{1.0f, 3.0f, 0.0f});
+  REQUIRE(newGeom.getDimensions() == SizeVec3Type{2, 1, 1});
+  REQUIRE(newGeom.getOrigin() == FloatVec3Type{1.0f, 3.0f, 0.0f});
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_FeatureIds)) == std::vector<int32>{3, 3});
   REQUIRE(ReadInt32(dataStructure, newGeomPath.createChildPath(k_CellData).createChildPath(k_CellValueName)) == std::vector<int32>{113, 114});
   REQUIRE(dataStructure.getData(newGeomPath.createChildPath(k_CellFeatureData)) == nullptr);
@@ -909,7 +909,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract th
   REQUIRE(ReadInt32(dataStructure, k_CellValuePath) == expectedCellValue);
   CheckFeatureArraysCompacted(dataStructure, {1000, 1001, 1002});
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // =====================================================================================================
@@ -918,28 +918,28 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 1 Oracle - Extract th
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Error - flag array parent is not an Attribute Matrix (-9895)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureA());
   // Put a second flag array in a plain DataGroup.
   auto* groupPtr = DataGroup::Create(dataStructure, "FlagGroup");
-  BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {5}, {1}, groupPtr->getId());
+  BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {5}, {1}, groupPtr->getId());
 
   Arguments args = MakeArgs(k_Remove, false);
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({"FlagGroup", k_ActiveName})));
 
   RemoveFlaggedFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == k_ParentNotAttributeMatrixError);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == k_ParentNotAttributeMatrixError);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Warning - NeighborLists are removed (-5558)", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   for(const uint64 functionality : {k_Remove, k_ExtractThenRemove})
   {
     DYNAMIC_SECTION("Functionality = " << functionality)
@@ -949,16 +949,16 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Warning - Neighbo
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath));
       const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath);
       const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
-      Int32NeighborList::Create(dataStructure, "NeighborList", featureAM.getShape(), featureAM.getId());
+      Int32NeighborListType::Create(dataStructure, "NeighborList", featureAM.getShape(), featureAM.getId());
       REQUIRE(dataStructure.getData(neighborListPath) != nullptr);
 
       RemoveFlaggedFeaturesFilter filter;
       Arguments args = MakeArgs(functionality, false);
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       // Exactly one warning for the NeighborList: the filter must not report it twice.
-      REQUIRE(preflightResult.outputActions.warnings().size() == 1);
-      REQUIRE(preflightResult.outputActions.warnings()[0].code == k_NeighborListRemovalWarning);
+      REQUIRE(preflightResult.output_actions.warnings().size() == 1);
+      REQUIRE(preflightResult.output_actions.warnings()[0].code == k_NeighborListRemovalWarning);
 
       auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args, scope);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -973,13 +973,13 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Warning - Neighbo
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath));
     const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAMPath);
     const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
-    Int32NeighborList::Create(dataStructure, "NeighborList", featureAM.getShape(), featureAM.getId());
+    Int32NeighborListType::Create(dataStructure, "NeighborList", featureAM.getShape(), featureAM.getId());
 
     RemoveFlaggedFeaturesFilter filter;
     Arguments args = MakeArgs(k_Extract, false);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.warnings().empty());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.warnings().empty());
     auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args, scope);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     REQUIRE(dataStructure.getData(neighborListPath) != nullptr);
@@ -992,13 +992,13 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Warning - Neighbo
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 4 Invariants - Small IN100 remove small features with fill", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
+  unit_test::AlgorithmTestScope scope(scenario);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
   const auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   const DataPath featureIdsPath({k_DataContainer, k_CellData, k_FeatureIds});
   const DataPath cellPhasesPath({k_DataContainer, k_CellData, "Phases"});
@@ -1017,7 +1017,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 4 Invariants - Small 
   const usize numOldFeatures = oldNumElements.size();
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({k_DataContainer})));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({k_DataContainer}));
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   REQUIRE(oldFeatureIds.size() == dims[0] * dims[1] * dims[2]);
 
   // Input sanity: no background, every id in range, cell phase equals its feature's phase.
@@ -1035,7 +1035,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 4 Invariants - Small 
   constexpr int32 k_MinCells = 100;
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featureAMPath));
   const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(featureAMPath);
-  auto& flags = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "SmallFeatures", {numOldFeatures}, {1}, featureAM.getId())->getDataStoreRef();
+  auto& flags = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "SmallFeatures", {numOldFeatures}, {1}, featureAM.getId())->getDataStoreRef();
   // The flag array itself is compacted by the filter, so keep an independent copy for the checks below.
   std::vector<bool> flagged(numOldFeatures, false);
   std::vector<int32> newNames(numOldFeatures, 0);
@@ -1065,8 +1065,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 4 Invariants - Small 
 
   RemoveFlaggedFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(HasWarningCode(preflightResult.outputActions.warnings(), k_NeighborListRemovalWarning));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE(HasWarningCode(preflightResult.output_actions.warnings(), k_NeighborListRemovalWarning));
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args, scope);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -1147,7 +1147,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 4 Invariants - Small 
   }
   REQUIRE(totalGrowth == numFilled);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // =====================================================================================================
@@ -1156,10 +1156,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Class 4 Invariants - Small 
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   // Configure the filter arguments.
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
@@ -1174,28 +1174,28 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[Simplnx
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData})));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet})));
-  const auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet})));
+  const auto& featureIdsResult = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
   const auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));
-  const auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
+  const auto& testArrayResult = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
   ValidateResults(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   // Configure the filter arguments.
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
@@ -1209,7 +1209,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -1218,25 +1218,25 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Simpln
   WriteTestDataStructure(dataStructure, fmt::format("{}/extract_flagged_features.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData})));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet})));
-  auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet})));
+  auto& featureIdsResult = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
   auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));
-  auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
+  auto& testArrayResult = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
   ValidateResults<false>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_NewFeatureIdsPath));
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeom, k_CellFeatureData})) == nullptr);
-  auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
+  auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32ArrayType>(k_NewFeatureIdsPath);
   ValidateNewGeom(newFeatureIdsResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill direct and scanline parity", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   RemoveFlaggedFeaturesFilter filter;
   Arguments args = MakeRemoveArgs();
 
@@ -1251,12 +1251,12 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill direct and scanline parity",
     auto result = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellVectorPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_CellBoolPath));
-    const auto& ids = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
-    const auto& vectors = dataStructure.getDataRefAs<Int32Array>(k_CellVectorPath);
-    const auto& bools = dataStructure.getDataRefAs<BoolArray>(k_CellBoolPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_CellVectorPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(k_CellBoolPath));
+    const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
+    const auto& vectors = dataStructure.getDataRefAs<Int32ArrayType>(k_CellVectorPath);
+    const auto& bools = dataStructure.getDataRefAs<BoolArrayType>(k_CellBoolPath);
     // The bottom-row removed cells are 13 and 14. Cell 13 has two
     // feature-2 neighbors; cell 14 has two background neighbors. The
     // winning second neighbors in face order are cells 12 and 15.
@@ -1275,9 +1275,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill direct and scanline parity",
     }
     const DataPath featureDataPath({k_DataContainer, k_CellFeatureData});
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureDataPath.createChildPath(k_Int32DataSet)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureDataPath.createChildPath(k_Int32DataSet)));
     CHECK(dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath).getNumberOfTuples() == 3);
-    const auto& featureValues = dataStructure.getDataRefAs<Int32Array>(featureDataPath.createChildPath(k_Int32DataSet));
+    const auto& featureValues = dataStructure.getDataRefAs<Int32ArrayType>(featureDataPath.createChildPath(k_Int32DataSet));
     REQUIRE(featureValues.getSize() == 3);
     CHECK(featureValues[0] == 0);
     CHECK(featureValues[1] == 4041);
@@ -1305,21 +1305,21 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill direct and scanline parity",
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill terminates with background zeros present", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   DYNAMIC_SECTION(scenario)
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
 
     // The fixture contains background Feature IDs. Fill mode never turns a zero into another id.
     DataStructure dataStructure = CreateFlaggedFeaturesFixture();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
 
     // The filter overwrites the array in place, so the expected values are copied out first.
     std::vector<int32> idsBefore;
     usize zerosBefore = 0;
     {
-      const auto& idsBeforeArray = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+      const auto& idsBeforeArray = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
       idsBefore.resize(idsBeforeArray.getNumberOfTuples());
       for(usize i = 0; i < idsBeforeArray.getNumberOfTuples(); ++i)
       {
@@ -1363,8 +1363,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill terminates with background z
     REQUIRE_FALSE(timedOut.load());
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    const auto& idsAfter = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    const auto& idsAfter = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
     REQUIRE(idsAfter.getNumberOfTuples() == idsBefore.size());
 
     // Feature 3 is the only flagged feature in the fixture and it occupies exactly these voxels,
@@ -1400,10 +1400,10 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: fill terminates with background z
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorithm", "[SimplnxCore][RemoveFlaggedFeatures]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   // Configure the filter arguments.
   RemoveFlaggedFeaturesFilter filter;
   DataStructure dataStructure;
@@ -1419,30 +1419,30 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData})));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet})));
-  const auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet})));
+  const auto& featureIdsResult = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
   const auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));
-  const auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
+  const auto& testArrayResult = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_DataContainer, k_CellFeatureData, k_Int32DataSet}));
   ValidateResults<true>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_NewFeatureIdsPath));
   REQUIRE(dataStructure.getData(DataPath({k_NewImgGeom, k_CellFeatureData})) == nullptr);
-  auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
+  auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32ArrayType>(k_NewFeatureIdsPath);
   ValidateNewGeom(newFeatureIdsResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[SimplnxCore][RemoveFlaggedFeaturesFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Strict Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cells");
@@ -1460,15 +1460,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[Simp
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Cells", shape, imageGeomPtr->getId());
   REQUIRE(otherPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<bool>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
   auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
   REQUIRE(elsewherePtr != nullptr);
   auto* externalFeaturesPtr = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewherePtr->getId());
   REQUIRE(externalFeaturesPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<bool>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
 
   RemoveFlaggedFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -1498,7 +1498,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[Simp
   }
   SECTION("Feature array under a plain DataGroup")
   {
-    REQUIRE(UnitTest::CreateTestDataArray<bool>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
+    REQUIRE(unit_test::CreateTestDataArray<bool>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
     offendingPath = DataPath({"Elsewhere", "Ungrouped Features"});
     args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(offendingPath));
     expectedCode = -9895;
@@ -1528,30 +1528,30 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Strict Feature Ids", "[Simp
   const auto result = filter.preflight(dataStructure, args);
   if(expectedCode == 0)
   {
-    REQUIRE(result.outputActions.valid());
-    for(const auto& modification : result.outputActions.value().modifiedActions)
+    REQUIRE(result.output_actions.valid());
+    for(const auto& modification : result.output_actions.value().modified_actions)
     {
-      CHECK(modification.modifiedPath.getParent() != DataPath({"Elsewhere", "Cells"}));
+      CHECK(modification.modified_path.getParent() != DataPath({"Elsewhere", "Cells"}));
     }
   }
   else
   {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == expectedCode);
+    CHECK(result.output_actions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selected Feature Matrix", "[SimplnxCore][RemoveFlaggedFeaturesFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   const bool useAliasForIds = GENERATE(false, true);
   CAPTURE(useAliasForIds);
   DataStructure dataStructure;
@@ -1570,9 +1570,9 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
   imageGeomPtr->setCellData(*cellsPtr);
   REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), earlierParentPtr->getId()));
   REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
-  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
-  auto* ignoredPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* valuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
+  auto* ignoredPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(ignoredPtr != nullptr);
@@ -1585,14 +1585,14 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
   }
 
   // The selected array has another parent; only the selected Feature Attribute Matrix is compacted.
-  auto* featureValuesPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
-  auto* externalMarkerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
+  auto* featureValuesPtr = unit_test::CreateTestDataArray<bool>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
+  auto* externalMarkerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
   REQUIRE(featureValuesPtr != nullptr);
   REQUIRE(externalMarkerPtr != nullptr);
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3}, imageGeomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(featureValuesPtr->getId(), featuresPtr->getId()));
-  auto* markerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
+  auto* markerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
   REQUIRE(markerPtr != nullptr);
   for(usize index = 0; index < 3; index++)
   {
@@ -1614,12 +1614,12 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key,
                       std::make_any<std::vector<DataPath>>(std::vector<DataPath>{ignoreParent.createChildPath("Ignored"), ignoreParent.createChildPath("Ids")}));
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool reportsValues = false;
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  for(const auto& modification : preflight.output_actions.value().modified_actions)
   {
-    CHECK(modification.modifiedPath.getParent() != aliasCellPath);
-    reportsValues = reportsValues || modification.modifiedPath == cellPath.createChildPath("Values");
+    CHECK(modification.modified_path.getParent() != aliasCellPath);
+    reportsValues = reportsValues || modification.modified_path == cellPath.createChildPath("Values");
   }
   CHECK(reportsValues);
   const auto execute = algorithmTestScope.executeFilter(filter, dataStructure, args);
@@ -1643,13 +1643,13 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Shared Cell Paths and Selec
   {
     CHECK((*externalMarkerPtr)[index] == static_cast<int32>(90 + index));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RemoveFlaggedFeaturesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -1691,7 +1691,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: SIMPL Backwards Compatibili
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][RemoveFlaggedFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   for(const uint64 operation : {k_Extract, k_Remove, k_ExtractThenRemove})
   {
     DYNAMIC_SECTION("Operation=" << operation)
@@ -1701,13 +1701,13 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[
       const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAMPath);
       REQUIRE(featureAmPtr != nullptr);
       const DataPath neighborListPath = k_FeatureAMPath.createChildPath("NeighborList");
-      REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
+      REQUIRE(Int32NeighborListType::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
 
       RemoveFlaggedFeaturesFilter filter;
       auto preflightResult = filter.preflight(dataStructure, MakeArgs(operation, false));
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       usize staleArrayCount = 0;
-      for(const auto& value : preflightResult.outputValues)
+      for(const auto& value : preflightResult.output_values)
       {
         if(value.name == "Stale Arrays")
         {
@@ -1718,16 +1718,16 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Preflight Stale Arrays", "[
         }
       }
       CHECK(staleArrayCount == (operation == k_Extract ? 0 : 1));
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested Feature AM aliases", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   const uint64 operation = GENERATE(k_Extract, k_ExtractThenRemove);
   DataStructure dataStructure;
   BuildFixture(dataStructure, FixtureSpec{.dims = {3, 1, 1}, .feature_ids = {1, 2, 3}, .num_features = 4, .flagged = {false, true, false, true}});
@@ -1738,7 +1738,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested 
   REQUIRE(dataStructure.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
   auto* ensemblePtr = AttributeMatrix::Create(dataStructure, "Ensemble", {2}, nestedPtr->getId());
   REQUIRE(ensemblePtr != nullptr);
-  auto* phasesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {2}, {1}, ensemblePtr->getId());
+  auto* phasesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {2}, {1}, ensemblePtr->getId());
   REQUIRE(phasesPtr != nullptr);
   (*phasesPtr)[0] = 42;
   (*phasesPtr)[1] = 99;
@@ -1751,13 +1751,13 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction excludes nested 
     REQUIRE(dataStructure.getDataAs<ImageGeom>(output) != nullptr);
     CHECK(dataStructure.getData(output.createChildPath(k_CellFeatureData)) == nullptr);
     CHECK(dataStructure.getData(output.createChildPath("Nested").createChildPath(k_CellFeatureData)) == nullptr);
-    const auto* outputPhasesPtr = dataStructure.getDataAs<Int32Array>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
+    const auto* outputPhasesPtr = dataStructure.getDataAs<Int32ArrayType>(output.createChildPath("Nested").createChildPath("Ensemble").createChildPath("Phases"));
     REQUIRE(outputPhasesPtr != nullptr);
     CHECK((*outputPhasesPtr)[0] == 42);
     CHECK((*outputPhasesPtr)[1] == 99);
   }
   CHECK(dataStructure.getData(k_ImageGeomPath.createChildPath("Nested").createChildPath(k_CellFeatureData)) == sourceFeaturesPtr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature AM registered as vertex data", "[SimplnxCore][RemoveFlaggedFeaturesFilter]")
@@ -1769,7 +1769,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature 
   REQUIRE(sourceFeaturesPtr != nullptr);
   auto* nestedPtr = VertexGeom::Create(dataStructure, "Nested Mesh", dataStructure.getData(k_ImageGeomPath)->getId());
   REQUIRE(nestedPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {4}, {3}, nestedPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, VertexGeom::k_SharedVertexListName, {4}, {3}, nestedPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   nestedPtr->setVertices(*verticesPtr);
   REQUIRE(dataStructure.setAdditionalParent(sourceFeaturesPtr->getId(), nestedPtr->getId()));
@@ -1777,8 +1777,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedFeaturesFilter: Extraction rejects Feature 
 
   RemoveFlaggedFeaturesFilter filter;
   const auto result = filter.preflight(dataStructure, MakeArgs(operation, false));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors().front().code == -67460);
-  CHECK(result.outputActions.errors().front().message.find(k_ImageGeomPath.createChildPath("Nested Mesh").toString()) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors().front().code == -67460);
+  CHECK(result.output_actions.errors().front().message.find(k_ImageGeomPath.createChildPath("Nested Mesh").toString()) != std::string::npos);
 }

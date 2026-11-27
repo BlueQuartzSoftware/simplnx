@@ -36,16 +36,16 @@ enum class GroupingType : ChoicesParameter::ValueType
  */
 struct SIMPLNXCORE_EXPORT WriteStlFileInputValues
 {
-  ChoicesParameter::ValueType GroupingType{};
-  FileSystemPathParameter::ValueType OutputStlFile;
-  FileSystemPathParameter::ValueType OutputStlDirectory;
-  StringParameter::ValueType OutputStlPrefix;
-  DataPath FeatureIdsPath;
-  DataPath FeaturePhasesPath;
-  DataPath TriangleGeomPath;
-  DataPath PartNumberPath;
+  ChoicesParameter::ValueType grouping_type{};
+  FileSystemPathParameter::ValueType output_stl_file;
+  FileSystemPathParameter::ValueType output_stl_directory;
+  StringParameter::ValueType output_stl_prefix;
+  DataPath feature_ids_path;
+  DataPath feature_phases_path;
+  DataPath triangle_geom_path;
+  DataPath part_number_path;
 
-  usize HIDDEN_MaxTrianglesPerFile = std::numeric_limits<int32>::max();
+  usize hidden_max_triangles_per_file = std::numeric_limits<int32>::max();
 };
 
 /**

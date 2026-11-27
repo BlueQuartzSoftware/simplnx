@@ -12,7 +12,7 @@
  *
  * Uuid::FromString is constexpr. A malformed UUID therefore stops the build instead of the test run.
  */
-namespace nx::core::NXImageProcessingLegacyUuids
+namespace nx::core::nx_image_processing_legacy_uuids
 {
 inline constexpr Uuid k_ITKImageReader = *Uuid::FromString("d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2");
 inline constexpr Uuid k_ITKMhaFileReader = *Uuid::FromString("41c33a08-0052-4915-8d53-d503f85f30d9");

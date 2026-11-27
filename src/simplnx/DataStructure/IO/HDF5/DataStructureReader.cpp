@@ -17,7 +17,7 @@
 
 namespace nx::core::hdf5
 {
-DataStructureReader::DataStructureReader(DataIOManager* factoryManager, dream3d::DeferredImageMetadata* deferredImageMetadata)
+DataStructureReader::DataStructureReader(DataIOManager* factoryManager, dream3d::DeferredImageMetadataType* deferredImageMetadata)
 : m_IOManager(factoryManager)
 , m_DeferredImageMetadata(deferredImageMetadata)
 {
@@ -35,10 +35,10 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::hdf5::FileIO
 }
 
 Result<DataStructure> DataStructureReader::ReadFile(const nx::core::hdf5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver,
-                                                    dream3d::DeferredImageMetadata* deferredImageMetadata)
+                                                    dream3d::DeferredImageMetadataType* deferredImageMetadata)
 {
   DataStructureReader dataStructureReader(nullptr, deferredImageMetadata);
-  auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
+  auto groupReader = fileReader.openGroup(constants::k_DataStructureTag);
   // readGroup imports every array -- including geometry connectivity such as vertex/face/edge lists,
   // derived connectivity, and rectilinear-grid bounds -- as an EmptyDataStore carrying only shape and
   // type when useEmptyDataStores is set, keeping preflight metadata-only with no eager bulk reads from
@@ -48,7 +48,7 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::hdf5::FileIO
 
 Result<std::shared_ptr<DataObject>> DataStructureReader::ReadObject(const nx::core::hdf5::FileIO& fileReader, const DataPath& dataPath)
 {
-  std::string parentPathString = Constants::k_DataStructureTag;
+  std::string parentPathString = constants::k_DataStructureTag;
   parentPathString += dataPath.getParent().toString();
 
   DataStructureReader dataStructureReader;
@@ -78,7 +78,7 @@ Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure
 {
   std::shared_ptr<IDataIO> factory = nullptr;
 
-  std::string parentPathString = Constants::k_DataStructureTag;
+  std::string parentPathString = constants::k_DataStructureTag;
   parentPathString += "/" + dataPath.getParent().toString();
 
   DataStructureReader dataStructureReader;
@@ -87,7 +87,7 @@ Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure
   if(isGroup)
   {
     auto childObj = parentGroupReader.openGroup(dataPath.getTargetName());
-    auto attrResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+    auto attrResult = childObj.readStringAttribute(constants::k_ObjectTypeTag);
     if(attrResult.invalid())
     {
       return ConvertResult(std::move(attrResult));
@@ -99,7 +99,7 @@ Result<> DataStructureReader::FinishImportingObject(DataStructure& dataStructure
   else
   {
     auto childObj = parentGroupReader.openDataset(dataPath.getTargetName());
-    auto typeNameResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+    auto typeNameResult = childObj.readStringAttribute(constants::k_ObjectTypeTag);
     if(typeNameResult.invalid())
     {
       return ConvertResult(std::move(typeNameResult));
@@ -131,7 +131,7 @@ Result<DataStructure> DataStructureReader::readGroup(const nx::core::hdf5::Group
     return MakeErrorResult<DataStructure>(-1, ss);
   }
 
-  auto idResult = groupReader.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  auto idResult = groupReader.readScalarAttribute<DataObject::IdType>(constants::k_NextIdTag);
   if(idResult.invalid())
   {
     return ConvertInvalidResult<DataStructure>(std::move(idResult));
@@ -172,7 +172,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
 
       // Return 0 if object is marked as not importable.
       int32 importable = 0;
-      auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
+      auto importableResult = childObj.readScalarAttribute<int32>(constants::k_ImportableTag);
       if(importableResult.invalid())
       {
         return ConvertResult(std::move(importableResult));
@@ -185,7 +185,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
       }
 
       // Check if data has already been read
-      auto idResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
+      auto idResult = childObj.readScalarAttribute<DataObject::IdType>(constants::k_ObjectIdTag);
       if(idResult.invalid())
       {
         return ConvertResult(std::move(idResult));
@@ -199,7 +199,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
       }
 
       // Get DataObject type for factory
-      auto attrResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+      auto attrResult = childObj.readStringAttribute(constants::k_ObjectTypeTag);
       if(attrResult.invalid())
       {
         return ConvertResult(std::move(attrResult));
@@ -213,7 +213,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
       auto childObj = parentGroup.openDataset(objectName);
 
       // Return 0 if object is marked as not importable.
-      auto importableResult = childObj.readScalarAttribute<int32>(Constants::k_ImportableTag);
+      auto importableResult = childObj.readScalarAttribute<int32>(constants::k_ImportableTag);
       int32 importable = 0;
       if(importableResult.valid())
       {
@@ -226,7 +226,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
       }
 
       // Check if data has already been read
-      auto objectIdResult = childObj.readScalarAttribute<DataObject::IdType>(Constants::k_ObjectIdTag);
+      auto objectIdResult = childObj.readScalarAttribute<DataObject::IdType>(constants::k_ObjectIdTag);
       if(objectIdResult.valid())
       {
         objectId = objectIdResult.value();
@@ -239,7 +239,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
       }
 
       // Get DataObject type for factory
-      auto typeNameResult = childObj.readStringAttribute(Constants::k_ObjectTypeTag);
+      auto typeNameResult = childObj.readStringAttribute(constants::k_ObjectTypeTag);
       if(typeNameResult.invalid())
       {
         return ConvertResult(std::move(typeNameResult));
@@ -263,7 +263,7 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::hdf5::GroupIO&
   }
 }
 
-dream3d::DeferredImageMetadata* DataStructureReader::deferredImageMetadata() const
+dream3d::DeferredImageMetadataType* DataStructureReader::deferredImageMetadata() const
 {
   return m_DeferredImageMetadata;
 }

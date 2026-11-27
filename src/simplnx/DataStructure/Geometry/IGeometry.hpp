@@ -16,14 +16,14 @@ public:
 
   using MeshIndexType = uint64;
   using MeshIndexArrayType = DataArray<MeshIndexType>;
-  using SharedVertexList = Float32Array;
-  using SharedEdgeList = MeshIndexArrayType;
-  using SharedFaceList = MeshIndexArrayType;
-  using SharedTriList = MeshIndexArrayType;
-  using SharedQuadList = MeshIndexArrayType;
-  using SharedTetList = MeshIndexArrayType;
-  using SharedHexList = MeshIndexArrayType;
-  using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
+  using SharedVertexListType = Float32ArrayType;
+  using SharedEdgeListType = MeshIndexArrayType;
+  using SharedFaceListType = MeshIndexArrayType;
+  using SharedTriListType = MeshIndexArrayType;
+  using SharedQuadListType = MeshIndexArrayType;
+  using SharedTetListType = MeshIndexArrayType;
+  using SharedHexListType = MeshIndexArrayType;
+  using ElementDynamicListType = DynamicListArray<uint16, MeshIndexType>;
 
   static constexpr StringLiteralType k_VoxelSizes = "Voxel Sizes";
   static constexpr StringLiteralType k_TypeName = "IGeometry";
@@ -118,19 +118,19 @@ public:
    * @brief Returns a pointer to the array containing element sizes.
    * @return const Float32Array* Pointer to the element sizes array, or nullptr if not available
    */
-  const Float32Array* getElementSizes() const;
+  const Float32ArrayType* getElementSizes() const;
 
   /**
    * @brief Returns the optional ID of the element sizes array.
    * @return OptionalId The ID of the element sizes array if it exists
    */
-  OptionalId getElementSizesId() const;
+  OptionalIdType getElementSizesId() const;
 
   /**
    * @brief Sets the ID of the element sizes array.
    * @param sizesId The ID of the element sizes array
    */
-  void setElementSizesId(const OptionalId& sizesId);
+  void setElementSizesId(const OptionalIdType& sizesId);
 
   /**
    * @brief Deletes the element sizes array from the geometry.

@@ -95,7 +95,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   const AttributeMatrix* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
   if(faceAttributeMatrixPtr == nullptr)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
 
@@ -108,7 +108,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -116,8 +116,8 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   TriangleDihedralAngleInputValues inputValues;
-  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TGeometryDataPath_Key);
-  inputValues.SurfaceMeshTriangleDihedralAnglesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
+  inputValues.input_triangle_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TGeometryDataPath_Key);
+  inputValues.surface_mesh_triangle_dihedral_angles_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
   return TriangleDihedralAngle(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

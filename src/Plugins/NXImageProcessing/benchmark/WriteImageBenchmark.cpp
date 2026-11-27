@@ -255,7 +255,7 @@ Result<> BuildInput(DataStructure& dataStructure, DataStorageMode storageMode)
   std::shared_ptr<AbstractDataStore<T>> store;
   {
     ip_bench::BenchmarkPreferenceSnapshot preferences(*Application::Instance()->getPreferences(), storageMode);
-    store = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_InputArrayPath, {k_DimZ, k_DimY, k_DimX}, {1});
+    store = data_store_utilities::CreateDataStore<T>(dataStructure, k_InputArrayPath, {k_DimZ, k_DimY, k_DimX}, {1});
   }
   if(store == nullptr)
   {
@@ -381,7 +381,7 @@ Arguments CreateWriterArguments(IFilter& filter, usize plane, const fs::path& ou
   arguments.insertOrAssign("total_index_digits", std::make_any<Int32ParameterType::ValueType>(4));
   arguments.insertOrAssign("leading_digit_character", std::make_any<StringParameter::ValueType>("0"));
   arguments.insertOrAssign("create_color_table", std::make_any<bool>(createColorTable));
-  arguments.insertOrAssign("selected_preset", std::make_any<std::string>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  arguments.insertOrAssign("selected_preset", std::make_any<std::string>(color_table_utilities::GetDefaultRGBPresetName()));
   arguments.insertOrAssign("use_mask", std::make_any<bool>(false));
   arguments.insertOrAssign("add_scale_bar", std::make_any<bool>(false));
   return arguments;
@@ -404,10 +404,10 @@ Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, 
   }
   Arguments arguments = CreateWriterArguments(*filter, plane, caseDirectory / ("slice" + extension), createColorTable);
   IFilter::PreflightResult preflightResult = filter->preflight(dataStructure, arguments);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
     return MakeErrorResult<TimingRow>(-9323, fmt::format("The '{}' writer failed preflight for case '{}': {}", writerName, caseName,
-                                                         preflightResult.outputActions.errors().empty() ? "no error message" : preflightResult.outputActions.errors().front().message));
+                                                         preflightResult.output_actions.errors().empty() ? "no error message" : preflightResult.output_actions.errors().front().message));
   }
 
   const auto& store = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath).getDataStoreRef();
@@ -611,7 +611,7 @@ int main(int argc, char** argv)
   DataStructure::setDefaultFormatResolver(std::make_shared<SimplnxOoc::PreferenceFormatResolver>());
 #endif
 
-  if(options.storage_mode == DataStorageMode::ForceOutOfCore && !DataStoreUtilities::GetIOCollection().anyManagerFinalizesImport())
+  if(options.storage_mode == DataStorageMode::ForceOutOfCore && !data_store_utilities::GetIOCollection().anyManagerFinalizesImport())
   {
     fmt::print(stderr, "The OOC benchmark requires a registered disk-backed IO manager.\n");
     return 1;

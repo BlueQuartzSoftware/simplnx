@@ -11,12 +11,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeBiasedFeaturesInputValues
 {
-  bool CalcByPhase{};
-  DataPath ImageGeometryPath;
-  DataPath CentroidsArrayPath;
-  DataPath SurfaceFeaturesArrayPath;
-  DataPath PhasesArrayPath;
-  DataPath BiasedFeaturesArrayName;
+  bool calc_by_phase{};
+  DataPath image_geometry_path;
+  DataPath centroids_array_path;
+  DataPath surface_features_array_path;
+  DataPath phases_array_path;
+  DataPath biased_features_array_name;
 };
 
 /**

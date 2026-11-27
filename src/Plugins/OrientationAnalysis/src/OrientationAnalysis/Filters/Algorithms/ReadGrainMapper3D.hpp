@@ -20,18 +20,18 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ReadGrainMapper3DInputValues
 {
-  std::filesystem::path InputFile;
-  bool ReadDctData{};
-  DataPath DctImageGeometryPath;
-  std::string DctCellAttributeMatrixName;
-  std::string DctCellEnsembleAttributeMatrixName;
-  bool ConvertPhaseData{};
-  bool ConvertOrientationData{};
-  bool ConvertIPFColors{};
+  std::filesystem::path input_file;
+  bool read_dct_data{};
+  DataPath dct_image_geometry_path;
+  std::string dct_cell_attribute_matrix_name;
+  std::string dct_cell_ensemble_attribute_matrix_name;
+  bool convert_phase_data{};
+  bool convert_orientation_data{};
+  bool convert_ipf_colors{};
 
-  bool ReadAbsorptionData{};
-  DataPath AbsorptionImageGeometryPath;
-  std::string AbsorptionCellAttributeMatrixName;
+  bool read_absorption_data{};
+  DataPath absorption_image_geometry_path;
+  std::string absorption_cell_attribute_matrix_name;
 };
 
 namespace gm_3d_constants

@@ -3,7 +3,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, const std::vector<int32>& input)
+std::map<int32, std::vector<usize>> montage_utilities::Burn(int32 tolerance, const std::vector<int32>& input)
 {
   int32 halfTol = tolerance / 2;
   usize count = input.size();
@@ -47,7 +47,7 @@ std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, cons
 }
 
 // -----------------------------------------------------------------------------
-int32 MontageUtilities::CalculatePaddingDigits(usize count)
+int32 montage_utilities::CalculatePaddingDigits(usize count)
 {
   int32 zeroPadding = 0;
   if(count > 0)

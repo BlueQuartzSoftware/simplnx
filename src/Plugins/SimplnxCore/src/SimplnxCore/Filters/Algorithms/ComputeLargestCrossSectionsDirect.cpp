@@ -180,13 +180,13 @@ ComputeLargestCrossSectionsDirect::ComputeLargestCrossSectionsDirect(DataStructu
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSectionsDirect::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
-  auto& largestCrossSectStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath).getDataStoreRef();
+  auto& largestCrossSectStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->largest_cross_sections_array_path).getDataStoreRef();
   const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds, false, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->largest_cross_sections_array_path, featureIds, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -204,9 +204,9 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
   const usize xCells = imageGeom.getNumXCells();
   const usize yCells = imageGeom.getNumYCells();
   const usize zCells = imageGeom.getNumZCells();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
 
-  if(m_InputValues->Plane == 0)
+  if(m_InputValues->plane == 0)
   {
     numPlanes = zCells;
     firstDimension = xCells;
@@ -216,7 +216,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
     secondStride = xCells;
     areaScalar = spacing[0] * spacing[1];
   }
-  if(m_InputValues->Plane == 1)
+  if(m_InputValues->plane == 1)
   {
     numPlanes = yCells;
     firstDimension = xCells;
@@ -226,7 +226,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
     secondStride = xCells * yCells;
     areaScalar = spacing[0] * spacing[2];
   }
-  if(m_InputValues->Plane == 2)
+  if(m_InputValues->plane == 2)
   {
     numPlanes = xCells;
     firstDimension = yCells;
@@ -239,15 +239,15 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
 
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", numPlanes));
 
-  const auto* inMemoryFeatureIdsPtr = dynamic_cast<const Int32DataStore*>(&featureIdsStore);
-  auto* inMemoryLargestCrossSectionsPtr = dynamic_cast<Float32DataStore*>(&largestCrossSectStore);
+  const auto* inMemoryFeatureIdsPtr = dynamic_cast<const Int32DataStoreType*>(&featureIdsStore);
+  auto* inMemoryLargestCrossSectionsPtr = dynamic_cast<Float32DataStoreType*>(&largestCrossSectStore);
   if(inMemoryFeatureIdsPtr != nullptr && inMemoryLargestCrossSectionsPtr != nullptr)
   {
     const int32* featureIdsDataPtr = inMemoryFeatureIdsPtr->data();
     float32* largestCrossSectionsDataPtr = inMemoryLargestCrossSectionsPtr->data();
     const usize sliceSize = xCells * yCells;
 
-    if(m_InputValues->Plane == 0)
+    if(m_InputValues->plane == 0)
     {
       for(usize zIndex = 0; zIndex < zCells; zIndex++)
       {
@@ -267,7 +267,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
       return {};
     }
 
-    if(m_InputValues->Plane == 1)
+    if(m_InputValues->plane == 1)
     {
       // Workers use only the stable in-memory backing pointer and thread-local
       // feature vectors; output remains untouched until the serial reduction.
@@ -289,7 +289,7 @@ Result<> ComputeLargestCrossSectionsDirect::operator()()
       return {};
     }
 
-    if(m_InputValues->Plane == 2)
+    if(m_InputValues->plane == 2)
     {
       // Limit per-block counts to keep YZ scratch bounded for many features.
       constexpr usize k_MaxXPlaneBlockSize = 16;

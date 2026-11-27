@@ -116,12 +116,12 @@ public:
         currentPagePtr = &pageResult.value().get();
         currentPageIndex = pageIndex;
       }
-      if(recordIndex < currentPagePtr->firstRecord || recordIndex - currentPagePtr->firstRecord >= currentPagePtr->recordCount)
+      if(recordIndex < currentPagePtr->first_record || recordIndex - currentPagePtr->first_record >= currentPagePtr->record_count)
       {
-        return MakeErrorResult(-6041, fmt::format("Temporary record page-cache bulk read index {} is outside its loaded page range [{}, {}).", recordIndex, currentPagePtr->firstRecord,
-                                                  currentPagePtr->firstRecord + currentPagePtr->recordCount));
+        return MakeErrorResult(-6041, fmt::format("Temporary record page-cache bulk read index {} is outside its loaded page range [{}, {}).", recordIndex, currentPagePtr->first_record,
+                                                  currentPagePtr->first_record + currentPagePtr->record_count));
       }
-      values[index] = currentPagePtr->records[static_cast<usize>(recordIndex - currentPagePtr->firstRecord)];
+      values[index] = currentPagePtr->records[static_cast<usize>(recordIndex - currentPagePtr->first_record)];
     }
     return {};
   }
@@ -231,8 +231,8 @@ private:
    */
   struct Page
   {
-    uint64 firstRecord = 0;
-    uint64 recordCount = 0;
+    uint64 first_record = 0;
+    uint64 record_count = 0;
     bool dirty = false;
     std::vector<T> records;
   };
@@ -255,7 +255,7 @@ private:
     {
       return MakeErrorResult<std::reference_wrapper<Page>>(-6041, "Temporary record page-cache request is outside the store");
     }
-    if(!m_Pages.empty() && m_Pages.front().firstRecord == firstRecord)
+    if(!m_Pages.empty() && m_Pages.front().first_record == firstRecord)
     {
       return {std::ref(m_Pages.front())};
     }
@@ -278,7 +278,7 @@ private:
       {
         return ConvertInvalidResult<std::reference_wrapper<Page>>(std::move(result));
       }
-      m_PageIndex.erase(m_Pages.back().firstRecord);
+      m_PageIndex.erase(m_Pages.back().first_record);
       m_Pages.splice(m_Pages.begin(), m_Pages, std::prev(m_Pages.end()));
     }
     else
@@ -293,8 +293,8 @@ private:
     }
 
     Page& page = m_Pages.front();
-    page.firstRecord = firstRecord;
-    page.recordCount = count;
+    page.first_record = firstRecord;
+    page.record_count = count;
     page.dirty = false;
     try
     {
@@ -327,7 +327,7 @@ private:
       }
     } catch(const std::exception&)
     {
-      if(!m_Pages.empty() && m_Pages.front().firstRecord == firstRecord)
+      if(!m_Pages.empty() && m_Pages.front().first_record == firstRecord)
       {
         m_Pages.pop_front();
       }
@@ -349,7 +349,7 @@ private:
       return {};
     }
     auto bytes = nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(page.records.data()), page.records.size() * sizeof(T));
-    auto result = m_Store.write(page.firstRecord, page.recordCount, bytes, shouldCancel);
+    auto result = m_Store.write(page.first_record, page.record_count, bytes, shouldCancel);
     if(result.valid())
     {
       page.dirty = false;

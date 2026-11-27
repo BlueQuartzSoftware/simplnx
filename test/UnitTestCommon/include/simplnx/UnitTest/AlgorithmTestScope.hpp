@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 class PreferencesSentinel;
 

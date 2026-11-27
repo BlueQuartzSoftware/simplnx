@@ -53,12 +53,12 @@ inline Result<> AddMorphologyLayoutGeometryContext(Result<> result, const DataPa
 // allowed-DataType set — no duplicated type switch.
 struct AllNumeric
 {
-  static const std::set<DataType>& allowedTypes()
+  static const std::set<DataType>& AllowedTypes()
   {
     return GetScalarNumericTypes();
   }
   template <class FuncT>
-  static Result<> dispatch(DataType dataType, FuncT&& func)
+  static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
     return ExecuteDataFunctionNoBool(std::forward<FuncT>(func), dataType);
   }
@@ -66,12 +66,12 @@ struct AllNumeric
 
 struct IntegerOnly
 {
-  static const std::set<DataType>& allowedTypes()
+  static const std::set<DataType>& AllowedTypes()
   {
     return GetIntegerScalarTypes();
   }
   template <class FuncT>
-  static Result<> dispatch(DataType dataType, FuncT&& func)
+  static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
     return ExecuteDataFunctionIntType(std::forward<FuncT>(func), dataType);
   }
@@ -86,12 +86,12 @@ struct IntegerOnly
  */
 struct ProjectionScalar
 {
-  static const std::set<DataType>& allowedTypes()
+  static const std::set<DataType>& AllowedTypes()
   {
     return GetProjectionScalarTypes();
   }
   template <class FuncT>
-  static Result<> dispatch(DataType dataType, FuncT&& func)
+  static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
     switch(dataType)
     {
@@ -111,12 +111,12 @@ struct ProjectionScalar
 
 struct SignedScalar
 {
-  static const std::set<DataType>& allowedTypes()
+  static const std::set<DataType>& AllowedTypes()
   {
     return GetSignedScalarTypes();
   }
   template <class FuncT>
-  static Result<> dispatch(DataType dataType, FuncT&& func)
+  static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
     switch(dataType)
     {
@@ -146,12 +146,12 @@ struct SignedScalar
  */
 struct FloatingScalar
 {
-  static const std::set<DataType>& allowedTypes()
+  static const std::set<DataType>& AllowedTypes()
   {
     return GetFloatingScalarTypes();
   }
   template <class FuncT>
-  static Result<> dispatch(DataType dataType, FuncT&& func)
+  static Result<> Dispatch(DataType dataType, FuncT&& func)
   {
     switch(dataType)
     {
@@ -255,20 +255,20 @@ inline Result<> ValidateOneValueInRange(float64 value, const char* label, int32 
  */
 struct BinaryFgBgRangeGuard
 {
-  float64 foregroundValue;
-  float64 backgroundValue;
-  int32 nonFiniteCode;
-  int32 outOfRangeCode;
-  int32 truncatedWarnCode;
+  float64 foreground_value;
+  float64 background_value;
+  int32 non_finite_code;
+  int32 out_of_range_code;
+  int32 truncated_warn_code;
 
   template <class T>
   Result<> operator()() const
   {
     Result<> result;
-    const std::array<std::pair<const char*, float64>, 2> params{{{"Foreground Value", foregroundValue}, {"Background Value", backgroundValue}}};
+    const std::array<std::pair<const char*, float64>, 2> params{{{"Foreground Value", foreground_value}, {"Background Value", background_value}}};
     for(const auto& [label, value] : params)
     {
-      Result<> valueResult = ValidateOneValueInRange<T>(value, label, nonFiniteCode, outOfRangeCode, truncatedWarnCode);
+      Result<> valueResult = ValidateOneValueInRange<T>(value, label, non_finite_code, out_of_range_code, truncated_warn_code);
       if(valueResult.invalid())
       {
         return valueResult;
@@ -292,14 +292,14 @@ struct SingleValueRangeGuard
 {
   float64 value;
   const char* label;
-  int32 nonFiniteCode;
-  int32 outOfRangeCode;
-  int32 truncatedWarnCode;
+  int32 non_finite_code;
+  int32 out_of_range_code;
+  int32 truncated_warn_code;
 
   template <class T>
   Result<> operator()() const
   {
-    return ValidateOneValueInRange<T>(value, label, nonFiniteCode, outOfRangeCode, truncatedWarnCode);
+    return ValidateOneValueInRange<T>(value, label, non_finite_code, out_of_range_code, truncated_warn_code);
   }
 };
 
@@ -317,16 +317,16 @@ struct ScalarValueRangeGuard
 {
   float64 value;
   const char* label;
-  int32 nonFiniteCode;
-  int32 outOfRangeCode;
-  int32 truncatedWarnCode;
+  int32 non_finite_code;
+  int32 out_of_range_code;
+  int32 truncated_warn_code;
 
   template <class T>
   Result<> operator()() const
   {
     if constexpr(std::is_integral_v<T>)
     {
-      return ValidateOneValueInRange<T>(value, label, nonFiniteCode, outOfRangeCode, truncatedWarnCode);
+      return ValidateOneValueInRange<T>(value, label, non_finite_code, out_of_range_code, truncated_warn_code);
     }
     else
     {
@@ -337,12 +337,12 @@ struct ScalarValueRangeGuard
       // not truncate toward zero), so no truncation warning is emitted.
       if(!std::isfinite(value))
       {
-        return MakeErrorResult(nonFiniteCode, fmt::format("{} must be a finite number, but is {}.", label, value));
+        return MakeErrorResult(non_finite_code, fmt::format("{} must be a finite number, but is {}.", label, value));
       }
       const auto highest = static_cast<float64>(std::numeric_limits<T>::max());
       if(value < -highest || value > highest) // float types are symmetric: lowest() == -max()
       {
-        return MakeErrorResult(outOfRangeCode, fmt::format("{} ({}) is outside the representable range [{}, {}] of the floating-point input image type '{}'.", label, value, -highest, highest,
+        return MakeErrorResult(out_of_range_code, fmt::format("{} ({}) is outside the representable range [{}, {}] of the floating-point input image type '{}'.", label, value, -highest, highest,
                                                            DataTypeToString(GetDataType<T>())));
       }
       return {};
@@ -365,9 +365,9 @@ struct ScalarValueRangeGuard
  */
 inline Result<> ValidateBinaryFgBgInRange(DataType inputType, float64 foreground, float64 background, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return IntegerOnly::dispatch(
+  return IntegerOnly::Dispatch(
       inputType, detail::BinaryFgBgRangeGuard{
-                     .foregroundValue = foreground, .backgroundValue = background, .nonFiniteCode = nonFiniteCode, .outOfRangeCode = outOfRangeCode, .truncatedWarnCode = truncatedWarnCode});
+                     .foreground_value = foreground, .background_value = background, .non_finite_code = nonFiniteCode, .out_of_range_code = outOfRangeCode, .truncated_warn_code = truncatedWarnCode});
 }
 
 /**
@@ -382,9 +382,9 @@ inline Result<> ValidateBinaryFgBgInRange(DataType inputType, float64 foreground
  */
 inline Result<> ValidateBackgroundInRange(DataType inputType, float64 background, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return IntegerOnly::dispatch(
+  return IntegerOnly::Dispatch(
       inputType,
-      detail::SingleValueRangeGuard{.value = background, .label = "Background Value", .nonFiniteCode = nonFiniteCode, .outOfRangeCode = outOfRangeCode, .truncatedWarnCode = truncatedWarnCode});
+      detail::SingleValueRangeGuard{.value = background, .label = "Background Value", .non_finite_code = nonFiniteCode, .out_of_range_code = outOfRangeCode, .truncated_warn_code = truncatedWarnCode});
 }
 
 /**
@@ -392,7 +392,7 @@ inline Result<> ValidateBackgroundInRange(DataType inputType, float64 background
  *        RecursiveSeparableImageFilter throws otherwise). A Z size of 1 is treated as a 2D image (the ITK bridge does
  *        the same), so Z is only required to be >= 4 when Z > 1.
  */
-inline Result<> ValidateSeparableImageDims(const SizeVec3& dims, int32 errorCode)
+inline Result<> ValidateSeparableImageDims(const SizeVec3Type& dims, int32 errorCode)
 {
   const bool zIs2D = dims[2] == 1;
   const bool ok = dims[0] >= 4 && dims[1] >= 4 && (zIs2D || dims[2] >= 4);
@@ -421,7 +421,7 @@ inline Result<> ValidatePositiveSigma(float64 sigma, int32 errorCode)
  * @brief Per-axis overload (SmoothingRecursiveGaussian). Only the sigmas for FILTERED axes are required to be
  *        positive: a Z size of 1 is a 2D image, so sigma[2] is unused there.
  */
-inline Result<> ValidatePositiveSigma(const std::vector<float64>& sigma, const SizeVec3& dims, int32 errorCode)
+inline Result<> ValidatePositiveSigma(const std::vector<float64>& sigma, const SizeVec3Type& dims, int32 errorCode)
 {
   const uint32 effDim = (dims[2] > 1) ? 3u : 2u;
   for(uint32 a = 0; a < effDim; ++a)
@@ -443,7 +443,7 @@ inline Result<> ValidatePositiveSigma(const std::vector<float64>& sigma, const S
  *        which rejects only an exactly-zero spacing). A Z size of 1 is a 2D image, so spacing[2] is not checked there.
  *        The `!(abs(spacing) > minSpacing)` form also rejects a NaN spacing.
  */
-inline Result<> ValidatePositiveSpacing(const FloatVec3& spacing, const SizeVec3& dims, int32 errorCode, double minSpacing)
+inline Result<> ValidatePositiveSpacing(const FloatVec3Type& spacing, const SizeVec3Type& dims, int32 errorCode, double minSpacing)
 {
   const uint32 effDim = (dims[2] > 1) ? 3u : 2u;
   for(uint32 a = 0; a < effDim; ++a)
@@ -467,7 +467,7 @@ inline Result<> ValidatePositiveSpacing(const FloatVec3& spacing, const SizeVec3
  *        pair (GradientAnisotropicDiffusion and CurvatureAnisotropicDiffusion), which both pass the SAME shared
  *        warning code (@ref ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep) for this condition.
  */
-inline void AppendUnstableTimeStepWarning(Result<OutputActions>& actions, float64 timeStep, const FloatVec3& spacing, const SizeVec3& dims, int32 warningCode)
+inline void AppendUnstableTimeStepWarning(Result<OutputActions>& actions, float64 timeStep, const FloatVec3Type& spacing, const SizeVec3Type& dims, int32 warningCode)
 {
   const uint32 effDim = (dims[2] > 1) ? 3u : 2u;
   float64 minSpacing = static_cast<float64>(spacing[0]);
@@ -499,8 +499,8 @@ inline void AppendUnstableTimeStepWarning(Result<OutputActions>& actions, float6
  */
 inline Result<> ValidateScalarValueForType(DataType inputType, float64 value, const char* label, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return AllNumeric::dispatch(inputType,
-                              detail::ScalarValueRangeGuard{.value = value, .label = label, .nonFiniteCode = nonFiniteCode, .outOfRangeCode = outOfRangeCode, .truncatedWarnCode = truncatedWarnCode});
+  return AllNumeric::Dispatch(inputType,
+                              detail::ScalarValueRangeGuard{.value = value, .label = label, .non_finite_code = nonFiniteCode, .out_of_range_code = outOfRangeCode, .truncated_warn_code = truncatedWarnCode});
 }
 
 /**
@@ -620,7 +620,7 @@ Result<OutputActions> PreflightImageFilter(const DataStructure& dataStructure, c
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
 
   const DataType inputType = inputArray.getDataType();
-  if(TypeSetPolicy::allowedTypes().count(inputType) == 0)
+  if(TypeSetPolicy::AllowedTypes().count(inputType) == 0)
   {
     return MakeErrorResult<OutputActions>(k_UnsupportedDataType,
                                           fmt::format("Input array '{}' has DataType '{}', which is not supported by this filter.", inputArrayPath.toString(), DataTypeToString(inputType)));
@@ -702,10 +702,10 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
   }
 
   const DataType inputType = inputArray.getDataType();
-  if(TypeSetPolicy::allowedTypes().count(inputType) == 0)
+  if(TypeSetPolicy::AllowedTypes().count(inputType) == 0)
   {
     std::string supportedTypes;
-    for(const DataType allowedType : TypeSetPolicy::allowedTypes())
+    for(const DataType allowedType : TypeSetPolicy::AllowedTypes())
     {
       if(!supportedTypes.empty())
       {
@@ -732,7 +732,7 @@ Result<OutputActions> PreflightAxisProjection(const DataStructure& dataStructure
 
   // Collapsed geometry dims: the projected axis becomes size 1. Origin & spacing are copied verbatim
   // (NOT rescaled) per the pinned output-shape rule. dims are XYZ; the array tuple shape is ZYX.
-  const SizeVec3 inputDims = imageGeom.getDimensions();
+  const SizeVec3Type inputDims = imageGeom.getDimensions();
   CreateImageGeometryAction::DimensionType collapsedDims = {inputDims[0], inputDims[1], inputDims[2]};
   collapsedDims[projDim] = 1;
   const std::vector<usize> tupleShape = {collapsedDims[2], collapsedDims[1], collapsedDims[0]};

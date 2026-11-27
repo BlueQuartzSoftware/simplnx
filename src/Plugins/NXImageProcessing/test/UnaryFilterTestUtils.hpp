@@ -43,7 +43,7 @@ inline DataPath BuildRampImage(DataStructure& dataStructure, usize dim, double s
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -87,7 +87,7 @@ inline DataPath BuildScalarValuesImage(DataStructure& dataStructure, const std::
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
   for(usize i = 0; i < n; ++i)
@@ -112,7 +112,7 @@ inline DataPath RunPointwiseFilter(DataStructure& dataStructure, const DataPath&
   args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   return inputPath.replaceName("Output");

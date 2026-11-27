@@ -60,7 +60,7 @@ constexpr int32 k_SliceBySliceReordersSlicesError = -6851;
 // 120/240-degree rotations about a body-diagonal (111) axis. Every such rotation is a lossless
 // permutation of the voxels; any other rotation is a lossy nearest-neighbor resample (see the
 // RotateSampleRefFrame V&V report).
-bool IsLosslessGridRotation(const ImageRotationUtilities::Matrix3fR& rotation, float32 tol)
+bool IsLosslessGridRotation(const image_rotation_utilities::Matrix3fRType& rotation, float32 tol)
 {
   std::array<int32, 3> rowOnesCount = {0, 0, 0};
   std::array<int32, 3> colOnesCount = {0, 0, 0};
@@ -136,9 +136,9 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RotateSliceBySlice_Key, "Perform Slice By Slice Transform", "This option is specific to EBSD Data and is not generally used.", false));
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "Which form used to represent rotation (axis angle or rotation matrix)",
-                                                                    to_underlying(RotationRepresentationType::AxisAngle), ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
-                                                         VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
+                                                                    to_underlying(RotationRepresentationType::AxisAngle), ChoicesParameter::ChoicesType{"Axis Angle", "Rotation Matrix"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
+                                                         VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place Rotation", "Performs the rotation in-place for the given Image Geometry", true));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_KeepInputGeometryOrigin_Key, "Keep Input Geometry's Origin", "The input geometry's origin is kept instead of the origin resulting from the transform", false));
@@ -201,25 +201,25 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  ImageRotationUtilities::Matrix4fRType rotationMatrix;
+  image_rotation_utilities::Matrix4fRType rotationMatrix;
 
   auto rotationRepresentationIndex = filterArgs.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
   switch(rotationRepresentationIndex)
   {
   case static_cast<uint64>(RotationRepresentationType::AxisAngle): {
     auto pRotationValue = filterArgs.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
-    auto validation = ImageRotationUtilities::ValidateRotationAxisAngle(pRotationValue, "Rotation Axis-Angle");
+    auto validation = image_rotation_utilities::ValidateRotationAxisAngle(pRotationValue, "Rotation Axis-Angle");
     if(validation.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
 
-    rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+    rotationMatrix = image_rotation_utilities::GenerateRotationTransformationMatrix(pRotationValue);
     break;
   }
   case static_cast<uint64>(RotationRepresentationType::RotationMatrix): {
     auto rotationMatrixTable = filterArgs.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
-    rotationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(rotationMatrixTable);
+    rotationMatrix = image_rotation_utilities::GenerateManualTransformationMatrix(rotationMatrixTable);
     break;
   }
   }
@@ -228,7 +228,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   // the cubic voxel grid exactly onto itself (a signed axis-permutation / octahedral-group rotation).
   // For any other rotation the nearest-neighbor resample drops/duplicates voxels and introduces
   // background fill, so it is rejected here. Arbitrary rotations belong to "Apply Transformation To Geometry".
-  const ImageRotationUtilities::Matrix3fR rotationBlock = rotationMatrix.block(0, 0, 3, 3);
+  const image_rotation_utilities::Matrix3fRType rotationBlock = rotationMatrix.block(0, 0, 3, 3);
   if(!IsLosslessGridRotation(rotationBlock, k_Rotation90Tolerance))
   {
     return MakePreflightErrorResult(k_NonPrincipalRotationError,
@@ -251,9 +251,9 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-  ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(selectedImageGeom, rotationMatrix);
-  const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputDims[0]), static_cast<usize>(rotateArgs.outputDims[1]), static_cast<usize>(rotateArgs.outputDims[2])};
-  const std::vector<float32> spacing = {rotateArgs.outputSpacing[0], rotateArgs.outputSpacing[1], rotateArgs.outputSpacing[2]};
+  image_rotation_utilities::RotateArgs rotateArgs = image_rotation_utilities::CreateRotationArgs(selectedImageGeom, rotationMatrix);
+  const std::vector<usize> dims = {static_cast<usize>(rotateArgs.output_dims[0]), static_cast<usize>(rotateArgs.output_dims[1]), static_cast<usize>(rotateArgs.output_dims[2])};
+  const std::vector<float32> spacing = {rotateArgs.output_spacing[0], rotateArgs.output_spacing[1], rotateArgs.output_spacing[2]};
   auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
   if(!keepInputGeometryOrigin)
   {
@@ -261,9 +261,9 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     // transforms ImageGeom::getBoundingBoxf(), which already includes the input origin. Assign (do not add) so
     // the persisted geometry origin equals the RotateArgs::TransformedOrigin the resample worker samples
     // against; adding the input origin again double-counts it for any non-zero input origin.
-    origin[0] = rotateArgs.outputXMin;
-    origin[1] = rotateArgs.outputYMin;
-    origin[2] = rotateArgs.outputZMin;
+    origin[0] = rotateArgs.output_x_min;
+    origin[1] = rotateArgs.output_y_min;
+    origin[2] = rotateArgs.output_z_min;
   }
 
   std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
@@ -312,9 +312,9 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     // These values should have been updated during the preflightImpl(...) method
     const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
                                                                                                                           srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
-    preflightUpdatedValues.push_back({"Rotated Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(
+    preflightUpdatedValues.push_back({"Rotated Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(
                                                                          dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeomPtr->getUnits())});
   }
 
@@ -339,7 +339,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     // Ignore every path to the Feature AM, including selections through another parent.
     const auto featureAmPaths = srcCellFeatureDataPtr->getDataPaths();
@@ -383,7 +383,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -391,28 +391,28 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
 {
   RotateSampleRefFrameInputValues inputValues;
 
-  inputValues.SourceGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.DestGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
-  inputValues.CellFeatureAttributeMatrix = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
+  inputValues.source_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.dest_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.cell_feature_attribute_matrix = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
 
   auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  inputValues.KeepInputGeometryOrigin = filterArgs.value<bool>(k_KeepInputGeometryOrigin_Key);
+  inputValues.keep_input_geometry_origin = filterArgs.value<bool>(k_KeepInputGeometryOrigin_Key);
 
-  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SourceGeometryPath);
+  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.source_geometry_path);
   auto sourceImageGeomorigin = srcImageGeom.getOrigin();
   if(removeOriginalGeometry)
   {
-    auto tempPathVector = inputValues.SourceGeometryPath.getPathVector();
+    auto tempPathVector = inputValues.source_geometry_path.getPathVector();
     std::string tempName = k_TempGeometryName;
     tempPathVector.back() = tempName;
-    inputValues.DestGeometryPath = DataPath({tempPathVector});
+    inputValues.dest_geometry_path = DataPath({tempPathVector});
   }
 
-  inputValues.SliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
-  inputValues.RotationRepresentationIndex = filterArgs.value<ChoicesParameter::ValueType>(k_RotationRepresentation_Key);
-  inputValues.RotationAxisAngle = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
-  inputValues.RotationMatrixTable = filterArgs.value<DynamicTableParameter::ValueType>(k_RotationMatrix_Key);
+  inputValues.slice_by_slice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
+  inputValues.rotation_representation_index = filterArgs.value<ChoicesParameter::ValueType>(k_RotationRepresentation_Key);
+  inputValues.rotation_axis_angle = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_RotationAxisAngle_Key);
+  inputValues.rotation_matrix_table = filterArgs.value<DynamicTableParameter::ValueType>(k_RotationMatrix_Key);
 
   return RotateSampleRefFrame(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -444,7 +444,7 @@ Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json
     results.push_back(std::move(rotateResult));
   }
   results.push_back(
-      simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
+      simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverterType>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
   Result<> tableResult = simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_RotationTableKey, k_RotationMatrix_Key);
   if(tableResult.valid())
   {

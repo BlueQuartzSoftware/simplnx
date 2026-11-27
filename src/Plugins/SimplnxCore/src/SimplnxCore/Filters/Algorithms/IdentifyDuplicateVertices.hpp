@@ -18,22 +18,22 @@ namespace detail
 const std::string k_CopySelectedTriangleData("Copy Selected Triangle Data");
 const std::string k_CopyAllTriangleData("Copy All Triangle Data");
 
-const nx::core::ChoicesParameter::Choices k_TriangleDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllTriangleData};
+const nx::core::ChoicesParameter::ChoicesType k_TriangleDataHandlingChoices = {k_CopySelectedTriangleData, k_CopyAllTriangleData};
 const nx::core::ChoicesParameter::ValueType k_CopySelectedTriangleArraysIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_CopyAllTriangleArraysIdx = 1ULL;
 
 const std::string k_CopySelectedVertexData("Copy Selected Vertex Data");
 const std::string k_CopyAllVertexData("Copy All Vertex Data");
 
-const nx::core::ChoicesParameter::Choices k_VertexDataHandlingChoices = {k_CopySelectedVertexData, k_CopyAllVertexData};
+const nx::core::ChoicesParameter::ChoicesType k_VertexDataHandlingChoices = {k_CopySelectedVertexData, k_CopyAllVertexData};
 const nx::core::ChoicesParameter::ValueType k_CopySelectedVertexArraysIdx = 0ULL;
 const nx::core::ChoicesParameter::ValueType k_CopyAllVertexArraysIdx = 1ULL;
 } // namespace detail
 
 struct SIMPLNXCORE_EXPORT IdentifyDuplicateVerticesInputValues
 {
-  DataPath TargetGeometryPath;
-  DataPath DuplicatesMaskPath;
+  DataPath target_geometry_path;
+  DataPath duplicates_mask_path;
 };
 
 /**

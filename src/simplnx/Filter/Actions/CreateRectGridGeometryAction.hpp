@@ -82,6 +82,6 @@ private:
   DataPath m_InputZBounds;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
 
-  Float32Array* createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const;
+  Float32ArrayType* createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const;
 };
 } // namespace nx::core

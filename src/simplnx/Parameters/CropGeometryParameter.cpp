@@ -37,7 +37,7 @@ Uuid CropGeometryParameter::uuid() const
   return ParameterTraits<CropGeometryParameter>::uuid;
 }
 
-IParameter::AcceptedTypes CropGeometryParameter::acceptedTypes() const
+IParameter::AcceptedTypesType CropGeometryParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -54,15 +54,15 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
   nlohmann::json json;
   json[k_Type_Key] = static_cast<uint8>(cropValues.type);
   json[k_Is2D_Key] = cropValues.is_2d;
-  json[k_CropX_Key] = cropValues.cropX;
-  json[k_CropY_Key] = cropValues.cropY;
-  json[k_CropZ_Key] = cropValues.cropZ;
-  json[k_XBoundsVoxels_Key] = cropValues.xBoundVoxels;
-  json[k_YBoundsVoxels_Key] = cropValues.yBoundVoxels;
-  json[k_ZBoundsVoxels_Key] = cropValues.zBoundVoxels;
-  json[k_XBoundsPhysical_Key] = cropValues.xBoundPhysical;
-  json[k_YBoundsPhysical_Key] = cropValues.yBoundPhysical;
-  json[k_ZBoundsPhysical_Key] = cropValues.zBoundPhysical;
+  json[k_CropX_Key] = cropValues.crop_x;
+  json[k_CropY_Key] = cropValues.crop_y;
+  json[k_CropZ_Key] = cropValues.crop_z;
+  json[k_XBoundsVoxels_Key] = cropValues.x_bound_voxels;
+  json[k_YBoundsVoxels_Key] = cropValues.y_bound_voxels;
+  json[k_ZBoundsVoxels_Key] = cropValues.z_bound_voxels;
+  json[k_XBoundsPhysical_Key] = cropValues.x_bound_physical;
+  json[k_YBoundsPhysical_Key] = cropValues.y_bound_physical;
+  json[k_ZBoundsPhysical_Key] = cropValues.z_bound_physical;
   return json;
 }
 
@@ -74,13 +74,13 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
   ValueType value;
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix.view(), name()));
   }
 
   const auto& keyJson = json[k_Type_Key];
   if(!keyJson.is_number_unsigned())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                      fmt::format("{}JSON value for key '{}' is not an unsigned integer", k_Prefix.view(), nameDiv + k_Type_Key.str()));
   }
   value.type = static_cast<ValueType::TypeEnum>(keyJson.get<uint8>());
@@ -90,7 +90,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& is2dJson = json[k_Is2D_Key];
     if(!is2dJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_Is2D_Key.str()));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_Is2D_Key.str()));
     }
     value.is_2d = is2dJson.get<bool>();
   }
@@ -99,93 +99,93 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& cropXJson = json[k_CropX_Key];
     if(!cropXJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropX_Key.str()));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropX_Key.str()));
     }
-    value.cropX = cropXJson.get<bool>();
+    value.crop_x = cropXJson.get<bool>();
   }
 
   {
     const auto& cropYJson = json[k_CropY_Key];
     if(!cropYJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropY_Key.str()));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropY_Key.str()));
     }
-    value.cropY = cropYJson.get<bool>();
+    value.crop_y = cropYJson.get<bool>();
   }
 
   {
     const auto& cropZJson = json[k_CropZ_Key];
     if(!cropZJson.is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropZ_Key.str()));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_CropZ_Key.str()));
     }
-    value.cropZ = cropZJson.get<bool>();
+    value.crop_z = cropZJson.get<bool>();
   }
 
   {
     const auto& xBoundsJson = json[k_XBoundsVoxels_Key];
     if(!xBoundsJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                        fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_XBoundsVoxels_Key.str()));
     }
     const auto tmp = xBoundsJson.get<std::array<usize, 2>>();
-    value.xBoundVoxels = {tmp[0], tmp[1]};
+    value.x_bound_voxels = {tmp[0], tmp[1]};
   }
 
   {
     const auto& yBoundsJson = json[k_YBoundsVoxels_Key];
     if(!yBoundsJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                        fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_YBoundsVoxels_Key.str()));
     }
     const auto tmp = yBoundsJson.get<std::array<usize, 2>>();
-    value.yBoundVoxels = {tmp[0], tmp[1]};
+    value.y_bound_voxels = {tmp[0], tmp[1]};
   }
 
   {
     const auto& zBoundsJson = json[k_ZBoundsVoxels_Key];
     if(!zBoundsJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                        fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_ZBoundsVoxels_Key.str()));
     }
     const auto tmp = zBoundsJson.get<std::array<usize, 2>>();
-    value.zBoundVoxels = {tmp[0], tmp[1]};
+    value.z_bound_voxels = {tmp[0], tmp[1]};
   }
 
   {
     const auto& xBoundsJson = json[k_XBoundsPhysical_Key];
     if(!xBoundsJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                        fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_XBoundsPhysical_Key.str()));
     }
     const auto tmp = xBoundsJson.get<std::array<float32, 2>>();
-    value.xBoundPhysical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
+    value.x_bound_physical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
   }
 
   {
     const auto& yBoundsJson = json[k_YBoundsPhysical_Key];
     if(!yBoundsJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                        fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_YBoundsPhysical_Key.str()));
     }
     const auto tmp = yBoundsJson.get<std::array<float32, 2>>();
-    value.yBoundPhysical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
+    value.y_bound_physical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
   }
 
   {
     const auto& zBoundsJson = json[k_ZBoundsPhysical_Key];
     if(!zBoundsJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String,
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString,
                                        fmt::format("{}JSON value for key '{}' is not an array", k_Prefix.view(), nameDiv + k_ZBoundsPhysical_Key.str()));
     }
     const auto tmp = zBoundsJson.get<std::array<float32, 2>>();
-    value.zBoundPhysical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
+    value.z_bound_physical = {static_cast<float32>(tmp[0]), static_cast<float32>(tmp[1])};
   }
 
   return {value};
@@ -218,32 +218,32 @@ Result<> CropGeometryParameter::validate(const std::any& value) const
 
   if(cropValues.type == CropValues::TypeEnum::VoxelSubvolume)
   {
-    if(cropValues.xBoundVoxels[0] > cropValues.xBoundVoxels[1])
+    if(cropValues.x_bound_voxels[0] > cropValues.x_bound_voxels[1])
     {
-      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid X bounds: min ({}) is greater than max ({})", cropValues.xBoundVoxels[0], cropValues.xBoundVoxels[1]));
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid X bounds: min ({}) is greater than max ({})", cropValues.x_bound_voxels[0], cropValues.x_bound_voxels[1]));
     }
-    if(cropValues.yBoundVoxels[0] > cropValues.yBoundVoxels[1])
+    if(cropValues.y_bound_voxels[0] > cropValues.y_bound_voxels[1])
     {
-      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Y bounds: min ({}) is greater than max ({})", cropValues.yBoundVoxels[0], cropValues.yBoundVoxels[1]));
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Y bounds: min ({}) is greater than max ({})", cropValues.y_bound_voxels[0], cropValues.y_bound_voxels[1]));
     }
-    if(cropValues.zBoundVoxels[0] > cropValues.zBoundVoxels[1])
+    if(cropValues.z_bound_voxels[0] > cropValues.z_bound_voxels[1])
     {
-      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Z bounds: min ({}) is greater than max ({})", cropValues.zBoundVoxels[0], cropValues.zBoundVoxels[1]));
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Z bounds: min ({}) is greater than max ({})", cropValues.z_bound_voxels[0], cropValues.z_bound_voxels[1]));
     }
   }
   else if(cropValues.type == CropValues::TypeEnum::PhysicalSubvolume)
   {
-    if(cropValues.xBoundPhysical[0] > cropValues.xBoundPhysical[1])
+    if(cropValues.x_bound_physical[0] > cropValues.x_bound_physical[1])
     {
-      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid X bounds: min ({}) is greater than max ({})", cropValues.xBoundPhysical[0], cropValues.xBoundPhysical[1]));
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid X bounds: min ({}) is greater than max ({})", cropValues.x_bound_physical[0], cropValues.x_bound_physical[1]));
     }
-    if(cropValues.yBoundPhysical[0] > cropValues.yBoundPhysical[1])
+    if(cropValues.y_bound_physical[0] > cropValues.y_bound_physical[1])
     {
-      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Y bounds: min ({}) is greater than max ({})", cropValues.yBoundPhysical[0], cropValues.yBoundPhysical[1]));
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Y bounds: min ({}) is greater than max ({})", cropValues.y_bound_physical[0], cropValues.y_bound_physical[1]));
     }
-    if(cropValues.zBoundPhysical[0] > cropValues.zBoundPhysical[1])
+    if(cropValues.z_bound_physical[0] > cropValues.z_bound_physical[1])
     {
-      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Z bounds: min ({}) is greater than max ({})", cropValues.zBoundPhysical[0], cropValues.zBoundPhysical[1]));
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Z bounds: min ({}) is greater than max ({})", cropValues.z_bound_physical[0], cropValues.z_bound_physical[1]));
     }
   }
 

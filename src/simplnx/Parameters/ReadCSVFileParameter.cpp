@@ -51,7 +51,7 @@ Uuid ReadCSVFileParameter::uuid() const
 }
 
 // -----------------------------------------------------------------------------
-IParameter::AcceptedTypes ReadCSVFileParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ReadCSVFileParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -92,8 +92,8 @@ std::any ReadCSVFileParameter::defaultValue() const
 std::any ReadCSVFileParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   auto value = args.value<ValueType>(name());
-  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputFilePath);
-  value.inputFilePath = absolutePath.string();
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.input_file_path);
+  value.input_file_path = absolutePath.string();
   return value;
 }
 
@@ -154,42 +154,42 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
   dataTypeStrings = result.value();
 
   ValueType value;
-  value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
-  value.customHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
+  value.input_file_path = json[k_InputFilePathKey].get<std::string>();
+  value.custom_headers = json[k_DataHeadersKey].get<std::vector<std::string>>();
   auto beginIndex = json[k_BeginIndexKey].get<int32>();
   if(beginIndex < 0)
   {
-    value.startImportRow = 0;
+    value.start_import_row = 0;
   }
   else
   {
-    value.startImportRow = json[k_BeginIndexKey].get<int32>();
+    value.start_import_row = json[k_BeginIndexKey].get<int32>();
   }
-  value.dataTypes = ConvertCSVTypeStrings(dataTypeStrings);
+  value.data_types = ConvertCSVTypeStrings(dataTypeStrings);
   value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
   int64 headersLineNum = json[k_HeaderLineKey].get<int64>();
   headersLineNum = headersLineNum < 0 ? 0 : headersLineNum;
-  value.headersLine = static_cast<usize>(headersLineNum);
-  value.tupleDims = json[k_TupleDimsKey].get<std::vector<usize>>();
+  value.headers_line = static_cast<usize>(headersLineNum);
+  value.tuple_dims = json[k_TupleDimsKey].get<std::vector<usize>>();
 
-  value.skippedArrayMask.resize(dataTypeStrings.size());
-  std::transform(dataTypeStrings.begin(), dataTypeStrings.end(), value.skippedArrayMask.begin(), [](auto const& s) { return s == "Skip"; });
+  value.skipped_array_mask.resize(dataTypeStrings.size());
+  std::transform(dataTypeStrings.begin(), dataTypeStrings.end(), value.skipped_array_mask.begin(), [](auto const& s) { return s == "Skip"; });
 
   bool headerIsCustom = json[k_HeaderIsCustomKey].get<bool>();
   // bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
 
   if(headerIsCustom)
   {
-    value.headerMode = ValueType::HeaderMode::CUSTOM;
+    value.header_mode = ValueType::HeaderMode::CUSTOM;
   }
   else
   {
-    value.headerMode = ValueType::HeaderMode::LINE;
+    value.header_mode = ValueType::HeaderMode::LINE;
   }
 
   // DREAM.3D 6.x dropped every empty token whatever Wizard_ConsecutiveDelimiters was, and saved its column counts that way.
   // Collapse delimiters so converted pipelines read the same columns.
-  value.consecutiveDelimiters = true;
+  value.consecutive_delimiters = true;
 
   return {std::move(value)};
 }

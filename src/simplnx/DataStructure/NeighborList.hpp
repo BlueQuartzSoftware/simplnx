@@ -567,18 +567,18 @@ extern template class NeighborList<float64>;
 extern template class NeighborList<usize>;
 
 // Declare Aliases
-using UInt8NeighborList = NeighborList<uint8>;
-using UInt16NeighborList = NeighborList<uint16>;
-using UInt32NeighborList = NeighborList<uint32>;
-using UInt64NeighborList = NeighborList<uint64>;
+using UInt8NeighborListType = NeighborList<uint8>;
+using UInt16NeighborListType = NeighborList<uint16>;
+using UInt32NeighborListType = NeighborList<uint32>;
+using UInt64NeighborListType = NeighborList<uint64>;
 
-using Int8NeighborList = NeighborList<int8>;
-using Int16NeighborList = NeighborList<int16>;
-using Int32NeighborList = NeighborList<int32>;
-using Int64NeighborList = NeighborList<int64>;
+using Int8NeighborListType = NeighborList<int8>;
+using Int16NeighborListType = NeighborList<int16>;
+using Int32NeighborListType = NeighborList<int32>;
+using Int64NeighborListType = NeighborList<int64>;
 
-using Float32NeighborList = NeighborList<float32>;
-using Float64NeighborList = NeighborList<float64>;
+using Float32NeighborListType = NeighborList<float32>;
+using Float64NeighborListType = NeighborList<float64>;
 
-using VectorOfFloat32NeighborList = std::vector<std::shared_ptr<Float32NeighborList>>;
+using VectorOfFloat32NeighborListType = std::vector<std::shared_ptr<Float32NeighborListType>>;
 } // namespace nx::core

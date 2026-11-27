@@ -33,7 +33,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief

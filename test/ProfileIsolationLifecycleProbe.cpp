@@ -11,7 +11,7 @@
 namespace
 {
 namespace fs = std::filesystem;
-using nx::core::UnitTest::ProcessTestProfile;
+using nx::core::unit_test::ProcessTestProfile;
 
 std::optional<std::string> EnvironmentValue(const char* name)
 {
@@ -46,7 +46,7 @@ struct LateWitness
     }
     try
     {
-      const char* homePtr = std::getenv(ProcessTestProfile::homeVariable());
+      const char* homePtr = std::getenv(ProcessTestProfile::HomeVariable());
       if(fs::exists(root) || homePtr == nullptr || fs::path(homePtr) != root)
       {
         std::_Exit(86);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   }
   for(size_t index = 0; index < names.size(); ++index)
   {
-    if(std::string(names[index]) != ProcessTestProfile::homeVariable() && EnvironmentValue(names[index]) != before[index])
+    if(std::string(names[index]) != ProcessTestProfile::HomeVariable() && EnvironmentValue(names[index]) != before[index])
     {
       std::cerr << "Unrelated environment variable changed: " << names[index] << '\n';
       return 4;

@@ -23,92 +23,92 @@ namespace
 const std::string k_VolumeFractions("Volume Fractions");
 const std::string k_VolumeFractionsNX("Volume Fractions NX");
 
-const DataPath k_IncorrectCellPhasesPath({Constants::k_DataContainer, Constants::k_FeatureData, Constants::k_Phases});
+const DataPath k_IncorrectCellPhasesPath({constants::k_DataContainer, constants::k_FeatureData, constants::k_Phases});
 
-const DataPath k_VolumeFractionsPath = Constants::k_CellEnsembleAttributeMatrixPath.createChildPath(k_VolumeFractions);
-const DataPath k_VolumeFractionsPathNX = Constants::k_CellEnsembleAttributeMatrixPath.createChildPath(k_VolumeFractionsNX);
+const DataPath k_VolumeFractionsPath = constants::k_CellEnsembleAttributeMatrixPath.createChildPath(k_VolumeFractions);
+const DataPath k_VolumeFractionsPathNX = constants::k_CellEnsembleAttributeMatrixPath.createChildPath(k_VolumeFractionsNX);
 
 const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure the filter arguments.
   ComputeVolumeFractionsFilter filter;
   Arguments args;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
-  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(Constants::k_PhasesArrayPath));
+  DataStructure dataStructure = unit_test::LoadDataStructure(k_BaseDataFilePath);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(constants::k_PhasesArrayPath));
 
-  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
-  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(constants::k_PhasesArrayPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(constants::k_CellEnsembleAttributeMatrixPath));
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& d3dVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
-  auto& nxVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
+  auto& d3dVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumeFractionsPath);
+  auto& nxVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumeFractionsPathNX);
   scope.requireExpectedStore(nxVolumeFractionsArrayRef);
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
     float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
-    REQUIRE(result < UnitTest::EPSILON);
+    REQUIRE(result < unit_test::k_Epsilon);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution", "[SimplnxCore::ComputeVolumeFractionsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Configure the filter arguments.
   ComputeVolumeFractionsFilter filter;
   Arguments args;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(k_BaseDataFilePath);
 
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
-  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(ComputeVolumeFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(constants::k_CellEnsembleAttributeMatrixPath));
   args.insertOrAssign(ComputeVolumeFractionsFilter::k_VolFractionsArrayName_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto& d3dVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
-  auto& nxVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
+  auto& d3dVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumeFractionsPath);
+  auto& nxVolumeFractionsArrayRef = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumeFractionsPathNX);
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
     float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
-    REQUIRE(result > UnitTest::EPSILON);
+    REQUIRE(result > unit_test::k_Epsilon);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeVolumeFractionsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

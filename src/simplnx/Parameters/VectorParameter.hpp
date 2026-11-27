@@ -56,7 +56,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
@@ -155,7 +155,7 @@ using VectorUInt32ParameterType = VectorParameter<uint32>;
 using VectorInt64ParameterType = VectorParameter<int64>;
 using VectorUInt64ParameterType = VectorParameter<uint64>;
 
-using VectorFloat32Parameter = VectorParameter<float32>;
+using VectorFloat32ParameterType = VectorParameter<float32>;
 using VectorFloat64ParameterType = VectorParameter<float64>;
 
 namespace simpl_conversion
@@ -192,9 +192,9 @@ extern template struct MultiToVec3FilterParameterConverter<uint64>;
 extern template struct MultiToVec3FilterParameterConverter<float32>;
 extern template struct MultiToVec3FilterParameterConverter<float64>;
 
-using UInt64ToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<uint64>;
-using FloatToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<float32>;
-using DoubleToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<float64>;
+using UInt64ToVec3FilterParameterConverterType = MultiToVec3FilterParameterConverter<uint64>;
+using FloatToVec3FilterParameterConverterType = MultiToVec3FilterParameterConverter<float32>;
+using DoubleToVec3FilterParameterConverterType = MultiToVec3FilterParameterConverter<float64>;
 
 template <typename T>
 struct Vec2FilterParameterConverter
@@ -220,11 +220,11 @@ extern template struct Vec2FilterParameterConverter<uint64>;
 extern template struct Vec2FilterParameterConverter<float32>;
 extern template struct Vec2FilterParameterConverter<float64>;
 
-using IntVec2FilterParameterConverter = Vec2FilterParameterConverter<int32>;
-using UInt32Vec2FilterParameterConverter = Vec2FilterParameterConverter<uint32>;
-using UInt64Vec2FilterParameterConverter = Vec2FilterParameterConverter<uint64>;
-using FloatVec2FilterParameterConverter = Vec2FilterParameterConverter<float32>;
-using DoubleVec2FilterParameterConverter = Vec2FilterParameterConverter<float64>;
+using IntVec2FilterParameterConverterType = Vec2FilterParameterConverter<int32>;
+using UInt32Vec2FilterParameterConverterType = Vec2FilterParameterConverter<uint32>;
+using UInt64Vec2FilterParameterConverterType = Vec2FilterParameterConverter<uint64>;
+using FloatVec2FilterParameterConverterType = Vec2FilterParameterConverter<float32>;
+using DoubleVec2FilterParameterConverterType = Vec2FilterParameterConverter<float64>;
 
 template <typename T>
 struct Vec3FilterParameterConverter
@@ -250,11 +250,11 @@ extern template struct Vec3FilterParameterConverter<uint64>;
 extern template struct Vec3FilterParameterConverter<float32>;
 extern template struct Vec3FilterParameterConverter<float64>;
 
-using IntVec3FilterParameterConverter = Vec3FilterParameterConverter<int32>;
-using UInt32Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint32>;
-using UInt64Vec3FilterParameterConverter = Vec3FilterParameterConverter<uint64>;
-using FloatVec3FilterParameterConverter = Vec3FilterParameterConverter<float32>;
-using DoubleVec3FilterParameterConverter = Vec3FilterParameterConverter<float64>;
+using IntVec3FilterParameterConverterType = Vec3FilterParameterConverter<int32>;
+using UInt32Vec3FilterParameterConverterType = Vec3FilterParameterConverter<uint32>;
+using UInt64Vec3FilterParameterConverterType = Vec3FilterParameterConverter<uint64>;
+using FloatVec3FilterParameterConverterType = Vec3FilterParameterConverter<float32>;
+using DoubleVec3FilterParameterConverterType = Vec3FilterParameterConverter<float64>;
 
 template <typename T>
 struct Vec4FilterParameterConverter
@@ -280,7 +280,7 @@ extern template struct Vec4FilterParameterConverter<uint64>;
 extern template struct Vec4FilterParameterConverter<float32>;
 extern template struct Vec4FilterParameterConverter<float64>;
 
-using FloatVec4FilterParameterConverter = Vec4FilterParameterConverter<float32>;
+using FloatVec4FilterParameterConverterType = Vec4FilterParameterConverter<float32>;
 
 template <typename T>
 struct AxisAngleFilterParameterConverter
@@ -330,7 +330,7 @@ extern template struct Vec3p1FilterParameterConverter<uint64>;
 extern template struct Vec3p1FilterParameterConverter<float32>;
 extern template struct Vec3p1FilterParameterConverter<float64>;
 
-using FloatVec3p1FilterParameterConverter = Vec3p1FilterParameterConverter<float32>;
+using FloatVec3p1FilterParameterConverterType = Vec3p1FilterParameterConverter<float32>;
 } // namespace simpl_conversion
 } // namespace nx::core
 
@@ -350,6 +350,6 @@ SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt64ParameterType, "nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt64ParameterType, "nx::core::VectorUInt64Parameter", "17309744-c4e8-4d1e-807e-e7012387f1ec");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat32Parameter, "nx::core::VectorFloat32Parameter", "88f231a1-7956-41f5-98b7-4471705d2805");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat32ParameterType, "nx::core::VectorFloat32Parameter", "88f231a1-7956-41f5-98b7-4471705d2805");
 
 SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat64ParameterType, "nx::core::VectorFloat64Parameter", "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96");

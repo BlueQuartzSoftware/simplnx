@@ -108,7 +108,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
     const usize cellCount = dataStructure.getDataRefAs<ImageGeom>(geometryPath).getNumberOfCells();
     if(tupleCount != cellCount)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -5565, fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.", parameterName,
                                      matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
     }
@@ -159,7 +159,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   //    }
   //  }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -168,11 +168,11 @@ Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStru
 {
   NearestPointFuseRegularGridsInputValues inputValues;
 
-  inputValues.SamplingGeometryPath = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
-  inputValues.ReferenceGeometryPath = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
-  inputValues.SamplingCellAttributeMatrixPath = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
-  inputValues.ReferenceCellAttributeMatrixPath = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
-  filterArgs.value<bool>(k_UseFill_Key) ? inputValues.fillValue = filterArgs.value<float64>(k_FillValue_Key) : inputValues.fillValue = 0.0;
+  inputValues.sampling_geometry_path = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
+  inputValues.reference_geometry_path = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
+  inputValues.sampling_cell_attribute_matrix_path = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
+  inputValues.reference_cell_attribute_matrix_path = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
+  filterArgs.value<bool>(k_UseFill_Key) ? inputValues.fill_value = filterArgs.value<float64>(k_FillValue_Key) : inputValues.fill_value = 0.0;
 
   return NearestPointFuseRegularGrids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

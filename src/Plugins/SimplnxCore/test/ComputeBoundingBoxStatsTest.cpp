@@ -17,7 +17,7 @@
 #include <memory>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -59,7 +59,7 @@ DataStructure InitializeImageDataStructure()
 
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, dims, imageGeomPtr->getId());
 
-  Int32Array* inputArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, dims, std::vector<usize>{1}, cellAmPtr->getId());
+  Int32ArrayType* inputArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, dims, std::vector<usize>{1}, cellAmPtr->getId());
   (*inputArrayPtr)[0] = 1;
   (*inputArrayPtr)[1] = 2;
   (*inputArrayPtr)[2] = 3;
@@ -89,7 +89,7 @@ DataStructure InitializeImageDataStructure()
   dims.resize(1);
   dims[0] = 2;
   AttributeMatrix* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, dims, imageGeomPtr->getId());
-  Float32Array* unifiedBoundsArrayPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, dims, std::vector<usize>{6}, featureAmPtr->getId());
+  Float32ArrayType* unifiedBoundsArrayPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, dims, std::vector<usize>{6}, featureAmPtr->getId());
 
   return dataStructure;
 }
@@ -160,8 +160,8 @@ void BuildBenchmarkDataStructure(DataStructure& dataStructure)
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto inputStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_InputArrayPath, cellTupleShape, {1});
-  auto* inputArrayPtr = Int32Array::Create(dataStructure, k_InputArrayName, inputStore, cellAmPtr->getId());
+  auto inputStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_InputArrayPath, cellTupleShape, {1});
+  auto* inputArrayPtr = Int32ArrayType::Create(dataStructure, k_InputArrayName, inputStore, cellAmPtr->getId());
   REQUIRE(inputArrayPtr != nullptr);
 
   auto sliceBuffer = std::make_unique<int32[]>(k_BenchmarkSliceTuples);
@@ -179,8 +179,8 @@ void BuildBenchmarkDataStructure(DataStructure& dataStructure)
   }
 
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {k_BenchmarkNumBounds}, imageGeomPtr->getId());
-  auto boundsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_UnifiedBoundsPath, {k_BenchmarkNumBounds}, {k_BenchmarkBoundsComponents});
-  auto* boundsArrayPtr = Float32Array::Create(dataStructure, k_UnifiedBoundsName, boundsStore, featureAmPtr->getId());
+  auto boundsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_UnifiedBoundsPath, {k_BenchmarkNumBounds}, {k_BenchmarkBoundsComponents});
+  auto* boundsArrayPtr = Float32ArrayType::Create(dataStructure, k_UnifiedBoundsName, boundsStore, featureAmPtr->getId());
   REQUIRE(boundsArrayPtr != nullptr);
 
   const std::array<float32, k_BenchmarkNumBounds * k_BenchmarkBoundsComponents> bounds = {
@@ -196,14 +196,14 @@ void BuildBenchmarkDataStructure(DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Overlapping Bounds", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
     unifiedBounds[1] = 0.0f;
     unifiedBounds[2] = 0.0f;
@@ -225,7 +225,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Over
     k_FillAllArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -233,23 +233,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Over
 
   // Compare the generated values.
   {
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr != nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr != nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr != nullptr);
 
     auto lengthVal = (*lengthArrayPtr)[0];
@@ -268,10 +268,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Over
     REQUIRE(maxVal == 13);
     REQUIRE(modeVals.size() == 9);
     REQUIRE(modeVals[0] == 1);
-    REQUIRE(std::fabs(sumVal - 63.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 63.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 9);
 
     lengthVal = (*lengthArrayPtr)[1];
@@ -290,24 +290,24 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Over
     REQUIRE(maxVal == 25);
     REQUIRE(modeVals.size() == 9);
     REQUIRE(modeVals[0] == 13);
-    REQUIRE(std::fabs(sumVal - 171.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 19.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 19.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 171.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 19.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 19.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 9);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mode - Two Overlapping Bounds", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
     unifiedBounds[1] = 0.0f;
     unifiedBounds[2] = 0.0f;
@@ -329,7 +329,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     k_FillAllExceptModeArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -337,23 +337,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
 
   // Compare the generated values.
   {
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr != nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr == nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr != nullptr);
 
     auto lengthVal = (*lengthArrayPtr)[0];
@@ -369,10 +369,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 13);
-    REQUIRE(std::fabs(sumVal - 63.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 63.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 9);
 
     lengthVal = (*lengthArrayPtr)[1];
@@ -388,24 +388,24 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 13);
     REQUIRE(maxVal == 25);
-    REQUIRE(std::fabs(sumVal - 171.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 19.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 19.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 171.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 19.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 19.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 9);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Overlapping Bounds", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
     unifiedBounds[1] = 0.0f;
     unifiedBounds[2] = 0.0f;
@@ -427,7 +427,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Ove
     k_FillBaseArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -435,23 +435,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Ove
 
   // Compare the generated values.
   {
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr == nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr == nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr == nullptr);
 
     auto lengthVal = (*lengthArrayPtr)[0];
@@ -465,9 +465,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Ove
     REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 13);
-    REQUIRE(std::fabs(sumVal - 63.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 63.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
 
     lengthVal = (*lengthArrayPtr)[1];
     minVal = (*minArrayPtr)[1];
@@ -480,22 +480,22 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Ove
     REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 13);
     REQUIRE(maxVal == 25);
-    REQUIRE(std::fabs(sumVal - 171.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 19.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 171.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 19.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isolated Bounds - Box Bounds Checking", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = -1.0f;
     unifiedBounds[1] = -1.0f;
     unifiedBounds[2] = 0.0f;
@@ -517,7 +517,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isol
     k_FillAllArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -525,23 +525,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isol
 
   // Compare the generated values.
   {
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr != nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr != nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr != nullptr);
 
     auto lengthVal = (*lengthArrayPtr)[0];
@@ -560,10 +560,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isol
     REQUIRE(maxVal == 7);
     REQUIRE(modeVals.size() == 4);
     REQUIRE(modeVals[0] == 1);
-    REQUIRE(std::fabs(sumVal - 16.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 4.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 4.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 2.55f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 16.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 4.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 4.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 2.55f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 4);
 
     lengthVal = (*lengthArrayPtr)[1];
@@ -582,24 +582,24 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - Two Isol
     REQUIRE(maxVal == 25);
     REQUIRE(modeVals.size() == 4);
     REQUIRE(modeVals[0] == 19);
-    REQUIRE(std::fabs(sumVal - 88.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 22.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 22.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 2.55f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 88.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 22.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 22.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 2.55f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 4);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mode - Two Isolated Bounds - Box Bounds Checking", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = -1.0f;
     unifiedBounds[1] = -1.0f;
     unifiedBounds[2] = 0.0f;
@@ -621,7 +621,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     k_FillAllExceptModeArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -629,23 +629,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
 
   // Compare the generated values.
   {
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr != nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr == nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr != nullptr);
 
     auto lengthVal = (*lengthArrayPtr)[0];
@@ -661,10 +661,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     REQUIRE(lengthVal == 4);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 7);
-    REQUIRE(std::fabs(sumVal - 16.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 4.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 4.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 2.55f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 16.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 4.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 4.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 2.55f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 4);
 
     lengthVal = (*lengthArrayPtr)[1];
@@ -680,24 +680,24 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats Except Mod
     REQUIRE(lengthVal == 4);
     REQUIRE(minVal == 19);
     REQUIRE(maxVal == 25);
-    REQUIRE(std::fabs(sumVal - 88.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 22.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 22.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 2.55f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 88.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 22.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 22.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 2.55f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 4);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Isolated Bounds - Box Bounds Checking", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = -1.0f;
     unifiedBounds[1] = -1.0f;
     unifiedBounds[2] = 0.0f;
@@ -719,7 +719,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Iso
     k_FillBaseArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -727,23 +727,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Iso
 
   // Compare the generated values.
   {
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr == nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr == nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr == nullptr);
 
     auto lengthVal = (*lengthArrayPtr)[0];
@@ -757,9 +757,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Iso
     REQUIRE(lengthVal == 4);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 7);
-    REQUIRE(std::fabs(sumVal - 16.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 4.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 2.55f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 16.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 4.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 2.55f) < unit_test::k_Epsilon);
 
     lengthVal = (*lengthArrayPtr)[1];
     minVal = (*minArrayPtr)[1];
@@ -772,22 +772,22 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - Two Iso
     REQUIRE(lengthVal == 4);
     REQUIRE(minVal == 19);
     REQUIRE(maxVal == 25);
-    REQUIRE(std::fabs(sumVal - 88.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 22.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 2.55f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 88.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 22.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 2.55f) < unit_test::k_Epsilon);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty Bound - 1 In Bound", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
     unifiedBounds[1] = 0.0f;
     unifiedBounds[2] = 0.0f;
@@ -809,7 +809,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty 
     k_FillAllArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -817,25 +817,25 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty 
 
   // Compare the generated values.
   {
-    auto* boundsHasDataArrayPtr = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
+    auto* boundsHasDataArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
     REQUIRE(boundsHasDataArrayPtr != nullptr);
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr != nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr != nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr != nullptr);
 
     auto boundHasDataVal = (*boundsHasDataArrayPtr)[0];
@@ -856,10 +856,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty 
     REQUIRE(maxVal == 13);
     REQUIRE(modeVals.size() == 9);
     REQUIRE(modeVals[0] == 1);
-    REQUIRE(std::fabs(sumVal - 63.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 63.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 9);
 
     boundHasDataVal = (*boundsHasDataArrayPtr)[1];
@@ -872,14 +872,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Stats - 1 Empty 
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stats - 1 Empty Bound - 1 In Bound", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
     unifiedBounds[1] = 0.0f;
     unifiedBounds[2] = 0.0f;
@@ -901,7 +901,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stat
     k_FillAllExceptModeArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -909,25 +909,25 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stat
 
   // Compare the generated values.
   {
-    auto* boundsHasDataArrayPtr = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
+    auto* boundsHasDataArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
     REQUIRE(boundsHasDataArrayPtr != nullptr);
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr != nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr == nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr != nullptr);
 
     auto boundHasDataVal = (*boundsHasDataArrayPtr)[0];
@@ -945,10 +945,10 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stat
     REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 13);
-    REQUIRE(std::fabs(sumVal - 63.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(medianVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 63.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(medianVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
     REQUIRE(numUnique == 9);
 
     boundHasDataVal = (*boundsHasDataArrayPtr)[1];
@@ -961,14 +961,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test All Except Mode Stat
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty Bound - 1 In Bound", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   // Configure the unified bounds array.
   {
-    auto& unifiedBounds = dataStructure.getDataRefAs<Float32Array>(k_UnifiedBoundsPath);
+    auto& unifiedBounds = dataStructure.getDataRefAs<Float32ArrayType>(k_UnifiedBoundsPath);
     unifiedBounds[0] = 0.0f;
     unifiedBounds[1] = 0.0f;
     unifiedBounds[2] = 0.0f;
@@ -990,7 +990,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty
     k_FillBaseArgs(args);
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -998,25 +998,25 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty
 
   // Compare the generated values.
   {
-    auto* boundsHasDataArrayPtr = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
+    auto* boundsHasDataArrayPtr = dataStructure.getDataAs<BoolArrayType>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
     REQUIRE(boundsHasDataArrayPtr != nullptr);
-    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(k_FeatureAMPath.createChildPath(k_Length));
+    auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(k_FeatureAMPath.createChildPath(k_Length));
     REQUIRE(lengthArrayPtr != nullptr);
-    auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Min));
+    auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Min));
     REQUIRE(minArrayPtr != nullptr);
-    auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_Max));
+    auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_Max));
     REQUIRE(maxArrayPtr != nullptr);
-    auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Mean));
+    auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Mean));
     REQUIRE(meanArrayPtr != nullptr);
-    auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+    auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
     REQUIRE(medianArrayPtr == nullptr);
     auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(k_FeatureAMPath.createChildPath(k_Mode));
     REQUIRE(modeArrayPtr == nullptr);
-    auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_StdDev));
+    auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_StdDev));
     REQUIRE(stdArrayPtr != nullptr);
-    auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Sum));
+    auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Sum));
     REQUIRE(sumArrayPtr != nullptr);
-    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
+    auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(k_FeatureAMPath.createChildPath(k_NumUniqueValues));
     REQUIRE(numUniqueValuesArrayPtr == nullptr);
 
     auto boundHasDataVal = (*boundsHasDataArrayPtr)[0];
@@ -1032,9 +1032,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty
     REQUIRE(lengthVal == 9);
     REQUIRE(minVal == 1);
     REQUIRE(maxVal == 13);
-    REQUIRE(std::fabs(sumVal - 63.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(meanVal - 7.0f) < UnitTest::EPSILON);
-    REQUIRE(std::fabs(stdVal - 4.17f) < UnitTest::EPSILON);
+    REQUIRE(std::fabs(sumVal - 63.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(meanVal - 7.0f) < unit_test::k_Epsilon);
+    REQUIRE(std::fabs(stdVal - 4.17f) < unit_test::k_Epsilon);
 
     boundHasDataVal = (*boundsHasDataArrayPtr)[1];
     lengthVal = (*lengthArrayPtr)[1];
@@ -1046,9 +1046,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Test Base Stats - 1 Empty
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling Checks - Create")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
   constexpr StringLiteralType k_NewAMName = "newAM";
@@ -1085,7 +1085,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
     args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_ModeName_Key, std::make_any<std::string>(k_Mode));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -1095,23 +1095,23 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
   REQUIRE(amPtr != nullptr);
   REQUIRE(amPtr->getNumberOfTuples() == 2);
 
-  auto* lengthArrayPtr = dataStructure.getDataAs<UInt64Array>(newAMPath.createChildPath(k_Length));
+  auto* lengthArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(newAMPath.createChildPath(k_Length));
   REQUIRE(lengthArrayPtr != nullptr);
-  auto* minArrayPtr = dataStructure.getDataAs<Int32Array>(newAMPath.createChildPath(k_Min));
+  auto* minArrayPtr = dataStructure.getDataAs<Int32ArrayType>(newAMPath.createChildPath(k_Min));
   REQUIRE(minArrayPtr != nullptr);
-  auto* maxArrayPtr = dataStructure.getDataAs<Int32Array>(newAMPath.createChildPath(k_Max));
+  auto* maxArrayPtr = dataStructure.getDataAs<Int32ArrayType>(newAMPath.createChildPath(k_Max));
   REQUIRE(maxArrayPtr != nullptr);
-  auto* meanArrayPtr = dataStructure.getDataAs<Float32Array>(newAMPath.createChildPath(k_Mean));
+  auto* meanArrayPtr = dataStructure.getDataAs<Float32ArrayType>(newAMPath.createChildPath(k_Mean));
   REQUIRE(meanArrayPtr != nullptr);
-  auto* medianArrayPtr = dataStructure.getDataAs<Float32Array>(newAMPath.createChildPath(k_Median));
+  auto* medianArrayPtr = dataStructure.getDataAs<Float32ArrayType>(newAMPath.createChildPath(k_Median));
   REQUIRE(medianArrayPtr != nullptr);
   auto* modeArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(newAMPath.createChildPath(k_Mode));
   REQUIRE(modeArrayPtr != nullptr);
-  auto* stdArrayPtr = dataStructure.getDataAs<Float32Array>(newAMPath.createChildPath(k_StdDev));
+  auto* stdArrayPtr = dataStructure.getDataAs<Float32ArrayType>(newAMPath.createChildPath(k_StdDev));
   REQUIRE(stdArrayPtr != nullptr);
-  auto* sumArrayPtr = dataStructure.getDataAs<Float32Array>(newAMPath.createChildPath(k_Sum));
+  auto* sumArrayPtr = dataStructure.getDataAs<Float32ArrayType>(newAMPath.createChildPath(k_Sum));
   REQUIRE(sumArrayPtr != nullptr);
-  auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32Array>(newAMPath.createChildPath(k_NumUniqueValues));
+  auto* numUniqueValuesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(newAMPath.createChildPath(k_NumUniqueValues));
   REQUIRE(numUniqueValuesArrayPtr != nullptr);
 }
 
@@ -1137,7 +1137,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
     args.insertOrAssign(ComputeBoundingBoxStatsFilter::k_UnifiedBoundsPath_Key, std::make_any<DataPath>(k_UnifiedBoundsPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 }
 
@@ -1165,7 +1165,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
   Arguments args;
   args.insertOrAssign(FilterType::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({"Image"})));
   args.insertOrAssign(FilterType::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
-  REQUIRE(Float32Array::Create(dataStructure, "Bounds", std::make_shared<DataStore<float32>>(ShapeType{1}, ShapeType{6}, 0)) != nullptr);
+  REQUIRE(Float32ArrayType::Create(dataStructure, "Bounds", std::make_shared<DataStore<float32>>(ShapeType{1}, ShapeType{6}, 0)) != nullptr);
   args.insertOrAssign(FilterType::k_UnifiedBoundsPath_Key, std::make_any<DataPath>(DataPath({"Bounds"})));
   args.insertOrAssign(FilterType::k_CreateNewAM_Key, std::make_any<bool>(true));
   args.insertOrAssign(FilterType::k_CalculateMean_Key, std::make_any<bool>(true));
@@ -1173,13 +1173,13 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -59204);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
@@ -1189,9 +1189,9 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Geometry cell tuple count
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median ranks", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const usize caseIndex = GENERATE(0, 1, 2, 3, 4, 5, 6);
   CAPTURE(caseIndex);
   const std::vector<std::vector<int32>> smallInputs = {{1, 1, 2, 2}, {1, 2, 3, 4}, {1, 1, 1, 2}, {1, 2, 2, 2}, {5}, {1, 2, 3}};
@@ -1217,13 +1217,13 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median ranks", "[SimplnxC
   REQUIRE(geomPtr->setSpacing({1, 1, 1}).valid());
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, values.size()}, geomPtr->getId());
   geomPtr->setCellData(*cellsPtr);
-  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cellsPtr->getId());
+  auto* inputPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cellsPtr->getId());
   for(usize i = 0; i < values.size(); i++)
   {
     (*inputPtr)[i] = values[i];
   }
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2}, geomPtr->getId());
-  auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, featuresPtr->getId());
+  auto* boundsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, featuresPtr->getId());
   const std::array<float32, 12> boxValues = {0, 0, 0, static_cast<float32>(values.size()), 1, 1, 0, 0, 0, 1, 1, 1};
   for(usize i = 0; i < boxValues.size(); i++)
   {
@@ -1234,19 +1234,19 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median ranks", "[SimplnxC
   ComputeBoundingBoxStatsFilter filter;
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median)));
-  const auto& medians = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median)));
+  const auto& medians = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
   // Independent oracle: middle ranks of the listed inputs; (m + (m+1))/2 for 1..2m.
   CHECK(medians[0] == expected[caseIndex]);
   CHECK(medians[1] == static_cast<float32>(values[0]));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median of large values", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool distinctMiddleValues = GENERATE(false, true);
   CAPTURE(distinctMiddleValues);
   const std::vector<float32> values = distinctMiddleValues ? std::vector<float32>{2.0e38f, 3.0e38f} : std::vector<float32>{1.0f, 2.0e38f, 2.0e38f, 3.0e38f};
@@ -1259,13 +1259,13 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median of large values", 
   REQUIRE(geomPtr->setSpacing({1, 1, 1}).valid());
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, values.size()}, geomPtr->getId());
   geomPtr->setCellData(*cellsPtr);
-  auto* inputPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cellsPtr->getId());
+  auto* inputPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, values.size()}, ShapeType{1}, cellsPtr->getId());
   for(usize i = 0; i < values.size(); i++)
   {
     (*inputPtr)[i] = values[i];
   }
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {2}, geomPtr->getId());
-  auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, featuresPtr->getId());
+  auto* boundsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{2}, ShapeType{6}, featuresPtr->getId());
   // Box 0 contains all values; box 1 contains the middle pair.
   const float32 boxEnd = static_cast<float32>(values.size());
   const std::array<float32, 12> boxValues = {0, 0, 0, boxEnd, 1, 1, distinctMiddleValues ? 0.0f : 1.0f, 0, 0, distinctMiddleValues ? 2.0f : 3.0f, 1, 1};
@@ -1278,19 +1278,19 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median of large values", 
   ComputeBoundingBoxStatsFilter filter;
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median)));
-  const auto& medians = dataStructure.getDataRefAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median)));
+  const auto& medians = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
   CHECK(medians[0] == Approx(expectedMedian));
   CHECK(medians[1] == Approx(expectedMedian));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median does not require mean output", "[SimplnxCore][ComputeBoundingBoxStatsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool evenCount = GENERATE(false, true);
   CAPTURE(scenario, evenCount);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const usize count = evenCount ? 2 : 1;
   auto* geomPtr = ImageGeom::Create(dataStructure, k_GeomName);
@@ -1299,14 +1299,14 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median does not require m
   REQUIRE(geomPtr->setOrigin({10, 20, 30}).valid());
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, {1, 1, count}, geomPtr->getId());
   geomPtr->setCellData(*cellsPtr);
-  auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, count}, ShapeType{1}, cellsPtr->getId());
+  auto* valuesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_InputArrayName, ShapeType{1, 1, count}, ShapeType{1}, cellsPtr->getId());
   (*valuesPtr)[0] = evenCount ? 2 : 7;
   if(evenCount)
   {
     (*valuesPtr)[1] = 6;
   }
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {1}, geomPtr->getId());
-  auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{1}, ShapeType{6}, featuresPtr->getId());
+  auto* boundsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, k_UnifiedBoundsName, ShapeType{1}, ShapeType{6}, featuresPtr->getId());
   const std::array<float32, 6> boundValues = {10, 20, 30, evenCount ? 14.0F : 12.0F, 23, 35};
   for(usize i = 0; i < boundValues.size(); i++)
   {
@@ -1324,12 +1324,12 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Median does not require m
   ComputeBoundingBoxStatsFilter filter;
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* medianPtr = dataStructure.getDataAs<Float32Array>(k_FeatureAMPath.createChildPath(k_Median));
-  const auto* hasDataPtr = dataStructure.getDataAs<BoolArray>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
+  const auto* medianPtr = dataStructure.getDataAs<Float32ArrayType>(k_FeatureAMPath.createChildPath(k_Median));
+  const auto* hasDataPtr = dataStructure.getDataAs<BoolArrayType>(k_FeatureAMPath.createChildPath(k_BoundsHasData));
   REQUIRE(medianPtr != nullptr);
   REQUIRE(hasDataPtr != nullptr);
   CHECK((*hasDataPtr)[0]);
   // The singleton median is 7. The even median is (2 + 6) / 2 = 4.
   CHECK((*medianPtr)[0] == (evenCount ? 4.0F : 7.0F));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

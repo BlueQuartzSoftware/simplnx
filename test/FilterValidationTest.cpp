@@ -95,7 +95,7 @@ static void GenerateParameterList()
 
 TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   GenerateParameterList();
 
@@ -120,8 +120,8 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter
       IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
       const auto& parameters = filter->parameters();
 
-      if(nx::core::StringUtilities::starts_with(filterClassName, "Calculate") || nx::core::StringUtilities::starts_with(filterClassName, "Find") ||
-         nx::core::StringUtilities::starts_with(filterClassName, "Generate") || nx::core::StringUtilities::starts_with(filterClassName, "Calculate"))
+      if(nx::core::string_utilities::StartsWith(filterClassName, "Calculate") || nx::core::string_utilities::StartsWith(filterClassName, "Find") ||
+         nx::core::string_utilities::StartsWith(filterClassName, "Generate") || nx::core::string_utilities::StartsWith(filterClassName, "Calculate"))
       {
         uniqueSepNames.insert(fmt::format("{},{}", plugName, filterClassName));
       }
@@ -141,7 +141,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter
         }
 
         std::string pType = s_ParameterMap[paramValue->uuid()];
-        if(!nx::core::StringUtilities::ends_with(parameter.first, "_path") &&
+        if(!nx::core::string_utilities::EndsWith(parameter.first, "_path") &&
            (pType == "simplnx.ArraySelectionParameter" || pType == "simplnx.ArrayCreationParameter" || pType == "simplnx.AttributeMatrixSelectionParameter" ||
             pType == "simplnx.DataGroupCreationParameter" || pType == "simplnx.DataGroupSelectionParameter" || pType == "simplnx.DataPathSelectionParameter" ||
             pType == "simplnx.GeometrySelectionParameter" || pType == "simplnx.NeighborListSelectionParameter" || pType == "simplnx.DataGroupCreationParameter"))
@@ -149,16 +149,16 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter
           output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_path' for a Parameter of Type " << pType << '\n';
         }
 
-        if(pType == "simplnx.MultiArraySelectionParameter" && !nx::core::StringUtilities::ends_with(parameter.first, "s"))
+        if(pType == "simplnx.MultiArraySelectionParameter" && !nx::core::string_utilities::EndsWith(parameter.first, "s"))
         {
           output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with 's' for a Parameter of Type " << pType << '\n';
         }
 
-        if(pType == "simplnx.DataObjectNameParameter" && !nx::core::StringUtilities::ends_with(parameter.first, "_name"))
+        if(pType == "simplnx.DataObjectNameParameter" && !nx::core::string_utilities::EndsWith(parameter.first, "_name"))
         {
           output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_name' for a Parameter of Type " << pType << '\n';
         }
-        if((pType == "simplnx.ChoicesParameter" || pType == "simplnx.NumericTypeParameter") && !nx::core::StringUtilities::ends_with(parameter.first, "_index"))
+        if((pType == "simplnx.ChoicesParameter" || pType == "simplnx.NumericTypeParameter") && !nx::core::string_utilities::EndsWith(parameter.first, "_index"))
         {
           output << plugName << "->" << filter->name() << "->" << paramValue->name() << " The parameter key should end with '_index' for a Parameter of Type " << pType << '\n';
         }
@@ -183,7 +183,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter
 
 TEST_CASE("nx::core::FilterValidation::Filter Parameter Help Text", "[simplnx][Filter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   GenerateParameterList();
 
@@ -230,7 +230,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Help Text", "[simplnx][F
 
 TEST_CASE("nx::core::FilterValidation::Filter Name", "[simplnx][Filter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   GenerateParameterList();
 
@@ -251,7 +251,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Name", "[simplnx][Filter]")
     {
       const std::string filterClassName = filterHandle.getClassName();
       IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
-      if(!nx::core::StringUtilities::ends_with(filterClassName, "Filter"))
+      if(!nx::core::string_utilities::EndsWith(filterClassName, "Filter"))
       {
         output << "- [ ] " << plugName << "->" << filter->name() << ". Filter class names should end with 'Filter'.\n";
       }
@@ -270,7 +270,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Name", "[simplnx][Filter]")
 
 TEST_CASE("nx::core::FilterValidation::Filter Version", "[simplnx][Filter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto* filterListPtr = Application::Instance()->getFilterList();
   REQUIRE(filterListPtr->size() > 0);
@@ -298,7 +298,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Version", "[simplnx][Filter]")
 
 TEST_CASE("nx::core::FilterValidation::Test Filter Clone", "[simplnx][Filter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto* filterListPtr = Application::Instance()->getFilterList();
   REQUIRE(filterListPtr->size() > 0);

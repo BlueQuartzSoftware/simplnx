@@ -138,9 +138,9 @@ usize ComputeFeatureClustering::RdfCacheIndex(usize numberOfBins, usize ensemble
 
 Result<> ComputeFeatureClustering::operator()()
 {
-  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
-  const auto& centroidsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_array_path)->getDataStoreRef();
+  const auto& centroidsStoreRef = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
 
   // Local feature arrays remove store access from the quadratic distance loop.
   const usize numPhases = featurePhasesStoreRef.getSize();
@@ -159,23 +159,23 @@ Result<> ComputeFeatureClustering::operator()()
     return ioResult;
   }
 
-  auto& clusteringList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->ClusteringListArrayName);
-  auto& rdfStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->RDFArrayName)->getDataStoreRef();
-  auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->MaxMinArrayName)->getDataStoreRef();
+  auto& clusteringList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->clustering_list_array_name);
+  auto& rdfStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->rdf_array_name)->getDataStoreRef();
+  auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->max_min_array_name)->getDataStoreRef();
 
   // A local RDF cache avoids a DataStore operation for each pair distance.
   const usize rdfSize = rdfStore.getSize();
   std::vector<float32> rdfCache(rdfSize, 0.0f);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  if(m_InputValues->RemoveBiasedFeatures)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
+  if(m_InputValues->remove_biased_features)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->BiasedFeaturesArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->biased_features_array_path);
     } catch(const std::out_of_range& exception)
     {
       // A direct caller can bypass preflight. This guard reports an invalid mask path or type.
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->BiasedFeaturesArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->biased_features_array_path.toString());
       return MakeErrorResult(-54070, message);
     }
   }
@@ -195,13 +195,13 @@ Result<> ComputeFeatureClustering::operator()()
   float32 max = 0.0f;
 
   std::vector<std::vector<float32>> clusters;
-  std::vector<float32> oldCount(m_InputValues->NumberOfBins);
+  std::vector<float32> oldCount(m_InputValues->number_of_bins);
   std::vector<float32> randomRDF;
 
   const usize totalFeatures = numPhases;
 
-  SizeVec3 dims = imageGeometry.getDimensions();
-  FloatVec3 spacing = imageGeometry.getSpacing();
+  SizeVec3Type dims = imageGeometry.getDimensions();
+  FloatVec3Type spacing = imageGeometry.getSpacing();
 
   const float32 sizeX = dims[0] * spacing[0];
   const float32 sizeY = dims[1] * spacing[1];
@@ -213,7 +213,7 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesCache[i] == m_InputValues->phase_number)
     {
       totalPptFeatures++;
     }
@@ -230,7 +230,7 @@ Result<> ComputeFeatureClustering::operator()()
     {
       return {};
     }
-    if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesCache[i] == m_InputValues->phase_number)
     {
       x = centroidsCache[3 * i];
       y = centroidsCache[3 * i + 1];
@@ -260,7 +260,7 @@ Result<> ComputeFeatureClustering::operator()()
     {
       return {};
     }
-    if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
+    if(featurePhasesCache[i] == m_InputValues->phase_number)
     {
       for(auto value : clusters[i])
       {
@@ -270,12 +270,12 @@ Result<> ComputeFeatureClustering::operator()()
     }
   }
 
-  const float32 stepSize = (max - min) / m_InputValues->NumberOfBins;
+  const float32 stepSize = (max - min) / m_InputValues->number_of_bins;
 
-  minMaxDistancesStore[(m_InputValues->PhaseNumber * 2)] = max;
-  minMaxDistancesStore[(m_InputValues->PhaseNumber * 2) + 1] = min;
+  minMaxDistancesStore[(m_InputValues->phase_number * 2)] = max;
+  minMaxDistancesStore[(m_InputValues->phase_number * 2) + 1] = min;
 
-  if(m_InputValues->RemoveBiasedFeatures && maskCompare != nullptr)
+  if(m_InputValues->remove_biased_features && maskCompare != nullptr)
   {
     for(usize i = 1; i < totalFeatures; i++)
     {
@@ -283,7 +283,7 @@ Result<> ComputeFeatureClustering::operator()()
       {
         return {};
       }
-      if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
+      if(featurePhasesCache[i] == m_InputValues->phase_number)
       {
         if(maskCompare->isTrue(i))
         {
@@ -294,11 +294,11 @@ Result<> ComputeFeatureClustering::operator()()
         {
           ensemble = featurePhasesCache[i];
           bin = (clusters[i][j] - min) / stepSize;
-          if(bin >= m_InputValues->NumberOfBins)
+          if(bin >= m_InputValues->number_of_bins)
           {
-            bin = m_InputValues->NumberOfBins - 1;
+            bin = m_InputValues->number_of_bins - 1;
           }
-          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
+          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->number_of_bins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
         }
       }
     }
@@ -311,17 +311,17 @@ Result<> ComputeFeatureClustering::operator()()
       {
         return {};
       }
-      if(featurePhasesCache[i] == m_InputValues->PhaseNumber)
+      if(featurePhasesCache[i] == m_InputValues->phase_number)
       {
         for(usize j = 0; j < clusters[i].size(); j++)
         {
           ensemble = featurePhasesCache[i];
           bin = (clusters[i][j] - min) / stepSize;
-          if(bin >= m_InputValues->NumberOfBins)
+          if(bin >= m_InputValues->number_of_bins)
           {
-            bin = m_InputValues->NumberOfBins - 1;
+            bin = m_InputValues->number_of_bins - 1;
           }
-          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
+          rdfCache[RdfCacheIndex(static_cast<usize>(m_InputValues->number_of_bins), static_cast<usize>(ensemble), static_cast<usize>(bin))]++;
         }
       }
     }
@@ -331,15 +331,15 @@ Result<> ComputeFeatureClustering::operator()()
   const int32 currentNumBins = ceilf((maxBoxDistance - min) / (stepSize));
 
   randomRDF.resize(currentNumBins + 1);
-  randomRDF = GenerateRandomDistribution(min, max, m_InputValues->NumberOfBins, boxDims, boxRes, m_InputValues->SeedValue);
+  randomRDF = GenerateRandomDistribution(min, max, m_InputValues->number_of_bins, boxDims, boxRes, m_InputValues->seed_value);
 
   // Scale the random reference to the selected phase pair count.
   const float32 normFactor = totalPptFeatures * (totalPptFeatures - 1);
   std::transform(randomRDF.begin(), randomRDF.end(), randomRDF.begin(), [normFactor](float32 value) { return value * normFactor; });
 
-  for(usize i = 0; i < m_InputValues->NumberOfBins; i++)
+  for(usize i = 0; i < m_InputValues->number_of_bins; i++)
   {
-    const usize cacheIndex = RdfCacheIndex(static_cast<usize>(m_InputValues->NumberOfBins), static_cast<usize>(m_InputValues->PhaseNumber), i);
+    const usize cacheIndex = RdfCacheIndex(static_cast<usize>(m_InputValues->number_of_bins), static_cast<usize>(m_InputValues->phase_number), i);
     oldCount[i] = rdfCache[cacheIndex];
     rdfCache[cacheIndex] = oldCount[i] / randomRDF[i + 1];
   }

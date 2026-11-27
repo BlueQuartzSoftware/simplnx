@@ -117,7 +117,7 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
     auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
     if(dimensions.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     tupleDims = std::move(dimensions.value());
   }
@@ -137,7 +137,7 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> ReadStringDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -145,11 +145,11 @@ Result<> ReadStringDataArrayFilter::executeImpl(DataStructure& dataStructure, co
 {
   ReadStringDataArrayInputValues inputValues;
 
-  inputValues.inputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.skipLineCount = filterArgs.value<UInt64ParameterType::ValueType>(k_NSkipLines_Key);
-  inputValues.delimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
-  inputValues.outputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_DataArrayPath_Key);
-  inputValues.dataFormat = filterArgs.value<DataStoreFormatParameter::ValueType>(k_DataFormat_Key);
+  inputValues.input_file_value = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.skip_line_count = filterArgs.value<UInt64ParameterType::ValueType>(k_NSkipLines_Key);
+  inputValues.delimiter_index = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
+  inputValues.output_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_DataArrayPath_Key);
+  inputValues.data_format = filterArgs.value<DataStoreFormatParameter::ValueType>(k_DataFormat_Key);
 
   return ReadStringDataArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

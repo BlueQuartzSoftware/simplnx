@@ -52,7 +52,7 @@ private:
 class SIMPLNX_EXPORT ArrayThreshold : public IArrayThreshold
 {
 public:
-  using ComparisonValue = float64;
+  using ComparisonValueType = float64;
   enum class ComparisonType
   {
     GreaterThan,
@@ -72,8 +72,8 @@ public:
   [[nodiscard]] DataPath getArrayPath() const;
   void setArrayPath(const DataPath& path);
 
-  [[nodiscard]] ComparisonValue getComparisonValue() const;
-  void setComparisonValue(ComparisonValue value);
+  [[nodiscard]] ComparisonValueType getComparisonValue() const;
+  void setComparisonValue(ComparisonValueType value);
 
   [[nodiscard]] usize getComponentIndex() const;
   void setComponentIndex(usize index);
@@ -88,7 +88,7 @@ public:
 
 private:
   DataPath m_ArrayPath;
-  ComparisonValue m_Value{0.0};
+  ComparisonValueType m_Value{0.0};
   usize m_ComponentIndex = 0;
   ComparisonType m_Comparison{ComparisonType::GreaterThan};
 };

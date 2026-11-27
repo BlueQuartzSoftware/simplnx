@@ -78,12 +78,12 @@ inline std::string SelectDistanceWorkingDataFormat(IDataStore::StoreType inputSt
 
 struct Maurer2DBufferPlan
 {
-  usize rowBatchRows = 0;
-  usize columnBatchCols = 0;
-  usize lineBlockValues = 0;
-  usize residentBytes = 0;
-  bool spillX = false;
-  bool spillY = false;
+  usize row_batch_rows = 0;
+  usize column_batch_cols = 0;
+  usize line_block_values = 0;
+  usize resident_bytes = 0;
+  bool spill_x = false;
+  bool spill_y = false;
   bool valid = false;
   bool overflow = false;
 };
@@ -111,21 +111,21 @@ inline bool MaurerCheckedMultiply(usize left, usize right, usize& result)
 struct MaurerResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseMaurerResidentState(const SizeVec3& dims)
+inline bool ShouldUseMaurerResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateMaurerResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateMaurerResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -141,13 +141,13 @@ Result<usize> CalculateMaurerResidentWorkingMemoryBytes(const SizeVec3& dims)
   {
     return MakeErrorResult<usize>(-8359,
                                   fmt::format("Signed Maurer distance-map dimensions ({}) and input element size ({} bytes) overflow while sizing the resident input copy and float32 transform state.",
-                                              StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                              string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<MaurerResidentMemoryAllocation> ReserveMaurerResidentWorkingMemory(const SizeVec3& dims)
+Result<MaurerResidentMemoryAllocation> ReserveMaurerResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateMaurerResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -160,19 +160,19 @@ Result<MaurerResidentMemoryAllocation> ReserveMaurerResidentWorkingMemory(const 
 
 struct Maurer3DSlabMemoryPlan
 {
-  usize maxYRows = 0;
-  usize workerCount = 1;
-  usize stagingValues = 0;
-  usize residentBytes = 0;
+  usize max_y_rows = 0;
+  usize worker_count = 1;
+  usize staging_values = 0;
+  usize resident_bytes = 0;
 };
 
 template <class T>
-Result<Maurer3DSlabMemoryPlan> CreateMaurer3DSlabMemoryPlan(const SizeVec3& dims, usize targetBytes)
+Result<Maurer3DSlabMemoryPlan> CreateMaurer3DSlabMemoryPlan(const SizeVec3Type& dims, usize targetBytes)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] <= 1)
   {
     return MakeErrorResult<Maurer3DSlabMemoryPlan>(
-        -8360, fmt::format("Signed Maurer 3D slab planning requires nonzero X and Y dimensions and Z greater than one. Actual dimensions: {}.", StringUtilities::formatDimensions3D(dims)));
+        -8360, fmt::format("Signed Maurer 3D slab planning requires nonzero X and Y dimensions and Z greater than one. Actual dimensions: {}.", string_utilities::FormatDimensions3D(dims)));
   }
 
   usize planeValues = 0;
@@ -188,14 +188,14 @@ Result<Maurer3DSlabMemoryPlan> CreateMaurer3DSlabMemoryPlan(const SizeVec3& dims
   if(!MaurerCheckedMultiply(dims[0], dims[1], planeValues) || !MaurerCheckedMultiply(planeValues, k_InitBytesPerValue, initBuffersBytes))
   {
     return MakeErrorResult<Maurer3DSlabMemoryPlan>(
-        -8361, fmt::format("Signed Maurer dimensions ({}) and input element size ({} bytes) overflow while sizing 3D slab plane buffers.", StringUtilities::formatDimensions3D(dims), sizeof(T)));
+        -8361, fmt::format("Signed Maurer dimensions ({}) and input element size ({} bytes) overflow while sizing 3D slab plane buffers.", string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   maxLineValues = std::max({dims[0], dims[1], dims[2]});
   if(!MaurerCheckedMultiply(maxLineValues, k_WorkerBytesPerLineValue, oneWorkerScratchBytes) || !MaurerCheckedMultiply(oneWorkerScratchBytes, workerCount, workerScratchBytes) ||
      !MaurerCheckedAdd(initBuffersBytes, workerScratchBytes, initPeakBytes))
   {
     return MakeErrorResult<Maurer3DSlabMemoryPlan>(
-        -8362, fmt::format("Signed Maurer dimensions ({}) and worker count ({}) overflow while sizing 3D slab worker scratch.", StringUtilities::formatDimensions3D(dims), workerCount));
+        -8362, fmt::format("Signed Maurer dimensions ({}) and worker count ({}) overflow while sizing 3D slab worker scratch.", string_utilities::FormatDimensions3D(dims), workerCount));
   }
 
   usize valuesPerYRow = 0;
@@ -205,47 +205,47 @@ Result<Maurer3DSlabMemoryPlan> CreateMaurer3DSlabMemoryPlan(const SizeVec3& dims
      !MaurerCheckedMultiply(bytesPerYRow, 2, twoStagingRowBytes))
   {
     return MakeErrorResult<Maurer3DSlabMemoryPlan>(
-        -8363, fmt::format("Signed Maurer dimensions ({}) overflow while sizing one Y row in each of the two 3D Z-pass staging buffers.", StringUtilities::formatDimensions3D(dims)));
+        -8363, fmt::format("Signed Maurer dimensions ({}) overflow while sizing one Y row in each of the two 3D Z-pass staging buffers.", string_utilities::FormatDimensions3D(dims)));
   }
   if(targetBytes < initPeakBytes || targetBytes - workerScratchBytes < twoStagingRowBytes)
   {
     return MakeErrorResult<Maurer3DSlabMemoryPlan>(-8364, fmt::format("Signed Maurer 3D slab target ({} bytes) cannot hold the initialization peak ({} bytes) or worker scratch ({} bytes) plus one Y "
                                                                       "row in each of two Z-pass staging buffers ({} bytes per row) for dimensions {}.",
-                                                                      targetBytes, initPeakBytes, workerScratchBytes, bytesPerYRow, StringUtilities::formatDimensions3D(dims)));
+                                                                      targetBytes, initPeakBytes, workerScratchBytes, bytesPerYRow, string_utilities::FormatDimensions3D(dims)));
   }
 
   Maurer3DSlabMemoryPlan plan;
-  plan.workerCount = workerCount;
+  plan.worker_count = workerCount;
   const usize maximumYRows = std::min(dims[1], (targetBytes - workerScratchBytes) / twoStagingRowBytes);
   const usize batchCount = 1 + (dims[1] - 1) / maximumYRows;
-  plan.maxYRows = 1 + (dims[1] - 1) / batchCount;
+  plan.max_y_rows = 1 + (dims[1] - 1) / batchCount;
   usize stagingBytes = 0;
   usize twoStagingBytes = 0;
   usize zPassPeakBytes = 0;
-  if(!MaurerCheckedMultiply(plan.maxYRows, valuesPerYRow, plan.stagingValues) || !MaurerCheckedMultiply(plan.stagingValues, k_StagingBytesPerValue, stagingBytes) ||
+  if(!MaurerCheckedMultiply(plan.max_y_rows, valuesPerYRow, plan.staging_values) || !MaurerCheckedMultiply(plan.staging_values, k_StagingBytesPerValue, stagingBytes) ||
      !MaurerCheckedMultiply(stagingBytes, 2, twoStagingBytes) || !MaurerCheckedAdd(workerScratchBytes, twoStagingBytes, zPassPeakBytes))
   {
     return MakeErrorResult<Maurer3DSlabMemoryPlan>(
-        -8365, fmt::format("Signed Maurer dimensions ({}) and {} planned Y rows overflow while sizing two 3D Z-pass staging buffers.", StringUtilities::formatDimensions3D(dims), plan.maxYRows));
+        -8365, fmt::format("Signed Maurer dimensions ({}) and {} planned Y rows overflow while sizing two 3D Z-pass staging buffers.", string_utilities::FormatDimensions3D(dims), plan.max_y_rows));
   }
-  plan.residentBytes = std::max(initPeakBytes, zPassPeakBytes);
+  plan.resident_bytes = std::max(initPeakBytes, zPassPeakBytes);
   return {plan};
 }
 
 template <class T>
-Result<ShapeType> CreateMaurer3DChunkHint(const SizeVec3& dims, usize targetBytes)
+Result<ShapeType> CreateMaurer3DChunkHint(const SizeVec3Type& dims, usize targetBytes)
 {
   auto planResult = CreateMaurer3DSlabMemoryPlan<T>(dims, targetBytes);
   if(planResult.invalid())
   {
     return ConvertInvalidResult<ShapeType>(std::move(planResult));
   }
-  const ShapeType hint{1, planResult.value().maxYRows, dims[0]};
+  const ShapeType hint{1, planResult.value().max_y_rows, dims[0]};
   usize values = 0;
   usize bytes = 0;
   if(!MaurerCheckedMultiply(hint[0], hint[1], values) || !MaurerCheckedMultiply(values, hint[2], values) || !MaurerCheckedMultiply(values, sizeof(float32), bytes) || bytes == 0)
   {
-    return MakeErrorResult<ShapeType>(-8366, fmt::format("Signed Maurer chunk hint overflows for dimensions {}.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<ShapeType>(-8366, fmt::format("Signed Maurer chunk hint overflows for dimensions {}.", string_utilities::FormatDimensions3D(dims)));
   }
   return {hint};
 }
@@ -484,10 +484,10 @@ inline Maurer2DBufferPlan BuildMaurer2DBufferPlan(usize nx, usize ny, usize inpu
     plan.overflow = true;
     return plan;
   }
-  plan.spillX = oneRowPeak > residentLimit;
-  plan.spillY = oneColumnPeak > residentLimit;
+  plan.spill_x = oneRowPeak > residentLimit;
+  plan.spill_y = oneColumnPeak > residentLimit;
   // Spill-X writes the transposed full scratch directly, so keep phase 2 on the matching external-store route too.
-  plan.spillY = plan.spillY || plan.spillX;
+  plan.spill_y = plan.spill_y || plan.spill_x;
 
   auto largestFitting = [residentLimit](usize high, const auto& peakFunction) {
     usize low = 1;
@@ -507,18 +507,18 @@ inline Maurer2DBufferPlan BuildMaurer2DBufferPlan(usize nx, usize ny, usize inpu
     return low;
   };
 
-  if(!plan.spillX)
+  if(!plan.spill_x)
   {
-    plan.rowBatchRows = largestFitting(ny, [nx, inputBytes](usize rows, usize& peak) { return Maurer2DDirectXPeak(nx, rows, inputBytes, peak); });
+    plan.row_batch_rows = largestFitting(ny, [nx, inputBytes](usize rows, usize& peak) { return Maurer2DDirectXPeak(nx, rows, inputBytes, peak); });
   }
-  if(!plan.spillY)
+  if(!plan.spill_y)
   {
-    const usize rowBatchRows = plan.spillX ? 0 : plan.rowBatchRows;
-    plan.columnBatchCols = largestFitting(nx, [ny, rowBatchRows](usize columns, usize& peak) { return Maurer2DDirectYPeak(ny, columns, rowBatchRows, peak); });
+    const usize rowBatchRows = plan.spill_x ? 0 : plan.row_batch_rows;
+    plan.column_batch_cols = largestFitting(nx, [ny, rowBatchRows](usize columns, usize& peak) { return Maurer2DDirectYPeak(ny, columns, rowBatchRows, peak); });
   }
 
   usize spillPeak = 0;
-  if(plan.spillX || plan.spillY)
+  if(plan.spill_x || plan.spill_y)
   {
     const usize maxLine = std::max(nx, ny);
     const usize minimumBlock = maxLine == 1 ? 1 : 2;
@@ -542,7 +542,7 @@ inline Maurer2DBufferPlan BuildMaurer2DBufferPlan(usize nx, usize ny, usize inpu
         high = middle - 1;
       }
     }
-    plan.lineBlockValues = low;
+    plan.line_block_values = low;
     if(!Maurer2DSpillPeak(low, inputBytes, spillPeak))
     {
       plan.overflow = true;
@@ -551,19 +551,19 @@ inline Maurer2DBufferPlan BuildMaurer2DBufferPlan(usize nx, usize ny, usize inpu
   }
   else
   {
-    plan.lineBlockValues = std::min<usize>(std::max(nx, ny), 65536);
+    plan.line_block_values = std::min<usize>(std::max(nx, ny), 65536);
   }
 
   usize directXPeak = 0;
   usize directYPeak = 0;
-  const usize rowBatchRows = plan.spillX ? 0 : plan.rowBatchRows;
-  if((!plan.spillX && !Maurer2DDirectXPeak(nx, plan.rowBatchRows, inputBytes, directXPeak)) || (!plan.spillY && !Maurer2DDirectYPeak(ny, plan.columnBatchCols, rowBatchRows, directYPeak)))
+  const usize rowBatchRows = plan.spill_x ? 0 : plan.row_batch_rows;
+  if((!plan.spill_x && !Maurer2DDirectXPeak(nx, plan.row_batch_rows, inputBytes, directXPeak)) || (!plan.spill_y && !Maurer2DDirectYPeak(ny, plan.column_batch_cols, rowBatchRows, directYPeak)))
   {
     plan.overflow = true;
     return plan;
   }
-  plan.residentBytes = std::max({directXPeak, directYPeak, spillPeak});
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.resident_bytes = std::max({directXPeak, directYPeak, spillPeak});
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 
@@ -1020,7 +1020,7 @@ inline Result<> ExternalVoronoi1D(const AbstractDataStore<float32>& source, cons
  * Each work value retains its final sign so later axis passes do not need a separate inside-state volume.
  */
 template <class T>
-bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, SizeVec3 dims, bool insideIsPositive, nonstd::span<float32> work, const std::atomic_bool& shouldCancel)
+bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, SizeVec3Type dims, bool insideIsPositive, nonstd::span<float32> work, const std::atomic_bool& shouldCancel)
 {
   constexpr float32 k_Max = std::numeric_limits<float32>::max();
   // Raw pointers avoid the per-element span contract check during initialization.
@@ -1156,14 +1156,14 @@ bool BuildMaurerEncodedInit(nonstd::span<const T> input, T backgroundValue, Size
 template <class T>
 struct Maurer3DSlabParameters
 {
-  SizeVec3 dims;
-  T backgroundValue;
-  bool insideIsPositive{};
-  bool squaredDistance{};
-  bool useSpacing{};
-  FloatVec3 spacing;
-  usize maxYRows{};
-  usize workerCount{};
+  SizeVec3Type dims;
+  T background_value;
+  bool inside_is_positive{};
+  bool squared_distance{};
+  bool use_spacing{};
+  FloatVec3Type spacing;
+  usize max_y_rows{};
+  usize worker_count{};
 };
 
 /**
@@ -1201,7 +1201,7 @@ void ExecuteMaurer3DParallel(usize count, usize workerCount, const Body& body)
  * Each read is a flat transfer because raw scratch stores do not provide an extent API.
  */
 template <class WorkStoreT>
-Result<> GatherMaurer3DZBatch(const WorkStoreT& workStore, nonstd::span<float32> stagingBuffer, const SizeVec3& dims, usize yBegin, usize yCount, const std::atomic_bool& shouldCancel)
+Result<> GatherMaurer3DZBatch(const WorkStoreT& workStore, nonstd::span<float32> stagingBuffer, const SizeVec3Type& dims, usize yBegin, usize yCount, const std::atomic_bool& shouldCancel)
 {
   const usize valuesPerPlaneBlock = yCount * dims[0];
   float32* stagingDataPtr = stagingBuffer.data();
@@ -1297,7 +1297,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
         bool rowHasBoundary = false;
         auto initializeBoundedVoxel = [&](int64 x) {
           const usize planeIndex = flat2d(x, y);
-          const bool isObject = curDataPtr[planeIndex] != parameters.backgroundValue;
+          const bool isObject = curDataPtr[planeIndex] != parameters.background_value;
           bool isBoundary = false;
           if(isObject)
           {
@@ -1320,7 +1320,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
                     continue; // ITK ignores out-of-bounds neighbors because the image border is not background.
                   }
                   const T neighborValue = zOffset == 0 ? curDataPtr[flat2d(adjacentX, adjacentY)] : zOffset < 0 ? prevDataPtr[flat2d(adjacentX, adjacentY)] : nextDataPtr[flat2d(adjacentX, adjacentY)];
-                  if(neighborValue == parameters.backgroundValue)
+                  if(neighborValue == parameters.background_value)
                   {
                     isBoundary = true;
                   }
@@ -1328,7 +1328,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
               }
             }
           }
-          featurePlaneDataPtr[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.insideIsPositive);
+          featurePlaneDataPtr[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.inside_is_positive);
           if(isBoundary)
           {
             rowHasBoundary = true;
@@ -1349,7 +1349,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
           for(int64 x = 1; x < nX - 1; ++x)
           {
             const usize planeIndex = flat2d(x, y);
-            const bool isObject = curDataPtr[planeIndex] != parameters.backgroundValue;
+            const bool isObject = curDataPtr[planeIndex] != parameters.background_value;
             bool isBoundary = false;
             if(isObject)
             {
@@ -1357,7 +1357,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
               for(const int64 offset : adjacentPlaneOffsets)
               {
                 const usize neighborIndex = static_cast<usize>(center + offset);
-                if(prevDataPtr[neighborIndex] == parameters.backgroundValue || nextDataPtr[neighborIndex] == parameters.backgroundValue)
+                if(prevDataPtr[neighborIndex] == parameters.background_value || nextDataPtr[neighborIndex] == parameters.background_value)
                 {
                   isBoundary = true;
                   break;
@@ -1367,7 +1367,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
               {
                 for(const int64 offset : currentPlaneOffsets)
                 {
-                  if(curDataPtr[static_cast<usize>(center + offset)] == parameters.backgroundValue)
+                  if(curDataPtr[static_cast<usize>(center + offset)] == parameters.background_value)
                   {
                     isBoundary = true;
                     break;
@@ -1375,7 +1375,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
                 }
               }
             }
-            featurePlaneDataPtr[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.insideIsPositive);
+            featurePlaneDataPtr[planeIndex] = MaurerSignedValue(isBoundary ? 0.0f : k_Max, isObject, parameters.inside_is_positive);
             if(isBoundary)
             {
               rowHasBoundary = true;
@@ -1417,7 +1417,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
           return;
         }
         const usize offset = y * parameters.dims[0];
-        Voronoi1DEncodedSign(nonstd::span<float32>(featurePlaneDataPtr + offset, parameters.dims[0]), parameters.dims[0], parameters.useSpacing, parameters.spacing[0], localG, localH);
+        Voronoi1DEncodedSign(nonstd::span<float32>(featurePlaneDataPtr + offset, parameters.dims[0]), parameters.dims[0], parameters.use_spacing, parameters.spacing[0], localG, localH);
       }
     };
     ParallelDataAlgorithm xParallelAlgorithm;
@@ -1440,7 +1440,7 @@ Result<> StreamMaurer3DInitAndTransformXY(const AbstractDataStore<T>& inputStore
         {
           lineDataPtr[y] = featurePlaneDataPtr[y * parameters.dims[0] + x];
         }
-        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, parameters.dims[1]), parameters.dims[1], parameters.useSpacing, parameters.spacing[1], localG, localH);
+        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, parameters.dims[1]), parameters.dims[1], parameters.use_spacing, parameters.spacing[1], localG, localH);
         for(usize y = 0; y < parameters.dims[1]; ++y)
         {
           featurePlaneDataPtr[y * parameters.dims[0] + x] = lineDataPtr[y];
@@ -1508,13 +1508,13 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     {
       return result;
     }
-    if(!parameters.squaredDistance || !hasBoundary)
+    if(!parameters.squared_distance || !hasBoundary)
     {
       auto finalizeValues = [&](const Range& valueRange) {
         float32* planeDataPtr = plane.data();
         for(usize index = valueRange.min(); index < valueRange.max(); ++index)
         {
-          if(parameters.squaredDistance)
+          if(parameters.squared_distance)
           {
             planeDataPtr[index] = std::abs(planeDataPtr[index]);
           }
@@ -1536,7 +1536,7 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
     return RunMaurerIoCallSafely([&]() { return outputStore.copyFromBuffer(0, nonstd::span<const float32>(plane.data(), plane.size())); }, "2D output plane write");
   }
 
-  usize maxYRows = parameters.maxYRows;
+  usize maxYRows = parameters.max_y_rows;
   if(maxYRows == 0)
   {
     // This limit bounds both fallback staging buffers together.
@@ -1614,22 +1614,22 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
         {
           lineDataPtr[z] = currentDataPtr[z * valuesPerPlaneBlock + line];
         }
-        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, nz), nz, parameters.useSpacing, parameters.spacing[2], localG, localH);
+        Voronoi1DEncodedSign(nonstd::span<float32>(lineDataPtr, nz), nz, parameters.use_spacing, parameters.spacing[2], localG, localH);
         for(usize z = 0; z < nz; ++z)
         {
           currentDataPtr[z * valuesPerPlaneBlock + line] = lineDataPtr[z];
         }
       }
     };
-    ExecuteMaurer3DParallel(valuesPerPlaneBlock, parameters.workerCount, transformZLines);
+    ExecuteMaurer3DParallel(valuesPerPlaneBlock, parameters.worker_count, transformZLines);
 
-    if(!shouldCancel && (!parameters.squaredDistance || !hasBoundary))
+    if(!shouldCancel && (!parameters.squared_distance || !hasBoundary))
     {
       auto finalizeValues = [&](const Range& valueRange) {
         float32* currentDataPtr = currentPtr->data();
         for(usize index = valueRange.min(); index < valueRange.max(); ++index)
         {
-          if(parameters.squaredDistance)
+          if(parameters.squared_distance)
           {
             currentDataPtr[index] = std::abs(currentDataPtr[index]);
           }
@@ -1640,7 +1640,7 @@ Result<> RunMaurer3DZPass(const WorkStoreT& workStore, AbstractDataStore<float32
           }
         }
       };
-      ExecuteMaurer3DParallel(batchValues, parameters.workerCount, finalizeValues);
+      ExecuteMaurer3DParallel(batchValues, parameters.worker_count, finalizeValues);
     }
 
     ioWorker.join();
@@ -1684,8 +1684,8 @@ template <class T>
 class MaurerDistanceInCore
 {
 public:
-  MaurerDistanceInCore(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
-                       FloatVec3 spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  MaurerDistanceInCore(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
+                       FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
   , m_Dims(std::move(dims))
@@ -1859,12 +1859,12 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   T m_Bg;
   bool m_InsidePos;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
@@ -1887,8 +1887,8 @@ template <class T>
 class MaurerDistanceSlab
 {
 public:
-  MaurerDistanceSlab(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
-                     FloatVec3 spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_Maurer2DResidentLimit,
+  MaurerDistanceSlab(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
+                     FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_Maurer2DResidentLimit,
                      usize max3DYRows = 0, usize max3DWorkers = 1)
   : m_In(inStore)
   , m_Out(outStore)
@@ -1950,7 +1950,7 @@ public:
     {
       workChunkHint = detail::SelectMaurer3DScratchChunkHint(*outputChunkShape, workTupleShape);
     }
-    auto workPtr = DataStoreUtilities::CreateDataStoreWithFormat<float32>(workingFormat, workTupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute, workChunkHint);
+    auto workPtr = data_store_utilities::CreateDataStoreWithFormat<float32>(workingFormat, workTupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute, workChunkHint);
     return run3D(*workPtr);
   }
 
@@ -2042,15 +2042,15 @@ private:
     const detail::Maurer2DBufferPlan plan = detail::BuildMaurer2DBufferPlan(nx, ny, sizeof(T), m_ResidentLimit2D);
     if(plan.overflow)
     {
-      return MakeErrorResult(-8356, fmt::format("Signed Maurer distance-map 2D buffer plan cannot represent dimensions {} due to arithmetic overflow.", StringUtilities::formatDimensions3D(m_Dims)));
+      return MakeErrorResult(-8356, fmt::format("Signed Maurer distance-map 2D buffer plan cannot represent dimensions {} due to arithmetic overflow.", string_utilities::FormatDimensions3D(m_Dims)));
     }
     if(!plan.valid)
     {
       return MakeErrorResult(-8355, fmt::format("Signed Maurer distance-map 2D buffer plan exceeds the 67108864-byte resident limit. Dimensions: {}; input bytes: {}.",
-                                                StringUtilities::formatDimensions3D(m_Dims), sizeof(T)));
+                                                string_utilities::FormatDimensions3D(m_Dims), sizeof(T)));
     }
-    usize directRowBatchRows = plan.rowBatchRows;
-    if(!plan.spillX && !plan.spillY)
+    usize directRowBatchRows = plan.row_batch_rows;
+    if(!plan.spill_x && !plan.spill_y)
     {
       const std::optional<ShapeType> outputChunkShape = m_Out.getChunkShape();
       if(outputChunkShape.has_value() && outputChunkShape->size() >= 3 && (*outputChunkShape)[1] > 0 && (*outputChunkShape)[1] <= directRowBatchRows)
@@ -2070,18 +2070,18 @@ private:
     usize directRecordSize = 0;
     try
     {
-      if(plan.spillX || plan.spillY)
+      if(plan.spill_x || plan.spill_y)
       {
-        transposedWork = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{1, nx, ny}, std::vector<usize>{1});
-        transposedInside = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(format, std::vector<usize>{1, nx, ny}, std::vector<usize>{1});
+        transposedWork = data_store_utilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{1, nx, ny}, std::vector<usize>{1});
+        transposedInside = data_store_utilities::CreateDataStoreWithFormat<uint8>(format, std::vector<usize>{1, nx, ny}, std::vector<usize>{1});
         const usize maxLine = std::max(nx, ny);
-        envelopeG = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{maxLine}, std::vector<usize>{1});
-        envelopeH = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{maxLine}, std::vector<usize>{1});
+        envelopeG = data_store_utilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{maxLine}, std::vector<usize>{1});
+        envelopeH = data_store_utilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{maxLine}, std::vector<usize>{1});
       }
-      if(plan.spillX)
+      if(plan.spill_x)
       {
-        xLine = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{nx}, std::vector<usize>{1});
-        xInside = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(format, std::vector<usize>{nx}, std::vector<usize>{1});
+        xLine = data_store_utilities::CreateDataStoreWithFormat<float32>(format, std::vector<usize>{nx}, std::vector<usize>{1});
+        xInside = data_store_utilities::CreateDataStoreWithFormat<uint8>(format, std::vector<usize>{nx}, std::vector<usize>{1});
       }
     } catch(const std::bad_alloc& exception)
     {
@@ -2092,12 +2092,12 @@ private:
     }
 
     const auto isOutOfCore = [](const auto& store) { return store != nullptr && store->getStoreType() == IDataStore::StoreType::OutOfCore; };
-    if(((plan.spillX || plan.spillY) && (!isOutOfCore(transposedWork) || !isOutOfCore(transposedInside) || !isOutOfCore(envelopeG) || !isOutOfCore(envelopeH))) ||
-       (plan.spillX && (!isOutOfCore(xLine) || !isOutOfCore(xInside))))
+    if(((plan.spill_x || plan.spill_y) && (!isOutOfCore(transposedWork) || !isOutOfCore(transposedInside) || !isOutOfCore(envelopeG) || !isOutOfCore(envelopeH))) ||
+       (plan.spill_x && (!isOutOfCore(xLine) || !isOutOfCore(xInside))))
     {
       return MakeErrorResult(-8357, fmt::format("Signed Maurer distance-map failed to create 2D scratch store using data format '{}': resolved store is not out-of-core", format));
     }
-    if(!plan.spillY)
+    if(!plan.spill_y)
     {
       const usize directBatchCount = 1 + (ny - 1) / directRowBatchRows;
       usize directRecordCount = 0;
@@ -2105,15 +2105,15 @@ private:
          directRecordSize > std::numeric_limits<uint64>::max() || directRecordCount > std::numeric_limits<uint64>::max())
       {
         return MakeErrorResult(
-            -8356, fmt::format("Signed Maurer distance-map 2D temporary-record layout cannot represent dimensions {} due to arithmetic overflow.", StringUtilities::formatDimensions3D(m_Dims)));
+            -8356, fmt::format("Signed Maurer distance-map 2D temporary-record layout cannot represent dimensions {} due to arithmetic overflow.", string_utilities::FormatDimensions3D(m_Dims)));
       }
       TemporaryRecordStoreConfig config;
-      config.recordSize = static_cast<uint64>(directRecordSize);
-      config.maxRecordsPerBatch = static_cast<uint64>(plan.columnBatchCols);
-      config.initialRecordCount = static_cast<uint64>(directRecordCount);
+      config.record_size = static_cast<uint64>(directRecordSize);
+      config.max_records_per_batch = static_cast<uint64>(plan.column_batch_cols);
+      config.initial_record_count = static_cast<uint64>(directRecordCount);
       try
       {
-        auto storeResult = DataStoreUtilities::CreateTemporaryRecordStore(config);
+        auto storeResult = data_store_utilities::CreateTemporaryRecordStore(config);
         if(storeResult.invalid())
         {
           return MakeErrorResult(-8357, fmt::format("Signed Maurer distance-map failed to create direct-transpose scratch store using data format '{}': {}", format, DescribeResultError(storeResult)));
@@ -2134,7 +2134,7 @@ private:
     m_MessageHandler.sendInfoMessage("Maurer: Initializing and Transforming X Rows");
     progressThrottle.reset(ny, "Maurer: Transforming X Rows");
     // Phase 1: feature initialization plus X transform, written directly in transposed storage order.
-    if(!plan.spillX)
+    if(!plan.spill_x)
     {
       for(usize yBegin = 0; yBegin < ny; yBegin += directRowBatchRows)
       {
@@ -2199,7 +2199,7 @@ private:
           detail::ExecuteMaurer2DParallel(rowCount, processRows);
         }
 
-        if(plan.spillY)
+        if(plan.spill_y)
         {
           const Extent transposedExtent({0, 0, static_cast<uint64>(yBegin)}, {0, static_cast<uint64>(nx - 1), static_cast<uint64>(yBegin + rowCount - 1)});
           {
@@ -2237,9 +2237,9 @@ private:
         else
         {
           const usize batchRecordOffset = (yBegin / directRowBatchRows) * nx;
-          for(usize xBegin = 0; xBegin < nx; xBegin += plan.columnBatchCols)
+          for(usize xBegin = 0; xBegin < nx; xBegin += plan.column_batch_cols)
           {
-            const usize columnCount = std::min(plan.columnBatchCols, nx - xBegin);
+            const usize columnCount = std::min(plan.column_batch_cols, nx - xBegin);
             std::vector<std::byte> recordBytes(columnCount * directRecordSize);
             auto packRecords = [&](const Range& range) {
               for(usize localX = range.min(); localX < range.max(); ++localX)
@@ -2267,7 +2267,7 @@ private:
     }
     else
     {
-      const usize blockValues = plan.lineBlockValues;
+      const usize blockValues = plan.line_block_values;
       const usize capacity = std::min(nx, blockValues + 1);
       for(usize y = 0; y < ny; ++y)
       {
@@ -2364,15 +2364,15 @@ private:
     m_MessageHandler.sendInfoMessage("Maurer: Transforming Y Columns");
     progressThrottle.reset(nx, "Maurer: Transforming Y Columns");
     // Phase 2: contiguous transposed Y lines plus final sign/sqrt, written directly to the output geometry.
-    if(!plan.spillY)
+    if(!plan.spill_y)
     {
-      for(usize xBegin = 0; xBegin < nx; xBegin += plan.columnBatchCols)
+      for(usize xBegin = 0; xBegin < nx; xBegin += plan.column_batch_cols)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize columnCount = std::min(plan.columnBatchCols, nx - xBegin);
+        const usize columnCount = std::min(plan.column_batch_cols, nx - xBegin);
         std::vector<float32> columns(columnCount * ny);
         {
           std::vector<uint8> insideValues(columnCount * ny);
@@ -2462,9 +2462,9 @@ private:
         const usize rowCount = std::min(directRowBatchRows, ny - yBegin);
         const usize batchRecordOffset = (yBegin / directRowBatchRows) * nx;
         std::vector<float32> output(nx * rowCount);
-        for(usize xBegin = 0; xBegin < nx; xBegin += plan.columnBatchCols)
+        for(usize xBegin = 0; xBegin < nx; xBegin += plan.column_batch_cols)
         {
-          const usize columnCount = std::min(plan.columnBatchCols, nx - xBegin);
+          const usize columnCount = std::min(plan.column_batch_cols, nx - xBegin);
           std::vector<std::byte> recordBytes(columnCount * directRecordSize);
           if(Result<> result =
                  readTemporaryRecordsSafely(*directRecords, batchRecordOffset + xBegin, columnCount, nonstd::span<std::byte>(recordBytes.data(), recordBytes.size()), "2D final-output record read");
@@ -2493,7 +2493,7 @@ private:
     }
     else
     {
-      const usize blockValues = plan.lineBlockValues;
+      const usize blockValues = plan.line_block_values;
       for(usize x = 0; x < nx; ++x)
       {
         const usize offset = x * ny;
@@ -2529,12 +2529,12 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   T m_Bg;
   bool m_InsidePos;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   usize m_ResidentLimit2D = detail::k_Maurer2DResidentLimit;
@@ -2546,8 +2546,8 @@ template <class T>
 class MaurerDistanceWorkingMemory
 {
 public:
-  MaurerDistanceWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
-                              FloatVec3 spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  MaurerDistanceWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
+                              FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
   , m_Dims(std::move(dims))
@@ -2586,7 +2586,7 @@ public:
         auto slabPlanResult = detail::CreateMaurer3DSlabMemoryPlan<T>(m_Dims, static_cast<usize>(allocation.reservation.sizeBytes()));
         if(slabPlanResult.valid())
         {
-          allocation.reservation.shrinkTo(static_cast<uint64>(slabPlanResult.value().residentBytes));
+          allocation.reservation.shrinkTo(static_cast<uint64>(slabPlanResult.value().resident_bytes));
           return MaurerDistanceSlab<T>{m_In,
                                        m_Out,
                                        m_Dims,
@@ -2598,8 +2598,8 @@ public:
                                        m_ShouldCancel,
                                        m_MessageHandler,
                                        detail::k_Maurer2DResidentLimit,
-                                       slabPlanResult.value().maxYRows,
-                                       slabPlanResult.value().workerCount}();
+                                       slabPlanResult.value().max_y_rows,
+                                       slabPlanResult.value().worker_count}();
         }
       }
     }
@@ -2609,12 +2609,12 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   T m_Bg;
   bool m_InsidePos;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
@@ -2639,8 +2639,8 @@ private:
  * Resident arrays use the in-core algorithm. Other routes require a complete memory grant or use bounded slabs.
  */
 template <class T>
-Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, T backgroundValue, bool insideIsPositive, bool squaredDistance,
-                                      bool useSpacing, const FloatVec3& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
+Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, T backgroundValue, bool insideIsPositive, bool squaredDistance,
+                                      bool useSpacing, const FloatVec3Type& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                       const IFilter::MessageHandler& messageHandler)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
@@ -2651,7 +2651,7 @@ Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, Abstr
   constexpr usize k_Int64Max = static_cast<usize>(std::numeric_limits<int64>::max());
   if(dims[0] > k_Int64Max || dims[1] > k_Int64Max || dims[2] > k_Int64Max)
   {
-    return MakeErrorResult(-8354, fmt::format("Signed Maurer distance-map dimensions exceed the signed 64-bit indexing limit. Actual dimensions: {}.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult(-8354, fmt::format("Signed Maurer distance-map dimensions exceed the signed 64-bit indexing limit. Actual dimensions: {}.", string_utilities::FormatDimensions3D(dims)));
   }
 
   auto checkedMultiply = [](usize left, usize right, usize& product) {
@@ -2662,7 +2662,7 @@ Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, Abstr
     product = left * right;
     return true;
   };
-  const std::string formattedDims = StringUtilities::formatDimensions3D(dims);
+  const std::string formattedDims = string_utilities::FormatDimensions3D(dims);
   usize slice = 0;
   if(!checkedMultiply(dims[0], dims[1], slice))
   {

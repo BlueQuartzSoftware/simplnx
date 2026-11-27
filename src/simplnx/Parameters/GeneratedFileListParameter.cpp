@@ -18,7 +18,7 @@ namespace nx::core
 {
 namespace
 {
-using OrderingUnderlyingTType = std::underlying_type_t<GeneratedFileListParameter::Ordering>;
+using OrderingUnderlyingTType = std::underlying_type_t<GeneratedFileListParameter::OrderingType>;
 
 constexpr StringLiteralType k_StartIndex = "start_index";
 constexpr StringLiteralType k_EndIndex = "end_index";
@@ -45,7 +45,7 @@ Uuid GeneratedFileListParameter::uuid() const
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes GeneratedFileListParameter::acceptedTypes() const
+IParameter::AcceptedTypesType GeneratedFileListParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -61,15 +61,15 @@ nlohmann::json GeneratedFileListParameter::toJsonImpl(const std::any& value) con
 {
   const auto& data = GetAnyRef<ValueType>(value);
   nlohmann::json json;
-  json[k_StartIndex] = data.startIndex;
-  json[k_EndIndex] = data.endIndex;
-  json[k_PaddingDigits] = data.paddingDigits;
+  json[k_StartIndex] = data.start_index;
+  json[k_EndIndex] = data.end_index;
+  json[k_PaddingDigits] = data.padding_digits;
   json[k_Ordering] = to_underlying(data.ordering);
-  json[k_IncrementIndex] = data.incrementIndex;
-  json[k_InputPath] = data.inputPath;
-  json[k_FilePrefix] = data.filePrefix;
-  json[k_FileSuffix] = data.fileSuffix;
-  json[k_FileExtension] = data.fileExtension;
+  json[k_IncrementIndex] = data.increment_index;
+  json[k_InputPath] = data.input_path;
+  json[k_FilePrefix] = data.file_prefix;
+  json[k_FileSuffix] = data.file_suffix;
+  json[k_FileExtension] = data.file_extension;
   return json;
 }
 
@@ -80,7 +80,7 @@ Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& 
 
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Object, fmt::format("{}The JSON data entry for key '{}' is not an object.", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotObject, fmt::format("{}The JSON data entry for key '{}' is not an object.", k_Prefix.view(), name()));
   }
 
   std::vector<const char*> keys = {k_StartIndex.c_str(), k_EndIndex.c_str(), k_PaddingDigits.c_str(), k_Ordering.c_str(), k_IncrementIndex.c_str()};
@@ -88,11 +88,11 @@ Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& 
   {
     if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
     if(!json[keyPtr].is_number_integer())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Integer, fmt::format("{}JSON value for key '{}' is not an integer", k_Prefix.view(), keyPtr));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotInteger, fmt::format("{}JSON value for key '{}' is not an integer", k_Prefix.view(), keyPtr));
     }
   }
 
@@ -101,38 +101,38 @@ Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& 
   {
     if(!json.contains(keyPtr))
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}The JSON data does not contain an entry with a key of '{}'", k_Prefix.view(), keyPtr));
     }
     if(!json[keyPtr].is_string())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), keyPtr));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), keyPtr));
     }
   }
 
   auto orderingCheck = json[k_Ordering].get<OrderingUnderlyingTType>();
-  if(orderingCheck != to_underlying(Ordering::LowToHigh) && orderingCheck != to_underlying(Ordering::HighToLow))
+  if(orderingCheck != to_underlying(OrderingType::LowToHigh) && orderingCheck != to_underlying(OrderingType::HighToLow))
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
-                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Ordering.view(), to_underlying(Ordering::LowToHigh),
-                                                 to_underlying(Ordering::HighToLow)));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotEnumeration,
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Ordering.view(), to_underlying(OrderingType::LowToHigh),
+                                                 to_underlying(OrderingType::HighToLow)));
   }
 
   if(!json[k_PaddingDigits].is_number_unsigned())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Unsigned, fmt::format("{}JSON value for key '{}' is not an unsigned int", k_Prefix.view(), k_PaddingDigits.view()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotUnsigned, fmt::format("{}JSON value for key '{}' is not an unsigned int", k_Prefix.view(), k_PaddingDigits.view()));
   }
 
   ValueType value;
 
-  value.paddingDigits = json[k_PaddingDigits].get<int32>();
-  value.ordering = static_cast<Ordering>(json[k_Ordering].get<OrderingUnderlyingTType>());
-  value.incrementIndex = json[k_IncrementIndex].get<int32>();
-  value.inputPath = json[k_InputPath].get<std::string>();
-  value.filePrefix = json[k_FilePrefix].get<std::string>();
-  value.fileSuffix = json[k_FileSuffix].get<std::string>();
-  value.fileExtension = json[k_FileExtension].get<std::string>();
-  value.startIndex = json[k_StartIndex].get<int32>();
-  value.endIndex = json[k_EndIndex].get<int32>();
+  value.padding_digits = json[k_PaddingDigits].get<int32>();
+  value.ordering = static_cast<OrderingType>(json[k_Ordering].get<OrderingUnderlyingTType>());
+  value.increment_index = json[k_IncrementIndex].get<int32>();
+  value.input_path = json[k_InputPath].get<std::string>();
+  value.file_prefix = json[k_FilePrefix].get<std::string>();
+  value.file_suffix = json[k_FileSuffix].get<std::string>();
+  value.file_extension = json[k_FileExtension].get<std::string>();
+  value.start_index = json[k_StartIndex].get<int32>();
+  value.end_index = json[k_EndIndex].get<int32>();
 
   return {{std::move(value)}};
 }
@@ -153,8 +153,8 @@ std::any GeneratedFileListParameter::defaultValue() const
 std::any GeneratedFileListParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   auto value = args.value<ValueType>(name());
-  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputPath);
-  value.inputPath = absolutePath.string();
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.input_path);
+  value.input_path = absolutePath.string();
   return value;
 }
 
@@ -167,14 +167,14 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 
     const auto& value = GetAnyRef<ValueType>(valueRef);
 
-    if(value.inputPath.empty())
+    if(value.input_path.empty())
     {
-      return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Input Path cannot be empty.", prefix));
+      return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}Input Path cannot be empty.", prefix));
     }
 
-    if(value.startIndex > value.endIndex)
+    if(value.start_index > value.end_index)
     {
-      return nx::core::MakeErrorResult(-4002, fmt::format("{}startIndex ({}) must be less than or equal to endIndex ({}).", prefix, value.startIndex, value.endIndex));
+      return nx::core::MakeErrorResult(-4002, fmt::format("{}startIndex ({}) must be less than or equal to endIndex ({}).", prefix, value.start_index, value.end_index));
     }
     // Generate the file list
     auto fileList = value.generate();
@@ -227,7 +227,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
   }
 
   ValueType value;
-  value.endIndex = json[k_EndIndex].get<int32>();
+  value.end_index = json[k_EndIndex].get<int32>();
 
   {
     if(!json.contains(k_FileExtension))
@@ -240,7 +240,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-4, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FileExtension));
     }
 
-    value.fileExtension = json[k_FileExtension].get<std::string>();
+    value.file_extension = json[k_FileExtension].get<std::string>();
   }
 
   {
@@ -254,7 +254,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-6, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FilePrefix));
     }
 
-    value.filePrefix = json[k_FilePrefix].get<std::string>();
+    value.file_prefix = json[k_FilePrefix].get<std::string>();
   }
 
   {
@@ -268,7 +268,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-8, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_FileSuffix));
     }
 
-    value.fileSuffix = json[k_FileSuffix].get<std::string>();
+    value.file_suffix = json[k_FileSuffix].get<std::string>();
   }
 
   {
@@ -282,7 +282,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-10, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_IncrementIndex));
     }
 
-    value.incrementIndex = json[k_IncrementIndex].get<int32>();
+    value.increment_index = json[k_IncrementIndex].get<int32>();
   }
 
   {
@@ -296,7 +296,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-12, fmt::format("FileListInfoFilterParameterConverter json '{}' is not a string '{}'", json.dump(), k_InputPath));
     }
 
-    value.inputPath = json[k_InputPath].get<std::string>();
+    value.input_path = json[k_InputPath].get<std::string>();
   }
 
   {
@@ -310,7 +310,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-14, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an unsigned integer '{}'", json.dump(), k_Ordering));
     }
 
-    value.ordering = static_cast<ParameterType::Ordering>(json[k_Ordering].get<uint8>());
+    value.ordering = static_cast<ParameterType::OrderingType>(json[k_Ordering].get<uint8>());
   }
 
   {
@@ -324,7 +324,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-16, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an unsigned integer '{}'", json.dump(), k_PaddingDigits));
     }
 
-    value.paddingDigits = json[k_PaddingDigits].get<uint32>();
+    value.padding_digits = json[k_PaddingDigits].get<uint32>();
   }
 
   {
@@ -338,7 +338,7 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
       return MakeErrorResult<ValueType>(-18, fmt::format("FileListInfoFilterParameterConverter json '{}' is not an integer '{}'", json.dump(), k_StartIndex));
     }
 
-    value.startIndex = json[k_StartIndex].get<int32>();
+    value.start_index = json[k_StartIndex].get<int32>();
   }
 
   return {std::move(value)};

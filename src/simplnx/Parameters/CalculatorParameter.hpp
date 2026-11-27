@@ -20,9 +20,9 @@ public:
 
   struct ValueType
   {
-    DataPath m_SelectedGroup;
+    DataPath m_selected_group;
     std::string equation;
-    AngleUnits m_Units = Radians;
+    AngleUnits m_units = Radians;
   };
 
   CalculatorParameter() = delete;
@@ -45,7 +45,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief

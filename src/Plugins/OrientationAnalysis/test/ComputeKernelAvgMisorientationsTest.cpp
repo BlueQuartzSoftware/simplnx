@@ -33,8 +33,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -48,7 +48,7 @@ class CacheMemoryBudgetSentinel
 {
 public:
   explicit CacheMemoryBudgetSentinel(uint64 budget)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -101,10 +101,10 @@ struct FixtureData
   ImageGeom* geom = nullptr;
   AttributeMatrix* cell_am = nullptr;
   AttributeMatrix* ensemble_am = nullptr;
-  Int32Array* feature_ids = nullptr;
-  Int32Array* cell_phases = nullptr;
-  Float32Array* quats = nullptr;
-  UInt32Array* crystal_structures = nullptr;
+  Int32ArrayType* feature_ids = nullptr;
+  Int32ArrayType* cell_phases = nullptr;
+  Float32ArrayType* quats = nullptr;
+  UInt32ArrayType* crystal_structures = nullptr;
   usize total_cells = 0;
 };
 
@@ -167,9 +167,9 @@ Arguments BuildArgs(const std::vector<int32>& kernelRadius, bool useFeatureIds =
   return args;
 }
 
-const Float32Array& GetOutputKAM(const DataStructure& dataStructure)
+const Float32ArrayType& GetOutputKAM(const DataStructure& dataStructure)
 {
-  return dataStructure.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
+  return dataStructure.getDataRefAs<Float32ArrayType>(k_CellDataPath.createChildPath(k_KAMOutName));
 }
 } // namespace analytical_fixtures
 
@@ -188,17 +188,17 @@ analytical_fixtures::FixtureData CreateOocFixture(usize nX, usize ny, usize nz)
   td.geom->setCellData(*td.cell_am);
   td.ensemble_am = AttributeMatrix::Create(td.ds, "EnsembleData", {2}, td.geom->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_FeatureIdsName), tupleShape, {1});
-  td.feature_ids = Int32Array::Create(td.ds, analytical_fixtures::k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_FeatureIdsName), tupleShape, {1});
+  td.feature_ids = Int32ArrayType::Create(td.ds, analytical_fixtures::k_FeatureIdsName, featureIdsStore, td.cell_am->getId());
 
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_CellPhasesName), tupleShape, {1});
-  td.cell_phases = Int32Array::Create(td.ds, analytical_fixtures::k_CellPhasesName, phasesStore, td.cell_am->getId());
+  auto phasesStore = data_store_utilities::CreateDataStore<int32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_CellPhasesName), tupleShape, {1});
+  td.cell_phases = Int32ArrayType::Create(td.ds, analytical_fixtures::k_CellPhasesName, phasesStore, td.cell_am->getId());
 
-  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_QuatsName), tupleShape, {4});
-  td.quats = Float32Array::Create(td.ds, analytical_fixtures::k_QuatsName, quatsStore, td.cell_am->getId());
+  auto quatsStore = data_store_utilities::CreateDataStore<float32>(td.ds, analytical_fixtures::k_CellDataPath.createChildPath(analytical_fixtures::k_QuatsName), tupleShape, {4});
+  td.quats = Float32ArrayType::Create(td.ds, analytical_fixtures::k_QuatsName, quatsStore, td.cell_am->getId());
 
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(td.ds, analytical_fixtures::k_EnsembleDataPath.createChildPath(analytical_fixtures::k_CrystalStructuresName), {2}, {1});
-  td.crystal_structures = UInt32Array::Create(td.ds, analytical_fixtures::k_CrystalStructuresName, crystalStructuresStore, td.ensemble_am->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(td.ds, analytical_fixtures::k_EnsembleDataPath.createChildPath(analytical_fixtures::k_CrystalStructuresName), {2}, {1});
+  td.crystal_structures = UInt32ArrayType::Create(td.ds, analytical_fixtures::k_CrystalStructuresName, crystalStructuresStore, td.ensemble_am->getId());
 
   REQUIRE(td.feature_ids != nullptr);
   REQUIRE(td.cell_phases != nullptr);
@@ -218,40 +218,40 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Pla
 
   SECTION("normal kernel selects rolling window")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{200, 200, 200}, {1, 1, 1}, 1024ULL * 1024ULL * 1024ULL, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{200, 200, 200}, {1, 1, 1}, 1024ULL * 1024ULL * 1024ULL, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().UseRollingWindow);
-    REQUIRE(result.value().WindowSlices == 3);
-    REQUIRE(result.value().RollingBytes == 3040000);
-    REQUIRE(result.value().RollingBytes <= result.value().CapBytes);
+    REQUIRE(result.value().use_rolling_window);
+    REQUIRE(result.value().window_slices == 3);
+    REQUIRE(result.value().rolling_bytes == 3040000);
+    REQUIRE(result.value().rolling_bytes <= result.value().cap_bytes);
   }
 
   SECTION("live cache use reduces the algorithm cap")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{1, 1, 1}, {0, 0, 0}, 1024, 768, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{1, 1, 1}, {0, 0, 0}, 1024, 768, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().CapBytes == 128);
+    REQUIRE(result.value().cap_bytes == 128);
   }
 
   SECTION("large window selects bounded blocks")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{64, 64, 5}, {0, 0, 4}, 1024ULL * 1024ULL, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{64, 64, 5}, {0, 0, 4}, 1024ULL * 1024ULL, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE_FALSE(result.value().UseRollingWindow);
-    REQUIRE(result.value().CapBytes == 262144);
-    REQUIRE(result.value().RollingBytes == 507904);
+    REQUIRE_FALSE(result.value().use_rolling_window);
+    REQUIRE(result.value().cap_bytes == 262144);
+    REQUIRE(result.value().rolling_bytes == 507904);
     // Keep blocks aligned to complete X rows and provide eight fully
     // associative slots for the five active Z-row blocks. This prevents the
     // bounded fallback from evicting every input block for each focal tuple.
-    REQUIRE(result.value().BlockTuples == 1280);
-    REQUIRE(result.value().CacheSlots == 8);
+    REQUIRE(result.value().block_tuples == 1280);
+    REQUIRE(result.value().cache_slots == 8);
   }
 
   SECTION("slice tuple overflow reports complete context")
   {
     constexpr uint64 k_Budget = 1024ULL * 1024ULL * 1024ULL;
     constexpr usize k_MaxSize = std::numeric_limits<usize>::max();
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{k_MaxSize, 2, 1}, {1, 1, 1}, k_Budget, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{k_MaxSize, 2, 1}, {1, 1, 1}, k_Budget, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors()[0].code == -67200);
@@ -270,7 +270,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Inp
 
   SECTION("oversized kernel is rejected")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{4, 5, 6}, {1, 2, 3, 4}, 4096, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{4, 5, 6}, {1, 2, 3, 4}, 4096, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors()[0].code == k_InputError);
@@ -281,7 +281,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Inp
 
   SECTION("negative kernel radius is rejected as invalid input")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{4, 5, 6}, {1, -2, 3}, 4096, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{4, 5, 6}, {1, -2, 3}, 4096, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors()[0].code == k_InputError);
@@ -293,19 +293,19 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Inp
   SECTION("INT32_MAX radii remain valid")
   {
     constexpr int32 k_MaxRadius = std::numeric_limits<int32>::max();
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{1, 1, 1}, {k_MaxRadius, k_MaxRadius, k_MaxRadius}, 1024, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{1, 1, 1}, {k_MaxRadius, k_MaxRadius, k_MaxRadius}, 1024, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().CapBytes == 256);
-    REQUIRE(result.value().SliceTuples == 1);
-    REQUIRE(result.value().WindowSlices == 1);
-    REQUIRE(result.value().RollingBytes == 28);
-    REQUIRE(result.value().UseRollingWindow);
+    REQUIRE(result.value().cap_bytes == 256);
+    REQUIRE(result.value().slice_tuples == 1);
+    REQUIRE(result.value().window_slices == 1);
+    REQUIRE(result.value().rolling_bytes == 28);
+    REQUIRE(result.value().use_rolling_window);
   }
 
   SECTION("short kernel is rejected before indexing")
   {
     const VectorInt32ParameterType::ValueType kernelSize = {1, 2};
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{4, 5, 6}, kernelSize, 4096, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{4, 5, 6}, kernelSize, 4096, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors()[0].code == k_InputError);
@@ -321,54 +321,54 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Bud
 
   SECTION("zero budget uses irreducible fallback")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{1, 1, 1}, {0, 0, 0}, 0, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{1, 1, 1}, {0, 0, 0}, 0, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().CapBytes == 0);
-    REQUIRE(result.value().RollingBytes == 28);
-    REQUIRE_FALSE(result.value().UseRollingWindow);
-    REQUIRE(result.value().BlockTuples == 1);
-    REQUIRE(result.value().CacheSlots == 1);
+    REQUIRE(result.value().cap_bytes == 0);
+    REQUIRE(result.value().rolling_bytes == 28);
+    REQUIRE_FALSE(result.value().use_rolling_window);
+    REQUIRE(result.value().block_tuples == 1);
+    REQUIRE(result.value().cache_slots == 1);
   }
 
   SECTION("cache use at or above budget leaves no policy cap")
   {
-    auto fullyUsedResult = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{1, 1, 1}, {0, 0, 0}, 1024, 1024, geomPath);
+    auto fullyUsedResult = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{1, 1, 1}, {0, 0, 0}, 1024, 1024, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(fullyUsedResult);
-    REQUIRE(fullyUsedResult.value().CapBytes == 0);
-    REQUIRE_FALSE(fullyUsedResult.value().UseRollingWindow);
-    REQUIRE(fullyUsedResult.value().BlockTuples == 1);
-    REQUIRE(fullyUsedResult.value().CacheSlots == 1);
+    REQUIRE(fullyUsedResult.value().cap_bytes == 0);
+    REQUIRE_FALSE(fullyUsedResult.value().use_rolling_window);
+    REQUIRE(fullyUsedResult.value().block_tuples == 1);
+    REQUIRE(fullyUsedResult.value().cache_slots == 1);
 
-    auto overusedResult = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{1, 1, 1}, {0, 0, 0}, 1024, 2048, geomPath);
+    auto overusedResult = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{1, 1, 1}, {0, 0, 0}, 1024, 2048, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(overusedResult);
-    REQUIRE(overusedResult.value().CapBytes == 0);
-    REQUIRE_FALSE(overusedResult.value().UseRollingWindow);
-    REQUIRE(overusedResult.value().BlockTuples == 1);
-    REQUIRE(overusedResult.value().CacheSlots == 1);
+    REQUIRE(overusedResult.value().cap_bytes == 0);
+    REQUIRE_FALSE(overusedResult.value().use_rolling_window);
+    REQUIRE(overusedResult.value().block_tuples == 1);
+    REQUIRE(overusedResult.value().cache_slots == 1);
   }
 
   SECTION("cap below one tuple keeps fixed executor overhead")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{1, 1, 1}, {0, 0, 0}, 100, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{1, 1, 1}, {0, 0, 0}, 100, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().CapBytes == 25);
-    REQUIRE(result.value().RollingBytes == 28);
-    REQUIRE_FALSE(result.value().UseRollingWindow);
-    REQUIRE(result.value().BlockTuples == 1);
-    REQUIRE(result.value().CacheSlots == 1);
+    REQUIRE(result.value().cap_bytes == 25);
+    REQUIRE(result.value().rolling_bytes == 28);
+    REQUIRE_FALSE(result.value().use_rolling_window);
+    REQUIRE(result.value().block_tuples == 1);
+    REQUIRE(result.value().cache_slots == 1);
   }
 
   SECTION("zero dimensions have an empty rolling working set")
   {
-    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{0, 0, 0}, {0, 0, 0}, 0, 0, geomPath);
+    auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{0, 0, 0}, {0, 0, 0}, 0, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(result.value().CapBytes == 0);
-    REQUIRE(result.value().SliceTuples == 0);
-    REQUIRE(result.value().WindowSlices == 0);
-    REQUIRE(result.value().RollingBytes == 0);
-    REQUIRE(result.value().UseRollingWindow);
-    REQUIRE(result.value().BlockTuples == 1);
-    REQUIRE(result.value().CacheSlots == 1);
+    REQUIRE(result.value().cap_bytes == 0);
+    REQUIRE(result.value().slice_tuples == 0);
+    REQUIRE(result.value().window_slices == 0);
+    REQUIRE(result.value().rolling_bytes == 0);
+    REQUIRE(result.value().use_rolling_window);
+    REQUIRE(result.value().block_tuples == 1);
+    REQUIRE(result.value().cache_slots == 1);
   }
 }
 
@@ -389,7 +389,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
   constexpr uint64 k_MaxDimensionRollingBytes = !k_CanRepresentTotalRollingOverflow ? static_cast<uint64>(k_MaxSize) * k_TotalRollingBytesPerTuple : 0;
   constexpr uint64 k_MaxDimensionFocalBytes = !k_CanRepresentFocalByteOverflow ? static_cast<uint64>(k_MaxSize) * k_FocalAndOutputBytesPerTuple : 0;
 
-  const auto expectedOverflowMessage = [](const SizeVec3& dimensions, const char* quantity) {
+  const auto expectedOverflowMessage = [](const SizeVec3Type& dimensions, const char* quantity) {
     return fmt::format(
         "Compute Kernel Average Misorientations cannot size its working set for Image Geometry 'ImageGeometry' with dimensions (Z={}, Y={}, X={}) and kernel radius (0, 0, 0) under cache budget "
         "4096 bytes because {} overflows.",
@@ -398,7 +398,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
 
   SECTION("total tuple count overflow")
   {
-    const SizeVec3 dimensions = {2, k_MaxSize / 2, 2};
+    const SizeVec3Type dimensions = {2, k_MaxSize / 2, 2};
     auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
@@ -408,7 +408,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
 
   SECTION("total quaternion value count overflow")
   {
-    const SizeVec3 dimensions = {1, 1, k_MaxSize};
+    const SizeVec3Type dimensions = {1, 1, k_MaxSize};
     auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
@@ -421,7 +421,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
   {
     if constexpr(k_CanRepresentInputByteOverflow)
     {
-      const SizeVec3 dimensions = {static_cast<usize>(k_MaxBytes / k_InputBytesPerTuple + 1), 1, 1};
+      const SizeVec3Type dimensions = {static_cast<usize>(k_MaxBytes / k_InputBytesPerTuple + 1), 1, 1};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
       REQUIRE(result.errors().size() == 1);
@@ -430,20 +430,20 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
     }
     else if constexpr(!k_CanRepresentTotalRollingOverflow)
     {
-      const SizeVec3 dimensions = {k_MaxSize, 1, 1};
+      const SizeVec3Type dimensions = {k_MaxSize, 1, 1};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_VALID(result);
-      REQUIRE(result.value().CapBytes == 1024);
-      REQUIRE(result.value().SliceTuples == k_MaxSize);
-      REQUIRE(result.value().WindowSlices == 1);
-      REQUIRE(result.value().RollingBytes == k_MaxDimensionRollingBytes);
-      REQUIRE(result.value().UseRollingWindow == (k_MaxDimensionRollingBytes <= result.value().CapBytes));
-      REQUIRE(result.value().BlockTuples >= 1);
-      REQUIRE(result.value().CacheSlots >= 1);
+      REQUIRE(result.value().cap_bytes == 1024);
+      REQUIRE(result.value().slice_tuples == k_MaxSize);
+      REQUIRE(result.value().window_slices == 1);
+      REQUIRE(result.value().rolling_bytes == k_MaxDimensionRollingBytes);
+      REQUIRE(result.value().use_rolling_window == (k_MaxDimensionRollingBytes <= result.value().cap_bytes));
+      REQUIRE(result.value().block_tuples >= 1);
+      REQUIRE(result.value().cache_slots >= 1);
     }
     else
     {
-      const SizeVec3 dimensions = {k_MaxSize, 1, 1};
+      const SizeVec3Type dimensions = {k_MaxSize, 1, 1};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
       REQUIRE(result.errors().size() == 1);
@@ -456,7 +456,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
   {
     if constexpr(k_CanRepresentFocalByteOverflow)
     {
-      const SizeVec3 dimensions = {static_cast<usize>(k_MaxBytes / k_FocalAndOutputBytesPerTuple + 1), 1, 0};
+      const SizeVec3Type dimensions = {static_cast<usize>(k_MaxBytes / k_FocalAndOutputBytesPerTuple + 1), 1, 0};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
       REQUIRE(result.errors().size() == 1);
@@ -465,16 +465,16 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
     }
     else
     {
-      const SizeVec3 dimensions = {k_MaxSize, 1, 0};
+      const SizeVec3Type dimensions = {k_MaxSize, 1, 0};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_VALID(result);
-      REQUIRE(result.value().CapBytes == 1024);
-      REQUIRE(result.value().SliceTuples == k_MaxSize);
-      REQUIRE(result.value().WindowSlices == 0);
-      REQUIRE(result.value().RollingBytes == k_MaxDimensionFocalBytes);
-      REQUIRE(result.value().UseRollingWindow == (k_MaxDimensionFocalBytes <= result.value().CapBytes));
-      REQUIRE(result.value().BlockTuples >= 1);
-      REQUIRE(result.value().CacheSlots >= 1);
+      REQUIRE(result.value().cap_bytes == 1024);
+      REQUIRE(result.value().slice_tuples == k_MaxSize);
+      REQUIRE(result.value().window_slices == 0);
+      REQUIRE(result.value().rolling_bytes == k_MaxDimensionFocalBytes);
+      REQUIRE(result.value().use_rolling_window == (k_MaxDimensionFocalBytes <= result.value().cap_bytes));
+      REQUIRE(result.value().block_tuples >= 1);
+      REQUIRE(result.value().cache_slots >= 1);
     }
   }
 
@@ -482,7 +482,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
   {
     if constexpr(k_CanRepresentTotalRollingOverflow)
     {
-      const SizeVec3 dimensions = {static_cast<usize>(k_MaxBytes / k_TotalRollingBytesPerTuple + 1), 1, 1};
+      const SizeVec3Type dimensions = {static_cast<usize>(k_MaxBytes / k_TotalRollingBytesPerTuple + 1), 1, 1};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
       REQUIRE(result.errors().size() == 1);
@@ -491,26 +491,26 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Ove
     }
     else
     {
-      const SizeVec3 dimensions = {k_MaxSize, 1, 1};
+      const SizeVec3Type dimensions = {k_MaxSize, 1, 1};
       auto result = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, {0, 0, 0}, k_Budget, 0, geomPath);
       SIMPLNX_RESULT_REQUIRE_VALID(result);
-      REQUIRE(result.value().CapBytes == 1024);
-      REQUIRE(result.value().SliceTuples == k_MaxSize);
-      REQUIRE(result.value().WindowSlices == 1);
-      REQUIRE(result.value().RollingBytes == k_MaxDimensionRollingBytes);
-      REQUIRE(result.value().UseRollingWindow == (k_MaxDimensionRollingBytes <= result.value().CapBytes));
-      REQUIRE(result.value().BlockTuples >= 1);
-      REQUIRE(result.value().CacheSlots >= 1);
+      REQUIRE(result.value().cap_bytes == 1024);
+      REQUIRE(result.value().slice_tuples == k_MaxSize);
+      REQUIRE(result.value().window_slices == 1);
+      REQUIRE(result.value().rolling_bytes == k_MaxDimensionRollingBytes);
+      REQUIRE(result.value().use_rolling_window == (k_MaxDimensionRollingBytes <= result.value().cap_bytes));
+      REQUIRE(result.value().block_tuples >= 1);
+      REQUIRE(result.value().cache_slots >= 1);
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline Handles Maximum Kernel Radius", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter][Scanline]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(1, 1, 1);
   constexpr int32 k_MaxRadius = std::numeric_limits<int32>::max();
@@ -519,11 +519,11 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline 
   Arguments args = analytical_fixtures::BuildArgs({k_MaxRadius, k_MaxRadius, k_MaxRadius});
 
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const Float32Array* kamPtr = nullptr;
+  const Float32ArrayType* kamPtr = nullptr;
   REQUIRE_NOTHROW(kamPtr = &analytical_fixtures::GetOutputKAM(td.ds));
   REQUIRE(kamPtr != nullptr);
   REQUIRE(kamPtr->getNumberOfTuples() == 1);
@@ -532,13 +532,13 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline 
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline Handles Empty Image Geometry", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter][Scanline]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const std::array<SizeVec3, 3> emptyDimensions = {SizeVec3{0, 1, 1}, SizeVec3{1, 0, 1}, SizeVec3{1, 1, 0}};
-  for(const SizeVec3& dimensions : emptyDimensions)
+  const std::array<SizeVec3Type, 3> emptyDimensions = {SizeVec3Type{0, 1, 1}, SizeVec3Type{1, 0, 1}, SizeVec3Type{1, 1, 0}};
+  for(const SizeVec3Type& dimensions : emptyDimensions)
   {
     DYNAMIC_SECTION("dimensions = " << dimensions[0] << " x " << dimensions[1] << " x " << dimensions[2])
     {
@@ -548,11 +548,11 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline 
       Arguments args = analytical_fixtures::BuildArgs({1, 1, 1});
 
       auto preflightResult = filter.preflight(td.ds, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = scope.executeFilter(filter, td.ds, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      const Float32Array* kamPtr = nullptr;
+      const Float32ArrayType* kamPtr = nullptr;
       REQUIRE_NOTHROW(kamPtr = &analytical_fixtures::GetOutputKAM(td.ds));
       REQUIRE(kamPtr != nullptr);
       CHECK(kamPtr->getNumberOfTuples() == 0);
@@ -563,7 +563,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Scanline 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -609,12 +609,12 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: SIMPL Bac
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Uniform 2D Single Feature", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Identity orientations make every valid 2D kernel average zero. This checks
   // feature matching and boundary clamping.
@@ -624,7 +624,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   Arguments args = analytical_fixtures::BuildArgs({1, 1, 0});
 
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -634,15 +634,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
     REQUIRE(kam[i] == Approx(0.0f).margin(1e-4f));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   analytical_fixtures::FixtureData fixture = analytical_fixtures::CreateScaffold(3, 1, 1);
   ComputeKernelAvgMisorientationsFilter filter;
@@ -672,15 +672,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Phase and
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(fixture.ds);
+  unit_test::CheckArraysInheritTupleDims(fixture.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - 1D x-axis Gradient", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // A 5-degree x gradient gives {2.5, 10/3, 10/3, 10/3, 2.5}. This checks
   // one-dimensional averaging and boundary clamping.
@@ -694,7 +694,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   ComputeKernelAvgMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -705,15 +705,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
     REQUIRE(kam[i] == Approx(expected[i]).margin(1e-3f));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - 1D z-axis Gradient (3D path)", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // A 10-degree z gradient gives {5, 20/3, 5}. This checks the outer z loop
   // and z-boundary clamping.
@@ -727,7 +727,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   ComputeKernelAvgMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs({0, 0, 1});
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -738,15 +738,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
     REQUIRE(kam[i] == Approx(expected[i]).margin(1e-3f));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Multi-Feature Multi-Voxel + Background", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Mixed feature IDs verify same-feature accumulation, background zero, and
   // isolated-feature handling.
@@ -772,7 +772,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   ComputeKernelAvgMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -785,15 +785,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   // The background short-circuit must write exact zero.
   REQUIRE(kam[4] == 0.0f);
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode (use_feature_ids = false)", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   // Per-voxel mode admits positive same-phase neighbors across feature
   // boundaries. Feature zero remains excluded.
@@ -819,7 +819,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   ComputeKernelAvgMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs({1, 0, 0}, false);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -831,15 +831,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   }
   REQUIRE(kam[4] == 0.0f);
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode Two-Phase Gates", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   // Two cubic phases verify the per-voxel phase and feature-ID gates.
   analytical_fixtures::FixtureData td = analytical_fixtures::CreateScaffold(5, 1, 1, 3);
@@ -857,7 +857,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   ComputeKernelAvgMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs({1, 0, 0}, false);
   auto preflightResult = filter.preflight(td.ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -870,15 +870,15 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   // An invalid focal cell must receive exact zero.
   REQUIRE(kam[4] == 0.0f);
 
-  UnitTest::CheckArraysInheritTupleDims(td.ds);
+  unit_test::CheckArraysInheritTupleDims(td.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Mode Equivalence on Single Feature", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   // A single-feature, single-phase gradient gives both modes the same neighbor
   // set. Compare the full three-dimensional outputs bit-for-bit.
@@ -906,7 +906,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
   auto runFilter = [&filter, &scope](analytical_fixtures::FixtureData& td, bool useFeatureIds) {
     Arguments args = analytical_fixtures::BuildArgs({1, 1, 1}, useFeatureIds);
     auto preflightResult = filter.preflight(td.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   };
@@ -927,16 +927,16 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
   // Require nonzero output so an all-zero result cannot pass the equality check.
   REQUIRE(anyNonzero);
 
-  UnitTest::CheckArraysInheritTupleDims(tdPerGrain.ds);
-  UnitTest::CheckArraysInheritTupleDims(tdPerVoxel.ds);
+  unit_test::CheckArraysInheritTupleDims(tdPerGrain.ds);
+  unit_test::CheckArraysInheritTupleDims(tdPerVoxel.ds);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 - Invariants", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Class 4 checks zero for uniform and background cells, nonnegative output,
   // the 62.8-degree cubic bound, and nonzero output for a gradient.
@@ -948,7 +948,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
     ComputeKernelAvgMisorientationsFilter filter;
     Arguments args = analytical_fixtures::BuildArgs({1, 1, 1});
     auto preflightResult = filter.preflight(td.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
@@ -969,7 +969,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
     ComputeKernelAvgMisorientationsFilter filter;
     Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
     auto preflightResult = filter.preflight(td.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
@@ -987,7 +987,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
     ComputeKernelAvgMisorientationsFilter filter;
     Arguments args = analytical_fixtures::BuildArgs({1, 0, 0});
     auto preflightResult = filter.preflight(td.ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, td.ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     const auto& kam = analytical_fixtures::GetOutputKAM(td.ds);
@@ -1011,7 +1011,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 4 -
 
 TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded Cache Full-Depth Kernel", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // The cache budget forces the bounded block-cache traversal for a full-depth
   // kernel.
   constexpr usize k_X = 64;
@@ -1021,9 +1021,9 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded C
   constexpr uint64 k_CacheBudget = 1024ULL * 1024ULL;
   constexpr int64 k_BytesPerQuatSlice = static_cast<int64>(k_SliceTuples * 4 * sizeof(float32));
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const CacheMemoryBudgetSentinel budget(k_CacheBudget);
 
   auto td = CreateOocFixture(k_X, k_Y, k_Z);
@@ -1058,9 +1058,9 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Bounded C
   SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
 
   auto planResult =
-      CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{k_X, k_Y, k_Z}, {0, 0, 4}, k_CacheBudget, CacheMemoryBudgetManager::instance().usedBytes(), analytical_fixtures::k_ImageGeomPath);
+      CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3Type{k_X, k_Y, k_Z}, {0, 0, 4}, k_CacheBudget, CacheMemoryBudgetManager::Instance().usedBytes(), analytical_fixtures::k_ImageGeomPath);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
-  REQUIRE_FALSE(planResult.value().UseRollingWindow);
+  REQUIRE_FALSE(planResult.value().use_rolling_window);
 
   ComputeKernelAvgMisorientationsFilter filter;
   Arguments args = analytical_fixtures::BuildArgs({0, 0, 4});
@@ -1114,7 +1114,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Geometry 
   REQUIRE(inputAM2Ptr != nullptr);
   REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count2}, {4}, inputAM2Ptr->getId()) != nullptr);
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "Quats"})));
-  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  REQUIRE(UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
   const bool useFeatureIds = GENERATE(true, false);
   CAPTURE(useFeatureIds);
@@ -1123,14 +1123,14 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Geometry 
   const auto result = filter.preflight(dataStructure, args);
   if(testCase == 2)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
     {
-      const auto& errorRef = result.outputActions.errors()[0];
+      const auto& errorRef = result.output_actions.errors()[0];
       CHECK(errorRef.code == -67205);
       const std::vector<DataPath> inputPaths = {DataPath({"Input0", "FeatureIds"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
       const usize inputIndex = testCase >= 3 ? static_cast<usize>(testCase - 3) : 0;

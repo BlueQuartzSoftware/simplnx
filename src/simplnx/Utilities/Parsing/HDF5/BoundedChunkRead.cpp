@@ -41,7 +41,7 @@ namespace nx::core::hdf5
 namespace
 {
 
-using BoundedRead::Status;
+using bounded_read::Status;
 
 /** @brief Labels the actual owned storage seen by the existing test observer. */
 enum class BoundedCarrier : uint64
@@ -93,7 +93,7 @@ struct DecoderQuota
     auto& quota = *static_cast<DecoderQuota*>(opaque);
     uint64 payload = 0;
     uint64 bytes = 0;
-    if(!BoundedRead::Multiply(count, size, payload) || !BoundedRead::Add(payload, sizeof(DecoderHeader), bytes) || payload > quota.allowance - quota.live || bytes > std::numeric_limits<usize>::max())
+    if(!bounded_read::Multiply(count, size, payload) || !bounded_read::Add(payload, sizeof(DecoderHeader), bytes) || payload > quota.allowance - quota.live || bytes > std::numeric_limits<usize>::max())
     {
       quota.quota_failed = true;
       return nullptr;
@@ -266,7 +266,7 @@ struct BoundedChunkReadMetadata
   bool needs_decoder = false;
   bool has_sparse = false;
 };
-static_assert(H5S_MAX_RANK <= BoundedRead::k_MaxRank);
+static_assert(H5S_MAX_RANK <= bounded_read::k_MaxRank);
 
 /**
  * @brief Reads one record without treating a failed query as sparse storage.
@@ -285,7 +285,7 @@ Status QueryRecord(hid_t dataset, const hsize_t* origin, ParallelChunkCodec::Chu
   unsigned mask = 0;
   if(H5Dget_chunk_info_by_coord(dataset, origin, &mask, &address, &bytes) < 0)
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk metadata query failed."));
+    diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk metadata query failed."));
     return Status::Failed;
   }
 #if SIMPLNX_BUILD_TESTS
@@ -299,10 +299,10 @@ Status QueryRecord(hid_t dataset, const hsize_t* origin, ParallelChunkCodec::Chu
 #endif
   if((address == HADDR_UNDEF) != (bytes == 0))
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk metadata has contradictory address and length."));
+    diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk metadata has contradictory address and length."));
     return Status::Failed;
   }
-  record = {.allocated = address != HADDR_UNDEF, .filterMask = mask, .storedAddress = static_cast<uint64>(address), .storedSize = static_cast<uint64>(bytes)};
+  record = {.allocated = address != HADDR_UNDEF, .filter_mask = mask, .stored_address = static_cast<uint64>(address), .stored_size = static_cast<uint64>(bytes)};
   return Status::Complete;
 }
 
@@ -371,22 +371,22 @@ Status ValidateRecord(const BoundedChunkReadMetadata& metadata, const ParallelCh
   {
     return Status::Complete;
   }
-  if((record.filterMask & ~(metadata.has_deflate ? 1U : 0U)) != 0)
+  if((record.filter_mask & ~(metadata.has_deflate ? 1U : 0U)) != 0)
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk has a filter mask outside its declared pipeline."));
+    diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk has a filter mask outside its declared pipeline."));
     return Status::Failed;
   }
-  const bool compressed = metadata.has_deflate && record.filterMask == 0;
-  if(!compressed && record.storedSize != metadata.nominal_bytes)
+  const bool compressed = metadata.has_deflate && record.filter_mask == 0;
+  if(!compressed && record.stored_size != metadata.nominal_bytes)
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure,
-                                   fmt::format("Bounded raw chunk byte length does not match nominal storage.; required={}, available={}", metadata.nominal_bytes, record.storedSize));
+    diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure,
+                                   fmt::format("Bounded raw chunk byte length does not match nominal storage.; required={}, available={}", metadata.nominal_bytes, record.stored_size));
     return Status::Failed;
   }
-  if(record.storedSize > std::numeric_limits<usize>::max() || record.storedSize > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()) ||
-     (compressed && (record.storedSize > std::numeric_limits<uInt>::max() || metadata.nominal_bytes > std::numeric_limits<uInt>::max())))
+  if(record.stored_size > std::numeric_limits<usize>::max() || record.stored_size > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()) ||
+     (compressed && (record.stored_size > std::numeric_limits<uInt>::max() || metadata.nominal_bytes > std::numeric_limits<uInt>::max())))
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Bounded chunk exceeds the supported raw or zlib length."));
+    diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Bounded chunk exceeds the supported raw or zlib length."));
     return Status::Failed;
   }
   return Status::Complete;
@@ -426,7 +426,7 @@ void Scatter(BoundedChunkReadMetadata& metadata, const Extent& extent, usize ele
       control.dimension = control.first_run_dimension - 1;
       // Nominal strides retain edge padding. Output strides retain gaps from split components and partial rows.
       if(extent.stride[control.dimension] != 1 || metadata.nominal_strides[control.dimension] != control.run_values || metadata.output_strides[control.dimension] != control.run_values ||
-         !BoundedRead::Multiply(control.run_values, metadata.high[control.dimension] - metadata.low[control.dimension] + 1, control.joined_values))
+         !bounded_read::Multiply(control.run_values, metadata.high[control.dimension] - metadata.low[control.dimension] + 1, control.joined_values))
       {
         break;
       }
@@ -481,7 +481,7 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
   std::array<hsize_t, H5S_MAX_RANK> chunks{};
   if(fullRankChunkOffset.empty() || fullRankChunkOffset.size() > offset.size())
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Checked chunk origin has an invalid rank."));
+    diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Checked chunk origin has an invalid rank."));
     status = Status::Failed;
   }
   else
@@ -501,7 +501,7 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
     });
     if(space < 0 || properties < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Checked chunk query cannot obtain dataset metadata."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Checked chunk query cannot obtain dataset metadata."));
       status = Status::Failed;
     }
     else
@@ -509,18 +509,18 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
       const int rank = SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Sget_simple_extent_ndims(space));
       if(rank < 0)
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Checked chunk query cannot obtain the dataset rank."));
+        diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Checked chunk query cannot obtain the dataset rank."));
         status = Status::Failed;
       }
       else if(rank != static_cast<int>(fullRankChunkOffset.size()))
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Checked chunk origin does not match the dataset rank."));
+        diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Checked chunk origin does not match the dataset rank."));
         status = Status::Failed;
       }
       else if(SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Sget_simple_extent_dims(space, dimensions.data(), nullptr)) != rank ||
               SIMPLNX_OBSERVE_METADATA_CALL(MetadataLayoutCall, H5Pget_chunk(properties, rank, chunks.data())) != rank)
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Checked chunk query cannot obtain dimension and chunk sizes."));
+        diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Checked chunk query cannot obtain dimension and chunk sizes."));
         status = Status::Failed;
       }
       else
@@ -529,7 +529,7 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
         {
           if(chunks[dimension] == 0 || fullRankChunkOffset[dimension] >= dimensions[dimension] || fullRankChunkOffset[dimension] % chunks[dimension] != 0)
           {
-            diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Checked chunk origin is outside or not aligned to the physical chunk grid."));
+            diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Checked chunk origin is outside or not aligned to the physical chunk grid."));
             status = Status::Failed;
             break;
           }
@@ -550,13 +550,13 @@ Result<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfoChecked(no
     properties = H5I_INVALID_HID;
     if(status == Status::Complete && (spaceClose < 0 || propertiesClose < 0))
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Checked chunk metadata cleanup failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Checked chunk metadata cleanup failed."));
       status = Status::Failed;
     }
   }
   if(status != Status::Complete)
   {
-    diagnostic.errors().front().message += BoundedRead::FormatSourceContext(m_FilePath, m_DatasetPath);
+    diagnostic.errors().front().message += bounded_read::FormatSourceContext(m_FilePath, m_DatasetPath);
     return ConvertInvalidResult<ChunkInfo>(std::move(diagnostic));
   }
   return {info};
@@ -584,18 +584,18 @@ Result<bool> ParallelChunkCodec::readExtentIntoBufferBounded(const Extent& exten
     status = readExtentIntoBufferBoundedImpl(extent, destination, scratchBudgetBytes, diagnostic, &selectedOutput);
   } catch(const std::bad_alloc&)
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::AllocationFailure, fmt::format("Bounded read could not allocate its data scratch or metadata."));
+    diagnostic = MakeErrorResult<>(bounded_read::AllocationFailure, fmt::format("Bounded read could not allocate its data scratch or metadata."));
     status = Status::Failed;
   }
   if(status != Status::Complete)
   {
     if(status == Status::Failed)
     {
-      diagnostic.errors().front().message += BoundedRead::FormatSourceContext(m_FilePath, m_DatasetPath);
+      diagnostic.errors().front().message += bounded_read::FormatSourceContext(m_FilePath, m_DatasetPath);
     }
     else
     {
-      diagnostic.warnings().front().message += BoundedRead::FormatSourceContext(m_FilePath, m_DatasetPath);
+      diagnostic.warnings().front().message += bounded_read::FormatSourceContext(m_FilePath, m_DatasetPath);
     }
     return ConvertResultTo(std::move(diagnostic), false);
   }
@@ -608,13 +608,13 @@ Result<bool> ParallelChunkCodec::readExtentIntoBufferBounded(const Extent& exten
   });
   // The stage remains owned and observed until the actual result construction and publication finish.
 #if SIMPLNX_BUILD_TESTS
-  return Result<bool>{true, BoundedRead::MakeSuccessWarningsForTesting(&m_FilePath, m_DatasetPath)};
+  return Result<bool>{true, bounded_read::MakeSuccessWarningsForTesting(&m_FilePath, m_DatasetPath)};
 #else
   return Result<bool>{true};
 #endif
 }
 
-BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const Extent& extent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic) const
+bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const Extent& extent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic) const
 {
 #if SIMPLNX_BUILD_TESTS
   const BoundedReadTaskScopeForTesting taskObservation;
@@ -624,12 +624,12 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const E
     return readExtentIntoBufferBoundedImpl(extent, destination, payloadBudgetBytes, diagnostic, nullptr);
   } catch(const std::bad_alloc&)
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::AllocationFailure, fmt::format("Bounded read could not allocate its data scratch or metadata."));
+    diagnostic = MakeErrorResult<>(bounded_read::AllocationFailure, fmt::format("Bounded read could not allocate its data scratch or metadata."));
     return Status::Failed;
   }
 }
 
-BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Extent& extent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
+bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Extent& extent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
                                                                         std::unique_ptr<std::byte[]>* selectedOutput) const
 {
   const BoundedIdentity identity{.file = m_FilePath, .Dataset = m_DatasetPath};
@@ -650,12 +650,12 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     const std::lock_guard<std::mutex> lock(Support::ApiLock());
     if(m_BoundedTypeQueryFailed)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded native type capture failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded native type capture failed."));
       return Status::Failed;
     }
     if(m_BoundedNativeType < 0)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, fmt::format("Bounded chunk reads require an exact native numeric memory type."));
+      diagnostic = MakeWarningVoidResult(bounded_read::Unsupported, fmt::format("Bounded chunk reads require an exact native numeric memory type."));
       return Status::Unavailable;
     }
     usize nativeSize = H5Tget_size(m_BoundedNativeType);
@@ -667,65 +667,65 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #endif
     if(nativeSize == 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded native scalar-size query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded native scalar-size query failed."));
       return Status::Failed;
     }
     if(m_ElementSize == 0 || nativeSize != m_ElementSize)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Bounded native type size does not match scalar bytes.; required={}, available={}", nativeSize, m_ElementSize));
+      diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Bounded native type size does not match scalar bytes.; required={}, available={}", nativeSize, m_ElementSize));
       return Status::Failed;
     }
     const hid_t fileType = SIMPLNX_OBSERVE_METADATA_CALL(MetadataTypeCall, H5Dget_type(m_DatasetId));
     if(fileType < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk type query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk type query failed."));
       return Status::Failed;
     }
     const htri_t exact = H5Tequal(fileType, m_BoundedNativeType);
     const herr_t typeClose = H5Tclose(fileType);
     if(typeClose < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk datatype cleanup failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk datatype cleanup failed."));
       return Status::Failed;
     }
     if(exact < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk type comparison failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk type comparison failed."));
       return Status::Failed;
     }
     if(exact == 0)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, fmt::format("Bounded chunk read requires datatype conversion."));
+      diagnostic = MakeWarningVoidResult(bounded_read::Unsupported, fmt::format("Bounded chunk read requires datatype conversion."));
       return Status::Unavailable;
     }
     properties = SIMPLNX_OBSERVE_METADATA_CALL(MetadataLayoutCall, H5Dget_create_plist(m_DatasetId));
     if(properties < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk layout query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk layout query failed."));
       return Status::Failed;
     }
     const H5D_layout_t layout = SIMPLNX_OBSERVE_METADATA_CALL(MetadataLayoutCall, H5Pget_layout(properties));
     const int external = H5Pget_external_count(properties);
     if(layout == H5D_LAYOUT_ERROR || external < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk layout or external-storage query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk layout or external-storage query failed."));
       return Status::Failed;
     }
     if(layout != H5D_CHUNKED || external != 0)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, fmt::format("Bounded codec requires internal chunked storage."));
+      diagnostic = MakeWarningVoidResult(bounded_read::Unsupported, fmt::format("Bounded codec requires internal chunked storage."));
       return Status::Unavailable;
     }
     const int filters = SIMPLNX_OBSERVE_METADATA_CALL(MetadataFilterCall, H5Pget_nfilters(properties));
     if(filters < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk filter count query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk filter count query failed."));
       return Status::Failed;
     }
     if(filters > 1)
     {
       diagnostic =
-          MakeWarningVoidResult(BoundedRead::UnsupportedFilter, fmt::format("Bounded chunk pipeline exceeds the supported filter count.; required={}, available={}", static_cast<uint64>(filters), 1));
+          MakeWarningVoidResult(bounded_read::UnsupportedFilter, fmt::format("Bounded chunk pipeline exceeds the supported filter count.; required={}, available={}", static_cast<uint64>(filters), 1));
       return Status::Unavailable;
     }
     if(filters == 1)
@@ -737,13 +737,13 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
       const H5Z_filter_t filter = SIMPLNX_OBSERVE_METADATA_CALL(MetadataFilterCall, H5Pget_filter2(properties, 0, &flags, &count, values.data(), 0, nullptr, &configuration));
       if(filter == H5Z_FILTER_ERROR)
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk filter query failed."));
+        diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk filter query failed."));
         return Status::Failed;
       }
       if(filter != H5Z_FILTER_DEFLATE || count != 1 || values[0] > 9)
       {
         diagnostic =
-            MakeWarningVoidResult(BoundedRead::UnsupportedFilter, fmt::format("Bounded chunk pipeline is not a supported single deflate filter; filter={}, parameter count={}, first parameter={}",
+            MakeWarningVoidResult(bounded_read::UnsupportedFilter, fmt::format("Bounded chunk pipeline is not a supported single deflate filter; filter={}, parameter count={}, first parameter={}",
                                                                               static_cast<uint64>(filter), count, values[0]));
         return Status::Unavailable;
       }
@@ -752,7 +752,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     const hid_t space = SIMPLNX_OBSERVE_METADATA_CALL(MetadataSpaceCall, H5Dget_space(m_DatasetId));
     if(space < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk dataspace query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk dataspace query failed."));
       return Status::Failed;
     }
     const int rank = H5Sget_simple_extent_ndims(space);
@@ -760,34 +760,34 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     const herr_t spaceClose = H5Sclose(space);
     if(spaceClose < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk dataspace cleanup failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk dataspace cleanup failed."));
       return Status::Failed;
     }
     if(rank < 0 || (rank > 0 && rank <= H5S_MAX_RANK && dimensions < 0))
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk rank or dimensions query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk rank or dimensions query failed."));
       return Status::Failed;
     }
     if(rank == 0 || rank > H5S_MAX_RANK)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, fmt::format("Bounded chunk read does not support this rank."));
+      diagnostic = MakeWarningVoidResult(bounded_read::Unsupported, fmt::format("Bounded chunk read does not support this rank."));
       return Status::Unavailable;
     }
     metadata.rank = static_cast<usize>(rank);
     if(H5Pget_chunk(properties, rank, metadata.chunks.data()) != rank)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded physical chunk shape query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded physical chunk shape query failed."));
       return Status::Failed;
     }
   }
   uint64 selectedValues = 0;
   if(destination.size() % m_ElementSize != 0)
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Bounded byte destination is not a scalar multiple."));
+    diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Bounded byte destination is not a scalar multiple."));
     return Status::Failed;
   }
   const auto extentStatus =
-      BoundedRead::ValidateExtent(extent, nonstd::span<const hsize_t>(metadata.shape.data(), metadata.rank), 1, destination.size() / m_ElementSize, selectedValues, diagnostic, m_ElementSize);
+      bounded_read::ValidateExtent(extent, nonstd::span<const hsize_t>(metadata.shape.data(), metadata.rank), 1, destination.size() / m_ElementSize, selectedValues, diagnostic, m_ElementSize);
   if(extentStatus != Status::Complete)
   {
     return extentStatus;
@@ -799,24 +799,24 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     const usize dimension = reverse - 1;
     if(metadata.chunks[dimension] == 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded physical chunk shape has a zero dimension."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded physical chunk shape has a zero dimension."));
       return Status::Failed;
     }
     metadata.nominal_strides[dimension] = nominalValues;
     metadata.output_strides[dimension] = outputStride;
     metadata.counts[dimension] = (extent.max[dimension] - extent.min[dimension]) / extent.stride[dimension] + 1;
-    if(!BoundedRead::Multiply(nominalValues, metadata.chunks[dimension], nominalValues) || !BoundedRead::Multiply(outputStride, metadata.counts[dimension], outputStride))
+    if(!bounded_read::Multiply(nominalValues, metadata.chunks[dimension], nominalValues) || !bounded_read::Multiply(outputStride, metadata.counts[dimension], outputStride))
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Bounded chunk strides overflow uint64."));
+      diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Bounded chunk strides overflow uint64."));
       return Status::Failed;
     }
     metadata.first[dimension] = (extent.min[dimension] / metadata.chunks[dimension]) * metadata.chunks[dimension];
     metadata.last[dimension] = (extent.max[dimension] / metadata.chunks[dimension]) * metadata.chunks[dimension];
     metadata.Origin[dimension] = metadata.first[dimension];
   }
-  if(!BoundedRead::Multiply(nominalValues, m_ElementSize, metadata.nominal_bytes) || metadata.nominal_bytes > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()))
+  if(!bounded_read::Multiply(nominalValues, m_ElementSize, metadata.nominal_bytes) || metadata.nominal_bytes > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()))
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Bounded nominal chunk bytes overflow addressable storage."));
+    diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Bounded nominal chunk bytes overflow addressable storage."));
     return Status::Failed;
   }
   // Pass one admits every touched record under the existing serial-alias precondition.
@@ -834,7 +834,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #if SIMPLNX_BUILD_TESTS
       if(InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::MetadataQuery))
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Injected bounded metadata query failure."));
+        diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Injected bounded metadata query failure."));
         return Status::Failed;
       }
 #endif
@@ -851,8 +851,8 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     }
     if(metadata.Record.allocated)
     {
-      metadata.maximum_stored = std::max(metadata.maximum_stored, metadata.Record.storedSize);
-      metadata.needs_decoder = metadata.needs_decoder || (metadata.has_deflate && metadata.Record.filterMask == 0);
+      metadata.maximum_stored = std::max(metadata.maximum_stored, metadata.Record.stored_size);
+      metadata.needs_decoder = metadata.needs_decoder || (metadata.has_deflate && metadata.Record.filter_mask == 0);
     }
     else
     {
@@ -865,34 +865,34 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     H5D_fill_value_t fillStatus = H5D_FILL_VALUE_ERROR;
     if(SIMPLNX_OBSERVE_METADATA_CALL(MetadataFillCall, H5Pfill_value_defined(properties, &fillStatus)) < 0 || fillStatus == H5D_FILL_VALUE_ERROR)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded fill-value status query failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded fill-value status query failed."));
       return Status::Failed;
     }
     if(fillStatus == H5D_FILL_VALUE_UNDEFINED)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::UndefinedFill, fmt::format("Bounded sparse chunk has an undefined fill value."));
+      diagnostic = MakeWarningVoidResult(bounded_read::UndefinedFill, fmt::format("Bounded sparse chunk has an undefined fill value."));
       return Status::Unavailable;
     }
     if(SIMPLNX_OBSERVE_METADATA_CALL(MetadataFillCall, H5Pget_fill_value(properties, m_BoundedNativeType, metadata.fill.data())) < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded fill-value conversion failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded fill-value conversion failed."));
       return Status::Failed;
     }
   }
   uint64 requiredBytes = 0;
   const uint64 nominalAllocation = metadata.needs_decoder ? metadata.nominal_bytes : 0;
   const uint64 selectedAllocation = selectedOutput != nullptr ? destination.size() : 0;
-  const uint64 decoderWorkspace = metadata.needs_decoder ? BoundedRead::k_DefaultDecoderWorkspaceBytes : 0;
-  if(selectedAllocation > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()) || !BoundedRead::Add(metadata.maximum_stored, nominalAllocation, requiredBytes) ||
-     !BoundedRead::Add(requiredBytes, selectedAllocation, requiredBytes) || !BoundedRead::Add(requiredBytes, decoderWorkspace, requiredBytes))
+  const uint64 decoderWorkspace = metadata.needs_decoder ? bounded_read::k_DefaultDecoderWorkspaceBytes : 0;
+  if(selectedAllocation > static_cast<uint64>(std::numeric_limits<std::ptrdiff_t>::max()) || !bounded_read::Add(metadata.maximum_stored, nominalAllocation, requiredBytes) ||
+     !bounded_read::Add(requiredBytes, selectedAllocation, requiredBytes) || !bounded_read::Add(requiredBytes, decoderWorkspace, requiredBytes))
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::InvalidExtent, fmt::format("Bounded read data scratch byte count overflows addressable storage."));
+    diagnostic = MakeErrorResult<>(bounded_read::InvalidExtent, fmt::format("Bounded read data scratch byte count overflows addressable storage."));
     return Status::Failed;
   }
   if(requiredBytes > payloadBudgetBytes)
   {
     diagnostic =
-        MakeWarningVoidResult(BoundedRead::Insufficient, fmt::format("Bounded read data scratch exceeds the allowance. Request a smaller extent or increase the allowance.; required={}, available={}",
+        MakeWarningVoidResult(bounded_read::Insufficient, fmt::format("Bounded read data scratch exceeds the allowance. Request a smaller extent or increase the allowance.; required={}, available={}",
                                                                      requiredBytes, payloadBudgetBytes));
     return Status::Unavailable;
   }
@@ -914,7 +914,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     if(!initialized)
     {
       diagnostic =
-          MakeErrorResult<>(metadata.quota.quota_failed ? BoundedRead::DecoderQuotaFailure : BoundedRead::AllocationFailure, fmt::format("Bounded zlib initialization cannot acquire its workspace."));
+          MakeErrorResult<>(metadata.quota.quota_failed ? bounded_read::DecoderQuotaFailure : bounded_read::AllocationFailure, fmt::format("Bounded zlib initialization cannot acquire its workspace."));
       return Status::Failed;
     }
   }
@@ -922,7 +922,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
   auto& nominal = metadata.nominal;
   if(!stored.acquire(metadata.maximum_stored) || !nominal.acquire(nominalAllocation) || !metadata.selected_output.acquire(selectedAllocation))
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::AllocationFailure, fmt::format("Bounded chunk carrier allocation failed within its allowance."));
+    diagnostic = MakeErrorResult<>(bounded_read::AllocationFailure, fmt::format("Bounded chunk carrier allocation failed within its allowance."));
     return Status::Failed;
   }
 #ifndef _WIN32
@@ -936,7 +936,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
   });
   if(metadata.maximum_stored != 0 && !detail::IsValidFileHandle(readHandle))
   {
-    diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded positional source could not open."));
+    diagnostic = MakeErrorResult<>(bounded_read::ReadFailure, fmt::format("Bounded positional source could not open."));
     return Status::Failed;
   }
 #endif
@@ -956,7 +956,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #if SIMPLNX_BUILD_TESTS
       if(InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::MetadataQuery))
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Injected bounded metadata query failure."));
+        diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Injected bounded metadata query failure."));
         return Status::Failed;
       }
 #endif
@@ -968,20 +968,20 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #if SIMPLNX_BUILD_TESTS
       if(InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::SecondPassUnpreparedDecoder))
       {
-        metadata.Record.filterMask = 0;
+        metadata.Record.filter_mask = 0;
       }
       if(InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::SecondPassLargerRecord))
       {
-        metadata.Record.storedSize = metadata.maximum_stored + 1;
+        metadata.Record.stored_size = metadata.maximum_stored + 1;
       }
 #endif
-      if(metadata.Record.storedSize > metadata.maximum_stored || (metadata.Record.allocated && metadata.has_deflate && metadata.Record.filterMask == 0 && !initialized) ||
+      if(metadata.Record.stored_size > metadata.maximum_stored || (metadata.Record.allocated && metadata.has_deflate && metadata.Record.filter_mask == 0 && !initialized) ||
          (!metadata.Record.allocated && !metadata.has_sparse))
       {
         diagnostic = MakeErrorResult<>(
-            BoundedRead::MetadataChanged,
+            bounded_read::MetadataChanged,
             fmt::format("Bounded second-pass record requires unadmitted stored bytes or decoder/fill state.; required={}, available={}, filter mask={}, decoder prepared={}, fill prepared={}",
-                        metadata.Record.storedSize, metadata.maximum_stored, metadata.Record.filterMask, initialized ? 1 : 0, metadata.has_sparse ? 1 : 0));
+                        metadata.Record.stored_size, metadata.maximum_stored, metadata.Record.filter_mask, initialized ? 1 : 0, metadata.has_sparse ? 1 : 0));
         return Status::Failed;
       }
       const auto recordStatus = ValidateRecord(metadata, metadata.Record, diagnostic);
@@ -1023,60 +1023,60 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #ifndef _WIN32
     auto readStored = [&]() {
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.Record.storedSize, 0);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.Record.stored_size, 0);
 #endif
       bool injectedFailure = false;
 #if SIMPLNX_BUILD_TESTS
       injectedFailure = InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::RawRead);
 #endif
-      const auto got = injectedFailure ? std::ptrdiff_t{-1} : detail::PositionalRead(readHandle, stored.data.get(), static_cast<usize>(metadata.Record.storedSize), metadata.Record.storedAddress);
+      const auto got = injectedFailure ? std::ptrdiff_t{-1} : detail::PositionalRead(readHandle, stored.data.get(), static_cast<usize>(metadata.Record.stored_size), metadata.Record.stored_address);
 #if SIMPLNX_BUILD_TESTS
       ObserveCodecIoForTesting(m_FilePath, m_DatasetPath,
-                               got == static_cast<std::ptrdiff_t>(metadata.Record.storedSize) ? CodecIoEventForTesting::StoredRead :
+                               got == static_cast<std::ptrdiff_t>(metadata.Record.stored_size) ? CodecIoEventForTesting::StoredRead :
                                got < 0                                                        ? CodecIoEventForTesting::StoredReadFailed :
                                                                                                 CodecIoEventForTesting::StoredReadShort,
-                               got >= 0 ? static_cast<uint64>(got) : metadata.Record.storedSize, metadata.Record.storedSize);
+                               got >= 0 ? static_cast<uint64>(got) : metadata.Record.stored_size, metadata.Record.stored_size);
 #endif
       return got;
     };
     auto got = readStored();
-    if(got != static_cast<std::ptrdiff_t>(metadata.Record.storedSize))
+    if(got != static_cast<std::ptrdiff_t>(metadata.Record.stored_size))
     {
       std::lock_guard<std::mutex> recoveryLock(m_PositionalReadRecoveryMutex);
       got = readStored();
-      if(got != static_cast<std::ptrdiff_t>(metadata.Record.storedSize))
+      if(got != static_cast<std::ptrdiff_t>(metadata.Record.stored_size))
       {
         {
           const std::lock_guard<std::mutex> lock(Support::ApiLock());
           if(H5Fflush(m_DatasetId, H5F_SCOPE_LOCAL) < 0)
           {
-            diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded short-read recovery flush failed."));
+            diagnostic = MakeErrorResult<>(bounded_read::ReadFailure, fmt::format("Bounded short-read recovery flush failed."));
             return Status::Failed;
           }
         }
         got = readStored();
       }
     }
-    if(got != static_cast<std::ptrdiff_t>(metadata.Record.storedSize))
+    if(got != static_cast<std::ptrdiff_t>(metadata.Record.stored_size))
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded positional chunk read was short or failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::ReadFailure, fmt::format("Bounded positional chunk read was short or failed."));
       return Status::Failed;
     }
 #endif
     const std::byte* decodedPtr = stored.data.get();
-    if(metadata.has_deflate && metadata.Record.filterMask == 0)
+    if(metadata.has_deflate && metadata.Record.filter_mask == 0)
     {
       if(inflateReset(&metadata.stream) != Z_OK)
       {
-        diagnostic = MakeErrorResult<>(BoundedRead::DecodeFailure, fmt::format("Bounded decoder reset failed."));
+        diagnostic = MakeErrorResult<>(bounded_read::DecodeFailure, fmt::format("Bounded decoder reset failed."));
         return Status::Failed;
       }
       metadata.stream.next_in = reinterpret_cast<Bytef*>(stored.data.get());
-      metadata.stream.avail_in = static_cast<uInt>(metadata.Record.storedSize);
+      metadata.stream.avail_in = static_cast<uInt>(metadata.Record.stored_size);
       metadata.stream.next_out = reinterpret_cast<Bytef*>(nominal.data.get());
       metadata.stream.avail_out = static_cast<uInt>(metadata.nominal_bytes);
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateAttempt, metadata.Record.storedSize, metadata.nominal_bytes);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateAttempt, metadata.Record.stored_size, metadata.nominal_bytes);
 #endif
       int status = Z_OK;
 #if SIMPLNX_BUILD_TESTS
@@ -1096,29 +1096,29 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
       if(status != Z_STREAM_END || metadata.stream.total_out != metadata.nominal_bytes || metadata.stream.avail_in != 0)
       {
 #if SIMPLNX_BUILD_TESTS
-        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateFailed, metadata.Record.storedSize, metadata.stream.total_out);
+        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::InflateFailed, metadata.Record.stored_size, metadata.stream.total_out);
 #endif
-        int32 code = BoundedRead::DecodeFailure;
+        int32 code = bounded_read::DecodeFailure;
         if(metadata.quota.quota_failed)
         {
-          code = BoundedRead::DecoderQuotaFailure;
+          code = bounded_read::DecoderQuotaFailure;
         }
         else if(metadata.quota.allocation_failed)
         {
-          code = BoundedRead::AllocationFailure;
+          code = bounded_read::AllocationFailure;
         }
         diagnostic = MakeErrorResult<>(code, fmt::format("Bounded decoder did not consume one complete nominal stream."));
         return Status::Failed;
       }
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::Inflated, metadata.Record.storedSize, metadata.stream.total_out);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::Inflated, metadata.Record.stored_size, metadata.stream.total_out);
 #endif
       decodedPtr = nominal.data.get();
     }
     else if(metadata.has_deflate)
     {
 #if SIMPLNX_BUILD_TESTS
-      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::SkippedDeflate, metadata.Record.storedSize, metadata.nominal_bytes);
+      ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::SkippedDeflate, metadata.Record.stored_size, metadata.nominal_bytes);
 #endif
     }
     Scatter(metadata, extent, m_ElementSize, decodedPtr, false, outputPtr);
@@ -1136,7 +1136,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #endif
     if(status != Z_OK)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::DecodeFailure, fmt::format("Bounded decoder cleanup failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::DecodeFailure, fmt::format("Bounded decoder cleanup failed."));
       return Status::Failed;
     }
   }
@@ -1152,7 +1152,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #endif
     if(status < 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::MetadataFailure, fmt::format("Bounded chunk metadata cleanup failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::MetadataFailure, fmt::format("Bounded chunk metadata cleanup failed."));
       return Status::Failed;
     }
   }
@@ -1163,7 +1163,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     readHandle = detail::InvalidFileHandle();
     if(status != 0)
     {
-      diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded positional source cleanup failed."));
+      diagnostic = MakeErrorResult<>(bounded_read::ReadFailure, fmt::format("Bounded positional source cleanup failed."));
       return Status::Failed;
     }
   }

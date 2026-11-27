@@ -108,7 +108,7 @@ Parameters RegularizeZSpacingFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after resampling", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The path to the resampled Image Geometry.", DataPath()));
@@ -156,8 +156,8 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
   }
 
   const auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
-  const SizeVec3 srcDimensions = srcImageGeom.getDimensions();
-  const FloatVec3 srcSpacing = srcImageGeom.getSpacing();
+  const SizeVec3Type srcDimensions = srcImageGeom.getDimensions();
+  const FloatVec3Type srcSpacing = srcImageGeom.getSpacing();
   auto srcOrigin = srcImageGeom.getOrigin().toContainer<std::vector<float32>>();
   const usize origZDim = srcDimensions[2];
 
@@ -165,7 +165,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
   Result<std::vector<float32>> zBoundsResult = ReadZBoundsFile(inputFile, origZDim + 1);
   if(zBoundsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(zBoundsResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(zBoundsResult)), {})};
   }
   const std::vector<float32> zBoundValues = zBoundsResult.value();
 
@@ -189,7 +189,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
 
   std::vector<usize> geomDims = {srcDimensions[0], srcDimensions[1], newZDim}; // ImageGeometry dimensions go fastest to slowest, XYZ.
   std::vector<usize> dataArrayShape = {geomDims[2], geomDims[1], geomDims[0]}; // DataArray shape goes slowest to fastest, ZYX.
-  const FloatVec3 destSpacing = {srcSpacing[0], srcSpacing[1], newZRes};
+  const FloatVec3Type destSpacing = {srcSpacing[0], srcSpacing[1], newZRes};
 
   std::vector<DataPath> ignorePaths; // already handled, so skip these when copying remaining child paths
 
@@ -239,9 +239,9 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
                                                                                                                           srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
-    preflightUpdatedValues.push_back({"Regularized Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, destSpacing, srcOrigin, srcImageGeom.getUnits())});
+    preflightUpdatedValues.push_back({"Regularized Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(geomDims, destSpacing, srcOrigin, srcImageGeom.getUnits())});
   }
 
   // The cleared Feature AM keeps its source shape until optional renumbering.
@@ -265,16 +265,16 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
       auto locationResult = ValidateArrayInGeometryCellData(dataStructure, srcImagePath, featureIdsArrayPath, -67433, "Cell Feature Ids");
       if(locationResult.invalid())
       {
-        return {.outputActions = ConvertResultTo<OutputActions>(std::move(locationResult), {})};
+        return {.output_actions = ConvertResultTo<OutputActions>(std::move(locationResult), {})};
       }
-      const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+      const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsArrayPath);
       if(featureIds.getNumberOfTuples() != srcImageGeom.getNumberOfCells())
       {
         return MakePreflightErrorResult(-67434,
@@ -328,10 +328,10 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
 
     // Inform downstream filters that the cell data arrays are modified in place.
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom.getCellDataPath(), {});
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, srcImageGeom.getCellDataPath(), {});
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -340,21 +340,21 @@ Result<> RegularizeZSpacingFilter::executeImpl(DataStructure& dataStructure, con
 {
   RegularizeZSpacingInputValues inputValues;
 
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.NewZRes = filterArgs.value<float32>(k_NewZRes_Key);
-  inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
-  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CellFeatureAttributeMatrix = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
+  inputValues.selected_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.new_z_res = filterArgs.value<float32>(k_NewZRes_Key);
+  inputValues.remove_original_image_geom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  inputValues.created_image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumber_features = inputValues.clear_feature_attribute_matrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.cell_feature_attribute_matrix = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrix_Key);
 
-  if(inputValues.RemoveOriginalImageGeom)
+  if(inputValues.remove_original_image_geom)
   {
-    auto tempPathVector = inputValues.SelectedImageGeometryPath.getPathVector();
+    auto tempPathVector = inputValues.selected_image_geometry_path.getPathVector();
     tempPathVector.back() = k_TempGeometryName;
-    inputValues.CreatedImageGeometryPath = DataPath({tempPathVector});
+    inputValues.created_image_geometry_path = DataPath({tempPathVector});
   }
 
   return RegularizeZSpacing(dataStructure, messageHandler, shouldCancel, &inputValues)();

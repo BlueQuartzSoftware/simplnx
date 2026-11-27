@@ -58,9 +58,9 @@ constexpr int32 k_ValueTruncated = -8533;
 
 // The standard correctness configurations: 3D uniform + 3D non-cubic radius on a multi-object/edge-touching
 // image, plus a genuinely 2D (Z=1) image.
-const std::vector<omt::ObjCase> k_Configs = {{.label = "3D r{1,1,1}", .radius = {1, 1, 1}, .dimX = 12, .dimY = 12, .dimZ = 12},
-                                             {.label = "3D r{2,1,1}", .radius = {2, 1, 1}, .dimX = 12, .dimY = 12, .dimZ = 12},
-                                             {.label = "2D Z=1 r{2,2,0}", .radius = {2, 2, 0}, .dimX = 20, .dimY = 16, .dimZ = 1}};
+const std::vector<omt::ObjCase> k_Configs = {{.label = "3D r{1,1,1}", .radius = {1, 1, 1}, .dim_x = 12, .dim_y = 12, .dim_z = 12},
+                                             {.label = "3D r{2,1,1}", .radius = {2, 1, 1}, .dim_x = 12, .dim_y = 12, .dim_z = 12},
+                                             {.label = "2D Z=1 r{2,2,0}", .radius = {2, 2, 0}, .dim_x = 20, .dim_y = 16, .dim_z = 1}};
 
 const char* KernelName(KernelType kt)
 {
@@ -99,7 +99,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
       DYNAMIC_SECTION("kernel=" << KernelName(kt) << " " << cfg.label)
       {
         const std::array<int32, 3> radius = {static_cast<int32>(cfg.radius[0]), static_cast<int32>(cfg.radius[1]), static_cast<int32>(cfg.radius[2])};
-        omt::RunObjectMorphologyComputedExpected<ErodeObjectMorphologyImageFilter, uint8>(build, cfg.dimX, cfg.dimY, cfg.dimZ, kt, radius, ObjectMorphOp::Erode, uint8{1}, uint8{0}, setParams);
+        omt::RunObjectMorphologyComputedExpected<ErodeObjectMorphologyImageFilter, uint8>(build, cfg.dim_x, cfg.dim_y, cfg.dim_z, kt, radius, ObjectMorphOp::Erode, uint8{1}, uint8{0}, setParams);
       }
     }
   }
@@ -162,11 +162,11 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: float32 exact-eq
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 32;
   constexpr uint8 k_ObjectValue = 1;
@@ -196,7 +196,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<uint8>(dataStructure, inputPath, cellShape, {1});
   auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   {
     constexpr usize k_ChunkValues = 65536;
@@ -257,7 +257,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -269,8 +269,8 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-guard on Object + Background Value", "[NXImageProcessing][ErodeObjectMorphologyImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   auto makeArgs = [](const DataPath& inputPath, float64 objectValue, float64 backgroundValue) {
     Arguments args;
@@ -294,40 +294,40 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
     // Object Value out of range -> error.
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 99999.0, 0.0));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_ValueOutOfRange);
     }
     // Background Value out of range (negative) -> error (Object Value is in-range).
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0, -5.0));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_ValueOutOfRange);
     }
     // Non-finite (NaN) Object Value -> error.
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN(), 0.0));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_NonFiniteValue);
     }
     // Non-finite (Inf) Background Value -> error (Object Value is in-range).
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0, std::numeric_limits<float64>::infinity()));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_NonFiniteValue);
     }
     // Both values fractional -> TWO truncation warnings, still valid (warnings from both are accumulated).
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.5, 0.5));
-      SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-      REQUIRE(result.outputActions.warnings().size() == 2);
-      REQUIRE(result.outputActions.warnings()[0].code == k_ValueTruncated);
-      REQUIRE(result.outputActions.warnings()[1].code == k_ValueTruncated);
+      SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+      REQUIRE(result.output_actions.warnings().size() == 2);
+      REQUIRE(result.output_actions.warnings()[0].code == k_ValueTruncated);
+      REQUIRE(result.output_actions.warnings()[1].code == k_ValueTruncated);
     }
     // Both in-range integer values -> clean.
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1.0, 0.0));
-      SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-      REQUIRE(result.outputActions.warnings().empty());
+      SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+      REQUIRE(result.output_actions.warnings().empty());
     }
   }
 
@@ -339,26 +339,26 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
     // Object Value out of float32 range (1e300 > FLT_MAX) -> error.
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 1e300, 0.0));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_ValueOutOfRange);
     }
     // Background Value out of float32 range -> error (Object Value is in-range).
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 3.0, 1e300));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_ValueOutOfRange);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_ValueOutOfRange);
     }
     // Non-finite (Inf) Object Value -> error.
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::infinity(), 0.0));
-      REQUIRE(result.outputActions.invalid());
-      REQUIRE(result.outputActions.errors().front().code == k_NonFiniteValue);
+      REQUIRE(result.output_actions.invalid());
+      REQUIRE(result.output_actions.errors().front().code == k_NonFiniteValue);
     }
     // Both exactly-representable finite values -> clean (no truncation warning for float types).
     {
       auto result = filter.preflight(dataStructure, makeArgs(inputPath, 3.0, 0.0));
-      SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-      REQUIRE(result.outputActions.warnings().empty());
+      SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+      REQUIRE(result.output_actions.warnings().empty());
     }
   }
 }

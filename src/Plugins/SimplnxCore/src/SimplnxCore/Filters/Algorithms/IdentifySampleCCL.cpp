@@ -209,10 +209,10 @@ constexpr usize k_MaxCachedPages = 16;    // Bounds resident temporary-record ca
 Result<std::unique_ptr<ITemporaryRecordStore>> CreateTemporaryRecordStore(uint64 recordSize, uint64 recordCount, bool allowInMemoryFallback)
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = recordSize;
-  config.maxRecordsPerBatch = k_RecordsPerPage;
-  config.initialRecordCount = recordCount;
-  auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+  config.record_size = recordSize;
+  config.max_records_per_batch = k_RecordsPerPage;
+  config.initial_record_count = recordCount;
+  auto result = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.invalid() && allowInMemoryFallback)
   {
     auto fallbackResult = InMemoryTemporaryRecordStore::Create(config);
@@ -919,7 +919,7 @@ struct IdentifySampleSliceLayout
  * @param maskName Identifies the selected mask.
  * @return Safe layout, or an error before allocation and transfer.
  */
-Result<IdentifySampleSliceLayout> MakeIdentifySampleSliceLayout(const SizeVec3& dimensions, IdentifySampleSliceBySliceFunctor::Plane plane, usize elementBytes, const std::string& maskName)
+Result<IdentifySampleSliceLayout> MakeIdentifySampleSliceLayout(const SizeVec3Type& dimensions, IdentifySampleSliceBySliceFunctor::Plane plane, usize elementBytes, const std::string& maskName)
 {
   for(usize axis = 0; axis < 3; ++axis)
   {
@@ -1226,7 +1226,7 @@ struct IdentifySampleSliceCCLFunctor
 #if SIMPLNX_BUILD_TESTS
     xyObservation.acquired(layout.xy_values);
 #endif
-    auto& budget = CacheMemoryBudgetManager::instance();
+    auto& budget = CacheMemoryBudgetManager::Instance();
     // The first write to an out-of-core mask can need its own working reservation, for example to create a
     // writable copy of a read-only imported source. Publish the first batch without extra planes so that this
     // reservation never competes with them, then group later batches.
@@ -1282,9 +1282,9 @@ struct IdentifySampleSliceCCLFunctor
       if(extras != 0)
       {
 #if SIMPLNX_BUILD_TESTS
-        if(IdentifySampleExtraAllocationControl.beforeAllocate != nullptr)
+        if(IdentifySampleExtraAllocationControl.before_allocate != nullptr)
         {
-          IdentifySampleExtraAllocationControl.beforeAllocate(IdentifySampleExtraAllocationControl.context, maskArray, extraValues);
+          IdentifySampleExtraAllocationControl.before_allocate(IdentifySampleExtraAllocationControl.context, maskArray, extraValues);
         }
 #endif
         extraPlanes = std::make_unique<T[]>(extraValues);
@@ -1406,9 +1406,9 @@ struct IdentifySampleSliceCCLFunctor
         try
         {
 #if SIMPLNX_BUILD_TESTS
-          if(IdentifySampleDiagnosticControl.beforeAggregate != nullptr)
+          if(IdentifySampleDiagnosticControl.before_aggregate != nullptr)
           {
-            IdentifySampleDiagnosticControl.beforeAggregate(IdentifySampleDiagnosticControl.context, maskArray);
+            IdentifySampleDiagnosticControl.before_aggregate(IdentifySampleDiagnosticControl.context, maskArray);
           }
 #endif
           // Preserve both original carriers until all diagnostic allocation succeeds.
@@ -1477,7 +1477,7 @@ struct IdentifySampleCCLFunctor
   {
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    SizeVec3 udims = imageGeom->getDimensions();
+    SizeVec3Type udims = imageGeom->getDimensions();
     const int64 dimX = static_cast<int64>(udims[0]);
     const int64 dimY = static_cast<int64>(udims[1]);
     const int64 dimZ = static_cast<int64>(udims[2]);
@@ -1607,16 +1607,16 @@ IdentifySampleCCL::IdentifySampleCCL(DataStructure& dataStructure, const IFilter
 
 Result<> IdentifySampleCCL::operator()()
 {
-  auto* inputDataPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
+  auto* inputDataPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->input_image_geometry_path);
 
-  if(m_InputValues->SliceBySlice)
+  if(m_InputValues->slice_by_slice)
   {
-    return ExecuteDataFunction(IdentifySampleSliceCCLFunctor{}, inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->FillHoles,
-                               static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
+    return ExecuteDataFunction(IdentifySampleSliceCCLFunctor{}, inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->fill_holes,
+                               static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->slice_by_slice_plane_index), m_MessageHandler, m_ShouldCancel);
   }
 
-  return ExecuteDataFunction(IdentifySampleCCLFunctor{}, inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
+  return ExecuteDataFunction(IdentifySampleCCLFunctor{}, inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->fill_holes, m_MessageHandler, m_ShouldCancel);
 
   return {};
 }

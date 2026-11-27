@@ -25,17 +25,17 @@ const float32 k_AxisToleranceValue = 1.0f;
 const float32 k_AngleToleranceValue = 1.0f;
 
 // Feature Level Data
-const DataPath k_AvgQuatsPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_AvgQuats});
-const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_Phases});
+const DataPath k_AvgQuatsPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_AvgQuats});
+const DataPath k_PhasesPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_Phases});
 
 // Ensemble Level Data
-const DataPath k_CrystalStructuresPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures});
+const DataPath k_CrystalStructuresPath({constants::k_SmallIN100, constants::k_PhaseData, constants::k_CrystalStructures});
 
 // Face Level Data
 const StringLiteralType k_TriangleContainerName = "TriangleDataContainer";
-const DataPath k_FaceDataPath({k_TriangleContainerName, Constants::k_FaceData});
-const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(Constants::k_FaceLabels);
-const DataPath k_FaceNormalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+const DataPath k_FaceDataPath({k_TriangleContainerName, constants::k_FaceData});
+const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(constants::k_FaceLabels);
+const DataPath k_FaceNormalsPath = k_FaceDataPath.createChildPath(constants::k_FaceNormals);
 
 // Created Data Names/Paths
 const StringLiteralType k_ExemplarBoundariesName = "NX Twin Boundaries";
@@ -53,11 +53,11 @@ const DataPath k_GeneratedIncoherencePath = k_FaceDataPath.createChildPath(k_Gen
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_twin_boundaries_test/validation/7_0_Compute_Twin_Boundaries_Test.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate ComputeTwinBoundariesFilter
   {
@@ -83,7 +83,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherenc
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -92,8 +92,8 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherenc
 
   // Compare the output arrays with those precalculated from the file
   {
-    UnitTest::CompareArrays<float32>(dataStructure, twin_boundaries_constants::k_ExemplarIncoherencePath, twin_boundaries_constants::k_GeneratedIncoherencePath);
-    UnitTest::CompareArrays<uint8>(dataStructure, twin_boundaries_constants::k_ExemplarBoundariesPath, twin_boundaries_constants::k_GeneratedBoundariesPath);
+    unit_test::CompareArrays<float32>(dataStructure, twin_boundaries_constants::k_ExemplarIncoherencePath, twin_boundaries_constants::k_GeneratedIncoherencePath);
+    unit_test::CompareArrays<uint8>(dataStructure, twin_boundaries_constants::k_ExemplarBoundariesPath, twin_boundaries_constants::k_GeneratedBoundariesPath);
   }
 
 // Write the DataStructure out to the file system
@@ -101,16 +101,16 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherenc
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/base_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_twin_boundaries_test/validation/7_0_Compute_Twin_Boundaries_Test.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate ComputeTwinBoundariesFilter
   {
@@ -134,7 +134,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -144,9 +144,9 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
   // Compare the output arrays with those precalculated from the file
   {
     // The exemplar algorithm skips invalid values. This algorithm lacks prior face-normal knowledge, so the test simulates that behavior here.
-    auto& faceNormals = dataStructure.getDataRefAs<Float64Array>(twin_boundaries_constants::k_FaceNormalsPath);
-    auto& exemplarBoundaries = dataStructure.getDataRefAs<UInt8Array>(twin_boundaries_constants::k_ExemplarBoundariesPath);
-    auto& generatedBoundaries = dataStructure.getDataRefAs<UInt8Array>(twin_boundaries_constants::k_GeneratedBoundariesPath);
+    auto& faceNormals = dataStructure.getDataRefAs<Float64ArrayType>(twin_boundaries_constants::k_FaceNormalsPath);
+    auto& exemplarBoundaries = dataStructure.getDataRefAs<UInt8ArrayType>(twin_boundaries_constants::k_ExemplarBoundariesPath);
+    auto& generatedBoundaries = dataStructure.getDataRefAs<UInt8ArrayType>(twin_boundaries_constants::k_GeneratedBoundariesPath);
     for(usize i = 0; i < faceNormals.getNumberOfTuples(); i++)
     {
       const Eigen::Vector3d normals{faceNormals[3 * i], faceNormals[(3 * i) + 1], faceNormals[(3 * i) + 2]};
@@ -165,23 +165,23 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/no_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeTwinBoundariesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool findCoherence = GENERATE(false, true);
   CAPTURE(findCoherence);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_twin_boundaries_test" / "validation" / "7_0_Compute_Twin_Boundaries_Test.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(twin_boundaries_constants::k_PhasesPath));
-  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(twin_boundaries_constants::k_PhasesPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(twin_boundaries_constants::k_CrystalStructuresPath));
-  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(twin_boundaries_constants::k_CrystalStructuresPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(twin_boundaries_constants::k_PhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(twin_boundaries_constants::k_PhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(twin_boundaries_constants::k_CrystalStructuresPath));
+  const auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(twin_boundaries_constants::k_CrystalStructuresPath);
   auto& featurePhasesStoreRef = featurePhasesArrayRef.getDataStoreRef();
   for(usize featureIdx = 1; featureIdx < featurePhasesStoreRef.getNumberOfTuples(); featureIdx++)
   {
@@ -209,11 +209,11 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Phase Index Bounds"
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_twin_boundaries_test/validation/7_0_Compute_Twin_Boundaries_Test.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate ComputeTwinBoundariesFilter
   {
@@ -238,7 +238,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check",
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -258,13 +258,13 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check",
     REQUIRE(found);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeTwinBoundariesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

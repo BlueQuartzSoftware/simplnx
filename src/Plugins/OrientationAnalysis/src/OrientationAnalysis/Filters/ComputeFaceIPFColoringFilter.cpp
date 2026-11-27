@@ -60,21 +60,21 @@ Parameters ComputeFaceIPFColoringFilter::parameters() const
                                                    "  TSL: Primary-corner SST coloring (EDAX/OIM Analysis default).\n"
                                                    "  PUCM: Perceptually-uniform color map (Patala / MTEX-style).\n"
                                                    "  Nolze-Hielscher: MTEX HSV-style coloring.",
-                                                   0, ChoicesParameter::Choices{"TSL", "PUCM", "Nolze-Hielscher"}));
+                                                   0, ChoicesParameter::ChoicesType{"TSL", "PUCM", "Nolze-Hielscher"}));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FirstFaceIPFColorsArrayName_Key, "First Set of IPF Colors", "The first set of RGB color schemes encoded as unsigned chars for each Face",
@@ -117,11 +117,11 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(triangleArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-2430, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue);
+  const auto* const faceLabelsPtr = dataStructure.getDataAs<Int32ArrayType>(pSurfaceMeshFaceLabelsArrayPathValue);
   if(faceLabelsPtr == nullptr)
   {
     return MakePreflightErrorResult(-2431, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
@@ -132,7 +132,7 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   tupleValidityCheck = dataStructure.validateNumberOfTuples(imageArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-2432, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -144,7 +144,7 @@ IFilter::PreflightResult ComputeFaceIPFColoringFilter::preflightImpl(const DataS
   auto secondAction = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabelsPtr->getTupleShape(), std::vector<usize>{3}, faceIpfColorsArrayPath);
   resultOutputActions.value().appendAction(std::move(secondAction));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -153,25 +153,25 @@ Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure,
 {
   ComputeFaceIPFColoringInputValues inputValues;
 
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.SurfaceMeshFaceNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
-  inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FirstFaceIPFColorsArrayName = filterArgs.value<std::string>(k_FirstFaceIPFColorsArrayName_Key);
-  inputValues.SecondFaceIPFColorsArrayName = filterArgs.value<std::string>(k_SecondFaceIPFColorsArrayName_Key);
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.surface_mesh_face_normals_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
+  inputValues.feature_euler_angles_array_path = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.first_face_ipf_colors_array_name = filterArgs.value<std::string>(k_FirstFaceIPFColorsArrayName_Key);
+  inputValues.second_face_ipf_colors_array_name = filterArgs.value<std::string>(k_SecondFaceIPFColorsArrayName_Key);
 
   const auto colorKeyChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key);
   switch(colorKeyChoice)
   {
   case 0:
-    inputValues.ColorKey = ebsdlib::ColorKeyKind::TSL;
+    inputValues.color_key = ebsdlib::ColorKeyKind::TSL;
     break;
   case 1:
-    inputValues.ColorKey = ebsdlib::ColorKeyKind::PUCM;
+    inputValues.color_key = ebsdlib::ColorKeyKind::PUCM;
     break;
   case 2:
-    inputValues.ColorKey = ebsdlib::ColorKeyKind::NolzeHielscher;
+    inputValues.color_key = ebsdlib::ColorKeyKind::NolzeHielscher;
     break;
   default:
     return MakeErrorResult(-24340, fmt::format("Invalid Color Key choice: {}. Valid range is [0, 2].", colorKeyChoice));

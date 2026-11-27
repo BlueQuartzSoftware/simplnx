@@ -73,7 +73,7 @@ void CheckLocation(const DataStructure& dataStructure, const DataPath& path, Arr
         CHECK_FALSE(resultPtr->errors().empty());
         if(!resultPtr->errors().empty())
         {
-          CHECK(resultPtr->errors().front().code == FilterParameter::Constants::k_Validate_DataLocation_Error);
+          CHECK(resultPtr->errors().front().code == filter_parameter::constants::k_ValidateDataLocationError);
           CHECK(resultPtr->errors().front().message.find(path.toString()) != std::string::npos);
           CHECK(resultPtr->errors().front().message.find("in-memory") != std::string::npos);
           CHECK(resultPtr->errors().front().message.find("out-of-core") != std::string::npos);
@@ -149,7 +149,7 @@ TEST_CASE("ArraySelectionParameter keeps type and shape checks for empty stores"
       CHECK(typedCopyPtr->allowedDataLocations() == location);
       const auto originalResult = parameter.validate(dataStructure, std::any{path});
       const auto copyResult = typedCopyPtr->validate(dataStructure, std::any{path});
-      const auto expectedCode = path.getTargetName() == "WrongType" ? FilterParameter::Constants::k_Validate_AllowedType_Error : FilterParameter::Constants::k_Validate_TupleShapeValue;
+      const auto expectedCode = path.getTargetName() == "WrongType" ? filter_parameter::constants::k_ValidateAllowedTypeError : filter_parameter::constants::k_ValidateTupleShapeValue;
       for(const auto* resultPtr : {&originalResult, &copyResult})
       {
         CHECK(resultPtr->invalid());

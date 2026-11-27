@@ -76,7 +76,7 @@ Parameters WriteAbaqusHexahedronFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
 
@@ -109,20 +109,20 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
   auto inputArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
-  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  if(auto sizeResult = abaqus_element_sets::ValidateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
   }
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, -1124); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -1122); prefixResult.invalid())
+  if(auto prefixResult = abaqus_element_sets::ValidateFilePrefix(prefix, -1122); prefixResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
   }
 
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -133,9 +133,9 @@ IFilter::PreflightResult WriteAbaqusHexahedronFilter::preflightImpl(const DataSt
     return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
   }
 
-  if(auto targetsResult = AbaqusElementSets::validateOutputTargets(pOutputPathValue, prefix, -1123); targetsResult.invalid())
+  if(auto targetsResult = abaqus_element_sets::ValidateOutputTargets(pOutputPathValue, prefix, -1123); targetsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
   return {};
@@ -147,14 +147,14 @@ Result<> WriteAbaqusHexahedronFilter::executeImpl(DataStructure& dataStructure, 
 {
   WriteAbaqusHexahedronInputValues inputValues;
 
-  inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
-  inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
-  inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.WriteDummyNode = filterArgs.value<bool>(k_WriteDummyNode_Key);
+  inputValues.use_reduced_integration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
+  inputValues.hourglass_stiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
+  inputValues.job_name = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.file_prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.write_dummy_node = filterArgs.value<bool>(k_WriteDummyNode_Key);
 
   return WriteAbaqusHexahedron(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

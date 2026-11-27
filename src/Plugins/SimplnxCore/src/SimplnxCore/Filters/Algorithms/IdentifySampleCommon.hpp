@@ -148,7 +148,7 @@ struct IdentifySampleSliceBySliceFunctor
    * Cancellation is not checked within a component search.
    */
   template <typename T>
-  static void processSlice(T* sliceBuffer, usize sliceSize, int64 planeDim1, int64 planeDim2, bool fillHoles, const std::atomic_bool& shouldCancel)
+  static void ProcessSlice(T* sliceBuffer, usize sliceSize, int64 planeDim1, int64 planeDim2, bool fillHoles, const std::atomic_bool& shouldCancel)
   {
     // Find the largest true plane component.
     std::vector<bool> checked(sliceSize, false);
@@ -304,7 +304,7 @@ struct IdentifySampleSliceBySliceFunctor
   {
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    SizeVec3 uDims = imageGeom->getDimensions();
+    SizeVec3Type uDims = imageGeom->getDimensions();
     const int64 dimX = static_cast<int64>(uDims[0]);
     const int64 dimY = static_cast<int64>(uDims[1]);
     const int64 dimZ = static_cast<int64>(uDims[2]);
@@ -399,7 +399,7 @@ struct IdentifySampleSliceBySliceFunctor
             {
               return {};
             }
-            processSlice(columnBuffers[static_cast<usize>(b)].get(), sliceSize, planeDim1, planeDim2, fillHoles, shouldCancel);
+            ProcessSlice(columnBuffers[static_cast<usize>(b)].get(), sliceSize, planeDim1, planeDim2, fillHoles, shouldCancel);
           }
 
           // Read each Z-slice, insert all batch columns, and write it back.
@@ -476,7 +476,7 @@ struct IdentifySampleSliceBySliceFunctor
         }
       }
 
-      processSlice(sliceBuffer.get(), sliceSize, planeDim1, planeDim2, fillHoles, shouldCancel);
+      ProcessSlice(sliceBuffer.get(), sliceSize, planeDim1, planeDim2, fillHoles, shouldCancel);
 
       // Write the plane with bulk transfers where its layout permits them.
       if(stride1 == 1 && stride2 == planeDim1)

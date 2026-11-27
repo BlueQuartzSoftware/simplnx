@@ -21,15 +21,15 @@ public:
       PhysicalSubvolume
     } type = TypeEnum::NoCropping;
     bool is_2d = false;
-    bool cropX = true;
-    bool cropY = true;
-    bool cropZ = true;
-    SizeVec2 xBoundVoxels;
-    SizeVec2 yBoundVoxels;
-    SizeVec2 zBoundVoxels;
-    FloatVec2Type xBoundPhysical;
-    FloatVec2Type yBoundPhysical;
-    FloatVec2Type zBoundPhysical;
+    bool crop_x = true;
+    bool crop_y = true;
+    bool crop_z = true;
+    SizeVec2Type x_bound_voxels;
+    SizeVec2Type y_bound_voxels;
+    SizeVec2Type z_bound_voxels;
+    FloatVec2Type x_bound_physical;
+    FloatVec2Type y_bound_physical;
+    FloatVec2Type z_bound_physical;
   };
 
   using ValueType = CropValues;
@@ -54,7 +54,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief

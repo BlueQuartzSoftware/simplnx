@@ -16,8 +16,8 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::LabelContourImageFilter: Preflight rejects non-finite / out-of-range background for integer input", "[NXImageProcessing][LabelContourImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = contour_test::BuildMultiLabelContourImage<uint8>(dataStructure, 8, 8, 8); // uint8 input, range [0, 255]
@@ -35,16 +35,16 @@ TEST_CASE("NXImageProcessing::LabelContourImageFilter: Preflight rejects non-fin
   LabelContourImageFilter filter;
 
   // Background out of uint8 range (255 max) -> undefined cast -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0)).output_actions.valid());
   // Background out of range on the negative side -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(-5.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(-5.0)).output_actions.valid());
   // Non-finite (NaN) background -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN())).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN())).output_actions.valid());
   // Non-finite (Inf) background -> preflight error.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::infinity())).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::infinity())).output_actions.valid());
   // In-range integer value still preflights cleanly.
   auto preflightResult = filter.preflight(dataStructure, makeArgs(0.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 }
 
 // -----------------------------------------------------------------------------

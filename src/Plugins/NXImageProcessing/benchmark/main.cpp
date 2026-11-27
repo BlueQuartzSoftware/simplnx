@@ -261,7 +261,7 @@ int main(int argc, char** argv)
   // --- Load ALL plugins from the build's plugin directory (same dir as this exe). This resolves the
   //     NXImageProcessing filters through the FilterList. ---
   auto app = Application::GetOrCreateInstance();
-  auto& cacheBudgetManager = CacheMemoryBudgetManager::instance();
+  auto& cacheBudgetManager = CacheMemoryBudgetManager::Instance();
   const uint64 requestedCacheBudgetBytes = opts.cache_memory_budget_bytes.value_or(app->getPreferences()->cacheMemoryBudgetBytes());
   const bool cacheBudgetClamped = cacheBudgetManager.setBudgetBytes(requestedCacheBudgetBytes);
   if(cacheBudgetClamped)
@@ -344,14 +344,14 @@ int main(int argc, char** argv)
 
   // --- Run the two-config sweep (per-filter error isolation lives in RunFilterBenchmark). ---
   ip_bench::SweepOptions sweep;
-  sweep.targetVoxels = opts.target_voxels;
-  sweep.minZSlices = opts.z_slices;
+  sweep.target_voxels = opts.target_voxels;
+  sweep.min_z_slices = opts.z_slices;
   sweep.force_2d = opts.force_2d;
-  sweep.projectionAxis = opts.projection_axis;
+  sweep.projection_axis = opts.projection_axis;
   sweep.warmup = opts.warmup;
   sweep.repeats = opts.repeats;
-  sweep.oocRequested = (storeMode == DataStorageMode::ForceOutOfCore);
-  sweep.oocOnly = opts.ooc_only;
+  sweep.ooc_requested = (storeMode == DataStorageMode::ForceOutOfCore);
+  sweep.ooc_only = opts.ooc_only;
 
   std::vector<ip_bench::BenchmarkRow> rows;
   try
@@ -371,7 +371,7 @@ int main(int argc, char** argv)
     bool missingResult = false;
     for(const ip_bench::BenchmarkRow& row : rows)
     {
-      const bool hasResult = sweep.oocRequested ? row.newOocMs.has_value() : row.newIncoreMs.has_value();
+      const bool hasResult = sweep.ooc_requested ? row.new_ooc_ms.has_value() : row.new_incore_ms.has_value();
       if(!hasResult)
       {
         fmt::print("Required new-filter result missing for '{}': {}\n", row.filter, row.notes.empty() ? "no diagnostic was recorded" : row.notes);

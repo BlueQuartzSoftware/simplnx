@@ -57,7 +57,7 @@ inline void AppendWriteResult(Result<>& accumulated, Result<> next)
       {
         // Build separately so a failed prepend leaves the failed operation's warnings intact.
         static_assert(std::is_nothrow_move_constructible_v<Warning>);
-        WarningCollection combined;
+        WarningCollectionType combined;
         if(earlierWarnings.size() > combined.max_size() - accumulated.warnings().size())
         {
           throw std::length_error("Too many write warnings");

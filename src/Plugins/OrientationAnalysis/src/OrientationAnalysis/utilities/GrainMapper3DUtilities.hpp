@@ -73,13 +73,13 @@ public:
   explicit GrainMapperReader(std::string filePath, bool readDctData, bool readAbsorptionData);
   ~GrainMapperReader();
 
-  using GrainMapperPhase = struct
+  using GrainMapperPhaseType = struct
   {
-    std::string Name;
-    int32_t SpaceGroup;
-    std::vector<double> UnitCell; //  ABC, Alpha, Beta, Gamma
-    std::string UniversalHermannMauguin;
-    int32_t PhaseIndex;
+    std::string name;
+    int32_t space_group;
+    std::vector<double> unit_cell; //  ABC, Alpha, Beta, Gamma
+    std::string universal_hermann_mauguin;
+    int32_t phase_index;
   };
 
   nx::core::Result<> readHeaderOnly();
@@ -97,8 +97,8 @@ public:
 
   std::vector<std::string> getDctDatasetNames() const;
   std::map<std::string, nx::core::DataType> getNameToDataTypeMap() const;
-  static std::map<std::string, size_t> getNameToCompDimMap();
-  std::vector<GrainMapperPhase> getPhaseVector() const;
+  static std::map<std::string, size_t> GetNameToCompDimMap();
+  std::vector<GrainMapperPhaseType> getPhaseVector() const;
   herr_t readPhaseInfo(hid_t parentId);
   herr_t findAvailableDctDatasets(hid_t parentId);
 
@@ -126,7 +126,7 @@ private:
   std::vector<double> m_AbsorptionCTOrigin = {0.0, 0.0, 0.0};
 
   std::vector<std::string> m_AvailableDCTDatasets;
-  std::vector<GrainMapperPhase> m_PhaseInfos;
+  std::vector<GrainMapperPhaseType> m_PhaseInfos;
 
   std::map<std::string, nx::core::DataType> m_NameToDataTypeMap;
 };

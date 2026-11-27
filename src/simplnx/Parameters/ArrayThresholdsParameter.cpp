@@ -10,7 +10,7 @@
 
 namespace nx::core
 {
-ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapes requiredComps)
+ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapesType requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
 , m_DefaultValue(std::move(defaultValue))
 , m_RequiredComponentShapes(std::move(requiredComps))
@@ -22,7 +22,7 @@ Uuid ArrayThresholdsParameter::uuid() const
   return ParameterTraits<ArrayThresholdsParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ArrayThresholdsParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ArrayThresholdsParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -46,7 +46,7 @@ Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& js
   auto thresholds = ArrayThresholdSet::FromJson(json);
   if(thresholds == nullptr)
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as ArrayThresholdSet", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as ArrayThresholdSet", k_Prefix.view(), name()));
   }
   return {{std::move(*thresholds)}};
 }
@@ -66,7 +66,7 @@ typename ArrayThresholdsParameter::ValueType ArrayThresholdsParameter::defaultPa
   return m_DefaultValue;
 }
 
-ArrayThresholdsParameter::AllowedComponentShapes ArrayThresholdsParameter::requiredComponentShapes() const
+ArrayThresholdsParameter::AllowedComponentShapesType ArrayThresholdsParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }
@@ -84,18 +84,18 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
 
   if(dataPath.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* objectPtr = dataStructure.getData(dataPath);
   if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
   }
 
   const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(objectPtr);
   if(dataArrayPtr == nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, dataPath.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, dataPath.toString()));
   }
 
   if(!m_RequiredComponentShapes.empty())
@@ -109,17 +109,17 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
         foundMatch = true;
         break;
       }
-      compStr += StringUtilities::number(compShape[0]);
+      compStr += string_utilities::Number(compShape[0]);
       for(usize i = 1; i < compShape.size(); ++i)
       {
-        compStr += " x " + StringUtilities::number(compShape[i]);
+        compStr += " x " + string_utilities::Number(compShape[i]);
       }
       compStr += " or ";
     }
     if(!foundMatch)
     {
       compStr.erase(compStr.size() - 4); // Remove trailing " or "
-      return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue,
+      return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
                                          fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, dataPath.toString(), compStr));
     }
   }

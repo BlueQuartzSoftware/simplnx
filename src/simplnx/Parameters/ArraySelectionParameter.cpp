@@ -39,7 +39,7 @@ struct fmt::formatter<nx::core::DataType>
 namespace nx::core
 {
 ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
-                                                 AllowedComponentShapes requiredComps, DataLocation location)
+                                                 AllowedComponentShapesType requiredComps, DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(allowedTypes)
@@ -58,7 +58,7 @@ Uuid ArraySelectionParameter::uuid() const
   return ParameterTraits<ArraySelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ArraySelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ArraySelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -80,7 +80,7 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
   static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
@@ -90,7 +90,7 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
   }
   return {{std::move(*path)}};
 }
@@ -115,7 +115,7 @@ ArraySelectionParameter::AllowedTypeSetType ArraySelectionParameter::allowedType
   return m_AllowedTypes;
 }
 
-ArraySelectionParameter::AllowedComponentShapes ArraySelectionParameter::requiredComponentShapes() const
+ArraySelectionParameter::AllowedComponentShapesType ArraySelectionParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }
@@ -148,18 +148,18 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
   const DataObject* objectPtr = dataStructure.getData(value);
   if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateDoesNotExist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
   const auto* iArrayPtr = dynamic_cast<const IArray*>(objectPtr);
   if(iArrayPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }
 
   // StringArray has fixed string type and component shape. Numeric type,
@@ -173,7 +173,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
       DataType dataType = dataArrayPtr->getDataType();
       if(!m_AllowedTypes.contains(dataType))
       {
-        return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
+        return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateAllowedTypeError,
                                          fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
       }
     }
@@ -189,17 +189,17 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
           foundMatch = true;
           break;
         }
-        compStr += StringUtilities::number(compShape[0]);
+        compStr += string_utilities::Number(compShape[0]);
         for(usize i = 1; i < compShape.size(); ++i)
         {
-          compStr += " x " + StringUtilities::number(compShape[i]);
+          compStr += " x " + string_utilities::Number(compShape[i]);
         }
         compStr += " or ";
       }
       if(!foundMatch)
       {
         compStr.erase(compStr.size() - 4); // Remove trailing " or "
-        return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue,
+        return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
                                            fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
       }
     }
@@ -231,7 +231,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
           requestedLocationNamePtr = "out-of-core";
         }
 
-        return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
+        return MakeErrorResult(filter_parameter::constants::k_ValidateDataLocationError,
                                fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationNamePtr, requestedLocationNamePtr));
       }
     }

@@ -21,8 +21,8 @@
 #include <fstream>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 namespace fs = std::filesystem;
 
 namespace
@@ -39,8 +39,8 @@ constexpr usize k_LargeBlockSize = 25;
 constexpr usize k_LargeSliceSize = k_LargeDimX * k_LargeDimY;
 
 const DataPath k_LargeGeomPath({"LargeImageGeom"});
-const DataPath k_LargeCellDataPath = k_LargeGeomPath.createChildPath(Constants::k_CellData);
-const DataPath k_LargeFeatureIdsPath = k_LargeCellDataPath.createChildPath(Constants::k_FeatureIds);
+const DataPath k_LargeCellDataPath = k_LargeGeomPath.createChildPath(constants::k_CellData);
+const DataPath k_LargeFeatureIdsPath = k_LargeCellDataPath.createChildPath(constants::k_FeatureIds);
 
 /**
  * @brief Builds a 200-cubed block-patterned feature volume for timing tests.
@@ -56,11 +56,11 @@ void BuildLargeTestData(DataStructure& dataStructure, bool includeBlockedCells =
   REQUIRE(imageGeomPtr->setSpacing({0.5F, 0.75F, 1.25F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
-  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_LargeFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, featureIdsStore, cellDataPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_LargeFeatureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, constants::k_FeatureIds, featureIdsStore, cellDataPtr->getId());
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
 
   constexpr usize k_BlocksX = k_LargeDimX / k_LargeBlockSize;
@@ -124,7 +124,7 @@ float64 ExecuteTimedDistanceMap(DataStructure& dataStructure, bool calcManhattan
   const Arguments args = CreateDistanceMapArguments(calcManhattanDist, calculateAllMaps);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   const auto executeStart = std::chrono::steady_clock::now();
   auto executeResult = filter.execute(dataStructure, args);
@@ -205,13 +205,13 @@ std::array<uint64, 3> HashDistanceMaps(const DataStructure& dataStructure, bool 
     const DataPath outputPath = k_LargeCellDataPath.createChildPath(kOutputNames[outputIndex]);
     if(calcManhattanDist)
     {
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath));
-      hashes[outputIndex] = HashDataStoreBytes(dataStructure.getDataRefAs<Int32Array>(outputPath).getDataStoreRef());
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputPath));
+      hashes[outputIndex] = HashDataStoreBytes(dataStructure.getDataRefAs<Int32ArrayType>(outputPath).getDataStoreRef());
     }
     else
     {
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-      hashes[outputIndex] = HashDataStoreBytes(dataStructure.getDataRefAs<Float32Array>(outputPath).getDataStoreRef());
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+      hashes[outputIndex] = HashDataStoreBytes(dataStructure.getDataRefAs<Float32ArrayType>(outputPath).getDataStoreRef());
     }
   }
   return hashes;
@@ -238,11 +238,11 @@ void BuildComparisonTestData(DataStructure& dataStructure, bool includeBlockedCe
   REQUIRE(imageGeomPtr->setSpacing({0.5F, 0.75F, 1.25F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
-  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_LargeFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, featureIdsStore, cellDataPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_LargeFeatureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, constants::k_FeatureIds, featureIdsStore, cellDataPtr->getId());
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
 
   std::vector<int32> sliceBuffer(k_SliceSize);
@@ -289,7 +289,7 @@ void ExecuteComparisonDistanceMap(DataStructure& dataStructure)
   args.insertOrAssign(ComputeEuclideanDistMapFilter::k_QPDistancesArrayName_Key, std::make_any<std::string>(k_QPDistancesArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -309,12 +309,12 @@ bool ArrayExists(const DataStructure& dataStructure, const std::string& name)
 
 TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclideanDistMap]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
 
   // Load the Small IN100 exemplar for the output-selection matrix.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
@@ -327,7 +327,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
 
   INFO("Scenario: " << scenarioName);
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   {
     ComputeEuclideanDistMapFilter filter;
@@ -347,7 +347,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
     args.insert(ComputeEuclideanDistMapFilter::k_QPDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_QPDistancesArrayName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -374,36 +374,36 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
   const DataPath calculatedPath({k_DataContainer, k_CellData, k_CalculatedPrefix + expectedArrayName});
   const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
   const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-  UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
+  unit_test::CompareDataArrays<int32>(exemplarData, calculatedData);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: Euclidean direct and OOC equivalence", "[SimplnxCore][ComputeEuclideanDistMap]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool includeBlockedCells = GENERATE(false, true);
 
   DYNAMIC_SECTION("blocked cells: " << includeBlockedCells)
   {
     std::array<std::vector<float32>, 3> referenceOutputs;
     bool hasReferenceOutputs = false;
-    const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+    const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
     for(const auto scenario : scenarios)
     {
       CAPTURE(scenario);
-      UnitTest::AlgorithmTestScope scope(scenario);
+      unit_test::AlgorithmTestScope scope(scenario);
       DataStructure dataStructure;
       BuildComparisonTestData(dataStructure, includeBlockedCells);
-      scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(k_LargeFeatureIdsPath));
+      scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(k_LargeFeatureIdsPath));
       scope.execute([&dataStructure] { ExecuteComparisonDistanceMap(dataStructure); });
 
       const std::array<std::string, 3> outputNames = {k_GBDistancesArrayName, k_TJDistancesArrayName, k_QPDistancesArrayName};
       for(usize outputIndex = 0; outputIndex < outputNames.size(); outputIndex++)
       {
         const DataPath outputPath = k_LargeCellDataPath.createChildPath(outputNames[outputIndex]);
-        REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-        const auto& outputArray = dataStructure.getDataRefAs<Float32Array>(outputPath);
+        REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+        const auto& outputArray = dataStructure.getDataRefAs<Float32ArrayType>(outputPath);
         std::vector<float32> outputValues(outputArray.getSize());
         auto outputArrayReadResult = outputArray.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(outputValues.data(), outputValues.size()));
         SIMPLNX_RESULT_REQUIRE_VALID(outputArrayReadResult);
@@ -418,14 +418,14 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: Euclidean direct and OOC equiva
       }
 
       hasReferenceOutputs = true;
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: 200x200x200 same-storage algorithm matrix", "[SimplnxCore][ComputeEuclideanDistMap][.Performance]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto [caseName, calcManhattanDist, includeBlockedCells, calculateAllMaps] =
       GENERATE(std::make_tuple("Manhattan, unblocked, boundaries only", true, false, false), std::make_tuple("Manhattan, unblocked, all maps", true, false, true),
@@ -439,15 +439,15 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: 200x200x200 same-storage algori
   {
     std::array<uint64, 3> expectedHashes = {};
     bool hasExpectedHashes = false;
-    const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+    const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
     for(const auto scenario : scenarios)
     {
       CAPTURE(scenario);
-      UnitTest::AlgorithmTestScope scope(scenario);
+      unit_test::AlgorithmTestScope scope(scenario);
       DataStructure dataStructure;
       BuildLargeTestData(dataStructure, includeBlockedCells);
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_LargeFeatureIdsPath));
-      scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(k_LargeFeatureIdsPath));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_LargeFeatureIdsPath));
+      scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(k_LargeFeatureIdsPath));
       scope.execute(
           [&dataStructure, shouldCalculateManhattanDistance, shouldCalculateAllMaps] { return ExecuteTimedDistanceMap(dataStructure, shouldCalculateManhattanDistance, shouldCalculateAllMaps); });
       const auto hashes = HashDistanceMaps(dataStructure, calcManhattanDist, calculateAllMaps);
@@ -463,13 +463,13 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: 200x200x200 same-storage algori
           const usize index = z * k_LargeSliceSize + y * k_LargeDimX + x;
           if(calcManhattanDist)
           {
-            REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath));
-            CHECK(dataStructure.getDataRefAs<Int32Array>(outputPath)[index] == static_cast<int32>(expected));
+            REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputPath));
+            CHECK(dataStructure.getDataRefAs<Int32ArrayType>(outputPath)[index] == static_cast<int32>(expected));
           }
           else
           {
-            REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-            CHECK(dataStructure.getDataRefAs<Float32Array>(outputPath)[index] == Approx(expected));
+            REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+            CHECK(dataStructure.getDataRefAs<Float32ArrayType>(outputPath)[index] == Approx(expected));
           }
         };
         CAPTURE(mapIdx);
@@ -489,7 +489,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: 200x200x200 same-storage algori
         expectedHashes = hashes;
         hasExpectedHashes = true;
       }
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -497,7 +497,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap: 200x200x200 same-storage algori
 TEST_CASE("SimplnxCore::ComputeEuclideanDistMapFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeEuclideanDistMapFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -569,13 +569,13 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMapFilter: Geometry cell tuple count
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -12805);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);

@@ -21,7 +21,7 @@ public:
    * @param path The path to the ImageGeometry to update
    * @param centerOrigin Whether to center the origin
    */
-  UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, DataPath path, bool centerOrigin = false);
+  UpdateImageGeomAction(const std::optional<FloatVec3Type>& origin, const std::optional<FloatVec3Type>& spacing, DataPath path, bool centerOrigin = false);
 
   ~UpdateImageGeomAction() noexcept override;
 
@@ -63,13 +63,13 @@ public:
    * @brief Returns the NumericType of the DataArray to be created.
    * @return const std::vector<float64>&
    */
-  const std::optional<FloatVec3>& origin() const;
+  const std::optional<FloatVec3Type>& origin() const;
 
   /**
    * @brief Returns the dimensions of the DataArray to be created.
    * @return const std::vector<float64>&
    */
-  const std::optional<FloatVec3>& spacing() const;
+  const std::optional<FloatVec3Type>& spacing() const;
 
   /**
    * @brief Returns the path of the ImageGeometry to be updated.
@@ -78,8 +78,8 @@ public:
   const DataPath& path() const;
 
 private:
-  std::optional<FloatVec3> m_Origin;
-  std::optional<FloatVec3> m_Spacing;
+  std::optional<FloatVec3Type> m_Origin;
+  std::optional<FloatVec3Type> m_Spacing;
   DataPath m_Path;
   bool m_CenterOrigin;
 };

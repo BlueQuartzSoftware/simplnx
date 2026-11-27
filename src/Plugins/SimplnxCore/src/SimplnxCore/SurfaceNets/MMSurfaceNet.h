@@ -62,19 +62,19 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(TriangleGeom::SharedVertexList::StoreType& verticesStore, Int32Array* labels, size_t arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(TriangleGeom::SharedVertexListType::StoreType& verticesStore, Int32ArrayType* labels, size_t arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // I am unsure of the ownership model of the underlying code, so I am making this
   // a shared_ptr<> instead of a unique_ptr<>
-  using MMCellMapPtr = std::shared_ptr<MMCellMap>;
+  using MmCellMapPtrType = std::shared_ptr<MMCellMap>;
 
   // Surface smoothing (relaxation)
   struct RelaxAttrs
   {
-    int numRelaxIterations;      // More iterations --> smoother and slower
-    float relaxFactor;           // Range (0.0, 1.0); larger --> faster but less stable
-    float maxDistFromCellCenter; // Maximun displacement of relaxed surface in voxel units
+    int num_relax_iterations;      // More iterations --> smoother and slower
+    float relax_factor;           // Range (0.0, 1.0); larger --> faster but less stable
+    float max_dist_from_cell_center; // Maximun displacement of relaxed surface in voxel units
   };
   void relax(const RelaxAttrs& relaxAttrs) const;
 
@@ -84,7 +84,7 @@ public:
     Padding = std::numeric_limits<int32_t>::max()
   };
 
-  MMCellMapPtr getCellMap() const
+  MmCellMapPtrType getCellMap() const
   {
     return m_CellMap;
   }
@@ -104,7 +104,7 @@ private:
   // friend class MMGeometryGL;
   // friend class MMGeometryOBJ;
 
-  MMCellMapPtr m_CellMap = nullptr;
+  MmCellMapPtrType m_CellMap = nullptr;
   Result<> m_InitializationResult;
 };
 

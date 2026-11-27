@@ -75,7 +75,7 @@ Parameters ReadCtfDataFilter::parameters() const
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
@@ -114,23 +114,23 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ebsdlib::CtfReader reader;
-  const auto xStep = EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::XStep);
-  const auto yStep = EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::YStep);
-  const auto zStep = EbsdStepMetadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::ZStep);
+  const auto xStep = ebsd_step_metadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::XStep);
+  const auto yStep = ebsd_step_metadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::YStep);
+  const auto zStep = ebsd_step_metadata::Observe<ebsdlib::CtfReader::CtfFloatHeaderType>(reader, ebsdlib::Ctf::ZStep);
   reader.setFileName(pInputFileValue.string());
   const int32 err = reader.readHeaderOnly();
   if(err < 0)
   {
     // CtfReader does not set its error-code member on every failure path, so fall back to the returned code.
     const int32 errorCode = reader.getErrorCode() < 0 ? reader.getErrorCode() : err;
-    return {.outputActions = MakeErrorResult<OutputActions>(errorCode, reader.getErrorMessage())};
+    return {.output_actions = MakeErrorResult<OutputActions>(errorCode, reader.getErrorMessage())};
   }
 
   // readHeaderOnly() can accept a header with zero dimensions.
   // Reject it before creating a zero-sized Image Geometry.
   if(reader.getXCells() < 1 || reader.getYCells() < 1)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-19604, fmt::format("The .ctf file header reports X Cells = {} and Y Cells = {}. Both must be at least 1. The file may be malformed or not a .ctf file.",
                                                                    reader.getXCells(), reader.getYCells()))};
   }
@@ -141,7 +141,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
   // for one slice — the copies would then see only sentinel bytes, never the file's data.
   if(reader.getZCells() < 0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -19604, fmt::format("The .ctf file header reports Z Cells = {}. A negative slice count is not usable. The file may be malformed or not a .ctf file.", reader.getZCells()))};
   }
   // A ZCells of 0 slips through the header-only read; it is caught at execute by the -19603
@@ -153,13 +153,13 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
   // A missing ZStep has a unit thickness. An explicitly stored zero is invalid.
   CreateImageGeometryAction::SpacingType spacing = {xStep->storedOr(0.0F), yStep->storedOr(0.0F), zStep->storedOr(1.0F)};
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pInputFileValue, origin, spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues, FloatVec3(spacing));
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues, FloatVec3Type(spacing));
+  ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::CtfReader>(reader, preflightUpdatedValues);
 
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
 
@@ -236,7 +236,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& /
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -244,14 +244,14 @@ Result<> ReadCtfDataFilter::executeImpl(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadCtfDataInputValues inputValues;
-  inputValues.SpacingOverride = ImageIO::GeometryOverrides::FromArguments(filterArgs).Spacing;
+  inputValues.spacing_override = image_io::GeometryOverrides::FromArguments(filterArgs).Spacing;
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.DegreesToRadians = filterArgs.value<bool>(k_DegreesToRadians_Key);
-  inputValues.EdaxHexagonalAlignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.degrees_to_radians = filterArgs.value<bool>(k_DegreesToRadians_Key);
+  inputValues.edax_hexagonal_alignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
+  inputValues.data_container_name = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
 
   ReadCtfData readCtfData(dataStructure, messageHandler, shouldCancel, &inputValues);
   return readCtfData();

@@ -35,16 +35,16 @@ constexpr int32 k_IgnoredAxisDirectionWarning = -34753;
 ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, const DataPath& outputGeometryPath, const CropGeometryParameter::ValueType& croppingOptions)
 {
   ImageGeometryCropOptions options;
-  options.inputImageGeometryPath = inputGeometryPath;
-  options.outputImageGeometryPath = outputGeometryPath;
-  options.usePhysicalBounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  options.cropX = croppingOptions.cropX;
-  options.cropY = croppingOptions.cropY;
-  options.cropZ = croppingOptions.cropZ;
-  options.minVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]), static_cast<uint64>(croppingOptions.zBoundVoxels[0])};
-  options.maxVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]), static_cast<uint64>(croppingOptions.zBoundVoxels[1])};
-  options.minCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]), static_cast<float64>(croppingOptions.zBoundPhysical[0])};
-  options.maxCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]), static_cast<float64>(croppingOptions.zBoundPhysical[1])};
+  options.input_image_geometry_path = inputGeometryPath;
+  options.output_image_geometry_path = outputGeometryPath;
+  options.use_physical_bounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  options.crop_x = croppingOptions.crop_x;
+  options.crop_y = croppingOptions.crop_y;
+  options.crop_z = croppingOptions.crop_z;
+  options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
+  options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]), static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]), static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 
@@ -134,7 +134,7 @@ Parameters ReadNIfTIFileFilter::parameters() const
                                                         CropGeometryParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to the created Image Geometry", DataPath({"NIfTI Image"})));
@@ -178,7 +178,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   if(!fs::exists(pInputFilePath))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-34710, fmt::format("Input NIfTI file does not exist: '{}'", pInputFilePath.string()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-34710, fmt::format("Input NIfTI file does not exist: '{}'", pInputFilePath.string()))};
   }
 
   // Check the cache under the lock; copy the metadata out so the rest of
@@ -202,7 +202,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     auto metadataResult = nifti::ReadNiftiHeader(pInputFilePath, pUseAffineIfPresent);
     if(metadataResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
     md = std::move(metadataResult).value();
 
@@ -218,12 +218,12 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
   std::vector<float32> origin = {md.origin[0], md.origin[1], md.origin[2]};
   std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
-  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
   // If cropping is enabled, use the shared crop planner on a temporary DataStructure.
   if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
@@ -237,21 +237,21 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(tmpActionsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
     }
 
     const DataPath croppedGeomPath({pImageGeomPath.getTargetName() + "_cropped"});
     const ImageGeometryCropOptions cropOptions = CreateCropOptions(pImageGeomPath, croppedGeomPath, pCroppingOptions);
     ImageGeometryCropBounds cropBounds;
     PreflightResult cropImageResult = PreflightImageGeometryCrop(tmpDs, cropOptions, cropBounds);
-    if(cropImageResult.outputActions.invalid())
+    if(cropImageResult.output_actions.invalid())
     {
       return cropImageResult;
     }
-    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    Result<> actionsResult = cropImageResult.output_actions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
 
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
@@ -267,60 +267,60 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   // Determine output DataType. If the file has non-trivial scaling and the user
   // wants to apply it, promote single-component types to float32.
-  DataType outputDataType = md.dataType;
-  if(pApplyScaling && md.hasNontrivialScaling && md.componentCount == 1)
+  DataType outputDataType = md.data_type;
+  if(pApplyScaling && md.has_nontrivial_scaling && md.component_count == 1)
   {
     outputDataType = DataType::float32;
   }
 
   // DataArray tuple dims mirror the reversed image dims (z, y, x)
   const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
-  const std::vector<usize> componentDims = {md.componentCount};
+  const std::vector<usize> componentDims = {md.component_count};
   const DataPath dataArrayPath = pImageGeomPath.createChildPath(pCellAttrMatName).createChildPath(pImageDataArrayName);
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(outputDataType, tupleDims, componentDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
   std::string scalingSummary =
-      md.hasNontrivialScaling ? fmt::format("slope={}, inter={}{}", md.sclSlope, std::isfinite(md.sclInter) ? md.sclInter : 0.0f, (pApplyScaling ? " (applied → float32)" : " (not applied)")) : "none";
-  preflightUpdatedValues.push_back({"NIfTI Header", fmt::format("datatype code: {}  |  components: {}  |  byte-swap: {}  |  vox_offset: {}  |  scaling: {}", md.niftiDatatype, md.componentCount,
-                                                                md.byteSwapRequired ? "yes" : "no", md.voxOffset, scalingSummary)});
+      md.has_nontrivial_scaling ? fmt::format("slope={}, inter={}{}", md.scl_slope, std::isfinite(md.scl_inter) ? md.scl_inter : 0.0f, (pApplyScaling ? " (applied → float32)" : " (not applied)")) : "none";
+  preflightUpdatedValues.push_back({"NIfTI Header", fmt::format("datatype code: {}  |  components: {}  |  byte-swap: {}  |  vox_offset: {}  |  scaling: {}", md.nifti_datatype, md.component_count,
+                                                                md.byte_swap_required ? "yes" : "no", md.vox_offset, scalingSummary)});
 
-  if(md.affineHasFlip)
+  if(md.affine_has_flip)
   {
     resultOutputActions.warnings().push_back(Warning{
         .code = k_IgnoredAxisDirectionWarning,
         .message = fmt::format("NIfTI file '{}' contains negative direction values. This filter uses positive spacing and does not preserve these directions. The loaded image may have a different "
                                "orientation. Voxels are loaded in their stored order.",
-                               md.filePath)});
+                               md.file_path)});
   }
-  if(md.affineHasRotation)
+  if(md.affine_has_rotation)
   {
     resultOutputActions.warnings().push_back(Warning{
         .code = -34750,
         .message = fmt::format("NIfTI file '{}' contains a non-trivial rotation in its {} transform. The ImageGeom in simplnx is axis-aligned; the rotation component has been dropped and only the "
                                "spacing and origin were extracted. Voxels will be loaded in their stored orientation.",
-                               md.filePath, (md.sformCode > 0 ? "sform" : "qform"))});
+                               md.file_path, (md.sform_code > 0 ? "sform" : "qform"))});
   }
-  if(pApplyScaling && md.componentCount == 1 && std::isfinite(md.sclSlope) && md.sclSlope != 0.0f && !std::isfinite(md.sclInter))
+  if(pApplyScaling && md.component_count == 1 && std::isfinite(md.scl_slope) && md.scl_slope != 0.0f && !std::isfinite(md.scl_inter))
   {
-    resultOutputActions.warnings().push_back(Warning{.code = -34752, .message = fmt::format("NIfTI file '{}' scaling intercept is not finite; 0 is used for the intercept.", md.filePath)});
+    resultOutputActions.warnings().push_back(Warning{.code = -34752, .message = fmt::format("NIfTI file '{}' scaling intercept is not finite; 0 is used for the intercept.", md.file_path)});
   }
-  if(md.niftiDatatype == NIFTI_TYPE_RGB24 || md.niftiDatatype == NIFTI_TYPE_RGBA32)
+  if(md.nifti_datatype == NIFTI_TYPE_RGB24 || md.nifti_datatype == NIFTI_TYPE_RGBA32)
   {
-    if(pApplyScaling && std::isfinite(md.sclSlope) && (md.sclSlope != 0.0f && (md.sclSlope != 1.0f || (std::isfinite(md.sclInter) && md.sclInter != 0.0f))))
+    if(pApplyScaling && std::isfinite(md.scl_slope) && (md.scl_slope != 0.0f && (md.scl_slope != 1.0f || (std::isfinite(md.scl_inter) && md.scl_inter != 0.0f))))
     {
       resultOutputActions.warnings().push_back(Warning{
           .code = -34751,
           .message = fmt::format("NIfTI file '{}' has datatype {} with a scaling transform. Per the NIfTI-1 specification, scaling is not applied to RGB24/RGBA32 data; voxels were copied verbatim.",
-                                 md.filePath, (md.niftiDatatype == NIFTI_TYPE_RGB24 ? "RGB24" : "RGBA32"))});
+                                 md.file_path, (md.nifti_datatype == NIFTI_TYPE_RGB24 ? "RGB24" : "RGBA32"))});
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -328,14 +328,14 @@ Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadNIfTIFileInputValues inputValues;
-  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
-  inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
-  inputValues.UseAffineIfPresent = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
-  inputValues.ApplyScalingTransform = filterArgs.value<bool>(k_ApplyScalingTransform_Key);
-  inputValues.CroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.ImageDataArrayName = filterArgs.value<std::string>(k_ImageDataArrayName_Key);
+  inputValues.geometry_overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
+  inputValues.input_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
+  inputValues.use_affine_if_present = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
+  inputValues.apply_scaling_transform = filterArgs.value<bool>(k_ApplyScalingTransform_Key);
+  inputValues.cropping_options = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.image_data_array_name = filterArgs.value<std::string>(k_ImageDataArrayName_Key);
 
   return ReadNIfTIFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

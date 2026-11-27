@@ -14,11 +14,11 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ResampleRectGridToImageGeomInputValues
 {
-  DataPath RectilinearGridPath;
-  MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
-  VectorInt32ParameterType::ValueType Dimensions;
-  DataPath ImageGeometryPath;
-  std::string ImageGeomCellAttributeMatrixName;
+  DataPath rectilinear_grid_path;
+  MultiArraySelectionParameter::ValueType selected_data_array_paths;
+  VectorInt32ParameterType::ValueType dimensions;
+  DataPath image_geometry_path;
+  std::string image_geom_cell_attribute_matrix_name;
 };
 
 /**

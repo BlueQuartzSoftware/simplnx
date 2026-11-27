@@ -80,7 +80,7 @@ IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure
 {
   auto pArgumentsValue = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
 
-  std::vector<std::string> arguments = ExecuteProcess::splitArgumentsString(pArgumentsValue);
+  std::vector<std::string> arguments = ExecuteProcess::SplitArgumentsString(pArgumentsValue);
   if(arguments.empty())
   {
     return MakePreflightErrorResult(-4001, "No command line arguments have been specified.");
@@ -95,10 +95,10 @@ Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const A
 {
   ExecuteProcessInputValues inputValues;
 
-  inputValues.Arguments = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
-  inputValues.Blocking = filterArgs.value<bool>(k_Blocking_Key);
-  inputValues.Timeout = filterArgs.value<int32>(k_Timeout_Key);
-  inputValues.LogFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputLogFile_Key);
+  inputValues.arguments = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
+  inputValues.blocking = filterArgs.value<bool>(k_Blocking_Key);
+  inputValues.timeout = filterArgs.value<int32>(k_Timeout_Key);
+  inputValues.log_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputLogFile_Key);
 
   return ExecuteProcess(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -24,7 +24,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   {
     return;
   }
-  m_SignalConnections.emplace_back(pipeline->getFilterFaultDetailSignal().connect([](AbstractPipelineNode*, int32_t, const WarningCollection& warnings, const ErrorCollection& errors) {
+  m_SignalConnections.emplace_back(pipeline->getFilterFaultDetailSignal().connect([](AbstractPipelineNode*, int32_t, const WarningCollectionType& warnings, const ErrorCollectionType& errors) {
     if(!warnings.empty())
     {
       std::cout << "Pipeline completion warnings" << '\n';
@@ -46,26 +46,26 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
   for(const auto& cxFilter : *pipeline)
   {
     m_SignalConnections.emplace_back(cxFilter->getFilterUpdateSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, const std::string& message) {
-      std::cout << timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << message << '\n';
+      std::cout << Timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << message << '\n';
     }));
 
     m_SignalConnections.emplace_back(cxFilter->getFilterProgressSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode* node, int32_t, int32_t progress, const std::string& message) {
-      std::cout << timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << progress << "% " << message << '\n';
+      std::cout << Timestamp() << "  [" << currentFilterIndex << "] " << node->getName() << ": " << progress << "% " << message << '\n';
     }));
 
     m_SignalConnections.emplace_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t /*filterIndex*/, nx::core::FaultState state) {
       if(state == nx::core::FaultState::Errors)
       {
-        std::cout << timestamp() << "  [" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << '\n';
+        std::cout << Timestamp() << "  [" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << '\n';
       }
       if(state == nx::core::FaultState::Warnings)
       {
-        std::cout << timestamp() << "  [" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << '\n';
+        std::cout << Timestamp() << "  [" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << '\n';
       }
     }));
 
     m_SignalConnections.emplace_back(cxFilter->getFilterFaultDetailSignal().connect(
-        [currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t /*filterIndex*/, const nx::core::WarningCollection& warnings, const nx::core::ErrorCollection& errors) {
+        [currentFilterIndex](nx::core::AbstractPipelineNode*, int32_t /*filterIndex*/, const nx::core::WarningCollectionType& warnings, const nx::core::ErrorCollectionType& errors) {
           if(!warnings.empty())
           {
             std::cout << "[" << currentFilterIndex << "] Warnings During Execution" << '\n';
@@ -97,7 +97,7 @@ void PipelineObserver::onNotify(AbstractPipelineNode* /*node*/, const std::share
 
 void PipelineObserver::OnCancelled()
 {
-  std::cout << timestamp() << "  Pipeline has been cancelled" << '\n';
+  std::cout << Timestamp() << "  Pipeline has been cancelled" << '\n';
 }
 
 void PipelineObserver::OnFaultStateChanged(AbstractPipelineNode* node, FaultState state)
@@ -105,10 +105,10 @@ void PipelineObserver::OnFaultStateChanged(AbstractPipelineNode* node, FaultStat
   switch(state)
   {
   case FaultState::Errors:
-    std::cout << timestamp() << fmt::format(" '{}' has completed with errors", node->getName()) << '\n';
+    std::cout << Timestamp() << fmt::format(" '{}' has completed with errors", node->getName()) << '\n';
     break;
   case FaultState::Warnings:
-    std::cout << timestamp() << fmt::format(" '{}' has completed with warnings", node->getName()) << '\n';
+    std::cout << Timestamp() << fmt::format(" '{}' has completed with warnings", node->getName()) << '\n';
     break;
   case FaultState::None:
     break;

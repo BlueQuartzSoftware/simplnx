@@ -20,7 +20,7 @@ using DanielssonFilterType = DanielssonDistanceMapImageFilter;
 // Sets the geometry, input, and output keys plus the three Danielsson parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
 void RunDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool inputIsBinary, bool squaredDistance, bool useImageSpacing,
-                   UnitTest::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
+                   unit_test::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -31,7 +31,7 @@ void RunDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath
   args.insertOrAssign(DanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(squaredDistance));
   args.insertOrAssign(DanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -43,8 +43,8 @@ void RunDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed plane", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 4;
@@ -56,8 +56,8 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
   }
 
   DataStructure dataStructure;
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
   DanielssonFilterType filter;
@@ -84,11 +84,11 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed seed plane (both algorithm paths)", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 4;
@@ -127,18 +127,18 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: hand-computed se
       REQUIRE(out.getValue(rt::FlatIndex(x, y, 0, k_Dx, k_Dy)) == static_cast<float32>(x * x));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is output-neutral", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   const std::vector<uint8> pattern = rt::MakeHolePattern<uint8>(8, 7, 1, uint8{0}, uint8{1});
   DataStructure falseDs;
   {
-    UnitTest::AlgorithmTestScope falseScope(scenario);
+    unit_test::AlgorithmTestScope falseScope(scenario);
     const DataPath falseInput = rt::BuildImageFromPattern<uint8>(falseDs, 8, 7, 1, pattern);
     falseScope.requireExpectedStore(falseDs.getDataRefAs<IDataArray>(falseInput));
     DanielssonFilterType falseFilter;
@@ -146,13 +146,13 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is
   }
   DataStructure trueDs;
   {
-    UnitTest::AlgorithmTestScope trueScope(scenario);
+    unit_test::AlgorithmTestScope trueScope(scenario);
     const DataPath trueInput = rt::BuildImageFromPattern<uint8>(trueDs, 8, 7, 1, pattern);
     trueScope.requireExpectedStore(trueDs.getDataRefAs<IDataArray>(trueInput));
     DanielssonFilterType trueFilter;
     RunDanielsson(trueFilter, trueDs, trueInput, true, true, false, &trueScope);
   }
-  UnitTest::CompareDataArrays<float32>(falseDs.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})),
+  unit_test::CompareDataArrays<float32>(falseDs.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})),
                                        trueDs.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})));
 }
 
@@ -161,8 +161,8 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-integer input", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -180,12 +180,12 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight reject
   args.insertOrAssign(DanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
   args.insertOrAssign(DanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
   auto result = filter.preflight(dataStructure, args);
-  REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+  REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][DanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath input = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
   const DataPath geomPath = input.getParent().getParent();
@@ -203,22 +203,22 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: preflight reject
   SECTION("non-scalar")
   {
     const DataPath path({"Image Geometry", "CellData", "Vec"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
     DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
     const auto result = filter.preflight(dataStructure, argsFor(path));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8550);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8550);
   }
   SECTION("tuple mismatch")
   {
     const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
     auto* wrongAmPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, geom.getId());
     const DataPath path({"Image Geometry", "WrongCellData", "Short"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
     DataArray<int32>::Create(dataStructure, "Short", store, wrongAmPtr->getId());
     const auto result = filter.preflight(dataStructure, argsFor(path));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8001);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8001);
   }
 }
 
@@ -250,7 +250,7 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: FromSIMPLJson", 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][DanielssonDistanceMapImageFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   rt::RunDistanceMapItkGoldenBaseline<DanielssonDistanceMapImageFilter>("2th_cthead1.png", "BasicFilters_DanielssonDistanceMapImageFilter_default.nrrd", 0.01, rt::NoExtraParams(), &scope);
 }

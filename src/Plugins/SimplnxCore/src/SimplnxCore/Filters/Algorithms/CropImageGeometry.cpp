@@ -54,7 +54,7 @@ public:
    * @param taskResult Stores the first validation or transfer error.
    */
   CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel,
-                         CopyFromArray::ParallelTaskResult& taskResult)
+                         copy_from_array::ParallelTaskResult& taskResult)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SourceArrayName(oldCellArray.getName())
@@ -280,7 +280,7 @@ private:
   const ImageGeom& m_SrcImageGeom;
   std::array<uint64, 6> m_Bounds;
   const std::atomic_bool& m_ShouldCancel;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 } // namespace
 
@@ -298,24 +298,24 @@ CropImageGeometry::CropImageGeometry(DataStructure& dataStructure, const IFilter
 // -----------------------------------------------------------------------------
 Result<> CropImageGeometry::operator()()
 {
-  auto srcImagePath = m_InputValues->InputImageGeometryPath;
-  auto destImagePath = m_InputValues->OutputImageGeometryPath;
-  const auto featureIdsArrayPath = m_InputValues->FeatureIdsPath;
-  auto shouldRenumberFeatures = m_InputValues->RenumberFeatures;
-  auto cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrixPath;
-  auto removeOriginalGeometry = m_InputValues->RemoveOriginalGeometry;
+  auto srcImagePath = m_InputValues->input_image_geometry_path;
+  auto destImagePath = m_InputValues->output_image_geometry_path;
+  const auto featureIdsArrayPath = m_InputValues->feature_ids_path;
+  auto shouldRenumberFeatures = m_InputValues->renumber_features;
+  auto cellFeatureAMPath = m_InputValues->cell_feature_attribute_matrix_path;
+  auto removeOriginalGeometry = m_InputValues->remove_original_geometry;
 
-  uint64 xMin = m_InputValues->XMin;
-  uint64 xMax = m_InputValues->XMax;
-  uint64 yMax = m_InputValues->YMax;
-  uint64 yMin = m_InputValues->YMin;
-  uint64 zMax = m_InputValues->ZMax;
-  uint64 zMin = m_InputValues->ZMin;
+  uint64 xMin = m_InputValues->x_min;
+  uint64 xMax = m_InputValues->x_max;
+  uint64 yMax = m_InputValues->y_max;
+  uint64 yMin = m_InputValues->y_min;
+  uint64 zMax = m_InputValues->z_max;
+  uint64 zMin = m_InputValues->z_min;
 
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
   // Source and destination paths are resolved before array tasks start.
-  SizeVec3 udims = srcImageGeom.getDimensions();
+  SizeVec3Type udims = srcImageGeom.getDimensions();
 
   int64 dims[3] = {
       static_cast<int64>(udims[0]),
@@ -338,7 +338,7 @@ Result<> CropImageGeometry::operator()()
   }
 
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(destImagePath);
-  FloatVec3 oldOrigin = destImageGeom.getOrigin();
+  FloatVec3Type oldOrigin = destImageGeom.getOrigin();
 
   // Check to make sure the new dimensions are not "out of bounds" and warn the user if they are
   if(dims[0] <= xMax)
@@ -367,7 +367,7 @@ Result<> CropImageGeometry::operator()()
 
   // Each task owns one source and destination array. Arrays can copy in parallel.
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
@@ -401,7 +401,7 @@ Result<> CropImageGeometry::operator()()
   // Validate Feature Ids against the source AM before compacting the cropped data.
   if(shouldRenumberFeatures)
   {
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(featureIdsArrayPath);
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
@@ -410,7 +410,7 @@ Result<> CropImageGeometry::operator()()
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
     // Renumber cropped Feature Ids and resize the empty destination Feature AM.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
-    return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+    return sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
 
   // The deferred actions will take care of removing the original and renaming the output if

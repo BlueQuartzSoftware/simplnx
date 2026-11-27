@@ -73,7 +73,7 @@ Uuid DataTypeParameter::uuid() const
   return ParameterTraits<DataTypeParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataTypeParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataTypeParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

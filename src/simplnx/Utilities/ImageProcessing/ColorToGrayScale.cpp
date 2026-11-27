@@ -25,56 +25,56 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
   Result<OutputActions> resultOutputActions;
   std::vector<IFilter::PreflightValue> preflightUpdatedValues;
 
-  if(inputValues.ConversionAlgorithm == to_underlying(ConvertColorToGrayScale::ConversionType::Luminosity))
+  if(inputValues.conversion_algorithm == to_underlying(ConvertColorToGrayScale::ConversionType::Luminosity))
   {
-    if(inputValues.ColorWeights[0] < 0.0F || inputValues.ColorWeights[1] < 0.0F || inputValues.ColorWeights[2] < 0.0F)
+    if(inputValues.color_weights[0] < 0.0F || inputValues.color_weights[1] < 0.0F || inputValues.color_weights[2] < 0.0F)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-10704, "One or more of the Color Weight values is negative. All weights must be zero or positive.")};
+      return {.output_actions = MakeErrorResult<OutputActions>(-10704, "One or more of the Color Weight values is negative. All weights must be zero or positive.")};
     }
 
-    const float colorWeightSum = inputValues.ColorWeights[0] + inputValues.ColorWeights[1] + inputValues.ColorWeights[2];
+    const float colorWeightSum = inputValues.color_weights[0] + inputValues.color_weights[1] + inputValues.color_weights[2];
     if(colorWeightSum < .9800 || colorWeightSum > 1.02)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum))};
     }
   }
 
-  if(inputValues.InputDataArrayPaths.empty())
+  if(inputValues.input_data_array_paths.empty())
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-10705, fmt::format("No input arrays selected for conversion."))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-10705, fmt::format("No input arrays selected for conversion."))};
   }
 
-  for(const auto& inputDataArrayPath : inputValues.InputDataArrayPaths)
+  for(const auto& inputDataArrayPath : inputValues.input_data_array_paths)
   {
     const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
     const usize numComponents = inputArray.getNumberOfComponents();
-    if(inputValues.ConversionAlgorithm == to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel))
+    if(inputValues.conversion_algorithm == to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel))
     {
       if(numComponents == 0)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}', which has no components. Select an array with at least one component.",
-                                                                                    inputValues.ColorChannel, inputDataArrayPath.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}', which has no components. Select an array with at least one component.",
+                                                                                    inputValues.color_channel, inputDataArrayPath.toString()))};
       }
-      if(inputValues.ColorChannel < 0 || std::cmp_greater_equal(inputValues.ColorChannel, numComponents))
+      if(inputValues.color_channel < 0 || std::cmp_greater_equal(inputValues.color_channel, numComponents))
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}' with {} components. Select a channel from 0 to {}.",
-                                                                                    inputValues.ColorChannel, inputDataArrayPath.toString(), numComponents, numComponents - 1))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}' with {} components. Select a channel from 0 to {}.",
+                                                                                    inputValues.color_channel, inputDataArrayPath.toString(), numComponents, numComponents - 1))};
       }
     }
-    else if(inputValues.ConversionAlgorithm <= to_underlying(ConvertColorToGrayScale::ConversionType::Lightness) && numComponents < 3)
+    else if(inputValues.conversion_algorithm <= to_underlying(ConvertColorToGrayScale::ConversionType::Lightness) && numComponents < 3)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-10710, fmt::format("Grayscale conversion requires at least 3 components. Array '{}' has {} components. Select an RGB or RGBA array.",
+      return {.output_actions = MakeErrorResult<OutputActions>(-10710, fmt::format("Grayscale conversion requires at least 3 components. Array '{}' has {} components. Select an RGB or RGBA array.",
                                                                                   inputDataArrayPath.toString(), numComponents))};
     }
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     const std::string inputArrayName = inputDataArrayPath.getTargetName();
-    const std::string outputArrayName = fmt::format("{}{}", inputValues.OutputArrayPrefix, inputArrayName);
+    const std::string outputArrayName = fmt::format("{}{}", inputValues.output_array_prefix, inputArrayName);
     inputPathVector.back() = outputArrayName;
     const DataPath outputDataArrayPath(inputPathVector);
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, inputArray.getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 namespace
@@ -94,7 +94,7 @@ template <bool BoundsCheckV>
 class LuminosityImpl
 {
 public:
-  LuminosityImpl(const UInt8AbstractDataStore& data, UInt8AbstractDataStore& outputData, const FloatVec3& colorWeights, size_t numComp)
+  LuminosityImpl(const UInt8AbstractDataStoreType& data, UInt8AbstractDataStoreType& outputData, const FloatVec3Type& colorWeights, size_t numComp)
   : m_ImageData(data)
   , m_FlatImageData(outputData)
   , m_ColorWeights(colorWeights)
@@ -134,9 +134,9 @@ public:
   }
 
 private:
-  const UInt8AbstractDataStore& m_ImageData;
-  UInt8AbstractDataStore& m_FlatImageData;
-  const FloatVec3& m_ColorWeights;
+  const UInt8AbstractDataStoreType& m_ImageData;
+  UInt8AbstractDataStoreType& m_FlatImageData;
+  const FloatVec3Type& m_ColorWeights;
   size_t m_NumComp;
 };
 
@@ -150,7 +150,7 @@ private:
 class LightnessImpl
 {
 public:
-  LightnessImpl(const UInt8AbstractDataStore& data, UInt8AbstractDataStore& outputData, size_t numComp)
+  LightnessImpl(const UInt8AbstractDataStoreType& data, UInt8AbstractDataStoreType& outputData, size_t numComp)
   : m_ImageData(data)
   , m_FlatImageData(outputData)
   , m_NumComp(numComp)
@@ -177,8 +177,8 @@ public:
   }
 
 private:
-  const UInt8AbstractDataStore& m_ImageData;
-  UInt8AbstractDataStore& m_FlatImageData;
+  const UInt8AbstractDataStoreType& m_ImageData;
+  UInt8AbstractDataStoreType& m_FlatImageData;
   size_t m_NumComp;
 };
 
@@ -194,7 +194,7 @@ template <bool BoundsCheckV>
 class SingleChannelImpl
 {
 public:
-  SingleChannelImpl(const UInt8AbstractDataStore& data, UInt8AbstractDataStore& outputData, size_t numComp, int32_t channel)
+  SingleChannelImpl(const UInt8AbstractDataStoreType& data, UInt8AbstractDataStoreType& outputData, size_t numComp, int32_t channel)
   : m_ImageData(data)
   , m_FlatImageData(outputData)
   , m_NumComp(numComp)
@@ -228,8 +228,8 @@ public:
   }
 
 private:
-  const UInt8AbstractDataStore& m_ImageData;
-  UInt8AbstractDataStore& m_FlatImageData;
+  const UInt8AbstractDataStoreType& m_ImageData;
+  UInt8AbstractDataStoreType& m_FlatImageData;
   size_t m_NumComp;
   int32_t m_Channel;
 };
@@ -246,7 +246,7 @@ template <ConvertColorToGrayScale::ConversionType ConversionV>
 class ContiguousConversionImpl
 {
 public:
-  ContiguousConversionImpl(const uint8* inputData, uint8* outputData, FloatVec3 colorWeights, usize numComponents, int32 colorChannel)
+  ContiguousConversionImpl(const uint8* inputData, uint8* outputData, FloatVec3Type colorWeights, usize numComponents, int32 colorChannel)
   : m_InputData(inputData)
   , m_OutputData(outputData)
   , m_ColorWeights(std::move(colorWeights))
@@ -281,7 +281,7 @@ public:
 private:
   const uint8* m_InputData = nullptr;
   uint8* m_OutputData = nullptr;
-  FloatVec3 m_ColorWeights;
+  FloatVec3Type m_ColorWeights;
   usize m_NumComponents = 0;
   int32 m_ColorChannel = 0;
 };
@@ -303,7 +303,7 @@ public:
   ParallelWrapper& operator=(ParallelWrapper&&) = delete;
 
   template <typename T>
-  static void Run(T impl, size_t totalPoints, const typename IParallelAlgorithm::AlgorithmStores& algStores)
+  static void Run(T impl, size_t totalPoints, const typename IParallelAlgorithm::AlgorithmStoresType& algStores)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalPoints);
@@ -334,7 +334,7 @@ protected:
 class ConvertColorToGrayScaleDirect
 {
 public:
-  ConvertColorToGrayScaleDirect(const UInt8AbstractDataStore& inputColorData, UInt8AbstractDataStore& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3 colorWeights,
+  ConvertColorToGrayScaleDirect(const UInt8AbstractDataStoreType& inputColorData, UInt8AbstractDataStoreType& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3Type colorWeights,
                                 int32 colorChannel, const std::atomic_bool& /*unused*/)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
@@ -353,8 +353,8 @@ public:
     const usize numComponents = m_InputColorData.getNumberOfComponents();
     const usize totalPoints = m_InputColorData.getNumberOfTuples();
 
-    const auto* contiguousInputStorePtr = dynamic_cast<const UInt8DataStore*>(&m_InputColorData);
-    auto* contiguousOutputStorePtr = dynamic_cast<UInt8DataStore*>(&m_OutputGrayData);
+    const auto* contiguousInputStorePtr = dynamic_cast<const UInt8DataStoreType*>(&m_InputColorData);
+    auto* contiguousOutputStorePtr = dynamic_cast<UInt8DataStoreType*>(&m_OutputGrayData);
     if(contiguousInputStorePtr != nullptr && contiguousOutputStorePtr != nullptr)
     {
       const uint8* inputDataPtr = contiguousInputStorePtr->data();
@@ -396,7 +396,7 @@ public:
       }
     }
 
-    typename IParallelAlgorithm::AlgorithmStores algorithmStores;
+    typename IParallelAlgorithm::AlgorithmStoresType algorithmStores;
     algorithmStores.push_back(&m_InputColorData);
     algorithmStores.push_back(&m_OutputGrayData);
 
@@ -441,10 +441,10 @@ public:
   }
 
 private:
-  const UInt8AbstractDataStore& m_InputColorData;
-  UInt8AbstractDataStore& m_OutputGrayData;
+  const UInt8AbstractDataStoreType& m_InputColorData;
+  UInt8AbstractDataStoreType& m_OutputGrayData;
   ConvertColorToGrayScale::ConversionType m_ConversionType;
-  FloatVec3 m_ColorWeights;
+  FloatVec3Type m_ColorWeights;
   int32 m_ColorChannel;
 };
 
@@ -466,7 +466,7 @@ public:
    * @param colorChannel Specifies the selected RGB component.
    * @param shouldCancel Stops before later chunks when true.
    */
-  ConvertColorToGrayScaleScanline(const UInt8AbstractDataStore& inputColorData, UInt8AbstractDataStore& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3 colorWeights,
+  ConvertColorToGrayScaleScanline(const UInt8AbstractDataStoreType& inputColorData, UInt8AbstractDataStoreType& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3Type colorWeights,
                                   int32 colorChannel, const std::atomic_bool& shouldCancel)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
@@ -564,7 +564,7 @@ private:
    * @param numComponents Specifies input components per tuple.
    * @param colorWeights Specifies RGB weights.
    */
-  static void ConvertLuminosity(const uint8* inputBuffer, uint8* outputBuffer, usize tupleCount, usize numComponents, const FloatVec3& colorWeights)
+  static void ConvertLuminosity(const uint8* inputBuffer, uint8* outputBuffer, usize tupleCount, usize numComponents, const FloatVec3Type& colorWeights)
   {
     for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
     {
@@ -575,10 +575,10 @@ private:
     }
   }
 
-  const UInt8AbstractDataStore& m_InputColorData;
-  UInt8AbstractDataStore& m_OutputGrayData;
+  const UInt8AbstractDataStoreType& m_InputColorData;
+  UInt8AbstractDataStoreType& m_OutputGrayData;
   ConvertColorToGrayScale::ConversionType m_ConversionType;
-  FloatVec3 m_ColorWeights;
+  FloatVec3Type m_ColorWeights;
   int32 m_ColorChannel;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -601,14 +601,14 @@ const std::atomic_bool& ConvertColorToGrayScale::getCancel()
 
 Result<> ConvertColorToGrayScale::operator()()
 {
-  if(m_InputValues->OutputDataArrayPaths.size() != m_InputValues->InputDataArrayPaths.size())
+  if(m_InputValues->output_data_array_paths.size() != m_InputValues->input_data_array_paths.size())
   {
-    return MakeErrorResult(-10706, fmt::format("Grayscale conversion needs one output path for each input path. Input paths: {}. Output paths: {}.", m_InputValues->InputDataArrayPaths.size(),
-                                               m_InputValues->OutputDataArrayPaths.size()));
+    return MakeErrorResult(-10706, fmt::format("Grayscale conversion needs one output path for each input path. Input paths: {}. Output paths: {}.", m_InputValues->input_data_array_paths.size(),
+                                               m_InputValues->output_data_array_paths.size()));
   }
 
-  auto outputPathIter = m_InputValues->OutputDataArrayPaths.begin();
-  for(const auto& arrayPath : m_InputValues->InputDataArrayPaths)
+  auto outputPathIter = m_InputValues->output_data_array_paths.begin();
+  for(const auto& arrayPath : m_InputValues->input_data_array_paths)
   {
     m_MessageHandler.sendInfoMessage(fmt::format("Converting data '{}'", arrayPath.toString()));
 
@@ -616,15 +616,15 @@ Result<> ConvertColorToGrayScale::operator()()
     {
       break;
     }
-    const auto& inputColorArray = m_DataStructure.getDataRefAs<UInt8Array>(arrayPath);
-    auto& outputGrayArray = m_DataStructure.getDataRefAs<UInt8Array>(*outputPathIter);
+    const auto& inputColorArray = m_DataStructure.getDataRefAs<UInt8ArrayType>(arrayPath);
+    auto& outputGrayArray = m_DataStructure.getDataRefAs<UInt8ArrayType>(*outputPathIter);
     const auto& inputColorData = inputColorArray.getDataStoreRef();
     auto& outputGrayData = outputGrayArray.getDataStoreRef();
-    const auto conversionType = static_cast<ConversionType>(m_InputValues->ConversionAlgorithm);
-    const FloatVec3 colorWeights = m_InputValues->ColorWeights;
+    const auto conversionType = static_cast<ConversionType>(m_InputValues->conversion_algorithm);
+    const FloatVec3Type colorWeights = m_InputValues->color_weights;
 
     Result<> result = DispatchAlgorithm<ConvertColorToGrayScaleDirect, ConvertColorToGrayScaleScanline>({&inputColorArray, &outputGrayArray}, inputColorData, outputGrayData, conversionType,
-                                                                                                        colorWeights, m_InputValues->ColorChannel, m_ShouldCancel);
+                                                                                                        colorWeights, m_InputValues->color_channel, m_ShouldCancel);
     if(result.invalid())
     {
       return result;
@@ -639,11 +639,11 @@ Result<> nx::core::ConvertColorToGrayScaleArrays(DataStructure& dataStructure, c
                                                  const std::atomic_bool& shouldCancel)
 {
   ConvertColorToGrayScaleInputValues resolvedValues = inputValues;
-  if(resolvedValues.OutputDataArrayPaths.empty())
+  if(resolvedValues.output_data_array_paths.empty())
   {
-    for(const auto& inputDataArrayPath : resolvedValues.InputDataArrayPaths)
+    for(const auto& inputDataArrayPath : resolvedValues.input_data_array_paths)
     {
-      resolvedValues.OutputDataArrayPaths.push_back(inputDataArrayPath.replaceName(resolvedValues.OutputArrayPrefix + inputDataArrayPath.getTargetName()));
+      resolvedValues.output_data_array_paths.push_back(inputDataArrayPath.replaceName(resolvedValues.output_array_prefix + inputDataArrayPath.getTargetName()));
     }
   }
   return ConvertColorToGrayScale(dataStructure, messageHandler, shouldCancel, &resolvedValues)();

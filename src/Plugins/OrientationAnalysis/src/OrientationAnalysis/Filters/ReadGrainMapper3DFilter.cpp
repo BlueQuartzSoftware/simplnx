@@ -172,7 +172,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     DataPath cellAMPath = pLabDCTImageGeometryPath.createChildPath(pLabDCTCellAttributeMatrixNameValue);
 
     auto nameToDataTypeMap = reader.getNameToDataTypeMap();
-    auto nameToCompDimMap = reader.getNameToCompDimMap();
+    auto nameToCompDimMap = reader.GetNameToCompDimMap();
     auto availableDataSets = reader.getDctDatasetNames();
     for(const auto& dataSetName : availableDataSets)
     {
@@ -201,8 +201,8 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     // read the DCT phase information
     DataPath cellEnsembleAMPath = pLabDCTImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
 
-    EbsdReaderUtilities::GeneratePreflightScanInformation<GrainMapperReader>(reader, preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues);
+    ebsd_reader_utilities::GeneratePreflightScanInformation<GrainMapperReader>(reader, preflightUpdatedValues);
+    ebsd_reader_utilities::GeneratePreflightPhaseInformation<GrainMapperReader>(reader, preflightUpdatedValues);
 
     auto phases = reader.getPhaseVector();
     std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -253,7 +253,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
         pAbsorptionCTImageGeometryPath.createChildPath(pAbsorptionCTCellAttributeMatrixNameValue).createChildPath(grain_mapper_3d_utilities::constants::k_DataGroupName)));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -262,19 +262,19 @@ Result<> ReadGrainMapper3DFilter::executeImpl(DataStructure& dataStructure, cons
 {
   ReadGrainMapper3DInputValues inputValues;
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
 
-  inputValues.ReadDctData = filterArgs.value<bool>(k_ReadLabDCT_Key);
-  inputValues.DctImageGeometryPath = filterArgs.value<DataPath>(k_CreatedDCTImageGeometryPath_Key);
-  inputValues.DctCellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.DctCellEnsembleAttributeMatrixName = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
-  inputValues.ConvertPhaseData = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
-  inputValues.ConvertOrientationData = filterArgs.value<bool>(k_ConvertOrientationData_Key);
-  inputValues.ConvertIPFColors = filterArgs.value<bool>(k_ConvertIPFColorData_Key);
+  inputValues.read_dct_data = filterArgs.value<bool>(k_ReadLabDCT_Key);
+  inputValues.dct_image_geometry_path = filterArgs.value<DataPath>(k_CreatedDCTImageGeometryPath_Key);
+  inputValues.dct_cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.dct_cell_ensemble_attribute_matrix_name = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
+  inputValues.convert_phase_data = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
+  inputValues.convert_orientation_data = filterArgs.value<bool>(k_ConvertOrientationData_Key);
+  inputValues.convert_ipf_colors = filterArgs.value<bool>(k_ConvertIPFColorData_Key);
 
-  inputValues.ReadAbsorptionData = filterArgs.value<bool>(k_ReadAbsorptionCT_Key);
-  inputValues.AbsorptionImageGeometryPath = filterArgs.value<DataPath>(k_CreatedAbsorptionGeometryPath_Key);
-  inputValues.AbsorptionCellAttributeMatrixName = filterArgs.value<std::string>(k_CellAbsorptionAttributeMatrixName_Key);
+  inputValues.read_absorption_data = filterArgs.value<bool>(k_ReadAbsorptionCT_Key);
+  inputValues.absorption_image_geometry_path = filterArgs.value<DataPath>(k_CreatedAbsorptionGeometryPath_Key);
+  inputValues.absorption_cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAbsorptionAttributeMatrixName_Key);
 
   return ReadGrainMapper3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

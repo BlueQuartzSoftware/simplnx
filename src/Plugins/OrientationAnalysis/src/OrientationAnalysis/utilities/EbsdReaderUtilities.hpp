@@ -25,7 +25,7 @@
 
 using namespace nx::core;
 
-namespace EbsdReaderUtilities
+namespace ebsd_reader_utilities
 {
 /**
  * @brief Gives the rotation about the crystal c-axis from the Oxford/HKL hexagonal frame to EDAX/TSL, in radians.
@@ -238,7 +238,7 @@ struct ReaderTraits<ebsdlib::H5CtfVolumeReader>
 };
 
 template <typename ReaderType>
-void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues, const std::optional<FloatVec3>& spacing = {})
+void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues, const std::optional<FloatVec3Type>& spacing = {})
 {
   auto colCount = ReaderTraits<ReaderType>::GetCols()(reader);
   auto rowCount = ReaderTraits<ReaderType>::GetRows()(reader);
@@ -324,9 +324,9 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
 
     if constexpr(std::is_same_v<ReaderType, grain_mapper_3d_utilities::GrainMapperReader>)
     {
-      const auto laueOpPtr = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup);
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.PhaseIndex), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                                               laueOpPtr != nullptr ? laueOpPtr->getSymmetryName() : "Unknown", phaseInfo.SpaceGroup)});
+      const auto laueOpPtr = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.space_group);
+      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.phase_index), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.name,
+                                                                                               laueOpPtr != nullptr ? laueOpPtr->getSymmetryName() : "Unknown", phaseInfo.space_group)});
     }
   }
 }

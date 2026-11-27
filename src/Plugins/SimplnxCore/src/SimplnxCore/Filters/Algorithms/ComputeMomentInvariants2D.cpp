@@ -241,8 +241,8 @@ public:
    * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
-  ComputeMomentInvariants2DImpl(const Int32AbstractDataStore& featureIds, const UInt32AbstractDataStore& featureRect, Float32AbstractDataStore& omega1, Float32AbstractDataStore& omega2,
-                                Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
+  ComputeMomentInvariants2DImpl(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1, Float32AbstractDataStoreType& omega2,
+                                Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
                                 const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
@@ -265,7 +265,7 @@ public:
    *
    * Empty and non-XY features keep zero moment outputs. The worker continues with the next feature.
    */
-  void convert(usize start, usize end, Float32AbstractDataStore& centralMoments) const
+  void convert(usize start, usize end, Float32AbstractDataStoreType& centralMoments) const
   {
     const usize numRectComponents = m_FeatureRect.getNumberOfComponents();
     for(usize featureId = start; featureId < end; featureId++)
@@ -332,7 +332,7 @@ public:
       if(m_NormalizeMomentInvariants)
       {
         // normalize the invariants by those of the circle
-        constexpr double k_CircleOmega[2] = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
+        constexpr double k_CircleOmega[2] = {4.0 * numbers::k_Pi, 16.0 * numbers::k_Pi * numbers::k_Pi};
         omega1 /= k_CircleOmega[0];
         omega2 /= k_CircleOmega[1];
       }
@@ -423,7 +423,7 @@ public:
       if(m_NormalizeMomentInvariants)
       {
         // Circle values make the selected invariants dimensionless.
-        constexpr double k_CircleOmega[2] = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
+        constexpr double k_CircleOmega[2] = {4.0 * numbers::k_Pi, 16.0 * numbers::k_Pi * numbers::k_Pi};
         omega1 /= k_CircleOmega[0];
         omega2 /= k_CircleOmega[1];
       }
@@ -465,12 +465,12 @@ public:
   }
 
 private:
-  const Int32AbstractDataStore& m_FeatureIds;
-  const UInt32AbstractDataStore& m_FeatureRect;
-  Float32AbstractDataStore& m_Omega1;
-  Float32AbstractDataStore& m_Omega2;
-  Float32Array* m_CentralMoments = nullptr;
-  const SizeVec3& m_VolDims;
+  const Int32AbstractDataStoreType& m_FeatureIds;
+  const UInt32AbstractDataStoreType& m_FeatureRect;
+  Float32AbstractDataStoreType& m_Omega1;
+  Float32AbstractDataStoreType& m_Omega2;
+  Float32ArrayType* m_CentralMoments = nullptr;
+  const SizeVec3Type& m_VolDims;
   const bool m_NormalizeMomentInvariants = true;
   const std::atomic_bool& m_ShouldCancel;
   const std::function<void(usize)>& m_ReportProgress;
@@ -500,8 +500,8 @@ public:
    * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
-  ComputeMomentInvariants2DScanline(const Int32AbstractDataStore& featureIds, const UInt32AbstractDataStore& featureRect, Float32AbstractDataStore& omega1, Float32AbstractDataStore& omega2,
-                                    Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
+  ComputeMomentInvariants2DScanline(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1, Float32AbstractDataStoreType& omega2,
+                                    Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
                                     const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
@@ -649,7 +649,7 @@ public:
       double omega2 = std::pow(centralMoments(0, 0), 4) / (centralMoments(2, 0) * centralMoments(0, 2) - std::pow(centralMoments(1, 1), 2));
       if(m_NormalizeMomentInvariants)
       {
-        constexpr std::array<double, 2> k_CircleOmega = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
+        constexpr std::array<double, 2> k_CircleOmega = {4.0 * numbers::k_Pi, 16.0 * numbers::k_Pi * numbers::k_Pi};
         omega1 /= k_CircleOmega[0];
         omega2 /= k_CircleOmega[1];
       }
@@ -716,12 +716,12 @@ private:
     return basis;
   }
 
-  const Int32AbstractDataStore& m_FeatureIds;
-  const UInt32AbstractDataStore& m_FeatureRect;
-  Float32AbstractDataStore& m_Omega1;
-  Float32AbstractDataStore& m_Omega2;
-  Float32Array* m_CentralMoments = nullptr;
-  const SizeVec3& m_VolDims;
+  const Int32AbstractDataStoreType& m_FeatureIds;
+  const UInt32AbstractDataStoreType& m_FeatureRect;
+  Float32AbstractDataStoreType& m_Omega1;
+  Float32AbstractDataStoreType& m_Omega2;
+  Float32ArrayType* m_CentralMoments = nullptr;
+  const SizeVec3Type& m_VolDims;
   const bool m_NormalizeMomentInvariants = true;
   const std::function<void(usize)>& m_ReportProgress;
   const std::function<void(usize)>& m_ReportSkipped;
@@ -744,21 +744,21 @@ const std::atomic_bool& ComputeMomentInvariants2D::getCancel()
 
 Result<> ComputeMomentInvariants2D::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 volDims = imageGeom.getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type volDims = imageGeom.getDimensions();
 
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& featureRectArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
-  auto& omega1Array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega1ArrayPath);
-  auto& omega2Array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega2ArrayPath);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& featureRectArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->feature_rect_array_path);
+  auto& omega1Array = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->omega1_array_path);
+  auto& omega2Array = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->omega2_array_path);
   const auto& featureIds = featureIdsArray.getDataStoreRef();
   const auto& featureRect = featureRectArray.getDataStoreRef();
   auto& omega1 = omega1Array.getDataStoreRef();
   auto& omega2 = omega2Array.getDataStoreRef();
-  Float32Array* centralMomentsPtr = nullptr;
-  if(m_InputValues->SaveCentralMoments)
+  Float32ArrayType* centralMomentsPtr = nullptr;
+  if(m_InputValues->save_central_moments)
   {
-    centralMomentsPtr = &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentralMomentsArrayPath);
+    centralMomentsPtr = &m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->central_moments_array_path);
   }
 
   const usize numFeatures = featureRect.getNumberOfTuples();
@@ -775,6 +775,6 @@ Result<> ComputeMomentInvariants2D::operator()()
   };
 
   return DispatchAlgorithm<ComputeMomentInvariants2DImpl, ComputeMomentInvariants2DScanline>({&featureIdsArray, &featureRectArray, &omega1Array, &omega2Array, centralMomentsPtr}, featureIds,
-                                                                                             featureRect, omega1, omega2, centralMomentsPtr, volDims, m_InputValues->NormalizeMomentInvariants,
+                                                                                             featureRect, omega1, omega2, centralMomentsPtr, volDims, m_InputValues->normalize_moment_invariants,
                                                                                              reportProgress, reportSkipped, m_ShouldCancel);
 }

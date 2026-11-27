@@ -114,7 +114,7 @@ inline NeighborSelection SelectNeighbor(const int32* previousSlice, const int32*
   return selection;
 }
 
-Result<> ScanFeatureIds(const Int32AbstractDataStore& featureIds, const std::array<usize, 3>& dimensions, std::optional<usize> maxFeatureCount, const std::atomic_bool& shouldCancel, FillScan& scan)
+Result<> ScanFeatureIds(const Int32AbstractDataStoreType& featureIds, const std::array<usize, 3>& dimensions, std::optional<usize> maxFeatureCount, const std::atomic_bool& shouldCancel, FillScan& scan)
 {
   const usize sliceSize = dimensions[0] * dimensions[1];
   auto featureBuffer = std::make_unique<int32[]>(3 * sliceSize);
@@ -193,7 +193,7 @@ Result<> ScanFeatureIds(const Int32AbstractDataStore& featureIds, const std::arr
 struct FillArrayFunctor
 {
   template <typename T>
-  Result<> operator()(IDataArray& array, const Int32AbstractDataStore& featureIds, const std::array<usize, 3>& dimensions, const std::atomic_bool& shouldCancel) const
+  Result<> operator()(IDataArray& array, const Int32AbstractDataStoreType& featureIds, const std::array<usize, 3>& dimensions, const std::atomic_bool& shouldCancel) const
   {
     auto& targetStore = array.template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize sliceSize = dimensions[0] * dimensions[1];
@@ -322,7 +322,7 @@ struct FillArrayFunctor
   }
 };
 
-Result<> FillFeatureIds(Int32AbstractDataStore& featureIds, const std::array<usize, 3>& dimensions, const std::atomic_bool& shouldCancel)
+Result<> FillFeatureIds(Int32AbstractDataStoreType& featureIds, const std::array<usize, 3>& dimensions, const std::atomic_bool& shouldCancel)
 {
   const usize sliceSize = dimensions[0] * dimensions[1];
   auto featureBuffer = std::make_unique<int32[]>(3 * sliceSize);
@@ -399,7 +399,7 @@ Result<> FillFeatureIds(Int32AbstractDataStore& featureIds, const std::array<usi
 }
 } // namespace
 
-Result<> nx::core::FillBadVoxels(DataStructure& dataStructure, const DataPath& featureIdsPath, const SizeVec3& dimensions, const std::vector<DataPath>& ignoredArrayPaths,
+Result<> nx::core::FillBadVoxels(DataStructure& dataStructure, const DataPath& featureIdsPath, const SizeVec3Type& dimensions, const std::vector<DataPath>& ignoredArrayPaths,
                                  std::optional<usize> maxFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   if(dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0)
@@ -407,7 +407,7 @@ Result<> nx::core::FillBadVoxels(DataStructure& dataStructure, const DataPath& f
     return {};
   }
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   auto& featureIds = featureIdsArray.getDataStoreRef();
   const std::array<usize, 3> dims = {dimensions[0], dimensions[1], dimensions[2]};
 

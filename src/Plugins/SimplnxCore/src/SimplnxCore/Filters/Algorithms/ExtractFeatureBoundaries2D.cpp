@@ -91,7 +91,7 @@ Result<> CountEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize di
  */
 template <typename T>
 Result<> PopulateVerticalEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                               INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, nonstd::span<T> rowBuffer, const std::atomic_bool& shouldCancel)
+                               INodeGeometry0D::SharedVertexListType& vertices, INodeGeometry1D::SharedEdgeListType& edges, usize& currentEdge, nonstd::span<T> rowBuffer, const std::atomic_bool& shouldCancel)
 {
   for(usize y = 0; y < dimY; y++)
   {
@@ -161,7 +161,7 @@ Result<> PopulateVerticalEdges(const AbstractDataStore<T>& featureIds, usize dim
  */
 template <typename T>
 Result<> PopulateHorizontalEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                                 INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, nonstd::span<T> currentRow, nonstd::span<T> nextRow,
+                                 INodeGeometry0D::SharedVertexListType& vertices, INodeGeometry1D::SharedEdgeListType& edges, usize& currentEdge, nonstd::span<T> currentRow, nonstd::span<T> nextRow,
                                  const std::atomic_bool& shouldCancel)
 {
   Result<> readResult = featureIds.copyIntoBuffer(0, currentRow);
@@ -236,9 +236,9 @@ struct ExtractFeatureBoundariesFunctor
   {
     const auto& featureIdsStoreRef = dataStructure.getDataRefAs<DataArray<T>>(featureIdsPath).getDataStoreRef();
 
-    const SizeVec3 dims = imageGeom.getDimensions();
-    const FloatVec3 origin = imageGeom.getOrigin();
-    const FloatVec3 spacing = imageGeom.getSpacing();
+    const SizeVec3Type dims = imageGeom.getDimensions();
+    const FloatVec3Type origin = imageGeom.getOrigin();
+    const FloatVec3Type spacing = imageGeom.getSpacing();
 
     const usize dimX = dims.getX();
     const usize dimY = dims.getY();
@@ -331,8 +331,8 @@ struct ExtractFeatureBoundariesFunctor
       return resizeResult;
     }
 
-    INodeGeometry0D::SharedVertexList& verticesRef = edgeGeom.getVerticesRef();
-    INodeGeometry1D::SharedEdgeList& edgesRef = edgeGeom.getEdgesRef();
+    INodeGeometry0D::SharedVertexListType& verticesRef = edgeGeom.getVerticesRef();
+    INodeGeometry1D::SharedEdgeListType& edgesRef = edgeGeom.getEdgesRef();
 
     usize currentEdge = 0;
 
@@ -473,7 +473,7 @@ struct ExtractFeatureBoundariesFunctor
     }
 
     // Merge shared endpoints and update edge connectivity.
-    Result<> result = GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);
+    Result<> result = geometry_utilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);
 
     return result;
   }
@@ -502,15 +502,15 @@ const std::atomic_bool& ExtractFeatureBoundaries2D::getCancel() const
 // -----------------------------------------------------------------------------
 Result<> ExtractFeatureBoundaries2D::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
-  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->OutputEdgeGeometryPath);
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry_path);
+  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->output_edge_geometry_path);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path);
 
   const DataType dataType = featureIdsArray.getDataType();
 
   m_MessageHandler.sendInfoMessage("Extracting feature boundaries...");
 
   // Dispatch because the filter accepts every integral Feature ID type.
-  return ExecuteDataFunction(ExtractFeatureBoundariesFunctor{}, dataType, m_DataStructure, m_InputValues->FeatureIdsArrayPath, imageGeom, edgeGeom, m_ShouldCancel, m_InputValues->ZValueChoice,
-                             m_InputValues->CustomZValue, m_InputValues->ExtractVirtualSampleEdges);
+  return ExecuteDataFunction(ExtractFeatureBoundariesFunctor{}, dataType, m_DataStructure, m_InputValues->feature_ids_array_path, imageGeom, edgeGeom, m_ShouldCancel, m_InputValues->z_value_choice,
+                             m_InputValues->custom_z_value, m_InputValues->extract_virtual_sample_edges);
 }

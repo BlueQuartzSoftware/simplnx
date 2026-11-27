@@ -10,7 +10,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-namespace nx::core::UnitTest::Comparison
+namespace nx::core::unit_test::comparison
 {
 inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject& testObject);
 

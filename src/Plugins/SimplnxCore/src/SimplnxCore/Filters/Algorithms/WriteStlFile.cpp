@@ -26,7 +26,7 @@ using namespace nx::core;
 namespace
 {
 using TriStoreType = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
-using VertexStoreType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+using VertexStoreType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
 struct LimitBoundAtomicFileFactory;
 
@@ -203,8 +203,8 @@ struct LimitBoundAtomicFileFactory
   triCount = 0;
 
   size_t totalWritten = 0;
-  FloatVec3 vecA = {0.0f, 0.0f, 0.0f};
-  FloatVec3 vecB = {0.0f, 0.0f, 0.0f};
+  FloatVec3Type vecA = {0.0f, 0.0f, 0.0f};
+  FloatVec3Type vecB = {0.0f, 0.0f, 0.0f};
 
   std::array<char, 50> data = {};
   nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
@@ -332,7 +332,7 @@ private:
  * One pass replaces a label-by-triangle search. A triangle enters at most two
  * buckets, so resident bucket memory scales with triangle count.
  */
-std::unordered_map<int32, std::vector<usize>> BuildTrianglesByLabel(const Int32AbstractDataStore& labels)
+std::unordered_map<int32, std::vector<usize>> BuildTrianglesByLabel(const Int32AbstractDataStoreType& labels)
 {
   const usize numComps = labels.getNumberOfComponents();
   const usize numTriangles = labels.getNumberOfTuples();
@@ -379,7 +379,7 @@ public:
    * @param shouldCancel Stops before later triangles when true.
    */
   MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const std::string& header, const TriStoreType& triangles, const VertexStoreType& vertices,
-                        const Int32AbstractDataStore& featureIds, const int32 featureId, const std::vector<usize>& triangleIndices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
+                        const Int32AbstractDataStoreType& featureIds, const int32 featureId, const std::vector<usize>& triangleIndices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_LimitBoundAtomicFile(limitBoundAtomicFile)
   , m_Header(header)
@@ -473,8 +473,8 @@ public:
     triCount = 0;
 
     size_t totalWritten = 0;
-    FloatVec3 vecA = {0.0f, 0.0f, 0.0f};
-    FloatVec3 vecB = {0.0f, 0.0f, 0.0f};
+    FloatVec3Type vecA = {0.0f, 0.0f, 0.0f};
+    FloatVec3Type vecB = {0.0f, 0.0f, 0.0f};
 
     std::array<char, 50> data = {};
     nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
@@ -584,7 +584,7 @@ private:
   const std::string m_Header;
   const TriStoreType& m_Triangles;
   const VertexStoreType& m_Vertices;
-  const Int32AbstractDataStore& m_FeatureIds;
+  const Int32AbstractDataStoreType& m_FeatureIds;
   const int32 m_FeatureId;
   const std::vector<usize>& m_TriangleIndices;
   const usize m_MaxTriangles;
@@ -692,12 +692,12 @@ const std::atomic_bool& WriteStlFile::getCancel()
 
 Result<> WriteStlFile::operator()()
 {
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geom_path);
   const ::VertexStoreType& vertices = triangleGeom.getVertices()->getDataStoreRef();
   const ::TriStoreType& triangles = triangleGeom.getFaces()->getDataStoreRef();
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
 
-  auto groupingType = static_cast<GroupingType>(m_InputValues->GroupingType);
+  auto groupingType = static_cast<GroupingType>(m_InputValues->grouping_type);
 
   if(groupingType == GroupingType::SingleFile)
   {
@@ -709,12 +709,12 @@ Result<> WriteStlFile::operator()()
       header += " " + triangleGeom.getName();
     }
 
-    if(triangleGeom.getNumberOfFaces() > m_InputValues->HIDDEN_MaxTrianglesPerFile)
+    if(triangleGeom.getNumberOfFaces() > m_InputValues->hidden_max_triangles_per_file)
     {
-      return ::ExecuteSingleFileOverflow(this, nTriangles, header, m_InputValues->OutputStlFile, triangles, vertices, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel);
+      return ::ExecuteSingleFileOverflow(this, nTriangles, header, m_InputValues->output_stl_file, triangles, vertices, m_InputValues->hidden_max_triangles_per_file, m_ShouldCancel);
     }
 
-    auto atomicFileResult = AtomicFile::Create(m_InputValues->OutputStlFile);
+    auto atomicFileResult = AtomicFile::Create(m_InputValues->output_stl_file);
     if(atomicFileResult.invalid())
     {
       return ConvertResult(std::move(atomicFileResult));
@@ -740,7 +740,7 @@ Result<> WriteStlFile::operator()()
     return writeResult;
   }
 
-  const std::filesystem::path outputPath = m_InputValues->OutputStlDirectory;
+  const std::filesystem::path outputPath = m_InputValues->output_stl_directory;
   {
     // Create the output directory before creating grouped AtomicFiles.
     Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(outputPath);
@@ -760,7 +760,7 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::Features)
   {
-    const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+    const auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
 
     // Build all feature memberships once before per-feature writers start.
     const std::unordered_map<int32, std::vector<usize>> trianglesByFeature = ::BuildTrianglesByLabel(featureIds);
@@ -770,7 +770,7 @@ Result<> WriteStlFile::operator()()
     usize fileIndex = 0;
     for(const auto& [featureId, featureTriangles] : trianglesByFeature)
     {
-      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}Feature_{}.stl", m_InputValues->OutputStlPrefix, featureId);
+      fs::path firstFile = m_InputValues->output_stl_directory / fmt::format("{}Feature_{}.stl", m_InputValues->output_stl_prefix, featureId);
       auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
       if(atomicFileResult.invalid())
       {
@@ -782,8 +782,8 @@ Result<> WriteStlFile::operator()()
       fileList.emplace_back(std::move(atomicFileResult.value()));
 
       m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", featureId));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId)}, triangles, vertices, featureIds, featureId,
-                                               featureTriangles, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + string_utilities::Number(featureId)}, triangles, vertices, featureIds, featureId,
+                                               featureTriangles, m_InputValues->hidden_max_triangles_per_file, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors.load())
       {
@@ -795,11 +795,11 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::FeaturesAndPhases)
   {
-    const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+    const auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
 
     std::map<int32, int32> uniqueGrainIdToPhase;
 
-    const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
+    const auto& featurePhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_path);
     for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
     {
       uniqueGrainIdToPhase.emplace(featureIds[i * 2], featurePhases[i * 2]);
@@ -815,7 +815,7 @@ Result<> WriteStlFile::operator()()
     usize fileIndex = 0;
     for(const auto& [featureId, value] : uniqueGrainIdToPhase)
     {
-      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->OutputStlPrefix, value, featureId);
+      fs::path firstFile = m_InputValues->output_stl_directory / fmt::format("{}Ensemble_{}_Feature_{}.stl", m_InputValues->output_stl_prefix, value, featureId);
       auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
       if(atomicFileResult.invalid())
       {
@@ -827,8 +827,8 @@ Result<> WriteStlFile::operator()()
       fileList.emplace_back(std::move(atomicFileResult.value()));
 
       m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Phase {} and Feature Id {}", value, featureId));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + StringUtilities::number(featureId) + " Phase " + StringUtilities::number(value)},
-                                               triangles, vertices, featureIds, featureId, trianglesByFeature.at(featureId), m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Feature ID " + string_utilities::Number(featureId) + " Phase " + string_utilities::Number(value)},
+                                               triangles, vertices, featureIds, featureId, trianglesByFeature.at(featureId), m_InputValues->hidden_max_triangles_per_file, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors.load())
       {
@@ -840,7 +840,7 @@ Result<> WriteStlFile::operator()()
 
   if(groupingType == GroupingType::PartNumber)
   {
-    const auto& partNumbers = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PartNumberPath)->getDataStoreRef();
+    const auto& partNumbers = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->part_number_path)->getDataStoreRef();
 
     // Build all part-number memberships once before per-part writers start.
     const std::unordered_map<int32, std::vector<usize>> trianglesByPartNumber = ::BuildTrianglesByLabel(partNumbers);
@@ -849,7 +849,7 @@ Result<> WriteStlFile::operator()()
     usize fileIndex = 0;
     for(const auto& [currentPartNumber, partTriangles] : trianglesByPartNumber)
     {
-      fs::path firstFile = m_InputValues->OutputStlDirectory / fmt::format("{}{}.stl", m_InputValues->OutputStlPrefix, currentPartNumber);
+      fs::path firstFile = m_InputValues->output_stl_directory / fmt::format("{}{}.stl", m_InputValues->output_stl_prefix, currentPartNumber);
       auto atomicFileResult = LimitBoundAtomicFileFactory::Create(firstFile);
       if(atomicFileResult.invalid())
       {
@@ -861,8 +861,8 @@ Result<> WriteStlFile::operator()()
       fileList.emplace_back(std::move(atomicFileResult.value()));
 
       m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing STL for Part Number {}", currentPartNumber));
-      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Part Number " + StringUtilities::number(currentPartNumber)}, triangles, vertices, partNumbers,
-                                               currentPartNumber, partTriangles, m_InputValues->HIDDEN_MaxTrianglesPerFile, m_ShouldCancel));
+      taskRunner.execute(MultiWriteStlFileImpl(this, fileList[fileIndex], {"DREAM3D Generated For Part Number " + string_utilities::Number(currentPartNumber)}, triangles, vertices, partNumbers,
+                                               currentPartNumber, partTriangles, m_InputValues->hidden_max_triangles_per_file, m_ShouldCancel));
       fileIndex++;
       if(m_HasErrors.load())
       {
@@ -913,7 +913,7 @@ void WriteStlFile::sendThreadSafeProgressMessage(Result<>&& result)
 
   // Every worker warning reaches the user, including warnings that arrive after the
   // first error.
-  WarningCollection& warnings = m_Result.warnings();
+  WarningCollectionType& warnings = m_Result.warnings();
   warnings.insert(warnings.end(), std::make_move_iterator(result.warnings().begin()), std::make_move_iterator(result.warnings().end()));
 
   if(result.invalid() && !m_HasErrors.load())

@@ -19,9 +19,9 @@ WriteBinaryData::WriteBinaryData(DataStructure& dataStructure, const IFilter::Me
 
 Result<> WriteBinaryData::operator()()
 {
-  const auto endianess = static_cast<endian>(m_InputValues->EndianIndex);
-  auto selectedDataArrayPaths = m_InputValues->InputDataArrayPaths;
-  auto dirPath = m_InputValues->OutputPath;
+  const auto endianess = static_cast<endian>(m_InputValues->endian_index);
+  auto selectedDataArrayPaths = m_InputValues->input_data_array_paths;
+  auto dirPath = m_InputValues->output_path;
   // Create the selected output directory before opening array files.
   Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(dirPath);
   if(createDirectoriesResult.invalid())
@@ -35,6 +35,6 @@ Result<> WriteBinaryData::operator()()
   }
   const bool swapEndian = endian::native != endianess;
   // Swap byte order only in the shared writer's page buffer.
-  return OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, m_DataStructure, dirPath.string(), m_MessageHandler, m_ShouldCancel, m_InputValues->FileExtension, true, "", false,
+  return o_stream_utilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, m_DataStructure, dirPath.string(), m_MessageHandler, m_ShouldCancel, m_InputValues->file_extension, true, "", false,
                                                         false, 0, swapEndian);
 }

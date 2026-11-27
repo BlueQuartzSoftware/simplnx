@@ -23,10 +23,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeaturePhasesInputValues
 {
-  AttributeMatrixSelectionParameter::ValueType CellFeaturesAttributeMatrixPath;
-  ArraySelectionParameter::ValueType CellPhasesArrayPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  DataObjectNameParameter::ValueType FeaturePhasesArrayName;
+  AttributeMatrixSelectionParameter::ValueType cell_features_attribute_matrix_path;
+  ArraySelectionParameter::ValueType cell_phases_array_path;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  DataObjectNameParameter::ValueType feature_phases_array_name;
 };
 
 /**

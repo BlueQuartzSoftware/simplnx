@@ -16,9 +16,9 @@ const DataPath k_CompDupPath = DataPath({"computed duplicates mask"});
 void GenerateVertexGeom(DataStructure& dataStructure)
 {
   // Create a Vertex Geometry grid for the Scan Data
-  VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry);
+  VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStructure, constants::k_VertexGeometry);
 
-  Float32Array* vertListPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", std::vector<usize>{25}, {3});
+  Float32ArrayType* vertListPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", std::vector<usize>{25}, {3});
 
   float32 xVal = 0.0f;
   float32 yVal = 0.0f;
@@ -45,7 +45,7 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[Simp
   dataStructure.exportHierarchyAsText(std::cout);
   const std::array<usize, 4> dupIndices = {5, 6, 13, 24};
   {
-    auto& vertexList = dataStructure.getDataRefAs<VertexGeom>(DataPath({Constants::k_VertexGeometry})).getVerticesRef();
+    auto& vertexList = dataStructure.getDataRefAs<VertexGeom>(DataPath({constants::k_VertexGeometry})).getVerticesRef();
 
     // Make sure that we are in bounds
     REQUIRE(vertexList.getNumberOfTuples() > 24);
@@ -68,19 +68,19 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[Simp
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(IdentifyDuplicateVerticesFilter::k_InputGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_VertexGeometry})));
+    args.insertOrAssign(IdentifyDuplicateVerticesFilter::k_InputGeomPath_Key, std::make_any<DataPath>(DataPath({constants::k_VertexGeometry})));
     args.insertOrAssign(IdentifyDuplicateVerticesFilter::k_DuplicateMaskPath_Key, std::make_any<DataPath>(k_CompDupPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.output_actions.valid());
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
-  auto& duplicates = dataStructure.getDataRefAs<UInt8Array>(k_CompDupPath);
+  auto& duplicates = dataStructure.getDataRefAs<UInt8ArrayType>(k_CompDupPath);
 
   usize count = 0;
   for(usize i = 0; i < duplicates.getNumberOfTuples(); i++)
@@ -93,7 +93,7 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: Has Duplicates", "[Simp
 
   REQUIRE(count == 4);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: No Duplicates", "[SimplnxCore][IdentifyDuplicateVerticesFilter]")
@@ -107,19 +107,19 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: No Duplicates", "[Simpl
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(IdentifyDuplicateVerticesFilter::k_InputGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_VertexGeometry})));
+    args.insertOrAssign(IdentifyDuplicateVerticesFilter::k_InputGeomPath_Key, std::make_any<DataPath>(DataPath({constants::k_VertexGeometry})));
     args.insertOrAssign(IdentifyDuplicateVerticesFilter::k_DuplicateMaskPath_Key, std::make_any<DataPath>(k_CompDupPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.output_actions.valid());
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
-  auto& duplicates = dataStructure.getDataRefAs<UInt8Array>(k_CompDupPath);
+  auto& duplicates = dataStructure.getDataRefAs<UInt8ArrayType>(k_CompDupPath);
 
   usize count = 0;
   for(usize i = 0; i < duplicates.getNumberOfTuples(); i++)
@@ -132,5 +132,5 @@ TEST_CASE("SimplnxCore::IdentifyDuplicateVerticesFilter: No Duplicates", "[Simpl
 
   REQUIRE(count == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

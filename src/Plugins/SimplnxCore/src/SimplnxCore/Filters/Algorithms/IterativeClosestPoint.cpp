@@ -21,7 +21,7 @@ template <typename Derived>
 struct VertexGeomAdaptor
 {
   const Derived& obj;
-  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>* verts;
+  AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>* verts;
   size_t num_components = 0;
   size_t num_tuples = 0;
 
@@ -79,16 +79,16 @@ const std::atomic_bool& IterativeClosestPoint::getCancel()
 // -----------------------------------------------------------------------------
 Result<> IterativeClosestPoint::operator()()
 {
-  auto* movingVertexGeomPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->MovingVertexPath);
-  auto* targetVertexGeomPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->TargetVertexPath);
+  auto* movingVertexGeomPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->moving_vertex_path);
+  auto* targetVertexGeomPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->target_vertex_path);
 
   if(movingVertexGeomPtr == nullptr)
   {
-    return MakeErrorResult(k_MissingVertices, fmt::format("Moving Vertex Geometry not found at path '{}'", m_InputValues->MovingVertexPath.toString()));
+    return MakeErrorResult(k_MissingVertices, fmt::format("Moving Vertex Geometry not found at path '{}'", m_InputValues->moving_vertex_path.toString()));
   }
   if(targetVertexGeomPtr == nullptr)
   {
-    return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry not found at path '{}'", m_InputValues->TargetVertexPath.toString()));
+    return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry not found at path '{}'", m_InputValues->target_vertex_path.toString()));
   }
 
   if(movingVertexGeomPtr->getVertices() == nullptr)
@@ -100,12 +100,12 @@ Result<> IterativeClosestPoint::operator()()
     return MakeErrorResult(k_MissingVertices, fmt::format("Target Vertex Geometry does not contain a vertex array"));
   }
 
-  Float32AbstractDataStore& movingStore = movingVertexGeomPtr->getVertices()->getDataStoreRef();
+  Float32AbstractDataStoreType& movingStore = movingVertexGeomPtr->getVertices()->getDataStoreRef();
   if(movingStore.getNumberOfTuples() == 0)
   {
     return MakeErrorResult(k_EmptyVertices, fmt::format("Moving Vertex Geometry does not contain any vertices"));
   }
-  Float32AbstractDataStore& targetStore = targetVertexGeomPtr->getVertices()->getDataStoreRef();
+  Float32AbstractDataStoreType& targetStore = targetVertexGeomPtr->getVertices()->getDataStoreRef();
   if(targetStore.getNumberOfTuples() == 0)
   {
     return MakeErrorResult(k_EmptyVertices, fmt::format("Target Vertex Geometry does not contain any vertices"));
@@ -137,8 +137,8 @@ Result<> IterativeClosestPoint::operator()()
   globalTransform << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  progressThrottle.reset(m_InputValues->NumIterations, "Performing Registration Iterations");
-  for(usize i = 0; i < m_InputValues->NumIterations; i++)
+  progressThrottle.reset(m_InputValues->num_iterations, "Performing Registration Iterations");
+  for(usize i = 0; i < m_InputValues->num_iterations; i++)
   {
     if(m_ShouldCancel)
     {
@@ -174,9 +174,9 @@ Result<> IterativeClosestPoint::operator()()
     progressThrottle.updateCount(i + 1);
   }
 
-  auto& transformStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->TransformArrayPath)->getDataStoreRef();
+  auto& transformStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->transform_array_path)->getDataStoreRef();
 
-  if(m_InputValues->ApplyTransformation)
+  if(m_InputValues->apply_transformation)
   {
     for(usize j = 0; j < numMovingVerts; j++)
     {

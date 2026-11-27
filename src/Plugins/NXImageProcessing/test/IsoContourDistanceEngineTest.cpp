@@ -168,7 +168,7 @@ class ScopedBudget
 {
 public:
   explicit ScopedBudget(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -189,7 +189,7 @@ private:
 };
 
 template <class T>
-std::vector<float32> ReferenceIsoContour(const std::vector<T>& field, usize dimX, usize dimY, usize dimZ, float64 levelSet, float64 farValue, FloatVec3 spacing)
+std::vector<float32> ReferenceIsoContour(const std::vector<T>& field, usize dimX, usize dimY, usize dimZ, float64 levelSet, float64 farValue, FloatVec3Type spacing)
 {
   using RealTType = ImageProcessing::detail::IsoRealType<T>;
   const RealTType level = static_cast<RealTType>(levelSet);
@@ -373,7 +373,7 @@ std::vector<T> MakeIsoField(usize dimX, usize dimY, usize dimZ, uint32 seed, Iso
 }
 
 template <class T>
-std::vector<float32> RunDirect(const std::vector<T>& field, const SizeVec3& dims, float64 levelSet, float64 farValue, FloatVec3 spacing)
+std::vector<float32> RunDirect(const std::vector<T>& field, const SizeVec3Type& dims, float64 levelSet, float64 farValue, FloatVec3Type spacing)
 {
   DataStore<T> inputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{});
   for(usize index = 0; index < field.size(); ++index)
@@ -409,7 +409,7 @@ struct IsoContourCountingResult
 };
 
 template <class T>
-IsoContourCountingResult RunSlabCounting(const std::vector<T>& field, const SizeVec3& dims, uint64 budgetBytes, float64 levelSet, float64 farValue, FloatVec3 spacing)
+IsoContourCountingResult RunSlabCounting(const std::vector<T>& field, const SizeVec3Type& dims, uint64 budgetBytes, float64 levelSet, float64 farValue, FloatVec3Type spacing)
 {
   ScopedBudget budget(budgetBytes);
   OocReportingDataStore<T> inputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{});
@@ -429,7 +429,7 @@ IsoContourCountingResult RunSlabCounting(const std::vector<T>& field, const Size
   {
     output[index] = outputStore.getValue(index);
   }
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   return {std::move(output),           inputStore.readCount(),       inputStore.readValues(), outputStore.writeCount(),
           outputStore.writtenValues(), outputStore.maxWriteValues(), inputStore.readRanges(), outputStore.writeRanges()};
 }
@@ -445,9 +445,9 @@ void RequireBitIdentical(const std::vector<float32>& actual, const std::vector<f
 }
 
 template <class T>
-std::vector<float32> RunEngine(const std::vector<T>& field, usize dx, usize dy, usize dz, float64 levelSet, float64 farValue, FloatVec3 spacing)
+std::vector<float32> RunEngine(const std::vector<T>& field, usize dx, usize dy, usize dz, float64 levelSet, float64 farValue, FloatVec3Type spacing)
 {
-  return RunDirect(field, SizeVec3{dx, dy, dz}, levelSet, farValue, std::move(spacing));
+  return RunDirect(field, SizeVec3Type{dx, dy, dz}, levelSet, farValue, std::move(spacing));
 }
 } // namespace
 
@@ -456,14 +456,14 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route ma
   using T = TestType;
   constexpr float64 k_LevelSet = 10.0;
   constexpr float64 k_FarValue = 100.0;
-  const FloatVec3 kUnitSpacing{1.0f, 1.0f, 1.0f};
-  const std::array<SizeVec3, 10> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 7}, SizeVec3{7, 1, 1},    SizeVec3{1, 5, 1},  SizeVec3{2, 2, 2},
-                                               SizeVec3{3, 3, 3}, SizeVec3{7, 6, 5}, SizeVec3{17, 13, 11}, SizeVec3{33, 9, 7}, SizeVec3{5, 40, 6}};
+  const FloatVec3Type kUnitSpacing{1.0f, 1.0f, 1.0f};
+  const std::array<SizeVec3Type, 10> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 7}, SizeVec3Type{7, 1, 1},    SizeVec3Type{1, 5, 1},  SizeVec3Type{2, 2, 2},
+                                               SizeVec3Type{3, 3, 3}, SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 6}};
   constexpr std::array<IsoFieldMode, 4> k_Modes = {IsoFieldMode::Dense, IsoFieldMode::Band, IsoFieldMode::Flat, IsoFieldMode::Level};
 
   for(usize dimensionsIndex = 0; dimensionsIndex < dimensions.size(); ++dimensionsIndex)
   {
-    const SizeVec3& dims = dimensions[dimensionsIndex];
+    const SizeVec3Type& dims = dimensions[dimensionsIndex];
     DYNAMIC_SECTION(dims[0] << "x" << dims[1] << "x" << dims[2])
     {
       for(const IsoFieldMode mode : k_Modes)
@@ -479,8 +479,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route ma
 
   if constexpr(std::is_same_v<T, uint8> || std::is_same_v<T, float64>)
   {
-    const SizeVec3 kDims{7, 6, 5};
-    const FloatVec3 kSpacing{0.5f, 2.0f, 1.25f};
+    const SizeVec3Type kDims{7, 6, 5};
+    const FloatVec3Type kSpacing{0.5f, 2.0f, 1.25f};
     const std::vector<T> field = MakeIsoField<T>(kDims[0], kDims[1], kDims[2], uint32{0x15C0A115u}, IsoFieldMode::Dense);
     const std::vector<float32> expected = ReferenceIsoContour(field, kDims[0], kDims[1], kDims[2], k_LevelSet, k_FarValue, kSpacing);
     const std::vector<float32> actual = RunDirect(field, kDims, k_LevelSet, k_FarValue, kSpacing);
@@ -494,13 +494,13 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route matc
   using T = TestType;
   constexpr float64 k_LevelSet = 10.0;
   constexpr float64 k_FarValue = 100.0;
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
-  const std::array<SizeVec3, 5> dimensions = {SizeVec3{7, 6, 5}, SizeVec3{17, 13, 11}, SizeVec3{5, 40, 6}, SizeVec3{9, 8, 2}, SizeVec3{9, 8, 3}};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
+  const std::array<SizeVec3Type, 5> dimensions = {SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{5, 40, 6}, SizeVec3Type{9, 8, 2}, SizeVec3Type{9, 8, 3}};
   constexpr std::array<IsoFieldMode, 2> k_Modes = {IsoFieldMode::Dense, IsoFieldMode::Band};
 
   for(usize dimensionsIndex = 0; dimensionsIndex < dimensions.size(); ++dimensionsIndex)
   {
-    const SizeVec3& dims = dimensions[dimensionsIndex];
+    const SizeVec3Type& dims = dimensions[dimensionsIndex];
     const uint64 sliceValues = dims[0] * dims[1];
     const uint64 planeInputBytes = sliceValues * sizeof(T);
     const uint64 planeOutputBytes = sliceValues * sizeof(float32);
@@ -523,7 +523,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route matc
         DYNAMIC_SECTION(dims[0] << "x" << dims[1] << "x" << dims[2] << " mode " << static_cast<int32>(mode) << " core " << expectedCorePlanes)
         {
           const auto plan = ImageProcessing::detail::PlanIsoContourSlab<T>(dims, budgetBytes / 4);
-          REQUIRE(plan.corePlanes == expectedCorePlanes);
+          REQUIRE(plan.core_planes == expectedCorePlanes);
           const IsoContourCountingResult result = RunSlabCounting(field, dims, budgetBytes, k_LevelSet, k_FarValue, kSpacing);
           RequireBitIdentical(result.output, expected);
           REQUIRE(result.read_values == dims[2] * sliceValues);
@@ -536,8 +536,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route matc
           REQUIRE(result.read_count <= 2 * numberOfSlabs);
           REQUIRE(result.write_count == numberOfSlabs);
           REQUIRE(result.write_ranges == expectedWriteRanges);
-          REQUIRE(result.max_write_values == plan.corePlanes * sliceValues);
-          if(plan.corePlanes == dims[2])
+          REQUIRE(result.max_write_values == plan.core_planes * sliceValues);
+          if(plan.core_planes == dims[2])
           {
             REQUIRE(result.read_count == 1);
           }
@@ -555,7 +555,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: axis ramp == an
   using T = TestType;
   const int axis = GENERATE(0, 1, 2);
   const bool aniso = GENERATE(false, true);
-  const FloatVec3 spacing = aniso ? FloatVec3{2.0f, 1.5f, 3.0f} : FloatVec3{1.0f, 1.0f, 1.0f};
+  const FloatVec3Type spacing = aniso ? FloatVec3Type{2.0f, 1.5f, 3.0f} : FloatVec3Type{1.0f, 1.0f, 1.0f};
   constexpr float64 k_Level = 2.5;
   constexpr float32 k_Far = 10.0f;
   CAPTURE(axis, aniso);
@@ -619,7 +619,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "
   SECTION("all above -> +far")
   {
     std::vector<int32> field(k_Dx * k_Dy * k_Dz, static_cast<int32>(levelSet) + 5);
-    const std::vector<float32> out = RunEngine<int32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
+    const std::vector<float32> out = RunEngine<int32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3Type{1.0f, 1.0f, 1.0f});
     for(float32 v : out)
     {
       REQUIRE(v == static_cast<float32>(farValue));
@@ -628,7 +628,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "
   SECTION("all below -> -far")
   {
     std::vector<int32> field(k_Dx * k_Dy * k_Dz, static_cast<int32>(levelSet) - 5);
-    const std::vector<float32> out = RunEngine<int32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
+    const std::vector<float32> out = RunEngine<int32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3Type{1.0f, 1.0f, 1.0f});
     for(float32 v : out)
     {
       REQUIRE(v == -static_cast<float32>(farValue));
@@ -637,7 +637,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: init and far regions", "
   SECTION("exactly on level set -> 0")
   {
     std::vector<float32> field(k_Dx * k_Dy * k_Dz, static_cast<float32>(levelSet));
-    const std::vector<float32> out = RunEngine<float32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3{1.0f, 1.0f, 1.0f});
+    const std::vector<float32> out = RunEngine<float32>(field, k_Dx, k_Dy, k_Dz, levelSet, farValue, FloatVec3Type{1.0f, 1.0f, 1.0f});
     for(float32 v : out)
     {
       REQUIRE(v == 0.0f);
@@ -665,7 +665,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: radial sign + finiteness
       }
     }
   }
-  const std::vector<float32> out = RunEngine<float32>(field, k_D, k_D, k_D, radius, 100.0, FloatVec3{1.0f, 1.0f, 1.0f});
+  const std::vector<float32> out = RunEngine<float32>(field, k_D, k_D, k_D, radius, 100.0, FloatVec3Type{1.0f, 1.0f, 1.0f});
   for(float32 v : out)
   {
     REQUIRE(std::isfinite(v));
@@ -683,8 +683,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: deterministic", "[NXImag
   {
     field[i] = static_cast<int16>((i * 7 + 3) % 11);
   }
-  const std::vector<float32> a = RunEngine<int16>(field, k_D, k_D, k_D, 5.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f});
-  const std::vector<float32> b = RunEngine<int16>(field, k_D, k_D, k_D, 5.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f});
+  const std::vector<float32> a = RunEngine<int16>(field, k_D, k_D, k_D, 5.0, 10.0, FloatVec3Type{1.0f, 1.0f, 1.0f});
+  const std::vector<float32> b = RunEngine<int16>(field, k_D, k_D, k_D, 5.0, 10.0, FloatVec3Type{1.0f, 1.0f, 1.0f});
   REQUIRE(a.size() == b.size());
   for(usize i = 0; i < a.size(); ++i)
   {
@@ -714,7 +714,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: tall-volume streaming z-
   constexpr uint64 k_PlaneInputBytes = k_Dx * k_Dy * sizeof(int32);
   constexpr uint64 k_PlaneOutputBytes = k_Dx * k_Dy * sizeof(float32);
   constexpr uint64 k_BudgetBytes = 4 * (5 * k_PlaneInputBytes + k_PlaneOutputBytes - 1);
-  const IsoContourCountingResult result = RunSlabCounting(field, SizeVec3{k_Dx, k_Dy, k_Dz}, k_BudgetBytes, 2.5, k_Far, FloatVec3{1.0f, 1.0f, 1.0f});
+  const IsoContourCountingResult result = RunSlabCounting(field, SizeVec3Type{k_Dx, k_Dy, k_Dz}, k_BudgetBytes, 2.5, k_Far, FloatVec3Type{1.0f, 1.0f, 1.0f});
   const std::vector<float32>& out = result.output;
   REQUIRE(result.read_values == field.size());
   REQUIRE(result.read_count <= 2 * k_Dz);
@@ -749,12 +749,12 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and can
     DataStore<float32> shortOutput(ShapeType{63}, ShapeType{1}, 0.0f);
     DataStore<float32> fullOutput(ShapeType{64}, ShapeType{1}, 0.0f);
 
-    IsoContourDistance<uint8> inputMismatch(shortInput, fullOutput, SizeVec3{4, 4, 4}, 0.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    IsoContourDistance<uint8> inputMismatch(shortInput, fullOutput, SizeVec3Type{4, 4, 4}, 0.0, 10.0, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     Result<> result = inputMismatch();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8622);
 
-    IsoContourDistance<uint8> outputMismatch(fullInput, shortOutput, SizeVec3{4, 4, 4}, 0.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    IsoContourDistance<uint8> outputMismatch(fullInput, shortOutput, SizeVec3Type{4, 4, 4}, 0.0, 10.0, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     result = outputMismatch();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8623);
@@ -766,7 +766,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and can
     DataStore<uint8> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, uint8{1});
     DataStore<float32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_Poison);
     shouldCancel = true;
-    IsoContourDistance<uint8> engine(inputStore, outputStore, SizeVec3{4, 4, 4}, 0.0, 10.0, FloatVec3{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
+    IsoContourDistance<uint8> engine(inputStore, outputStore, SizeVec3Type{4, 4, 4}, 0.0, 10.0, FloatVec3Type{1.0f, 1.0f, 1.0f}, shouldCancel, messageHandler);
     const Result<> result = engine();
     REQUIRE(result.valid());
     for(const float32 value : outputStore)
@@ -779,50 +779,50 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: validates stores and can
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the plane count from the grant", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 kLargeDims{512, 512, 128};
+  const SizeVec3Type kLargeDims{512, 512, 128};
 
   const auto uint8Partial = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kLargeDims, 128 * k_MiB);
-  REQUIRE(uint8Partial.corePlanes == 101);
-  REQUIRE(uint8Partial.inputPlanes == 105);
-  REQUIRE(uint8Partial.inputBytes == 105 * 256 * 1024);
-  REQUIRE(uint8Partial.outputBytes == 101 * k_MiB);
+  REQUIRE(uint8Partial.core_planes == 101);
+  REQUIRE(uint8Partial.input_planes == 105);
+  REQUIRE(uint8Partial.input_bytes == 105 * 256 * 1024);
+  REQUIRE(uint8Partial.output_bytes == 101 * k_MiB);
 
   const auto uint8Complete = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kLargeDims, 160 * k_MiB);
-  REQUIRE(uint8Complete.corePlanes == 128);
-  REQUIRE(uint8Complete.inputPlanes == 128);
-  REQUIRE(uint8Complete.inputBytes == 32 * k_MiB);
-  REQUIRE(uint8Complete.outputBytes == 128 * k_MiB);
+  REQUIRE(uint8Complete.core_planes == 128);
+  REQUIRE(uint8Complete.input_planes == 128);
+  REQUIRE(uint8Complete.input_bytes == 32 * k_MiB);
+  REQUIRE(uint8Complete.output_bytes == 128 * k_MiB);
 
   const auto float64Partial = ImageProcessing::detail::PlanIsoContourSlab<float64>(kLargeDims, 128 * k_MiB);
-  REQUIRE(float64Partial.corePlanes == 40);
-  REQUIRE(float64Partial.inputPlanes == 44);
-  REQUIRE(float64Partial.inputBytes == 44 * 2 * k_MiB);
-  REQUIRE(float64Partial.outputBytes == 40 * k_MiB);
+  REQUIRE(float64Partial.core_planes == 40);
+  REQUIRE(float64Partial.input_planes == 44);
+  REQUIRE(float64Partial.input_bytes == 44 * 2 * k_MiB);
+  REQUIRE(float64Partial.output_bytes == 40 * k_MiB);
 
-  const auto float64Thin = ImageProcessing::detail::PlanIsoContourSlab<float64>(SizeVec3{1024, 1024, 2}, 20 * k_MiB);
-  REQUIRE(float64Thin.corePlanes == 1);
-  REQUIRE(float64Thin.inputPlanes == 2);
-  REQUIRE(float64Thin.inputBytes == 16 * k_MiB);
-  REQUIRE(float64Thin.outputBytes == 4 * k_MiB);
+  const auto float64Thin = ImageProcessing::detail::PlanIsoContourSlab<float64>(SizeVec3Type{1024, 1024, 2}, 20 * k_MiB);
+  REQUIRE(float64Thin.core_planes == 1);
+  REQUIRE(float64Thin.input_planes == 2);
+  REQUIRE(float64Thin.input_bytes == 16 * k_MiB);
+  REQUIRE(float64Thin.output_bytes == 4 * k_MiB);
 
-  const SizeVec3 kThreePlaneDims{9, 8, 3};
+  const SizeVec3Type kThreePlaneDims{9, 8, 3};
   constexpr uint64 k_ThreePlaneUsefulBytes = 3 * 9 * 8 * (sizeof(uint8) + sizeof(float32));
   const auto uint8Thin = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kThreePlaneDims, k_ThreePlaneUsefulBytes - 1);
-  REQUIRE(uint8Thin.corePlanes <= 2);
-  REQUIRE(uint8Thin.inputPlanes == 3);
+  REQUIRE(uint8Thin.core_planes <= 2);
+  REQUIRE(uint8Thin.input_planes == 3);
 
-  const SizeVec3 kSmallDims{5, 6, 7};
+  const SizeVec3Type kSmallDims{5, 6, 7};
   const auto smallPartial = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kSmallDims, 512);
-  REQUIRE(smallPartial.corePlanes == 2);
-  REQUIRE(smallPartial.inputPlanes == 6);
-  REQUIRE(smallPartial.inputBytes == 180);
-  REQUIRE(smallPartial.outputBytes == 240);
+  REQUIRE(smallPartial.core_planes == 2);
+  REQUIRE(smallPartial.input_planes == 6);
+  REQUIRE(smallPartial.input_bytes == 180);
+  REQUIRE(smallPartial.output_bytes == 240);
 
   const auto smallComplete = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kSmallDims, 2048);
-  REQUIRE(smallComplete.corePlanes == 7);
-  REQUIRE(smallComplete.inputPlanes == 7);
-  REQUIRE(smallComplete.inputBytes == 210);
-  REQUIRE(smallComplete.outputBytes == 840);
+  REQUIRE(smallComplete.core_planes == 7);
+  REQUIRE(smallComplete.input_planes == 7);
+  REQUIRE(smallComplete.input_bytes == 210);
+  REQUIRE(smallComplete.output_bytes == 840);
 
   auto uint8Useful = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(kLargeDims);
   SIMPLNX_RESULT_REQUIRE_VALID(uint8Useful);
@@ -830,10 +830,10 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the pl
   auto float64Useful = ImageProcessing::detail::IsoContourSlabUsefulBytes<float64>(kLargeDims);
   SIMPLNX_RESULT_REQUIRE_VALID(float64Useful);
   REQUIRE(float64Useful.value() == 384 * k_MiB);
-  auto overflow = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  auto overflow = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflow);
   REQUIRE(overflow.errors().front().code == -8626);
-  auto zeroDimension = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(SizeVec3{4, 4, 0});
+  auto zeroDimension = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(SizeVec3Type{4, 4, 0});
   SIMPLNX_RESULT_REQUIRE_VALID(zeroDimension);
   REQUIRE(zeroDimension.value() == 0);
 }
@@ -841,7 +841,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab plan derives the pl
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows the grant", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 kDims{512, 512, 128};
+  const SizeVec3Type kDims{512, 512, 128};
   auto usefulResult = ImageProcessing::detail::IsoContourSlabUsefulBytes<uint8>(kDims);
   SIMPLNX_RESULT_REQUIRE_VALID(usefulResult);
   const usize usefulBytes = usefulResult.value();
@@ -852,12 +852,12 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows
       auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
       REQUIRE(reservation.sizeBytes() == 128 * k_MiB);
       const auto plan = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kDims, reservation.sizeBytes());
-      REQUIRE(plan.corePlanes == 101);
-      REQUIRE(plan.inputPlanes == 105);
+      REQUIRE(plan.core_planes == 101);
+      REQUIRE(plan.input_planes == 105);
     }
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
 
   {
     ScopedBudget budget(1024 * k_MiB);
@@ -865,18 +865,18 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab reservation follows
       auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
       REQUIRE(reservation.sizeBytes() == 160 * k_MiB);
       const auto plan = ImageProcessing::detail::PlanIsoContourSlab<uint8>(kDims, reservation.sizeBytes());
-      REQUIRE(plan.corePlanes == 128);
-      REQUIRE(plan.inputPlanes == 128);
+      REQUIRE(plan.core_planes == 128);
+      REQUIRE(plan.input_planes == 128);
     }
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
 }
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route transfers follow the plan", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
-  const SizeVec3 kDims{5, 6, 7};
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const SizeVec3Type kDims{5, 6, 7};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
   const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C071A9u}, IsoFieldMode::Dense);
   const std::vector<float32> expected = ReferenceIsoContour(field, kDims[0], kDims[1], kDims[2], 10.0, 100.0, kSpacing);
 
@@ -898,8 +898,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route transfers fol
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route reads each input plane once", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
-  const SizeVec3 kDims{5, 6, 7};
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const SizeVec3Type kDims{5, 6, 7};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
   const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C091A9u}, IsoFieldMode::Dense);
   const IsoContourCountingResult result = RunSlabCounting(field, kDims, 2048, 10.0, 100.0, kSpacing);
   REQUIRE(result.read_values == 7 * 30);
@@ -908,8 +908,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab route reads each in
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route performs no bulk transfers", "[NXImageProcessing][IsoContourDistanceEngine]")
 {
-  const SizeVec3 kDims{17, 13, 11};
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const SizeVec3Type kDims{17, 13, 11};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
   const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C0D17Eu}, IsoFieldMode::Dense);
   const std::vector<float32> expected = ReferenceIsoContour(field, kDims[0], kDims[1], kDims[2], 10.0, 100.0, kSpacing);
   CountingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{0});
@@ -937,8 +937,8 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route performs no
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: an OOC store overrides the forced in-core path", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   ScopedBudget budget(2048);
-  const SizeVec3 kDims{5, 6, 7};
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const SizeVec3Type kDims{5, 6, 7};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
   const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C0F04Cu}, IsoFieldMode::Dense);
   OocReportingDataStore<uint8> inputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, uint8{0});
   OocReportingDataStore<float32> outputStore(ShapeType{kDims[2], kDims[1], kDims[0]}, ShapeType{1}, -999.0f);
@@ -957,17 +957,17 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: an OOC store overrides t
   const AlgorithmPathExecutionCounts countsAfter = GetAlgorithmPathExecutionCounts();
   REQUIRE(inputStore.readCount() > 0);
   REQUIRE(outputStore.writeCount() > 0);
-  REQUIRE(countsAfter.InCore == countsBefore.InCore);
-  REQUIRE(countsAfter.OutOfCore == countsBefore.OutOfCore + 1);
-  REQUIRE(countsAfter.OutOfCoreOnOutOfCoreStore == countsBefore.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(countsAfter.in_core == countsBefore.in_core);
+  REQUIRE(countsAfter.out_of_core == countsBefore.out_of_core + 1);
+  REQUIRE(countsAfter.out_of_core_on_out_of_core_store == countsBefore.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
 }
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves the output untouched", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
-  const SizeVec3 kDims{9, 8, 7};
+  const SizeVec3Type kDims{9, 8, 7};
   constexpr float32 k_Poison = -999.0f;
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
   const std::vector<uint8> field = MakeIsoField<uint8>(kDims[0], kDims[1], kDims[2], uint32{0x15C0CA11u}, IsoFieldMode::Dense);
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
@@ -1009,16 +1009,16 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: pre-cancelled run leaves
     {
       REQUIRE(value == k_Poison);
     }
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 }
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and transfer failures release the reservation", "[NXImageProcessing][IsoContourDistanceEngine][WorkingMemory]")
 {
   ScopedBudget budget(2048);
-  const SizeVec3 kDims{5, 6, 7};
+  const SizeVec3Type kDims{5, 6, 7};
   constexpr float32 k_Poison = -999.0f;
-  const FloatVec3 kSpacing{1.0f, 1.0f, 1.0f};
+  const FloatVec3Type kSpacing{1.0f, 1.0f, 1.0f};
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
@@ -1031,7 +1031,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and tr
     REQUIRE(result.valid());
     REQUIRE(inputStore.readCount() == 1);
     REQUIRE(outputStore.writeCount() == 0);
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 
   SECTION("read failure is returned")
@@ -1043,7 +1043,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and tr
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == FailingReadDataStore<uint8>::k_ErrorCode);
     REQUIRE(outputStore.writeCount() == 0);
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 
   SECTION("write failure is returned")
@@ -1054,7 +1054,7 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: slab cancellation and tr
     const Result<> result = engine();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == FailingWriteDataStore<float32>::k_ErrorCode);
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 }
 
@@ -1062,36 +1062,36 @@ TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: 2D planner bounds row bl
 {
   const auto benchmark = ImageProcessing::detail::BuildIsoContour2DBufferPlan(5888, 5888, sizeof(uint8));
   REQUIRE(benchmark.valid);
-  REQUIRE(benchmark.coreCols == 5888);
-  REQUIRE(benchmark.coreRows > 1);
-  REQUIRE(benchmark.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
+  REQUIRE(benchmark.core_cols == 5888);
+  REQUIRE(benchmark.core_rows > 1);
+  REQUIRE(benchmark.resident_bytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
 
   for(const usize inputBytes : {sizeof(uint8), sizeof(uint64)})
   {
     const auto stress = ImageProcessing::detail::BuildIsoContour2DBufferPlan(16385, 1025, inputBytes);
     CAPTURE(inputBytes);
     REQUIRE(stress.valid);
-    REQUIRE(stress.coreCols == 16385);
-    REQUIRE(stress.coreRows > 0);
-    REQUIRE(stress.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
+    REQUIRE(stress.core_cols == 16385);
+    REQUIRE(stress.core_rows > 0);
+    REQUIRE(stress.resident_bytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
   }
 
   const auto overwide = ImageProcessing::detail::BuildIsoContour2DBufferPlan(100000000, 2, sizeof(uint8));
   REQUIRE(overwide.valid);
-  REQUIRE(overwide.coreCols < 100000000);
-  REQUIRE(overwide.coreRows == 1);
-  REQUIRE(overwide.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
+  REQUIRE(overwide.core_cols < 100000000);
+  REQUIRE(overwide.core_rows == 1);
+  REQUIRE(overwide.resident_bytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
 
   constexpr usize k_SmallLimit = 4995;
   const auto forcedTiled = ImageProcessing::detail::BuildIsoContour2DBufferPlan(100, 8, sizeof(uint8), k_SmallLimit);
   REQUIRE(forcedTiled.valid);
-  REQUIRE(forcedTiled.coreCols < 100);
-  REQUIRE(forcedTiled.coreRows == 1);
-  REQUIRE(forcedTiled.residentBytes <= k_SmallLimit);
+  REQUIRE(forcedTiled.core_cols < 100);
+  REQUIRE(forcedTiled.core_rows == 1);
+  REQUIRE(forcedTiled.resident_bytes <= k_SmallLimit);
 
   const auto oneCell = ImageProcessing::detail::BuildIsoContour2DBufferPlan(1, 1, sizeof(uint64));
   REQUIRE(oneCell.valid);
-  REQUIRE(oneCell.residentBytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
+  REQUIRE(oneCell.resident_bytes <= ImageProcessing::detail::k_IsoContour2DResidentLimit);
 }
 
 TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: 2D planner rejects invalid and overflow dimensions", "[NXImageProcessing][IsoContourDistanceEngine]")

@@ -119,7 +119,7 @@ TEST_CASE("simplnx::StringParameter: Legacy numeric conversion preserves precisi
     for(const auto& json : std::array<nlohmann::json, 5>{nlohmann::json("1e-7"), nlohmann::json(true), nlohmann::json(nullptr), nlohmann::json::array(), nlohmann::json::object()})
     {
       CAPTURE(json.dump());
-      const auto result = simpl_conversion::DoubleToStringFilterParameterConverter::Convert(json);
+      const auto result = simpl_conversion::DoubleToStringFilterParameterConverterType::Convert(json);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
       REQUIRE((result.errors().size() == 1));
       CHECK((result.errors().front().code == -1));
@@ -200,7 +200,7 @@ TEST_CASE("ParametersTest")
 
   // Test multiple linked groups
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_BizParamKey, "Biz", "Test Parameter", 0, ChoicesParameter::Choices{"Zero", "One", "Two"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_BizParamKey, "Biz", "Test Parameter", 0, ChoicesParameter::ChoicesType{"Zero", "One", "Two"}));
 
   REQUIRE(params.size() == 4);
 

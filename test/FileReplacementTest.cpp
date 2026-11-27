@@ -117,14 +117,14 @@ TEST_CASE("FileReplacement falls back once and prefers a retryable primary error
 TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
 {
   ScriptedReplacement scripted;
-  const detail::FileReplacementSteps steps{.Rename =
+  const detail::FileReplacementSteps steps{.rename =
                                                [&scripted](const fs::path& replacement, const fs::path& destination) {
                                                  REQUIRE((replacement == "replacement"));
                                                  REQUIRE((destination == "destination"));
                                                  return scripted.results.at(scripted.calls++);
                                                },
-                                           .IsTransient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::permission_denied; },
-                                           .Wait = [&scripted](std::chrono::milliseconds wait) { scripted.waits_ms.push_back(wait.count()); }};
+                                           .is_transient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::permission_denied; },
+                                           .wait = [&scripted](std::chrono::milliseconds wait) { scripted.waits_ms.push_back(wait.count()); }};
 
   const std::error_code transient = std::make_error_code(std::errc::permission_denied);
   const std::error_code permanent = std::make_error_code(std::errc::no_such_file_or_directory);
@@ -133,9 +133,9 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
   {
     scripted.results = {std::error_code{}};
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
-    REQUIRE_FALSE(outcome.Error);
-    CHECK((outcome.Attempts == 1));
-    CHECK((outcome.Waited.count() == 0));
+    REQUIRE_FALSE(outcome.error);
+    CHECK((outcome.attempts == 1));
+    CHECK((outcome.waited.count() == 0));
     CHECK((scripted.calls == 1));
     CHECK(scripted.waits_ms.empty());
   }
@@ -144,9 +144,9 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
   {
     scripted.results = {transient, transient, transient, std::error_code{}};
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
-    REQUIRE_FALSE(outcome.Error);
-    CHECK((outcome.Attempts == 4));
-    CHECK((outcome.Waited.count() == 7));
+    REQUIRE_FALSE(outcome.error);
+    CHECK((outcome.attempts == 4));
+    CHECK((outcome.waited.count() == 7));
     CHECK((scripted.calls == 4));
     const std::vector<std::chrono::milliseconds::rep> expectedWaitsMs{1, 2, 4};
     CHECK((scripted.waits_ms == expectedWaitsMs));
@@ -156,9 +156,9 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
   {
     scripted.results = {permanent};
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
-    REQUIRE((outcome.Error == permanent));
-    CHECK((outcome.Attempts == 1));
-    CHECK((outcome.Waited.count() == 0));
+    REQUIRE((outcome.error == permanent));
+    CHECK((outcome.attempts == 1));
+    CHECK((outcome.waited.count() == 0));
     CHECK((scripted.calls == 1));
     CHECK(scripted.waits_ms.empty());
   }
@@ -167,10 +167,10 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
   {
     scripted.results.assign(38, transient);
     const auto outcome = detail::InstallReplacementFile("replacement", "destination", steps);
-    REQUIRE((outcome.Error == transient));
-    CHECK(outcome.RetriesExhausted);
-    CHECK((outcome.Attempts == 38));
-    CHECK((outcome.Waited.count() == 2000));
+    REQUIRE((outcome.error == transient));
+    CHECK(outcome.retries_exhausted);
+    CHECK((outcome.attempts == 38));
+    CHECK((outcome.waited.count() == 2000));
     CHECK((scripted.calls == 38));
     // The first six waits use 63 ms. Thirty 64 ms waits leave 17 ms.
     std::vector<std::chrono::milliseconds::rep> expectedWaitsMs{1, 2, 4, 8, 16, 32};
@@ -182,25 +182,25 @@ TEST_CASE("InstallReplacementFile bounds the retries", "[simplnx]")
 
 TEST_CASE("FileReplacement identifies known preservation and uncertain rename errors", "[simplnx]")
 {
-  FileReplacementOutcome outcome{.Error = std::make_error_code(std::errc::io_error), .Attempts = 1};
+  FileReplacementOutcome outcome{.error = std::make_error_code(std::errc::io_error), .attempts = 1};
   bool unchanged = true;
   SECTION("No rename attempted")
   {
-    CHECK_FALSE(outcome.RenameAttempted);
+    CHECK_FALSE(outcome.rename_attempted);
   }
   SECTION("Retries exhausted with refusals")
   {
-    outcome.Error = std::make_error_code(std::errc::permission_denied);
-    outcome.RenameAttempted = true;
-    outcome.RetriesExhausted = true;
+    outcome.error = std::make_error_code(std::errc::permission_denied);
+    outcome.rename_attempted = true;
+    outcome.retries_exhausted = true;
   }
   SECTION("Definite refusal")
   {
     const auto refusal = GENERATE(std::errc::permission_denied, std::errc::operation_not_permitted, std::errc::read_only_file_system, std::errc::is_a_directory, std::errc::not_a_directory,
                                   std::errc::directory_not_empty, std::errc::file_exists, std::errc::no_such_file_or_directory, std::errc::cross_device_link, std::errc::filename_too_long,
                                   std::errc::device_or_resource_busy, std::errc::text_file_busy);
-    outcome.Error = std::make_error_code(refusal);
-    outcome.RenameAttempted = true;
+    outcome.error = std::make_error_code(refusal);
+    outcome.rename_attempted = true;
   }
 #ifdef _WIN32
   SECTION("Native Windows refusal")
@@ -213,8 +213,8 @@ TEST_CASE("FileReplacement identifies known preservation and uncertain rename er
   SECTION("Uncertain rename error")
   {
     const auto uncertain = GENERATE(std::errc::io_error, std::errc::timed_out, std::errc::no_lock_available);
-    outcome.Error = std::make_error_code(uncertain);
-    outcome.RenameAttempted = true;
+    outcome.error = std::make_error_code(uncertain);
+    outcome.rename_attempted = true;
     unchanged = false;
   }
   CHECK((FileReplacementLeftDestinationUnchanged(outcome) == unchanged));
@@ -236,7 +236,7 @@ TEST_CASE("FileReplacement describes what failed and how to recover", "[simplnx]
   std::string description;
   SECTION("One attempt")
   {
-    description = DescribeFileReplacementFailure({.Error = error, .Attempts = 1}, destination);
+    description = DescribeFileReplacementFailure({.error = error, .attempts = 1}, destination);
     CHECK_THAT(description, Catch::Matchers::Contains("The file or the output folder may be read-only, or you may not have permission to replace the file."));
     CHECK_THAT(description, !Catch::Matchers::Contains("open in another program"));
     CHECK_THAT(description, Catch::Matchers::EndsWith(error.message()));
@@ -244,7 +244,7 @@ TEST_CASE("FileReplacement describes what failed and how to recover", "[simplnx]
   }
   SECTION("Exhausted attempts")
   {
-    description = DescribeFileReplacementFailure({.Error = error, .Attempts = 38, .Waited = std::chrono::milliseconds{2000}, .RetriesExhausted = true}, destination);
+    description = DescribeFileReplacementFailure({.error = error, .attempts = 38, .waited = std::chrono::milliseconds{2000}, .retries_exhausted = true}, destination);
     CHECK_THAT(description, !Catch::Matchers::Contains("read-only"));
     CHECK_THAT(description,
                Catch::Matchers::Contains("It may be open in another program, or you may not have permission to replace it. Close it and run again. Operating system error: " + error.message()));
@@ -270,7 +270,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   {
     WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination);
-    REQUIRE_FALSE(outcome.Error);
+    REQUIRE_FALSE(outcome.error);
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
@@ -278,9 +278,9 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   SECTION("A missing replacement fails immediately")
   {
     const auto outcome = InstallReplacementFile(replacement, destination);
-    REQUIRE(outcome.Error);
-    CHECK((outcome.Attempts == 1));
-    CHECK((outcome.Waited.count() == 0));
+    REQUIRE(outcome.error);
+    CHECK((outcome.attempts == 1));
+    CHECK((outcome.waited.count() == 0));
     CHECK((ReadFile(destination) == "old"));
   }
 
@@ -289,21 +289,21 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps(FileReplacementDurability::WriteThrough);
     const auto flushError = std::make_error_code(std::errc::io_error);
-    steps.Flush = [&](const fs::path& path) {
+    steps.flush = [&](const fs::path& path) {
       CHECK((path == replacement));
       return flushError;
     };
-    steps.Rename = [](const fs::path&, const fs::path&) {
+    steps.rename = [](const fs::path&, const fs::path&) {
       FAIL("No rename may run after a failed flush");
       return std::error_code{};
     };
-    steps.IsTransient = [](const std::error_code&, const fs::path&, const fs::path&) { return false; };
-    steps.Wait = [](std::chrono::milliseconds) { FAIL("A flush error must not be retried"); };
+    steps.is_transient = [](const std::error_code&, const fs::path&, const fs::path&) { return false; };
+    steps.wait = [](std::chrono::milliseconds) { FAIL("A flush error must not be retried"); };
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    CHECK((outcome.Error == flushError));
-    CHECK_FALSE(outcome.RenameAttempted);
-    CHECK((outcome.Attempts == 1));
-    CHECK_FALSE(outcome.RetriesExhausted);
+    CHECK((outcome.error == flushError));
+    CHECK_FALSE(outcome.rename_attempted);
+    CHECK((outcome.attempts == 1));
+    CHECK_FALSE(outcome.retries_exhausted);
     CHECK((ReadFile(destination) == "old"));
     CHECK((ReadFile(replacement) == "new"));
   }
@@ -313,13 +313,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     WriteFile(replacement, "new");
     const bool exhausted = GENERATE(false, true);
     auto steps = detail::PlatformFileReplacementSteps();
-    const auto rename = steps.Rename;
+    const auto rename = steps.rename;
     const auto transient = std::make_error_code(std::errc::device_or_resource_busy);
     usize flushCalls = 0;
     usize successfulFlushes = 0;
     usize renameCalls = 0;
     std::chrono::milliseconds waited{0};
-    steps.Flush = [&](const fs::path& path) {
+    steps.flush = [&](const fs::path& path) {
       CHECK((path == replacement));
       CHECK((successfulFlushes == 0));
       ++flushCalls;
@@ -330,23 +330,23 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       ++successfulFlushes;
       return std::error_code{};
     };
-    steps.Rename = [&](const fs::path& from, const fs::path& to) {
+    steps.rename = [&](const fs::path& from, const fs::path& to) {
       REQUIRE((successfulFlushes == 1));
       ++renameCalls;
       // Also exercise a rename refusal after the flush used part of the budget.
       return renameCalls == 1 ? transient : rename(from, to);
     };
-    steps.IsTransient = [transient](const std::error_code& error, const fs::path&, const fs::path&) { return error == transient; };
-    steps.Wait = [&](std::chrono::milliseconds wait) { waited += wait; };
+    steps.is_transient = [transient](const std::error_code& error, const fs::path&, const fs::path&) { return error == transient; };
+    steps.wait = [&](std::chrono::milliseconds wait) { waited += wait; };
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    CHECK((outcome.Waited == waited));
-    CHECK((outcome.RetriesExhausted == exhausted));
-    CHECK((outcome.RenameAttempted == !exhausted));
+    CHECK((outcome.waited == waited));
+    CHECK((outcome.retries_exhausted == exhausted));
+    CHECK((outcome.rename_attempted == !exhausted));
     if(exhausted)
     {
-      CHECK((outcome.Error == transient));
-      CHECK((outcome.Waited == detail::k_FileReplacementTotalWaitLimitMs));
-      CHECK((outcome.Attempts == flushCalls));
+      CHECK((outcome.error == transient));
+      CHECK((outcome.waited == detail::k_FileReplacementTotalWaitLimitMs));
+      CHECK((outcome.attempts == flushCalls));
       CHECK((renameCalls == 0));
       CHECK((successfulFlushes == 0));
       CHECK((ReadFile(destination) == "old"));
@@ -355,12 +355,12 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     }
     else
     {
-      REQUIRE_FALSE(outcome.Error);
+      REQUIRE_FALSE(outcome.error);
       CHECK((flushCalls == 2));
       CHECK((successfulFlushes == 1));
       CHECK((renameCalls == 2));
-      CHECK((outcome.Attempts == 3));
-      CHECK((outcome.Waited == std::chrono::milliseconds{3}));
+      CHECK((outcome.attempts == 3));
+      CHECK((outcome.waited == std::chrono::milliseconds{3}));
       CHECK((ReadFile(destination) == "new"));
       CHECK_FALSE(fs::exists(replacement));
     }
@@ -370,20 +370,20 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   {
     WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
-    const auto rename = steps.Rename;
+    const auto rename = steps.rename;
     usize flushCalls = 0;
     usize renameCalls = 0;
-    steps.Flush = [&](const fs::path&) { return ++flushCalls == 1 ? std::make_error_code(std::errc::device_or_resource_busy) : std::error_code{}; };
-    steps.Rename = [&](const fs::path& from, const fs::path& to) {
+    steps.flush = [&](const fs::path&) { return ++flushCalls == 1 ? std::make_error_code(std::errc::device_or_resource_busy) : std::error_code{}; };
+    steps.rename = [&](const fs::path& from, const fs::path& to) {
       REQUIRE((flushCalls == 2));
       ++renameCalls;
       return rename(from, to);
     };
-    steps.IsTransient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::device_or_resource_busy; };
-    steps.Wait = [](std::chrono::milliseconds) {};
+    steps.is_transient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::device_or_resource_busy; };
+    steps.wait = [](std::chrono::milliseconds) {};
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    REQUIRE_FALSE(outcome.Error);
-    CHECK(outcome.RenameAttempted);
+    REQUIRE_FALSE(outcome.error);
+    CHECK(outcome.rename_attempted);
     CHECK((flushCalls == 2));
     CHECK((renameCalls == 1));
     CHECK((ReadFile(destination) == "new"));
@@ -394,15 +394,15 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   {
     WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
-    const auto rename = steps.Rename;
+    const auto rename = steps.rename;
     bool flushed = false;
     bool refused = false;
-    steps.Flush = [&](const fs::path&) {
+    steps.flush = [&](const fs::path&) {
       CHECK_FALSE(flushed);
       flushed = true;
       return std::error_code{};
     };
-    steps.Rename = [&](const fs::path& from, const fs::path& to) {
+    steps.rename = [&](const fs::path& from, const fs::path& to) {
       REQUIRE(flushed);
       if(!refused)
       {
@@ -411,10 +411,10 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       }
       return rename(from, to);
     };
-    steps.IsTransient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::device_or_resource_busy; };
-    steps.Wait = [](std::chrono::milliseconds) {};
+    steps.is_transient = [](const std::error_code& error, const fs::path&, const fs::path&) { return error == std::errc::device_or_resource_busy; };
+    steps.wait = [](std::chrono::milliseconds) {};
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    REQUIRE_FALSE(outcome.Error);
+    REQUIRE_FALSE(outcome.error);
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
@@ -424,7 +424,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     REQUIRE(fs::remove(destination));
     WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination);
-    REQUIRE_FALSE(outcome.Error);
+    REQUIRE_FALSE(outcome.error);
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
@@ -435,7 +435,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const auto relativeDestination = fs::relative(destination);
     REQUIRE(relativeDestination.is_relative());
     const auto outcome = InstallReplacementFile(replacement, relativeDestination);
-    REQUIRE_FALSE(outcome.Error);
+    REQUIRE_FALSE(outcome.error);
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }

@@ -41,7 +41,7 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.

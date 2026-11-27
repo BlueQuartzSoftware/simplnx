@@ -10,7 +10,7 @@ using namespace nx::core;
 
 namespace nx::core
 {
-UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, DataPath path, bool centerOrigin)
+UpdateImageGeomAction::UpdateImageGeomAction(const std::optional<FloatVec3Type>& origin, const std::optional<FloatVec3Type>& spacing, DataPath path, bool centerOrigin)
 : m_Origin(origin)
 , m_Spacing(spacing)
 , m_Path(std::move(path))
@@ -36,8 +36,8 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*
     }
     return result;
   };
-  const FloatVec3 spacing = m_Spacing.value_or(imagePtr->getSpacing());
-  FloatVec3 origin = m_Origin.value_or(imagePtr->getOrigin());
+  const FloatVec3Type spacing = m_Spacing.value_or(imagePtr->getSpacing());
+  FloatVec3Type origin = m_Origin.value_or(imagePtr->getOrigin());
   if(auto result = ImageGeom::ValidateSpacing(spacing); result.invalid())
   {
     return addGeometryPath(std::move(result));
@@ -48,10 +48,10 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*
   }
   if(m_CenterOrigin)
   {
-    const SizeVec3 dims = imagePtr->getDimensions();
-    const BoundingBox3Df bounds(std::array<float32, 6>{origin[0], origin[1], origin[2], origin[0] + dims[0] * spacing[0], origin[1] + dims[1] * spacing[1], origin[2] + dims[2] * spacing[2]});
-    const FloatVec3 center = bounds.center();
-    const FloatVec3& min = bounds.getMinPoint();
+    const SizeVec3Type dims = imagePtr->getDimensions();
+    const BoundingBox3DfType bounds(std::array<float32, 6>{origin[0], origin[1], origin[2], origin[0] + dims[0] * spacing[0], origin[1] + dims[1] * spacing[1], origin[2] + dims[2] * spacing[2]});
+    const FloatVec3Type center = bounds.center();
+    const FloatVec3Type& min = bounds.getMinPoint();
     for(usize axis = 0; axis < 3; ++axis)
     {
       origin[axis] -= center[axis] - min[axis];
@@ -95,12 +95,12 @@ bool UpdateImageGeomAction::shouldUpdateSpacing() const
   return m_Spacing.has_value();
 }
 
-const std::optional<FloatVec3>& UpdateImageGeomAction::origin() const
+const std::optional<FloatVec3Type>& UpdateImageGeomAction::origin() const
 {
   return m_Origin;
 }
 
-const std::optional<FloatVec3>& UpdateImageGeomAction::spacing() const
+const std::optional<FloatVec3Type>& UpdateImageGeomAction::spacing() const
 {
   return m_Spacing;
 }

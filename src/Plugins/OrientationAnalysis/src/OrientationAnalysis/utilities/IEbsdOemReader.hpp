@@ -22,13 +22,13 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ReadH5DataInputValues
 {
-  OEMEbsdScanSelectionParameter::ValueType SelectedScanNames;
-  bool ReadPatternData{};
-  DataPath ImageGeometryPath;
-  DataPath CellAttributeMatrixPath;
-  DataPath CellEnsembleAttributeMatrixPath;
-  bool EdaxHexagonalAlignment{};
-  bool ConvertPhaseToInt32{};
+  OEMEbsdScanSelectionParameter::ValueType selected_scan_names;
+  bool read_pattern_data{};
+  DataPath image_geometry_path;
+  DataPath cell_attribute_matrix_path;
+  DataPath cell_ensemble_attribute_matrix_path;
+  bool edax_hexagonal_alignment{};
+  bool convert_phase_to_int32{};
 };
 
 /**
@@ -63,7 +63,7 @@ public:
   , m_InputValues(inputValues)
   {
 
-    m_Reader->setFileName(inputValues->SelectedScanNames.inputFilePath.string());
+    m_Reader->setFileName(inputValues->selected_scan_names.input_file_path.string());
   }
 
   virtual ~IEbsdOemReader() noexcept = default;
@@ -81,10 +81,10 @@ public:
    */
   Result<> execute()
   {
-    auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+    auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
     imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
 
-    const auto& scanNames = m_InputValues->SelectedScanNames.scanNames;
+    const auto& scanNames = m_InputValues->selected_scan_names.scan_names;
     int index = 0;
     for(const auto& currentScanName : scanNames)
     {
@@ -101,7 +101,7 @@ public:
         return readResults;
       }
 
-      const int sliceIndex = m_InputValues->SelectedScanNames.stackingOrder == RefFrameZDir::k_HightoLow ? static_cast<int>(scanNames.size()) - 1 - index : index;
+      const int sliceIndex = m_InputValues->selected_scan_names.stacking_order == ref_frame_z_dir::k_HightoLow ? static_cast<int>(scanNames.size()) - 1 - index : index;
       Result<> copyDataResults = copyRawEbsdData(sliceIndex);
       if(copyDataResults.invalid())
       {
@@ -130,7 +130,7 @@ public:
    */
   Result<> readData(const std::string& scanName)
   {
-    m_Reader->setReadPatternData(m_InputValues->ReadPatternData);
+    m_Reader->setReadPatternData(m_InputValues->read_pattern_data);
     m_Reader->setHDF5Path(scanName);
 
     if(const int32 err = m_Reader->readFile(); err < 0)
@@ -146,10 +146,10 @@ public:
     }
 
     // Use shared AngFile ensemble names for every OEM reader format.
-    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
-    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::MaterialName));
-    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
-    Float32Array::StoreType* latticeConstantsPtr = latticeConstantsArray.getDataStore();
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->cell_ensemble_attribute_matrix_path.createChildPath(ebsdlib::AngFile::CrystalStructures));
+    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->cell_ensemble_attribute_matrix_path.createChildPath(ebsdlib::AngFile::MaterialName));
+    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_ensemble_attribute_matrix_path.createChildPath(ebsdlib::AngFile::LatticeConstants));
+    Float32ArrayType::StoreType* latticeConstantsPtr = latticeConstantsArray.getDataStore();
 
     crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
     materialNames[0] = "Invalid Phase";

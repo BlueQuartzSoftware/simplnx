@@ -39,7 +39,7 @@
 #include <vector>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace fs = std::filesystem;
 
@@ -65,12 +65,12 @@ const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 const fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/import_image_stack_test_v3/{}", unit_test::k_TestFilesDir, k_FlippedImageStackSubDirName));
 
 // Exemplar Array Paths
-const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
-const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
+const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
+const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
 
 void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& filePrefix)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Define Shared parameters
   const std::vector<float32> origin = {0.0f, 0.0f, 0.0f};
@@ -79,15 +79,15 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 
   // Set File list for reads
   {
-    fileListInfo.inputPath = k_ImageFlipStackDir.string();
-    fileListInfo.startIndex = 1;
-    fileListInfo.endIndex = 1;
-    fileListInfo.incrementIndex = 1;
-    fileListInfo.fileExtension = ".tiff";
-    fileListInfo.filePrefix = filePrefix;
-    fileListInfo.fileSuffix = "";
-    fileListInfo.paddingDigits = 1;
-    fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+    fileListInfo.input_path = k_ImageFlipStackDir.string();
+    fileListInfo.start_index = 1;
+    fileListInfo.end_index = 1;
+    fileListInfo.increment_index = 1;
+    fileListInfo.file_extension = ".tiff";
+    fileListInfo.file_prefix = filePrefix;
+    fileListInfo.file_suffix = "";
+    fileListInfo.padding_digits = 1;
+    fileListInfo.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
   }
 
   // Run generated X flip
@@ -102,7 +102,7 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
     args.insertOrAssign(ReadImageStackFilter::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -120,7 +120,7 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
     args.insertOrAssign(ReadImageStackFilter::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -139,7 +139,7 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(::k_ImageDataName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -154,7 +154,7 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
     args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(::k_ImageDataName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -163,21 +163,21 @@ void ReadInFlippedXYExemplars(DataStructure& dataStructure, const std::string& f
 
 void CompareXYFlippedGeometries(DataStructure& dataStructure)
 {
-  UnitTest::CompareImageGeometry(dataStructure, ::k_XFlipImageGeomPath, k_XGeneratedImageGeomPath);
-  UnitTest::CompareImageGeometry(dataStructure, ::k_YFlipImageGeomPath, k_YGeneratedImageGeomPath);
+  unit_test::CompareImageGeometry(dataStructure, ::k_XFlipImageGeomPath, k_XGeneratedImageGeomPath);
+  unit_test::CompareImageGeometry(dataStructure, ::k_YFlipImageGeomPath, k_YGeneratedImageGeomPath);
 
   // Processed
-  DataPath kXGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
-  DataPath kYGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
-  const auto& xGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(kXGeneratedImageDataPath);
-  const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(kYGeneratedImageDataPath);
+  DataPath kXGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
+  DataPath kYGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
+  const auto& xGeneratedImageData = dataStructure.getDataRefAs<UInt8ArrayType>(kXGeneratedImageDataPath);
+  const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8ArrayType>(kYGeneratedImageDataPath);
 
   // Exemplar
-  const auto& xFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_XFlippedImageDataPath);
-  const auto& yFlippedImageData = dataStructure.getDataRefAs<UInt8Array>(k_YFlippedImageDataPath);
+  const auto& xFlippedImageData = dataStructure.getDataRefAs<UInt8ArrayType>(k_XFlippedImageDataPath);
+  const auto& yFlippedImageData = dataStructure.getDataRefAs<UInt8ArrayType>(k_YFlippedImageDataPath);
 
-  UnitTest::CompareDataArrays<uint8_t>(xGeneratedImageData, xFlippedImageData);
-  UnitTest::CompareDataArrays<uint8_t>(yGeneratedImageData, yFlippedImageData);
+  unit_test::CompareDataArrays<uint8_t>(xGeneratedImageData, xFlippedImageData);
+  unit_test::CompareDataArrays<uint8_t>(yGeneratedImageData, yFlippedImageData);
 }
 
 // Test data paths
@@ -191,9 +191,9 @@ const std::string k_FilePrefix = "200x200_";
 const std::string k_FileExtension = ".tif";
 
 // Cropping boundaries (crop to the colored square: 50:150 in X/Y, all Z)
-const SizeVec2 k_VoxelCropX = {50, 150};
-const SizeVec2 k_VoxelCropY = {50, 150};
-const SizeVec2 k_VoxelCropZ = {0, 1};
+const SizeVec2Type k_VoxelCropX = {50, 150};
+const SizeVec2Type k_VoxelCropY = {50, 150};
+const SizeVec2Type k_VoxelCropZ = {0, 1};
 
 const FloatVec2Type k_PhysicalCropX = {50.0f, 150.0f};
 const FloatVec2Type k_PhysicalCropY = {50.0f, 150.0f};
@@ -215,15 +215,15 @@ const ChoicesParameter::ValueType k_Postprocessed = 1;
 GeneratedFileListParameter::ValueType CreateStandardFileList()
 {
   GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = k_InputImagesDir.string();
-  fileList.filePrefix = k_FilePrefix;
-  fileList.fileSuffix = "";
-  fileList.fileExtension = k_FileExtension;
-  fileList.startIndex = 0;
-  fileList.endIndex = 2;
-  fileList.incrementIndex = 1;
-  fileList.paddingDigits = 1;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileList.input_path = k_InputImagesDir.string();
+  fileList.file_prefix = k_FilePrefix;
+  fileList.file_suffix = "";
+  fileList.file_extension = k_FileExtension;
+  fileList.start_index = 0;
+  fileList.end_index = 2;
+  fileList.increment_index = 1;
+  fileList.padding_digits = 1;
+  fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
   return fileList;
 }
 
@@ -234,21 +234,21 @@ CropGeometryParameter::ValueType CreateCropOptions(CropGeometryParameter::CropVa
 {
   CropGeometryParameter::ValueType crop;
   crop.type = type;
-  crop.cropX = cropX;
-  crop.cropY = cropY;
-  crop.cropZ = cropZ;
+  crop.crop_x = cropX;
+  crop.crop_y = cropY;
+  crop.crop_z = cropZ;
 
   if(type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
   {
-    crop.xBoundVoxels = k_VoxelCropX;
-    crop.yBoundVoxels = k_VoxelCropY;
-    crop.zBoundVoxels = k_VoxelCropZ;
+    crop.x_bound_voxels = k_VoxelCropX;
+    crop.y_bound_voxels = k_VoxelCropY;
+    crop.z_bound_voxels = k_VoxelCropZ;
   }
   else if(type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
   {
-    crop.xBoundPhysical = k_PhysicalCropX;
-    crop.yBoundPhysical = k_PhysicalCropY;
-    crop.zBoundPhysical = k_PhysicalCropZ;
+    crop.x_bound_physical = k_PhysicalCropX;
+    crop.y_bound_physical = k_PhysicalCropY;
+    crop.z_bound_physical = k_PhysicalCropZ;
   }
 
   return crop;
@@ -289,9 +289,9 @@ Result<> ExecuteImportImageStack(DataStructure& dataStructure, const DataPath& o
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
-    return ConvertResult(std::move(preflightResult.outputActions));
+    return ConvertResult(std::move(preflightResult.output_actions));
   }
 
   auto executeResult = filter.execute(dataStructure, args);
@@ -306,7 +306,7 @@ void VerifyGeometryDimensions(const DataStructure& dataStructure, const DataPath
   const auto* geomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   REQUIRE(geomPtr != nullptr);
 
-  SizeVec3 dims = geomPtr->getDimensions();
+  SizeVec3Type dims = geomPtr->getDimensions();
   REQUIRE(dims[0] == expectedX);
   REQUIRE(dims[1] == expectedY);
   REQUIRE(dims[2] == expectedZ);
@@ -315,13 +315,13 @@ void VerifyGeometryDimensions(const DataStructure& dataStructure, const DataPath
 /**
  * @brief Verify origin and spacing
  */
-void VerifyOriginSpacing(const DataStructure& dataStructure, const DataPath& geomPath, const FloatVec3& expectedOrigin, const FloatVec3& expectedSpacing)
+void VerifyOriginSpacing(const DataStructure& dataStructure, const DataPath& geomPath, const FloatVec3Type& expectedOrigin, const FloatVec3Type& expectedSpacing)
 {
   const auto* geomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   REQUIRE(geomPtr != nullptr);
 
-  FloatVec3 origin = geomPtr->getOrigin();
-  FloatVec3 spacing = geomPtr->getSpacing();
+  FloatVec3Type origin = geomPtr->getOrigin();
+  FloatVec3Type spacing = geomPtr->getSpacing();
 
   REQUIRE(origin[0] == Approx(expectedOrigin[0]));
   REQUIRE(origin[1] == Approx(expectedOrigin[1]));
@@ -341,9 +341,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoInput", "[NXImageProcessin
   Arguments args;
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoImageGeometry", "[NXImageProcessing][ReadImageStackFilter]")
@@ -354,14 +354,14 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoImageGeometry", "[NXImageP
 
   GeneratedFileListParameter::ValueType fileListInfo;
 
-  fileListInfo.inputPath = k_ImageStackDir;
+  fileListInfo.input_path = k_ImageStackDir;
 
   args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoFiles", "[NXImageProcessing][ReadImageStackFilter]")
@@ -371,13 +371,13 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoFiles", "[NXImageProcessin
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = "doesNotExist.ghost";
-  fileListInfo.startIndex = 75;
-  fileListInfo.endIndex = 77;
-  fileListInfo.fileExtension = "dcm";
-  fileListInfo.filePrefix = "Image";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 4;
+  fileListInfo.input_path = "doesNotExist.ghost";
+  fileListInfo.start_index = 75;
+  fileListInfo.end_index = 77;
+  fileListInfo.file_extension = "dcm";
+  fileListInfo.file_prefix = "Image";
+  fileListInfo.file_suffix = "";
+  fileListInfo.padding_digits = 4;
 
   args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
   args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(3));
@@ -385,9 +385,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: NoFiles", "[NXImageProcessin
   args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: FileDoesNotExist", "[NXImageProcessing][ReadImageStackFilter]")
@@ -397,13 +397,13 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: FileDoesNotExist", "[NXImage
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = k_ImageStackDir;
-  fileListInfo.startIndex = 75;
-  fileListInfo.endIndex = 79;
-  fileListInfo.fileExtension = "dcm";
-  fileListInfo.filePrefix = "Image";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 4;
+  fileListInfo.input_path = k_ImageStackDir;
+  fileListInfo.start_index = 75;
+  fileListInfo.end_index = 79;
+  fileListInfo.file_extension = "dcm";
+  fileListInfo.file_prefix = "Image";
+  fileListInfo.file_suffix = "";
+  fileListInfo.padding_digits = 4;
 
   args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
   args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(3));
@@ -411,29 +411,29 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: FileDoesNotExist", "[NXImage
   args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: CompareImage", "[NXImageProcessing][ReadImageStackFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   ReadImageStackFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = k_ImageStackDir;
-  fileListInfo.startIndex = 11;
-  fileListInfo.endIndex = 13;
-  fileListInfo.incrementIndex = 1;
-  fileListInfo.fileExtension = ".tif";
-  fileListInfo.filePrefix = "slice_";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 2;
-  fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileListInfo.input_path = k_ImageStackDir;
+  fileListInfo.start_index = 11;
+  fileListInfo.end_index = 13;
+  fileListInfo.increment_index = 1;
+  fileListInfo.file_extension = ".tif";
+  fileListInfo.file_prefix = "slice_";
+  fileListInfo.file_suffix = "";
+  fileListInfo.padding_digits = 2;
+  fileListInfo.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
   std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
   std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
@@ -446,7 +446,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: CompareImage", "[NXImageProc
   args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -454,9 +454,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: CompareImage", "[NXImageProc
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeomPtr != nullptr);
 
-  SizeVec3 imageDims = imageGeomPtr->getDimensions();
-  FloatVec3 imageOrigin = imageGeomPtr->getOrigin();
-  FloatVec3 imageSpacing = imageGeomPtr->getSpacing();
+  SizeVec3Type imageDims = imageGeomPtr->getDimensions();
+  FloatVec3Type imageOrigin = imageGeomPtr->getOrigin();
+  FloatVec3Type imageSpacing = imageGeomPtr->getSpacing();
 
   std::array<usize, 3> dims = {524, 390, 3};
 
@@ -472,15 +472,15 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: CompareImage", "[NXImageProc
   REQUIRE(imageSpacing[1] == Approx(spacing[1]));
   REQUIRE(imageSpacing[2] == Approx(spacing[2]));
 
-  const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
+  const auto* imageDataPtr = dataStructure.getDataAs<UInt8ArrayType>(k_ImageDataPath);
   REQUIRE(imageDataPtr != nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Even X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   const std::string filePrefix = "image_flip_even_even_";
 
@@ -499,12 +499,12 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Even X/Y"
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Odd X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   const std::string filePrefix = "image_flip_even_odd_";
 
@@ -523,12 +523,12 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Odd X/Y",
   // Compare against exemplars
   ::CompareXYFlippedGeometries(dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Even X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   const std::string filePrefix = "image_flip_odd_even_";
 
@@ -543,12 +543,12 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Even X/Y",
 
   ::CompareXYFlippedGeometries(dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Odd X/Y", "[NXImageProcessing][ReadImageStackFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   const std::string filePrefix = "image_flip_odd_odd_";
 
@@ -563,14 +563,14 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Odd X/Y", 
 
   ::CompareXYFlippedGeometries(dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[NXImageProcessing][ReadImageStackFilter][Baseline]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Baseline_Geometry"});
@@ -582,16 +582,16 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[NX
   VerifyOriginSpacing(dataStructure, geomPath, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Baseline_Geometry"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Baseline_Geometry", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Baseline_Geometry", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -600,9 +600,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[NX
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Voxel_X"});
@@ -613,23 +613,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[NXImage
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 200, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_X"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Voxel_Y"});
@@ -640,23 +640,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[NXImage
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 101, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Y"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Voxel_Z"});
@@ -667,23 +667,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[NXImage
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 2);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Z"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Voxel_XY"});
@@ -694,23 +694,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[NXImagePro
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XY"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Voxel_XYZ"});
@@ -721,23 +721,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[NXImagePr
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 2);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XYZ"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Physical_XY"});
@@ -748,23 +748,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[NXImage
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_XY"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Physical_Z"});
@@ -775,16 +775,16 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[NXImageP
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 2);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_Z"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -793,9 +793,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[NXImageP
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[NXImageProcessing][ReadImageStackFilter][Resampling]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Resample_Scaling50"});
@@ -806,23 +806,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[N
 
   VerifyGeometryDimensions(dataStructure, geomPath, 100, 100, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Scaling_50"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "[NXImageProcessing][ReadImageStackFilter][Resampling]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Resample_Exact128x128"});
@@ -833,16 +833,16 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "
 
   VerifyGeometryDimensions(dataStructure, geomPath, 128, 128, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Exact_128x128"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -851,9 +851,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXImageProcessing][ReadImageStackFilter][Grayscale]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Grayscale"});
@@ -864,19 +864,19 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXI
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_Conversion"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -885,9 +885,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXI
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::FlipY", "[NXImageProcessing][ReadImageStackFilter][Flip]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"FlipY_Test"});
@@ -898,16 +898,16 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::FlipY", "[NXImageProcessing]
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"FlipY_Test"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"FlipY_Test", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"FlipY_Test", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -916,9 +916,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::FlipY", "[NXImageProcessing]
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"OriginSpacing_Preprocessed"});
@@ -930,23 +930,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed",
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
   VerifyOriginSpacing(dataStructure, geomPath, {110.0f, 120.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"OriginSpacing_Postprocessed"});
@@ -958,23 +958,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed"
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
   VerifyOriginSpacing(dataStructure, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_WithZCrop", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"OriginSpacing_Preprocessed_WithZCrop"});
@@ -986,23 +986,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_W
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 2);
   VerifyOriginSpacing(dataStructure, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed_WithZCrop"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_WithZCrop", "[NXImageProcessing][ReadImageStackFilter][OriginSpacing]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"OriginSpacing_Postprocessed_WithZCrop"});
@@ -1014,16 +1014,16 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 2);
   VerifyOriginSpacing(dataStructure, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed_WithZCrop"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -1032,9 +1032,9 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Then_Resample"});
@@ -1045,23 +1045,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", 
 
   VerifyGeometryDimensions(dataStructure, geomPath, 64, 64, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Resample"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_And_Resample", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_Resample", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Then_FlipX"});
@@ -1072,23 +1072,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[NX
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_FlipX"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Resample_Then_FlipX"});
@@ -1099,23 +1099,23 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", 
 
   VerifyGeometryDimensions(dataStructure, geomPath, 128, 128, 3);
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_FlipX"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Crop_Then_Grayscale"});
@@ -1126,26 +1126,26 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale",
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Grayscale"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Grayscale", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Resample_Then_Grayscale"});
@@ -1156,26 +1156,26 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Graysca
 
   VerifyGeometryDimensions(dataStructure, geomPath, 128, 128, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_Grayscale"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Grayscale_Then_FlipX"});
@@ -1186,26 +1186,26 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip",
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_And_FlipX"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "[NXImageProcessing][ReadImageStackFilter][Interaction]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
 
   const DataPath geomPath({"Full_Pipeline_Calculated"});
@@ -1216,19 +1216,19 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "
 
   VerifyGeometryDimensions(dataStructure, geomPath, 50, 50, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   const auto* generatedGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Full_Pipeline"}));
-  UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
+  unit_test::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Full_Pipeline", Constants::k_CellDataWithSpaces, k_ImageDataName});
-  const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  DataPath generatedDataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Full_Pipeline", constants::k_CellDataWithSpaces, k_ImageDataName});
+  const auto& generatedArray = dataStructure.getDataRefAs<UInt8ArrayType>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8ArrayType>(exemplarDataPath);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -1284,7 +1284,7 @@ enum class NestedImageStackResampling : nx::core::uint8
   Scale100
 };
 
-void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3& expectedDimensions, bool requireDiskStore)
+void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3Type& expectedDimensions, bool requireDiskStore)
 {
   constexpr nx::core::uint32 k_Width = 4;
   constexpr nx::core::uint32 k_Height = 6;
@@ -1321,15 +1321,15 @@ void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
   const auto decoyChildId = decoyChildPtr->getId();
 
   GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = inputDir.string();
-  fileList.filePrefix = "slice_";
-  fileList.fileSuffix = "";
-  fileList.fileExtension = ".tif";
-  fileList.startIndex = 0;
-  fileList.endIndex = 1;
-  fileList.incrementIndex = 1;
-  fileList.paddingDigits = 1;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileList.input_path = inputDir.string();
+  fileList.file_prefix = "slice_";
+  fileList.file_suffix = "";
+  fileList.file_extension = ".tif";
+  fileList.start_index = 0;
+  fileList.end_index = 1;
+  fileList.increment_index = 1;
+  fileList.padding_digits = 1;
+  fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
   const ReadImageStackFilter filter;
   const ChoicesParameter::ValueType resampleMode = resampling == NestedImageStackResampling::ExactDimensions ? 2 : 1;
@@ -1344,19 +1344,19 @@ void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
   args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<nx::core::uint64>{3, 2}));
   const auto preflightResult = filter.preflight(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
-  const auto& image = UnitTest::GetRequiredData<UInt8Array>(dataStructure, imagePath);
+  const auto& geometry = unit_test::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  const auto& image = unit_test::GetRequiredData<UInt8ArrayType>(dataStructure, imagePath);
   REQUIRE((geometry.getDimensions() == expectedDimensions));
   REQUIRE((image.getTupleShape() == ShapeType{2, expectedDimensions[1], expectedDimensions[0]}));
   REQUIRE((image.getNumberOfComponents() == 1));
   if(requireDiskStore)
   {
-    UnitTest::RequireDiskBackedStore(image);
+    unit_test::RequireDiskBackedStore(image);
   }
   else
   {
@@ -1376,18 +1376,18 @@ void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
   CHECK((dataStructure.getDataAs<ImageGeom>(rootDecoyPath) == nullptr));
   CHECK_FALSE(dataStructure.containsData(DataPath({"Stack_resampled"})));
   CHECK_FALSE(dataStructure.containsData(geometryPath.replaceName("Stack_resampled")));
-  const auto& decoy = UnitTest::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath);
-  const auto& decoyChild = UnitTest::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath.createChildPath("Keep Me"));
+  const auto& decoy = unit_test::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath);
+  const auto& decoyChild = unit_test::GetRequiredData<DataGroup>(dataStructure, rootDecoyPath.createChildPath("Keep Me"));
   CHECK((decoy.getId() == decoyId));
   CHECK((decoyChild.getId() == decoyChildId));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves output path", "[NXImageProcessing][ReadImageStackFilter][NestedPaths]")
 {
   Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   SECTION("50 percent scaling")
   {
     CheckNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, false);
@@ -1404,8 +1404,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves 
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves output path with real OOC stores", "[NXImageProcessing][ReadImageStackFilter][NestedPaths][.OocStoreContract]")
 {
-  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  REQUIRE(data_store_utilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   SECTION("50 percent scaling")
   {
     CheckNestedImageStack(NestedImageStackResampling::Scale50, {2, 3, 2}, true);
@@ -1426,7 +1426,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: nested resampling preserves 
 // that would make Z == the sum of all pages and waste IO/memory on large multi-page stacks.
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile", "[NXImageProcessing][ReadImageStackFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   constexpr uint32_t k_Width = 5;
   constexpr uint32_t k_Height = 4;
@@ -1451,15 +1451,15 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   }
 
   GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = inputDir.string();
-  fileList.filePrefix = "multipage_";
-  fileList.fileSuffix = "";
-  fileList.fileExtension = ".tif";
-  fileList.startIndex = 0;
-  fileList.endIndex = k_NumFiles - 1;
-  fileList.incrementIndex = 1;
-  fileList.paddingDigits = 1;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileList.input_path = inputDir.string();
+  fileList.file_prefix = "multipage_";
+  fileList.file_suffix = "";
+  fileList.file_extension = ".tif";
+  fileList.start_index = 0;
+  fileList.end_index = k_NumFiles - 1;
+  fileList.increment_index = 1;
+  fileList.padding_digits = 1;
+  fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
   const DataPath geomPath({"MultiPage_Stack"});
 
@@ -1470,7 +1470,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   args.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -1479,8 +1479,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   VerifyGeometryDimensions(dataStructure, geomPath, k_Width, k_Height, k_NumFiles);
 
   // (b) Each slice equals the FIRST page of the corresponding file.
-  const DataPath dataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
-  const auto& store = dataStructure.getDataRefAs<UInt8Array>(dataPath).getDataStoreRef();
+  const DataPath dataPath = geomPath.createChildPath(constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  const auto& store = dataStructure.getDataRefAs<UInt8ArrayType>(dataPath).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_SliceElems * k_NumFiles);
   for(usize f = 0; f < k_NumFiles; ++f)
   {
@@ -1529,15 +1529,15 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXIm
   }
 
   GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = inputDir.string();
-  fileList.filePrefix = "slice_";
-  fileList.fileSuffix = "";
-  fileList.fileExtension = ".tif";
-  fileList.startIndex = 0;
-  fileList.endIndex = 1;
-  fileList.incrementIndex = 1;
-  fileList.paddingDigits = 1;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileList.input_path = inputDir.string();
+  fileList.file_prefix = "slice_";
+  fileList.file_suffix = "";
+  fileList.file_extension = ".tif";
+  fileList.start_index = 0;
+  fileList.end_index = 1;
+  fileList.increment_index = 1;
+  fileList.padding_digits = 1;
+  fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
   ReadImageStackFilter filter;
   DataStructure dataStructure;
@@ -1552,7 +1552,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXIm
     DataStructure preflightDs;
     IFilter::PreflightResult preflightResult;
     REQUIRE_NOTHROW(preflightResult = filter.preflight(preflightDs, args));
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     IFilter::ExecuteResult executeResult;
     REQUIRE_NOTHROW(executeResult = filter.execute(dataStructure, args));
@@ -1575,7 +1575,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXIm
       REQUIRE(invalidSlice.good());
     }
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
 
   SECTION("Explicit conversion permits mixed types")
@@ -1584,7 +1584,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXIm
     args.insertOrAssign(ReadImageStackFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(1));
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    const auto& store = dataStructure.getDataRefAs<UInt16Array>(k_ImageDataPath).getDataStoreRef();
+    const auto& store = dataStructure.getDataRefAs<UInt16ArrayType>(k_ImageDataPath).getDataStoreRef();
     REQUIRE(store.getNumberOfTuples() == 8);
     // Read Image's normalized conversion gives 10 * (65535 / 255) = 2570;
     // uint16(1000) remains 1000 when the source and destination types match.
@@ -1601,7 +1601,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MixedSliceDataTypes", "[NXIm
   SECTION("Z crop excludes the mismatched slice")
   {
     auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
-    crop.zBoundVoxels = {0, 0};
+    crop.z_bound_voxels = {0, 0};
     args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -1631,15 +1631,15 @@ Arguments CreateZCropStackArgs(const std::string& name, std::optional<double> xR
   }
 
   GeneratedFileListParameter::ValueType fileList;
-  fileList.inputPath = inputDir.string();
-  fileList.filePrefix = "slice_";
-  fileList.fileSuffix = "";
-  fileList.fileExtension = ".tif";
-  fileList.startIndex = 0;
-  fileList.endIndex = 3;
-  fileList.incrementIndex = 1;
-  fileList.paddingDigits = 1;
-  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  fileList.input_path = inputDir.string();
+  fileList.file_prefix = "slice_";
+  fileList.file_suffix = "";
+  fileList.file_extension = ".tif";
+  fileList.start_index = 0;
+  fileList.end_index = 3;
+  fileList.increment_index = 1;
+  fileList.padding_digits = 1;
+  fileList.ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 
   Arguments args;
   args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
@@ -1650,22 +1650,22 @@ Arguments CreateZCropStackArgs(const std::string& name, std::optional<double> xR
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackPhysicalZNonZeroStart");
   auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
-  crop.zBoundPhysical = {1.0f, 2.5f};
+  crop.z_bound_physical = {1.0f, 2.5f};
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   VerifyGeometryDimensions(dataStructure, k_ImageGeomPath, 3, 2, 2);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ImageDataPath));
-  const auto& store = dataStructure.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_ImageDataPath));
+  const auto& store = dataStructure.getDataRefAs<UInt8ArrayType>(k_ImageDataPath).getDataStoreRef();
   for(usize sliceIdx = 0; sliceIdx < 2; ++sliceIdx)
   {
     for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
@@ -1673,31 +1673,31 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NonZeroStart
       REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + 1) + pixelIdx);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_MaxAtBound", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackPhysicalZMaxAtBound");
   auto fileList = args.value<GeneratedFileListParameter::ValueType>(ReadImageStackFilter::k_InputFileListInfo_Key);
-  fileList.endIndex = 2;
+  fileList.end_index = 2;
   args.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
   const usize firstSlice = GENERATE(0, 1);
   auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
-  crop.zBoundPhysical = {static_cast<float32>(firstSlice), 3.0f};
+  crop.z_bound_physical = {static_cast<float32>(firstSlice), 3.0f};
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   VerifyGeometryDimensions(dataStructure, k_ImageGeomPath, 3, 2, 3 - firstSlice);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ImageDataPath));
-  const auto& store = dataStructure.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_ImageDataPath));
+  const auto& store = dataStructure.getDataRefAs<UInt8ArrayType>(k_ImageDataPath).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == 6 * (3 - firstSlice));
   for(usize sliceIdx = 0; sliceIdx < 3 - firstSlice; ++sliceIdx)
   {
@@ -1706,12 +1706,12 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_MaxAtBound",
       REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + firstSlice) + pixelIdx);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool useOverrides = GENERATE(false, true);
   DYNAMIC_SECTION("Spatial overrides: " << useOverrides)
   {
@@ -1719,59 +1719,59 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Z_ShiftsOrigin", "[NXIm
     ReadImageStackFilter filter;
     auto args = CreateZCropStackArgs("ReadImageStackZShiftsOrigin");
     auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
-    crop.zBoundVoxels = {1, 2};
+    crop.z_bound_voxels = {1, 2};
     args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
     args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(ReadImageStackFilter::k_ChangeOrigin_Key, useOverrides);
     args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, useOverrides);
-    args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{5, 6, 7}));
-    args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{2, 3, 4}));
+    args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{5, 6, 7}));
+    args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{2, 3, 4}));
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     VerifyGeometryDimensions(dataStructure, k_ImageGeomPath, 3, 2, 2);
-    VerifyOriginSpacing(dataStructure, k_ImageGeomPath, useOverrides ? FloatVec3{5, 6, 11} : FloatVec3{0, 0, 1}, useOverrides ? FloatVec3{2, 3, 4} : FloatVec3{1, 1, 1});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    VerifyOriginSpacing(dataStructure, k_ImageGeomPath, useOverrides ? FloatVec3Type{5, 6, 11} : FloatVec3Type{0, 0, 1}, useOverrides ? FloatVec3Type{2, 3, 4} : FloatVec3Type{1, 1, 1});
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_ScalarInput_Rejected", "[NXImageProcessing][ReadImageStackFilter][Grayscale]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackGrayscaleScalarInput");
   args.insertOrAssign(ReadImageStackFilter::k_ConvertToGrayScale_Key, true);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == -23507);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == -23507);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_UpperBound", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackPhysicalZUpperBound");
   auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
   // Four slices at Z = 7, 11, 15, 19 have an upper physical bound of 23.
-  crop.zBoundPhysical = {11.0f, 23.0f};
+  crop.z_bound_physical = {11.0f, 23.0f};
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
   args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(ReadImageStackFilter::k_ChangeOrigin_Key, true);
   args.insertOrAssign(ReadImageStackFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0, 0, 7}));
-  args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 4}));
+  args.insertOrAssign(ReadImageStackFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0, 0, 7}));
+  args.insertOrAssign(ReadImageStackFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 4}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.warnings().empty());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.warnings().empty());
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   VerifyGeometryDimensions(dataStructure, k_ImageGeomPath, 3, 2, 3);
   VerifyOriginSpacing(dataStructure, k_ImageGeomPath, {0, 0, 11}, {1, 1, 4});
-  const auto& store = dataStructure.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<UInt8ArrayType>(k_ImageDataPath).getDataStoreRef();
   for(usize sliceIdx = 0; sliceIdx < 3; ++sliceIdx)
   {
     for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
@@ -1779,12 +1779,12 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_UpperBound",
       REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + 1) + pixelIdx);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackPhysicalZClamped");
@@ -1793,24 +1793,24 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[
   usize expectedSlices = 3;
   SECTION("Minimum below origin")
   {
-    crop.zBoundPhysical = {-1.0f, 2.5f};
+    crop.z_bound_physical = {-1.0f, 2.5f};
   }
   SECTION("Maximum above upper bound")
   {
-    crop.zBoundPhysical = {1.0f, 5.0f};
+    crop.z_bound_physical = {1.0f, 5.0f};
     firstSlice = 1;
   }
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto& warnings = preflightResult.outputActions.warnings();
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto& warnings = preflightResult.output_actions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -50503; }));
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   VerifyGeometryDimensions(dataStructure, k_ImageGeomPath, 3, 2, expectedSlices);
   VerifyOriginSpacing(dataStructure, k_ImageGeomPath, {0, 0, static_cast<float32>(firstSlice)}, {1, 1, 1});
-  const auto& store = dataStructure.getDataRefAs<UInt8Array>(k_ImageDataPath).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<UInt8ArrayType>(k_ImageDataPath).getDataStoreRef();
   for(usize sliceIdx = 0; sliceIdx < expectedSlices; ++sliceIdx)
   {
     for(usize pixelIdx = 0; pixelIdx < 6; ++pixelIdx)
@@ -1818,49 +1818,49 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_Clamped", "[
       REQUIRE(store[sliceIdx * 6 + pixelIdx] == 10 * (sliceIdx + firstSlice) + pixelIdx);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z_NaN", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackPhysicalZNaN");
   auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
   SECTION("NaN minimum")
   {
-    crop.zBoundPhysical = {std::numeric_limits<float32>::quiet_NaN(), 2.5f};
+    crop.z_bound_physical = {std::numeric_limits<float32>::quiet_NaN(), 2.5f};
   }
   SECTION("NaN maximum")
   {
-    crop.zBoundPhysical = {1.0f, std::numeric_limits<float32>::quiet_NaN()};
+    crop.z_bound_physical = {1.0f, std::numeric_limits<float32>::quiet_NaN()};
   }
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  const auto& errors = preflightResult.outputActions.errors();
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  const auto& errors = preflightResult.output_actions.errors();
   REQUIRE(std::any_of(errors.begin(), errors.end(), [](const Error& error) { return error.code == -23526; }));
 }
 
 TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWarning", "[NXImageProcessing][ReadImageStackFilter][Cropping]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const ChoicesParameter::ValueType resampleMode = GENERATE(0ULL, 2ULL);
   CAPTURE(resampleMode);
   DataStructure dataStructure;
   ReadImageStackFilter filter;
   auto args = CreateZCropStackArgs("ReadImageStackPhysicalXPreflightWarning");
   auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, true, false, false);
-  crop.xBoundPhysical = {-1.0f, 2.0f};
+  crop.x_bound_physical = {-1.0f, 2.0f};
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
   args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(resampleMode));
   args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<nx::core::uint64>{3, 2}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto& warnings = preflightResult.outputActions.warnings();
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto& warnings = preflightResult.output_actions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const Warning& warning) { return warning.code == -50503; }));
 }
 
@@ -1868,19 +1868,19 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: postprocessed override rescu
 {
   auto args = CreateZCropStackArgs("ReadImageStackBadSpacing", 0.0);
   auto crop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, true, false, false);
-  crop.xBoundPhysical = {2.1F, 3.9F};
+  crop.x_bound_physical = {2.1F, 3.9F};
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, crop);
   args.insertOrAssign(ReadImageStackFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Postprocessed));
 
   const ReadImageStackFilter filter;
   const auto& fileList = args.value<GeneratedFileListParameter::ValueType>(ReadImageStackFilter::k_InputFileListInfo_Key);
-  UnitTest::RequireBadReaderMetadata(filter, args, fileList.generate().front(), true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, fileList.generate().front(), true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   DataStructure dataStructure;
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  UnitTest::RequireReaderGeometry(dataStructure, k_ImageGeomPath, {4, -3, 8}, {2, 3, 4});
-  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(dataStructure, k_ImageDataPath);
+  unit_test::RequireReaderGeometry(dataStructure, k_ImageGeomPath, {4, -3, 8}, {2, 3, 4});
+  const auto& pixels = unit_test::GetRequiredData<UInt8ArrayType>(dataStructure, k_ImageDataPath);
   REQUIRE(pixels.getSize() == 8);
   for(usize slice = 0; slice < 4; ++slice)
   {

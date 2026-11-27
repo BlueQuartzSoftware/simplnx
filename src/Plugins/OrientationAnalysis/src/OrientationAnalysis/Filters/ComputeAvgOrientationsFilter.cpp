@@ -59,16 +59,16 @@ Parameters ComputeAvgOrientationsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Cell Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation",
                                                           DataPath({"Cell Data", "Quats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Cell Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "The path to the cell feature attribute matrix",
                                                                     DataPath({"Cell Feature Data"})));
@@ -153,7 +153,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   // Require at least one averaging method before execution.
   if(!pUseRodriguesAverageKey && !pUseVonMisesFisher && !pUseWatson)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
   }
 
@@ -169,7 +169,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -222,7 +222,7 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = resultOutputActions};
+  return {.output_actions = resultOutputActions};
 }
 
 //------------------------------------------------------------------------------
@@ -231,27 +231,27 @@ Result<> ComputeAvgOrientationsFilter::executeImpl(DataStructure& dataStructure,
 {
   ComputeAvgOrientationsInputValues inputValues;
 
-  inputValues.cellFeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.cellQuatsArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
-  inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.cell_feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.cell_quats_array_path = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
 
-  inputValues.useRodriguesAverage = filterArgs.value<bool>(k_UseRodriguesAverage_Key);
-  inputValues.avgQuatsArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_RodriguesQuatsArrayName_Key));
-  inputValues.avgEulerAnglesArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_RodriguesAvgEulerArrayName_Key));
+  inputValues.use_rodrigues_average = filterArgs.value<bool>(k_UseRodriguesAverage_Key);
+  inputValues.avg_quats_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_RodriguesQuatsArrayName_Key));
+  inputValues.avg_euler_angles_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_RodriguesAvgEulerArrayName_Key));
 
-  inputValues.useVonMisesAverage = filterArgs.value<bool>(k_UseVonMisesFisher_Key);
-  inputValues.VMFQuatsArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_VonMisesFisherAvgQuatsArrayName_Key));
-  inputValues.VMFEulerAnglesArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_VonMisesFisherAvgEulerArrayName_Key));
-  inputValues.VMFKappaArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_VonMisesFisherKappaArrayName_Key));
+  inputValues.use_von_mises_average = filterArgs.value<bool>(k_UseVonMisesFisher_Key);
+  inputValues.vmf_quats_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_VonMisesFisherAvgQuatsArrayName_Key));
+  inputValues.vmf_euler_angles_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_VonMisesFisherAvgEulerArrayName_Key));
+  inputValues.vmf_kappa_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_VonMisesFisherKappaArrayName_Key));
 
-  inputValues.useWatsonAverage = filterArgs.value<bool>(k_UseWatson_Key);
-  inputValues.WatsonQuatsArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonAvgQuatsArrayName_Key));
-  inputValues.WatsonEulerAnglesArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonAvgEulerArrayName_Key));
-  inputValues.WatsonKappaArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonKappaArrayName_Key));
+  inputValues.use_watson_average = filterArgs.value<bool>(k_UseWatson_Key);
+  inputValues.watson_quats_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonAvgQuatsArrayName_Key));
+  inputValues.watson_euler_angles_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonAvgEulerArrayName_Key));
+  inputValues.watson_kappa_array_path = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonKappaArrayName_Key));
 
-  inputValues.RandomSeed = 43514;
+  inputValues.random_seed = 43514;
 
   // Let the Algorithm instance do the work
   return ComputeAvgOrientations(dataStructure, messageHandler, shouldCancel, &inputValues)();

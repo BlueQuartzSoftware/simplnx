@@ -18,7 +18,7 @@ namespace nx::core
 namespace compute_misorientations_constants
 {
 
-const ChoicesParameter::Choices k_ComputationTypeStrings = {"Use Arrays", "Use Reference Axis Angle"};
+const ChoicesParameter::ChoicesType k_ComputationTypeStrings = {"Use Arrays", "Use Reference Axis Angle"};
 constexpr ChoicesParameter::ValueType k_UseArraysIndex = 0;
 constexpr ChoicesParameter::ValueType k_UseReferenceAxesIndex = 1;
 
@@ -33,13 +33,13 @@ constexpr ChoicesParameter::ValueType k_UseReferenceAxesIndex = 1;
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeMisorientationsInputValues
 {
-  DataPath InputOrientationPath1;
-  DataPath InputOrientationPath2;
-  VectorFloat32Parameter::ValueType ReferenceOrientation;
-  ChoicesParameter::ValueType ComputationType{};
-  DataPath InputPhasesArrayPath;
-  DataPath OutputMisorientationsPath;
-  DataPath InputCrystalStructuresArrayPath;
+  DataPath input_orientation_path1;
+  DataPath input_orientation_path2;
+  VectorFloat32ParameterType::ValueType reference_orientation;
+  ChoicesParameter::ValueType computation_type{};
+  DataPath input_phases_array_path;
+  DataPath output_misorientations_path;
+  DataPath input_crystal_structures_array_path;
 };
 
 /**

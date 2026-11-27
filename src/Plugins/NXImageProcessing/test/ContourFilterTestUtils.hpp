@@ -152,7 +152,7 @@ inline DataPath BuildBinaryContourImage(DataStructure& dataStructure, usize dimX
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -181,7 +181,7 @@ inline DataPath BuildMultiLabelContourImage(DataStructure& dataStructure, usize 
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -211,7 +211,7 @@ inline DataPath BuildBinaryContourImageBulk(DataStructure& dataStructure, usize 
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -254,7 +254,7 @@ inline DataPath BuildMultiLabelContourImageBulk(DataStructure& dataStructure, us
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -284,13 +284,13 @@ inline DataPath BuildMultiLabelContourImageBulk(DataStructure& dataStructure, us
  *        Label contour (which has Fully Connected + Background but no Foreground) can reuse the same driver with
  *        its own setter.
  */
-using ContourParamSetter = std::function<void(Arguments&)>;
+using ContourParamSetterType = std::function<void(Arguments&)>;
 
 /**
  * @brief Parameter setter for the BINARY contour filter (Fully Connected + Foreground + Background).
  */
 template <class NewFilterT>
-inline ContourParamSetter BinaryContourParamSetter(bool fullyConnected, float64 foreground, float64 background)
+inline ContourParamSetterType BinaryContourParamSetter(bool fullyConnected, float64 foreground, float64 background)
 {
   return [fullyConnected, foreground, background](Arguments& args) {
     args.insertOrAssign(NewFilterT::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
@@ -303,7 +303,7 @@ inline ContourParamSetter BinaryContourParamSetter(bool fullyConnected, float64 
  * @brief Parameter setter for the LABEL contour filter (Fully Connected + Background; no Foreground).
  */
 template <class NewFilterT>
-inline ContourParamSetter LabelContourParamSetter(bool fullyConnected, float64 background)
+inline ContourParamSetterType LabelContourParamSetter(bool fullyConnected, float64 background)
 {
   return [fullyConnected, background](Arguments& args) {
     args.insertOrAssign(NewFilterT::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
@@ -318,10 +318,10 @@ inline ContourParamSetter LabelContourParamSetter(bool fullyConnected, float64 b
 // "Image Geometry"/"CellData"/"Output". @p setParams injects the case's filter parameters
 // (BinaryContourParamSetter / LabelContourParamSetter). The case is pinned ForceInCore.
 template <class FilterT>
-inline void RunContourMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, const ContourParamSetter& setParams)
+inline void RunContourMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, const ContourParamSetterType& setParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -345,7 +345,7 @@ inline void RunContourMd5ItkGolden(const std::string& inputFile, const std::stri
   const Arguments args = makeArgs();
   FilterT filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -354,6 +354,6 @@ inline void RunContourMd5ItkGolden(const std::string& inputFile, const std::stri
   INFO(fmt::format("contour md5: ours='{}' committed='{}' (input={})", ourMd5, committedMd5, inputFile));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace contour_test

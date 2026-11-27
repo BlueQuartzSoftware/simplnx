@@ -13,11 +13,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT FlyingEdges3DInputValues
 {
-  DataPath imageGeomPath;
-  DataPath triangleGeomPath;
-  DataPath contouringArrayPath;
-  DataPath normalsArrayPath;
-  float64 isoVal{};
+  DataPath image_geom_path;
+  DataPath triangle_geom_path;
+  DataPath contouring_array_path;
+  DataPath normals_array_path;
+  float64 iso_val{};
 };
 
 /**

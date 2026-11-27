@@ -17,9 +17,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT CombineAttributeArraysInputValues
 {
-  bool NormalizeData = {};
-  MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
-  DataPath StackedDataArrayPath;
+  bool normalize_data = {};
+  MultiArraySelectionParameter::ValueType selected_data_array_paths;
+  DataPath stacked_data_array_path;
 };
 
 /**

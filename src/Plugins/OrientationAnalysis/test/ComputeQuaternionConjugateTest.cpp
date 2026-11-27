@@ -31,23 +31,23 @@ const std::string k_Exemplar0 = "Exemplar0";
 
 TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter", "[OrientationAnalysis][ComputeQuaternionConjugateFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
-  Float32Array* quatsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_QuatName, {4ULL}, {4ULL}, {});
+  Float32ArrayType* quatsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_QuatName, {4ULL}, {4ULL}, {});
 
   for(size_t i = 0; i < 16; i++)
   {
     (*quatsPtr)[i] = static_cast<float32>(i);
   }
-  Float32Array* exemplarDataPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
+  Float32ArrayType* exemplarDataPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
 
   (*exemplarDataPtr)[0] = -0.0F;
   (*exemplarDataPtr)[1] = -1.0F;
@@ -78,22 +78,22 @@ TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter", "[Orientation
     args.insertOrAssign(ComputeQuaternionConjugateFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
-    UnitTest::CompareDataArrays<float32>(*exemplarDataPtr, outputArray);
+    auto& outputArray = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({k_ConvertedName}));
+    unit_test::CompareDataArrays<float32>(*exemplarDataPtr, outputArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeQuaternionConjugateFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeQuaternionConjugateFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

@@ -13,11 +13,11 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Create Filter", "[DREAM3DReview][IterativeClosestPointFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   IterativeClosestPointFilter filter;
   DataStructure dataStructure;
@@ -25,36 +25,36 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Create Filter", "[DREAM3DRe
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.output_actions.invalid());
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DReview][IterativeClosestPointFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   IterativeClosestPointFilter filter;
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = unit_test::CreateDataStructure();
   Arguments args;
 
-  DataPath movingVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_VertexGeometry});
+  DataPath movingVertexPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_VertexGeometry});
   auto* movingVertexGeomPtr = dataStructure.getDataAs<VertexGeom>(movingVertexPath);
 
   uint64 numIterations = 1;
   bool applyTransformation = true;
-  DataPath transformArrayPath({Constants::k_SmallIN100, "Transform Array"});
+  DataPath transformArrayPath({constants::k_SmallIN100, "Transform Array"});
 
   auto* targetVertexGeomPtr = VertexGeom::Create(dataStructure, "Vertex Geometry 2", movingVertexGeomPtr->getParentIds().front());
   auto* eulerData2Ptr =
-      Float32Array::CreateWithStore<DataStore<float>>(dataStructure, "Euler 2", {movingVertexGeomPtr->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeomPtr->getParentIds().front());
+      Float32ArrayType::CreateWithStore<DataStore<float>>(dataStructure, "Euler 2", {movingVertexGeomPtr->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeomPtr->getParentIds().front());
   targetVertexGeomPtr->setVertices(*eulerData2Ptr);
 
-  DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, targetVertexGeomPtr->getName()});
+  DataPath targetVertexPath({constants::k_SmallIN100, constants::k_EbsdScanData, targetVertexGeomPtr->getName()});
 
   auto* vertices1Ptr = movingVertexGeomPtr->getVertices();
   auto* vertices2Ptr = targetVertexGeomPtr->getVertices();
@@ -73,19 +73,19 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::IterativeClosestPointFilter: SIMPL Backwards Compatibility", "[SimplnxCore][IterativeClosestPointFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

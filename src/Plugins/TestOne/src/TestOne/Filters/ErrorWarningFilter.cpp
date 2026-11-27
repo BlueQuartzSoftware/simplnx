@@ -106,14 +106,14 @@ nx::core::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataS
   }
   if(preflightError)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-666001, "Intentional preflight error generated")};
   }
   if(preflightException)
   {
     throw std::runtime_error("Intentional preflight runtime excption generated");
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -55,68 +55,68 @@ PointSampleTriangleGeometry::PointSampleTriangleGeometry(DataStructure& dataStru
 
 Result<> PointSampleTriangleGeometry::operator()()
 {
-  DataPath triangleGeometryDataPath = m_Inputs->pTriangleGeometry;
+  DataPath triangleGeometryDataPath = m_Inputs->p_triangle_geometry;
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
   auto numTris = static_cast<int64_t>(triangle.getNumberOfFaces());
 
-  auto& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
-  Result<> resizeResult = vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
+  auto& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->p_vertex_geometry_path);
+  Result<> resizeResult = vertex.resizeVertexList(m_Inputs->p_number_of_samples);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  auto tupleShape = {static_cast<usize>(m_Inputs->pNumberOfSamples)};
+  auto tupleShape = {static_cast<usize>(m_Inputs->p_number_of_samples)};
   resizeResult = vertex.getVertexAttributeMatrix()->resizeTuples(tupleShape);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
 
-  std::mt19937_64 generator(m_Inputs->Seed);
+  std::mt19937_64 generator(m_Inputs->seed);
   std::uniform_real_distribution<> distribution(0.0f, 1.0f);
 
   // Initialize the Triangle Weights with the Triangle Area Values
-  const auto& faceAreasStore = m_DataStructure.getDataAs<Float64Array>(m_Inputs->pTriangleAreasArrayPath)->getDataStoreRef();
+  const auto& faceAreasStore = m_DataStructure.getDataAs<Float64ArrayType>(m_Inputs->p_triangle_areas_array_path)->getDataStoreRef();
 
   // VS2013 does not implement the iterator constructor for std::discrete_distribution<>, which
   // really is a massively idiotic oversight; hack the equivalent using the unary_op constructor
   std::discrete_distribution<size_t> triangleDistribution(numTris, -0.5, -0.5 + static_cast<double>(numTris), [&faceAreasStore](double index) { return faceAreasStore[static_cast<size_t>(index)]; });
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  progressThrottle.reset(m_Inputs->pNumberOfSamples, "Sampling Triangles");
+  progressThrottle.reset(m_Inputs->p_number_of_samples, "Sampling Triangles");
   int64_t counter = 0;
 
-  std::vector<FloatVec3> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
+  std::vector<FloatVec3Type> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
 
   // We get the pointer to the Array instead of a reference because it might not have been set because
   // the bool "use_mask" might have been false, but we do NOT want to try to get the array
   // 'on demand' in the loop. That is a BAD idea as is it really slow to do that. (10x slower).
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskArray = nullptr;
-  if(m_Inputs->pUseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskArray = nullptr;
+  if(m_Inputs->p_use_mask)
   {
     try
     {
-      maskArray = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_Inputs->pMaskArrayPath);
+      maskArray = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_Inputs->p_mask_array_path);
     } catch(const std::out_of_range& exception)
     {
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_Inputs->pMaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_Inputs->p_mask_array_path.toString());
       return MakeErrorResult(-506, message);
     }
   }
 
   // Get a reference to the Vertex List
-  AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertices = vertex.getVertices()->getDataStoreRef();
+  AbstractDataStore<IGeometry::SharedVertexListType::value_type>& vertices = vertex.getVertices()->getDataStoreRef();
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(size_t i = 0; i < m_Inputs->pSelectedDataArrayPaths.size(); i++)
+  for(size_t i = 0; i < m_Inputs->p_selected_data_array_paths.size(); i++)
   {
-    ::AddTupleTransferInstance(m_DataStructure, m_Inputs->pSelectedDataArrayPaths[i], m_Inputs->pCreatedDataArrayPaths[i], tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_Inputs->p_selected_data_array_paths[i], m_Inputs->p_created_data_array_paths[i], tupleTransferFunctions);
   }
 
-  for(int64_t curVertex = 0; curVertex < m_Inputs->pNumberOfSamples; curVertex++)
+  for(int64_t curVertex = 0; curVertex < m_Inputs->p_number_of_samples; curVertex++)
   {
     if(m_ShouldCancel)
     {
@@ -125,7 +125,7 @@ Result<> PointSampleTriangleGeometry::operator()()
 
     int64_t randomTri = 0;
 
-    if(m_Inputs->pUseMask && maskArray != nullptr)
+    if(m_Inputs->p_use_mask && maskArray != nullptr)
     {
       while(true)
       {
@@ -163,13 +163,13 @@ Result<> PointSampleTriangleGeometry::operator()()
     vertices[curVertex * 3 + 2] = (prefactorA * faceVerts[0][2]) + (prefactorB * faceVerts[1][2]) + (prefactorC * faceVerts[2][2]);
 
     // Transfer the face data to the vertex data
-    for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)
+    for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->p_selected_data_array_paths.size(); dataVectorIndex++)
     {
       tupleTransferFunctions[dataVectorIndex]->pointSampleTransfer(randomTri, curVertex);
     }
 
     counter++;
-    if(counter % 1024 == 0 || counter == m_Inputs->pNumberOfSamples)
+    if(counter % 1024 == 0 || counter == m_Inputs->p_number_of_samples)
     {
       progressThrottle.updatePercent(counter);
     }

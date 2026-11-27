@@ -6,7 +6,7 @@
 
 using namespace nx::core;
 
-std::string ArrayCreationUtilities::ResolveStorageFormat(const DataStructure& dataStructure, const DataPath& path, DataType numericType, uint64 dataSizeBytes, const std::string& requestedFormat)
+std::string array_creation_utilities::ResolveStorageFormat(const DataStructure& dataStructure, const DataPath& path, DataType numericType, uint64 dataSizeBytes, const std::string& requestedFormat)
 {
   // An explicit format overrides automatic policy.
   if(!requestedFormat.empty())
@@ -17,14 +17,14 @@ std::string ArrayCreationUtilities::ResolveStorageFormat(const DataStructure& da
   return dataStructure.formatResolver().resolveFormat(dataStructure, path, numericType, dataSizeBytes);
 }
 
-bool ArrayCreationUtilities::CheckMemoryRequirement(const DataStructure& dataStructure, uint64 requiredMemory)
+bool array_creation_utilities::CheckMemoryRequirement(const DataStructure& dataStructure, uint64 requiredMemory)
 {
   static const uint64 kAvailableMemory = memory_utilities::GetTotalMemory();
   const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
   return memoryUsage < kAvailableMemory;
 }
 
-bool ArrayCreationUtilities::WouldExceedAvailableMemory(uint64 currentUsageBytes, uint64 requiredMemory, uint64 availableBytes)
+bool array_creation_utilities::WouldExceedAvailableMemory(uint64 currentUsageBytes, uint64 requiredMemory, uint64 availableBytes)
 {
   // Overflow-safe form of (currentUsageBytes + requiredMemory) > availableBytes.
   if(requiredMemory > availableBytes)

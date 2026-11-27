@@ -83,7 +83,7 @@ TEST_CASE("ResolveStorageFormat consults the resolver for every geometry parent"
 
   for(const DataPath& path : {imgArrayPath, triArrayPath, grpArrayPath, rectArrayPath})
   {
-    CHECK(ArrayCreationUtilities::ResolveStorageFormat(dataStructure, path, DataType::float32, 40, "") == "RESOLVED");
-    CHECK(ArrayCreationUtilities::ResolveStorageFormat(dataStructure, path, DataType::float32, 40, "EXPLICIT") == "EXPLICIT");
+    CHECK(array_creation_utilities::ResolveStorageFormat(dataStructure, path, DataType::float32, 40, "") == "RESOLVED");
+    CHECK(array_creation_utilities::ResolveStorageFormat(dataStructure, path, DataType::float32, 40, "EXPLICIT") == "EXPLICIT");
   }
 }

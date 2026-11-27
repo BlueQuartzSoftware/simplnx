@@ -7,9 +7,9 @@
 #include <vector>
 
 using namespace nx::core;
-namespace nx::core::GeometryHelpers::Description
+namespace nx::core::geometry_helpers::description
 {
-std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, IGeometry::LengthUnit units)
+std::string GenerateGeometryInfo(const nx::core::SizeVec3Type& dims, const nx::core::FloatVec3Type& spacing, const nx::core::FloatVec3Type& origin, IGeometry::LengthUnit units)
 {
   std::stringstream description;
 
@@ -31,9 +31,9 @@ std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core:
 }
 } // namespace nx::core::GeometryHelpers::Description
 
-namespace nx::core::GeometryHelpers::Connectivity
+namespace nx::core::geometry_helpers::connectivity
 {
-std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32Array& faceLabelsRef)
+std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32ArrayType& faceLabelsRef)
 {
   const auto& triangleList = triangleGeom.getFacesRef().getDataStoreRef();
   const auto& faceLabels = faceLabelsRef.getDataStoreRef();
@@ -171,16 +171,16 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
 #endif
 } // namespace nx::core::GeometryHelpers::Connectivity
 
-namespace nx::core::GeometryHelpers::Topology
+namespace nx::core::geometry_helpers::topology
 {
-BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet)
+BoundingBoxFacesType FindElementPeriodicFaces(const BoundingBox3DfType& boundingBox, const Float32AbstractDataStoreType& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet)
 {
   if(vertexSet.empty())
   {
     return {};
   }
 
-  BoundingBoxFaces edgeFaces;
+  BoundingBoxFacesType edgeFaces;
 
   const auto& maxPoint = boundingBox.getMaxPoint();
   const auto& minPoint = boundingBox.getMinPoint();
@@ -195,29 +195,29 @@ BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, con
 
     if(std::abs(x - minPoint[0]) <= k_Epsilon)
     {
-      edgeFaces.insert(BoundingBox3Df::faces_enum::left);
+      edgeFaces.insert(BoundingBox3DfType::faces_enum::left);
     }
     else if(std::abs(x - maxPoint[0]) <= k_Epsilon)
     {
-      edgeFaces.insert(BoundingBox3Df::faces_enum::right);
+      edgeFaces.insert(BoundingBox3DfType::faces_enum::right);
     }
 
     if(std::abs(y - minPoint[1]) <= k_Epsilon)
     {
-      edgeFaces.insert(BoundingBox3Df::faces_enum::top);
+      edgeFaces.insert(BoundingBox3DfType::faces_enum::top);
     }
     else if(std::abs(y - maxPoint[1]) <= k_Epsilon)
     {
-      edgeFaces.insert(BoundingBox3Df::faces_enum::bottom);
+      edgeFaces.insert(BoundingBox3DfType::faces_enum::bottom);
     }
 
     if(std::abs(z - minPoint[2]) <= k_Epsilon)
     {
-      edgeFaces.insert(BoundingBox3Df::faces_enum::front);
+      edgeFaces.insert(BoundingBox3DfType::faces_enum::front);
     }
     else if(std::abs(z - maxPoint[2]) <= k_Epsilon)
     {
-      edgeFaces.insert(BoundingBox3Df::faces_enum::back);
+      edgeFaces.insert(BoundingBox3DfType::faces_enum::back);
     }
   }
   return edgeFaces;
@@ -314,17 +314,17 @@ float32 PeriodicMean1D(const std::vector<float32>& coords, float32 domainMin, fl
 }
 } // namespace
 
-bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet,
-                                     Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId)
+bool AdjustCentroidsForPeriodicFaces(const BoundingBox3DfType& boundingBox, const BoundingBoxFacesType& faces, const Float32AbstractDataStoreType& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet,
+                                     Float32AbstractDataStoreType& centroids, IGeometry::MeshIndexType featureId)
 {
   bool isPeriodic = false;
   const auto& minPoint = boundingBox.getMinPoint();
   const auto& maxPoint = boundingBox.getMaxPoint();
 
   // left/right => X (axis 0), top/bottom => Y (axis 1), front/back => Z (axis 2)
-  const std::array<std::pair<BoundingBox3Df::faces_enum, BoundingBox3Df::faces_enum>, 3> axisFaces = {std::make_pair(BoundingBox3Df::faces_enum::left, BoundingBox3Df::faces_enum::right),
-                                                                                                      std::make_pair(BoundingBox3Df::faces_enum::top, BoundingBox3Df::faces_enum::bottom),
-                                                                                                      std::make_pair(BoundingBox3Df::faces_enum::front, BoundingBox3Df::faces_enum::back)};
+  const std::array<std::pair<BoundingBox3DfType::faces_enum, BoundingBox3DfType::faces_enum>, 3> axisFaces = {std::make_pair(BoundingBox3DfType::faces_enum::left, BoundingBox3DfType::faces_enum::right),
+                                                                                                      std::make_pair(BoundingBox3DfType::faces_enum::top, BoundingBox3DfType::faces_enum::bottom),
+                                                                                                      std::make_pair(BoundingBox3DfType::faces_enum::front, BoundingBox3DfType::faces_enum::back)};
 
   // For each axis on which the feature touches both opposing periodic faces, the naive arithmetic centroid
   // lands in the empty middle of the wrapped feature. Replace that component with the minimum-image mean

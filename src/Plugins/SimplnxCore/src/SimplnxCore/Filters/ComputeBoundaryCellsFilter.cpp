@@ -62,7 +62,7 @@ Parameters ComputeBoundaryCellsFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Image Geometry", "The selected geometry to which the cells belong", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_BoundaryCellsArrayName_Key, "Boundary Cells",
                                                           "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6",
@@ -97,12 +97,12 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   const usize numFeatureIds = featureIds.getSize();
   const usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath).getNumberOfCells();
   if(numFeatureIds != numCells)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -5320,
                 fmt::format(
                     "The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
@@ -112,7 +112,7 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
   auto action = std::make_unique<CreateArrayAction>(DataType::int8, featureIds.getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -121,11 +121,11 @@ Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, c
 {
   ComputeBoundaryCellsInputValues inputValues;
 
-  inputValues.IgnoreFeatureZero = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
-  inputValues.IncludeVolumeBoundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
+  inputValues.ignore_feature_zero = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
+  inputValues.include_volume_boundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.boundary_cells_array_name = inputValues.feature_ids_array_path.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
 
   return ComputeBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

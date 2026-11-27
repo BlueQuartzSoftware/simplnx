@@ -14,16 +14,16 @@ namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT CreateAMScanPathsInputValues
 {
-  float32 StripeWidth{};
-  float32 HatchSpacing{};
-  float32 SliceHatchRotationAngle{};
-  DataPath CADSliceDataContainerName;
-  DataPath CADSliceIdsArrayPath;
-  DataPath CADRegionIdsArrayPath;
-  DataPath HatchDataContainerName;
-  DataObjectNameParameter::ValueType VertexAttributeMatrixName;
-  DataObjectNameParameter::ValueType HatchAttributeMatrixName;
-  DataObjectNameParameter::ValueType RegionIdsArrayName;
+  float32 stripe_width{};
+  float32 hatch_spacing{};
+  float32 slice_hatch_rotation_angle{};
+  DataPath cad_slice_data_container_name;
+  DataPath cad_slice_ids_array_path;
+  DataPath cad_region_ids_array_path;
+  DataPath hatch_data_container_name;
+  DataObjectNameParameter::ValueType vertex_attribute_matrix_name;
+  DataObjectNameParameter::ValueType hatch_attribute_matrix_name;
+  DataObjectNameParameter::ValueType region_ids_array_name;
 };
 
 /**

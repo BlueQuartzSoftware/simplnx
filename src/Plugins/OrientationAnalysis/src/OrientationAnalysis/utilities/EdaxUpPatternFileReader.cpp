@@ -36,27 +36,27 @@ Result<> ReadPayload(const std::filesystem::path& filePath, const EbsdPatternFil
     return MakeErrorResult(k_UpPayloadReadError, fmt::format("Unable to open EBSD pattern file '{}' for pattern import. Check that the file exists and is readable.", filePath.string()));
   }
 
-  stream.seekg(static_cast<std::streamoff>(fileInfo.dataOffset), std::ios::beg);
+  stream.seekg(static_cast<std::streamoff>(fileInfo.data_offset), std::ios::beg);
   if(!stream.good())
   {
-    return MakeErrorResult(k_UpPayloadReadError, fmt::format("Unable to seek to pattern payload byte offset {} in EBSD pattern file '{}'.", fileInfo.dataOffset, filePath.string()));
+    return MakeErrorResult(k_UpPayloadReadError, fmt::format("Unable to seek to pattern payload byte offset {} in EBSD pattern file '{}'.", fileInfo.data_offset, filePath.string()));
   }
 
-  const uint64 patternsPerChunk = std::max<uint64>(1, k_TargetChunkBytes / fileInfo.patternStride);
+  const uint64 patternsPerChunk = std::max<uint64>(1, k_TargetChunkBytes / fileInfo.pattern_stride);
   ThrottledMessageHandler progressThrottle(messageHandler);
-  progressThrottle.reset(static_cast<usize>(fileInfo.numberOfPatterns), "Reading EBSD patterns");
+  progressThrottle.reset(static_cast<usize>(fileInfo.number_of_patterns), "Reading EBSD patterns");
 
   auto& dataStoreRef = outputArray.getDataStoreRef();
   uint64 completedPatterns = 0;
-  while(completedPatterns < fileInfo.numberOfPatterns)
+  while(completedPatterns < fileInfo.number_of_patterns)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    const uint64 chunkPatternCount = std::min(patternsPerChunk, fileInfo.numberOfPatterns - completedPatterns);
-    const uint64 requestedBytes = chunkPatternCount * fileInfo.patternStride;
+    const uint64 chunkPatternCount = std::min(patternsPerChunk, fileInfo.number_of_patterns - completedPatterns);
+    const uint64 requestedBytes = chunkPatternCount * fileInfo.pattern_stride;
     std::vector<uint8> buffer(static_cast<usize>(requestedBytes));
     stream.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(requestedBytes));
     const uint64 actualBytes = static_cast<uint64>(stream.gcount());
@@ -64,11 +64,11 @@ Result<> ReadPayload(const std::filesystem::path& filePath, const EbsdPatternFil
     {
       return MakeErrorResult(k_UpPayloadReadError, fmt::format("Could not read a complete pattern chunk from EBSD pattern file '{}'. Byte offset: {}. Requested bytes: {}. Actual bytes: {}. "
                                                                "Complete patterns imported before the failure: {}.",
-                                                               filePath.string(), fileInfo.dataOffset + completedPatterns * fileInfo.patternStride, requestedBytes, actualBytes, completedPatterns));
+                                                               filePath.string(), fileInfo.data_offset + completedPatterns * fileInfo.pattern_stride, requestedBytes, actualBytes, completedPatterns));
     }
 
-    const uint64 firstElement = completedPatterns * fileInfo.patternWidth * fileInfo.patternHeight;
-    const uint64 elementCount = chunkPatternCount * fileInfo.patternWidth * fileInfo.patternHeight;
+    const uint64 firstElement = completedPatterns * fileInfo.pattern_width * fileInfo.pattern_height;
+    const uint64 elementCount = chunkPatternCount * fileInfo.pattern_width * fileInfo.pattern_height;
     std::vector<T> decodedValues(static_cast<usize>(elementCount));
     if constexpr(std::is_same_v<T, uint8>)
     {
@@ -118,22 +118,22 @@ Result<EbsdPatternFileInfo> EdaxUpPatternFileReader::readFileInfo() const
   const uint64 fileSize = std::filesystem::file_size(m_FilePath, errorCode);
   if(errorCode)
   {
-    return MakeErrorResult<EbsdPatternFileInfo>(EbsdPatternFileUtilities::k_FileAccessError,
+    return MakeErrorResult<EbsdPatternFileInfo>(ebsd_pattern_file_utilities::k_FileAccessError,
                                                 fmt::format("Unable to determine the size of EBSD pattern file '{}': {}", m_FilePath.string(), errorCode.message()));
   }
   if(fileSize < k_Version1HeaderSize)
   {
-    return MakeErrorResult<EbsdPatternFileInfo>(EbsdPatternFileUtilities::k_ExactReadError,
+    return MakeErrorResult<EbsdPatternFileInfo>(ebsd_pattern_file_utilities::k_ExactReadError,
                                                 fmt::format("EBSD pattern file '{}' is {} bytes, but the smallest UP header is {} bytes.", m_FilePath.string(), fileSize, k_Version1HeaderSize));
   }
 
-  auto minimumHeaderResult = EbsdPatternFileUtilities::ReadExactBytes(m_FilePath, 0, k_Version1HeaderSize);
+  auto minimumHeaderResult = ebsd_pattern_file_utilities::ReadExactBytes(m_FilePath, 0, k_Version1HeaderSize);
   if(minimumHeaderResult.invalid())
   {
     return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(minimumHeaderResult));
   }
 
-  const uint32 headerVersion = EbsdPatternFileUtilities::DecodeUInt32LittleEndian(minimumHeaderResult.value().data());
+  const uint32 headerVersion = ebsd_pattern_file_utilities::DecodeUInt32LittleEndian(minimumHeaderResult.value().data());
   if(headerVersion == 2 || headerVersion == 0)
   {
     return MakeErrorResult<EbsdPatternFileInfo>(
@@ -150,7 +150,7 @@ Result<EbsdPatternFileInfo> EdaxUpPatternFileReader::readFileInfo() const
   }
 
   const uint64 headerSize = isVersion1 ? k_Version1HeaderSize : k_Version3HeaderSize;
-  auto headerResult = EbsdPatternFileUtilities::ReadExactBytes(m_FilePath, 0, headerSize);
+  auto headerResult = ebsd_pattern_file_utilities::ReadExactBytes(m_FilePath, 0, headerSize);
   if(headerResult.invalid())
   {
     return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(headerResult));
@@ -158,120 +158,120 @@ Result<EbsdPatternFileInfo> EdaxUpPatternFileReader::readFileInfo() const
   const auto& bytes = headerResult.value();
 
   EbsdPatternFileInfo fileInfo;
-  fileInfo.formatName = "EDAX UP";
-  fileInfo.headerVersion = headerVersion;
-  fileInfo.patternWidth = EbsdPatternFileUtilities::DecodeUInt32LittleEndian(bytes.data() + 4);
-  fileInfo.patternHeight = EbsdPatternFileUtilities::DecodeUInt32LittleEndian(bytes.data() + 8);
-  fileInfo.dataOffset = EbsdPatternFileUtilities::DecodeUInt32LittleEndian(bytes.data() + 12);
-  fileInfo.fileSize = fileSize;
+  fileInfo.format_name = "EDAX UP";
+  fileInfo.header_version = headerVersion;
+  fileInfo.pattern_width = ebsd_pattern_file_utilities::DecodeUInt32LittleEndian(bytes.data() + 4);
+  fileInfo.pattern_height = ebsd_pattern_file_utilities::DecodeUInt32LittleEndian(bytes.data() + 8);
+  fileInfo.data_offset = ebsd_pattern_file_utilities::DecodeUInt32LittleEndian(bytes.data() + 12);
+  fileInfo.file_size = fileSize;
 
-  const std::string extension = EbsdPatternFileUtilities::NormalizeExtension(m_FilePath);
-  fileInfo.pixelDataType = extension == ".up1" ? DataType::uint8 : DataType::uint16;
-  fileInfo.bytesPerPixel = extension == ".up1" ? 1 : 2;
+  const std::string extension = ebsd_pattern_file_utilities::NormalizeExtension(m_FilePath);
+  fileInfo.pixel_data_type = extension == ".up1" ? DataType::uint8 : DataType::uint16;
+  fileInfo.bytes_per_pixel = extension == ".up1" ? 1 : 2;
 
-  if(fileInfo.patternWidth < k_MinimumPatternDimension || fileInfo.patternWidth > k_MaximumPatternDimension || fileInfo.patternHeight < k_MinimumPatternDimension ||
-     fileInfo.patternHeight > k_MaximumPatternDimension)
+  if(fileInfo.pattern_width < k_MinimumPatternDimension || fileInfo.pattern_width > k_MaximumPatternDimension || fileInfo.pattern_height < k_MinimumPatternDimension ||
+     fileInfo.pattern_height > k_MaximumPatternDimension)
   {
     return MakeErrorResult<EbsdPatternFileInfo>(k_InvalidUpDimensionsError,
                                                 fmt::format("EDAX UP file '{}' has pattern dimensions {} x {} pixels. Each dimension must be in the inclusive range {} to {} pixels.",
-                                                            m_FilePath.string(), fileInfo.patternWidth, fileInfo.patternHeight, k_MinimumPatternDimension, k_MaximumPatternDimension));
+                                                            m_FilePath.string(), fileInfo.pattern_width, fileInfo.pattern_height, k_MinimumPatternDimension, k_MaximumPatternDimension));
   }
-  if(fileInfo.dataOffset < headerSize || fileInfo.dataOffset >= fileSize)
+  if(fileInfo.data_offset < headerSize || fileInfo.data_offset >= fileSize)
   {
     return MakeErrorResult<EbsdPatternFileInfo>(k_InvalidUpDataOffsetError,
                                                 fmt::format("EDAX UP version {} file '{}' has data offset {}, but the offset must be at least {} and less than the file size {}.",
-                                                            fileInfo.headerVersion, m_FilePath.string(), fileInfo.dataOffset, headerSize, fileSize));
+                                                            fileInfo.header_version, m_FilePath.string(), fileInfo.data_offset, headerSize, fileSize));
   }
 
-  auto pixelCountResult = EbsdPatternFileUtilities::CheckedMultiply(fileInfo.patternWidth, fileInfo.patternHeight, "the number of pixels per pattern", m_FilePath);
+  auto pixelCountResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.pattern_width, fileInfo.pattern_height, "the number of pixels per pattern", m_FilePath);
   if(pixelCountResult.invalid())
   {
     return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(pixelCountResult));
   }
-  auto strideResult = EbsdPatternFileUtilities::CheckedMultiply(pixelCountResult.value(), fileInfo.bytesPerPixel, "the pattern byte stride", m_FilePath);
+  auto strideResult = ebsd_pattern_file_utilities::CheckedMultiply(pixelCountResult.value(), fileInfo.bytes_per_pixel, "the pattern byte stride", m_FilePath);
   if(strideResult.invalid())
   {
     return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(strideResult));
   }
-  fileInfo.patternStride = strideResult.value();
+  fileInfo.pattern_stride = strideResult.value();
 
   std::vector<Warning> warnings;
   if(isVersion1)
   {
-    const uint64 payloadBytes = fileSize - fileInfo.dataOffset;
-    const uint64 residualBytes = payloadBytes % fileInfo.patternStride;
+    const uint64 payloadBytes = fileSize - fileInfo.data_offset;
+    const uint64 residualBytes = payloadBytes % fileInfo.pattern_stride;
     if(residualBytes != 0)
     {
       return MakeErrorResult<EbsdPatternFileInfo>(
           k_InvalidUpPayloadError, fmt::format("EDAX UP version 1 file '{}' has {} payload bytes after offset {}, which is not an integral number of {}-byte patterns. Residual bytes: {}.",
-                                               m_FilePath.string(), payloadBytes, fileInfo.dataOffset, fileInfo.patternStride, residualBytes));
+                                               m_FilePath.string(), payloadBytes, fileInfo.data_offset, fileInfo.pattern_stride, residualBytes));
     }
-    fileInfo.numberOfPatterns = payloadBytes / fileInfo.patternStride;
-    if(fileInfo.numberOfPatterns == 0)
+    fileInfo.number_of_patterns = payloadBytes / fileInfo.pattern_stride;
+    if(fileInfo.number_of_patterns == 0)
     {
       return MakeErrorResult<EbsdPatternFileInfo>(k_InvalidUpPayloadError,
-                                                  fmt::format("EDAX UP version 1 file '{}' contains zero complete patterns after data offset {}.", m_FilePath.string(), fileInfo.dataOffset));
+                                                  fmt::format("EDAX UP version 1 file '{}' contains zero complete patterns after data offset {}.", m_FilePath.string(), fileInfo.data_offset));
     }
   }
   else
   {
-    fileInfo.extraPatterns = bytes[16];
-    fileInfo.numberOfColumns = EbsdPatternFileUtilities::DecodeUInt32LittleEndian(bytes.data() + 17);
-    fileInfo.numberOfRows = EbsdPatternFileUtilities::DecodeUInt32LittleEndian(bytes.data() + 21);
-    fileInfo.isHexagonal = bytes[25] != 0;
-    const float64 xStep = EbsdPatternFileUtilities::DecodeFloat64LittleEndian(bytes.data() + 26);
-    const float64 yStep = EbsdPatternFileUtilities::DecodeFloat64LittleEndian(bytes.data() + 34);
+    fileInfo.extra_patterns = bytes[16];
+    fileInfo.number_of_columns = ebsd_pattern_file_utilities::DecodeUInt32LittleEndian(bytes.data() + 17);
+    fileInfo.number_of_rows = ebsd_pattern_file_utilities::DecodeUInt32LittleEndian(bytes.data() + 21);
+    fileInfo.is_hexagonal = bytes[25] != 0;
+    const float64 xStep = ebsd_pattern_file_utilities::DecodeFloat64LittleEndian(bytes.data() + 26);
+    const float64 yStep = ebsd_pattern_file_utilities::DecodeFloat64LittleEndian(bytes.data() + 34);
     if(!std::isfinite(xStep) || !std::isfinite(yStep) || xStep < 0.0 || yStep < 0.0)
     {
       return MakeErrorResult<EbsdPatternFileInfo>(
           k_InvalidUpDimensionsError, fmt::format("EDAX UP version {} file '{}' has invalid scan steps. X step: {} micrometers. Y step: {} micrometers. Values must be finite and nonnegative.",
-                                                  fileInfo.headerVersion, m_FilePath.string(), xStep, yStep));
+                                                  fileInfo.header_version, m_FilePath.string(), xStep, yStep));
     }
     if(xStep > 0.0)
     {
-      fileInfo.xStep = xStep;
+      fileInfo.x_step = xStep;
     }
     if(yStep > 0.0)
     {
-      fileInfo.yStep = yStep;
+      fileInfo.y_step = yStep;
     }
     if(xStep == 0.0 || yStep == 0.0)
     {
       warnings.push_back({k_UnknownUpStepWarning, fmt::format("EDAX UP version {} file '{}' has an unknown scan step represented by zero. X step: {} micrometers. Y step: {} micrometers.",
-                                                              fileInfo.headerVersion, m_FilePath.string(), xStep, yStep)});
+                                                              fileInfo.header_version, m_FilePath.string(), xStep, yStep)});
     }
 
-    auto gridPatternCountResult = EbsdPatternFileUtilities::CheckedMultiply(fileInfo.numberOfRows.value(), fileInfo.numberOfColumns.value(), "the version 3 grid pattern count", m_FilePath);
+    auto gridPatternCountResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.number_of_rows.value(), fileInfo.number_of_columns.value(), "the version 3 grid pattern count", m_FilePath);
     if(gridPatternCountResult.invalid())
     {
       return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(gridPatternCountResult));
     }
-    fileInfo.numberOfPatterns = gridPatternCountResult.value();
-    if(fileInfo.numberOfPatterns == 0)
+    fileInfo.number_of_patterns = gridPatternCountResult.value();
+    if(fileInfo.number_of_patterns == 0)
     {
-      return MakeErrorResult<EbsdPatternFileInfo>(k_InvalidUpPayloadError, fmt::format("EDAX UP version {} file '{}' describes an empty grid with {} rows and {} columns.", fileInfo.headerVersion,
-                                                                                       m_FilePath.string(), fileInfo.numberOfRows.value(), fileInfo.numberOfColumns.value()));
+      return MakeErrorResult<EbsdPatternFileInfo>(k_InvalidUpPayloadError, fmt::format("EDAX UP version {} file '{}' describes an empty grid with {} rows and {} columns.", fileInfo.header_version,
+                                                                                       m_FilePath.string(), fileInfo.number_of_rows.value(), fileInfo.number_of_columns.value()));
     }
 
-    auto gridPayloadSizeResult = EbsdPatternFileUtilities::CheckedMultiply(fileInfo.numberOfPatterns, fileInfo.patternStride, "the version 3 grid payload size", m_FilePath);
+    auto gridPayloadSizeResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.number_of_patterns, fileInfo.pattern_stride, "the version 3 grid payload size", m_FilePath);
     if(gridPayloadSizeResult.invalid())
     {
       return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(gridPayloadSizeResult));
     }
-    auto gridFileSizeResult = EbsdPatternFileUtilities::CheckedAdd(fileInfo.dataOffset, gridPayloadSizeResult.value(), "the version 3 grid file size", m_FilePath);
+    auto gridFileSizeResult = ebsd_pattern_file_utilities::CheckedAdd(fileInfo.data_offset, gridPayloadSizeResult.value(), "the version 3 grid file size", m_FilePath);
     if(gridFileSizeResult.invalid())
     {
       return ConvertInvalidResult<EbsdPatternFileInfo>(std::move(gridFileSizeResult));
     }
-    const uint64 oppositeBytesPerPixel = fileInfo.bytesPerPixel == 1 ? 2 : 1;
+    const uint64 oppositeBytesPerPixel = fileInfo.bytes_per_pixel == 1 ? 2 : 1;
     bool matchesOppositePixelWidth = false;
-    auto oppositeStrideResult = EbsdPatternFileUtilities::CheckedMultiply(fileInfo.patternWidth * fileInfo.patternHeight, oppositeBytesPerPixel, "the opposite pixel-width pattern stride", m_FilePath);
+    auto oppositeStrideResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.pattern_width * fileInfo.pattern_height, oppositeBytesPerPixel, "the opposite pixel-width pattern stride", m_FilePath);
     if(oppositeStrideResult.valid())
     {
-      auto oppositePayloadResult = EbsdPatternFileUtilities::CheckedMultiply(fileInfo.numberOfPatterns, oppositeStrideResult.value(), "the opposite pixel-width grid payload", m_FilePath);
+      auto oppositePayloadResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.number_of_patterns, oppositeStrideResult.value(), "the opposite pixel-width grid payload", m_FilePath);
       if(oppositePayloadResult.valid())
       {
-        auto oppositeFileSizeResult = EbsdPatternFileUtilities::CheckedAdd(fileInfo.dataOffset, oppositePayloadResult.value(), "the opposite pixel-width file size", m_FilePath);
+        auto oppositeFileSizeResult = ebsd_pattern_file_utilities::CheckedAdd(fileInfo.data_offset, oppositePayloadResult.value(), "the opposite pixel-width file size", m_FilePath);
         matchesOppositePixelWidth = oppositeFileSizeResult.valid() && fileSize == oppositeFileSizeResult.value();
       }
     }
@@ -281,20 +281,20 @@ Result<EbsdPatternFileInfo> EdaxUpPatternFileReader::readFileInfo() const
       const std::string extensionHint = matchesOppositePixelWidth ? " The payload size exactly matches the opposite UP pixel width; verify the .up1/.up2 extension." : "";
       return MakeErrorResult<EbsdPatternFileInfo>(matchesOppositePixelWidth ? k_UpExtensionMismatchError : k_InvalidUpPayloadError,
                                                   fmt::format("EDAX UP version {} file '{}' is too small for its grid. Expected at least {} bytes for {} patterns; actual file size: {}.{}",
-                                                              fileInfo.headerVersion, m_FilePath.string(), gridFileSizeResult.value(), fileInfo.numberOfPatterns, fileSize, extensionHint));
+                                                              fileInfo.header_version, m_FilePath.string(), gridFileSizeResult.value(), fileInfo.number_of_patterns, fileSize, extensionHint));
     }
 
     const uint64 trailingBytes = fileSize - gridFileSizeResult.value();
-    const uint64 declaredExtraBytes = static_cast<uint64>(fileInfo.extraPatterns) * fileInfo.patternStride;
-    if(fileInfo.extraPatterns > 0)
+    const uint64 declaredExtraBytes = static_cast<uint64>(fileInfo.extra_patterns) * fileInfo.pattern_stride;
+    if(fileInfo.extra_patterns > 0)
     {
       warnings.push_back({k_ExtraUpPatternsWarning, fmt::format("EDAX UP version {} file '{}' declares {} extra patterns. They will be skipped; {} grid patterns will be imported.",
-                                                                fileInfo.headerVersion, m_FilePath.string(), fileInfo.extraPatterns, fileInfo.numberOfPatterns)});
+                                                                fileInfo.header_version, m_FilePath.string(), fileInfo.extra_patterns, fileInfo.number_of_patterns)});
       if(trailingBytes != declaredExtraBytes)
       {
         warnings.push_back({k_ExtraUpPatternsSizeWarning,
                             fmt::format("EDAX UP version {} file '{}' declares {} extra patterns ({} bytes), but {} trailing bytes follow the grid payload. The complete grid will still be imported.",
-                                        fileInfo.headerVersion, m_FilePath.string(), fileInfo.extraPatterns, declaredExtraBytes, trailingBytes)});
+                                        fileInfo.header_version, m_FilePath.string(), fileInfo.extra_patterns, declaredExtraBytes, trailingBytes)});
       }
     }
     else if(trailingBytes != 0)
@@ -303,23 +303,23 @@ Result<EbsdPatternFileInfo> EdaxUpPatternFileReader::readFileInfo() const
       {
         return MakeErrorResult<EbsdPatternFileInfo>(k_UpExtensionMismatchError,
                                                     fmt::format("EDAX UP version {} file '{}' has a payload size that exactly matches the opposite UP pixel width. Verify the .up1/.up2 extension.",
-                                                                fileInfo.headerVersion, m_FilePath.string()));
+                                                                fileInfo.header_version, m_FilePath.string()));
       }
       return MakeErrorResult<EbsdPatternFileInfo>(
           k_InvalidUpPayloadError, fmt::format("EDAX UP version {} file '{}' has {} undeclared trailing bytes after the complete grid payload. Expected file size: {}. Actual file size: {}.",
-                                               fileInfo.headerVersion, m_FilePath.string(), trailingBytes, gridFileSizeResult.value(), fileSize));
+                                               fileInfo.header_version, m_FilePath.string(), trailingBytes, gridFileSizeResult.value(), fileSize));
     }
   }
 
-  if(fileInfo.headerVersion > 3)
+  if(fileInfo.header_version > 3)
   {
     warnings.push_back(
-        {k_FutureUpVersionWarning, fmt::format("EDAX UP file '{}' reports header version {}. It will be read using the version 3 layout.", m_FilePath.string(), fileInfo.headerVersion)});
+        {k_FutureUpVersionWarning, fmt::format("EDAX UP file '{}' reports header version {}. It will be read using the version 3 layout.", m_FilePath.string(), fileInfo.header_version)});
   }
-  if(fileInfo.dataOffset != headerSize)
+  if(fileInfo.data_offset != headerSize)
   {
     warnings.push_back({k_UnusualUpDataOffsetWarning, fmt::format("EDAX UP version {} file '{}' uses data offset {}; the usual offset is {}. The file-supplied offset will be used.",
-                                                                  fileInfo.headerVersion, m_FilePath.string(), fileInfo.dataOffset, headerSize)});
+                                                                  fileInfo.header_version, m_FilePath.string(), fileInfo.data_offset, headerSize)});
   }
 
   Result<EbsdPatternFileInfo> result{fileInfo};
@@ -331,21 +331,21 @@ Result<> EdaxUpPatternFileReader::readPatternData(const EbsdPatternFileInfo& fil
                                                   const IFilter::MessageHandler& messageHandler) const
 {
   const ShapeType& componentShape = outputArray.getComponentShape();
-  if(outputArray.getDataType() != fileInfo.pixelDataType || outputArray.getNumberOfTuples() != fileInfo.numberOfPatterns ||
-     componentShape != ShapeType{static_cast<usize>(fileInfo.patternHeight), static_cast<usize>(fileInfo.patternWidth)})
+  if(outputArray.getDataType() != fileInfo.pixel_data_type || outputArray.getNumberOfTuples() != fileInfo.number_of_patterns ||
+     componentShape != ShapeType{static_cast<usize>(fileInfo.pattern_height), static_cast<usize>(fileInfo.pattern_width)})
   {
     const std::string componentDescription = componentShape.size() == 2 ? fmt::format("{} x {}", componentShape[0], componentShape[1]) : fmt::format("[{}]", fmt::join(componentShape, ", "));
     return MakeErrorResult(k_UpDestinationMismatchError,
                            fmt::format("Output DataArray '{}' does not match EBSD pattern file '{}'. Array type: '{}', tuples: {}, components: {}. File type: '{}', patterns: {}, "
                                        "pattern size: {} x {}.",
                                        outputArray.getName(), m_FilePath.string(), DataTypeToString(outputArray.getDataType()), outputArray.getNumberOfTuples(), componentDescription,
-                                       DataTypeToString(fileInfo.pixelDataType), fileInfo.numberOfPatterns, fileInfo.patternHeight, fileInfo.patternWidth));
+                                       DataTypeToString(fileInfo.pixel_data_type), fileInfo.number_of_patterns, fileInfo.pattern_height, fileInfo.pattern_width));
   }
 
-  if(fileInfo.pixelDataType == DataType::uint8)
+  if(fileInfo.pixel_data_type == DataType::uint8)
   {
-    return ReadPayload(m_FilePath, fileInfo, dynamic_cast<UInt8Array&>(outputArray), shouldCancel, messageHandler);
+    return ReadPayload(m_FilePath, fileInfo, dynamic_cast<UInt8ArrayType&>(outputArray), shouldCancel, messageHandler);
   }
-  return ReadPayload(m_FilePath, fileInfo, dynamic_cast<UInt16Array&>(outputArray), shouldCancel, messageHandler);
+  return ReadPayload(m_FilePath, fileInfo, dynamic_cast<UInt16ArrayType&>(outputArray), shouldCancel, messageHandler);
 }
 } // namespace nx::core

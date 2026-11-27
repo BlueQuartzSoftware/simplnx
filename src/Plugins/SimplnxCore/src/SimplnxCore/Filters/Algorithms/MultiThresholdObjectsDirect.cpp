@@ -216,13 +216,13 @@ MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStru
 
 Result<> MultiThresholdObjectsDirect::operator()()
 {
-  auto thresholdsObject = m_InputValues->ArrayThresholdsObject;
-  auto maskArrayName = m_InputValues->OutputDataArrayName;
-  auto maskArrayType = m_InputValues->CreatedMaskType;
-  auto useCustomTrueValue = m_InputValues->UseCustomTrueValue;
-  auto useCustomFalseValue = m_InputValues->UseCustomFalseValue;
-  auto customTrueValue = m_InputValues->CustomTrueValue;
-  auto customFalseValue = m_InputValues->CustomFalseValue;
+  auto thresholdsObject = m_InputValues->array_thresholds_object;
+  auto maskArrayName = m_InputValues->output_data_array_name;
+  auto maskArrayType = m_InputValues->created_mask_type;
+  auto useCustomTrueValue = m_InputValues->use_custom_true_value;
+  auto useCustomFalseValue = m_InputValues->use_custom_false_value;
+  auto customTrueValue = m_InputValues->custom_true_value;
+  auto customFalseValue = m_InputValues->custom_false_value;
 
   float64 trueValue = useCustomTrueValue ? customTrueValue : 1.0;
   float64 falseValue = useCustomFalseValue ? customFalseValue : 0.0;

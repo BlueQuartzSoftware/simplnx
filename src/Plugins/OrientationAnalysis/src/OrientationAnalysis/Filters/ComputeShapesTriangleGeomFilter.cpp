@@ -53,7 +53,7 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
@@ -61,7 +61,7 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
                                                                     DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "Input DataPath to the **Feature Centroids** for the face data",
                                                           DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "The name of the DataArray that holds the calculated Omega3 values", "Omega3s"));
@@ -154,7 +154,7 @@ IFilter::PreflightResult ComputeShapesTriangleGeomFilter::preflightImpl(const Da
   }
 
   // Return both the resultOutputActions via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -162,10 +162,10 @@ Result<> ComputeShapesTriangleGeomFilter::executeImpl(DataStructure& dataStructu
                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeShapesTriangleGeomInputValues inputValues;
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
+  inputValues.face_labels_array_path = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.centroids_array_path = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
 
   auto omega3sArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_Omega3sArrayName_Key);
   auto axisLengthsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName_Key);
@@ -173,11 +173,11 @@ Result<> ComputeShapesTriangleGeomFilter::executeImpl(DataStructure& dataStructu
   auto aspectRatiosArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName_Key);
   auto eulerCharacteristicArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_EulerCharacteristicArrayName_Key);
 
-  inputValues.Omega3sArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(omega3sArrayNameValue);
-  inputValues.AxisLengthsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(axisLengthsArrayNameValue);
-  inputValues.AxisEulerAnglesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(axisEulerAnglesArrayNameValue);
-  inputValues.AspectRatiosArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(aspectRatiosArrayNameValue);
-  inputValues.EulerCharacteristicPath = inputValues.FeatureAttributeMatrixPath.createChildPath(eulerCharacteristicArrayNameValue);
+  inputValues.omega3s_array_path = inputValues.feature_attribute_matrix_path.createChildPath(omega3sArrayNameValue);
+  inputValues.axis_lengths_array_path = inputValues.feature_attribute_matrix_path.createChildPath(axisLengthsArrayNameValue);
+  inputValues.axis_euler_angles_array_path = inputValues.feature_attribute_matrix_path.createChildPath(axisEulerAnglesArrayNameValue);
+  inputValues.aspect_ratios_array_path = inputValues.feature_attribute_matrix_path.createChildPath(aspectRatiosArrayNameValue);
+  inputValues.euler_characteristic_path = inputValues.feature_attribute_matrix_path.createChildPath(eulerCharacteristicArrayNameValue);
   return ComputeShapesTriangleGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

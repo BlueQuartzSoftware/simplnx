@@ -84,19 +84,19 @@ const std::atomic_bool& RemoveFlaggedEdges::getCancel()
 Result<> RemoveFlaggedEdges::operator()()
 {
   // Remove Edges from reduced according to removeEdgesIndex
-  const auto& originalEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->EdgeGeometry);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  const auto& originalEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->edge_geometry);
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
     return MakeErrorResult(-54070, message);
   }
-  auto& reducedEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->ReducedEdgeGeometry);
+  auto& reducedEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->reduced_edge_geometry);
 
   // Set up allocated masks
   usize size = originalEdgeGeom.getNumberOfEdges();
@@ -161,7 +161,7 @@ Result<> RemoveFlaggedEdges::operator()()
   }
 
   // load reduced Geometry Vertex list according to used vertices
-  FloatVec3 coords = {0.0f, 0.0f, 0.0f};
+  FloatVec3Type coords = {0.0f, 0.0f, 0.0f};
   for(usize i = 0; i < size; i++)
   {
     coords = originalEdgeGeom.getVertexCoordinate(vertexListIndices[i]);
@@ -192,34 +192,34 @@ Result<> RemoveFlaggedEdges::operator()()
   dataAlg.execute(PopulateReducedGeometryEdgesImpl(originalEdgeGeom, reducedEdgeGeom, newEdgesIndexList, vertexListIndices));
 
   /** This section will copy any user defined Edge Data Arrays from the old to the reduced edge geometry **/
-  if(m_InputValues->EdgeDataHandling == detail::k_CopySelectedEdgeArraysIdx)
+  if(m_InputValues->edge_data_handling == detail::k_CopySelectedEdgeArraysIdx)
   {
-    TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->SelectedEdgeData, newEdgesIndexList, m_ShouldCancel,
+    transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->selected_edge_data, newEdgesIndexList, m_ShouldCancel,
                                                      m_MessageHandler);
   }
-  else if(m_InputValues->EdgeDataHandling == detail::k_CopyAllEdgeArraysIdx)
+  else if(m_InputValues->edge_data_handling == detail::k_CopyAllEdgeArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
-    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->EdgeAttributeMatrixPath, ignorePaths);
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->edge_attribute_matrix_path, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), getChildrenResult.value(), newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
+      transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), getChildrenResult.value(), newEdgesIndexList, m_ShouldCancel, m_MessageHandler);
     }
   }
 
   /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
-  if(m_InputValues->VertexDataHandling == detail::k_CopySelectedVertexArraysIdx)
+  if(m_InputValues->vertex_data_handling == detail::k_CopySelectedVertexArraysIdx)
   {
-    TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel,
+    transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->selected_vertex_data, vertexListIndices, m_ShouldCancel,
                                                      m_MessageHandler);
   }
-  else if(m_InputValues->VertexDataHandling == detail::k_CopyAllVertexArraysIdx)
+  else if(m_InputValues->vertex_data_handling == detail::k_CopyAllVertexArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
-    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->vertex_attribute_matrix_path, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      TransferGeometryElementData::transferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel, m_MessageHandler);
+      transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel, m_MessageHandler);
     }
   }
 

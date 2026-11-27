@@ -48,7 +48,7 @@ void Parameters::insert(IParameter::UniquePointerType parameter)
   }
 
   m_Params.insert({name, std::move(parameter)});
-  m_ParamGroups.insert({name, GroupList{}});
+  m_ParamGroups.insert({name, GroupListType{}});
 
   m_LayoutVector.emplace_back(ParameterKey{name});
 }
@@ -63,17 +63,17 @@ void Parameters::insertSeparator(Separator separator)
   m_LayoutVector.emplace_back(std::move(separator));
 }
 
-AnyParameter& Parameters::at(std::string_view key)
+AnyParameterType& Parameters::at(std::string_view key)
 {
   return MapAt(m_Params, key, "Key '{}' does not exist in Parameters");
 }
 
-const AnyParameter& Parameters::at(std::string_view key) const
+const AnyParameterType& Parameters::at(std::string_view key) const
 {
   return MapAt(m_Params, key, "Key '{}' does not exist in Parameters");
 }
 
-void Parameters::insertLinkableParameter(IParameter::UniquePointerType parameter, IsActiveFunc func)
+void Parameters::insertLinkableParameter(IParameter::UniquePointerType parameter, IsActiveFuncType func)
 {
   std::string name = parameter->name();
   insert(std::move(parameter));
@@ -123,7 +123,7 @@ bool Parameters::isParameterActive(std::string_view key, const Arguments& args) 
   for(const auto& [groupKey, associatedValue] : groupList)
   {
     const std::any& value = args.at(groupKey);
-    IsActiveFunc funcPtr = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
+    IsActiveFuncType funcPtr = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
 
     const IParameter* groupParameterPtr = at(groupKey).get();
 
@@ -178,7 +178,7 @@ std::vector<std::string> Parameters::getGroupKeys() const
   return keys;
 }
 
-const Parameters::LayoutVector& Parameters::getLayout() const
+const Parameters::LayoutVectorType& Parameters::getLayout() const
 {
   return m_LayoutVector;
 }
@@ -188,7 +188,7 @@ usize Parameters::getNumberOfLinkedGroups(std::string_view key) const
   return MapAt(m_ParamGroups, key, "Parameters::getNumberOfLinkedGroups(...): Key '{}' does not exist").size();
 }
 
-const Parameters::GroupList& Parameters::getLinkedGroups(std::string_view key) const
+const Parameters::GroupListType& Parameters::getLinkedGroups(std::string_view key) const
 {
   return MapAt(m_ParamGroups, key, "Parameters::getLinkedGroups(...): Key '{}' does not exist");
 }

@@ -24,7 +24,7 @@ public:
    * @param newNode
    * @param index
    */
-  OutputRenamedMessage(AbstractPipelineNode* pipeline, PipelineFilter::RenamedPath renamedOutput);
+  OutputRenamedMessage(AbstractPipelineNode* pipeline, PipelineFilter::RenamedPathType renamedOutput);
 
   ~OutputRenamedMessage() noexcept override;
 
@@ -32,7 +32,7 @@ public:
    * @brief Returns the PipelineFilter::RenamedPath pair.
    * @return PipelineFilter::RenamedPath
    */
-  PipelineFilter::RenamedPath getRenamedPath() const;
+  PipelineFilter::RenamedPathType getRenamedPath() const;
 
   /**
    * @brief Returns the previous output path
@@ -53,6 +53,6 @@ public:
   std::string toString() const override;
 
 private:
-  PipelineFilter::RenamedPath m_RenamedPath;
+  PipelineFilter::RenamedPathType m_RenamedPath;
 };
 } // namespace nx::core

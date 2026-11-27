@@ -24,17 +24,17 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
 {
-  int ScalarTolerance = 0;
-  bool UseMask{};
-  bool RandomizeFeatureIds{};
-  bool IsPeriodic = false;
-  SegmentFeatures::NeighborScheme NeighborScheme;
-  DataPath ImageGeometryPath;
-  DataPath InputDataPath;
-  DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellFeatureAttributeMatrixPath;
-  DataPath ActiveArrayPath;
+  int scalar_tolerance = 0;
+  bool use_mask{};
+  bool randomize_feature_ids{};
+  bool is_periodic = false;
+  SegmentFeatures::NeighborScheme neighbor_scheme;
+  DataPath image_geometry_path;
+  DataPath input_data_path;
+  DataPath mask_array_path;
+  DataPath feature_ids_array_path;
+  DataPath cell_feature_attribute_matrix_path;
+  DataPath active_array_path;
 };
 
 /**
@@ -70,11 +70,11 @@ public:
   /**
    * @brief Defines the per-cell Feature ID array type.
    */
-  using FeatureIdsArrayType = Int32Array;
+  using FeatureIdsArrayType = Int32ArrayType;
   /**
    * @brief Defines the Boolean mask array type.
    */
-  using GoodVoxelsArrayType = BoolArray;
+  using GoodVoxelsArrayType = BoolArrayType;
 
   /**
    * @brief Initializes the scalar-segmentation algorithm.
@@ -164,7 +164,7 @@ private:
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
   GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
   std::shared_ptr<SegmentFeatures::CompareFunctor> m_CompareFunctor;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxels = nullptr;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> m_GoodVoxels = nullptr;
   IDataArray* m_InputDataArray = nullptr;
 
   std::vector<float64> m_ScalarBuffer;

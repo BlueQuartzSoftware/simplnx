@@ -82,27 +82,27 @@ IFilter::PreflightResult LaplacianRecursiveGaussianImageFilter::preflightImpl(co
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions = std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   if(Result<> dimCheck = ImageProcessing::ValidateSeparableImageDims(imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianTooFewPixels); dimCheck.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
   }
 
   auto sigma = filterArgs.value<float64>(k_Sigma_Key);
   if(Result<> sigmaCheck = ImageProcessing::ValidatePositiveSigma(sigma, ImageProcessing::k_RecursiveGaussianNonPositiveSigma); sigmaCheck.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
   }
 
   if(Result<> spacingCheck = ImageProcessing::ValidatePositiveSpacing(imageGeom.getSpacing(), imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSpacing, 1e-8);
      spacingCheck.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(spacingCheck), OutputActions{})};
   }
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> LaplacianRecursiveGaussianImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -136,7 +136,7 @@ Result<Arguments> LaplacianRecursiveGaussianImageFilter::FromSIMPLJson(const nlo
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeAcrossScaleKey, k_NormalizeAcrossScale_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));

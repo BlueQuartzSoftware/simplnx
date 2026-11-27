@@ -20,20 +20,20 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT WriteImageInputValues
 {
-  std::filesystem::path outputFilePath;
-  usize planeIndex = 0;
-  uint64 indexOffset = 0;
-  int32 totalIndexDigits = 3;
-  std::string leadingDigitCharacter = "0";
-  DataPath imageGeometryPath;
-  DataPath imageDataArrayPath;
-  bool createColorTable = false;
-  std::string presetName;
-  bool useMask = false;
-  DataPath maskArrayPath;
-  std::vector<uint8> invalidColor;
-  ImageFlipTransform flipMode = ImageFlipTransform::None;
-  bool addScaleBar = false;
+  std::filesystem::path output_file_path;
+  usize plane_index = 0;
+  uint64 index_offset = 0;
+  int32 total_index_digits = 3;
+  std::string leading_digit_character = "0";
+  DataPath image_geometry_path;
+  DataPath image_data_array_path;
+  bool create_color_table = false;
+  std::string preset_name;
+  bool use_mask = false;
+  DataPath mask_array_path;
+  std::vector<uint8> invalid_color;
+  ImageFlipTransform flip_mode = ImageFlipTransform::None;
+  bool add_scale_bar = false;
 };
 
 /**

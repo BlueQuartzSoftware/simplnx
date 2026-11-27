@@ -17,11 +17,11 @@ namespace nx::core
 /** @brief RefFrameZDir defined for the Stacking order of images into a 3D Volume. This is taken from
  * EbsdLib. If EbsdLib changes, this should follow suit.
  */
-namespace RefFrameZDir
+namespace ref_frame_z_dir
 {
 inline constexpr uint32_t k_LowtoHigh = 0;
 inline constexpr uint32_t k_HightoLow = 1;
-inline constexpr uint32_t UnknownRefFrameZDirection = 2;
+inline constexpr uint32_t k_UnknownRefFrameZDirection = 2;
 } // namespace RefFrameZDir
 
 class SIMPLNX_EXPORT OEMEbsdScanSelectionParameter : public ValueParameter
@@ -33,9 +33,9 @@ public:
    */
   struct ValueType
   {
-    fs::path inputFilePath;
-    uint32_t stackingOrder = RefFrameZDir::k_LowtoHigh;
-    std::list<std::string> scanNames;
+    fs::path input_file_path;
+    uint32_t stacking_order = ref_frame_z_dir::k_LowtoHigh;
+    std::list<std::string> scan_names;
   };
 
   using ExtensionsType = std::unordered_set<std::string>;
@@ -76,7 +76,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief

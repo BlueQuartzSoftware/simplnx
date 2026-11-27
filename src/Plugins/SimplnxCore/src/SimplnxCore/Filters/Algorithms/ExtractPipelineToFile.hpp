@@ -21,8 +21,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ExtractPipelineToFileInputValues
 {
-  FileSystemPathParameter::ValueType InputFilePath;
-  FileSystemPathParameter::ValueType OutputFilePath;
+  FileSystemPathParameter::ValueType input_file_path;
+  FileSystemPathParameter::ValueType output_file_path;
 };
 
 /**

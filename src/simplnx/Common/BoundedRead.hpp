@@ -12,7 +12,7 @@
 
 #include <fmt/format.h>
 
-namespace nx::core::BoundedRead
+namespace nx::core::bounded_read
 {
 /** @brief Limits each active decoder to 128 KiB of workspace payload. */
 inline constexpr uint64 k_DefaultDecoderWorkspaceBytes = uint64{128} * 1024;
@@ -58,7 +58,7 @@ enum Code : int32
  * @return An empty warnings collection, constructed directly in the result member.
  * @throws std::bad_alloc When the existing bounded fault observer requests a construction failure.
  */
-SIMPLNX_EXPORT WarningCollection MakeSuccessWarningsForTesting(const std::filesystem::path* file = nullptr, std::string_view dataset = {});
+SIMPLNX_EXPORT WarningCollectionType MakeSuccessWarningsForTesting(const std::filesystem::path* file = nullptr, std::string_view dataset = {});
 #endif
 
 /**

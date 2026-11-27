@@ -19,7 +19,7 @@ namespace
  * @param featureIds Provides in-memory Feature Id values.
  * @return True when the voxel marks its feature as surface.
  */
-bool IsPointASurfaceFeature(const Vec2<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
+bool IsPointASurfaceFeature(const Vec2<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32AbstractDataStoreType& featureIds)
 {
   const usize yStride = point.getY() * xPoints;
 
@@ -65,7 +65,7 @@ bool IsPointASurfaceFeature(const Vec2<usize>& point, usize xPoints, usize yPoin
  * @param featureIds Provides in-memory Feature Id values.
  * @return True when the voxel marks its feature as surface.
  */
-bool IsPointASurfaceFeature(const Vec3<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
+bool IsPointASurfaceFeature(const Vec3<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32AbstractDataStoreType& featureIds)
 {
   usize yStride = point.getY() * xPoints;
   usize zStride = point.getZ() * xPoints * yPoints;
@@ -129,8 +129,8 @@ void FindSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsArrayPathValue)->getDataStoreRef();
-  auto& surfaceFeatures = dataStructure.getDataAs<UInt8Array>(surfaceFeaturesArrayPathValue)->getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataAs<Int32ArrayType>(featureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeatures = dataStructure.getDataAs<UInt8ArrayType>(surfaceFeaturesArrayPathValue)->getDataStoreRef();
 
   const usize xPoints = featureGeometry.getNumXCells();
   const usize yPoints = featureGeometry.getNumYCells();
@@ -177,8 +177,8 @@ void FindSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const auto& featureIds = dataStructure.getDataAs<Int32Array>(featureIdsArrayPathValue)->getDataStoreRef();
-  auto& surfaceFeatures = dataStructure.getDataAs<UInt8Array>(surfaceFeaturesArrayPathValue)->getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataAs<Int32ArrayType>(featureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeatures = dataStructure.getDataAs<UInt8ArrayType>(surfaceFeaturesArrayPathValue)->getDataStoreRef();
 
   // Remove the dimension with one cell before using 2D flat indexes.
   usize xPoints = 0;
@@ -235,13 +235,13 @@ ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataSt
 
 Result<> ComputeSurfaceFeaturesDirect::operator()()
 {
-  const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;
-  const auto pFeatureGeometryPathValue = m_InputValues->InputImageGeometryPath;
-  const auto pFeatureIdsArrayPathValue = m_InputValues->FeatureIdsPath;
-  const auto pFeaturesAttributeMatrixPathValue = m_InputValues->FeatureAttributeMatrixPath;
-  const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(m_InputValues->SurfaceFeaturesArrayName);
+  const auto pMarkFeature0NeighborsValue = m_InputValues->mark_feature0_neighbors;
+  const auto pFeatureGeometryPathValue = m_InputValues->input_image_geometry_path;
+  const auto pFeatureIdsArrayPathValue = m_InputValues->feature_ids_path;
+  const auto pFeaturesAttributeMatrixPathValue = m_InputValues->feature_attribute_matrix_path;
+  const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(m_InputValues->surface_features_array_name);
 
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {

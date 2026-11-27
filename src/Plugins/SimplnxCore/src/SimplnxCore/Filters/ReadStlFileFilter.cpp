@@ -114,36 +114,36 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Validate that the STL File is binary and readable.
-  StlConstants::StlFileType stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
-  if(stlFileType == StlConstants::StlFileType::ASCI)
+  stl_constants::StlFileType stlFileType = stl_utilities::DetermineStlFileType(pStlFilePathValue);
+  if(stlFileType == stl_constants::StlFileType::ASCI)
   {
     return MakePreflightErrorResult(
-        StlConstants::k_UnsupportedFileType,
+        stl_constants::k_UnsupportedFileType,
         fmt::format("The Input STL File '{}' is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
   }
-  if(stlFileType == StlConstants::StlFileType::FileOpenError)
+  if(stlFileType == stl_constants::StlFileType::FileOpenError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file '{}'.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(stl_constants::k_ErrorOpeningFile, fmt::format("Error opening the STL file '{}'.", pStlFilePathValue.string()));
   }
-  if(stlFileType == StlConstants::StlFileType::HeaderParseError)
+  if(stlFileType == stl_constants::StlFileType::HeaderParseError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file '{}'.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(stl_constants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file '{}'.", pStlFilePathValue.string()));
   }
 
   // Now get the number of Triangles according to the STL Header
-  int32_t numTriangles = StlUtilities::NumFacesFromHeader(pStlFilePathValue);
+  int32_t numTriangles = stl_utilities::NumFacesFromHeader(pStlFilePathValue);
   if(numTriangles < 0)
   {
     return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file '{}'. Returned error code {}.", pStlFilePathValue.string(), numTriangles));
   }
 
   // Reject impossible triangle counts before creating actions that allocate the output arrays.
-  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(pStlFilePathValue);
+  const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(pStlFilePathValue);
   if(stlFileCheck.error != 0)
   {
-    return MakePreflightErrorResult(stlFileCheck.error, stlFileCheck.errorMessage);
+    return MakePreflightErrorResult(stlFileCheck.error, stlFileCheck.error_message);
   }
-  numTriangles = stlFileCheck.numTriangles;
+  numTriangles = stlFileCheck.num_triangles;
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
   if(numTriangles == 0)
@@ -159,7 +159,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, TriangleGeom::k_SharedVertexListName,
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, TriangleGeom::k_SharedVertexListName,
                                                                                        TriangleGeom::k_SharedFacesListName);
     auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
@@ -180,7 +180,7 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /
   // the appropriate methods. (None to store for this filter... yet)
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -189,13 +189,13 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 {
   ReadStlFileInputValues inputValues;
 
-  inputValues.stlFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
-  inputValues.geometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  inputValues.stl_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
+  inputValues.geometry_path = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto faceMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
-  inputValues.faceGroupPath = inputValues.geometryPath.createChildPath(faceMatrixName);
-  inputValues.faceNormalsDataPath = inputValues.faceGroupPath.createChildPath(filterArgs.value<std::string>(k_FaceNormalsName_Key));
-  inputValues.scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
-  inputValues.scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
+  inputValues.face_group_path = inputValues.geometry_path.createChildPath(faceMatrixName);
+  inputValues.face_normals_data_path = inputValues.face_group_path.createChildPath(filterArgs.value<std::string>(k_FaceNormalsName_Key));
+  inputValues.scale_output = filterArgs.value<bool>(k_ScaleOutput);
+  inputValues.scale_factor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
   Result<> result = ReadStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -210,7 +210,7 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   if(createFaceLabels)
   {
     auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
-    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(inputValues.faceGroupPath.createChildPath(faceLabelsName)).getDataStore();
+    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.face_group_path.createChildPath(faceLabelsName)).getDataStore();
     usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
 
     for(usize idx = 0; idx < numTuples; idx++)

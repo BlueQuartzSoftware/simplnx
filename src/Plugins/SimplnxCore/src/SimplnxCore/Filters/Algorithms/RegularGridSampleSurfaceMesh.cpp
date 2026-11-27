@@ -64,7 +64,7 @@ struct TriangleZRange
  *
  * The half-open vertex classification prevents duplicate crossings at shared vertices.
  */
-bool SliceTriangleAtZ(const std::array<FloatVec3, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
+bool SliceTriangleAtZ(const std::array<FloatVec3Type, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
 {
   // Vertices on the plane belong to the upper half-space.
   std::array<bool, 3> above = {verts[0][2] >= zPlane, verts[1][2] >= zPlane, verts[2][2] >= zPlane};
@@ -138,9 +138,9 @@ public:
    * @param triZRanges Provides triangle Z bounds.
    * @param taskResult Stores the first output-store error.
    */
-  ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, FloatVec3 origin, FloatVec3 spacing,
+  ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, FloatVec3Type origin, FloatVec3Type spacing,
                const IGeometry::MeshIndexType* facesBuffer, const float32* verticesBuffer, const T* faceLabelsBuffer, const std::vector<TriangleZRange>& triZRanges,
-               CopyFromArray::ParallelTaskResult& taskResult)
+               copy_from_array::ParallelTaskResult& taskResult)
   : m_Algorithm(algorithm)
   , m_ZSlice(zSlice)
   , m_XDim(xDim)
@@ -185,9 +185,9 @@ public:
       usize v0Idx = m_FacesBuffer[t * 3];
       usize v1Idx = m_FacesBuffer[t * 3 + 1];
       usize v2Idx = m_FacesBuffer[t * 3 + 2];
-      std::array<FloatVec3, 3> verts = {FloatVec3{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
-                                       FloatVec3{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
-                                       FloatVec3{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
+      std::array<FloatVec3Type, 3> verts = {FloatVec3Type{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
+                                       FloatVec3Type{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
+                                       FloatVec3Type{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
 
       float32 ex1 = NAN;
       float32 ey1 = NAN;
@@ -346,13 +346,13 @@ private:
   usize m_YDim;
   usize m_NumTriangles;
   usize m_NumFaceLabelComps;
-  FloatVec3 m_Origin;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Origin;
+  FloatVec3Type m_Spacing;
   const IGeometry::MeshIndexType* m_FacesBuffer;
   const float32* m_VerticesBuffer;
   const T* m_FaceLabelsBuffer;
   const std::vector<TriangleZRange>& m_TriZRanges;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 /**
@@ -379,9 +379,9 @@ struct ZSliceFunctor
   Result<> operator()(RegularGridSampleSurfaceMesh* algorithm, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                       const ImageGeom& imageGeom, const TriangleGeom& triangleGeom, const DataPath& faceLabelsArrayPath, DataType outputType)
   {
-    SizeVec3 dims = imageGeom.getDimensions();
-    FloatVec3 origin = imageGeom.getOrigin();
-    FloatVec3 spacing = imageGeom.getSpacing();
+    SizeVec3Type dims = imageGeom.getDimensions();
+    FloatVec3Type origin = imageGeom.getOrigin();
+    FloatVec3Type spacing = imageGeom.getSpacing();
 
     usize xDim = dims[0];
     usize yDim = dims[1];
@@ -489,7 +489,7 @@ struct ZSliceFunctor
     messageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
 
     // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-    CopyFromArray::ParallelTaskResult taskResult;
+    copy_from_array::ParallelTaskResult taskResult;
     ParallelTaskAlgorithm taskAlgorithm;
     for(usize z = 0; z < zDim; z++)
     {
@@ -519,13 +519,13 @@ RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataSt
 
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryOutputPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_output_path);
 
-  SizeVec3 dims = imageGeom.getDimensions();
+  SizeVec3Type dims = imageGeom.getDimensions();
   m_CellsPerSlice = dims[0] * dims[1];
 
-  return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), this, m_DataStructure, m_ShouldCancel,
-                                    m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath,
-                                    m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath).getDataType());
+  return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->surface_mesh_face_labels_array_path)->getDataType(), this, m_DataStructure, m_ShouldCancel,
+                                    m_MessageHandler, imageGeom, triangleGeom, m_InputValues->surface_mesh_face_labels_array_path,
+                                    m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path).getDataType());
 }

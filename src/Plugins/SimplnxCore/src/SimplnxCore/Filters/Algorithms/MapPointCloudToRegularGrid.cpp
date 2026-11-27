@@ -38,8 +38,8 @@ using WarningType = OutOfBoundsType<false, true, false>;
 using ErrorType = OutOfBoundsType<false, false, true>;
 
 template <class OutOfBoundsType = SilentType, bool UseMask = false>
-Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const VertexGeom& vertices, const ImageGeom& image, UInt64AbstractDataStore& voxelIndices,
-                         const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, uint64 outOfBoundsValue)
+Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const VertexGeom& vertices, const ImageGeom& image, UInt64AbstractDataStoreType& voxelIndices,
+                         const std::unique_ptr<mask_compare_utilities::MaskCompare>& maskCompare, uint64 outOfBoundsValue)
 {
   // Out of Bounds Counter
   usize count = 0;
@@ -72,9 +72,9 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
     {
       if constexpr(OutOfBoundsType::k_UsingError)
       {
-        BoundingBox3Df imageBounds = image.getBoundingBoxf();
-        const FloatVec3& minPoint = imageBounds.getMinPoint();
-        const FloatVec3& maxPoint = imageBounds.getMaxPoint();
+        BoundingBox3DfType imageBounds = image.getBoundingBoxf();
+        const FloatVec3Type& minPoint = imageBounds.getMinPoint();
+        const FloatVec3Type& maxPoint = imageBounds.getMaxPoint();
         return MakeErrorResult(
             k_ErrorOutOfBounds,
             fmt::format("Out of bounds value encountered.\nVertex Index: {}\nVertex Coordinates [X,Y,Z]: [{},{},{}]\nImage Coordinate Bounds:\nX: {} to {}\nY: {} to {}\nZ: {} to {}", i, coords[0],
@@ -123,60 +123,60 @@ const std::atomic_bool& MapPointCloudToRegularGrid::getCancel()
 Result<> MapPointCloudToRegularGrid::operator()()
 {
   // Get the target image as a pointer
-  const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
 
   // Create the Mask
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
     return MakeErrorResult(k_MaskCompareInvalid, message);
   }
 
   // Cache all the needed objects for ::ProcessVertices
-  const auto& vertices = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeomPath);
-  auto& voxelIndices = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->VoxelIndicesPath)->getDataStoreRef();
+  const auto& vertices = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->vertex_geom_path);
+  auto& voxelIndices = m_DataStructure.getDataAs<UInt64ArrayType>(m_InputValues->voxel_indices_path)->getDataStoreRef();
 
   // Execute the correct ::ProcessVertices, else error out
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
-    switch(m_InputValues->OutOfBoundsHandling)
+    switch(m_InputValues->out_of_bounds_handling)
     {
     case k_SilentModeIndex: {
-      return ProcessVertices<SilentType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
+      return ProcessVertices<SilentType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->out_of_bounds_value);
     }
     case k_WarningModeIndex: {
-      return ProcessVertices<WarningType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
+      return ProcessVertices<WarningType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->out_of_bounds_value);
     }
     case k_ErrorModeIndex: {
-      return ProcessVertices<ErrorType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
+      return ProcessVertices<ErrorType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->out_of_bounds_value);
     }
     default: {
-      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handling Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->OutOfBoundsHandling,
+      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handling Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->out_of_bounds_handling,
                                                                  k_SilentMode, k_SilentModeIndex, k_WarningMode, k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
     }
     }
   }
   else
   {
-    switch(m_InputValues->OutOfBoundsHandling)
+    switch(m_InputValues->out_of_bounds_handling)
     {
     case k_SilentModeIndex: {
-      return ProcessVertices<SilentType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
+      return ProcessVertices<SilentType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->out_of_bounds_value);
     }
     case k_WarningModeIndex: {
-      return ProcessVertices<WarningType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
+      return ProcessVertices<WarningType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->out_of_bounds_value);
     }
     case k_ErrorModeIndex: {
-      return ProcessVertices<ErrorType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
+      return ProcessVertices<ErrorType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->out_of_bounds_value);
     }
     default: {
-      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handling Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->OutOfBoundsHandling,
+      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handling Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->out_of_bounds_handling,
                                                                  k_SilentMode, k_SilentModeIndex, k_WarningMode, k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
     }
     }

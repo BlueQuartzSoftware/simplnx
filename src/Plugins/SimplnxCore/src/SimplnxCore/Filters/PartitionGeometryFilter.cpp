@@ -45,7 +45,7 @@ constexpr int32 k_GridOriginDomain = -86015;
 constexpr std::array<int32, 3> k_NegativeCellLength = {-3003, -3004, -3005};
 
 // -----------------------------------------------------------------------------
-Result<> ValidateAdvancedParameters(const FloatVec3& cellLength, const FloatVec3& gridOrigin)
+Result<> ValidateAdvancedParameters(const FloatVec3Type& cellLength, const FloatVec3Type& gridOrigin)
 {
   for(usize axis = 0; axis < 3; ++axis)
   {
@@ -54,12 +54,12 @@ Result<> ValidateAdvancedParameters(const FloatVec3& cellLength, const FloatVec3
       return MakeErrorResult(k_NegativeCellLength[axis], fmt::format("Parameter 'Cell Length' {} value {} cannot be negative.", "XYZ"[axis], cellLength[axis]));
     }
   }
-  auto validation = GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const float32>(&cellLength[0], 3), "Cell Length", k_CellLengthDomain);
+  auto validation = geometry_utilities::ValidatePositiveFiniteVector(nonstd::span<const float32>(&cellLength[0], 3), "Cell Length", k_CellLengthDomain);
   if(validation.invalid())
   {
     return validation;
   }
-  return GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32>(&gridOrigin[0], 3), "Partition Grid Origin", k_GridOriginDomain);
+  return geometry_utilities::ValidateFiniteVector(nonstd::span<const float32>(&gridOrigin[0], 3), "Partition Grid Origin", k_GridOriginDomain);
 }
 
 const std::string k_BasicMode("Basic (0)");
@@ -67,7 +67,7 @@ const std::string k_AdvancedMode("Advanced (1)");
 const std::string k_BoundingBoxMode("Bounding Box (2)");
 const std::string k_ExistingSchemeMode("Existing Partition Grid (3)");
 
-const ChoicesParameter::Choices k_Choices = {k_BasicMode, k_AdvancedMode, k_BoundingBoxMode, k_ExistingSchemeMode};
+const ChoicesParameter::ChoicesType k_Choices = {k_BasicMode, k_AdvancedMode, k_BoundingBoxMode, k_ExistingSchemeMode};
 
 const ChoicesParameter::ValueType k_BasicModeIndex = 0;
 const ChoicesParameter::ValueType k_AdvancedModeIndex = 1;
@@ -102,7 +102,7 @@ Result<> ValidateVertexTupleCount(const INodeGeometry0D& geometry, const DataPat
  * @param lengthUnits The length units of the input geometry
  * @return The text description of the current input geometry.
  */
-std::string GenerateInputGeometryDisplayText(const SizeVec3& dims, const FloatVec3& origin, const FloatVec3& spacing, const IGeometry::LengthUnit& lengthUnits)
+std::string GenerateInputGeometryDisplayText(const SizeVec3Type& dims, const FloatVec3Type& origin, const FloatVec3Type& spacing, const IGeometry::LengthUnit& lengthUnits)
 {
   std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnits);
   if(lengthUnits == IGeometry::LengthUnit::Unspecified)
@@ -133,7 +133,7 @@ std::string GenerateInputGeometryDisplayText(const SizeVec3& dims, const FloatVe
  * partitioning scheme geometry fits the input geometry or not.
  * @return The text description of the partitioning scheme geometry.
  */
-std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const FloatVec3& psOrigin, const FloatVec3& psSpacing, const IGeometry::LengthUnit& lengthUnits, const IGeometry& iGeom)
+std::string GeneratePartitioningSchemeDisplayText(const SizeVec3Type& psDims, const FloatVec3Type& psOrigin, const FloatVec3Type& psSpacing, const IGeometry::LengthUnit& lengthUnits, const IGeometry& iGeom)
 {
   const float32 xRangeMax = (psOrigin[0] + (static_cast<float32>(psDims[0]) * psSpacing[0]));
   const float32 xDelta = static_cast<float32>(psDims[0]) * psSpacing[0];
@@ -156,9 +156,9 @@ std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const 
   {
     const auto& geometry = dynamic_cast<const ImageGeom&>(iGeom);
 
-    SizeVec3 dims = geometry.getDimensions();
-    FloatVec3 origin = geometry.getOrigin();
-    FloatVec3 spacing = geometry.getSpacing();
+    SizeVec3Type dims = geometry.getDimensions();
+    FloatVec3Type origin = geometry.getOrigin();
+    FloatVec3Type spacing = geometry.getSpacing();
 
     const float32 gxRangeMax = origin[0] + (static_cast<float32>(dims[0]) * spacing[0]);
     const float32 gyRangeMax = origin[1] + (static_cast<float32>(dims[1]) * spacing[1]);
@@ -191,7 +191,7 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(PartitionGeometryFilter::k_PartitioningMode_Key);
   auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key);
 
-  const SizeVec3 numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
+  const SizeVec3Type numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
                                                 static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
   PartitionGeometry::PSGeomInfo psGeomMetadata;
@@ -199,13 +199,13 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
   switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
   {
   case PartitionGeometryFilter::PartitioningMode::Basic: {
-    psGeomMetadata.geometryDims = numOfPartitionsPerAxisValue;
-    psGeomMetadata.geometryUnits = geometry.getUnits();
+    psGeomMetadata.geometry_dims = numOfPartitionsPerAxisValue;
+    psGeomMetadata.geometry_units = geometry.getUnits();
 
-    Result<FloatVec3> originResult;
+    Result<FloatVec3Type> originResult;
     if constexpr(std::is_same_v<Geom, RectGridGeom>)
     {
-      const auto isPlaceholder = [](const Float32Array* bounds) { return bounds != nullptr && bounds->getStoreType() == IDataStore::StoreType::Empty; };
+      const auto isPlaceholder = [](const Float32ArrayType* bounds) { return bounds != nullptr && bounds->getStoreType() == IDataStore::StoreType::Empty; };
       if(isPlaceholder(geometry.getXBounds()) || isPlaceholder(geometry.getYBounds()) || isPlaceholder(geometry.getZBounds()))
       {
         break;
@@ -223,58 +223,58 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
       {
         break;
       }
-      const auto bounds = GeometryUtilities::GetPaddedNodePartitionBounds(geometry);
+      const auto bounds = geometry_utilities::GetPaddedNodePartitionBounds(geometry);
       if(bounds.isValid())
       {
-        psGeomMetadata.geometryOrigin = FloatVec3(bounds.getMinPoint());
-        psGeomMetadata.geometrySpacing = GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(bounds, numOfPartitionsPerAxisValue).value();
+        psGeomMetadata.geometry_origin = FloatVec3Type(bounds.getMinPoint());
+        psGeomMetadata.geometry_spacing = geometry_utilities::CalculatePartitionLengthsOfBoundingBox(bounds, numOfPartitionsPerAxisValue).value();
       }
       break;
     }
 
-    Result<FloatVec3> pLengthResult = GeometryUtilities::CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
+    Result<FloatVec3Type> pLengthResult = geometry_utilities::CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
     if(originResult.valid() && pLengthResult.valid())
     {
-      psGeomMetadata.geometryOrigin = originResult.value();
-      psGeomMetadata.geometrySpacing = pLengthResult.value();
+      psGeomMetadata.geometry_origin = originResult.value();
+      psGeomMetadata.geometry_spacing = pLengthResult.value();
     }
     break;
   }
   case PartitionGeometryFilter::PartitioningMode::Advanced: {
-    auto pPartitioningSchemeOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_PartitionGridOrigin_Key);
-    auto pCellLengthValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_CellLength_Key);
+    auto pPartitioningSchemeOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(PartitionGeometryFilter::k_PartitionGridOrigin_Key);
+    auto pCellLengthValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(PartitionGeometryFilter::k_CellLength_Key);
 
-    psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
-    psGeomMetadata.geometryOrigin = pPartitioningSchemeOriginValue;
-    psGeomMetadata.geometrySpacing = pCellLengthValue;
-    psGeomMetadata.geometryUnits = geometry.getUnits();
+    psGeomMetadata.geometry_dims = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+    psGeomMetadata.geometry_origin = pPartitioningSchemeOriginValue;
+    psGeomMetadata.geometry_spacing = pCellLengthValue;
+    psGeomMetadata.geometry_units = geometry.getUnits();
     break;
   }
   case PartitionGeometryFilter::PartitioningMode::BoundingBox: {
-    auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_MinGridCoord_Key);
-    auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_MaxGridCoord_Key);
+    auto pMinGridCoordValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(PartitionGeometryFilter::k_MinGridCoord_Key);
+    auto pMaxGridCoordValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(PartitionGeometryFilter::k_MaxGridCoord_Key);
 
-    psGeomMetadata.geometryDims = numOfPartitionsPerAxisValue;
-    psGeomMetadata.geometryOrigin = pMinGridCoordValue;
-    const FloatVec3 llCoord(pMinGridCoordValue[0], pMinGridCoordValue[1], pMinGridCoordValue[2]);
-    const FloatVec3 urCoord(pMaxGridCoordValue[0], pMaxGridCoordValue[1], pMaxGridCoordValue[2]);
+    psGeomMetadata.geometry_dims = numOfPartitionsPerAxisValue;
+    psGeomMetadata.geometry_origin = pMinGridCoordValue;
+    const FloatVec3Type llCoord(pMinGridCoordValue[0], pMinGridCoordValue[1], pMinGridCoordValue[2]);
+    const FloatVec3Type urCoord(pMaxGridCoordValue[0], pMaxGridCoordValue[1], pMaxGridCoordValue[2]);
 
-    Result<FloatVec3> result = GeometryUtilities::CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
+    Result<FloatVec3Type> result = geometry_utilities::CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
     if(result.valid())
     {
-      psGeomMetadata.geometrySpacing = result.value();
+      psGeomMetadata.geometry_spacing = result.value();
     }
 
-    psGeomMetadata.geometryUnits = geometry.getUnits();
+    psGeomMetadata.geometry_units = geometry.getUnits();
     break;
   }
   case PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid: {
     auto pExistingPartitioningSchemePathValue = filterArgs.value<DataPath>(PartitionGeometryFilter::k_ExistingPartitionGridPath_Key);
     const auto& psGeom = dataStructure.getDataRefAs<ImageGeom>(pExistingPartitioningSchemePathValue);
-    psGeomMetadata.geometryDims = psGeom.getDimensions();
-    psGeomMetadata.geometryOrigin = psGeom.getOrigin();
-    psGeomMetadata.geometrySpacing = psGeom.getSpacing();
-    psGeomMetadata.geometryUnits = psGeom.getUnits();
+    psGeomMetadata.geometry_dims = psGeom.getDimensions();
+    psGeomMetadata.geometry_origin = psGeom.getOrigin();
+    psGeomMetadata.geometry_spacing = psGeom.getSpacing();
+    psGeomMetadata.geometry_units = psGeom.getUnits();
     break;
   }
   }
@@ -336,14 +336,14 @@ Parameters PartitionGeometryFilter::parameters() const
                                                  "The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid.", 0));
   params.insert(std::make_unique<VectorInt32ParameterType>(k_NumberOfCellsPerAxis_Key, "Number Of Cells Per Axis", "The number of cells along each axis of the partition grid",
                                                        std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry", std::vector<float32>({0.0F, 0.0F, 0.0F}),
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry", std::vector<float32>({0.0F, 0.0F, 0.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_CellLength_Key, "Cell Length (Physical Units)",
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_CellLength_Key, "Cell Length (Physical Units)",
                                                          "The length in physical units for each cell in the partition grid. The physical units are automatically set by the input geometry.",
                                                          std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinGridCoord_Key, "Minimum Grid Coordinate", "Minimum grid coordinate used to create the partition grid",
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinGridCoord_Key, "Minimum Grid Coordinate", "Minimum grid coordinate used to create the partition grid",
                                                          std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxGridCoord_Key, "Maximum Grid Coordinate", "Maximum grid coordinate used to create the partition grid",
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxGridCoord_Key, "Maximum Grid Coordinate", "Maximum grid coordinate used to create the partition grid",
                                                          std::vector<float32>({10.0F, 10.0F, 10.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingPartitionGridPath_Key, "Existing Partition Grid",
                                                              "This is an existing Image Geometry that defines the partition grid that will be used.", DataPath{},
@@ -352,7 +352,7 @@ Parameters PartitionGeometryFilter::parameters() const
       std::make_unique<BoolParameter>(k_UseVertexMask_Key, "Use Vertex Mask (Node Geometries Only)",
                                       "Feature ID values will only be placed on vertices that have a 'true' mask value. All others will have the Out-Of-Bounds Feature ID value used instead", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAttrMatrixName_Key, "Partition Attribute Matrix",
@@ -416,10 +416,10 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 {
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
   auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
-  auto pPartitionGridOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_PartitionGridOrigin_Key);
-  auto pCellLengthValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_CellLength_Key);
-  auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
-  auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxGridCoord_Key);
+  auto pPartitionGridOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_PartitionGridOrigin_Key);
+  auto pCellLengthValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_CellLength_Key);
+  auto pMinGridCoordValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinGridCoord_Key);
+  auto pMaxGridCoordValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxGridCoord_Key);
   auto pInputGeomCellAMPathValue = filterArgs.value<DataPath>(k_InputGeometryCellAttributeMatrixPath_Key);
   auto pFeatureAttrMatrixNameValue = filterArgs.value<std::string>(k_FeatureAttrMatrixName_Key);
   auto pPartitionGridGeomValue = filterArgs.value<DataPath>(k_PartitionGridGeometry_Key);
@@ -429,7 +429,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   auto pPartitionIdsArrayNameValue = filterArgs.value<std::string>(k_PartitionIdsArrayName_Key);
   auto pUseVertexMask = filterArgs.value<bool>(k_UseVertexMask_Key);
 
-  const SizeVec3 numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+  const SizeVec3Type numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
   const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
@@ -438,7 +438,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     auto validation = ValidateAdvancedParameters(pCellLengthValue, pPartitionGridOriginValue);
     if(validation.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(validation))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(validation))};
     }
   }
 
@@ -448,7 +448,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     auto result = ValidateCellTupleCount(geometry, pInputGeometryToPartitionValue, attrMatrix.getNumberOfTuples(), pInputGeomCellAMPathValue, -3045);
     if(result.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {})};
     }
   }
   std::string inputGeometryInformation;
@@ -460,7 +460,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     Result<> result = dataCheckPartitioningMode<ImageGeom>(dataStructure, filterArgs, geometry);
     if(result.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {})};
     }
     psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = GenerateInputGeometryDisplayText(geometry.getDimensions(), geometry.getOrigin(), geometry.getSpacing(), geometry.getUnits());
@@ -471,7 +471,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     auto cellTupleResult = ValidateCellTupleCount(geometry, pInputGeometryToPartitionValue, attrMatrix.getNumberOfTuples(), pInputGeomCellAMPathValue, -3010);
     if(cellTupleResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
     }
     psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = "Rectilinear grid geometry space unknown during preflight.";
@@ -481,7 +481,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Vertex geometry space unknown during preflight.";
     break;
@@ -490,7 +490,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Edge geometry space unknown during preflight.";
     break;
@@ -499,7 +499,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Triangle geometry space unknown during preflight.";
     break;
@@ -508,7 +508,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Quad geometry space unknown during preflight.";
     break;
@@ -517,7 +517,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Tetrahedral geometry space unknown during preflight.";
     break;
@@ -526,7 +526,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     psInfo = GenerateNodeBasedPsInfo(dataStructure, filterArgs, pInputGeometryToPartitionValue, pInputGeomCellAMPathValue);
     if(psInfo.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
     }
     inputGeometryInformation = "Hexahedral geometry space unknown during preflight.";
     break;
@@ -535,13 +535,13 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   if(psInfo.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
   }
 
   const auto startingFeatureId = filterArgs.value<int32>(k_StartingFeatureID_Key);
   if(startingFeatureId < 0)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-3046, fmt::format("Starting Feature ID ({}) must be non-negative so partition IDs can index the feature Attribute Matrix.", startingFeatureId))};
   }
 
@@ -553,17 +553,17 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   dap = pInputGeomCellAMPathValue.getParent();
   dap = dap.createChildPath(pFeatureAttrMatrixNameValue);
-  const auto& partitionDims = psInfo.value().geometryDims;
+  const auto& partitionDims = psInfo.value().geometry_dims;
   const usize featureTupleCount = partitionDims[0] * partitionDims[1] * partitionDims[2] + static_cast<usize>(startingFeatureId);
   resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(dap, ShapeType{featureTupleCount}));
 
   std::string partitioningSchemeInformation;
 
   auto psMetadata = psInfo.value();
-  const std::vector<usize> psDims = {psMetadata.geometryDims[0], psMetadata.geometryDims[1], psMetadata.geometryDims[2]};
+  const std::vector<usize> psDims = {psMetadata.geometry_dims[0], psMetadata.geometry_dims[1], psMetadata.geometry_dims[2]};
   std::vector<float32> psOrigin;
   std::vector<float32> psSpacing;
-  if(!psMetadata.geometryOrigin.has_value() || !psMetadata.geometrySpacing.has_value())
+  if(!psMetadata.geometry_origin.has_value() || !psMetadata.geometry_spacing.has_value())
   {
     psOrigin = {0.0, 0.0, 0.0};
     psSpacing = {1.0F, 1.0F, 1.0F};
@@ -571,9 +571,9 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   }
   else
   {
-    psOrigin = {(*psMetadata.geometryOrigin)[0], (*psMetadata.geometryOrigin)[1], (*psMetadata.geometryOrigin)[2]};
-    psSpacing = {(*psMetadata.geometrySpacing)[0], (*psMetadata.geometrySpacing)[1], (*psMetadata.geometrySpacing)[2]};
-    partitioningSchemeInformation = GeneratePartitioningSchemeDisplayText(psDims, psOrigin, psSpacing, psMetadata.geometryUnits, iGeom);
+    psOrigin = {(*psMetadata.geometry_origin)[0], (*psMetadata.geometry_origin)[1], (*psMetadata.geometry_origin)[2]};
+    psSpacing = {(*psMetadata.geometry_spacing)[0], (*psMetadata.geometry_spacing)[1], (*psMetadata.geometry_spacing)[2]};
+    partitioningSchemeInformation = GeneratePartitioningSchemeDisplayText(psDims, psOrigin, psSpacing, psMetadata.geometry_units, iGeom);
   }
 
   if(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue) != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
@@ -583,7 +583,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
     dap = pPartitionGridGeomValue;
     dap = dap.createChildPath(pPartitionGridCellAMNameValue).createChildPath(pPartitionGridFeatureIDsNameValue);
-    action = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{psMetadata.geometryDims[2], psMetadata.geometryDims[1], psMetadata.geometryDims[0]}, std::vector<usize>{1}, dap);
+    action = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{psMetadata.geometry_dims[2], psMetadata.geometry_dims[1], psMetadata.geometry_dims[0]}, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -593,7 +593,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   if(pUseVertexMask && (iGeom.getGeomType() == IGeometry::Type::Image || iGeom.getGeomType() == IGeometry::Type::RectGrid))
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-3019, fmt::format("{}: The input geometry is {}, which is not vertex-based.  Vertex mask cannot be used.", humanName(), iGeom.getTypeName()))};
   }
 
@@ -603,7 +603,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     // ArraySelectionParameter also accepts StringArray and NeighborList for Boolean selections.
     // Keep the local type check until the parameter validates supported array kinds.
     // TODO(#1833): Revisit this guard after the shared fix preserves generic array support.
-    if(dataStructure.getDataAs<BoolArray>(maskPath) == nullptr)
+    if(dataStructure.getDataAs<BoolArrayType>(maskPath) == nullptr)
     {
       const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(maskPath);
       return MakePreflightErrorResult(-3044, fmt::format("The selected Vertex Mask object '{}' has type '{}', but a scalar Boolean DataArray is required. Select a scalar Boolean DataArray.",
@@ -611,7 +611,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
@@ -671,10 +671,10 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
   auto partitioningMode = static_cast<PartitioningMode>(pPartitioningModeValue);
 
   auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
-  SizeVec3 numOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+  SizeVec3Type numOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
-  auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
-  auto pMaxGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxGridCoord_Key);
+  auto pMinGridCoordValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinGridCoord_Key);
+  auto pMaxGridCoordValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxGridCoord_Key);
 
   auto pInputGeomCellAMPathValue = filterArgs.value<DataPath>(k_InputGeometryCellAttributeMatrixPath_Key);
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>({pInputGeomCellAMPathValue});
@@ -697,7 +697,7 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
+Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3Type& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
                                                      const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
   Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
@@ -717,7 +717,7 @@ Result<> PartitionGeometryFilter::dataCheckBasicMode(const SizeVec3& numOfPartit
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
+Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3Type& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
                                                         const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
   Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
@@ -737,7 +737,7 @@ Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPar
 
 // -----------------------------------------------------------------------------
 template <typename GeomType>
-Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition,
+Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3Type& numOfPartitionsPerAxis, const FloatVec3Type& llCoord, const FloatVec3Type& urCoord, const GeomType& geometryToPartition,
                                                            const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const
 {
   Result<> result = DataCheckNumberOfPartitions(numOfPartitionsPerAxis);
@@ -793,7 +793,7 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
 }
 
 // -----------------------------------------------------------------------------
-Result<> PartitionGeometryFilter::DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis)
+Result<> PartitionGeometryFilter::DataCheckNumberOfPartitions(const SizeVec3Type& numberOfPartitionsPerAxis)
 {
   if(numberOfPartitionsPerAxis.getX() <= 0)
   {
@@ -820,24 +820,24 @@ Result<> PartitionGeometryFilter::executeImpl(DataStructure& dataStructure, cons
 
   PartitionGeometryInputValues inputValues;
 
-  inputValues.PartitioningMode = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
-  inputValues.StartingFeatureID = filterArgs.value<int32>(k_StartingFeatureID_Key);
-  inputValues.OutOfBoundsFeatureID = filterArgs.value<int32>(k_OutOfBoundsFeatureID_Key);
-  inputValues.NumberOfCellsPerAxis = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
-  inputValues.PartitionGridOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_PartitionGridOrigin_Key);
-  inputValues.CellLength = filterArgs.value<VectorFloat32Parameter::ValueType>(k_CellLength_Key);
-  inputValues.MinGridCoord = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
-  inputValues.MaxGridCoord = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxGridCoord_Key);
-  inputValues.InputGeomCellAMPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_InputGeometryCellAttributeMatrixPath_Key);
-  inputValues.PartitionGridGeomPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_PartitionGridGeometry_Key);
-  inputValues.PartitionGridCellAMName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartitionGridCellAMName_Key);
-  inputValues.PartitionGridFeatureIDsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartitionGridFeatureIDsName_Key);
-  inputValues.InputGeometryToPartition = filterArgs.value<DataPath>(k_InputGeometryToPartition_Key);
-  inputValues.PartitionIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartitionIdsArrayName_Key);
-  inputValues.ExistingPartitionGridPath = filterArgs.value<DataPath>(k_ExistingPartitionGridPath_Key);
-  inputValues.UseVertexMask = filterArgs.value<bool>(k_UseVertexMask_Key);
-  inputValues.VertexMaskPath = filterArgs.value<DataPath>(k_VertexMaskPath_Key);
-  inputValues.FeatureAttrMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureAttrMatrixName_Key);
+  inputValues.partitioning_mode = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
+  inputValues.starting_feature_id = filterArgs.value<int32>(k_StartingFeatureID_Key);
+  inputValues.out_of_bounds_feature_id = filterArgs.value<int32>(k_OutOfBoundsFeatureID_Key);
+  inputValues.number_of_cells_per_axis = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
+  inputValues.partition_grid_origin = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_PartitionGridOrigin_Key);
+  inputValues.cell_length = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_CellLength_Key);
+  inputValues.min_grid_coord = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinGridCoord_Key);
+  inputValues.max_grid_coord = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxGridCoord_Key);
+  inputValues.input_geom_cell_am_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_InputGeometryCellAttributeMatrixPath_Key);
+  inputValues.partition_grid_geom_path = filterArgs.value<DataGroupCreationParameter::ValueType>(k_PartitionGridGeometry_Key);
+  inputValues.partition_grid_cell_am_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartitionGridCellAMName_Key);
+  inputValues.partition_grid_feature_i_ds_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartitionGridFeatureIDsName_Key);
+  inputValues.input_geometry_to_partition = filterArgs.value<DataPath>(k_InputGeometryToPartition_Key);
+  inputValues.partition_ids_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PartitionIdsArrayName_Key);
+  inputValues.existing_partition_grid_path = filterArgs.value<DataPath>(k_ExistingPartitionGridPath_Key);
+  inputValues.use_vertex_mask = filterArgs.value<bool>(k_UseVertexMask_Key);
+  inputValues.vertex_mask_path = filterArgs.value<DataPath>(k_VertexMaskPath_Key);
+  inputValues.feature_attr_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureAttrMatrixName_Key);
 
   return PartitionGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

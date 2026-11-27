@@ -200,7 +200,7 @@ class ScopedBudget
 {
 public:
   explicit ScopedBudget(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -276,7 +276,7 @@ struct ZeroCrossingCountingResult
 };
 
 template <class T>
-ZeroCrossingCountingResult RunZeroCrossingCounting(const std::vector<T>& field, const SizeVec3& dims, uint8 foreground, uint8 background, uint64 budgetBytes)
+ZeroCrossingCountingResult RunZeroCrossingCounting(const std::vector<T>& field, const SizeVec3Type& dims, uint8 foreground, uint8 background, uint64 budgetBytes)
 {
   ScopedBudget budget(budgetBytes);
   OutOfCoreTransferCountingDataStore<T> inputStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{});
@@ -296,7 +296,7 @@ ZeroCrossingCountingResult RunZeroCrossingCounting(const std::vector<T>& field, 
   {
     output[index] = outputStore.getValue(index);
   }
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   return {std::move(output), inputStore.readCount(), inputStore.maxReadValues(), outputStore.writeCount(), outputStore.maxWriteValues()};
 }
 
@@ -312,7 +312,7 @@ std::vector<uint8> RunZeroCrossing(const std::vector<T>& field, usize dx, usize 
   DataStore<uint8> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, background);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ApplyZeroCrossing<T>(inStore, outStore, SizeVec3{dx, dy, dz}, foreground, background, shouldCancel, messageHandler);
+  const Result<> r = ApplyZeroCrossing<T>(inStore, outStore, SizeVec3Type{dx, dy, dz}, foreground, background, shouldCancel, messageHandler);
   REQUIRE(r.valid());
   std::vector<uint8> out(field.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -328,12 +328,12 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ZeroCrossingEngine: direct route matches 
   using T = TestType;
   constexpr uint8 k_Foreground = 7;
   constexpr uint8 k_Background = 3;
-  const std::array<SizeVec3, 10> dimensions = {SizeVec3{1, 1, 1}, SizeVec3{1, 1, 7}, SizeVec3{7, 1, 1},    SizeVec3{1, 5, 1},  SizeVec3{2, 2, 2},
-                                               SizeVec3{3, 3, 3}, SizeVec3{7, 6, 5}, SizeVec3{17, 13, 11}, SizeVec3{33, 9, 7}, SizeVec3{5, 40, 3}};
+  const std::array<SizeVec3Type, 10> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 7}, SizeVec3Type{7, 1, 1},    SizeVec3Type{1, 5, 1},  SizeVec3Type{2, 2, 2},
+                                               SizeVec3Type{3, 3, 3}, SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 3}};
 
   for(usize dimensionsIndex = 0; dimensionsIndex < dimensions.size(); ++dimensionsIndex)
   {
-    const SizeVec3& dims = dimensions[dimensionsIndex];
+    const SizeVec3Type& dims = dimensions[dimensionsIndex];
     DYNAMIC_SECTION(dims[0] << "x" << dims[1] << "x" << dims[2])
     {
       const std::vector<T> field = MakeSignedField<T>(dims[0], dims[1], dims[2], uint32{0x5EED0001u} + static_cast<uint32>(dimensionsIndex));
@@ -354,11 +354,11 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab route matches th
   using T = TestType;
   constexpr uint8 k_Foreground = 7;
   constexpr uint8 k_Background = 3;
-  const std::array<SizeVec3, 3> dimensions = {SizeVec3{7, 6, 5}, SizeVec3{17, 13, 11}, SizeVec3{5, 40, 6}};
+  const std::array<SizeVec3Type, 3> dimensions = {SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{5, 40, 6}};
 
   for(usize dimensionsIndex = 0; dimensionsIndex < dimensions.size(); ++dimensionsIndex)
   {
-    const SizeVec3& dims = dimensions[dimensionsIndex];
+    const SizeVec3Type& dims = dimensions[dimensionsIndex];
     const usize sliceValues = dims[0] * dims[1];
     const uint64 planeInputBytes = sliceValues * sizeof(T);
     const uint64 planeOutputBytes = sliceValues * sizeof(uint8);
@@ -378,21 +378,21 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab route matches th
       DYNAMIC_SECTION(dims[0] << "x" << dims[1] << "x" << dims[2] << " with budget " << budgetBytes)
       {
         const zero_detail::ZeroCrossingSlabPlan plan = zero_detail::PlanZeroCrossingSlab<T>(dims, budgetBytes / 4);
-        REQUIRE(plan.corePlanes == expectedCorePlanes[budgetIndex]);
+        REQUIRE(plan.core_planes == expectedCorePlanes[budgetIndex]);
         const ZeroCrossingCountingResult result = RunZeroCrossingCounting(field, dims, k_Foreground, k_Background, budgetBytes);
         REQUIRE(result.output == expected);
-        const usize expectedTransferCount = (dims[2] + plan.corePlanes - 1) / plan.corePlanes;
+        const usize expectedTransferCount = (dims[2] + plan.core_planes - 1) / plan.core_planes;
         REQUIRE(result.read_count == expectedTransferCount);
         REQUIRE(result.write_count == expectedTransferCount);
-        if(plan.corePlanes == dims[2])
+        if(plan.core_planes == dims[2])
         {
-          REQUIRE(result.max_read_values == plan.inputPlanes * sliceValues);
+          REQUIRE(result.max_read_values == plan.input_planes * sliceValues);
         }
         else
         {
-          REQUIRE(result.max_read_values <= plan.inputPlanes * sliceValues);
+          REQUIRE(result.max_read_values <= plan.input_planes * sliceValues);
         }
-        REQUIRE(result.max_write_values == plan.corePlanes * sliceValues);
+        REQUIRE(result.max_write_values == plan.core_planes * sliceValues);
       }
     }
   }
@@ -479,27 +479,27 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: determinism + tall-Z analytic 
 TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab plan derives the plane count from the grant", "[NXImageProcessing][ZeroCrossingEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 largeDims{1024, 1024, 256};
+  const SizeVec3Type largeDims{1024, 1024, 256};
   const auto requirePlan = [](const zero_detail::ZeroCrossingSlabPlan& plan, usize corePlanes, usize inputPlanes, usize inputBytes, usize outputBytes) {
-    REQUIRE(plan.corePlanes == corePlanes);
-    REQUIRE(plan.inputPlanes == inputPlanes);
-    REQUIRE(plan.inputBytes == inputBytes);
-    REQUIRE(plan.outputBytes == outputBytes);
+    REQUIRE(plan.core_planes == corePlanes);
+    REQUIRE(plan.input_planes == inputPlanes);
+    REQUIRE(plan.input_bytes == inputBytes);
+    REQUIRE(plan.output_bytes == outputBytes);
   };
 
   requirePlan(zero_detail::PlanZeroCrossingSlab<float32>(largeDims, 512 * k_MiB), 100, 102, 408 * k_MiB, 100 * k_MiB);
   requirePlan(zero_detail::PlanZeroCrossingSlab<float32>(largeDims, 20 * k_MiB), 2, 4, 16 * k_MiB, 2 * k_MiB);
   requirePlan(zero_detail::PlanZeroCrossingSlab<float32>(largeDims, 1 * k_MiB), 1, 3, 12 * k_MiB, 1 * k_MiB);
   requirePlan(zero_detail::PlanZeroCrossingSlab<float32>(largeDims, 1280 * k_MiB), 256, 256, 1024 * k_MiB, 256 * k_MiB);
-  requirePlan(zero_detail::PlanZeroCrossingSlab<float32>(SizeVec3{5, 6, 7}, 1024), 5, 7, 840, 150);
+  requirePlan(zero_detail::PlanZeroCrossingSlab<float32>(SizeVec3Type{5, 6, 7}, 1024), 5, 7, 840, 150);
 
-  auto usefulFloatResult = zero_detail::ZeroCrossingSlabUsefulBytes<float32>(SizeVec3{512, 512, 128});
+  auto usefulFloatResult = zero_detail::ZeroCrossingSlabUsefulBytes<float32>(SizeVec3Type{512, 512, 128});
   SIMPLNX_RESULT_REQUIRE_VALID(usefulFloatResult);
   REQUIRE(usefulFloatResult.value() == 160 * k_MiB);
-  auto overflowResult = zero_detail::ZeroCrossingSlabUsefulBytes<float64>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2});
+  auto overflowResult = zero_detail::ZeroCrossingSlabUsefulBytes<float64>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2});
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowResult);
   REQUIRE(overflowResult.errors().front().code == -8761);
-  auto emptyResult = zero_detail::ZeroCrossingSlabUsefulBytes<float32>(SizeVec3{4, 4, 0});
+  auto emptyResult = zero_detail::ZeroCrossingSlabUsefulBytes<float32>(SizeVec3Type{4, 4, 0});
   SIMPLNX_RESULT_REQUIRE_VALID(emptyResult);
   REQUIRE(emptyResult.value() == 0);
 }
@@ -507,7 +507,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab plan derives the plane co
 TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab reservation follows the grant", "[NXImageProcessing][ZeroCrossingEngine][WorkingMemory]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{512, 512, 128};
+  const SizeVec3Type dims{512, 512, 128};
   auto usefulResult = zero_detail::ZeroCrossingSlabUsefulBytes<float32>(dims);
   SIMPLNX_RESULT_REQUIRE_VALID(usefulResult);
   const usize usefulBytes = usefulResult.value();
@@ -518,10 +518,10 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab reservation follows the g
       auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
       REQUIRE(reservation.sizeBytes() == 128 * k_MiB);
       const zero_detail::ZeroCrossingSlabPlan plan = zero_detail::PlanZeroCrossingSlab<float32>(dims, reservation.sizeBytes());
-      REQUIRE(plan.corePlanes == 100);
-      REQUIRE(plan.inputPlanes == 102);
+      REQUIRE(plan.core_planes == 100);
+      REQUIRE(plan.input_planes == 102);
     }
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
   {
     ScopedBudget budget(1024 * k_MiB);
@@ -529,10 +529,10 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab reservation follows the g
       auto reservation = ReserveWorkingMemory(usefulBytes, usefulBytes);
       REQUIRE(reservation.sizeBytes() == 160 * k_MiB);
       const zero_detail::ZeroCrossingSlabPlan plan = zero_detail::PlanZeroCrossingSlab<float32>(dims, reservation.sizeBytes());
-      REQUIRE(plan.corePlanes == 128);
-      REQUIRE(plan.inputPlanes == 128);
+      REQUIRE(plan.core_planes == 128);
+      REQUIRE(plan.input_planes == 128);
     }
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 }
 
@@ -543,12 +543,12 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab route transfers follow th
   constexpr usize k_DimZ = 7;
   constexpr uint8 k_Foreground = 7;
   constexpr uint8 k_Background = 3;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<float32> field = MakeSignedField<float32>(k_DimX, k_DimY, k_DimZ, 0x5EED2001u);
   const std::vector<uint8> expected = ZeroCrossing3DOracle(field, k_DimX, k_DimY, k_DimZ, k_Foreground, k_Background);
 
   const auto partialPlan = zero_detail::PlanZeroCrossingSlab<float32>(dims, 1024);
-  REQUIRE(partialPlan.corePlanes == 5);
+  REQUIRE(partialPlan.core_planes == 5);
   const ZeroCrossingCountingResult partialResult = RunZeroCrossingCounting(field, dims, k_Foreground, k_Background, 4096);
   REQUIRE(partialResult.output == expected);
   REQUIRE(partialResult.read_count == 2);
@@ -557,7 +557,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: slab route transfers follow th
   REQUIRE(partialResult.max_write_values == 5 * k_DimX * k_DimY);
 
   const auto completePlan = zero_detail::PlanZeroCrossingSlab<float32>(dims, 2048);
-  REQUIRE(completePlan.corePlanes == 7);
+  REQUIRE(completePlan.core_planes == 7);
   const ZeroCrossingCountingResult completeResult = RunZeroCrossingCounting(field, dims, k_Foreground, k_Background, 8192);
   REQUIRE(completeResult.output == expected);
   REQUIRE(completeResult.read_count == 1);
@@ -573,7 +573,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: in-core direct route performs 
   constexpr usize k_DimZ = 11;
   constexpr uint8 k_Foreground = 7;
   constexpr uint8 k_Background = 3;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<float32> field = MakeSignedField<float32>(k_DimX, k_DimY, k_DimZ, 0x5EED3001u);
   const std::vector<uint8> expected = ZeroCrossing3DOracle(field, k_DimX, k_DimY, k_DimZ, k_Foreground, k_Background);
   TransferCountingDataStore<float32> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
@@ -603,7 +603,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: pre-cancelled run leaves the o
   constexpr usize k_DimY = 8;
   constexpr usize k_DimZ = 7;
   constexpr uint8 k_Poison = 255;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<float32> field = MakeSignedField<float32>(k_DimX, k_DimY, k_DimZ, 0x5EED4001u);
   std::atomic_bool shouldCancel{true};
   IFilter::MessageHandler messageHandler{};
@@ -649,7 +649,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: pre-cancelled run leaves the o
       CAPTURE(index);
       REQUIRE(outputStore.getValue(index) == k_Poison);
     }
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == 0);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == 0);
   }
 }
 
@@ -698,7 +698,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles pr
       std::atomic_bool shouldCancel{false};
       IFilter::MessageHandler messageHandler{};
       const Result<> applyResult =
-          ApplyZeroCrossing<int32>(inputStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, k_Foreground, k_Background, shouldCancel, messageHandler, transferCase.target_bytes);
+          ApplyZeroCrossing<int32>(inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_Foreground, k_Background, shouldCancel, messageHandler, transferCase.target_bytes);
       SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
       std::vector<uint8> actual(k_TotalValues);
@@ -715,7 +715,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: bounded 2D blocks and tiles pr
 
 TEST_CASE("NXImageProcessing::ZeroCrossingEngine: resident flag precedence has an execution witness", "[NXImageProcessing][ZeroCrossingEngine][ZeroCrossingSelection]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Low-level selector tests use raw flags to cover the otherwise conflicting force controls.
   struct FlagCase
   {
@@ -755,15 +755,15 @@ TEST_CASE("NXImageProcessing::ZeroCrossingEngine: resident flag precedence has a
     }
     const std::atomic_bool shouldCancel{false};
     const IFilter::MessageHandler messages{};
-    const auto result = ApplyZeroCrossing(inputStore, outputStore, SizeVec3{2, 1, 2}, uint8{7}, uint8{3}, shouldCancel, messages);
+    const auto result = ApplyZeroCrossing(inputStore, outputStore, SizeVec3Type{2, 1, 2}, uint8{7}, uint8{3}, shouldCancel, messages);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     const auto counts = GetAlgorithmPathExecutionCounts();
-    CHECK(counts.InCore == (testCase.expect_direct ? 1 : 0));
-    CHECK(counts.OutOfCore == (testCase.expect_direct ? 0 : 1));
-    CHECK(counts.InCoreOnInMemoryStore == counts.InCore);
-    CHECK(counts.OutOfCoreOnInMemoryStore == counts.OutOfCore);
-    CHECK(counts.InCoreOnOutOfCoreStore == 0);
-    CHECK(counts.OutOfCoreOnOutOfCoreStore == 0);
+    CHECK(counts.in_core == (testCase.expect_direct ? 1 : 0));
+    CHECK(counts.out_of_core == (testCase.expect_direct ? 0 : 1));
+    CHECK(counts.in_core_on_in_memory_store == counts.in_core);
+    CHECK(counts.out_of_core_on_in_memory_store == counts.out_of_core);
+    CHECK(counts.in_core_on_out_of_core_store == 0);
+    CHECK(counts.out_of_core_on_out_of_core_store == 0);
     CHECK((inputStore.readCount() == 0) == testCase.expect_direct);
     CHECK((outputStore.writeCount() == 0) == testCase.expect_direct);
     for(usize index = 0; index < k_Expected.size(); ++index)

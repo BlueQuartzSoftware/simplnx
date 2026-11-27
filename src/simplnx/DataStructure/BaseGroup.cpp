@@ -247,7 +247,7 @@ std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupTyp
   return stringValues;
 }
 
-std::vector<std::string> BaseGroup::GetChildrenNames()
+std::vector<std::string> BaseGroup::getChildrenNames()
 {
   return m_DataMap.getNames();
 }
@@ -257,7 +257,7 @@ void BaseGroup::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType,
   m_DataMap.updateIds(updatedIdsMap);
 }
 
-std::vector<DataObject::IdType> BaseGroup::GetChildrenIds()
+std::vector<DataObject::IdType> BaseGroup::getChildrenIds()
 {
   return m_DataMap.getKeys();
 }

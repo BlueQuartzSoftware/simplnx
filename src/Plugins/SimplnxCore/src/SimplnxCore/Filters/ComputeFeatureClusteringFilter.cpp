@@ -86,12 +86,12 @@ Parameters ComputeFeatureClusteringFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_BiasedFeaturesArrayPath_Key, "Biased Features",
                                                           "Specifies which features are biased and therefore should be removed if the Remove Biased Features option is on; True values removed",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
                                                                     "The path to the cell ensemble attribute matrix where the RDF and RDF min and max distance arrays will be stored", DataPath{}));
@@ -128,7 +128,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   Result<> binCountResult = ValidateNumberOfBins(pNumberOfBinsValue);
   if(binCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(binCountResult), {})};
   }
   auto pRemoveBiasedFeaturesValue = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -154,7 +154,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(featureDataArrays);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-9750, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -181,7 +181,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -195,22 +195,22 @@ Result<> ComputeFeatureClusteringFilter::executeImpl(DataStructure& dataStructur
   }
 
   // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   ComputeFeatureClusteringInputValues inputValues;
 
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.NumberOfBins = filterArgs.value<int32>(k_NumberOfBins_Key);
-  inputValues.PhaseNumber = filterArgs.value<int32>(k_PhaseNumber_Key);
-  inputValues.RemoveBiasedFeatures = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
-  inputValues.SeedValue = seed;
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.BiasedFeaturesArrayPath = filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
-  inputValues.ClusteringListArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_ClusteringListArrayName_Key));
-  inputValues.RDFArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_RDFArrayName_Key));
-  inputValues.MaxMinArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_MaxMinArrayName_Key));
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.number_of_bins = filterArgs.value<int32>(k_NumberOfBins_Key);
+  inputValues.phase_number = filterArgs.value<int32>(k_PhaseNumber_Key);
+  inputValues.remove_biased_features = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
+  inputValues.seed_value = seed;
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.centroids_array_path = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  inputValues.biased_features_array_path = filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
+  inputValues.clustering_list_array_name = inputValues.feature_phases_array_path.replaceName(filterArgs.value<std::string>(k_ClusteringListArrayName_Key));
+  inputValues.rdf_array_name = inputValues.cell_ensemble_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_RDFArrayName_Key));
+  inputValues.max_min_array_name = inputValues.cell_ensemble_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_MaxMinArrayName_Key));
 
   return ComputeFeatureClustering(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

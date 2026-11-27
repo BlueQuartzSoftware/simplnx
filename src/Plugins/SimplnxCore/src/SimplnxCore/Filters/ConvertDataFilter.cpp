@@ -116,7 +116,7 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -125,16 +125,16 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
 {
   ConvertDataInputValues inputValues;
   auto scalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);
-  inputValues.ScalarType = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
-  inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
+  inputValues.scalar_type = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
+  inputValues.selected_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
   auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
   if(filterArgs.value<bool>(k_DeleteOriginal_Key))
   {
-    inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(k_TempName);
+    inputValues.output_array_name = inputValues.selected_array_path.replaceName(k_TempName);
   }
   else
   {
-    inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(pConvertedArrayName);
+    inputValues.output_array_name = inputValues.selected_array_path.replaceName(pConvertedArrayName);
   }
 
   return ConvertData(dataStructure, messageHandler, shouldCancel, &inputValues)();

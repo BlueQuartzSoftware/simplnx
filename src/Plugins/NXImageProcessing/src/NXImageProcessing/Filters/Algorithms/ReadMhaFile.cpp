@@ -46,20 +46,20 @@ Result<CropBounds> ComputeCropBounds(const nx::core::mhd::MetaImageMetadata& md,
 
   if(opts.type == _Type::VoxelSubvolume)
   {
-    if(opts.cropX)
+    if(opts.crop_x)
     {
-      b.x_start = opts.xBoundVoxels[0];
-      b.x_end = opts.xBoundVoxels[1];
+      b.x_start = opts.x_bound_voxels[0];
+      b.x_end = opts.x_bound_voxels[1];
     }
-    if(opts.cropY)
+    if(opts.crop_y)
     {
-      b.y_start = opts.yBoundVoxels[0];
-      b.y_end = opts.yBoundVoxels[1];
+      b.y_start = opts.y_bound_voxels[0];
+      b.y_end = opts.y_bound_voxels[1];
     }
-    if(opts.cropZ)
+    if(opts.crop_z)
     {
-      b.z_start = opts.zBoundVoxels[0];
-      b.z_end = opts.zBoundVoxels[1];
+      b.z_start = opts.z_bound_voxels[0];
+      b.z_end = opts.z_bound_voxels[1];
     }
   }
   else // PhysicalSubvolume
@@ -95,9 +95,9 @@ Result<CropBounds> ComputeCropBounds(const nx::core::mhd::MetaImageMetadata& md,
       return {start, end};
     };
 
-    const auto [xStart, xEnd] = axisBounds(opts.cropX, opts.xBoundPhysical, md.origin[0], md.spacing[0], md.dimensions[0]);
-    const auto [yStart, yEnd] = axisBounds(opts.cropY, opts.yBoundPhysical, md.origin[1], md.spacing[1], md.dimensions[1]);
-    const auto [zStart, zEnd] = axisBounds(opts.cropZ, opts.zBoundPhysical, md.origin[2], md.spacing[2], md.dimensions[2]);
+    const auto [xStart, xEnd] = axisBounds(opts.crop_x, opts.x_bound_physical, md.origin[0], md.spacing[0], md.dimensions[0]);
+    const auto [yStart, yEnd] = axisBounds(opts.crop_y, opts.y_bound_physical, md.origin[1], md.spacing[1], md.dimensions[1]);
+    const auto [zStart, zEnd] = axisBounds(opts.crop_z, opts.z_bound_physical, md.origin[2], md.spacing[2], md.dimensions[2]);
     b.x_start = xStart;
     b.x_end = xEnd;
     b.y_start = yStart;
@@ -132,8 +132,8 @@ Result<> StreamCroppedVoxels(nx::core::mhd::MetaImageDataReader& reader, Abstrac
   const usize srcNx = md.dimensions[0];
   const usize srcNy = md.dimensions[1];
   const usize srcNz = md.dimensions[2];
-  const usize comp = md.componentCount;
-  const bool byteSwap = md.byteSwapRequired;
+  const usize comp = md.component_count;
+  const bool byteSwap = md.byte_swap_required;
 
   const usize srcScanlineElements = srcNx * comp;
   const usize srcScanlineBytes = srcScanlineElements * sizeof(T);
@@ -195,13 +195,13 @@ Result<> StreamCroppedVoxels(nx::core::mhd::MetaImageDataReader& reader, Abstrac
           T raw = srcScanline[baseIdx + c];
           if(byteSwap)
           {
-            raw = nx::core::byteswap(raw);
+            raw = nx::core::Byteswap(raw);
           }
           destScanline[writeIdx++] = raw;
         }
       }
 
-      Result<> copyResult = CopyFromArray::CopyData(destScanline, store, destTupleOffset, 0, destNx, comp);
+      Result<> copyResult = copy_from_array::CopyData(destScanline, store, destTupleOffset, 0, destNx, comp);
       if(copyResult.invalid())
       {
         return copyResult;
@@ -228,18 +228,18 @@ ReadMhaFile::ReadMhaFile(DataStructure& dataStructure, const IFilter::MessageHan
 
 Result<> ReadMhaFile::operator()()
 {
-  auto metadataResult = mhd::ReadMetaImageHeader(m_InputValues->InputFilePath);
+  auto metadataResult = mhd::ReadMetaImageHeader(m_InputValues->input_file_path);
   if(metadataResult.invalid())
   {
     return ConvertResult(std::move(metadataResult));
   }
   auto md = std::move(metadataResult).value();
-  if(auto geometryResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFilePath, md.origin, md.spacing); geometryResult.invalid())
+  if(auto geometryResult = m_InputValues->geometry_overrides.apply(m_InputValues->input_file_path, md.origin, md.spacing); geometryResult.invalid())
   {
     return geometryResult;
   }
 
-  auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
+  auto boundsResult = ComputeCropBounds(md, m_InputValues->cropping_options);
   if(boundsResult.invalid())
   {
     return ConvertResult(std::move(boundsResult));
@@ -253,7 +253,7 @@ Result<> ReadMhaFile::operator()()
   }
   auto& reader = *readerResult.value();
 
-  const DataPath dataArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->ImageDataArrayName);
+  const DataPath dataArrayPath = m_InputValues->image_geometry_path.createChildPath(m_InputValues->cell_attribute_matrix_name).createChildPath(m_InputValues->image_data_array_name);
   auto& dataArrayBase = m_DataStructure.getDataRefAs<IDataArray>(dataArrayPath);
 
   switch(dataArrayBase.getDataType())

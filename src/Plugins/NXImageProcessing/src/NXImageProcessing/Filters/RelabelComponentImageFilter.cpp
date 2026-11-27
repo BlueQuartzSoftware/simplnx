@@ -84,7 +84,7 @@ IFilter::PreflightResult RelabelComponentImageFilter::preflightImpl(const DataSt
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                      /*requireScalar=*/true);
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> RelabelComponentImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -117,7 +117,7 @@ Result<Arguments> RelabelComponentImageFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt64FilterParameterConverter>(args, json, simpl::k_MinimumObjectSizeKey, k_MinimumObjectSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt64FilterParameterConverterType>(args, json, simpl::k_MinimumObjectSizeKey, k_MinimumObjectSize_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_SortByObjectSizeKey, k_SortByObjectSize_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));

@@ -307,7 +307,7 @@ std::vector<T> RunVincent(const std::vector<T>& marker, const std::vector<T>& ma
   DataStore<T> outStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ReconstructVincent<T>{markerStore, maskStore, outStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, {}, frontierCapacity}();
+  const Result<> r = ReconstructVincent<T>{markerStore, maskStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, {}, frontierCapacity}();
   REQUIRE(r.valid());
   std::vector<T> out(marker.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -326,7 +326,7 @@ std::vector<T> RunSweep(const std::vector<T>& marker, const std::vector<T>& mask
   DataStore<T> outStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ReconstructSweep<T>{markerStore, maskStore, outStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, maxSlabValues, maxSweepPairs}();
+  const Result<> r = ReconstructSweep<T>{markerStore, maskStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, maxSlabValues, maxSweepPairs}();
   REQUIRE(r.valid());
   std::vector<T> out(marker.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -497,10 +497,10 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
     const auto result = CreateSweep2DPlan(/*dimX=*/7, /*dimY=*/11, /*maxBufferValues=*/30, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 3);
-    REQUIRE(plan.coreColumns == 7);
-    REQUIRE((plan.coreRows + 1) * 7 <= 30);
+    REQUIRE(plan.full_width);
+    REQUIRE(plan.core_rows == 3);
+    REQUIRE(plan.core_columns == 7);
+    REQUIRE((plan.core_rows + 1) * 7 <= 30);
   }
 
   SECTION("reconstruction overwide X tiles")
@@ -508,10 +508,10 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
     const auto result = CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, /*maxBufferValues=*/12, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE_FALSE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 1);
-    REQUIRE(plan.coreColumns == 10);
-    REQUIRE(plan.coreColumns + 2 <= 12);
+    REQUIRE_FALSE(plan.full_width);
+    REQUIRE(plan.core_rows == 1);
+    REQUIRE(plan.core_columns == 10);
+    REQUIRE(plan.core_columns + 2 <= 12);
   }
 
   SECTION("regional-extrema overwide X tiles reserve three halo rows")
@@ -519,10 +519,10 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
     const auto result = CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, /*maxBufferValues=*/18, /*fullWidthHaloRows=*/2, /*tiledRows=*/3);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE_FALSE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 1);
-    REQUIRE(plan.coreColumns == 4);
-    REQUIRE(3 * (plan.coreColumns + 2) <= 18);
+    REQUIRE_FALSE(plan.full_width);
+    REQUIRE(plan.core_rows == 1);
+    REQUIRE(plan.core_columns == 4);
+    REQUIRE(3 * (plan.core_columns + 2) <= 18);
   }
 
   SECTION("insufficient tile budget is rejected")
@@ -543,108 +543,108 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: total working-m
   constexpr usize k_SmallerTargetBytes = (2 * 2 * k_PlaneValues + k_PlaneValues) * sizeof(int16);
   constexpr usize k_LargerTargetBytes = (2 * 4 * k_PlaneValues + k_PlaneValues) * sizeof(int16);
 
-  auto smallerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, k_SmallerTargetBytes);
+  auto smallerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_SmallerTargetBytes);
   REQUIRE(smallerResult.valid());
   const auto& smaller = smallerResult.value();
-  REQUIRE(smaller.maxSlabValues == 2 * k_PlaneValues);
-  REQUIRE(smaller.residentBytes <= k_SmallerTargetBytes);
-  REQUIRE_FALSE(smaller.useResidentFullSweep);
+  REQUIRE(smaller.max_slab_values == 2 * k_PlaneValues);
+  REQUIRE(smaller.resident_bytes <= k_SmallerTargetBytes);
+  REQUIRE_FALSE(smaller.use_resident_full_sweep);
 
-  auto largerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, k_LargerTargetBytes);
+  auto largerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_LargerTargetBytes);
   REQUIRE(largerResult.valid());
   const auto& larger = largerResult.value();
-  REQUIRE(larger.maxSlabValues == 4 * k_PlaneValues);
-  REQUIRE(larger.maxSlabValues > smaller.maxSlabValues);
-  REQUIRE(larger.residentBytes <= k_LargerTargetBytes);
-  REQUIRE_FALSE(larger.useResidentFullSweep);
+  REQUIRE(larger.max_slab_values == 4 * k_PlaneValues);
+  REQUIRE(larger.max_slab_values > smaller.max_slab_values);
+  REQUIRE(larger.resident_bytes <= k_LargerTargetBytes);
+  REQUIRE_FALSE(larger.use_resident_full_sweep);
 
-  auto usefulResult = ImageProcessing::detail::CalculateReconstructionUsefulWorkingMemoryBytes<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ});
+  auto usefulResult = ImageProcessing::detail::CalculateReconstructionUsefulWorkingMemoryBytes<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ});
   REQUIRE(usefulResult.valid());
   REQUIRE(usefulResult.value() == (2 * k_DimX * k_DimY * k_DimZ + k_PlaneValues) * sizeof(int16));
-  auto fullResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, usefulResult.value());
+  auto fullResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, usefulResult.value());
   REQUIRE(fullResult.valid());
-  REQUIRE(fullResult.value().maxSlabValues == k_DimX * k_DimY * k_DimZ);
-  REQUIRE(fullResult.value().residentBytes <= usefulResult.value());
-  REQUIRE(fullResult.value().useResidentFullSweep);
+  REQUIRE(fullResult.value().max_slab_values == k_DimX * k_DimY * k_DimZ);
+  REQUIRE(fullResult.value().resident_bytes <= usefulResult.value());
+  REQUIRE(fullResult.value().use_resident_full_sweep);
 
   constexpr usize k_PrefixDimX = 1024;
   constexpr usize k_PrefixDimY = 1024;
   constexpr usize k_PrefixDimZ = 256;
   constexpr usize k_PrefixPlaneValues = k_PrefixDimX * k_PrefixDimY;
-  auto prefixPlanResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{k_PrefixDimX, k_PrefixDimY, k_PrefixDimZ}, /*maxSlabValues=*/127 * k_PrefixPlaneValues);
+  auto prefixPlanResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{k_PrefixDimX, k_PrefixDimY, k_PrefixDimZ}, /*maxSlabValues=*/127 * k_PrefixPlaneValues);
   REQUIRE(prefixPlanResult.valid());
-  REQUIRE(prefixPlanResult.value().residentPlanes == 252);
-  REQUIRE(prefixPlanResult.value().residentValues == 252 * k_PrefixPlaneValues);
-  REQUIRE(prefixPlanResult.value().residentBytes == 255 * k_PrefixPlaneValues * sizeof(int16));
-  REQUIRE(prefixPlanResult.value().residentBytes < 512ULL * 1024ULL * 1024ULL);
+  REQUIRE(prefixPlanResult.value().resident_planes == 252);
+  REQUIRE(prefixPlanResult.value().resident_values == 252 * k_PrefixPlaneValues);
+  REQUIRE(prefixPlanResult.value().resident_bytes == 255 * k_PrefixPlaneValues * sizeof(int16));
+  REQUIRE(prefixPlanResult.value().resident_bytes < 512ULL * 1024ULL * 1024ULL);
 
   constexpr usize k_ScaledPlaneValues = 7 * 6;
-  auto smallerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{7, 6, 20}, /*maxSlabValues=*/3 * k_ScaledPlaneValues);
-  auto largerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{7, 6, 20}, /*maxSlabValues=*/6 * k_ScaledPlaneValues);
+  auto smallerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{7, 6, 20}, /*maxSlabValues=*/3 * k_ScaledPlaneValues);
+  auto largerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{7, 6, 20}, /*maxSlabValues=*/6 * k_ScaledPlaneValues);
   REQUIRE(smallerPrefixResult.valid());
   REQUIRE(largerPrefixResult.valid());
-  REQUIRE(smallerPrefixResult.value().residentPlanes == 4);
-  REQUIRE(largerPrefixResult.value().residentPlanes == 10);
-  REQUIRE(smallerPrefixResult.value().residentBytes == 7 * k_ScaledPlaneValues * sizeof(int16));
-  REQUIRE(largerPrefixResult.value().residentBytes == 13 * k_ScaledPlaneValues * sizeof(int16));
-  REQUIRE(largerPrefixResult.value().residentPlanes > smallerPrefixResult.value().residentPlanes);
+  REQUIRE(smallerPrefixResult.value().resident_planes == 4);
+  REQUIRE(largerPrefixResult.value().resident_planes == 10);
+  REQUIRE(smallerPrefixResult.value().resident_bytes == 7 * k_ScaledPlaneValues * sizeof(int16));
+  REQUIRE(largerPrefixResult.value().resident_bytes == 13 * k_ScaledPlaneValues * sizeof(int16));
+  REQUIRE(largerPrefixResult.value().resident_planes > smallerPrefixResult.value().resident_planes);
 
-  auto insufficientPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{7, 6, 20}, /*maxSlabValues=*/k_ScaledPlaneValues);
+  auto insufficientPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{7, 6, 20}, /*maxSlabValues=*/k_ScaledPlaneValues);
   REQUIRE(insufficientPrefixResult.valid());
-  REQUIRE(insufficientPrefixResult.value().residentPlanes == 0);
+  REQUIRE(insufficientPrefixResult.value().resident_planes == 0);
 
-  auto minimumResult = ImageProcessing::detail::CalculateReconstructionMinimumWorkingMemoryBytes<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ});
+  auto minimumResult = ImageProcessing::detail::CalculateReconstructionMinimumWorkingMemoryBytes<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ});
   REQUIRE(minimumResult.valid());
   REQUIRE(minimumResult.value() == 3 * k_PlaneValues * sizeof(int16));
 
   const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   const std::vector<int16> marker = SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, k_DimZ);
   const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true);
-  REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true, smaller.maxSlabValues) == expected);
-  REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true, larger.maxSlabValues) == expected);
+  REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true, smaller.max_slab_values) == expected);
+  REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true, larger.max_slab_values) == expected);
 
   constexpr usize k_2DDimX = 7;
   constexpr usize k_2DDimY = 9;
   constexpr usize k_2DValues = k_2DDimX * k_2DDimY;
   constexpr usize k_2DTargetBytes = (k_2DValues + 2 * 3 * k_2DDimX) * sizeof(int16);
-  const SizeVec3 k2DDims{k_2DDimX, k_2DDimY, 1};
+  const SizeVec3Type k2DDims{k_2DDimX, k_2DDimY, 1};
   auto fixed2DResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(k2DDims, k_2DTargetBytes);
   REQUIRE(fixed2DResult.valid());
-  REQUIRE(fixed2DResult.value().fixedWorkValues == k_2DValues);
-  REQUIRE(fixed2DResult.value().fixedBufferValues >= 2 * k_2DDimX);
-  REQUIRE(fixed2DResult.value().residentBytes <= k_2DTargetBytes);
+  REQUIRE(fixed2DResult.value().fixed_work_values == k_2DValues);
+  REQUIRE(fixed2DResult.value().fixed_buffer_values >= 2 * k_2DDimX);
+  REQUIRE(fixed2DResult.value().resident_bytes <= k_2DTargetBytes);
 
   constexpr usize k_OverwideTargetBytes = 48;
-  auto overwideResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{31, 4, 1}, k_OverwideTargetBytes);
+  auto overwideResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{31, 4, 1}, k_OverwideTargetBytes);
   REQUIRE(overwideResult.valid());
   const auto& overwide = overwideResult.value();
-  REQUIRE(overwide.fixedWorkValues == 0);
-  auto overwideSweepResult = ImageProcessing::detail::CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, overwide.maxSlabValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
+  REQUIRE(overwide.fixed_work_values == 0);
+  auto overwideSweepResult = ImageProcessing::detail::CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, overwide.max_slab_values, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
   REQUIRE(overwideSweepResult.valid());
-  REQUIRE_FALSE(overwideSweepResult.value().fullWidth);
-  const usize actualTileBytes = (3 * overwideSweepResult.value().coreColumns + 2) * sizeof(int16);
+  REQUIRE_FALSE(overwideSweepResult.value().full_width);
+  const usize actualTileBytes = (3 * overwideSweepResult.value().core_columns + 2) * sizeof(int16);
   REQUIRE(actualTileBytes <= k_OverwideTargetBytes);
-  REQUIRE(overwide.residentBytes == actualTileBytes);
+  REQUIRE(overwide.resident_bytes == actualTileBytes);
 
-  REQUIRE(ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{k_DimX, k_DimY, k_DimZ}, /*targetBytes=*/1).invalid());
+  REQUIRE(ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, /*targetBytes=*/1).invalid());
 
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(256 * k_MiB);
   {
     ScopedWorkingMemoryTuningOverride override(128 * k_MiB);
-    auto allocationResult = ImageProcessing::detail::ReserveReconstructionWorkingMemoryPlan<int16>(SizeVec3{512, 512, 128});
+    auto allocationResult = ImageProcessing::detail::ReserveReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{512, 512, 128});
     REQUIRE(allocationResult.valid());
     REQUIRE(allocationResult.value().reservation.sizeBytes() == 64 * k_MiB);
-    REQUIRE(allocationResult.value().plan.residentBytes <= 64 * k_MiB);
+    REQUIRE(allocationResult.value().plan.resident_bytes <= 64 * k_MiB);
     REQUIRE(manager.reservedWorkingMemoryBytes() == 64 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
   manager.setBudgetBytes(1024 * k_MiB);
-  const SizeVec3 suppliedMarkerDims{512, 512, 128};
+  const SizeVec3Type suppliedMarkerDims{512, 512, 128};
   auto suppliedUsefulResult = ImageProcessing::detail::CalculateReconstructionUsefulWorkingMemoryBytes<int16>(suppliedMarkerDims);
   REQUIRE(suppliedUsefulResult.valid());
   {
@@ -660,16 +660,16 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: total working-m
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
   manager.setBudgetBytes(previousBudget);
 
-  const auto height3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 5}, ReconstructionMarkerSource::MaskMinusHeight);
+  const auto height3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 5}, ReconstructionMarkerSource::MaskMinusHeight);
   REQUIRE(height3DPreference.numerator == 1);
   REQUIRE(height3DPreference.denominator == 4);
-  const auto minimumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 5}, ReconstructionMarkerSource::MaskWithMinimumInterior);
+  const auto minimumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 5}, ReconstructionMarkerSource::MaskWithMinimumInterior);
   REQUIRE(minimumBorder3DPreference.numerator == 1);
   REQUIRE(minimumBorder3DPreference.denominator == 1);
-  const auto maximumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 5}, ReconstructionMarkerSource::MaskWithMaximumInterior);
+  const auto maximumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 5}, ReconstructionMarkerSource::MaskWithMaximumInterior);
   REQUIRE(maximumBorder3DPreference.numerator == 1);
   REQUIRE(maximumBorder3DPreference.denominator == 1);
-  const auto height2DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 1}, ReconstructionMarkerSource::MaskPlusHeight);
+  const auto height2DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 1}, ReconstructionMarkerSource::MaskPlusHeight);
   REQUIRE(height2DPreference.numerator == 1);
   REQUIRE(height2DPreference.denominator == 1);
 }
@@ -758,7 +758,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: full-grant 3D s
         REQUIRE(maskStore.copyFromBuffer(0, nonstd::span<const int16>(mask.data(), mask.size())).valid());
 
         ReconstructSweep<int16, true> sweep{
-            markerStore, maskStore, outputStore,     SizeVec3{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, k_VolumeValues, std::numeric_limits<usize>::max(), {}, 0,
+            markerStore, maskStore, outputStore,     SizeVec3Type{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, k_VolumeValues, std::numeric_limits<usize>::max(), {}, 0,
             0,           true,      frontierCapacity};
         REQUIRE(sweep().valid());
 
@@ -815,7 +815,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persis
       DataStore<int16> outputStore(tupleShape, componentShape, int16{0});
       const ReconstructionMarkerOptions options{.source = source, .height = 0.0};
       ReconstructSweep<int16, true> sweep{
-          maskStore, maskStore, outputStore, SizeVec3{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * k_PlaneValues, std::numeric_limits<usize>::max(), options, 0, 0,
+          maskStore, maskStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * k_PlaneValues, std::numeric_limits<usize>::max(), options, 0, 0,
           false,     0};
       REQUIRE(sweep().valid());
 
@@ -901,25 +901,25 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: validates dimen
 
   SECTION("XY product overflow")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{std::numeric_limits<usize>::max(), 2, 1}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 2, 1}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8640);
   }
   SECTION("XYZ product overflow")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{std::numeric_limits<usize>::max(), 1, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 1, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8641);
   }
   SECTION("store size mismatch")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{2, 2, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{2, 2, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8642);
   }
   SECTION("zero dimension is an explicit no-op")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{0, 2, 3}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{0, 2, 3}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.valid());
     REQUIRE(outStore.getValue(0) == int8{42});
   }
@@ -1032,11 +1032,11 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
     DataStore<int16> maskStore = MakeStore(mask, k_DimX, k_DimY, k_DimZ);
     DataStore<int16> vincentOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
     DataStore<int16> sweepOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
-    ReconstructVincent<int16> vincent{maskStore, maskStore, vincentOutput, SizeVec3{k_DimX, k_DimY, k_DimZ}, op, true, shouldCancel, messageHandler, options};
+    ReconstructVincent<int16> vincent{maskStore, maskStore, vincentOutput, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, op, true, shouldCancel, messageHandler, options};
     ReconstructSweep<int16, true> sweep{maskStore,
                                         maskStore,
                                         sweepOutput,
-                                        SizeVec3{k_DimX, k_DimY, k_DimZ},
+                                        SizeVec3Type{k_DimX, k_DimY, k_DimZ},
                                         op,
                                         true,
                                         shouldCancel,
@@ -1061,7 +1061,7 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
   constexpr usize k_DimY = 5;
   constexpr usize k_DimZ = 6;
   constexpr usize k_VolumeValues = k_DimX * k_DimY * k_DimZ;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};

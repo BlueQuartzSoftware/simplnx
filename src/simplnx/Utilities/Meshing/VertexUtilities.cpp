@@ -21,7 +21,7 @@
 using namespace nx::core;
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-namespace nx::core::MeshingUtilities::detail
+namespace nx::core::meshing_utilities::detail
 {
 namespace
 {
@@ -58,7 +58,7 @@ void CheckTransferEnrichmentAllocation()
 
 namespace
 {
-Result<> ReadCoordinatePage(const Float32AbstractDataStore& vertices, usize first, nonstd::span<float32> page)
+Result<> ReadCoordinatePage(const Float32AbstractDataStoreType& vertices, usize first, nonstd::span<float32> page)
 {
   return vertices.copyIntoBuffer(first * 3, page);
 }
@@ -118,8 +118,8 @@ Result<> GatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
       auto readResult = ReadCoordinatePage(vertices, first, page.first(count * 3));
       if(readResult.invalid())
       {
-        auto failure = MeshingUtilities::detail::PreserveTransferFailure(result, std::move(readResult));
-        MeshingUtilities::detail::AppendTransferFailureContext(failure,
+        auto failure = meshing_utilities::detail::PreserveTransferFailure(result, std::move(readResult));
+        meshing_utilities::detail::AppendTransferFailureContext(failure,
                                                                [&] { return MakeErrorResult(-65904, fmt::format("Error reading vertex-coordinate page at vertex {} ({} vertices).", first, count)); });
         return failure;
       }
@@ -135,9 +135,9 @@ Result<> GatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
 
 // Uses Hoare's method for speed
 IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end,
-                                        const INodeGeometry0D::SharedVertexList::StoreType& vertices, IGeometry::MeshIndexType offset)
+                                        const INodeGeometry0D::SharedVertexListType::StoreType& vertices, IGeometry::MeshIndexType offset)
 {
-  const INodeGeometry0D::SharedVertexList::value_type threshold = vertices[(sorted[begin] * 3) + offset];
+  const INodeGeometry0D::SharedVertexListType::value_type threshold = vertices[(sorted[begin] * 3) + offset];
 
   IGeometry::MeshIndexType front = begin;
   IGeometry::MeshIndexType back = end;
@@ -165,7 +165,7 @@ IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& s
   }
 }
 
-void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry0D::SharedVertexList::StoreType& vertices,
+void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry0D::SharedVertexListType::StoreType& vertices,
                        IGeometry::MeshIndexType offset, const std::atomic_bool& shouldCancel)
 {
   if(begin >= end || shouldCancel)
@@ -181,7 +181,7 @@ void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry:
 }
 } // namespace
 
-Result<> MeshingUtilities::detail::GatherVertexCoordinates(const Float32AbstractDataStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
+Result<> meshing_utilities::detail::GatherVertexCoordinates(const Float32AbstractDataStoreType& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
                                                            nonstd::span<float32> gathered, nonstd::span<float32> page)
 {
   if(vertices.getNumberOfComponents() != 3)
@@ -191,7 +191,7 @@ Result<> MeshingUtilities::detail::GatherVertexCoordinates(const Float32Abstract
   return GatherCoordinatePages(vertices, vertices.getNumberOfTuples(), indexes, order, gathered, page);
 }
 
-Result<> MeshingUtilities::detail::GatherVertexCoordinates(const ITemporaryRecordStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
+Result<> meshing_utilities::detail::GatherVertexCoordinates(const ITemporaryRecordStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
                                                            nonstd::span<float32> gathered, nonstd::span<float32> page)
 {
   if(vertices.recordSize() != 3 * sizeof(float32) || vertices.recordCount() > std::numeric_limits<usize>::max() || page.size() / 3 > vertices.maxRecordsPerBatch())
@@ -201,22 +201,22 @@ Result<> MeshingUtilities::detail::GatherVertexCoordinates(const ITemporaryRecor
   return GatherCoordinatePages(vertices, static_cast<usize>(vertices.recordCount()), indexes, order, gathered, page);
 }
 
-MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const nx::core::INodeGeometry0D& geom, const std::atomic_bool& shouldCancel)
+meshing_utilities::SortedVerticesList meshing_utilities::OrderSharedVertices(const nx::core::INodeGeometry0D& geom, const std::atomic_bool& shouldCancel)
 {
-  const BoundingBox3Df& bounds = geom.getBoundingBox();
+  const BoundingBox3DfType& bounds = geom.getBoundingBox();
 
-  const FloatVec3 diff = bounds.sideLengths();
+  const FloatVec3Type diff = bounds.sideLengths();
 
   // Inverse of to_underlying
   const AxialAlignment axis = static_cast<AxialAlignment>(std::distance(diff.begin(), std::max_element(diff.begin(), diff.end())));
 
   // Getting the verts list by ref here for the validation in the ref function
-  const INodeGeometry0D::SharedVertexList::StoreType& vertexListStore = geom.getVerticesRef().getDataStoreRef();
+  const INodeGeometry0D::SharedVertexListType::StoreType& vertexListStore = geom.getVerticesRef().getDataStoreRef();
 
   return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore, shouldCancel))};
 }
 
-std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::StoreType& vertexList,
+std::vector<IGeometry::MeshIndexType> meshing_utilities::OrderSharedVerticesAlongAxis(nx::core::meshing_utilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexListType::StoreType& vertexList,
                                                                                      const std::atomic_bool& shouldCancel)
 {
   std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
@@ -227,24 +227,24 @@ std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlong
   return sorted;
 }
 
-bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::StoreType& verts, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
+bool meshing_utilities::HasDuplicateVertices(const IGeometry::SharedVertexListType::StoreType& verts, const nx::core::meshing_utilities::SortedVerticesList& sortedVertices)
 {
-  using VertTType = INodeGeometry0D::SharedVertexList::value_type;
+  using VertTType = INodeGeometry0D::SharedVertexListType::value_type;
 
   // Leverage ordering assumptions to speed up duplicate checks
   std::array<IGeometry::MeshIndexType, 3> offset{};
 
   switch(sortedVertices.axis)
   {
-  case MeshingUtilities::AxialAlignment::X: {
+  case meshing_utilities::AxialAlignment::X: {
     offset = {0, 1, 2};
     break;
   }
-  case MeshingUtilities::AxialAlignment::Y: {
+  case meshing_utilities::AxialAlignment::Y: {
     offset = {1, 2, 0};
     break;
   }
-  case MeshingUtilities::AxialAlignment::Z: {
+  case meshing_utilities::AxialAlignment::Z: {
     offset = {2, 1, 0};
     break;
   }

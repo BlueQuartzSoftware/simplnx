@@ -56,7 +56,7 @@ namespace
  * @param data The data to extract from
  * @return Shared pointer to the extracted data
  */
-std::shared_ptr<Float64DataStore> ExtractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
+std::shared_ptr<Float64DataStoreType> ExtractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIdsTType& triPatch, Float64AbstractDataStoreType& data)
 {
   ShapeType cDims = {3ULL};
 
@@ -82,7 +82,7 @@ std::shared_ptr<Float64DataStore> ExtractPatchData(int64_t triId, FindNRingNeigh
 
   ShapeType tupleShape = {triPatch.size()};
   std::optional<float64> initValue = {};
-  std::shared_ptr<Float64DataStore> extractedData = std::make_shared<Float64DataStore>(tupleShape, cDims, initValue);
+  std::shared_ptr<Float64DataStoreType> extractedData = std::make_shared<Float64DataStoreType>(tupleShape, cDims, initValue);
   // This little chunk makes sure the current seed triangles centroid and normal data appear
   // first in the returned arrays which makes the next steps a tad easier.
   int32_t i = 0;
@@ -107,10 +107,10 @@ std::shared_ptr<Float64DataStore> ExtractPatchData(int64_t triId, FindNRingNeigh
 
 // -----------------------------------------------------------------------------
 CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting,
-                                                                   Float64Array* principleCurvature1, Float64Array* principleCurvature2, Float64Array* principleDirection1,
-                                                                   Float64Array* principleDirection2, Float64Array* gaussianCurvature, Float64Array* meanCurvature, Float64Array* weingartenMatrix,
-                                                                   TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
-                                                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+                                                                   Float64ArrayType* principleCurvature1, Float64ArrayType* principleCurvature2, Float64ArrayType* principleDirection1,
+                                                                   Float64ArrayType* principleDirection2, Float64ArrayType* gaussianCurvature, Float64ArrayType* meanCurvature, Float64ArrayType* weingartenMatrix,
+                                                                   TriangleGeom* trianglesGeom, Int32ArrayType* surfaceMeshFaceLabels, Float64ArrayType* surfaceMeshFaceNormals,
+                                                                   Float64ArrayType* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 : m_Filter(filter)
 , m_NRing(nring)
 , m_TriangleIds(std::move(triangleIds))
@@ -135,7 +135,7 @@ CalculateTriangleGroupCurvatures::CalculateTriangleGroupCurvatures(FeatureFaceCu
 CalculateTriangleGroupCurvatures::~CalculateTriangleGroupCurvatures() = default;
 
 // -----------------------------------------------------------------------------
-static void SubtractVector3d(Float64AbstractDataStore& data, double* v)
+static void SubtractVector3d(Float64AbstractDataStoreType& data, double* v)
 {
   size_t count = data.getNumberOfTuples();
   for(size_t i = 0; i < count; ++i)
@@ -150,7 +150,7 @@ static void SubtractVector3d(Float64AbstractDataStore& data, double* v)
 // -----------------------------------------------------------------------------
 void CalculateTriangleGroupCurvatures::markOutputsInvalid(int64 triId) const
 {
-  for(Float64Array* outputPtr : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
+  for(Float64ArrayType* outputPtr : {m_PrincipleCurvature1, m_PrincipleCurvature2, m_PrincipleDirection1, m_PrincipleDirection2, m_GaussianCurvature, m_MeanCurvature, m_WeingartenMatrix})
   {
     if(outputPtr == nullptr)
     {
@@ -204,12 +204,12 @@ void CalculateTriangleGroupCurvatures::operator()() const
 
     int64_t triId = m_TriangleIds[i];
     FindNRingNeighborsInputValues inputs;
-    inputs.TriangleGeomPtr = m_TrianglesPtr;
-    inputs.TriangleId = triId;
-    inputs.RegionId0 = feature0;
-    inputs.RegionId1 = feature1;
-    inputs.Ring = m_NRing;
-    inputs.FaceLabelsArray = m_SurfaceMeshFaceLabels;
+    inputs.triangle_geom_ptr = m_TrianglesPtr;
+    inputs.triangle_id = triId;
+    inputs.region_id0 = feature0;
+    inputs.region_id1 = feature1;
+    inputs.ring = m_NRing;
+    inputs.face_labels_array = m_SurfaceMeshFaceLabels;
 
     FindNRingNeighbors nRingNeighborAlg(&inputs);
     auto result = nRingNeighborAlg(m_MessageHandler, m_ShouldCancel);
@@ -220,7 +220,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       throw std::runtime_error("NRingNeighbor returned an error.");
     }
 
-    FindNRingNeighbors::UniqueFaceIds_t triPatch = nRingNeighborAlg.getNRingTriangles();
+    FindNRingNeighbors::UniqueFaceIdsTType triPatch = nRingNeighborAlg.getNRingTriangles();
     if(triPatch.size() <= 1)
     {
       markOutputsInvalid(triId);
@@ -228,7 +228,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
     }
 
     size_t beforeSize = triPatch.size();
-    std::shared_ptr<Float64DataStore> patchNormals = ExtractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
+    std::shared_ptr<Float64DataStoreType> patchNormals = ExtractPatchData(triId, triPatch, m_SurfaceMeshFaceNormals->getDataStoreRef());
     // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchNormals)
     {
@@ -243,7 +243,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
     }
 
     beforeSize = triPatch.size();
-    std::shared_ptr<Float64DataStore> patchCentroids = ExtractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
+    std::shared_ptr<Float64DataStoreType> patchCentroids = ExtractPatchData(triId, triPatch, m_SurfaceMeshTriangleCentroids->getDataStoreRef());
     // A removed seed or fewer than two valid triangles cannot define a curvature.
     if(nullptr == patchCentroids)
     {
@@ -263,28 +263,28 @@ void CalculateTriangleGroupCurvatures::operator()() const
     double sub[3] = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
     SubtractVector3d(*patchCentroids, sub);
 
-    nx::core::Matrix3X1d np = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
+    nx::core::Matrix3X1dType np = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
 
-    nx::core::Matrix3X1d seedCentroid = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
-    nx::core::Matrix3X1d firstCentroid = {patchCentroids->getComponentValue(1, 0), patchCentroids->getComponentValue(1, 1), patchCentroids->getComponentValue(1, 2)};
+    nx::core::Matrix3X1dType seedCentroid = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
+    nx::core::Matrix3X1dType firstCentroid = {patchCentroids->getComponentValue(1, 0), patchCentroids->getComponentValue(1, 1), patchCentroids->getComponentValue(1, 2)};
 
-    nx::core::Matrix3X1d temp = {firstCentroid[0] - seedCentroid[0], firstCentroid[1] - seedCentroid[1], firstCentroid[2] - seedCentroid[2]};
-    nx::core::Matrix3X1d vp = {0.0, 0.0, 0.0};
+    nx::core::Matrix3X1dType temp = {firstCentroid[0] - seedCentroid[0], firstCentroid[1] - seedCentroid[1], firstCentroid[2] - seedCentroid[2]};
+    nx::core::Matrix3X1dType vp = {0.0, 0.0, 0.0};
 
     // Cross Product of np and temp
     np = np.normalize();
     vp = np.cross(temp).normalize();
 
     // get the third orthogonal vector
-    Matrix3X1d up = vp.cross(np).normalize();
+    Matrix3X1dType up = vp.cross(np).normalize();
 
     // this constitutes a rotation matrix to a local coordinate system
-    nx::core::Matrix3X3D rot = {up[0], up[1], up[2], vp[0], vp[1], vp[2], np[0], np[1], np[2]};
+    nx::core::Matrix3X3DType rot = {up[0], up[1], up[2], vp[0], vp[1], vp[2], np[0], np[1], np[2]};
     double outPtr[3] = {0.0, 0.0, 0.0};
     // Transform all centroids and normals to a new coordinate system
     for(size_t m = 0; m < patchCentroids->getNumberOfTuples(); ++m)
     {
-      nx::core::Matrix3X1d patchCentroid = {patchCentroids->getComponentValue(m, 0), patchCentroids->getComponentValue(m, 1), patchCentroids->getComponentValue(m, 2)};
+      nx::core::Matrix3X1dType patchCentroid = {patchCentroids->getComponentValue(m, 0), patchCentroids->getComponentValue(m, 1), patchCentroids->getComponentValue(m, 2)};
       auto out = rot * patchCentroid;
 
       if(std::isnan(out[0]) || std::isnan(out[1]) || std::isnan(out[2]))
@@ -294,7 +294,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       // Copy the result back into `patchCentroids`
       patchCentroids->setTuple(m, out.data());
 
-      nx::core::Matrix3X1d patchNormal = {patchNormals->getComponentValue(m, 0), patchNormals->getComponentValue(m, 1), patchNormals->getComponentValue(m, 2)};
+      nx::core::Matrix3X1dType patchNormal = {patchNormals->getComponentValue(m, 0), patchNormals->getComponentValue(m, 1), patchNormals->getComponentValue(m, 2)};
       out = rot * patchNormal;
       patchNormals->setTuple(m, out.data());
 

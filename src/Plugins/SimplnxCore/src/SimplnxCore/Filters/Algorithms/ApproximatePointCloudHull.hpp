@@ -15,10 +15,10 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ApproximatePointCloudHullInputValues
 {
-  VectorFloat32Parameter::ValueType GridResolution;
-  GeometrySelectionParameter::ValueType InputVertexGeometryPath;
-  UInt64ParameterType::ValueType MinEmptyNeighbors{};
-  DataGroupCreationParameter::ValueType OutputVertexGeometryPath;
+  VectorFloat32ParameterType::ValueType grid_resolution;
+  GeometrySelectionParameter::ValueType input_vertex_geometry_path;
+  UInt64ParameterType::ValueType min_empty_neighbors{};
+  DataGroupCreationParameter::ValueType output_vertex_geometry_path;
 };
 
 /**

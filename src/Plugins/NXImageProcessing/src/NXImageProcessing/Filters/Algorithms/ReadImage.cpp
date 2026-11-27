@@ -162,15 +162,15 @@ struct DispatchConversionFunctor
 Result<> ReadNrrdBackend(DataStructure& dataStructure, const ReadImageInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   ReadNrrdFileInputValues nrrdInputs;
-  nrrdInputs.InputFilePath = inputValues.inputFilePath;
-  nrrdInputs.ImageGeometryPath = inputValues.imageGeometryPath;
-  nrrdInputs.CellAttributeMatrixName = inputValues.cellDataName;
-  nrrdInputs.ImageDataArrayName = inputValues.imageDataArrayPath.getTargetName();
-  nrrdInputs.CroppingOptions = inputValues.croppingOptions;
-  nrrdInputs.GeometryOverrides = {.Origin = inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt,
-                                  .Spacing = inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
-  nrrdInputs.Processing = inputValues.originSpacingProcessing;
-  nrrdInputs.CenterOrigin = inputValues.centerOrigin;
+  nrrdInputs.input_file_path = inputValues.input_file_path;
+  nrrdInputs.image_geometry_path = inputValues.image_geometry_path;
+  nrrdInputs.cell_attribute_matrix_name = inputValues.cell_data_name;
+  nrrdInputs.image_data_array_name = inputValues.image_data_array_path.getTargetName();
+  nrrdInputs.cropping_options = inputValues.cropping_options;
+  nrrdInputs.geometry_overrides = {.Origin = inputValues.change_origin ? std::optional{inputValues.origin} : std::nullopt,
+                                  .Spacing = inputValues.change_spacing ? std::optional{inputValues.spacing} : std::nullopt};
+  nrrdInputs.processing = inputValues.origin_spacing_processing;
+  nrrdInputs.center_origin = inputValues.center_origin;
 
   return ReadNrrdFile(dataStructure, messageHandler, shouldCancel, &nrrdInputs)();
 }
@@ -180,7 +180,7 @@ Result<> ReadNrrdBackend(DataStructure& dataStructure, const ReadImageInputValue
 // contract), so no whole-page staging buffer is ever allocated.
 Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  const auto& inputFilePath = inputValues.inputFilePath;
+  const auto& inputFilePath = inputValues.input_file_path;
 
   auto imageIOResult = CreateImageIO(inputFilePath);
   if(imageIOResult.invalid())
@@ -196,59 +196,59 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   }
   const auto& metadata = metadataResult.value();
 
-  auto& imageArray = dataStructure.getDataRefAs<IDataArray>(inputValues.imageDataArrayPath);
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.imageGeometryPath);
-  const SizeVec3 geomDims = imageGeom.getDimensions(); // final (post-crop) destination dims: X, Y, Z
+  auto& imageArray = dataStructure.getDataRefAs<IDataArray>(inputValues.image_data_array_path);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.image_geometry_path);
+  const SizeVec3Type geomDims = imageGeom.getDimensions(); // final (post-crop) destination dims: X, Y, Z
 
   RasterStreamInfo stream;
   stream.src_width = metadata.width;
   stream.src_height = metadata.height;
-  stream.num_components = metadata.numComponents;
+  stream.num_components = metadata.num_components;
   stream.dst_width = geomDims[0];
   stream.dst_height = geomDims[1];
   // When only page 0 is requested (ReadImageStack sub-call), the geometry is Z==1 and no Z crop
   // applies; otherwise the destination depth is whatever the (possibly Z-cropped) geometry has.
-  stream.dst_depth = inputValues.readSinglePageOnly ? 1 : geomDims[2];
-  stream.single_page_only = inputValues.readSinglePageOnly;
+  stream.dst_depth = inputValues.read_single_page_only ? 1 : geomDims[2];
+  stream.single_page_only = inputValues.read_single_page_only;
 
   // Resolve the source-space start offsets (xStart, yStart, zStart). X/Y cropping mirrors the prior
   // 2D behavior exactly; Z cropping is only honored for a genuine multi-page volume that is not being
   // read as a single page. The destination extents (dstWidth/dstHeight/dstDepth) already come from the
   // cropped geometry that preflight produced, so here we only need the start corner.
-  const auto& croppingOptions = inputValues.croppingOptions;
+  const auto& croppingOptions = inputValues.cropping_options;
   const bool cropImage = croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping;
-  const bool zCropActive = cropImage && croppingOptions.cropZ && !inputValues.readSinglePageOnly && metadata.numPages > 1;
+  const bool zCropActive = cropImage && croppingOptions.crop_z && !inputValues.read_single_page_only && metadata.num_pages > 1;
   if(cropImage)
   {
     if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
     {
-      if(croppingOptions.cropX)
+      if(croppingOptions.crop_x)
       {
-        stream.x_start = static_cast<usize>(croppingOptions.xBoundVoxels[0]);
+        stream.x_start = static_cast<usize>(croppingOptions.x_bound_voxels[0]);
       }
-      if(croppingOptions.cropY)
+      if(croppingOptions.crop_y)
       {
-        stream.y_start = static_cast<usize>(croppingOptions.yBoundVoxels[0]);
+        stream.y_start = static_cast<usize>(croppingOptions.y_bound_voxels[0]);
       }
       if(zCropActive)
       {
-        stream.z_start = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
+        stream.z_start = static_cast<usize>(croppingOptions.z_bound_voxels[0]);
       }
     }
     else // PhysicalSubvolume
     {
-      FloatVec3 srcOrigin = metadata.origin.value_or(FloatVec3{0.0F, 0.0F, 0.0F});
-      FloatVec3 srcSpacing = metadata.spacing.value_or(FloatVec3{1.0F, 1.0F, 1.0F});
-      const ImageIO::GeometryOverrides overrides{.Origin = inputValues.changeOrigin ? std::optional{inputValues.origin} : std::nullopt,
-                                                 .Spacing = inputValues.changeSpacing ? std::optional{inputValues.spacing} : std::nullopt};
-      const SizeVec3 srcDims{metadata.width, metadata.height, inputValues.readSinglePageOnly ? usize{1} : metadata.numPages};
-      if(auto result = ImageIO::ResolveCropGeometry(inputFilePath, overrides, inputValues.originSpacingProcessing, inputValues.centerOrigin, srcDims, srcOrigin, srcSpacing); result.invalid())
+      FloatVec3Type srcOrigin = metadata.origin.value_or(FloatVec3Type{0.0F, 0.0F, 0.0F});
+      FloatVec3Type srcSpacing = metadata.spacing.value_or(FloatVec3Type{1.0F, 1.0F, 1.0F});
+      const image_io::GeometryOverrides overrides{.Origin = inputValues.change_origin ? std::optional{inputValues.origin} : std::nullopt,
+                                                 .Spacing = inputValues.change_spacing ? std::optional{inputValues.spacing} : std::nullopt};
+      const SizeVec3Type srcDims{metadata.width, metadata.height, inputValues.read_single_page_only ? usize{1} : metadata.num_pages};
+      if(auto result = image_io::ResolveCropGeometry(inputFilePath, overrides, inputValues.origin_spacing_processing, inputValues.center_origin, srcDims, srcOrigin, srcSpacing); result.invalid())
       {
         return result;
       }
-      if(croppingOptions.cropX)
+      if(croppingOptions.crop_x)
       {
-        const float64 xMin = static_cast<float64>(croppingOptions.xBoundPhysical[0]);
+        const float64 xMin = static_cast<float64>(croppingOptions.x_bound_physical[0]);
         const int64 voxelX = xMin >= srcOrigin[0] ? static_cast<int64>(std::floor((xMin - static_cast<float64>(srcOrigin[0])) / static_cast<float64>(srcSpacing[0]))) : 0;
         if(voxelX < 0 || static_cast<usize>(voxelX) >= stream.src_width)
         {
@@ -257,9 +257,9 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
         }
         stream.x_start = static_cast<usize>(voxelX);
       }
-      if(croppingOptions.cropY)
+      if(croppingOptions.crop_y)
       {
-        const float64 yMin = static_cast<float64>(croppingOptions.yBoundPhysical[0]);
+        const float64 yMin = static_cast<float64>(croppingOptions.y_bound_physical[0]);
         const int64 voxelY = yMin >= srcOrigin[1] ? static_cast<int64>(std::floor((yMin - static_cast<float64>(srcOrigin[1])) / static_cast<float64>(srcSpacing[1]))) : 0;
         if(voxelY < 0 || static_cast<usize>(voxelY) >= stream.src_height)
         {
@@ -270,28 +270,28 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       }
       if(zCropActive)
       {
-        const float64 zMin = static_cast<float64>(croppingOptions.zBoundPhysical[0]);
+        const float64 zMin = static_cast<float64>(croppingOptions.z_bound_physical[0]);
         const int64 voxelZ = zMin >= srcOrigin[2] ? static_cast<int64>(std::floor((zMin - static_cast<float64>(srcOrigin[2])) / static_cast<float64>(srcSpacing[2]))) : 0;
-        if(voxelZ < 0 || static_cast<usize>(voxelZ) >= metadata.numPages)
+        if(voxelZ < 0 || static_cast<usize>(voxelZ) >= metadata.num_pages)
         {
           return MakeErrorResult(-2004, fmt::format("Physical crop Z minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", zMin, srcOrigin[2],
-                                                    srcOrigin[2] + srcSpacing[2] * static_cast<float32>(metadata.numPages), srcOrigin[2], srcSpacing[2]));
+                                                    srcOrigin[2] + srcSpacing[2] * static_cast<float32>(metadata.num_pages), srcOrigin[2], srcSpacing[2]));
         }
         stream.z_start = static_cast<usize>(voxelZ);
       }
     }
   }
 
-  if(stream.x_start + stream.dst_width > stream.src_width || stream.y_start + stream.dst_height > stream.src_height || stream.z_start + stream.dst_depth > metadata.numPages)
+  if(stream.x_start + stream.dst_width > stream.src_width || stream.y_start + stream.dst_height > stream.src_height || stream.z_start + stream.dst_depth > metadata.num_pages)
   {
     return MakeErrorResult(-2001, fmt::format("Crop window (start=[{},{},{}], size=[{},{},{}]) does not fit within the source image (size=[{},{},{}])", stream.x_start, stream.y_start, stream.z_start,
-                                              stream.dst_width, stream.dst_height, stream.dst_depth, stream.src_width, stream.src_height, metadata.numPages));
+                                              stream.dst_width, stream.dst_height, stream.dst_depth, stream.src_width, stream.src_height, metadata.num_pages));
   }
 
   const DataType destType = imageArray.getDataType();
-  const DataType srcType = metadata.dataType;
+  const DataType srcType = metadata.data_type;
 
-  const bool convertData = inputValues.changeDataType && srcType != destType;
+  const bool convertData = inputValues.change_data_type && srcType != destType;
   if(convertData)
   {
     messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Converting pixel data from {} to {}", DataTypeToString(srcType), DataTypeToString(destType)));
@@ -424,9 +424,9 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
   // the dropped data explicit. The warning is attached to the Result (so it propagates into the stack's
   // execute result) and also emitted through the message handler. It never fires for a normal standalone
   // read, where readSinglePageOnly is false and all pages are read into a genuine 3D volume.
-  if(readResult.valid() && inputValues.readSinglePageOnly && metadata.numPages > 1)
+  if(readResult.valid() && inputValues.read_single_page_only && metadata.num_pages > 1)
   {
-    std::string warningMessage = fmt::format("Image file '{}' has {} pages; reading only the first page (page 0).", inputFilePath.string(), metadata.numPages);
+    std::string warningMessage = fmt::format("Image file '{}' has {} pages; reading only the first page (page 0).", inputFilePath.string(), metadata.num_pages);
     messageHandler.sendMessage(IFilter::Message::Type::Warning, warningMessage);
     readResult.warnings().push_back(Warning{.code = -2005, .message = std::move(warningMessage)});
   }
@@ -445,7 +445,7 @@ ReadImage::ReadImage(DataStructure& dataStructure, const IFilter::MessageHandler
 
 Result<> ReadImage::operator()()
 {
-  const auto& inputFilePath = m_InputValues.inputFilePath;
+  const auto& inputFilePath = m_InputValues.input_file_path;
 
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Reading image file: {}", inputFilePath.string()));
 

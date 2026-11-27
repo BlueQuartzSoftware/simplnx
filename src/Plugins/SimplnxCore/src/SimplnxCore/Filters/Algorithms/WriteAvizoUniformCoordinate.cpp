@@ -27,9 +27,9 @@ Result<> WriteAvizoUniformCoordinate::operator()()
 
 Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
 {
-  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
+  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
 
-  if(m_InputValues->WriteBinaryFile)
+  if(m_InputValues->write_binary_file)
   {
     if constexpr(endian::big == endian::native)
     {
@@ -61,7 +61,7 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  SizeVec3 dims = geom.getDimensions();
+  SizeVec3Type dims = geom.getDimensions();
 
   if(auto outputResult =
          printOutput(outputFile, "define Lattice %llu %llu %llu\n", static_cast<unsigned long long>(dims[0]), static_cast<unsigned long long>(dims[1]), static_cast<unsigned long long>(dims[2]));
@@ -90,7 +90,7 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  if(auto outputResult = printOutput(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->FeatureIdsArrayPath.toString().c_str()); outputResult.invalid())
+  if(auto outputResult = printOutput(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->feature_ids_array_path.toString().c_str()); outputResult.invalid())
   {
     return outputResult;
   }
@@ -103,7 +103,7 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  if(auto outputResult = printOutput(outputFile, "         Coordinates \"%s\"\n", m_InputValues->Units.c_str()); outputResult.invalid())
+  if(auto outputResult = printOutput(outputFile, "         Coordinates \"%s\"\n", m_InputValues->units.c_str()); outputResult.invalid())
   {
     return outputResult;
   }
@@ -119,8 +119,8 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
     return outputResult;
   }
 
-  FloatVec3 origin = geom.getOrigin();
-  FloatVec3 res = geom.getSpacing();
+  FloatVec3Type origin = geom.getOrigin();
+  FloatVec3Type res = geom.getSpacing();
   if(auto outputResult = printOutput(outputFile, "     # Bounding Box is xmin xmax ymin ymax zmin zmax\n"); outputResult.invalid())
   {
     return outputResult;
@@ -162,13 +162,13 @@ Result<> WriteAvizoUniformCoordinate::writeData(FILE* outputFile) const
     return MergeResults(std::move(result), std::move(outputResult));
   }
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   constexpr usize k_ChunkSize = 65536;
   std::vector<int32> buffer(k_ChunkSize);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
-  if(m_InputValues->WriteBinaryFile)
+  if(m_InputValues->write_binary_file)
   {
     for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
     {

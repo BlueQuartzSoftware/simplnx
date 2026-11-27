@@ -23,12 +23,12 @@ NXImageProcessingPlugin::~NXImageProcessingPlugin() = default;
 
 AbstractPlugin::SIMPLMapType NXImageProcessingPlugin::getSimplToSimplnxMap() const
 {
-  return nx::core::k_SIMPL_to_NXImageProcessing;
+  return nx::core::k_SimplToNxImageProcessing;
 }
 
 AbstractPlugin::FilterReplacementMapType NXImageProcessingPlugin::getFilterReplacementMap() const
 {
-  return nx::core::k_ITK_to_NXImageProcessing_Replacements;
+  return nx::core::k_ItkToNxImageProcessingReplacements;
 }
 
 SIMPLNX_DEF_PLUGIN(NXImageProcessingPlugin)

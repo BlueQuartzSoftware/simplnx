@@ -23,7 +23,7 @@
 #include <string>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace shared_feature_face_filter_test
 {
@@ -55,8 +55,8 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
   DataStructure dataStructure;
   auto* meshGeomPtr = TriangleGeom::Create(dataStructure, "Mesh");
   REQUIRE(meshGeomPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {pairs.size() * 3}, {3}, meshGeomPtr->getId());
-  auto* trianglesPtr = UnitTest::CreateTestDataArray<uint64>(dataStructure, "Triangles", {pairs.size()}, {3}, meshGeomPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices", {pairs.size() * 3}, {3}, meshGeomPtr->getId());
+  auto* trianglesPtr = unit_test::CreateTestDataArray<uint64>(dataStructure, "Triangles", {pairs.size()}, {3}, meshGeomPtr->getId());
   auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Faces", ShapeType{pairs.size()}, meshGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(trianglesPtr != nullptr);
@@ -64,7 +64,7 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
   meshGeomPtr->setVertices(*verticesPtr);
   meshGeomPtr->setFaceList(*trianglesPtr);
   meshGeomPtr->setFaceDataId(faceDataPtr->getId());
-  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Labels", {pairs.size()}, {2}, faceDataPtr->getId());
+  auto* labelsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Labels", {pairs.size()}, {2}, faceDataPtr->getId());
   REQUIRE(labelsPtr != nullptr);
   for(usize tupleIdx = 0; tupleIdx < pairs.size(); ++tupleIdx)
   {
@@ -92,12 +92,12 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
   args.insertOrAssign(SharedFeatureFaceFilter::k_FeatureNumTrianglesArrayName_Key, std::make_any<std::string>("Counts"));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"})));
-  const auto& idsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Faces", "Ids"}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"})));
-  const auto& outLabelsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Labels"}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"})));
-  const auto& countsRef = dataStructure.getDataRefAs<Int32Array>(DataPath({"Mesh", "Boundaries", "Counts"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Mesh", "Faces", "Ids"})));
+  const auto& idsRef = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Mesh", "Faces", "Ids"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Mesh", "Boundaries", "Labels"})));
+  const auto& outLabelsRef = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Mesh", "Boundaries", "Labels"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Mesh", "Boundaries", "Counts"})));
+  const auto& countsRef = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Mesh", "Boundaries", "Counts"}));
   REQUIRE(idsRef.getNumberOfTuples() == expectedIds.size());
   REQUIRE(outLabelsRef.getNumberOfTuples() == expectedLabels.size());
   REQUIRE(countsRef.getNumberOfTuples() == expectedCounts.size());
@@ -111,7 +111,7 @@ static void ExecuteAndCheckLabelPairs(const std::vector<std::pair<int32, int32>>
     CHECK(outLabelsRef[2 * row + 1] == expectedLabels[row].second);
     CHECK(countsRef[row] == expectedCounts[row]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 } // namespace shared_feature_face_filter_test
@@ -120,12 +120,12 @@ using namespace shared_feature_face_filter_test;
 
 TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFaceFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_TestFilesDir));
@@ -149,7 +149,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -166,7 +166,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
     scope.requireExpectedStore(kNxArray);
 
-    UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
+    unit_test::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
   {
     const std::string kExemplarArrayName = "FaceLabels";
@@ -177,7 +177,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
     scope.requireExpectedStore(kNxArray);
 
-    UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
+    unit_test::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
   {
     const std::string kExemplarArrayName = "NumTriangles";
@@ -188,19 +188,19 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
     scope.requireExpectedStore(kNxArray);
 
-    UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
+    unit_test::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/shared_feature_faces.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SharedFeatureFace: Missing zero pair rotation race", "[SimplnxCore][SharedFeatureFaceFilter][Regression]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // The first distinct pairs create map keys 2 and 1. Key zero is absent, so the reserved row must receive
   // count zero without changing the shared map.
   const std::vector<std::pair<int32, int32>> pairs{{0, 2}, {0, 2}, {0, 1}};
@@ -216,7 +216,7 @@ TEST_CASE("SimplnxCore::SharedFeatureFace: Missing zero pair rotation race", "[S
 
 TEST_CASE("SimplnxCore::SharedFeatureFace: Real zero pair counts", "[SimplnxCore][SharedFeatureFaceFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Pair (0,0) creates map key zero, so the reserved row and boundary row 1 share that key and both report
   // its two triangles.
   const std::vector<std::pair<int32, int32>> pairs{{0, 0}, {0, 2}, {0, 0}};
@@ -228,11 +228,11 @@ TEST_CASE("SimplnxCore::SharedFeatureFace: Real zero pair counts", "[SimplnxCore
 
 TEST_CASE("SimplnxCore::SharedFeatureFaceFilter: hand-counted labels and reserved row", "[SimplnxCore][SharedFeatureFaceFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool realZeroPair = GENERATE(false, true);
   CAPTURE(scenario, realZeroPair);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath geometryPath({"Mesh"});
   const DataPath faceDataPath = geometryPath.createChildPath("FaceData");
@@ -242,12 +242,12 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter: hand-counted labels and reserve
   auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "FaceData", {6}, geometryPtr->getId());
   REQUIRE(faceDataPtr != nullptr);
   geometryPtr->setFaceAttributeMatrix(*faceDataPtr);
-  auto connectivityStore = DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, geometryPath.createChildPath("Faces"), {6}, {3});
+  auto connectivityStore = data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, geometryPath.createChildPath("Faces"), {6}, {3});
   auto* connectivityPtr = DataArray<IGeometry::MeshIndexType>::Create(dataStructure, "Faces", connectivityStore, geometryPtr->getId());
   REQUIRE(connectivityPtr != nullptr);
   geometryPtr->setFaceList(*connectivityPtr);
-  auto inputStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, labelsPath, {6}, {2});
-  auto* inputPtr = Int32Array::Create(dataStructure, "Labels", inputStore, faceDataPtr->getId());
+  auto inputStore = data_store_utilities::CreateDataStore<int32>(dataStructure, labelsPath, {6}, {2});
+  auto* inputPtr = Int32ArrayType::Create(dataStructure, "Labels", inputStore, faceDataPtr->getId());
   REQUIRE(inputPtr != nullptr);
   const std::array<int32, 12> inputLabels{2, 1, 1, 2, 3, -1, 9, 4, 4, 9, 0, realZeroPair ? 0 : 5};
   REQUIRE(inputStore->copyFromBuffer(0, {inputLabels.data(), inputLabels.size()}).valid());
@@ -267,12 +267,12 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter: hand-counted labels and reserve
   const DataPath idsPath = faceDataPath.createChildPath("Ids");
   const DataPath pairsPath = geometryPath.createChildPath("FeatureData").createChildPath("Pairs");
   const DataPath countsPath = geometryPath.createChildPath("FeatureData").createChildPath("Counts");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(pairsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
-  const auto& pairs = dataStructure.getDataRefAs<Int32Array>(pairsPath);
-  const auto& counts = dataStructure.getDataRefAs<Int32Array>(countsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(pairsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(countsPath));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(idsPath);
+  const auto& pairs = dataStructure.getDataRefAs<Int32ArrayType>(pairsPath);
+  const auto& counts = dataStructure.getDataRefAs<Int32ArrayType>(countsPath);
   scope.requireExpectedStore(ids);
   scope.requireExpectedStore(pairs);
   scope.requireExpectedStore(counts);
@@ -291,5 +291,5 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter: hand-counted labels and reserve
   CHECK(actualIds == expectedIds);
   CHECK(actualPairs == expectedPairs);
   CHECK(actualCounts == expectedCounts);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

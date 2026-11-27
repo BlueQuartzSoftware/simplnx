@@ -39,21 +39,21 @@ const std::atomic_bool& ComputeFeatureReferenceMisorientations::getCancel()
 Result<> ComputeFeatureReferenceMisorientations::operator()()
 {
   // The validated Cell Phases path follows the standard ImageGeom hierarchy.
-  DataPath imageGeomPath = m_InputValues->CellPhasesArrayPath.getParent().getParent();
+  DataPath imageGeomPath = m_InputValues->cell_phases_array_path.getParent().getParent();
   const ImageGeom& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  const auto& cellPhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& featureIdsArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& quatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  const auto& cellPhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& featureIdsArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& quatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
 
-  const auto* avgQuatsPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  const auto* featureAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto* avgQuatsPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->avg_quats_array_path);
+  const auto* featureAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->feature_attribute_matrix_path);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
-  auto& featureReferenceMisorientations = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureReferenceMisorientationsArrayName);
-  auto& avgReferenceMisorientation = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureAvgMisorientationsArrayName);
+  auto& featureReferenceMisorientations = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_reference_misorientations_array_name);
+  auto& avgReferenceMisorientation = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_avg_misorientations_array_name);
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAvgMisorientationsArrayName, featureIdsArrayRef, false, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->feature_avg_misorientations_array_name, featureIdsArrayRef, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -87,7 +87,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
 
   // Average quaternions stay local for random feature access.
   std::vector<float32> localAvgQuats;
-  if(m_InputValues->ReferenceOrientation == 0 && avgQuatsPtr != nullptr)
+  if(m_InputValues->reference_orientation == 0 && avgQuatsPtr != nullptr)
   {
     localAvgQuats.resize(totalFeatures * 4);
     if(Result<> ioResult = avgQuatsPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(localAvgQuats.data(), totalFeatures * 4)); ioResult.invalid())
@@ -106,9 +106,9 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   auto& misoStore = featureReferenceMisorientations.getDataStoreRef();
 
   // Mode 1 selects the farthest grain-boundary cell for each feature.
-  if(m_InputValues->ReferenceOrientation == 1)
+  if(m_InputValues->reference_orientation == 1)
   {
-    const auto& gbDistStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->GBEuclideanDistancesArrayPath).getDataStoreRef();
+    const auto& gbDistStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->gb_euclidean_distances_array_path).getDataStoreRef();
     auto fidBuf = std::make_unique<std::array<int32, k_ChunkTuples>>();
     auto distBuf = std::make_unique<std::array<float32, k_ChunkTuples>>();
 
@@ -139,7 +139,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
       }
     }
 
-    const auto& euclideanCellCenters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->FeatureEuclideanCentersPath)->getIDataStoreAs<AbstractDataStore<float32>>();
+    const auto& euclideanCellCenters = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->feature_euclidean_centers_path)->getIDataStoreAs<AbstractDataStore<float32>>();
     for(usize i = 1; i < totalFeatures; i++)
     {
       auto cellCenter = imageGeom.getCoordsf(centerVoxels[i]);
@@ -202,31 +202,31 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
         {
           return MakeErrorResult(-34901,
                                  fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid positive Phase indices are in [1, {}).",
-                                             m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, offset + chunkTupleIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                             m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, offset + chunkTupleIdx, m_InputValues->crystal_structures_array_path.toString(),
                                              numCrystalStructures, numCrystalStructures));
         }
         const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
         if(currentLaueIndex >= orientationOps.size())
         {
           return MakeErrorResult(-34902, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                                     m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
+                                                     m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
         }
         const usize qi = chunkTupleIdx * 4;
         ebsdlib::QuatD q1((*quatsBuffer)[qi], (*quatsBuffer)[qi + 1], (*quatsBuffer)[qi + 2], (*quatsBuffer)[qi + 3]);
         ebsdlib::QuatD q2;
-        if(m_InputValues->ReferenceOrientation == 0)
+        if(m_InputValues->reference_orientation == 0)
         {
           const usize fi = static_cast<usize>(currentFeatureIdx) * 4;
           q2 = ebsdlib::QuatD(localAvgQuats[fi], localAvgQuats[fi + 1], localAvgQuats[fi + 2], localAvgQuats[fi + 3]);
         }
-        else if(m_InputValues->ReferenceOrientation == 1)
+        else if(m_InputValues->reference_orientation == 1)
         {
           const usize fi = static_cast<usize>(currentFeatureIdx) * 4;
           q2 = ebsdlib::QuatD(centerQuats[fi], centerQuats[fi + 1], centerQuats[fi + 2], centerQuats[fi + 3]);
         }
 
         ebsdlib::AxisAngleDType axisAngle = orientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
-        const float32 misoValue = static_cast<float32>(Constants::k_RadToDegD * axisAngle[3]);
+        const float32 misoValue = static_cast<float32>(constants::k_RadToDegD * axisAngle[3]);
         (*misoBuf)[chunkTupleIdx] = misoValue;
         avgMisorientationCounts[currentFeatureIdx]++;
         avgMisorientationSums[currentFeatureIdx] += misoValue;

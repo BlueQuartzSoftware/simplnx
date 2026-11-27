@@ -22,8 +22,8 @@ namespace rt = recon_test;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 11;
   constexpr usize k_Dy = 11;
@@ -72,11 +72,11 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)",
           "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_Dx = 11;
   constexpr usize k_Dy = 11;
@@ -102,7 +102,7 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const rt::ReconParamSetter setter =
+  const rt::ReconParamSetterType setter =
       rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, 1.0, 0.0);
   setter(args, /*fullyConnected=*/false, /*height=*/0.0);
 
@@ -117,7 +117,7 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
   REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Fg); // square center preserved
   REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg); // square corner regrown
   REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Bg); // untouched background
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -134,8 +134,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus clamp-to-mask (enclosed hole stays background)", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 11;
   constexpr usize k_Dy = 11;
@@ -196,8 +196,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight rejects float32 input", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 8, 8, 8, std::vector<float32>(8 * 8 * 8, 1.0f));
@@ -210,7 +210,7 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1.0));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0.0));
   const auto result = filter.preflight(dataStructure, args);
-  REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+  REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
@@ -245,8 +245,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMP
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight fg/bg range guard", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr int32 k_NonFiniteBinaryValue = -8570;
   constexpr int32 k_BinaryValueOutOfRange = -8571;
@@ -272,43 +272,43 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   SECTION("valid fg/bg preflights cleanly")
   {
     auto result = filter.preflight(dataStructure, makeArgs(1.0, 0.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("non-finite fg is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::infinity(), 0.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteBinaryValue);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteBinaryValue);
   }
 
   SECTION("out-of-range fg (negative, invalid for uint8) is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(-1.0, 0.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_BinaryValueOutOfRange);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_BinaryValueOutOfRange);
   }
 
   SECTION("out-of-range bg (above uint8 max) is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(1.0, 300.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_BinaryValueOutOfRange);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_BinaryValueOutOfRange);
   }
 
   SECTION("fractional fg emits a truncation warning but preflights valid")
   {
     auto result = filter.preflight(dataStructure, makeArgs(0.5, 0.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE(!result.outputActions.warnings().empty());
-    REQUIRE(result.outputActions.warnings().front().code == k_BinaryValueTruncated);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE(!result.output_actions.warnings().empty());
+    REQUIRE(result.output_actions.warnings().front().code == k_BinaryValueTruncated);
   }
 
   SECTION("fg == bg is rejected")
   {
     auto result = filter.preflight(dataStructure, makeArgs(1.0, 1.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_ForegroundEqualsBackground);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_ForegroundEqualsBackground);
   }
 }
 
@@ -329,8 +329,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real-image golden (BinaryOpeningByReconstruction) -- documented contract divergence",
           "[NXImageProcessing][ItkGolden][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -350,7 +350,7 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real
 
   BinaryOpeningByReconstructionImageFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());                      // non-strictly-binary input (value 100) is rejected
   REQUIRE(executeResult.result.errors().front().code == -8002); // the documented binary-input contract error

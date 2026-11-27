@@ -16,7 +16,7 @@ using namespace nx::core;
 
 TEST_CASE("CacheMemoryBudgetManager basic allocation and eviction", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -51,7 +51,7 @@ TEST_CASE("CacheMemoryBudgetManager basic allocation and eviction", "[CacheMemor
 
 TEST_CASE("CacheMemoryBudgetManager touch updates LRU order", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -89,7 +89,7 @@ TEST_CASE("CacheMemoryBudgetManager touch updates LRU order", "[CacheMemoryBudge
 
 TEST_CASE("CacheMemoryBudgetManager cross-subsystem eviction", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -126,16 +126,16 @@ TEST_CASE("CacheMemoryBudgetManager cross-subsystem eviction", "[CacheMemoryBudg
 
 TEST_CASE("CacheMemoryBudgetManager cap and clamping", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
 
   const uint64 oneGiB = uint64{1} * 1024 * 1024 * 1024;
-  const uint64 maxAllowed = CacheMemoryBudgetManager::maxBudgetBytes();
+  const uint64 maxAllowed = CacheMemoryBudgetManager::MaxBudgetBytes();
 
   // The cap is always at least the 1 GiB floor.
   REQUIRE(maxAllowed >= oneGiB);
 
   // The 50%-of-RAM default never exceeds the cap.
-  REQUIRE(CacheMemoryBudgetManager::defaultBudgetBytes() <= maxAllowed);
+  REQUIRE(CacheMemoryBudgetManager::DefaultBudgetBytes() <= maxAllowed);
 
   // An over-cap request is clamped to the cap and reported as clamped.
   const bool clampedHigh = mgr.setBudgetBytes(maxAllowed + oneGiB);
@@ -149,12 +149,12 @@ TEST_CASE("CacheMemoryBudgetManager cap and clamping", "[CacheMemoryBudgetManage
   REQUIRE(mgr.budgetBytes() == 1000);
 
   // Restore a sane budget for any later test that shares this singleton.
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager registered handler receives free request on over-budget", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -181,7 +181,7 @@ TEST_CASE("CacheMemoryBudgetManager registered handler receives free request on 
 
 TEST_CASE("CacheMemoryBudgetManager registered handler receives absolute deficit for oversized request", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(64);
 
@@ -201,7 +201,7 @@ TEST_CASE("CacheMemoryBudgetManager registered handler receives absolute deficit
 
 TEST_CASE("CacheMemoryBudgetManager unregistered subsystem still uses per-entry eviction", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -219,11 +219,11 @@ TEST_CASE("CacheMemoryBudgetManager unregistered subsystem still uses per-entry 
 
 TEST_CASE("CacheMemoryBudgetManager deferred handler drain reconciles used bytes", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
-  std::vector<CacheMemoryBudgetManager::AllocationHandle> handles;
+  std::vector<CacheMemoryBudgetManager::AllocationHandleType> handles;
   uint64 pendingFreeBytes = 0;
   mgr.registerSubsystem("deferred", [&](uint64 bytesToFree) { pendingFreeBytes += bytesToFree; });
 
@@ -254,12 +254,12 @@ TEST_CASE("CacheMemoryBudgetManager deferred handler drain reconciles used bytes
 
 TEST_CASE("CacheMemoryBudgetManager pinned allocation balances nested pins", "[CacheMemoryBudgetManager][pin]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
 
   bool pinnedEntryEvicted = false;
   auto [pinnedHandle, initialEvictions] = mgr.allocate("pin-nesting", "pinned", 800, [&pinnedEntryEvicted]() { pinnedEntryEvicted = true; }, options);
@@ -293,12 +293,12 @@ TEST_CASE("CacheMemoryBudgetManager pinned allocation balances nested pins", "[C
 
 TEST_CASE("CacheMemoryBudgetManager evicts the oldest unpinned allocation", "[CacheMemoryBudgetManager][pin][lru]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
 
   bool pinnedEntryEvicted = false;
   bool unpinnedEntryEvicted = false;
@@ -321,7 +321,7 @@ TEST_CASE("CacheMemoryBudgetManager evicts the oldest unpinned allocation", "[Ca
 
 TEST_CASE("CacheMemoryBudgetManager pin transitions update recency", "[CacheMemoryBudgetManager][pin][lru]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -351,12 +351,12 @@ TEST_CASE("CacheMemoryBudgetManager pin transitions update recency", "[CacheMemo
 
 TEST_CASE("CacheMemoryBudgetManager reports unique pinned bytes", "[CacheMemoryBudgetManager][pin][accounting]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
   auto [initiallyPinnedHandle, initialEvictions] = mgr.allocate("pin-bytes", "initial", 300, []() {}, options);
   REQUIRE(initialEvictions.empty());
   auto [nestedHandle, nestedEvictions] = mgr.allocate("pin-bytes", "nested", 400, []() {});
@@ -380,12 +380,12 @@ TEST_CASE("CacheMemoryBudgetManager reports unique pinned bytes", "[CacheMemoryB
 
 TEST_CASE("CacheMemoryBudgetManager admits pins against unique pinned residency", "[CacheMemoryBudgetManager][pin][admission]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
   auto [visibleHandle, visibleEvictions] = mgr.allocate("pin-admission", "visible", 600, []() {}, options);
   REQUIRE(visibleEvictions.empty());
   auto [exactFitHandle, exactFitEvictions] = mgr.allocate("pin-admission", "exact-fit", 400, []() {});
@@ -410,7 +410,7 @@ TEST_CASE("CacheMemoryBudgetManager admits pins against unique pinned residency"
 
 TEST_CASE("CacheMemoryBudgetManager reserves bounded temporary working bytes", "[CacheMemoryBudgetManager][pin][reservation]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -437,7 +437,7 @@ TEST_CASE("CacheMemoryBudgetManager reserves bounded temporary working bytes", "
 
 TEST_CASE("CacheMemoryBudgetManager skips pinned delegated entries", "[CacheMemoryBudgetManager][pin][delegated]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -445,7 +445,7 @@ TEST_CASE("CacheMemoryBudgetManager skips pinned delegated entries", "[CacheMemo
   mgr.registerSubsystem("pin-delegated", [&handlerCalls](uint64) { handlerCalls++; });
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
   auto [pinnedHandle, pinnedEvictions] = mgr.allocate("pin-delegated", "pinned", 800, []() {}, options);
   REQUIRE(pinnedEvictions.empty());
 
@@ -462,7 +462,7 @@ TEST_CASE("CacheMemoryBudgetManager skips pinned delegated entries", "[CacheMemo
 
 TEST_CASE("CacheMemoryBudgetManager rejects handles after clear", "[CacheMemoryBudgetManager][pin][lifecycle]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -479,12 +479,12 @@ TEST_CASE("CacheMemoryBudgetManager rejects handles after clear", "[CacheMemoryB
 
 TEST_CASE("CacheMemoryBudgetManager preserves pinned accounting after budget reduction", "[CacheMemoryBudgetManager][pin][budget]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1200);
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
 
   bool firstEntryEvicted = false;
   bool secondEntryEvicted = false;
@@ -515,7 +515,7 @@ TEST_CASE("CacheMemoryBudgetManager preserves pinned accounting after budget red
 
 TEST_CASE("CacheMemoryBudgetManager concurrent pins do not accumulate overage", "[CacheMemoryBudgetManager][pin][concurrency]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(500);
 
@@ -584,9 +584,9 @@ TEST_CASE("CacheMemoryBudgetManager concurrent pins do not accumulate overage", 
 
 TEST_CASE("CacheMemoryBudgetManager pin overhead benchmark", "[.CacheMemoryBudgetManagerPinBenchmark]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 
   auto [handle, evictions] = mgr.allocate("pin-benchmark", "entry", 1, []() {});
   REQUIRE(evictions.empty());
@@ -633,7 +633,7 @@ TEST_CASE("CacheMemoryBudgetManager pin overhead benchmark", "[.CacheMemoryBudge
 
 TEST_CASE("CacheMemoryBudgetManager working-memory reservations use at most one quarter of the cache budget", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -657,12 +657,12 @@ TEST_CASE("CacheMemoryBudgetManager working-memory reservations use at most one 
 
   REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
   REQUIRE(mgr.effectiveCacheBudgetBytes() == 1000);
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager working-memory reservations release exactly once across moves", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -685,12 +685,12 @@ TEST_CASE("CacheMemoryBudgetManager working-memory reservations release exactly 
   auto empty = mgr.reserveWorkingMemory(0);
   REQUIRE(empty.sizeBytes() == 0);
   REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager working-memory reservations can return unused bytes", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -709,12 +709,12 @@ TEST_CASE("CacheMemoryBudgetManager working-memory reservations can return unuse
 
   REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
   REQUIRE(mgr.effectiveCacheBudgetBytes() == 1000);
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager keeps live working reservations separate from clear and budget changes", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -740,12 +740,12 @@ TEST_CASE("CacheMemoryBudgetManager keeps live working reservations separate fro
 
   REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
   REQUIRE(mgr.effectiveCacheBudgetBytes() == 800);
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager cache eviction accounts for active working memory", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -774,12 +774,12 @@ TEST_CASE("CacheMemoryBudgetManager cache eviction accounts for active working m
 
   REQUIRE(mgr.usedBytes() == 0);
   REQUIRE(mgr.reservedWorkingMemoryBytes() == 0);
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager exact working reservations require registered headroom and quota", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -805,12 +805,12 @@ TEST_CASE("CacheMemoryBudgetManager exact working reservations require registere
   CHECK(mgr.reservedWorkingMemoryBytes() == 100);
   mgr.release(cacheHandle);
   mgr.clear();
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager exact working reservations never request eviction", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -838,17 +838,17 @@ TEST_CASE("CacheMemoryBudgetManager exact working reservations never request evi
   mgr.release(delegatedHandle);
   mgr.registerSubsystem("exact-delegated", [](uint64) {});
   mgr.clear();
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager exact working reservations count pinned and pending entries", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
   CacheMemoryBudgetManager::AllocationOptions options;
-  options.initiallyPinned = true;
+  options.initially_pinned = true;
   int callbackCalls = 0;
   auto [pinnedHandle, pinnedEvictions] = mgr.allocate("exact-pinned", "entry", 900, [&callbackCalls]() { callbackCalls++; }, options);
   REQUIRE(pinnedEvictions.empty());
@@ -879,12 +879,12 @@ TEST_CASE("CacheMemoryBudgetManager exact working reservations count pinned and 
   mgr.release(secondHandle);
   mgr.registerSubsystem("exact-pending", [](uint64) {});
   mgr.clear();
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager exact working reservations recover after budget shrink", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   mgr.clear();
   mgr.setBudgetBytes(1000);
 
@@ -904,17 +904,17 @@ TEST_CASE("CacheMemoryBudgetManager exact working reservations recover after bud
   }
 
   CHECK(mgr.reservedWorkingMemoryBytes() == 0);
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 TEST_CASE("CacheMemoryBudgetManager concurrent exact working reservations cannot over-admit", "[CacheMemoryBudgetManager]")
 {
-  auto& mgr = CacheMemoryBudgetManager::instance();
+  auto& mgr = CacheMemoryBudgetManager::Instance();
   for(const uint64 cacheBytes : std::array<uint64, 2>{0, 850})
   {
     mgr.clear();
     mgr.setBudgetBytes(1000);
-    CacheMemoryBudgetManager::AllocationHandle cacheHandle = 0;
+    CacheMemoryBudgetManager::AllocationHandleType cacheHandle = 0;
     if(cacheBytes != 0)
     {
       auto [handle, evictions] = mgr.allocate("exact-concurrent", "entry", cacheBytes, []() {});
@@ -952,5 +952,5 @@ TEST_CASE("CacheMemoryBudgetManager concurrent exact working reservations cannot
     }
   }
   mgr.clear();
-  mgr.setBudgetBytes(CacheMemoryBudgetManager::defaultBudgetBytes());
+  mgr.setBudgetBytes(CacheMemoryBudgetManager::DefaultBudgetBytes());
 }

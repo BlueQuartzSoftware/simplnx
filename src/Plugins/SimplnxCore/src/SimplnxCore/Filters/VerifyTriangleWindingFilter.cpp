@@ -27,7 +27,7 @@ Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& d
   const DataPath parentPath = path.getParent();
   if(parentPath.empty())
   {
-    return {{nonstd::make_unexpected(ErrorCollection{Error{.code = -25740, .message = "Unable to find a Triangle Geometry on the supplied path"}})}};
+    return {{nonstd::make_unexpected(ErrorCollectionType{Error{.code = -25740, .message = "Unable to find a Triangle Geometry on the supplied path"}})}};
   }
 
   return FindParentGeometry(parentPath, dataStructure);
@@ -83,7 +83,7 @@ Parameters VerifyTriangleWindingFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If enabled, the triangle normals will be recomputed if the triangle normals exist", true));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.linkParameters(k_RepairNormals_Key, k_TriangleNormalsPath_Key, true);
 
@@ -128,7 +128,7 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
 
     const auto* triangleGeomPtr = dataStructure.getDataAs<INodeGeometry2D>(targetGeomResult.value());
 
-    const auto* existingNormalsPtr = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath);
+    const auto* existingNormalsPtr = dataStructure.getDataAs<Float64ArrayType>(pNormalsArrayPath);
     if(existingNormalsPtr != nullptr)
     {
       if(existingNormalsPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
@@ -140,7 +140,7 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
       }
 
       resultOutputActions.value().appendDataObjectModificationNotification(pNormalsArrayPath, DataObjectModification::ModifiedType::Modified);
-      return {.outputActions = std::move(resultOutputActions)};
+      return {.output_actions = std::move(resultOutputActions)};
     }
     const auto* existingObjectPtr = dataStructure.getDataAs<DataObject>(pNormalsArrayPath);
     if(existingObjectPtr != nullptr)
@@ -149,7 +149,7 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
       resultOutputActions.value().appendAction(
           std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
       resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
-      return {.outputActions = std::move(resultOutputActions)};
+      return {.output_actions = std::move(resultOutputActions)};
     }
   }
 
@@ -162,16 +162,16 @@ Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, 
 {
   VerifyTriangleWindingInputValues inputValues;
 
-  inputValues.LabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
+  inputValues.labels_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
 
-  Result<DataPath> targetGeomResult = ::FindParentGeometry(inputValues.LabelsPath, dataStructure);
+  Result<DataPath> targetGeomResult = ::FindParentGeometry(inputValues.labels_path, dataStructure);
   if(targetGeomResult.invalid())
   {
     return ConvertResult(std::move(targetGeomResult));
   }
-  inputValues.TargetGeometryPath = targetGeomResult.value();
-  inputValues.RepairNormals = filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key);
-  inputValues.TriangleNormalsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
+  inputValues.target_geometry_path = targetGeomResult.value();
+  inputValues.repair_normals = filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key);
+  inputValues.triangle_normals_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
 
   return VerifyTriangleWinding(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

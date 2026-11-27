@@ -135,7 +135,7 @@ std::string ClassNameFor(const FilterList& filterList, const Uuid& uuid)
 TEST_CASE("NXImageProcessing::every filter replacement map entry redirects a retired Uuid", "[NXImageProcessing][BackwardsCompatibility][PipelineUuidRedirect]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const NXImageProcessingPlugin plugin;
   const AbstractPlugin::FilterReplacementMapType replacements = plugin.getFilterReplacementMap();
@@ -179,7 +179,7 @@ TEST_CASE("NXImageProcessing::every filter replacement map entry redirects a ret
 TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixture", "[NXImageProcessing][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const NXImageProcessingPlugin plugin;
@@ -193,7 +193,7 @@ TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixtu
 
   for(const auto& [simplUuid, conversion] : simplMap)
   {
-    const Uuid newUuid = conversion.simplnxUuid;
+    const Uuid newUuid = conversion.simplnx_uuid;
     const std::string className = ClassNameFor(*filterListPtr, newUuid);
 
     // Every entry must own at least one fixture, or the entry is untested.

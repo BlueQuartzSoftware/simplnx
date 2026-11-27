@@ -131,7 +131,7 @@ struct SIMPLNXCORE_EXPORT OperatorDef
   } kind;
 
   int precedence;
-  int numArgs;
+  int num_args;
 
   /**
    * @enum Associativity
@@ -152,12 +152,12 @@ struct SIMPLNXCORE_EXPORT OperatorDef
     None,        ///< Does not convert angle units.
     ForwardTrig, ///< Converts degrees before trigonometric evaluation.
     InverseTrig  ///< Converts inverse-trigonometric results to degrees.
-  } trigMode = None;
+  } trig_mode = None;
 
   // This callable evaluates one operand when numArgs is one.
-  std::function<double(double)> unaryOp;
+  std::function<double(double)> unary_op;
   // This callable evaluates two operands when numArgs is two.
-  std::function<double(double, double)> binaryOp;
+  std::function<double(double, double)> binary_op;
 };
 
 /**
@@ -182,23 +182,23 @@ struct SIMPLNXCORE_EXPORT RpnItem
     TupleComponentExtract ///< Selects one tuple and component from an operand.
   } type;
 
-  float64 scalarValue = 0.0;
+  float64 scalar_value = 0.0;
 
-  DataPath arrayPath;
-  DataType sourceDataType = DataType::float64; ///< Selects typed bulk-I/O dispatch.
+  DataPath array_path;
+  DataType source_data_type = DataType::float64; ///< Selects typed bulk-I/O dispatch.
 
   // This pointer references the static operator registry.
   const OperatorDef* op = nullptr;
 
-  usize componentIndex = std::numeric_limits<usize>::max();
-  usize tupleIndex = std::numeric_limits<usize>::max();
+  usize component_index = std::numeric_limits<usize>::max();
+  usize tuple_index = std::numeric_limits<usize>::max();
 };
 
 /**
  * @brief Returns the supported calculator operators and functions.
  * @return Static registry with process-long lifetime.
  */
-SIMPLNXCORE_EXPORT const std::vector<OperatorDef>& getOperatorRegistry();
+SIMPLNXCORE_EXPORT const std::vector<OperatorDef>& GetOperatorRegistry();
 
 /**
  * @struct ArrayCalculatorInputValues
@@ -206,12 +206,12 @@ SIMPLNXCORE_EXPORT const std::vector<OperatorDef>& getOperatorRegistry();
  */
 struct SIMPLNXCORE_EXPORT ArrayCalculatorInputValues
 {
-  DataPath SelectedGroup; ///< Restricts unquoted array-name resolution.
-  std::string InfixEquation;
+  DataPath selected_group; ///< Restricts unquoted array-name resolution.
+  std::string infix_equation;
   // This unit choice applies to trigonometric operators.
-  CalculatorParameter::AngleUnits Units;
-  NumericType ScalarType;
-  DataPath CalculatedArray; ///< Identifies the preflight-created output array.
+  CalculatorParameter::AngleUnits units;
+  NumericType scalar_type;
+  DataPath calculated_array; ///< Identifies the preflight-created output array.
 };
 
 /**
@@ -283,7 +283,7 @@ public:
    * An unrecognized character becomes an identifier token. Parsing then reports
    * the contextual error.
    */
-  static std::vector<Token> tokenize(const std::string& equation);
+  static std::vector<Token> Tokenize(const std::string& equation);
 
 private:
   /**

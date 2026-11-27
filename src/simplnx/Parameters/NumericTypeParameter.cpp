@@ -71,7 +71,7 @@ Uuid NumericTypeParameter::uuid() const
   return ParameterTraits<NumericTypeParameter>::uuid;
 }
 
-IParameter::AcceptedTypes NumericTypeParameter::acceptedTypes() const
+IParameter::AcceptedTypesType NumericTypeParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

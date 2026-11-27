@@ -55,20 +55,20 @@ constexpr usize BinaryThinningMinimumExternal2DTargetBytes()
 
 struct BinaryThinningFixed2DPlan
 {
-  bool useFixedCapacity = false;
-  usize workCapacityValues = 0;
-  usize markerCapacityWords = 0;
-  usize transferValues = 0;
-  usize minimumFixedBytes = 0;
-  usize residentBytes = 0;
+  bool use_fixed_capacity = false;
+  usize work_capacity_values = 0;
+  usize marker_capacity_words = 0;
+  usize transfer_values = 0;
+  usize minimum_fixed_bytes = 0;
+  usize resident_bytes = 0;
 };
 
 struct BinaryThinningExternal2DPlan
 {
-  bool useTiles = false;
-  usize coreRows = 0;
-  usize coreColumns = 0;
-  usize residentBytes = 0;
+  bool use_tiles = false;
+  usize core_rows = 0;
+  usize core_columns = 0;
+  usize resident_bytes = 0;
 };
 
 /**
@@ -76,11 +76,11 @@ struct BinaryThinningExternal2DPlan
  */
 struct BinaryThinningSliceBatchPlan
 {
-  usize sliceValues = 0;
-  usize markerWordsPerSlice = 0;
-  usize bytesPerWorker = 0;
-  usize workerCount = 0;
-  usize residentBytes = 0;
+  usize slice_values = 0;
+  usize marker_words_per_slice = 0;
+  usize bytes_per_worker = 0;
+  usize worker_count = 0;
+  usize resident_bytes = 0;
 };
 
 inline bool BinaryThinningCheckedAdd(usize left, usize right, usize& sum)
@@ -114,7 +114,7 @@ inline bool BinaryThinningCheckedMultiply(usize left, usize right, usize& produc
  * @return A valid bounded plan or a contextual size or capacity error.
  */
 template <class T>
-Result<BinaryThinningSliceBatchPlan> CreateBinaryThinningSliceBatchPlan(const SizeVec3& dims, usize targetBytes, usize maximumWorkers)
+Result<BinaryThinningSliceBatchPlan> CreateBinaryThinningSliceBatchPlan(const SizeVec3Type& dims, usize targetBytes, usize maximumWorkers)
 {
   BinaryThinningSliceBatchPlan plan;
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0 || targetBytes == 0 || maximumWorkers == 0)
@@ -133,29 +133,29 @@ Result<BinaryThinningSliceBatchPlan> CreateBinaryThinningSliceBatchPlan(const Si
   }
 
   usize volumeValues = 0;
-  if(!BinaryThinningCheckedMultiply(dims[0], dims[1], plan.sliceValues) || !BinaryThinningCheckedMultiply(plan.sliceValues, dims[2], volumeValues) || volumeValues == 0)
+  if(!BinaryThinningCheckedMultiply(dims[0], dims[1], plan.slice_values) || !BinaryThinningCheckedMultiply(plan.slice_values, dims[2], volumeValues) || volumeValues == 0)
   {
     return MakeErrorResult<BinaryThinningSliceBatchPlan>(
         -8716, fmt::format("Binary thinning dimensions {} x {} x {} overflow the addressable value count. Target: {}; maximum workers: {}.", dims[0], dims[1], dims[2], targetBytes, maximumWorkers));
   }
-  plan.markerWordsPerSlice = plan.sliceValues / 64 + (plan.sliceValues % 64 != 0 ? 1 : 0);
+  plan.marker_words_per_slice = plan.slice_values / 64 + (plan.slice_values % 64 != 0 ? 1 : 0);
 
   usize typedBytes = 0;
   usize markerBytes = 0;
-  if(!BinaryThinningCheckedMultiply(plan.sliceValues, sizeof(T), typedBytes) || !BinaryThinningCheckedMultiply(plan.markerWordsPerSlice, sizeof(uint64), markerBytes) ||
-     !BinaryThinningCheckedAdd(typedBytes, plan.sliceValues, plan.bytesPerWorker) || !BinaryThinningCheckedAdd(plan.bytesPerWorker, markerBytes, plan.bytesPerWorker))
+  if(!BinaryThinningCheckedMultiply(plan.slice_values, sizeof(T), typedBytes) || !BinaryThinningCheckedMultiply(plan.marker_words_per_slice, sizeof(uint64), markerBytes) ||
+     !BinaryThinningCheckedAdd(typedBytes, plan.slice_values, plan.bytes_per_worker) || !BinaryThinningCheckedAdd(plan.bytes_per_worker, markerBytes, plan.bytes_per_worker))
   {
     return MakeErrorResult<BinaryThinningSliceBatchPlan>(-8716, fmt::format("Binary thinning cannot size one {}-byte-value worker for dimensions {} x {} x {}. Target: {}; maximum workers: {}.",
                                                                             sizeof(T), dims[0], dims[1], dims[2], targetBytes, maximumWorkers));
   }
 
   const usize availableWorkers = std::min(dims[2], maximumWorkers);
-  plan.workerCount = std::min(availableWorkers, targetBytes / plan.bytesPerWorker);
-  if(plan.workerCount == 0 || !BinaryThinningCheckedMultiply(plan.workerCount, plan.bytesPerWorker, plan.residentBytes))
+  plan.worker_count = std::min(availableWorkers, targetBytes / plan.bytes_per_worker);
+  if(plan.worker_count == 0 || !BinaryThinningCheckedMultiply(plan.worker_count, plan.bytes_per_worker, plan.resident_bytes))
   {
     return MakeErrorResult<BinaryThinningSliceBatchPlan>(-8716,
                                                          fmt::format("Binary thinning cannot fit one {}-byte Z-slice worker for dimensions {} x {} x {} within a {}-byte target. Maximum workers: {}.",
-                                                                     plan.bytesPerWorker, dims[0], dims[1], dims[2], targetBytes, maximumWorkers));
+                                                                     plan.bytes_per_worker, dims[0], dims[1], dims[2], targetBytes, maximumWorkers));
   }
   return {plan};
 }
@@ -175,29 +175,29 @@ Result<BinaryThinningFixed2DPlan> CreateBinaryThinningFixed2DPlan(usize volumeVa
   usize markerBytes = 0;
   usize fixedStateBytes = 0;
   if(!BinaryThinningCheckedMultiply(markerCapacityWords, sizeof(uint64), markerBytes) || !BinaryThinningCheckedAdd(k_BinaryThinning2DMetadataHeadroomBytes, volumeValues, fixedStateBytes) ||
-     !BinaryThinningCheckedAdd(fixedStateBytes, markerBytes, fixedStateBytes) || !BinaryThinningCheckedAdd(fixedStateBytes, sizeof(T), plan.minimumFixedBytes))
+     !BinaryThinningCheckedAdd(fixedStateBytes, markerBytes, fixedStateBytes) || !BinaryThinningCheckedAdd(fixedStateBytes, sizeof(T), plan.minimum_fixed_bytes))
   {
     return MakeErrorResult<BinaryThinningFixed2DPlan>(
         -8711, fmt::format("Binary thinning cannot plan fixed true-2-D storage for {} values of {} bytes each within a {}-byte target.", volumeValues, sizeof(T), targetBytes));
   }
 
-  if(plan.minimumFixedBytes > targetBytes)
+  if(plan.minimum_fixed_bytes > targetBytes)
   {
     return {plan};
   }
 
   const usize transferValues = std::min(volumeValues, (targetBytes - fixedStateBytes) / sizeof(T));
   usize transferBytes = 0;
-  if(transferValues == 0 || !BinaryThinningCheckedMultiply(transferValues, sizeof(T), transferBytes) || !BinaryThinningCheckedAdd(fixedStateBytes, transferBytes, plan.residentBytes))
+  if(transferValues == 0 || !BinaryThinningCheckedMultiply(transferValues, sizeof(T), transferBytes) || !BinaryThinningCheckedAdd(fixedStateBytes, transferBytes, plan.resident_bytes))
   {
     return MakeErrorResult<BinaryThinningFixed2DPlan>(
         -8711, fmt::format("Binary thinning fixed true-2-D storage leaves no typed transfer capacity for {} values of {} bytes each within a {}-byte target.", volumeValues, sizeof(T), targetBytes));
   }
 
-  plan.useFixedCapacity = true;
-  plan.workCapacityValues = volumeValues;
-  plan.markerCapacityWords = markerCapacityWords;
-  plan.transferValues = transferValues;
+  plan.use_fixed_capacity = true;
+  plan.work_capacity_values = volumeValues;
+  plan.marker_capacity_words = markerCapacityWords;
+  plan.transfer_values = transferValues;
   return {plan};
 }
 
@@ -216,12 +216,12 @@ inline Result<BinaryThinningExternal2DPlan> CreateBinaryThinningExternal2DPlan(u
   if(BinaryThinningCheckedMultiply(dimX, usize{4}, minimumFullWidthBytes) && minimumFullWidthBytes <= availableBytes)
   {
     const usize rowUnits = availableBytes / dimX;
-    plan.coreRows = std::min(dimY, (rowUnits - 2) / 2);
-    plan.coreColumns = dimX;
+    plan.core_rows = std::min(dimY, (rowUnits - 2) / 2);
+    plan.core_columns = dimX;
     usize residentRows = 0;
     usize residentValues = 0;
-    if(plan.coreRows == 0 || !BinaryThinningCheckedMultiply(plan.coreRows, usize{2}, residentRows) || !BinaryThinningCheckedAdd(residentRows, usize{2}, residentRows) ||
-       !BinaryThinningCheckedMultiply(residentRows, dimX, residentValues) || !BinaryThinningCheckedAdd(k_BinaryThinning2DMetadataHeadroomBytes, residentValues, plan.residentBytes))
+    if(plan.core_rows == 0 || !BinaryThinningCheckedMultiply(plan.core_rows, usize{2}, residentRows) || !BinaryThinningCheckedAdd(residentRows, usize{2}, residentRows) ||
+       !BinaryThinningCheckedMultiply(residentRows, dimX, residentValues) || !BinaryThinningCheckedAdd(k_BinaryThinning2DMetadataHeadroomBytes, residentValues, plan.resident_bytes))
     {
       return MakeErrorResult<BinaryThinningExternal2DPlan>(
           -8712, fmt::format("Binary thinning cannot fit one full-width external row block for dimensions {} x {} within a {}-byte target.", dimX, dimY, targetBytes));
@@ -237,12 +237,12 @@ inline Result<BinaryThinningExternal2DPlan> CreateBinaryThinningExternal2DPlan(u
         -8712, fmt::format("Binary thinning cannot fit one external X-tile column with halos for dimensions {} x {} within a {}-byte target.", dimX, dimY, targetBytes));
   }
 
-  plan.useTiles = true;
-  plan.coreRows = 1;
-  plan.coreColumns = std::min(dimX, (availableBytes - k_TileHaloBytes) / k_BytesPerCoreColumn);
+  plan.use_tiles = true;
+  plan.core_rows = 1;
+  plan.core_columns = std::min(dimX, (availableBytes - k_TileHaloBytes) / k_BytesPerCoreColumn);
   usize tileBytes = 0;
-  if(plan.coreColumns == 0 || !BinaryThinningCheckedMultiply(plan.coreColumns, k_BytesPerCoreColumn, tileBytes) || !BinaryThinningCheckedAdd(tileBytes, k_TileHaloBytes, tileBytes) ||
-     !BinaryThinningCheckedAdd(k_BinaryThinning2DMetadataHeadroomBytes, tileBytes, plan.residentBytes))
+  if(plan.core_columns == 0 || !BinaryThinningCheckedMultiply(plan.core_columns, k_BytesPerCoreColumn, tileBytes) || !BinaryThinningCheckedAdd(tileBytes, k_TileHaloBytes, tileBytes) ||
+     !BinaryThinningCheckedAdd(k_BinaryThinning2DMetadataHeadroomBytes, tileBytes, plan.resident_bytes))
   {
     return MakeErrorResult<BinaryThinningExternal2DPlan>(-8712,
                                                          fmt::format("Binary thinning external X-tile planning overflowed for dimensions {} x {} and a {}-byte target.", dimX, dimY, targetBytes));
@@ -299,7 +299,7 @@ namespace detail
 // write it (byte-identical to ITK's global loop; slices are decoupled). ZeroFluxNeumann (edge-clamp) 8-neighbor reads.
 // Output values are 0/1 in T.
 template <class T>
-Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
+Result<> ApplyBinaryThinningResident(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
                                      const IFilter::MessageHandler& messageHandler)
 {
   messageHandler.sendInfoMessage("Thinning Binary Image");
@@ -566,30 +566,30 @@ void ThinBinarySliceInPlace(T* typedValues, uint8* workValues, uint64* deletionM
  * @return A valid result or a contextual plan, allocation, or store-transfer error.
  */
 template <class T>
-Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
+Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
                                          const BinaryThinningSliceBatchPlan& plan, const IFilter::MessageHandler& messageHandler = {})
 {
   messageHandler.sendInfoMessage("Thinning Binary Image");
   ThrottledMessageHandler progressThrottle(messageHandler);
   usize volumeValues = 0;
-  auto expectedPlanResult = CreateBinaryThinningSliceBatchPlan<T>(dims, plan.residentBytes, plan.workerCount);
-  const bool planMatches = expectedPlanResult.valid() && expectedPlanResult.value().sliceValues == plan.sliceValues && expectedPlanResult.value().markerWordsPerSlice == plan.markerWordsPerSlice &&
-                           expectedPlanResult.value().bytesPerWorker == plan.bytesPerWorker && expectedPlanResult.value().workerCount == plan.workerCount &&
-                           expectedPlanResult.value().residentBytes == plan.residentBytes;
-  if(!planMatches || !BinaryThinningCheckedMultiply(plan.sliceValues, dims[2], volumeValues) || inStore.getSize() != volumeValues || outStore.getSize() != volumeValues)
+  auto expectedPlanResult = CreateBinaryThinningSliceBatchPlan<T>(dims, plan.resident_bytes, plan.worker_count);
+  const bool planMatches = expectedPlanResult.valid() && expectedPlanResult.value().slice_values == plan.slice_values && expectedPlanResult.value().marker_words_per_slice == plan.marker_words_per_slice &&
+                           expectedPlanResult.value().bytes_per_worker == plan.bytes_per_worker && expectedPlanResult.value().worker_count == plan.worker_count &&
+                           expectedPlanResult.value().resident_bytes == plan.resident_bytes;
+  if(!planMatches || !BinaryThinningCheckedMultiply(plan.slice_values, dims[2], volumeValues) || inStore.getSize() != volumeValues || outStore.getSize() != volumeValues)
   {
     return MakeErrorResult(
         -8717, fmt::format("Binary thinning received an invalid 3D slice-batch plan for dimensions {} x {} x {}. Input values: {}; output values: {}; slice values: {}; workers: {}; "
                            "marker words: {}; bytes per worker: {}; resident bytes: {}.",
-                           dims[0], dims[1], dims[2], inStore.getSize(), outStore.getSize(), plan.sliceValues, plan.workerCount, plan.markerWordsPerSlice, plan.bytesPerWorker, plan.residentBytes));
+                           dims[0], dims[1], dims[2], inStore.getSize(), outStore.getSize(), plan.slice_values, plan.worker_count, plan.marker_words_per_slice, plan.bytes_per_worker, plan.resident_bytes));
   }
 
   usize batchCapacityValues = 0;
   usize batchMarkerWords = 0;
-  if(!BinaryThinningCheckedMultiply(plan.sliceValues, plan.workerCount, batchCapacityValues) || !BinaryThinningCheckedMultiply(plan.markerWordsPerSlice, plan.workerCount, batchMarkerWords))
+  if(!BinaryThinningCheckedMultiply(plan.slice_values, plan.worker_count, batchCapacityValues) || !BinaryThinningCheckedMultiply(plan.marker_words_per_slice, plan.worker_count, batchMarkerWords))
   {
     return MakeErrorResult(
-        -8717, fmt::format("Binary thinning batch allocation overflows for {} slice values, {} marker words, and {} workers.", plan.sliceValues, plan.markerWordsPerSlice, plan.workerCount));
+        -8717, fmt::format("Binary thinning batch allocation overflows for {} slice values, {} marker words, and {} workers.", plan.slice_values, plan.marker_words_per_slice, plan.worker_count));
   }
 
   std::unique_ptr<T[]> typedValues;
@@ -602,8 +602,8 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
     deletionMarkers = std::make_unique_for_overwrite<uint64[]>(batchMarkerWords);
   } catch(const std::bad_alloc&)
   {
-    return MakeErrorResult(-8717, fmt::format("Binary thinning could not allocate {} bytes for {} Z-slice workers. Slice values: {}; marker words per slice: {}.", plan.residentBytes, plan.workerCount,
-                                              plan.sliceValues, plan.markerWordsPerSlice));
+    return MakeErrorResult(-8717, fmt::format("Binary thinning could not allocate {} bytes for {} Z-slice workers. Slice values: {}; marker words per slice: {}.", plan.resident_bytes, plan.worker_count,
+                                              plan.slice_values, plan.marker_words_per_slice));
   }
 
   progressThrottle.reset(dims[2], "Thinning Binary Slices");
@@ -614,18 +614,18 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
     progressThrottle.queueMessage("Thinning Binary Image: {} slice passes completed", ++completedPasses);
   };
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  const usize boundedWorkers = std::min(plan.workerCount, static_cast<usize>(std::numeric_limits<int>::max()));
+  const usize boundedWorkers = std::min(plan.worker_count, static_cast<usize>(std::numeric_limits<int>::max()));
   tbb::task_arena arena(static_cast<int>(boundedWorkers));
 #endif
-  for(usize zBegin = 0; zBegin < dims[2]; zBegin += plan.workerCount)
+  for(usize zBegin = 0; zBegin < dims[2]; zBegin += plan.worker_count)
   {
     if(shouldCancel)
     {
       return {};
     }
-    const usize batchSlices = std::min(plan.workerCount, dims[2] - zBegin);
-    const usize batchValues = batchSlices * plan.sliceValues;
-    if(Result<> result = inStore.copyIntoBuffer(zBegin * plan.sliceValues, nonstd::span<T>(typedValues.get(), batchValues)); result.invalid())
+    const usize batchSlices = std::min(plan.worker_count, dims[2] - zBegin);
+    const usize batchValues = batchSlices * plan.slice_values;
+    if(Result<> result = inStore.copyIntoBuffer(zBegin * plan.slice_values, nonstd::span<T>(typedValues.get(), batchValues)); result.invalid())
     {
       return result;
     }
@@ -641,7 +641,7 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
         {
           return;
         }
-        ThinBinarySliceInPlace(typedValues.get() + slot * plan.sliceValues, workValues.get() + slot * plan.sliceValues, deletionMarkers.get() + slot * plan.markerWordsPerSlice, dims[0], dims[1],
+        ThinBinarySliceInPlace(typedValues.get() + slot * plan.slice_values, workValues.get() + slot * plan.slice_values, deletionMarkers.get() + slot * plan.marker_words_per_slice, dims[0], dims[1],
                                shouldCancel, sendThreadSafeProgress);
       }
     };
@@ -656,7 +656,7 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
     {
       return {};
     }
-    if(Result<> result = outStore.copyFromBuffer(zBegin * plan.sliceValues, nonstd::span<const T>(typedValues.get(), batchValues)); result.invalid())
+    if(Result<> result = outStore.copyFromBuffer(zBegin * plan.slice_values, nonstd::span<const T>(typedValues.get(), batchValues)); result.invalid())
     {
       return result;
     }
@@ -667,7 +667,7 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
 }
 
 template <class T>
-Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
+Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
                                     const BinaryThinningFixed2DPlan& plan, const IFilter::MessageHandler& messageHandler = {})
 {
   messageHandler.sendInfoMessage("Thinning Binary Image");
@@ -694,15 +694,15 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
   }
 
   const usize logicalMarkerWords = volumeValues / 64 + (volumeValues % 64 != 0 ? 1 : 0);
-  if(!plan.useFixedCapacity || plan.workCapacityValues < volumeValues || plan.markerCapacityWords < logicalMarkerWords || plan.transferValues == 0)
+  if(!plan.use_fixed_capacity || plan.work_capacity_values < volumeValues || plan.marker_capacity_words < logicalMarkerWords || plan.transfer_values == 0)
   {
     return MakeErrorResult(-8710, fmt::format("Binary thinning fixed true-2-D capacity is insufficient for {} values. Work capacity: {}; marker words: {} ({} required); transfer values: {}.",
-                                              volumeValues, plan.workCapacityValues, plan.markerCapacityWords, logicalMarkerWords, plan.transferValues));
+                                              volumeValues, plan.work_capacity_values, plan.marker_capacity_words, logicalMarkerWords, plan.transfer_values));
   }
 
-  auto work = std::make_unique<uint8[]>(plan.workCapacityValues);
-  auto deletionMarkers = std::make_unique<uint64[]>(plan.markerCapacityWords);
-  auto transfer = std::make_unique<T[]>(plan.transferValues);
+  auto work = std::make_unique<uint8[]>(plan.work_capacity_values);
+  auto deletionMarkers = std::make_unique<uint64[]>(plan.marker_capacity_words);
+  auto transfer = std::make_unique<T[]>(plan.transfer_values);
 
   progressThrottle.reset(volumeValues, "Loading Binary Thinning Input");
   for(usize start = 0; start < volumeValues;)
@@ -711,7 +711,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
     {
       return {};
     }
-    const usize count = std::min(plan.transferValues, volumeValues - start);
+    const usize count = std::min(plan.transfer_values, volumeValues - start);
     if(Result<> result = inStore.copyIntoBuffer(start, nonstd::span<T>(transfer.get(), count)); result.invalid())
     {
       return result;
@@ -809,7 +809,7 @@ Result<> ApplyBinaryThinningFixed2D(const AbstractDataStore<T>& inStore, Abstrac
     {
       return {};
     }
-    const usize count = std::min(plan.transferValues, volumeValues - start);
+    const usize count = std::min(plan.transfer_values, volumeValues - start);
     for(usize index = 0; index < count; ++index)
     {
       transfer[index] = static_cast<T>(work[start + index]);
@@ -834,12 +834,12 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepBlocks(BinaryThinningWorkS
   usize volumeValues = 0;
   usize maximumInputValues = 0;
   usize maximumOutputValues = 0;
-  if(dimX == 0 || dimY == 0 || step < 1 || step > 4 || plan.useTiles || plan.coreRows == 0 || plan.coreColumns != dimX || !BinaryThinningCheckedMultiply(dimX, dimY, volumeValues) ||
-     !BinaryThinningCheckedAdd(plan.coreRows, usize{2}, maximumInputValues) || !BinaryThinningCheckedMultiply(maximumInputValues, dimX, maximumInputValues) ||
-     !BinaryThinningCheckedMultiply(plan.coreRows, dimX, maximumOutputValues))
+  if(dimX == 0 || dimY == 0 || step < 1 || step > 4 || plan.use_tiles || plan.core_rows == 0 || plan.core_columns != dimX || !BinaryThinningCheckedMultiply(dimX, dimY, volumeValues) ||
+     !BinaryThinningCheckedAdd(plan.core_rows, usize{2}, maximumInputValues) || !BinaryThinningCheckedMultiply(maximumInputValues, dimX, maximumInputValues) ||
+     !BinaryThinningCheckedMultiply(plan.core_rows, dimX, maximumOutputValues))
   {
     return MakeErrorResult<bool>(-8714, fmt::format("Binary thinning external block substep {} has an invalid plan for dimensions {} x {}. Core rows: {}; core columns: {}; tiles: {}.", step, dimX,
-                                                    dimY, plan.coreRows, plan.coreColumns, plan.useTiles));
+                                                    dimY, plan.core_rows, plan.core_columns, plan.use_tiles));
   }
   if(source.getSize() != volumeValues || destination.getSize() != volumeValues)
   {
@@ -856,7 +856,7 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepBlocks(BinaryThinningWorkS
     {
       return Result<bool>{false};
     }
-    const usize rowCount = std::min(plan.coreRows, dimY - rowBegin);
+    const usize rowCount = std::min(plan.core_rows, dimY - rowBegin);
     const usize coreEnd = rowBegin + rowCount;
     const usize readBegin = rowBegin == 0 ? 0 : rowBegin - 1;
     const usize readEnd = coreEnd < dimY ? coreEnd + 1 : dimY;
@@ -924,12 +924,12 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
   usize volumeValues = 0;
   usize tileStride = 0;
   usize maximumInputValues = 0;
-  if(dimX == 0 || dimY == 0 || step < 1 || step > 4 || !plan.useTiles || plan.coreRows != 1 || plan.coreColumns == 0 || plan.coreColumns > dimX ||
-     !BinaryThinningCheckedMultiply(dimX, dimY, volumeValues) || !BinaryThinningCheckedAdd(plan.coreColumns, usize{2}, tileStride) ||
+  if(dimX == 0 || dimY == 0 || step < 1 || step > 4 || !plan.use_tiles || plan.core_rows != 1 || plan.core_columns == 0 || plan.core_columns > dimX ||
+     !BinaryThinningCheckedMultiply(dimX, dimY, volumeValues) || !BinaryThinningCheckedAdd(plan.core_columns, usize{2}, tileStride) ||
      !BinaryThinningCheckedMultiply(tileStride, usize{3}, maximumInputValues))
   {
     return MakeErrorResult<bool>(-8714, fmt::format("Binary thinning external tile substep {} has an invalid plan for dimensions {} x {}. Core rows: {}; core columns: {}; tiles: {}.", step, dimX,
-                                                    dimY, plan.coreRows, plan.coreColumns, plan.useTiles));
+                                                    dimY, plan.core_rows, plan.core_columns, plan.use_tiles));
   }
   if(source.getSize() != volumeValues || destination.getSize() != volumeValues)
   {
@@ -938,7 +938,7 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
   }
 
   auto inputTile = std::make_unique<uint8[]>(maximumInputValues);
-  auto outputTile = std::make_unique<uint8[]>(plan.coreColumns);
+  auto outputTile = std::make_unique<uint8[]>(plan.core_columns);
   bool changed = false;
   for(usize y = 0; y < dimY; ++y)
   {
@@ -948,7 +948,7 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
       {
         return Result<bool>{false};
       }
-      const usize columnCount = std::min(plan.coreColumns, dimX - xBegin);
+      const usize columnCount = std::min(plan.core_columns, dimX - xBegin);
       const usize currentStride = columnCount + 2;
       const usize coreEnd = xBegin + columnCount;
       const usize readBegin = xBegin == 0 ? 0 : xBegin - 1;
@@ -1015,7 +1015,7 @@ inline Result<bool> ApplyBinaryThinningExternalSubstepTiles(BinaryThinningWorkSt
 }
 
 template <class T>
-Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel, usize target2DBytes,
+Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel, usize target2DBytes,
                                        usize inputValueOffset = 0, usize outputValueOffset = 0, const IFilter::MessageHandler& messageHandler = {})
 {
   messageHandler.sendInfoMessage("Thinning Binary Image");
@@ -1060,7 +1060,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
   std::unique_ptr<SweepTemporaryStore<uint8>> secondFixedRecords;
   std::unique_ptr<BinaryThinningWorkStore> firstWork;
   std::unique_ptr<BinaryThinningWorkStore> secondWork;
-  if(DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+  if(data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
   {
     auto firstResult = CreateSweepTemporaryStore<uint8>(volumeValues, std::max<usize>(1, target2DBytes), shouldCancel, "Binary-thinning first external work image");
     if(firstResult.invalid())
@@ -1080,8 +1080,8 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
   else
   {
     const std::string dataFormat = inStore.getStoreType() == IDataStore::StoreType::OutOfCore ? inStore.getDataFormat() : outStore.getDataFormat();
-    firstDataStore = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(dataFormat, std::vector<usize>{1, dims[1], dims[0]}, std::vector<usize>{1});
-    secondDataStore = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(dataFormat, std::vector<usize>{1, dims[1], dims[0]}, std::vector<usize>{1});
+    firstDataStore = data_store_utilities::CreateDataStoreWithFormat<uint8>(dataFormat, std::vector<usize>{1, dims[1], dims[0]}, std::vector<usize>{1});
+    secondDataStore = data_store_utilities::CreateDataStoreWithFormat<uint8>(dataFormat, std::vector<usize>{1, dims[1], dims[0]}, std::vector<usize>{1});
     if(firstDataStore == nullptr || secondDataStore == nullptr || firstDataStore->getSize() != volumeValues || secondDataStore->getSize() != volumeValues)
     {
       return MakeErrorResult(-8713, fmt::format("Binary thinning could not create two {}-value uint8 external work stores in format '{}'.", volumeValues, dataFormat));
@@ -1148,7 +1148,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       }
       const std::string passLabel = fmt::format("Binary Thinning Iteration {} Pass {} Values", completedIterations + 1, step);
       progressThrottle.reset(volumeValues, passLabel);
-      auto stepResult = plan.useTiles ? ApplyBinaryThinningExternalSubstepTiles(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle) :
+      auto stepResult = plan.use_tiles ? ApplyBinaryThinningExternalSubstepTiles(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle) :
                                         ApplyBinaryThinningExternalSubstepBlocks(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle);
       if(stepResult.invalid())
       {
@@ -1201,7 +1201,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
 } // namespace detail
 
 template <class T>
-Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel,
+Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_BinaryThinning2DTargetBytes)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
@@ -1222,9 +1222,9 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
       return ConvertResult(std::move(usefulPlanResult));
     }
     const auto& usefulPlan = usefulPlanResult.value();
-    auto reservation = ReserveWorkingMemory(usefulPlan.residentBytes, usefulPlan.residentBytes);
+    auto reservation = ReserveWorkingMemory(usefulPlan.resident_bytes, usefulPlan.resident_bytes);
     const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), std::numeric_limits<usize>::max()));
-    if(reservation.sizeBytes() >= usefulPlan.bytesPerWorker)
+    if(reservation.sizeBytes() >= usefulPlan.bytes_per_worker)
     {
       auto planResult = detail::CreateBinaryThinningSliceBatchPlan<T>(dims, grantedBytes, maximumWorkers);
       if(planResult.invalid())
@@ -1232,7 +1232,7 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
         return ConvertResult(std::move(planResult));
       }
       const auto& plan = planResult.value();
-      reservation.shrinkTo(plan.residentBytes);
+      reservation.shrinkTo(plan.resident_bytes);
       return detail::ApplyBinaryThinningSliceBatches(inStore, outStore, dims, shouldCancel, plan, messageHandler);
     }
 
@@ -1244,17 +1244,17 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
         return MakeErrorResult(-8716,
                                fmt::format("Binary thinning cannot run a bounded 3D OOC slice with the current working-memory grant. Dimensions: {} x {} x {}; value bytes: {}; granted bytes: {}; "
                                            "minimum external target: {}; cache budget: {}; maximum working memory: {}.",
-                                           dims[0], dims[1], dims[2], sizeof(T), grantedBytes, k_MinimumExternalTargetBytes, CacheMemoryBudgetManager::instance().budgetBytes(),
-                                           CacheMemoryBudgetManager::instance().maximumWorkingMemoryBytes()));
+                                           dims[0], dims[1], dims[2], sizeof(T), grantedBytes, k_MinimumExternalTargetBytes, CacheMemoryBudgetManager::Instance().budgetBytes(),
+                                           CacheMemoryBudgetManager::Instance().maximumWorkingMemoryBytes()));
       }
-      const SizeVec3 sliceDims{dims[0], dims[1], 1};
+      const SizeVec3Type sliceDims{dims[0], dims[1], 1};
       for(usize z = 0; z < dims[2]; ++z)
       {
         if(shouldCancel)
         {
           return {};
         }
-        const usize valueOffset = z * usefulPlan.sliceValues;
+        const usize valueOffset = z * usefulPlan.slice_values;
         if(Result<> result = detail::ApplyBinaryThinningExternal2D(inStore, outStore, sliceDims, shouldCancel, grantedBytes, valueOffset, valueOffset, messageHandler); result.invalid())
         {
           return result;
@@ -1280,16 +1280,16 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
     return ConvertResult(std::move(usefulPlanResult));
   }
   const auto& usefulPlan = usefulPlanResult.value();
-  const uint64 preferredBytes = std::max<uint64>(target2DBytes, usefulPlan.minimumFixedBytes);
-  auto reservation = ReserveWorkingMemory(preferredBytes, usefulPlan.residentBytes);
+  const uint64 preferredBytes = std::max<uint64>(target2DBytes, usefulPlan.minimum_fixed_bytes);
+  auto reservation = ReserveWorkingMemory(preferredBytes, usefulPlan.resident_bytes);
   const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), std::numeric_limits<usize>::max()));
   if(grantedBytes < detail::BinaryThinningMinimumExternal2DTargetBytes<T>())
   {
     return MakeErrorResult(-8711,
                            fmt::format("Binary thinning cannot run a bounded true-2-D OOC image with the current working-memory grant. Dimensions: {} x {} x {}; value bytes: {}; granted bytes: {}; "
                                        "minimum external target: {}; cache budget: {}; maximum working memory: {}.",
-                                       dims[0], dims[1], dims[2], sizeof(T), grantedBytes, detail::BinaryThinningMinimumExternal2DTargetBytes<T>(), CacheMemoryBudgetManager::instance().budgetBytes(),
-                                       CacheMemoryBudgetManager::instance().maximumWorkingMemoryBytes()));
+                                       dims[0], dims[1], dims[2], sizeof(T), grantedBytes, detail::BinaryThinningMinimumExternal2DTargetBytes<T>(), CacheMemoryBudgetManager::Instance().budgetBytes(),
+                                       CacheMemoryBudgetManager::Instance().maximumWorkingMemoryBytes()));
   }
   auto fixedPlanResult = detail::CreateBinaryThinningFixed2DPlan<T>(volumeValues, grantedBytes);
   if(fixedPlanResult.invalid())
@@ -1297,9 +1297,9 @@ Result<> ApplyBinaryThinning(const AbstractDataStore<T>& inStore, AbstractDataSt
     return ConvertResult(std::move(fixedPlanResult));
   }
   const detail::BinaryThinningFixed2DPlan& fixedPlan = fixedPlanResult.value();
-  if(fixedPlan.useFixedCapacity)
+  if(fixedPlan.use_fixed_capacity)
   {
-    reservation.shrinkTo(fixedPlan.residentBytes);
+    reservation.shrinkTo(fixedPlan.resident_bytes);
     return detail::ApplyBinaryThinningFixed2D(inStore, outStore, dims, shouldCancel, fixedPlan, messageHandler);
   }
   return detail::ApplyBinaryThinningExternal2D(inStore, outStore, dims, shouldCancel, grantedBytes, 0, 0, messageHandler);

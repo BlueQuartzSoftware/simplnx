@@ -23,8 +23,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -42,7 +42,7 @@ constexpr usize k_NumTuples = 32;
 // ImageGeom dimensions are ordered X, Y, Z. AttributeMatrix and DataArray tuple shapes are ordered
 // slowest-to-fastest, i.e. Z, Y, X. Both describe the same 32 cells, so keep them as separate constants
 // rather than reusing one that happens to multiply out to the same tuple count.
-const SizeVec3 k_GeometryDimensions{4, 4, 2};
+const SizeVec3Type k_GeometryDimensions{4, 4, 2};
 const ShapeType k_TupleShape{k_GeometryDimensions[2], k_GeometryDimensions[1], k_GeometryDimensions[0]};
 const DataPath k_DataPath({::k_ImageGeometry, ::k_CellData, k_MiscData});
 const DataPath k_ImageFeatureIdsPath({::k_ImageGeometry, ::k_CellData, k_FeatureIds});
@@ -200,8 +200,8 @@ DataStructure CreateTestData()
   geomPtr->setCellData(*cellDataPtr);
 
   // Feature IDs
-  auto featureIdsPtr = std::make_shared<Int32DataStore>(k_TupleShape, ShapeType{1}, 0);
-  auto* featureIdsArrayPtr = Int32Array::Create(dataStructure, ::k_FeatureIds, featureIdsPtr, cellDataPtr->getId());
+  auto featureIdsPtr = std::make_shared<Int32DataStoreType>(k_TupleShape, ShapeType{1}, 0);
+  auto* featureIdsArrayPtr = Int32ArrayType::Create(dataStructure, ::k_FeatureIds, featureIdsPtr, cellDataPtr->getId());
 
   // Index 0, 14, 31
   auto& featureIds = featureIdsArrayPtr->getDataStoreRef();
@@ -246,8 +246,8 @@ DataStructure CreateTestData()
   featureIds[31] = 0;
 
   // Misc DataArray
-  auto dataStorePtr = std::make_shared<Int32DataStore>(k_TupleShape, ShapeType{1}, 0);
-  auto* miscArrayPtr = Int32Array::Create(dataStructure, k_MiscData, dataStorePtr, cellDataPtr->getId());
+  auto dataStorePtr = std::make_shared<Int32DataStoreType>(k_TupleShape, ShapeType{1}, 0);
+  auto* miscArrayPtr = Int32ArrayType::Create(dataStructure, k_MiscData, dataStorePtr, cellDataPtr->getId());
 
   auto& dataStore = miscArrayPtr->getDataStoreRef();
   for(usize i = 0; i < dataStore.size(); i++)
@@ -265,10 +265,10 @@ void CheckPathIgnored(const DataStructure& dataStructure)
 {
   const DataStructure exemplarStructure = CreateTestData();
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
-  const auto& dataStore = dataStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
-  REQUIRE_NOTHROW(exemplarStructure.getDataRefAs<Int32Array>(k_DataPath));
-  const auto& exemplarStore = exemplarStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_DataPath));
+  const auto& dataStore = dataStructure.getDataRefAs<Int32ArrayType>(k_DataPath).getDataStoreRef();
+  REQUIRE_NOTHROW(exemplarStructure.getDataRefAs<Int32ArrayType>(k_DataPath));
+  const auto& exemplarStore = exemplarStructure.getDataRefAs<Int32ArrayType>(k_DataPath).getDataStoreRef();
 
   REQUIRE(dataStore.size() == exemplarStore.size());
 
@@ -286,10 +286,10 @@ void CheckFeatureIdsModified(const DataStructure& dataStructure)
 {
   const DataStructure exemplarStructure = CreateTestData();
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath));
-  const auto& dataStore = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
-  REQUIRE_NOTHROW(exemplarStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath));
-  const auto& exemplarStore = exemplarStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_ImageFeatureIdsPath));
+  const auto& dataStore = dataStructure.getDataRefAs<Int32ArrayType>(k_ImageFeatureIdsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(exemplarStructure.getDataRefAs<Int32ArrayType>(k_ImageFeatureIdsPath));
+  const auto& exemplarStore = exemplarStructure.getDataRefAs<Int32ArrayType>(k_ImageFeatureIdsPath).getDataStoreRef();
 
   REQUIRE(dataStore.size() == exemplarStore.size());
 
@@ -315,10 +315,10 @@ void CheckOutput(const DataStructure& dataStructure, ChoicesParameter::ValueType
     return;
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath));
-  const Int32AbstractDataStore& featureIds = dataStructure.getDataRefAs<Int32Array>(k_ImageFeatureIdsPath).getDataStoreRef();
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
-  const Int32AbstractDataStore& dataStore = dataStructure.getDataRefAs<Int32Array>(k_DataPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_ImageFeatureIdsPath));
+  const Int32AbstractDataStoreType& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_ImageFeatureIdsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_DataPath));
+  const Int32AbstractDataStoreType& dataStore = dataStructure.getDataRefAs<Int32ArrayType>(k_DataPath).getDataStoreRef();
 
   REQUIRE(featureIds.size() == exemplarIterPtr->expected_feature_ids.size());
   REQUIRE(dataStore.size() == exemplarIterPtr->expected_data.size());
@@ -347,7 +347,7 @@ void RunFilter(DataStructure& dataStructure, ChoicesParameter::ValueType operati
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -357,9 +357,9 @@ void RunFilter(DataStructure& dataStructure, ChoicesParameter::ValueType operati
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_bad_data.dream3d", unit_test::k_TestFilesDir));
@@ -381,7 +381,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDi
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -396,14 +396,14 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDi
   const std::string kExemplarDataContainerName("Exemplar Bad Data Erode");
   const DataPath kErodeCellAttributeMatrixDataPath = DataPath({kExemplarDataContainerName, "EBSD Scan Data"});
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, kExemplarDataContainerName);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, kExemplarDataContainerName);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode) Expanded", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   bool dirX = GENERATE(true, false);
   bool dirY = GENERATE(true, false);
@@ -425,12 +425,12 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode) Expanded", "[SimplnxCore
   RunFilter(dataStructure, operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
   CheckOutput(dataStructure, operation, directions, numIterations);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) Expanded", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   bool dirX = GENERATE(true, false);
   bool dirY = GENERATE(true, false);
@@ -452,12 +452,12 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate) Expanded", "[SimplnxCor
   RunFilter(dataStructure, operation, numIterations, directions, DataPath({k_ImageGeometry}), k_ImageFeatureIdsPath);
   CheckOutput(dataStructure, operation, directions, numIterations);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestData();
   const DirectionType directions = {true, true, true};
@@ -481,7 +481,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][E
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -492,12 +492,12 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter Ignored Path", "[SimplnxCore][E
   CheckPathIgnored(dataStructure);
   CheckFeatureIdsModified(dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Preflight Feature Data Modification Warning", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestData();
 
@@ -513,18 +513,18 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Preflight Feature Data Modific
   args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry})));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(preflightResult.output_actions.valid());
+  const auto& warnings = preflightResult.output_actions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -14600; }));
-  const auto& outputValues = preflightResult.outputValues;
+  const auto& outputValues = preflightResult.output_values;
   REQUIRE(std::any_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Feature Data Modification Warning"; }));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Direction", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestData();
   const DirectionType directions = {false, false, false};
@@ -546,16 +546,16 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Direction", "[SimplnxCore][E
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -14601);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -14601);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Dimensions", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = CreateTestData();
   const DirectionType directions = {true, true, true};
@@ -564,7 +564,7 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Dimensions", "[SimplnxCore][
   const DataPath geomPath({k_ImageGeometry});
 
   auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
-  imageGeomPtr->setDimensions(SizeVec3());
+  imageGeomPtr->setDimensions(SizeVec3Type());
 
   const ErodeDilateBadDataFilter filter;
   Arguments args;
@@ -581,16 +581,16 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter No Dimensions", "[SimplnxCore][
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -14602);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -14602);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Strict Feature Ids", "[SimplnxCore][ErodeDilateBadDataFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Strict Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cell Data");
@@ -606,8 +606,8 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Strict Feature Ids", "[Simplnx
   REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeomPtr->getId()) != nullptr);
   auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Data", shape, imageGeomPtr->getId());
   REQUIRE(otherPtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), otherPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), otherPtr->getId()) != nullptr);
 
   ErodeDilateBadDataFilter filter;
   auto args = filter.getDefaultArguments();
@@ -632,23 +632,23 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Strict Feature Ids", "[Simplnx
   const auto result = filter.preflight(dataStructure, args);
   if(expectedCode == 0)
   {
-    REQUIRE(result.outputActions.valid());
+    REQUIRE(result.output_actions.valid());
   }
   else
   {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(otherPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == expectedCode);
+    CHECK(result.output_actions.errors().front().message.find(otherPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Ignored Array Cell AM Alias", "[SimplnxCore][ErodeDilateBadDataFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Alias Test Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cells");
@@ -665,8 +665,8 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Ignored Array Cell AM Alias", 
   REQUIRE(alternateParentPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), alternateParentPtr->getId()));
   REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
-  auto* ignoredPtr = Int32Array::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
+  auto* idsPtr = Int32ArrayType::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
+  auto* ignoredPtr = Int32ArrayType::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   REQUIRE(ignoredPtr != nullptr);
   const std::vector<int32> originalIds{1, 0, 0, 1};
@@ -682,10 +682,10 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Ignored Array Cell AM Alias", 
   args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{aliasCellPath.createChildPath("Ignored")}));
   args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(1));
   const auto preflight = filter.preflight(dataStructure, args);
-  REQUIRE(preflight.outputActions.valid());
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  REQUIRE(preflight.output_actions.valid());
+  for(const auto& modification : preflight.output_actions.value().modified_actions)
   {
-    CHECK(modification.modifiedPath != ignoredPath);
+    CHECK(modification.modified_path != ignoredPath);
   }
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
@@ -696,13 +696,13 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Ignored Array Cell AM Alias", 
     idsChanged = idsChanged || (*idsPtr)[index] != originalIds[index];
   }
   CHECK(idsChanged);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateBadDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

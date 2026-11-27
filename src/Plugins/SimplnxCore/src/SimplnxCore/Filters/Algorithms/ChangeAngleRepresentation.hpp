@@ -17,8 +17,8 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ChangeAngleRepresentationInputValues
 {
-  ArraySelectionParameter::ValueType AnglesArrayPath;
-  ChoicesParameter::ValueType ConversionTypeIndex{};
+  ArraySelectionParameter::ValueType angles_array_path;
+  ChoicesParameter::ValueType conversion_type_index{};
 };
 
 /**

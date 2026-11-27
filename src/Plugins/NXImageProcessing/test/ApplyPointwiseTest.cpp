@@ -86,13 +86,13 @@ TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[N
     const ShapeType tupleShape{128, 450, 600};
     const auto plan = RequirePlan(
         k_TotalValues, k_TargetValues,
-        {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"},
-         {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
-    REQUIRE(plan.batchValues == 33'480'000);
-    REQUIRE(plan.totalBatches == 2);
-    REQUIRE(plan.alignmentValues == k_PlaneValues);
-    REQUIRE_FALSE(plan.usedMismatchedLayoutFallback);
-    REQUIRE(k_TotalValues - plan.batchValues == 4 * k_PlaneValues);
+        {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"},
+         {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+    REQUIRE(plan.batch_values == 33'480'000);
+    REQUIRE(plan.total_batches == 2);
+    REQUIRE(plan.alignment_values == k_PlaneValues);
+    REQUIRE_FALSE(plan.used_mismatched_layout_fallback);
+    REQUIRE(k_TotalValues - plan.batch_values == 4 * k_PlaneValues);
   }
 
   SECTION("512 by 512 planes already divide the uint8 budget exactly")
@@ -101,10 +101,10 @@ TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[N
     constexpr usize k_TotalValues = k_PlaneValues * 129;
     constexpr usize k_TargetValues = k_DefaultScratchBytes / (sizeof(uint8) + sizeof(uint8));
     const ShapeType tupleShape{129, 512, 512};
-    const auto plan = RequirePlan(k_TotalValues, k_TargetValues, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"}});
-    REQUIRE(plan.batchValues == k_TargetValues);
-    REQUIRE(plan.totalBatches == 2);
-    REQUIRE(k_TotalValues - plan.batchValues == k_PlaneValues);
+    const auto plan = RequirePlan(k_TotalValues, k_TargetValues, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"}});
+    REQUIRE(plan.batch_values == k_TargetValues);
+    REQUIRE(plan.total_batches == 2);
+    REQUIRE(k_TotalValues - plan.batch_values == k_PlaneValues);
   }
 
   SECTION("int16 to uint8 uses the combined three-byte scratch cost")
@@ -115,28 +115,28 @@ TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[N
     const ShapeType tupleShape{128, 450, 600};
     const auto plan = RequirePlan(
         k_TotalValues, k_TargetValues,
-        {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"},
-         {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+        {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"},
+         {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
     REQUIRE(k_TargetValues == 22'369'621);
-    REQUIRE(plan.batchValues == 22'140'000);
-    REQUIRE(plan.batchValues == 82 * k_PlaneValues);
-    REQUIRE(plan.totalBatches == 2);
+    REQUIRE(plan.batch_values == 22'140'000);
+    REQUIRE(plan.batch_values == 82 * k_PlaneValues);
+    REQUIRE(plan.total_batches == 2);
   }
 
   SECTION("rank-one multi-component stores align to complete tuples")
   {
     const ShapeType tupleShape{100};
-    const auto plan = RequirePlan(300, 100, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 3, .name = "input"}});
-    REQUIRE(plan.batchValues == 99);
-    REQUIRE(plan.totalBatches == 4);
+    const auto plan = RequirePlan(300, 100, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 3, .name = "input"}});
+    REQUIRE(plan.batch_values == 99);
+    REQUIRE(plan.total_batches == 4);
   }
 
   SECTION("small volumes use one complete batch")
   {
     const ShapeType tupleShape{2, 3, 5};
-    const auto plan = RequirePlan(30, 100, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"}});
-    REQUIRE(plan.batchValues == 30);
-    REQUIRE(plan.totalBatches == 1);
+    const auto plan = RequirePlan(30, 100, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"}});
+    REQUIRE(plan.batch_values == 30);
+    REQUIRE(plan.total_batches == 1);
   }
 
   SECTION("mixed endpoints use only the OOC alignment")
@@ -145,10 +145,10 @@ TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[N
     const ShapeType oocShape{2, 3, 10};
     const auto plan = RequirePlan(
         60, 31,
-        {{.storeType = IDataStore::StoreType::InMemory, .tupleShape = inMemoryShape, .numComponents = 1, .name = "input"},
-         {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = oocShape, .numComponents = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
-    REQUIRE(plan.batchValues == 30);
-    REQUIRE(plan.totalBatches == 2);
+        {{.store_type = IDataStore::StoreType::InMemory, .tuple_shape = inMemoryShape, .num_components = 1, .name = "input"},
+         {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = oocShape, .num_components = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+    REQUIRE(plan.batch_values == 30);
+    REQUIRE(plan.total_batches == 2);
   }
 
   SECTION("differing OOC layouts use their checked least common multiple")
@@ -157,12 +157,12 @@ TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[N
     const ShapeType outputShape{3, 4, 5}; // 20-value slabs
     const auto plan = RequirePlan(
         60, 60,
-        {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = inputShape, .numComponents = 1, .name = "input"},
-         {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = outputShape, .numComponents = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
-    REQUIRE(plan.batchValues == 60);
-    REQUIRE(plan.totalBatches == 1);
-    REQUIRE(plan.alignmentValues == 60);
-    REQUIRE_FALSE(plan.usedMismatchedLayoutFallback);
+        {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = inputShape, .num_components = 1, .name = "input"},
+         {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = outputShape, .num_components = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+    REQUIRE(plan.batch_values == 60);
+    REQUIRE(plan.total_batches == 1);
+    REQUIRE(plan.alignment_values == 60);
+    REQUIRE_FALSE(plan.used_mismatched_layout_fallback);
   }
 
   SECTION("large coprime OOC layouts fall back to the bounded output alignment")
@@ -174,38 +174,38 @@ TEST_CASE("NXImageProcessing::ApplyPointwise plans rectangular OOC batches", "[N
     const ShapeType outputShape{k_InputSlabValues, k_OutputSlabValues};
     const auto plan = RequirePlan(
         k_TotalValues, 1000,
-        {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = inputShape, .numComponents = 1, .name = "input"},
-         {.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = outputShape, .numComponents = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
-    REQUIRE(plan.usedMismatchedLayoutFallback);
-    REQUIRE(plan.alignmentValues == k_OutputSlabValues);
-    REQUIRE(plan.batchValues == k_OutputSlabValues);
-    REQUIRE(plan.batchValues <= std::max<usize>(1000, k_OutputSlabValues));
-    REQUIRE(plan.batchValues < k_TotalValues);
-    REQUIRE(plan.totalBatches == k_InputSlabValues);
+        {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = inputShape, .num_components = 1, .name = "input"},
+         {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = outputShape, .num_components = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+    REQUIRE(plan.used_mismatched_layout_fallback);
+    REQUIRE(plan.alignment_values == k_OutputSlabValues);
+    REQUIRE(plan.batch_values == k_OutputSlabValues);
+    REQUIRE(plan.batch_values <= std::max<usize>(1000, k_OutputSlabValues));
+    REQUIRE(plan.batch_values < k_TotalValues);
+    REQUIRE(plan.total_batches == k_InputSlabValues);
   }
 
   SECTION("an exact target cap is retained")
   {
     const ShapeType tupleShape{2, 4, 5};
-    const auto plan = RequirePlan(40, 40, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"}});
-    REQUIRE(plan.batchValues == 40);
-    REQUIRE(plan.totalBatches == 1);
+    const auto plan = RequirePlan(40, 40, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"}});
+    REQUIRE(plan.batch_values == 40);
+    REQUIRE(plan.total_batches == 1);
   }
 
   SECTION("one selected alignment unit is the minimum when it exceeds the target")
   {
     const ShapeType tupleShape{2, 10, 10};
-    const auto plan = RequirePlan(200, 64, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = 1, .name = "input"}});
-    REQUIRE(plan.batchValues == 100);
-    REQUIRE(plan.totalBatches == 2);
+    const auto plan = RequirePlan(200, 64, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"}});
+    REQUIRE(plan.batch_values == 100);
+    REQUIRE(plan.total_batches == 2);
   }
 
   SECTION("zero values require no batches and do not inspect layouts")
   {
     const ShapeType emptyShape;
-    const auto plan = RequirePlan(0, 0, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = emptyShape, .numComponents = 0, .name = "input"}});
-    REQUIRE(plan.batchValues == 0);
-    REQUIRE(plan.totalBatches == 0);
+    const auto plan = RequirePlan(0, 0, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = emptyShape, .num_components = 0, .name = "input"}});
+    REQUIRE(plan.batch_values == 0);
+    REQUIRE(plan.total_batches == 0);
   }
 }
 
@@ -213,7 +213,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise rejects malformed OOC batch layouts
 {
   auto requireError = [](usize totalValues, const ShapeType& tupleShape, usize numComponents, int32 expectedCode) {
     const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
-        ImageProcessing::detail::MakePointwiseBatchPlan(totalValues, 100, {{.storeType = IDataStore::StoreType::OutOfCore, .tupleShape = tupleShape, .numComponents = numComponents, .name = "input"}});
+        ImageProcessing::detail::MakePointwiseBatchPlan(totalValues, 100, {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = numComponents, .name = "input"}});
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == expectedCode);
   };
@@ -250,9 +250,9 @@ TEST_CASE("NXImageProcessing::ApplyPointwise rejects malformed OOC batch layouts
 
 TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProcessing]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Keep the basic transform check pinned in memory; the dedicated non-power-of-two test below covers real OOC stores.
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dim = 10;
   const ShapeType tupleShape = {k_Dim, k_Dim, k_Dim};
@@ -260,9 +260,9 @@ TEST_CASE("NXImageProcessing::ApplyPointwise doubles every value", "[NXImageProc
 
   const DataPath inputPath({"input"});
   const DataPath outputPath({"output"});
-  auto inStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, inputPath, tupleShape, {1});
+  auto inStore = data_store_utilities::CreateDataStore<int32>(dataStructure, inputPath, tupleShape, {1});
   auto* inArrayPtr = DataArray<int32>::Create(dataStructure, "input", inStore, {});
-  auto outStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, outputPath, tupleShape, {1});
+  auto outStore = data_store_utilities::CreateDataStore<int32>(dataStructure, outputPath, tupleShape, {1});
   auto* outArrayPtr = DataArray<int32>::Create(dataStructure, "output", outStore, {});
 
   // Fill input with 0..N-1
@@ -320,7 +320,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise forced buffered execution is exact 
   constexpr usize k_ValueCount = 23;
   constexpr usize k_TargetValues = 5;
   constexpr usize k_TargetScratchBytes = k_TargetValues * sizeof(int32);
-  const ImageProcessing::detail::PointwiseExecutionOptions options{.targetScratchBytes = k_TargetScratchBytes, .forceBuffered = true};
+  const ImageProcessing::detail::PointwiseExecutionOptions options{.target_scratch_bytes = k_TargetScratchBytes, .force_buffered = true};
 
   SECTION("short tail preserves exact output")
   {
@@ -374,7 +374,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise same-type buffered transfer reuses 
   }
 
   const auto doubler = [](int32 value) -> int32 { return value * 2; };
-  const ImageProcessing::detail::PointwiseExecutionOptions options{.targetScratchBytes = k_TargetScratchBytes, .forceBuffered = true};
+  const ImageProcessing::detail::PointwiseExecutionOptions options{.target_scratch_bytes = k_TargetScratchBytes, .force_buffered = true};
   std::atomic_bool shouldCancel{false};
   const Result<> result = ImageProcessing::detail::ApplyPointwiseImpl(inputStore, outputStore, doubler, shouldCancel, {}, options);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -400,7 +400,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise different-type buffered transfer re
     inputStore.setValue(index, static_cast<int32>(index) - 3);
   }
   const auto cast = [](int32 value) -> float64 { return static_cast<float64>(value) + 0.5; };
-  const ImageProcessing::detail::PointwiseExecutionOptions options{.targetScratchBytes = k_TargetValues * (sizeof(int32) + sizeof(float64)), .forceBuffered = true};
+  const ImageProcessing::detail::PointwiseExecutionOptions options{.target_scratch_bytes = k_TargetValues * (sizeof(int32) + sizeof(float64)), .force_buffered = true};
   std::atomic_bool shouldCancel{false};
   Result<> applyPointwiseResult = ImageProcessing::detail::ApplyPointwiseImpl(inputStore, outputStore, cast, shouldCancel, {}, options);
   SIMPLNX_RESULT_REQUIRE_VALID(applyPointwiseResult);
@@ -423,7 +423,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise same-type buffered execution suppor
   }
   const auto doubler = [](int32 value) -> int32 { return value * 2; };
   std::atomic_bool shouldCancel{false};
-  Result<> applyPointwiseResult = ImageProcessing::detail::ApplyPointwiseImpl(store, store, doubler, shouldCancel, {}, {.targetScratchBytes = 2 * sizeof(int32), .forceBuffered = true});
+  Result<> applyPointwiseResult = ImageProcessing::detail::ApplyPointwiseImpl(store, store, doubler, shouldCancel, {}, {.target_scratch_bytes = 2 * sizeof(int32), .force_buffered = true});
   SIMPLNX_RESULT_REQUIRE_VALID(applyPointwiseResult);
   REQUIRE(store.readStarts() == std::vector<usize>{0, 2});
   REQUIRE(store.readCounts() == std::vector<usize>{2, 2});
@@ -441,7 +441,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise buffered target smaller than one va
   CountingDataStore<int32> outputStore({3}, {1}, -1);
   const auto increment = [](int32 value) -> int32 { return value + 1; };
   std::atomic_bool shouldCancel{false};
-  Result<> applyPointwiseResult = ImageProcessing::detail::ApplyPointwiseImpl(inputStore, outputStore, increment, shouldCancel, {}, {.targetScratchBytes = 1, .forceBuffered = true});
+  Result<> applyPointwiseResult = ImageProcessing::detail::ApplyPointwiseImpl(inputStore, outputStore, increment, shouldCancel, {}, {.target_scratch_bytes = 1, .force_buffered = true});
   SIMPLNX_RESULT_REQUIRE_VALID(applyPointwiseResult);
   REQUIRE(inputStore.readStarts() == std::vector<usize>{0, 1, 2});
   REQUIRE(inputStore.readCounts() == std::vector<usize>{1, 1, 1});
@@ -454,7 +454,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise buffered target smaller than one va
 
 TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two OOC stores", "[NXImageProcessing][ApplyPointwise][OOC]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto application = Application::Instance();
   REQUIRE(application != nullptr);
   if(application->getIOManager("HDF5-OOC") == nullptr)
@@ -463,7 +463,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two
     return;
   }
 
-  const UnitTest::PreferencesSentinel prefsSentinel(DataStorageMode::ForceOutOfCore, 0);
+  const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceOutOfCore, 0);
   constexpr usize k_DimZ = 7;
   constexpr usize k_DimY = 5;
   constexpr usize k_DimX = 13;
@@ -476,8 +476,8 @@ TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two
   DataStructure dataStructure;
   const DataPath inputPath({"Input"});
   const DataPath outputPath({"Output"});
-  auto inputStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, inputPath, tupleShape, {1});
-  auto outputStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, outputPath, tupleShape, {1});
+  auto inputStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, inputPath, tupleShape, {1});
+  auto outputStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, outputPath, tupleShape, {1});
   REQUIRE(inputStore != nullptr);
   REQUIRE(outputStore != nullptr);
   auto* inputArrayPtr = DataArray<uint8>::Create(dataStructure, "Input", inputStore, {});
@@ -499,7 +499,7 @@ TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two
 
   const auto logicalNot = [](uint8 value) -> uint8 { return value == 0 ? uint8{1} : uint8{0}; };
   std::atomic_bool shouldCancel{false};
-  const ImageProcessing::detail::PointwiseExecutionOptions options{.targetScratchBytes = k_TargetScratchBytes, .forceBuffered = false};
+  const ImageProcessing::detail::PointwiseExecutionOptions options{.target_scratch_bytes = k_TargetScratchBytes, .force_buffered = false};
   const Result<> result = ImageProcessing::detail::ApplyPointwiseImpl(inputArrayPtr->getDataStoreRef(), outputArrayPtr->getDataStoreRef(), logicalNot, shouldCancel, {}, options);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -507,5 +507,5 @@ TEST_CASE("NXImageProcessing::ApplyPointwise preserves bytes on non-power-of-two
   Result<> copyIntoBufferResult = outputArrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actual.data(), actual.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(copyIntoBufferResult);
   REQUIRE(actual == expected);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

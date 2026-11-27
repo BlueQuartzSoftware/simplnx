@@ -13,11 +13,11 @@ namespace nx::core
 // Forward declarations
 template <typename T>
 class DataArray;
-using Int32Array = DataArray<int32>;
+using Int32ArrayType = DataArray<int32>;
 
 template <typename T>
 class AbstractDataStore;
-using Int32AbstractDataStore = AbstractDataStore<int32>;
+using Int32AbstractDataStoreType = AbstractDataStore<int32>;
 
 struct FillBadDataInputValues;
 
@@ -91,7 +91,7 @@ private:
    * @param dims Image dimensions in XYZ order.
    * @return Success, including cancellation, or an overflow, equivalence, or bulk-transfer error.
    */
-  Result<> phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ExternalEquivalence& equivalences, int32& nextLabel, const std::array<int64, 3>& dims) const;
+  Result<> phaseOneCCL(Int32AbstractDataStoreType& featureIdsStore, ExternalEquivalence& equivalences, int32& nextLabel, const std::array<int64, 3>& dims) const;
 
   /**
    * @brief Classifies provisional labels and rewrites Feature IDs.
@@ -104,7 +104,7 @@ private:
    * @param maxPhase Maximum existing phase.
    * @return Success, including cancellation, or an equivalence or bulk-transfer error.
    */
-  Result<> phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, int32 startLabel, int32 nextLabel, ExternalEquivalence& equivalences, usize maxPhase) const;
+  Result<> phaseThreeRelabeling(Int32AbstractDataStoreType& featureIdsStore, Int32ArrayType* cellPhasesPtr, int32 startLabel, int32 nextLabel, ExternalEquivalence& equivalences, usize maxPhase) const;
 
   /**
    * @brief Iteratively fills negative Feature IDs with deferred pair records.
@@ -115,7 +115,7 @@ private:
    * @param allowInMemoryFallback Permits resident temporary records when true.
    * @return Success, or a provider, record, adjacency, overflow, or bulk-transfer error.
    */
-  Result<> phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures, bool allowInMemoryFallback) const;
+  Result<> phaseFourIterativeFill(Int32AbstractDataStoreType& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures, bool allowInMemoryFallback) const;
 
   DataStructure& m_DataStructure;
   const FillBadDataInputValues* m_InputValues = nullptr;

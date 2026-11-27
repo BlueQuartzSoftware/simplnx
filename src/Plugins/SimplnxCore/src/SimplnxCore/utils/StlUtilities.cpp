@@ -42,26 +42,26 @@ bool IsMagicsFile(const std::string& stlHeaderStr)
  */
 bool IsVxElementsFile(const std::string& stlHeaderStr)
 {
-  return nx::core::StringUtilities::contains(stlHeaderStr, "VXelements");
+  return nx::core::string_utilities::Contains(stlHeaderStr, "VXelements");
 }
 } // namespace
 
-StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& path)
+stl_constants::StlFileType stl_utilities::DetermineStlFileType(const fs::path& path)
 {
   // Open File
   FILE* fPtr = std::fopen(path.string().c_str(), "rb");
   if(nullptr == fPtr)
   {
-    return StlConstants::StlFileType::FileOpenError;
+    return stl_constants::StlFileType::FileOpenError;
   }
 
   // Read the first 256 bytes of data, that should be enough but I'm sure someone will write
   // an ASCII STL File that contains a really long name which messes this up.
-  std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
-  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, fPtr) != StlConstants::k_STL_HEADER_LENGTH)
+  std::string header(stl_constants::k_StlHeaderLength, 0x00);
+  if(std::fread(header.data(), 1, stl_constants::k_StlHeaderLength, fPtr) != stl_constants::k_StlHeaderLength)
   {
     std::ignore = std::fclose(fPtr);
-    return StlConstants::StlFileType::HeaderParseError;
+    return stl_constants::StlFileType::HeaderParseError;
   }
   // close the file
   std::ignore = std::fclose(fPtr);
@@ -70,7 +70,7 @@ StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& pat
   // The word 'solid' was not found ANYWHERE in the first 80 bytes.
   if(solidPos == std::string::npos)
   {
-    return StlConstants::StlFileType::Binary;
+    return stl_constants::StlFileType::Binary;
   }
   // 'solid' was found as the first 5 bytes of the header. This is am ambiguous case so let's try to find 'facet'
   if(solidPos == 0)
@@ -79,29 +79,29 @@ StlConstants::StlFileType StlUtilities::DetermineStlFileType(const fs::path& pat
     if(facetPos == std::string::npos)
     {
       // 'facet' was NOT found so this is a binary file.
-      return StlConstants::StlFileType::Binary;
+      return stl_constants::StlFileType::Binary;
     }
-    return StlConstants::StlFileType::ASCI;
+    return stl_constants::StlFileType::ASCI;
   }
-  return StlConstants::StlFileType::Binary;
+  return stl_constants::StlFileType::Binary;
 }
 
-int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
+int32_t stl_utilities::NumFacesFromHeader(const fs::path& path)
 {
   // Open File
   FILE* fPtr = std::fopen(path.string().c_str(), "rb");
   if(nullptr == fPtr)
   {
-    return StlConstants::k_ErrorOpeningFile;
+    return stl_constants::k_ErrorOpeningFile;
   }
 
   // Read the first 256 bytes of data, that should be enough but I'm sure someone will write
   // an ASCII STL File that contains a really long name which messes this up.
-  std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
-  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, fPtr) != StlConstants::k_STL_HEADER_LENGTH)
+  std::string header(stl_constants::k_StlHeaderLength, 0x00);
+  if(std::fread(header.data(), 1, stl_constants::k_StlHeaderLength, fPtr) != stl_constants::k_StlHeaderLength)
   {
     std::ignore = std::fclose(fPtr);
-    return StlConstants::k_StlHeaderParseError;
+    return stl_constants::k_StlHeaderParseError;
   }
 
   int32_t triCount = 0;
@@ -109,23 +109,23 @@ int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
   if(std::fread(&triCount, sizeof(int32_t), 1, fPtr) != 1)
   {
     std::ignore = std::fclose(fPtr);
-    return StlConstants::k_StlHeaderParseError;
+    return stl_constants::k_StlHeaderParseError;
   }
 
   std::ignore = std::fclose(fPtr);
   return triCount;
 }
 
-StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
+stl_constants::StlFileCheck stl_utilities::SanityCheckFile(const fs::path& path)
 {
-  StlConstants::StlFileCheck stlFileCheck;
+  stl_constants::StlFileCheck stlFileCheck;
 
   std::error_code errorCode;
   const uintmax_t fileSize = std::filesystem::file_size(path, errorCode);
   if(errorCode)
   {
-    stlFileCheck.error = StlConstants::k_ErrorOpeningFile;
-    stlFileCheck.errorMessage = fmt::format("Could not determine the size of STL file '{}': {}", path.string(), errorCode.message());
+    stlFileCheck.error = stl_constants::k_ErrorOpeningFile;
+    stlFileCheck.error_message = fmt::format("Could not determine the size of STL file '{}': {}", path.string(), errorCode.message());
     return stlFileCheck;
   }
 
@@ -133,18 +133,18 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   FILE* fPtr = std::fopen(path.string().c_str(), "rb");
   if(nullptr == fPtr)
   {
-    stlFileCheck.error = StlConstants::k_ErrorOpeningFile;
-    stlFileCheck.errorMessage = fmt::format("Error opening STL file '{}'", path.string());
+    stlFileCheck.error = stl_constants::k_ErrorOpeningFile;
+    stlFileCheck.error_message = fmt::format("Error opening STL file '{}'", path.string());
     return stlFileCheck;
   }
   StlFileSentinel fileSentinel(fPtr); // Ensures the file is closed on every return path below
 
   // Read the 80 byte header.
-  std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
-  if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, fPtr) != StlConstants::k_STL_HEADER_LENGTH)
+  std::string header(stl_constants::k_StlHeaderLength, 0x00);
+  if(std::fread(header.data(), 1, stl_constants::k_StlHeaderLength, fPtr) != stl_constants::k_StlHeaderLength)
   {
-    stlFileCheck.error = StlConstants::k_StlHeaderParseError;
-    stlFileCheck.errorMessage = fmt::format("Error reading the {} byte header from STL file '{}'. The file is only {} bytes long.", StlConstants::k_STL_HEADER_LENGTH, path.string(), fileSize);
+    stlFileCheck.error = stl_constants::k_StlHeaderParseError;
+    stlFileCheck.error_message = fmt::format("Error reading the {} byte header from STL file '{}'. The file is only {} bytes long.", stl_constants::k_StlHeaderLength, path.string(), fileSize);
     return stlFileCheck;
   }
 
@@ -152,8 +152,8 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   // Read the number of triangles in the file.
   if(std::fread(&triCount, sizeof(int32_t), 1, fPtr) != 1)
   {
-    stlFileCheck.error = StlConstants::k_TriangleCountParseError;
-    stlFileCheck.errorMessage = fmt::format("Error reading the triangle count from STL file '{}'. The file is only {} bytes long.", path.string(), fileSize);
+    stlFileCheck.error = stl_constants::k_TriangleCountParseError;
+    stlFileCheck.error_message = fmt::format("Error reading the triangle count from STL file '{}'. The file is only {} bytes long.", path.string(), fileSize);
     return stlFileCheck;
   }
 
@@ -162,8 +162,8 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   // downstream, so reject it here rather than letting it reach resizeFaceList().
   if(triCount < 0)
   {
-    stlFileCheck.error = StlConstants::k_TriangleCountParseError;
-    stlFileCheck.errorMessage =
+    stlFileCheck.error = stl_constants::k_TriangleCountParseError;
+    stlFileCheck.error_message =
         fmt::format("STL file '{}' declares an out of range triangle count of {} in its header. The file is not a valid binary STL file.", path.string(), static_cast<uint32_t>(triCount));
     return stlFileCheck;
   }
@@ -171,18 +171,18 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   // The size this file would be if none of its triangles carry any attribute payload. The
   // arithmetic is done in uintmax_t because triCount * k_StlTriangleBytes overflows int32
   // for meshes beyond roughly 42.9 million triangles.
-  const uintmax_t sizeWithoutPayload = StlConstants::k_StlFixedHeaderBytes + (static_cast<uintmax_t>(triCount) * StlConstants::k_StlTriangleBytes);
+  const uintmax_t sizeWithoutPayload = stl_constants::k_StlFixedHeaderBytes + (static_cast<uintmax_t>(triCount) * stl_constants::k_StlTriangleBytes);
   if(fileSize < sizeWithoutPayload)
   {
-    stlFileCheck.error = StlConstants::k_StlFileLengthError;
-    stlFileCheck.errorMessage =
+    stlFileCheck.error = stl_constants::k_StlFileLengthError;
+    stlFileCheck.error_message =
         fmt::format("STL file '{}' declares {} triangles and requires at least {} bytes, but the file is only {} bytes long.", path.string(), triCount, sizeWithoutPayload, fileSize);
     return stlFileCheck;
   }
 
   stlFileCheck.header = header;
-  stlFileCheck.numTriangles = triCount;
-  stlFileCheck.fileSize = fileSize;
+  stlFileCheck.num_triangles = triCount;
+  stlFileCheck.file_size = fileSize;
 
   // Only a file with bytes left over beyond the fixed size records has anywhere to put
   // attribute payload. If the size matches exactly, then every attribute byte count in the file
@@ -190,7 +190,7 @@ StlConstants::StlFileCheck StlUtilities::SanityCheckFile(const fs::path& path)
   // triangle happens to contain. Smaller files were rejected above before any mesh allocation.
   // Vendors known to misuse the field are excluded even when there are spare bytes, since those
   // bytes may just be trailing junk.
-  stlFileCheck.attributePayloadPresent = (fileSize > sizeWithoutPayload) && !IsMagicsFile(header) && !IsVxElementsFile(header);
+  stlFileCheck.attribute_payload_present = (fileSize > sizeWithoutPayload) && !IsMagicsFile(header) && !IsVxElementsFile(header);
 
   return stlFileCheck;
 }
@@ -203,7 +203,7 @@ struct Triangle
   float vertex3[3];
 };
 
-void StlUtilities::ConvertAsciiToBinaryStl(const std::filesystem::path& inputPath, const std::filesystem::path& outputPath)
+void stl_utilities::ConvertAsciiToBinaryStl(const std::filesystem::path& inputPath, const std::filesystem::path& outputPath)
 {
   std::ifstream asciiFile(inputPath);
   std::ofstream binaryFile(outputPath, std::ios::binary);

@@ -15,13 +15,13 @@
 namespace nx::core::hdf5
 {
 
-bool hostIsLittleEndian()
+bool HostIsLittleEndian()
 {
   const uint16_t probe = 0x0001;
   return *reinterpret_cast<const uint8_t*>(&probe) == 0x01;
 }
 
-bool probeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t memoryTypeId, int32* deflateLevelOut)
+bool ProbeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t memoryTypeId, int32* deflateLevelOut)
 {
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
 
@@ -64,7 +64,7 @@ bool probeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t mem
                          SIMPLNX_OBSERVE_METADATA_CALL(MetadataTypeCall, H5Tequal(dtype, memoryTypeId)) > 0;
   const H5T_order_t order = identical && elementSize > 1 ? SIMPLNX_OBSERVE_METADATA_CALL(MetadataTypeCall, H5Tget_order(dtype)) : H5T_ORDER_ERROR;
   H5Tclose(dtype);
-  const H5T_order_t hostOrder = hostIsLittleEndian() ? H5T_ORDER_LE : H5T_ORDER_BE;
+  const H5T_order_t hostOrder = HostIsLittleEndian() ? H5T_ORDER_LE : H5T_ORDER_BE;
   return identical && (elementSize == 1 || order == hostOrder);
 }
 

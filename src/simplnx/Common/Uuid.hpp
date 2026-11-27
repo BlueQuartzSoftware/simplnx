@@ -207,44 +207,44 @@ struct SIMPLNX_EXPORT Uuid
     return FromString(ss.str()).value();
   }
 
-  constexpr uint32 time_low() const noexcept
+  constexpr uint32 timeLow() const noexcept
   {
-    return bit_cast_int<uint32, endian::big>(data.data());
+    return BitCastInt<uint32, endian::big>(data.data());
   }
 
-  constexpr uint16 time_mid() const noexcept
+  constexpr uint16 timeMid() const noexcept
   {
-    return bit_cast_int<uint16, endian::big>(data.data() + 4);
+    return BitCastInt<uint16, endian::big>(data.data() + 4);
   }
 
-  constexpr uint16 time_hi_version() const noexcept
+  constexpr uint16 timeHiVersion() const noexcept
   {
-    return bit_cast_int<uint16, endian::big>(data.data() + 6);
+    return BitCastInt<uint16, endian::big>(data.data() + 6);
   }
 
-  constexpr uint16 clock_seq_hi_and_res_clock_seq_low() const noexcept
+  constexpr uint16 clockSeqHiAndResClockSeqLow() const noexcept
   {
-    return bit_cast_int<uint16, endian::big>(data.data() + 8);
+    return BitCastInt<uint16, endian::big>(data.data() + 8);
   }
 
-  constexpr uint8 clock_seq_hi_variant() const noexcept
+  constexpr uint8 clockSeqHiVariant() const noexcept
   {
-    return bit_cast_int<uint8, endian::big>(data.data() + 8);
+    return BitCastInt<uint8, endian::big>(data.data() + 8);
   }
 
-  constexpr uint8 clock_seq_low() const noexcept
+  constexpr uint8 clockSeqLow() const noexcept
   {
-    return bit_cast_int<uint8, endian::big>(data.data() + 9);
+    return BitCastInt<uint8, endian::big>(data.data() + 9);
   }
 
   constexpr uint64 node() const noexcept
   {
-    return bit_cast_int<uint64, endian::big, 6>(data.data() + 10);
+    return BitCastInt<uint64, endian::big, 6>(data.data() + 10);
   }
 
   std::string str() const
   {
-    return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
+    return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", timeLow(), timeMid(), timeHiVersion(), clockSeqHiVariant(), clockSeqLow(), node());
   }
 
   std::array<std::byte, k_Size> data;
@@ -306,8 +306,8 @@ struct hash<::nx::core::Uuid>
 {
   std::size_t operator()(const ::nx::core::Uuid& value) const noexcept
   {
-    std::uint64_t v1 = ::nx::core::bit_cast_ptr<std::uint64_t>(value.data.data());
-    std::uint64_t v2 = ::nx::core::bit_cast_ptr<std::uint64_t>(value.data.data() + sizeof(v1));
+    std::uint64_t v1 = ::nx::core::BitCastPtr<std::uint64_t>(value.data.data());
+    std::uint64_t v2 = ::nx::core::BitCastPtr<std::uint64_t>(value.data.data() + sizeof(v1));
     return v1 ^ v2;
   }
 };

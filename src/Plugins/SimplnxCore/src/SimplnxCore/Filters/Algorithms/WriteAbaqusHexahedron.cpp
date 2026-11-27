@@ -186,7 +186,7 @@ int32 WriteElems(ThrottledMessageHandler& progressThrottle, const std::string& f
  *
  * The function checks stream errors before cancellation. A valid cancellation result leaves a partial temporary file.
  */
-Result<> WriteElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
+Result<> WriteElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
                     const std::atomic_bool& shouldCancel)
 {
   std::ofstream output(fileName, std::ios::binary);
@@ -198,7 +198,7 @@ Result<> WriteElset(ThrottledMessageHandler& progressThrottle, const std::string
          << "*Elset, elset=cube, generate\n"
          << fmt::format("1, {}, 1\n", totalPoints) << "**\n** Each Grain is made up of multiple elements\n**";
   Result<> result =
-      AbaqusElementSets::write(progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
+      abaqus_element_sets::Write(progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
   if(result.valid())
   {
     output << "\n**\n** ----------------------------------------------------------------\n**\n";
@@ -317,15 +317,15 @@ const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 
 Result<> WriteAbaqusHexahedron::operator()()
 {
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
   Vec3<usize> cDims = imageGeom.getDimensions();
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   Vec3<float32> origin = imageGeom.getOrigin();
   Vec3<float32> spacing = imageGeom.getSpacing();
   usize totalPoints = imageGeom.getNumberOfCells();
 
-  Result<int32> maxGrainResult = AbaqusElementSets::findMaximumGrainId(featureIdsRef, getCancel());
+  Result<int32> maxGrainResult = abaqus_element_sets::FindMaximumGrainId(featureIdsRef, getCancel());
   if(maxGrainResult.invalid())
   {
     return ConvertResult(std::move(maxGrainResult));
@@ -341,11 +341,11 @@ Result<> WriteAbaqusHexahedron::operator()()
 
   // Each output gets a separate recoverable temporary path.
   std::vector<Result<AtomicFile>> fileList;
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_nodes.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elems.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_nodes.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_elems.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_sects.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_elset.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}.inp", m_InputValues->file_prefix)));
 
   for(auto& file : fileList)
   {
@@ -356,7 +356,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  int32 err = WriteNodes(progressThrottle, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->WriteDummyNode);
+  int32 err = WriteNodes(progressThrottle, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->write_dummy_node);
   progressThrottle.flush();
   if(err < 0)
   {
@@ -369,7 +369,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Nodes (File 1/5)");
 
-  err = WriteElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration);
+  err = WriteElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->use_reduced_integration);
   progressThrottle.flush();
   if(err < 0)
   {
@@ -382,7 +382,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Elements (File 2/5)");
 
-  err = WriteSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
+  err = WriteSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->use_reduced_integration, m_InputValues->hourglass_stiffness); // Sections file
   if(err < 0)
   {
     return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));
@@ -408,7 +408,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Element Sets (File 4/5)");
 
-  err = WriteMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix);
+  err = WriteMaster(fileList[4].value().tempFilePath().string(), m_InputValues->job_name, m_InputValues->file_prefix);
   if(err < 0)
   {
     return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4].value().tempFilePath().string()));

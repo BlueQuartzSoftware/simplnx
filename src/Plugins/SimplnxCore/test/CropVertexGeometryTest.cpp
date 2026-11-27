@@ -27,13 +27,13 @@ DataStructure CreateTestData()
 {
   DataStructure dataStructure;
   auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertices(*vertexArrayPtr);
 
   auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
@@ -50,7 +50,7 @@ DataStructure CreateTestData()
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Instantiate)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static const std::vector<float32> kMinPos{0, 0, 0};
   static const std::vector<float32> kMaxPos{5, 6, 7};
@@ -69,12 +69,12 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Instantiate)", "[SimplnxCore][C
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Data)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static const std::vector<float32> kMinPos{0, 0, 0};
   static const std::vector<float32> kMaxPos{5, 6, 7};
@@ -99,7 +99,7 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Data)", "[SimplnxCore][CropVert
   auto* croppedVerticesPtr = croppedGeomPtr->getVertices();
   REQUIRE(croppedVerticesPtr != nullptr);
 
-  auto* croppedDataPtr = dataStructure.getDataAs<Int32Array>(k_CroppedGeomPath.createChildPath(k_VertexAttributeMatrixName).createChildPath("DataArray"));
+  auto* croppedDataPtr = dataStructure.getDataAs<Int32ArrayType>(k_CroppedGeomPath.createChildPath(k_VertexAttributeMatrixName).createChildPath("DataArray"));
   REQUIRE(croppedDataPtr != nullptr);
 
   REQUIRE(croppedDataPtr->getNumberOfTuples() == 6);
@@ -111,17 +111,17 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(Data)", "[SimplnxCore][CropVert
     REQUIRE(croppedDataStore[i] == i);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter(PreserveComponentShapes)", "[SimplnxCore][CropVertexGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
   REQUIRE(vertexGeomPtr != nullptr);
-  auto* verticesPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {3}, {3}, vertexGeomPtr->getId());
+  auto* verticesPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {3}, {3}, vertexGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   vertexGeomPtr->setVertices(*verticesPtr);
   auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {3}, vertexGeomPtr->getId());
@@ -132,8 +132,8 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(PreserveComponentShapes)", "[Si
   const std::array<float32, 9> coordinates = {-1, 0, 0, 0, 0, 0, 1, 1, 1};
   auto coordinatesWriteResult = verticesPtr->getDataStoreRef().copyFromBuffer(0, coordinates);
   SIMPLNX_RESULT_REQUIRE_VALID(coordinatesWriteResult);
-  auto* matricesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Matrices", {3}, {3, 3}, vertexDataPtr->getId());
-  auto* vectorsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vectors", {3}, {2}, vertexDataPtr->getId());
+  auto* matricesPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Matrices", {3}, {3, 3}, vertexDataPtr->getId());
+  auto* vectorsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vectors", {3}, {2}, vertexDataPtr->getId());
   REQUIRE(matricesPtr != nullptr);
   REQUIRE(vectorsPtr != nullptr);
   const std::array<int32, 27> matrixValues = {-9, -8, -7, -6, -5, -4, -3, -2, -1, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29};
@@ -157,8 +157,8 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(PreserveComponentShapes)", "[Si
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   const auto croppedDataPath = k_CroppedGeomPath.createChildPath(k_VertexAttributeMatrixName);
-  const auto* croppedMatricesPtr = dataStructure.getDataAs<Int32Array>(croppedDataPath.createChildPath("Matrices"));
-  const auto* croppedVectorsPtr = dataStructure.getDataAs<Float32Array>(croppedDataPath.createChildPath("Vectors"));
+  const auto* croppedMatricesPtr = dataStructure.getDataAs<Int32ArrayType>(croppedDataPath.createChildPath("Matrices"));
+  const auto* croppedVectorsPtr = dataStructure.getDataAs<Float32ArrayType>(croppedDataPath.createChildPath("Vectors"));
   const auto* croppedGeomPtr = dataStructure.getDataAs<VertexGeom>(k_CroppedGeomPath);
   REQUIRE(croppedMatricesPtr != nullptr);
   REQUIRE(croppedVectorsPtr != nullptr);
@@ -187,13 +187,13 @@ TEST_CASE("SimplnxCore::CropVertexGeometryFilter(PreserveComponentShapes)", "[Si
   CHECK(actualVectors == expectedVectors);
   CHECK(actualCoordinates == expectedCoordinates);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CropVertexGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CropVertexGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

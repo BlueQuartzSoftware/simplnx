@@ -73,7 +73,7 @@ Parameters LaplacianSmoothingFilter::parameters() const
       GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
@@ -102,9 +102,9 @@ IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStruc
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Inform users that the geometry vertex coordinates are going to be modified in place
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriangleGeomPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pTriangleGeomPath, {});
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -113,17 +113,17 @@ Result<> LaplacianSmoothingFilter::executeImpl(DataStructure& dataStructure, con
 {
   nx::core::LaplacianSmoothingInputValues inputValues;
 
-  inputValues.pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
-  inputValues.pIterationSteps = filterArgs.value<int32>(k_IterationSteps_Key);
-  inputValues.pLambda = filterArgs.value<float32>(k_Lambda_Key);
-  inputValues.pUseTaubinSmoothing = filterArgs.value<bool>(k_UseTaubinSmoothing_Key);
-  inputValues.pMuFactor = filterArgs.value<float32>(k_MuFactor_Key);
-  inputValues.pTripleLineLambda = filterArgs.value<float32>(k_TripleLineLambda_Key);
-  inputValues.pQuadPointLambda = filterArgs.value<float32>(k_QuadPointLambda_Key);
-  inputValues.pSurfacePointLambda = filterArgs.value<float32>(k_SurfacePointLambda_Key);
-  inputValues.pSurfaceTripleLineLambda = filterArgs.value<float32>(k_SurfaceTripleLineLambda_Key);
-  inputValues.pSurfaceQuadPointLambda = filterArgs.value<float32>(k_SurfaceQuadPointLambda_Key);
-  inputValues.pSurfaceMeshNodeTypeArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
+  inputValues.p_triangle_geometry_data_path = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
+  inputValues.p_iteration_steps = filterArgs.value<int32>(k_IterationSteps_Key);
+  inputValues.p_lambda = filterArgs.value<float32>(k_Lambda_Key);
+  inputValues.p_use_taubin_smoothing = filterArgs.value<bool>(k_UseTaubinSmoothing_Key);
+  inputValues.p_mu_factor = filterArgs.value<float32>(k_MuFactor_Key);
+  inputValues.p_triple_line_lambda = filterArgs.value<float32>(k_TripleLineLambda_Key);
+  inputValues.p_quad_point_lambda = filterArgs.value<float32>(k_QuadPointLambda_Key);
+  inputValues.p_surface_point_lambda = filterArgs.value<float32>(k_SurfacePointLambda_Key);
+  inputValues.p_surface_triple_line_lambda = filterArgs.value<float32>(k_SurfaceTripleLineLambda_Key);
+  inputValues.p_surface_quad_point_lambda = filterArgs.value<float32>(k_SurfaceQuadPointLambda_Key);
+  inputValues.p_surface_mesh_node_type_array_path = filterArgs.value<DataPath>(k_SurfaceMeshNodeTypeArrayPath_Key);
 
   // Let the Algorithm instance do the work
   return LaplacianSmoothing(dataStructure, &inputValues, shouldCancel, messageHandler)();

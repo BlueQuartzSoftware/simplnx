@@ -34,39 +34,39 @@ IFilter::PreflightResult ValidateArrayTypes(const DataStructure& dataStructure, 
       else if(dataType != dataArrayPtr->getDataType())
       {
         std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
-        return {.outputActions = MakeErrorResult<OutputActions>(-90001, ss)};
+        return {.output_actions = MakeErrorResult<OutputActions>(-90001, ss)};
       }
     }
     else
     {
       std::string ss = fmt::format("Selected DataPath must point to a DataArray");
-      return {.outputActions = MakeErrorResult<OutputActions>(-90002, ss)};
+      return {.output_actions = MakeErrorResult<OutputActions>(-90002, ss)};
     }
   }
   return {};
 }
 
-WarningCollection WarnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
+WarningCollectionType WarnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
 {
-  WarningCollection results;
+  WarningCollectionType results;
   for(const auto& dataPath : paths)
   {
-    if(dataStructure.getDataAs<UInt8Array>(dataPath) != nullptr)
+    if(dataStructure.getDataAs<UInt8ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint8_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90004, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt16Array>(dataPath) != nullptr)
+    if(dataStructure.getDataAs<UInt16ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint16_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90005, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt32Array>(dataPath) != nullptr)
+    if(dataStructure.getDataAs<UInt32ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint32_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90006, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt64Array>(dataPath) != nullptr)
+    if(dataStructure.getDataAs<UInt64ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint64_t. Using unsigned integer types may result in underflow leading to extremely large values!");
       results.push_back(Warning{.code = -90007, .message = ss});
@@ -150,13 +150,13 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(!dataArrayPaths.empty())
   {
     auto result = ValidateArrayTypes(dataStructure, dataArrayPaths);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
       return result;
     }
   }
 
-  WarningCollection warnings;
+  WarningCollectionType warnings;
   if(!dataArrayPaths.empty())
   {
     warnings = WarnOnUnsignedTypes(dataStructure, dataArrayPaths);
@@ -165,14 +165,14 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(firstInputArray.getNumberOfComponents() != secondInputArray.getNumberOfComponents())
   {
     std::string ss = fmt::format("Selected Attribute Arrays must have the same component dimensions");
-    return {.outputActions = MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
+    return {.output_actions = MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
   }
 
   // validate the number of tuples
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_InvalidNumTuples,
+    return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidNumTuples,
                                                             fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -184,9 +184,9 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   //
   nx::core::Result<OutputActions> actions;
   actions.value().appendAction(std::move(action));
-  actions.m_Warnings = warnings;
+  actions.m_warnings = warnings;
 
-  return {.outputActions = std::move(actions)};
+  return {.output_actions = std::move(actions)};
 }
 
 //------------------------------------------------------------------------------
@@ -195,9 +195,9 @@ Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, 
 {
   ComputeDifferencesMapInputValues inputValues;
 
-  inputValues.DifferenceMapArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_DifferenceMapArrayPath_Key);
-  inputValues.FirstInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FirstInputArrayPath_Key);
-  inputValues.SecondInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SecondInputArrayPath_Key);
+  inputValues.difference_map_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_DifferenceMapArrayPath_Key);
+  inputValues.first_input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FirstInputArrayPath_Key);
+  inputValues.second_input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_SecondInputArrayPath_Key);
   return ComputeDifferencesMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
 
   return {};

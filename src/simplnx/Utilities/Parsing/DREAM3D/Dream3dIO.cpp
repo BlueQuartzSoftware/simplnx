@@ -165,9 +165,9 @@ void WriteGeomXdmf(std::ostream& out, const ImageGeom& imageGeom, std::string_vi
 {
   std::string name = imageGeom.getName();
 
-  SizeVec3 dims = imageGeom.getDimensions();
-  FloatVec3 spacing = imageGeom.getSpacing();
-  FloatVec3 origin = imageGeom.getOrigin();
+  SizeVec3Type dims = imageGeom.getDimensions();
+  FloatVec3Type spacing = imageGeom.getSpacing();
+  FloatVec3Type origin = imageGeom.getOrigin();
 
   std::array<int64, 3> volDims = {static_cast<int64>(dims.getX()), static_cast<int64>(dims.getY()), static_cast<int64>(dims.getZ())};
 
@@ -195,10 +195,10 @@ void WriteGeomXdmf(std::ostream& out, const RectGridGeom& rectGridGeom, std::str
 {
   std::string name = rectGridGeom.getName();
 
-  SizeVec3 dims = rectGridGeom.getDimensions();
-  const Float32Array* xBoundsPtr = rectGridGeom.getXBounds();
-  const Float32Array* yBoundsPtr = rectGridGeom.getYBounds();
-  const Float32Array* zBoundsPtr = rectGridGeom.getZBounds();
+  SizeVec3Type dims = rectGridGeom.getDimensions();
+  const Float32ArrayType* xBoundsPtr = rectGridGeom.getXBounds();
+  const Float32ArrayType* yBoundsPtr = rectGridGeom.getYBounds();
+  const Float32ArrayType* zBoundsPtr = rectGridGeom.getZBounds();
   if(xBoundsPtr == nullptr || yBoundsPtr == nullptr || zBoundsPtr == nullptr)
   {
     return;
@@ -987,7 +987,7 @@ static Result<IDataArray*> ReadLegacyDataArray(DataStructure& dataStructure, con
     [[fallthrough]];
   case DataType::uint8: {
     std::string typeTag;
-    auto typeTagResult = dataArrayReader.readStringAttribute(Constants::k_ObjectTypeTag);
+    auto typeTagResult = dataArrayReader.readStringAttribute(constants::k_ObjectTypeTag);
     if(typeTagResult.invalid())
     {
       return ConvertInvalidResult<IDataArray*, std::string>(std::move(typeTagResult));
@@ -1099,7 +1099,7 @@ static Result<> FinishImportingLegacyDataArray(DataStructure& dataStructure, con
     [[fallthrough]];
   case DataType::uint8: {
     std::string typeTag;
-    auto typeTagResult = dataSetIO.readStringAttribute(Constants::k_ObjectTypeTag);
+    auto typeTagResult = dataSetIO.readStringAttribute(constants::k_ObjectTypeTag);
     if(typeTagResult.invalid())
     {
       return ConvertInvalidResult<void, std::string>(std::move(typeTagResult));
@@ -1128,7 +1128,7 @@ static Result<> FinishImportingLegacyDataArray(DataStructure& dataStructure, con
   return {};
 }
 
-static Result<UInt64Array*> ReadLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const hdf5::GroupIO& geomGroup, const std::string& arrayName, bool preflight = false)
+static Result<UInt64ArrayType*> ReadLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const hdf5::GroupIO& geomGroup, const std::string& arrayName, bool preflight = false)
 {
   hdf5::DatasetIO dataArrayReader = geomGroup.openDataset(arrayName);
   DataObject::IdType parentId = geometry->getId();
@@ -1139,18 +1139,18 @@ static Result<UInt64Array*> ReadLegacyNodeConnectivityList(DataStructure& dataSt
   if(result.invalid())
   {
     auto& error = result.errors()[0];
-    return MakeErrorResult<UInt64Array*>(error.code, error.message);
+    return MakeErrorResult<UInt64ArrayType*>(error.code, error.message);
   }
 
   auto daResult = CreateLegacyDataArray<uint64>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   if(daResult.invalid())
   {
     auto& error = daResult.errors()[0];
-    return MakeErrorResult<UInt64Array*>(error.code, error.message);
+    return MakeErrorResult<UInt64ArrayType*>(error.code, error.message);
   }
-  auto* valuePtr = dynamic_cast<UInt64Array*>(daResult.value());
+  auto* valuePtr = dynamic_cast<UInt64ArrayType*>(daResult.value());
   auto voidResult = ConvertResult(std::move(daResult));
-  return ConvertResultTo<UInt64Array*>(std::move(voidResult), std::move(valuePtr));
+  return ConvertResultTo<UInt64ArrayType*>(std::move(voidResult), std::move(valuePtr));
 }
 
 /**
@@ -1177,9 +1177,9 @@ static Result<> CreateLegacyNeighborList(DataStructure& dataStructure, DataObjec
   auto listStore = hdf5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader, preflight, warnings);
 
   Result<> result;
-  result.m_Warnings = std::move(warnings);
+  result.m_warnings = std::move(warnings);
 
-  if(listStore == nullptr && !result.m_Warnings.empty())
+  if(listStore == nullptr && !result.m_warnings.empty())
   {
     // Propagate placeholder warnings without creating an unusable list.
     return result;
@@ -1262,11 +1262,11 @@ static Result<> FinishImportingLegacyNeighborListImpl(DataStructure& dataStructu
   auto listStore = hdf5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader, false, warnings);
 
   Result<> result;
-  result.m_Warnings = std::move(warnings);
+  result.m_warnings = std::move(warnings);
 
   if(listStore == nullptr)
   {
-    if(!result.m_Warnings.empty())
+    if(!result.m_warnings.empty())
     {
       // Propagate placeholder warnings without creating an unusable list.
       return result;
@@ -1451,7 +1451,7 @@ static Result<> ReadDatasetAsDataArray(DataStructure& dataStructure, const hdf5:
 
 static Result<> ReadLegacyStatsDataArrayDatasetChild(DataStructure& dataStructure, const nx::core::hdf5::DatasetIO& datasetIO, DataObject::IdType parentId, bool preflight)
 {
-  Result<std::string> objectTypeResult = datasetIO.readStringAttribute(Constants::k_ObjectTypeTag);
+  Result<std::string> objectTypeResult = datasetIO.readStringAttribute(constants::k_ObjectTypeTag);
   if(objectTypeResult.invalid())
   {
     auto warnings = std::move(objectTypeResult.warnings());
@@ -1530,7 +1530,7 @@ static Result<> ReadAttributeAsDataArray(hdf5::ObjectIO& objectIO, const std::st
     isStringAttribute = (H5Tget_class(typeId) == H5T_STRING);
     H5Aclose(attribId);
   }
-  const hdf5::Type type = hdf5::getTypeFromId(typeId);
+  const hdf5::Type type = hdf5::GetTypeFromId(typeId);
   {
     std::lock_guard<std::mutex> hdf5Lock(nx::core::hdf5::Support::ApiLock());
     H5Tclose(typeId);
@@ -1733,7 +1733,7 @@ static Result<> ReadLegacyAttributeMatrix(DataStructure& dataStructure, const nx
       if(!amGroupReader.isDataset(childName))
       {
         auto groupReader = amGroupReader.openGroup(childName);
-        auto objectTypeResult = groupReader.readStringAttribute(Constants::k_ObjectTypeTag);
+        auto objectTypeResult = groupReader.readStringAttribute(constants::k_ObjectTypeTag);
         if(objectTypeResult.valid() && objectTypeResult.value() == "Statistics")
         {
           auto warnings = std::move(objectTypeResult.warnings());
@@ -1868,7 +1868,7 @@ static Result<DataObject*> ReadLegacyVertexGeom(DataStructure& dataStructure, co
     return MakeErrorResult<DataObject*>(-502680, fmt::format("Failed to create legacy Vertex Geometry '{}'.", name));
   }
   ReadGenericGeomDims(geomPtr, geomGroup);
-  Result<Float32Array*> sharedVertexList = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
+  Result<Float32ArrayType*> sharedVertexList = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
   if(sharedVertexList.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(sharedVertexList));
@@ -1889,7 +1889,7 @@ static Result<DataObject*> ReadLegacyTriangleGeom(DataStructure& dataStructure, 
     return MakeErrorResult<DataObject*>(-502681, fmt::format("Failed to create legacy Triangle Geometry '{}'.", name));
   }
   ReadGenericGeomDims(geomPtr, geomGroup);
-  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
+  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
   if(sharedVertexList.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(sharedVertexList));
@@ -1920,7 +1920,7 @@ static Result<DataObject*> ReadLegacyTetrahedralGeom(DataStructure& dataStructur
     return MakeErrorResult<DataObject*>(-502682, fmt::format("Failed to create legacy Tetrahedral Geometry '{}'.", name));
   }
   ReadGenericGeomDims(geomPtr, geomGroup);
-  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
+  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
   if(sharedVertexList.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(sharedVertexList));
@@ -1956,16 +1956,16 @@ static Result<DataObject*> ReadLegacyRectGridGeom(DataStructure& dataStructure, 
   {
     auto dimsDataset = geomGroup.openDataset("DIMENSIONS");
     auto dims = dimsDataset.readAsVector<int64>();
-    geomPtr->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
+    geomPtr->setDimensions(SizeVec3Type(dims[0], dims[1], dims[2]));
   }
 
-  auto xBoundsArray = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_XBoundsName, preflight);
+  auto xBoundsArray = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_XBoundsName, preflight);
   if(xBoundsArray.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(xBoundsArray));
   }
   auto warnings = std::move(xBoundsArray.warnings());
-  auto yBoundsArray = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_YBoundsName, preflight);
+  auto yBoundsArray = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_YBoundsName, preflight);
   if(yBoundsArray.invalid())
   {
     auto result = ConvertInvalidResult<DataObject*>(std::move(yBoundsArray));
@@ -1974,7 +1974,7 @@ static Result<DataObject*> ReadLegacyRectGridGeom(DataStructure& dataStructure, 
   }
   PrependWarnings(yBoundsArray, warnings);
   warnings = std::move(yBoundsArray.warnings());
-  auto zBoundsArray = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_ZBoundsName, preflight);
+  auto zBoundsArray = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_ZBoundsName, preflight);
   if(zBoundsArray.invalid())
   {
     auto result = ConvertInvalidResult<DataObject*>(std::move(zBoundsArray));
@@ -1986,7 +1986,7 @@ static Result<DataObject*> ReadLegacyRectGridGeom(DataStructure& dataStructure, 
   if(deferBoundsValidation)
   {
     // Discovery keeps the references so the selected geometry can be checked before publication.
-    const auto boundsId = [](const Float32Array* boundsPtr) -> DataObject::OptionalId { return boundsPtr == nullptr ? DataObject::OptionalId{} : boundsPtr->getId(); };
+    const auto boundsId = [](const Float32ArrayType* boundsPtr) -> DataObject::OptionalIdType { return boundsPtr == nullptr ? DataObject::OptionalIdType{} : boundsPtr->getId(); };
     geomPtr->setXBoundsId(boundsId(xBoundsArray.value()));
     geomPtr->setYBoundsId(boundsId(yBoundsArray.value()));
     geomPtr->setZBoundsId(boundsId(zBoundsArray.value()));
@@ -2014,7 +2014,7 @@ static Result<DataObject*> ReadLegacyQuadGeom(DataStructure& dataStructure, cons
     return MakeErrorResult<DataObject*>(-502684, fmt::format("Failed to create legacy Quad Geometry '{}'.", name));
   }
   ReadGenericGeomDims(geomPtr, geomGroup);
-  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
+  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
   if(sharedVertexList.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(sharedVertexList));
@@ -2045,7 +2045,7 @@ static Result<DataObject*> ReadLegacyHexGeom(DataStructure& dataStructure, const
     return MakeErrorResult<DataObject*>(-502685, fmt::format("Failed to create legacy Hexahedral Geometry '{}'.", name));
   }
   ReadGenericGeomDims(geomPtr, geomGroup);
-  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
+  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
   if(sharedVertexList.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(sharedVertexList));
@@ -2076,7 +2076,7 @@ static Result<DataObject*> ReadLegacyEdgeGeom(DataStructure& dataStructure, cons
     return MakeErrorResult<DataObject*>(-502686, fmt::format("Failed to create legacy Edge Geometry '{}'.", name));
   }
   ReadGenericGeomDims(geomPtr, geomGroup);
-  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32Array>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
+  auto sharedVertexList = ReadLegacyGeomArrayAs<Float32ArrayType>(dataStructure, geomPtr, geomGroup, legacy::k_VertexListName, preflight);
   if(sharedVertexList.invalid())
   {
     return ConvertInvalidResult<DataObject*>(std::move(sharedVertexList));
@@ -2099,7 +2099,7 @@ static Result<DataObject*> ReadLegacyEdgeGeom(DataStructure& dataStructure, cons
   return result;
 }
 
-static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, const nx::core::hdf5::GroupIO& geomGroup, const std::string& name, dream3d::DeferredImageMetadata* deferredImageMetadata)
+static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, const nx::core::hdf5::GroupIO& geomGroup, const std::string& name, dream3d::DeferredImageMetadataType* deferredImageMetadata)
 {
   auto* geomPtr = ImageGeom::Create(dataStructure, name);
   if(geomPtr == nullptr)
@@ -2119,7 +2119,7 @@ static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, con
       return MakeErrorResult<DataObject*>(k_InvalidDimensionsCount,
                                           fmt::format("Legacy image geometry '{}' in '{}' requires three dimensions values. Found {}.", name, geomGroup.getFilePath().string(), dims.size()));
     }
-    geomPtr->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
+    geomPtr->setDimensions(SizeVec3Type(dims[0], dims[1], dims[2]));
   }
 
   const auto readMetadata = [&]() -> Result<dream3d::ImageGeometryMetadata> {
@@ -2139,7 +2139,7 @@ static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, con
           k_InvalidSpacingCount, fmt::format("Legacy image geometry '{}' in '{}' requires three spacing values. Found {}.", name, geomGroup.getFilePath().string(), spacing.size()));
     }
 
-    return {dream3d::ImageGeometryMetadata{.origin = FloatVec3(origin), .spacing = FloatVec3(spacing)}};
+    return {dream3d::ImageGeometryMetadata{.origin = FloatVec3Type(origin), .spacing = FloatVec3Type(spacing)}};
   };
   auto metadata = dream3d::detail::ImportImageMetadata(*geomPtr, geomGroup.getFilePath(), readMetadata(), deferredImageMetadata);
   return ConvertResultTo<DataObject*>(std::move(metadata), geomPtr);
@@ -2147,7 +2147,7 @@ static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, con
 // End legacy Geometry importing
 
 static Result<> ReadLegacyDataContainer(DataStructure& dataStructure, const nx::core::hdf5::GroupIO& dcGroup, bool preflight = false, bool importChildren = true,
-                                        dream3d::DeferredImageMetadata* deferredImageMetadata = nullptr)
+                                        dream3d::DeferredImageMetadataType* deferredImageMetadata = nullptr)
 {
   DataObject* containerPtr = nullptr;
   Result<DataObject*> containerResult;
@@ -2305,7 +2305,7 @@ static Result<> FinishImportingLegacyRectGridGeom(DataStructure& /*dataStructure
   {
     auto dimsDataset = geomGroup.openDataset("DIMENSIONS");
     auto dims = dimsDataset.readAsVector<int64>();
-    rectGridGeomPtr->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
+    rectGridGeomPtr->setDimensions(SizeVec3Type(dims[0], dims[1], dims[2]));
   }
 
   return {};
@@ -2496,7 +2496,7 @@ static Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, co
 }
 
 static Result<DataStructure> ImportLegacyDataStructure(const nx::core::hdf5::FileIO& fileReader, bool preflight, std::shared_ptr<const IDataStoreFormatResolver> resolver,
-                                                       dream3d::DeferredImageMetadata* deferredImageMetadata = nullptr)
+                                                       dream3d::DeferredImageMetadataType* deferredImageMetadata = nullptr)
 {
   DataStructure dataStructure;
   dataStructure.setFormatResolver(std::move(resolver));
@@ -2521,7 +2521,7 @@ static Result<DataStructure> ImportLegacyDataStructure(const nx::core::hdf5::Fil
   return ImportLegacyDataStructure(fileReader, preflight, {});
 }
 
-Result<DataStructure> dream3d::detail::ImportMetadata(const nx::core::hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadata& deferredImageMetadata)
+Result<DataStructure> dream3d::detail::ImportMetadata(const nx::core::hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadataType& deferredImageMetadata)
 {
   const auto version = GetFileVersion(fileReader);
   if(version == k_CurrentFileVersion)
@@ -2688,7 +2688,7 @@ struct PrepareImportedNumericStoreFunctor
 
     if(sourceStorePtr->getStoreType() == IDataStore::StoreType::Empty)
     {
-      auto storeResult = DataStoreUtilities::CreatePlannedDataStore<T>(destination, destinationPath, typedArrayPtr->getTupleShape(), typedArrayPtr->getComponentShape(), "");
+      auto storeResult = data_store_utilities::CreatePlannedDataStore<T>(destination, destinationPath, typedArrayPtr->getTupleShape(), typedArrayPtr->getComponentShape(), "");
       if(storeResult.invalid())
       {
         return ConvertResult(std::move(storeResult));
@@ -2808,7 +2808,7 @@ Result<> dream3d::FinishImportingObject(DataStructure& importStructure, DataStru
   return materializeResult;
 }
 
-Result<dream3d::FileData> dream3d::ReadFile(const nx::core::hdf5::FileIO& fileReader, bool preflight)
+Result<dream3d::FileDataType> dream3d::ReadFile(const nx::core::hdf5::FileIO& fileReader, bool preflight)
 {
   // Pipeline pipeline;
   auto pipeline = ImportPipelineFromFile(fileReader);
@@ -2823,18 +2823,18 @@ Result<dream3d::FileData> dream3d::ReadFile(const nx::core::hdf5::FileIO& fileRe
     return {{nonstd::make_unexpected(std::move(dataStructure.errors()))}, std::move(dataStructure.warnings())};
   }
 
-  return {dream3d::FileData{std::move(pipeline.value()), std::move(dataStructure.value())}};
+  return {dream3d::FileDataType{std::move(pipeline.value()), std::move(dataStructure.value())}};
 }
 
-Result<dream3d::FileData> dream3d::ReadFile(const std::filesystem::path& path)
+Result<dream3d::FileDataType> dream3d::ReadFile(const std::filesystem::path& path)
 {
   auto reader = nx::core::hdf5::FileIO::ReadFile(path);
   nx::core::hdf5::ErrorType error = 0;
 
-  Result<FileData> fileData = ReadFile(reader, error != 0);
+  Result<FileDataType> fileData = ReadFile(reader, error != 0);
   if(error < 0)
   {
-    return MakeErrorResult<FileData>(-1, fmt::format("DREAM3D::ReadFile: Unable to read '{}'", path.string()));
+    return MakeErrorResult<FileDataType>(-1, fmt::format("DREAM3D::ReadFile: Unable to read '{}'", path.string()));
   }
   return fileData;
 }
@@ -2871,7 +2871,7 @@ static Result<> WriteFileVersion(nx::core::hdf5::FileIO& fileWriter)
   return fileWriter.writeStringAttribute(k_FileVersionTag, dream3d::k_CurrentFileVersion.str());
 }
 
-Result<> dream3d::WriteFile(nx::core::hdf5::FileIO& fileWriter, const FileData& fileData)
+Result<> dream3d::WriteFile(nx::core::hdf5::FileIO& fileWriter, const FileDataType& fileData)
 {
   return WriteFile(fileWriter, fileData.first, fileData.second);
 }

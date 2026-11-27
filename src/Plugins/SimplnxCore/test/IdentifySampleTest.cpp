@@ -30,7 +30,7 @@
 #include <optional>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 namespace fs = std::filesystem;
 
 namespace
@@ -50,12 +50,12 @@ const DataPath k_NonSquareMaskPath = k_NonSquareImagePath.createChildPath("CellD
  * @param useConfiguredStore True to create the mask with the configured store factory.
  * @return A DataStructure with the 3 by 4 component mask.
  */
-DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims, bool useConfiguredStore = false)
+DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3Type& dims, bool useConfiguredStore = false)
 {
   DataStructure dataStructure = {};
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_NonSquareImagePath.getTargetName());
-  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
-  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3Type{std::array<float32, 3>{1.0f, 1.0f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
   imageGeomPtr->setDimensions(dims);
 
   const ShapeType imageShape{dims[0], dims[1], dims[2]};
@@ -65,13 +65,13 @@ DataStructure CreateNonSquare2DMaskDataStructure(const SizeVec3& dims, bool useC
   std::shared_ptr<AbstractDataStore<bool>> maskStore;
   if(useConfiguredStore)
   {
-    maskStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_NonSquareMaskPath, cellDataPtr->getShape(), ShapeType{1});
+    maskStore = data_store_utilities::CreateDataStore<bool>(dataStructure, k_NonSquareMaskPath, cellDataPtr->getShape(), ShapeType{1});
   }
   else
   {
-    maskStore = std::make_shared<BoolDataStore>(cellDataPtr->getShape(), ShapeType{1}, std::optional<bool>{});
+    maskStore = std::make_shared<BoolDataStoreType>(cellDataPtr->getShape(), ShapeType{1}, std::optional<bool>{});
   }
-  BoolArray* maskPtr = BoolArray::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId());
+  BoolArrayType* maskPtr = BoolArrayType::Create(dataStructure, "Mask", maskStore, cellDataPtr->getId());
 
   const std::array<bool, 12> values = {true, true, false, true, true, false, false, false, true, false, false, true};
   REQUIRE(maskPtr->getNumberOfTuples() == values.size());
@@ -107,14 +107,14 @@ void RunIdentifySampleAndCheck(DataStructure& dataStructure)
   Arguments args = CreateNonSquareArguments();
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::array<bool, 12> expected = {true, true, false, true, true, false, false, false, false, false, false, false};
   const DataPath maskPath = k_NonSquareImagePath.createChildPath("CellData").createChildPath("Mask");
-  const auto& mask = dataStructure.getDataRefAs<BoolArray>(maskPath);
+  const auto& mask = dataStructure.getDataRefAs<BoolArrayType>(maskPath);
   REQUIRE(mask.getNumberOfTuples() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
   {
@@ -123,18 +123,18 @@ void RunIdentifySampleAndCheck(DataStructure& dataStructure)
   }
 }
 
-const DataPath k_ExemplarArrayPath = Constants::k_DataContainerPath.createChildPath(Constants::k_CellData).createChildPath("Mask Exemplar");
+const DataPath k_ExemplarArrayPath = constants::k_DataContainerPath.createChildPath(constants::k_CellData).createChildPath("Mask Exemplar");
 } // namespace
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample_v2.tar.gz", "identify_sample_v2");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample_v2.tar.gz", "identify_sample_v2");
   using TestArgType = std::tuple<std::string, std::string, std::string>;
   /* clang-format off */
   std::vector<TestArgType> allTestParams = {
@@ -180,30 +180,30 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
       DataStructure dataStructure = LoadDataStructure(inputFilePath);
       IdentifySampleFilter filter;
       Arguments args;
-      args.insert(IdentifySampleFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-      args.insert(IdentifySampleFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+      args.insert(IdentifySampleFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
+      args.insert(IdentifySampleFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(constants::k_MaskArrayPath));
       args.insert(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(fillHoles));
       args.insert(IdentifySampleFilter::k_SliceBySlice_Key, std::make_any<bool>(sliceBySlice));
       args.insert(IdentifySampleFilter::k_SliceBySlicePlane_Key, std::make_any<ChoicesParameter::ValueType>(sliceBySlicePlane));
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
       auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-      const IDataArray& computedArray = dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath);
+      const IDataArray& computedArray = dataStructure.getDataRefAs<IDataArray>(constants::k_MaskArrayPath);
       const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(k_ExemplarArrayPath);
       CompareDataArrays<uint8>(computedArray, exemplarArray);
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and slice oracle", "[SimplnxCore][IdentifySampleFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool fillHoles = GENERATE(false, true);
   CAPTURE(fillHoles);
@@ -223,8 +223,8 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and 
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {3, k_Height, k_Width}, geometryPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   geometryPtr->setCellData(*cellDataPtr);
-  auto store = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, k_NonSquareMaskPath, {3, k_Height, k_Width}, {1});
-  auto* maskPtr = UInt8Array::Create(dataStructure, "Mask", store, cellDataPtr->getId());
+  auto store = data_store_utilities::CreateDataStore<uint8>(dataStructure, k_NonSquareMaskPath, {3, k_Height, k_Width}, {1});
+  auto* maskPtr = UInt8ArrayType::Create(dataStructure, "Mask", store, cellDataPtr->getId());
   REQUIRE(maskPtr != nullptr);
 
   // Slice zero creates over 8,000 isolated provisional labels. Slice one joins
@@ -254,8 +254,8 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const auto after = GetAlgorithmPathExecutionCounts();
-  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(after.out_of_core_on_out_of_core_store == before.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(after.in_core == before.in_core);
   REQUIRE(maskPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   std::vector<uint8> actual(k_CellTuples);
@@ -275,13 +275,13 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: genuine HDF5 equivalence-page and 
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[SimplnxCore][IdentifySampleFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -322,31 +322,31 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: SIMPL Backwards Compatibility", "[
 // An incorrect flood-fill stride merges the components or accesses outside the mask.
 TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty Z Non-Square {3,4,1}", "[SimplnxCore][IdentifySampleFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{3, 4, 1});
+  unit_test::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3Type{3, 4, 1});
   scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty Y Non-Square {3,1,4}", "[SimplnxCore][IdentifySampleFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{3, 1, 4});
+  unit_test::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3Type{3, 1, 4});
   scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: 2D Empty X Non-Square {1,3,4}", "[SimplnxCore][IdentifySampleFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3{1, 3, 4});
+  unit_test::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure = ::CreateNonSquare2DMaskDataStructure(SizeVec3Type{1, 3, 4});
   scope.execute([&] { ::RunIdentifySampleAndCheck(dataStructure); });
 }
 
@@ -378,13 +378,13 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: Geometry cell tuple count", "[Simp
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -45463);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;
@@ -406,14 +406,14 @@ class IdentifySampleBudgetGuard
 public:
   /** @brief Captures the current manager budget. */
   IdentifySampleBudgetGuard()
-  : m_PreviousBudget(CacheMemoryBudgetManager::instance().budgetBytes())
+  : m_PreviousBudget(CacheMemoryBudgetManager::Instance().budgetBytes())
   {
   }
 
   /** @brief Restores the captured budget after the test releases its tokens. */
   ~IdentifySampleBudgetGuard()
   {
-    CacheMemoryBudgetManager::instance().setBudgetBytes(m_PreviousBudget);
+    CacheMemoryBudgetManager::Instance().setBudgetBytes(m_PreviousBudget);
   }
 
   IdentifySampleBudgetGuard(const IdentifySampleBudgetGuard&) = delete;
@@ -534,7 +534,7 @@ public:
 private:
   void beginTransfer(bool isRead, usize values) const
   {
-    const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+    const uint64 reserved = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
     const std::lock_guard<std::mutex> lock(m_CountMutex);
     if(isRead)
     {
@@ -570,7 +570,7 @@ private:
  * @param fillHoles Selects hole filling.
  */
 template <class T>
-void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& scope, bool fillHoles)
+void CheckIdentifySampleWithoutWorkingHeadroom(unit_test::AlgorithmTestScope& scope, bool fillHoles)
 {
   constexpr usize k_X = 19;
   constexpr usize k_Y = 11;
@@ -580,11 +580,11 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
   using DataArrayType = DataArray<T>;
 
   auto store = std::make_shared<IdentifySampleReportingStoreType>(ShapeType{k_Z, k_Y, k_X});
-  DataStructure dataStructure = IdentifySampleBatchTest::CreateFixture<T>(2, k_X, store);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArrayType>(IdentifySampleBatchTest::k_MaskPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<DataArrayType>(IdentifySampleBatchTest::k_MaskPath));
+  DataStructure dataStructure = identify_sample_batch_test::CreateFixture<T>(2, k_X, store);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArrayType>(identify_sample_batch_test::k_MaskPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<DataArrayType>(identify_sample_batch_test::k_MaskPath));
 
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   const uint64 originalBudget = budget.budgetBytes();
   {
@@ -600,9 +600,9 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
     REQUIRE(refused.sizeBytes() == 0);
 
     IdentifySampleFilter filter;
-    const auto args = IdentifySampleBatchTest::ArgumentsFor(2, fillHoles);
+    const auto args = identify_sample_batch_test::ArgumentsFor(2, fillHoles);
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     {
       store->setArmed(true);
       const auto disarm = MakeScopeGuard([&store]() noexcept { store->setArmed(false); });
@@ -610,7 +610,7 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
 
-    if(scope.scenario() == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+    if(scope.scenario() == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
     {
       // With no headroom, CCL retains the one-plane transfer schedule and full XY spans.
       const auto counts = store->counts();
@@ -630,63 +630,63 @@ void CheckIdentifySampleWithoutWorkingHeadroom(UnitTest::AlgorithmTestScope& sco
   }
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   REQUIRE(budget.budgetBytes() == originalBudget);
-  IdentifySampleBatchTest::RequireOutput<T>(dataStructure, 2, fillHoles, k_X);
+  identify_sample_batch_test::RequireOutput<T>(dataStructure, 2, fillHoles, k_X);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: orthogonal literal masks", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1}, ChoicesParameter::ValueType{2});
   const bool fillHoles = GENERATE(false, true);
   const bool useBool = GENERATE(false, true);
   CAPTURE(scenario, plane, fillHoles, useBool);
-  const IdentifySampleBatchTest::ScopedPreferenceRestore preferenceRestore;
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const identify_sample_batch_test::ScopedPreferenceRestore preferenceRestore;
+  unit_test::AlgorithmTestScope scope(scenario);
   if(useBool)
   {
-    auto dataStructure = IdentifySampleBatchTest::CreateFixture<bool>(plane);
-    IdentifySampleBatchTest::ExecuteAndRequire<bool>(scope, dataStructure, plane, fillHoles);
+    auto dataStructure = identify_sample_batch_test::CreateFixture<bool>(plane);
+    identify_sample_batch_test::ExecuteAndRequire<bool>(scope, dataStructure, plane, fillHoles);
   }
   else
   {
-    auto dataStructure = IdentifySampleBatchTest::CreateFixture<uint8>(plane);
-    IdentifySampleBatchTest::ExecuteAndRequire<uint8>(scope, dataStructure, plane, fillHoles);
+    auto dataStructure = identify_sample_batch_test::CreateFixture<uint8>(plane);
+    identify_sample_batch_test::ExecuteAndRequire<uint8>(scope, dataStructure, plane, fillHoles);
   }
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ literal tail masks", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const usize fixedCount = GENERATE(usize{1}, usize{7}, usize{8}, usize{9}, usize{16}, usize{17}, usize{19});
   const bool fillHoles = GENERATE(false, true);
   const bool useBool = GENERATE(false, true);
   CAPTURE(scenario, fixedCount, fillHoles, useBool);
-  const IdentifySampleBatchTest::ScopedPreferenceRestore preferenceRestore;
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const identify_sample_batch_test::ScopedPreferenceRestore preferenceRestore;
+  unit_test::AlgorithmTestScope scope(scenario);
   if(useBool)
   {
-    auto dataStructure = IdentifySampleBatchTest::CreateFixture<bool>(2, fixedCount);
-    IdentifySampleBatchControlTest::CheckGrant<bool>(scope, dataStructure, 8, 0, fillHoles, fixedCount, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+    auto dataStructure = identify_sample_batch_test::CreateFixture<bool>(2, fixedCount);
+    identify_sample_batch_control_test::CheckGrant<bool>(scope, dataStructure, 8, 0, fillHoles, fixedCount, scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   }
   else
   {
-    auto dataStructure = IdentifySampleBatchTest::CreateFixture<uint8>(2, fixedCount);
-    IdentifySampleBatchControlTest::CheckGrant<uint8>(scope, dataStructure, 8, 0, fillHoles, fixedCount, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+    auto dataStructure = identify_sample_batch_test::CreateFixture<uint8>(2, fixedCount);
+    identify_sample_batch_control_test::CheckGrant<uint8>(scope, dataStructure, 8, 0, fillHoles, fixedCount, scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   }
 }
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ without working headroom", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool fillHoles = GENERATE(false, true);
   const bool useBool = GENERATE(false, true);
   CAPTURE(scenario, fillHoles, useBool);
-  const IdentifySampleBatchTest::ScopedPreferenceRestore preferenceRestore;
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const identify_sample_batch_test::ScopedPreferenceRestore preferenceRestore;
+  unit_test::AlgorithmTestScope scope(scenario);
   if(useBool)
   {
     CheckIdentifySampleWithoutWorkingHeadroom<bool>(scope, fillHoles);
@@ -699,25 +699,25 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ without working headroom", "[Si
 
 TEST_CASE("SimplnxCore::IdentifySampleFilter: YZ real reservation widths", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleBatchCorrectness]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const usize width = GENERATE(usize{1}, usize{2}, usize{3}, usize{8});
   const usize partial = GENERATE(usize{0}, usize{17});
   const bool fillHoles = GENERATE(false, true);
   const bool useBool = GENERATE(false, true);
   DYNAMIC_SECTION("scenario=" << scenario << " width=" << width << " remainder=" << partial << " Bool=" << useBool << " fill=" << fillHoles)
   {
-    const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-    UnitTest::AlgorithmTestScope scope(scenario);
+    const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+    unit_test::AlgorithmTestScope scope(scenario);
     if(useBool)
     {
-      auto data = IdentifySampleBatchTest::CreateFixture<bool>(2);
-      IdentifySampleBatchControlTest::CheckGrant<bool>(scope, data, width, partial, fillHoles, 19, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+      auto data = identify_sample_batch_test::CreateFixture<bool>(2);
+      identify_sample_batch_control_test::CheckGrant<bool>(scope, data, width, partial, fillHoles, 19, scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
     }
     else
     {
-      auto data = IdentifySampleBatchTest::CreateFixture<uint8>(2);
-      IdentifySampleBatchControlTest::CheckGrant<uint8>(scope, data, width, partial, fillHoles, 19, scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+      auto data = identify_sample_batch_test::CreateFixture<uint8>(2);
+      identify_sample_batch_control_test::CheckGrant<uint8>(scope, data, width, partial, fillHoles, 19, scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
     }
   }
 }

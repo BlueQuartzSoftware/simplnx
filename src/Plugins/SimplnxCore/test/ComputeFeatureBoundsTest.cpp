@@ -61,8 +61,8 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellDataPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellDataPtr->getId());
   auto& featureIdsStoreRef = featureIdsPtr->getDataStoreRef();
 
   constexpr usize k_SliceSize = k_BenchmarkDim * k_BenchmarkDim;
@@ -90,10 +90,10 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes And Source Ids", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
@@ -104,7 +104,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes An
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 3, 4}, imageGeomPtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {2, 3, 4}, {1}, cellAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Feature Ids", {2, 3, 4}, {1}, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   featureIdsPtr->fill(-1);
   (*featureIdsPtr)[0] = 1;
@@ -131,8 +131,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes An
   const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"}));
   const auto& vertices = edgeGeom.getVerticesRef();
   const auto& edges = edgeGeom.getEdgesRef();
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"EdgeGeom", "Edge Data", "Edge Feature Ids"})));
-  const auto& edgeFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"EdgeGeom", "Edge Data", "Edge Feature Ids"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"EdgeGeom", "Edge Data", "Edge Feature Ids"})));
+  const auto& edgeFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"EdgeGeom", "Edge Data", "Edge Feature Ids"}));
 
   SECTION("Box counts and coordinates")
   {
@@ -165,20 +165,20 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Keeps All Boxes An
       REQUIRE(edgeFeatureIds[edgeIdx] == 3);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Feature AM Larger Than Max Id", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
   REQUIRE(vertexGeomPtr != nullptr);
-  auto* verticesPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {3}, {3}, vertexGeomPtr->getId());
+  auto* verticesPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {3}, {3}, vertexGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   vertexGeomPtr->setVertices(*verticesPtr);
   const std::array<float32, 9> coordinates = {-1, 0.5f, 7, 1, 2, 3, 4, 6, 9};
@@ -189,7 +189,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Feature AM Larger Than Max I
   auto* vertexAmPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, vertexGeomPtr->getId());
   REQUIRE(vertexAmPtr != nullptr);
   vertexGeomPtr->setVertexAttributeMatrix(*vertexAmPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {3}, {1}, vertexAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Feature Ids", {3}, {1}, vertexAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   (*featureIdsPtr)[0] = 0;
   (*featureIdsPtr)[1] = 1;
@@ -207,8 +207,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Feature AM Larger Than Max I
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath boundsPath({"VertexGeom", "Feature Data", "Bounds"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(boundsPath));
-  const auto& bounds = dataStructure.getDataRefAs<Float32Array>(boundsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(boundsPath));
+  const auto& bounds = dataStructure.getDataRefAs<Float32ArrayType>(boundsPath);
   REQUIRE(bounds.getNumberOfTuples() == 5);
   REQUIRE(bounds.getNumberOfComponents() == 6);
   const std::array<float32, 12> expectedBounds = {-1, 0.5f, 7, -1, 0.5f, 7, 1, 2, 3, 4, 6, 9};
@@ -224,12 +224,12 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Feature AM Larger Than Max I
       REQUIRE(std::isnan(bounds[featureIdx * 6 + compIdx]));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Reject Multi Component Feature Ids", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeomPtr != nullptr);
@@ -239,7 +239,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Reject Multi Component Featu
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 1}, imageGeomPtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Feature Ids", {1, 1, 1}, {2}, cellAmPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Feature Ids", {1, 1, 1}, {2}, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   featureIdsPtr->fill(0);
   REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", {1}, imageGeomPtr->getId()) != nullptr);
@@ -250,17 +250,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Reject Multi Component Featu
   args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "Cell Data", "Feature Ids"})));
   args.insertOrAssign(ComputeFeatureBoundsFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "Feature Data"})));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -208);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -208);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Image Geom/Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "ImageGeom";
@@ -282,7 +282,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
   const DataPath kCellAmPath = kGeomPath.createChildPath(kCellAmName);
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, kCellAmName, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
   featureIdsPtr->fill(-1);
   (*featureIdsPtr)[6] = 1;
   (*featureIdsPtr)[7] = 1;
@@ -316,7 +316,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_CreatedFeatureIdsArrayName_Key, std::make_any<std::string>("feature_ids"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -346,7 +346,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
   const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(DataPath({"EdgeGeom"}));
   const auto& sharedVertList = edgeGeom.getVerticesRef();
   const auto& sharedEdgeList = edgeGeom.getEdgesRef();
-  const auto& edgeFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"EdgeGeom", "EdgeAM", "feature_ids"}));
+  const auto& edgeFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"EdgeGeom", "EdgeAM", "feature_ids"}));
 
   for(usize i = 0; i < sharedVertList.getNumberOfTuples(); i++)
   {
@@ -364,14 +364,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Output Edge Geom Test - Imag
     REQUIRE(sharedEdgeList[(i * 2) + 1] == k_ExpectedEdges[i][1]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
@@ -394,7 +394,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
   const DataPath kCellAmPath = kGeomPath.createChildPath(kCellAmName);
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, kCellAmName, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
   featureIdsPtr->fill(0);
   (*featureIdsPtr)[6] = 1;
   (*featureIdsPtr)[7] = 1;
@@ -422,7 +422,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -430,21 +430,21 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Unified", 
 
   const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("unified"));
   // Feature 0 is reserved, so begin comparisons at feature 1.
   for(usize j = 0; j < 6; j++)
   {
     REQUIRE(unified[6 + j] == expectedValues[j]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
@@ -467,7 +467,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
   const DataPath kCellAmPath = kGeomPath.createChildPath(kCellAmName);
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, kCellAmName, dims, imageGeomPtr->getId());
 
-  Int32Array* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "feature_ids", dims, std::vector<usize>{1}, cellAmPtr->getId());
   featureIdsPtr->fill(0);
   (*featureIdsPtr)[6] = 1;
   (*featureIdsPtr)[7] = 1;
@@ -496,7 +496,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -504,8 +504,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
 
   const std::array<float32, 6> expectedValues = std::array<float32, 6>{1.0f, 1.0f, 0.0f, 4.0f, 4.0f, 1.0f};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("max"));
   for(usize j = 0; j < 6; j++)
   {
     if(j < 3)
@@ -518,23 +518,23 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Image Geom Test - Split", "[
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertices(*vertexArrayPtr);
 
   auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
@@ -559,7 +559,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -567,7 +567,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 6.0f, 6.0f, 6.0f}, std::array<float32, 6>{1.0f, 1.0f, 1.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(DataPath({"VertexGeom", "feature_data", "unified"}));
+  const auto& unified = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"VertexGeom", "feature_data", "unified"}));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -577,23 +577,23 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Unified",
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "VertexGeom");
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertices(*vertexArrayPtr);
 
   auto* vertexAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, k_VertexAttributeMatrixName, {k_TupleCount}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertexAttributeMatrix(*vertexAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {k_TupleCount}, {1}, vertexAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
@@ -619,7 +619,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -627,8 +627,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 6.0f, 6.0f, 6.0f}, std::array<float32, 6>{1.0f, 1.0f, 1.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(DataPath({"VertexGeom", "feature_data", "min"}));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(DataPath({"VertexGeom", "feature_data", "max"}));
+  const auto& min = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"VertexGeom", "feature_data", "min"}));
+  const auto& max = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"VertexGeom", "feature_data", "max"}));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -645,14 +645,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Vertex Geom Test - Split", "
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "EdgeGeom";
@@ -661,7 +661,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = EdgeGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
@@ -672,7 +672,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
   auto* edgeAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kEdgeAmName, {k_TupleCount}, geomPtr->getId());
   geomPtr->setEdgeAttributeMatrix(*edgeAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& edges = edgesArrayPtr->getDataStoreRef();
@@ -701,7 +701,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -709,7 +709,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}, std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -719,14 +719,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "EdgeGeom";
@@ -735,7 +735,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = EdgeGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
@@ -746,7 +746,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
   auto* edgeAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kEdgeAmName, {k_TupleCount}, geomPtr->getId());
   geomPtr->setEdgeAttributeMatrix(*edgeAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {k_TupleCount}, {1}, edgeAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& edges = edgesArrayPtr->getDataStoreRef();
@@ -776,7 +776,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -784,8 +784,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}, std::array<float32, 6>{0.0f, 0.0f, 0.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("max"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -802,14 +802,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "TriangleGeom";
@@ -818,7 +818,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
@@ -829,7 +829,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
   auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& faces = facesArrayPtr->getDataStoreRef();
@@ -857,7 +857,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -865,7 +865,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f}, std::array<float32, 6>{3.0f, 3.0f, 3.0f, 5.0f, 5.0f, 5.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -875,14 +875,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "TriangleGeom";
@@ -891,7 +891,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
@@ -902,7 +902,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
   auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& faces = facesArrayPtr->getDataStoreRef();
@@ -931,7 +931,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -939,8 +939,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 2.0f, 2.0f, 2.0f}, std::array<float32, 6>{3.0f, 3.0f, 3.0f, 5.0f, 5.0f, 5.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("max"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -957,14 +957,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "QuadGeom";
@@ -973,7 +973,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = QuadGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
@@ -984,7 +984,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
   auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& faces = facesArrayPtr->getDataStoreRef();
@@ -1012,7 +1012,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_UnifiedArrayName_Key, std::make_any<std::string>("unified"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -1020,7 +1020,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 3.0f, 3.0f, 3.0f}, std::array<float32, 6>{4.0f, 4.0f, 4.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& unified = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("unified"));
+  const auto& unified = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("unified"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < unified.getNumberOfTuples(); i++)
   {
@@ -1030,14 +1030,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "QuadGeom";
@@ -1046,7 +1046,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = QuadGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
@@ -1057,7 +1057,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
   auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& faces = facesArrayPtr->getDataStoreRef();
@@ -1086,7 +1086,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -1094,8 +1094,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
 
   std::array<std::array<float32, 6>, 2> expectedValues = {std::array<float32, 6>{0.0f, 0.0f, 0.0f, 3.0f, 3.0f, 3.0f}, std::array<float32, 6>{4.0f, 4.0f, 4.0f, 7.0f, 7.0f, 7.0f}};
 
-  const auto& min = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("min"));
-  const auto& max = dataStructure.getDataRefAs<Float32Array>(kFeatureAmPath.createChildPath("max"));
+  const auto& min = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("min"));
+  const auto& max = dataStructure.getDataRefAs<Float32ArrayType>(kFeatureAmPath.createChildPath("max"));
   // Start from 1 because feature 0 is junk
   for(usize i = 1; i < min.getNumberOfTuples(); i++)
   {
@@ -1112,7 +1112,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpected Feature Id Size", "[SimplnxCore][ComputeFeatureBoundsFilter]")
@@ -1125,7 +1125,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
@@ -1136,7 +1136,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
   auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {4}, {1});
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {4}, {1});
 
   AttributeMatrix::Create(dataStructure, kFeatureAmName, {3}, geomPtr->getId());
 
@@ -1153,17 +1153,17 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM Size Invalid", "[SimplnxCore][ComputeFeatureBoundsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
   const std::string kGeomName = "TriangleGeom";
@@ -1172,7 +1172,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
   const DataPath kFeatureAmPath = kGeomPath.createChildPath(kFeatureAmName);
 
   auto* geomPtr = TriangleGeom::Create(dataStructure, kGeomName);
-  auto* vertexArrayPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
   geomPtr->setVertices(*vertexArrayPtr);
 
   auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
@@ -1183,7 +1183,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
   auto* faceAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, kFaceAmName, {2}, geomPtr->getId());
   geomPtr->setFaceAttributeMatrix(*faceAttributeMatrixPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "feature_ids", {2}, {1}, faceAttributeMatrixPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   auto& vertices = vertexArrayPtr->getDataStoreRef();
   auto& faces = facesArrayPtr->getDataStoreRef();
@@ -1212,11 +1212,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
     args.insertOrAssign(ComputeFeatureBoundsFilter::k_MaxArrayName_Key, std::make_any<std::string>("max"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

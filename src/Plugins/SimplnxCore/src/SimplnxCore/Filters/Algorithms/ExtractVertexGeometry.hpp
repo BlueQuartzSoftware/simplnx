@@ -19,14 +19,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ExtractVertexGeometryInputValues
 {
-  ChoicesParameter::ValueType ArrayHandling{};
-  bool UseMask{};
-  DataPath MaskArrayPath;
-  DataPath InputGeometryPath;
-  MultiArraySelectionParameter::ValueType IncludedDataArrayPaths;
-  DataPath VertexGeometryPath;
-  std::string VertexAttrMatrixName;
-  std::string SharedVertexListName;
+  ChoicesParameter::ValueType array_handling{};
+  bool use_mask{};
+  DataPath mask_array_path;
+  DataPath input_geometry_path;
+  MultiArraySelectionParameter::ValueType included_data_array_paths;
+  DataPath vertex_geometry_path;
+  std::string vertex_attr_matrix_name;
+  std::string shared_vertex_list_name;
 };
 
 /**

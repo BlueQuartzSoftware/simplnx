@@ -19,11 +19,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT IdentifySampleInputValues
 {
-  BoolParameter::ValueType FillHoles{};
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  ArraySelectionParameter::ValueType MaskArrayPath;
-  BoolParameter::ValueType SliceBySlice{};
-  ChoicesParameter::ValueType SliceBySlicePlaneIndex{};
+  BoolParameter::ValueType fill_holes{};
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  ArraySelectionParameter::ValueType mask_array_path;
+  BoolParameter::ValueType slice_by_slice{};
+  ChoicesParameter::ValueType slice_by_slice_plane_index{};
 };
 
 /**

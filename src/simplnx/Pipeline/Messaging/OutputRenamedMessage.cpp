@@ -4,7 +4,7 @@
 
 using namespace nx::core;
 
-OutputRenamedMessage::OutputRenamedMessage(AbstractPipelineNode* pipeline, PipelineFilter::RenamedPath renamedOutput)
+OutputRenamedMessage::OutputRenamedMessage(AbstractPipelineNode* pipeline, PipelineFilter::RenamedPathType renamedOutput)
 : AbstractPipelineMessage(pipeline)
 , m_RenamedPath(std::move(renamedOutput))
 {
@@ -12,7 +12,7 @@ OutputRenamedMessage::OutputRenamedMessage(AbstractPipelineNode* pipeline, Pipel
 
 OutputRenamedMessage::~OutputRenamedMessage() noexcept = default;
 
-PipelineFilter::RenamedPath OutputRenamedMessage::getRenamedPath() const
+PipelineFilter::RenamedPathType OutputRenamedMessage::getRenamedPath() const
 {
   return m_RenamedPath;
 }

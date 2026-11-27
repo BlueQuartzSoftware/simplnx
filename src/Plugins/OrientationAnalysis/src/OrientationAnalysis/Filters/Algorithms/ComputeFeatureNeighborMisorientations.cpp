@@ -28,15 +28,15 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   // Input Arrays
-  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto& neighborListRef = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
+  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  const auto& neighborListRef = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->neighbor_list_array_path);
   const usize numCrystalStructures = crystalStructuresArrayRef.getNumberOfTuples();
 
   // The output misorientations is going to be used as a vector because the output array is optional and might
   // not exist in the DataStructure. We cannot get it by reference.
-  auto* avgMisorientationsArrayPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgMisorientationsArrayName);
+  auto* avgMisorientationsArrayPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->avg_misorientations_array_name);
 
   const usize totalFeatures = featurePhasesArrayRef.getNumberOfTuples();
 
@@ -55,7 +55,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
     {
       return MakeErrorResult(-34502, fmt::format("Feature Phases array '{}' has value {} at feature index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                 m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, featureIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                 m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, featureIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                  numCrystalStructures, numCrystalStructures));
     }
     const uint32 currentLaueIndex = crystalStructuresArrayRef[currentPhaseIdx];
@@ -75,7 +75,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       if(neighborFeaturePhaseIdx < 0 || static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-34502, fmt::format("Feature Phases array '{}' has value {} at feature index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                   m_InputValues->FeaturePhasesArrayPath.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                   m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                    numCrystalStructures, numCrystalStructures));
       }
       const uint32 neighborLaueIndex = crystalStructuresArrayRef[neighborFeaturePhaseIdx];
@@ -83,22 +83,22 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       {
         ebsdlib::AxisAngleDType axisAngle = orientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
 
-        tempMisorientationLists[featureIdx][neighborListIdx] = static_cast<float>(axisAngle[3] * nx::core::Constants::k_180OverPiF);
-        if(m_InputValues->ComputeAvgMisors)
+        tempMisorientationLists[featureIdx][neighborListIdx] = static_cast<float>(axisAngle[3] * nx::core::constants::k_180OverPiF);
+        if(m_InputValues->compute_avg_misors)
         {
           (*avgMisorientationsArrayPtr)[featureIdx] += tempMisorientationLists[featureIdx][neighborListIdx];
         }
       }
       else
       {
-        if(m_InputValues->ComputeAvgMisors)
+        if(m_InputValues->compute_avg_misors)
         {
           tempMisoList > 0 ? tempMisoList-- : tempMisoList = 0;
         }
         tempMisorientationLists[featureIdx][neighborListIdx] = NAN;
       }
     }
-    if(m_InputValues->ComputeAvgMisors)
+    if(m_InputValues->compute_avg_misors)
     {
       if(tempMisoList != 0)
       {
@@ -112,7 +112,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   }
 
   // Output Variables
-  auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->MisorientationListArrayName);
+  auto& outMisorientationList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->misorientation_list_array_name);
   // Set the vector for each list into the NeighborList Object
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {

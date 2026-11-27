@@ -64,7 +64,7 @@ bool InsideNxVolume(const int32* cellIndex, const std::array<size_t, 3>& nxDims)
 } // namespace
 
 // ----------------------------------------------------------------------------
-MMCellMap::MMCellMap(TriangleGeom::SharedVertexList::StoreType& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3])
+MMCellMap::MMCellMap(TriangleGeom::SharedVertexListType::StoreType& verticesStore, Int32ArrayType* labels, size_t arraySize[3], const float voxelSize[3])
 : m_CellArray(nullptr)
 , m_VerticesStoreRef(verticesStore)
 , m_NxLabelsPtr(labels)
@@ -117,13 +117,13 @@ Result<> MMCellMap::init()
         {
           Cell& cell = m_CellArray[cellIndex++];
           cell.flag.clear();
-          cell.vertexIndex = std::numeric_limits<size_t>::max();
+          cell.vertex_index = std::numeric_limits<size_t>::max();
         }
         else
         {
           Cell& cell = m_CellArray[cellIndex++];
           cell.flag.clear();
-          cell.vertexIndex = std::numeric_limits<size_t>::max();
+          cell.vertex_index = std::numeric_limits<size_t>::max();
         }
       }
     }
@@ -183,10 +183,10 @@ Result<> MMCellMap::setCellVertices()
         Cell* pCellPtr = getCell(i, j, k);
         if(pCellPtr->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
         {
-          pCellPtr->vertexIndex = idxVtx;
-          m_VertexArray[idxVtx].cellIndex[0] = i;
-          m_VertexArray[idxVtx].cellIndex[1] = j;
-          m_VertexArray[idxVtx].cellIndex[2] = k;
+          pCellPtr->vertex_index = idxVtx;
+          m_VertexArray[idxVtx].cell_index[0] = i;
+          m_VertexArray[idxVtx].cell_index[1] = j;
+          m_VertexArray[idxVtx].cell_index[2] = k;
 
           m_VerticesStoreRef.setValue(idxVtx * 3, 0.5f);
           m_VerticesStoreRef.setValue(idxVtx * 3 + 1, 0.5f);
@@ -224,7 +224,7 @@ int32_t MMCellMap::label(const int32 cellIndex[3]) const
 void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
 {
   size_t numVertices = m_VertexArray.size();
-  for(int i = 0; i < relaxAttrs.numRelaxIterations; i++)
+  for(int i = 0; i < relaxAttrs.num_relax_iterations; i++)
   {
     for(size_t idxVtx = 0; idxVtx < numVertices; idxVtx++)
     {
@@ -242,13 +242,13 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
           {
             int nbrIdx[3];
             Cell* nbrCellPtr = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
-            float avgpX = nbrCellPtr->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertexIndex * 3);
+            float avgpX = nbrCellPtr->vertex_index == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertex_index * 3);
             avgP[0] += avgpX + static_cast<float>(nbrIdx[0] - cellIdx[0]);
 
-            float avgpY = nbrCellPtr->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertexIndex * 3 + 1);
+            float avgpY = nbrCellPtr->vertex_index == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertex_index * 3 + 1);
             avgP[1] += avgpY + static_cast<float>(nbrIdx[1] - cellIdx[1]);
 
-            float avgpZ = nbrCellPtr->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertexIndex * 3 + 2);
+            float avgpZ = nbrCellPtr->vertex_index == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertex_index * 3 + 2);
             avgP[2] += avgpZ + static_cast<float>(nbrIdx[2] - cellIdx[2]);
 
             numNeighbors++;
@@ -264,13 +264,13 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
             int nbrIdx[3];
             Cell* nbrCellPtr = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
 
-            float avgpX = nbrCellPtr->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertexIndex * 3);
+            float avgpX = nbrCellPtr->vertex_index == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertex_index * 3);
             avgP[0] += avgpX + static_cast<float>(nbrIdx[0] - cellIdx[0]);
 
-            float avgpY = nbrCellPtr->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertexIndex * 3 + 1);
+            float avgpY = nbrCellPtr->vertex_index == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertex_index * 3 + 1);
             avgP[1] += avgpY + static_cast<float>(nbrIdx[1] - cellIdx[1]);
 
-            float avgpZ = nbrCellPtr->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertexIndex * 3 + 2);
+            float avgpZ = nbrCellPtr->vertex_index == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCellPtr->vertex_index * 3 + 2);
             avgP[2] += avgpZ + static_cast<float>(nbrIdx[2] - cellIdx[2]);
             numNeighbors++;
           }
@@ -281,25 +281,25 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
       if(numNeighbors > 0)
       {
         // Constrain vertex location to a max distance from the original voxel
-        const float min = 0.5f - relaxAttrs.maxDistFromCellCenter;
-        const float max = 0.5f + relaxAttrs.maxDistFromCellCenter;
+        const float min = 0.5f - relaxAttrs.max_dist_from_cell_center;
+        const float max = 0.5f + relaxAttrs.max_dist_from_cell_center;
 
         avgP[0] /= static_cast<float>(numNeighbors);
         avgP[1] /= static_cast<float>(numNeighbors);
         avgP[2] /= static_cast<float>(numNeighbors);
-        const float alpha = relaxAttrs.relaxFactor;
+        const float alpha = relaxAttrs.relax_factor;
 
-        float x = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3) + alpha * avgP[0];
+        float x = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3) + alpha * avgP[0];
         x = std::clamp(x, min, max);
-        m_VerticesStoreRef.setValue(pCellPtr->vertexIndex * 3, x);
+        m_VerticesStoreRef.setValue(pCellPtr->vertex_index * 3, x);
 
-        float y = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3 + 1) + alpha * avgP[1];
+        float y = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3 + 1) + alpha * avgP[1];
         y = std::clamp(y, min, max);
-        m_VerticesStoreRef.setValue(pCellPtr->vertexIndex * 3 + 1, y);
+        m_VerticesStoreRef.setValue(pCellPtr->vertex_index * 3 + 1, y);
 
-        float z = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3 + 2) + alpha * avgP[2];
+        float z = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3 + 2) + alpha * avgP[2];
         z = std::clamp(z, min, max);
-        m_VerticesStoreRef.setValue(pCellPtr->vertexIndex * 3 + 2, z);
+        m_VerticesStoreRef.setValue(pCellPtr->vertex_index * 3 + 2, z);
       }
     }
   }
@@ -408,7 +408,7 @@ bool MMCellMap::getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, size_t qu
 void MMCellMap::getVertexPosition(size_t vertexIndex, float position[3]) const
 {
   const Vertex& vertex = m_VertexArray[vertexIndex];
-  const int32_t* cellIndexPtr = vertex.cellIndex;
+  const int32_t* cellIndexPtr = vertex.cell_index;
   getVertexPosition(cellIndexPtr, position);
 }
 
@@ -531,73 +531,73 @@ void MMCellMap::getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, s
   Cell* pCellPtr = getCell(cellIndex);
   const int length = static_cast<int32_t>(m_ArraySize[0]);
   const int area = static_cast<int32_t>(m_ArraySize[0] * m_ArraySize[1]);
-  quadVtxIndices[0] = pCellPtr->vertexIndex;
+  quadVtxIndices[0] = pCellPtr->vertex_index;
   switch(edge)
   {
   case MMCellFlag::Edge::LeftBottomEdge:
-    quadVtxIndices[1] = (pCellPtr - area)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr - 1 - area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr - 1)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr - area)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr - 1 - area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr - 1)->vertex_index;
     break;
   case MMCellFlag::Edge::RightBottomEdge:
-    quadVtxIndices[1] = (pCellPtr + 1)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr + 1 - area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr - area)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr + 1)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr + 1 - area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr - area)->vertex_index;
     break;
   case MMCellFlag::Edge::BackBottomEdge:
-    quadVtxIndices[1] = (pCellPtr - length)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr - length - area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr - area)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr - length)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr - length - area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr - area)->vertex_index;
     break;
   case MMCellFlag::Edge::FrontBottomEdge:
-    quadVtxIndices[1] = (pCellPtr - area)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr + length - area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr + length)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr - area)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr + length - area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr + length)->vertex_index;
     break;
   case MMCellFlag::Edge::LeftTopEdge:
-    quadVtxIndices[1] = (pCellPtr - 1)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr - 1 + area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr + area)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr - 1)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr - 1 + area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr + area)->vertex_index;
     break;
   case MMCellFlag::Edge::RightTopEdge:
-    quadVtxIndices[1] = (pCellPtr + area)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr + 1 + area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr + 1)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr + area)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr + 1 + area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr + 1)->vertex_index;
     break;
   case MMCellFlag::Edge::BackTopEdge:
-    quadVtxIndices[1] = (pCellPtr + area)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr - length + area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr - length)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr + area)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr - length + area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr - length)->vertex_index;
     break;
   case MMCellFlag::Edge::FrontTopEdge:
-    quadVtxIndices[1] = (pCellPtr + length)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr + length + area)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr + area)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr + length)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr + length + area)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr + area)->vertex_index;
     break;
   case MMCellFlag::Edge::LeftBackEdge:
-    quadVtxIndices[1] = (pCellPtr - 1)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr - 1 - length)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr - length)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr - 1)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr - 1 - length)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr - length)->vertex_index;
     break;
   case MMCellFlag::Edge::RightBackEdge:
-    quadVtxIndices[1] = (pCellPtr - length)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr + 1 - length)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr + 1)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr - length)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr + 1 - length)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr + 1)->vertex_index;
     break;
   case MMCellFlag::Edge::LeftFrontEdge:
-    quadVtxIndices[1] = (pCellPtr + length)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr - 1 + length)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr - 1)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr + length)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr - 1 + length)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr - 1)->vertex_index;
     break;
   case MMCellFlag::Edge::RightFrontEdge:
-    quadVtxIndices[1] = (pCellPtr + 1)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr + 1 + length)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr + length)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr + 1)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr + 1 + length)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr + length)->vertex_index;
     break;
   default:
-    quadVtxIndices[1] = (pCellPtr)->vertexIndex;
-    quadVtxIndices[2] = (pCellPtr)->vertexIndex;
-    quadVtxIndices[3] = (pCellPtr)->vertexIndex;
+    quadVtxIndices[1] = (pCellPtr)->vertex_index;
+    quadVtxIndices[2] = (pCellPtr)->vertex_index;
+    quadVtxIndices[3] = (pCellPtr)->vertex_index;
     break;
   }
 }
@@ -737,33 +737,33 @@ void MMCellMap::getVertexCellIndex(size_t vertexIndex, int cellIndex[3]) const
     return;
   }
   const Vertex* pVertexPtr = &(m_VertexArray[vertexIndex]);
-  cellIndex[0] = pVertexPtr->cellIndex[0];
-  cellIndex[1] = pVertexPtr->cellIndex[1];
-  cellIndex[2] = pVertexPtr->cellIndex[2];
+  cellIndex[0] = pVertexPtr->cell_index[0];
+  cellIndex[1] = pVertexPtr->cell_index[1];
+  cellIndex[2] = pVertexPtr->cell_index[2];
 }
 
 void MMCellMap::getVertexPosition(const int cellIndex[3], float position[3]) const
 {
   const Cell* pCellPtr = getCell(cellArrayIndex(cellIndex));
 
-  position[0] = m_VoxelSize[0] * (static_cast<float>(cellIndex[0]) + m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3));
-  position[1] = m_VoxelSize[1] * (static_cast<float>(cellIndex[1]) + m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3 + 1));
-  position[2] = m_VoxelSize[2] * (static_cast<float>(cellIndex[2]) + m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3 + 2));
+  position[0] = m_VoxelSize[0] * (static_cast<float>(cellIndex[0]) + m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3));
+  position[1] = m_VoxelSize[1] * (static_cast<float>(cellIndex[1]) + m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3 + 1));
+  position[2] = m_VoxelSize[2] * (static_cast<float>(cellIndex[2]) + m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3 + 2));
 }
 
 void MMCellMap::getVertexPosition(int i, int j, int k, float position[3]) const
 {
   const Cell* pCellPtr = getCell(i, j, k);
 
-  position[0] = m_VoxelSize[0] * (i + m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3));
-  position[1] = m_VoxelSize[1] * (j + m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3 + 1));
-  position[2] = m_VoxelSize[2] * (k + m_VerticesStoreRef.getValue(pCellPtr->vertexIndex * 3 + 2));
+  position[0] = m_VoxelSize[0] * (i + m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3));
+  position[1] = m_VoxelSize[1] * (j + m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3 + 1));
+  position[2] = m_VoxelSize[2] * (k + m_VerticesStoreRef.getValue(pCellPtr->vertex_index * 3 + 2));
 }
 
 usize MMCellMap::vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const
 {
   const Vertex& vertex = m_VertexArray[vertexIndex];
-  const int32_t* cellIndexPtr = vertex.cellIndex;
+  const int32_t* cellIndexPtr = vertex.cell_index;
 
   size_t cellMapIndex = cellArrayIndex(cellIndexPtr);
   switch(face)

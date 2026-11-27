@@ -32,14 +32,14 @@ public:
    * @param spacing Spacing in X, Y, Z order.
    * @return Success or error -1556 with the first invalid axis and value.
    */
-  [[nodiscard]] static Result<> ValidateSpacing(const FloatVec3& spacing);
+  [[nodiscard]] static Result<> ValidateSpacing(const FloatVec3Type& spacing);
 
   /**
    * @brief Checks that the origin is finite on each axis.
    * @param origin Origin coordinates in X, Y, Z order.
    * @return Success or error -1557 with the first invalid axis and value.
    */
-  [[nodiscard]] static Result<> ValidateOrigin(const FloatVec3& origin);
+  [[nodiscard]] static Result<> ValidateOrigin(const FloatVec3Type& origin);
 
   enum class ErrorType : EnumType
   {
@@ -127,14 +127,14 @@ public:
    * @brief Gets the spacing (resolution) of the image geometry in X, Y, and Z dimensions.
    * @return FloatVec3 containing the spacing values for each dimension
    */
-  FloatVec3 getSpacing() const;
+  FloatVec3Type getSpacing() const;
 
   /**
    * @brief Sets the spacing (resolution) of the image geometry in X, Y, and Z dimensions.
    * @param spacing Vector containing the spacing values for each dimension
    * @return Success or error -1556 if spacing is nonfinite or not greater than zero. The geometry is unchanged on error.
    */
-  [[nodiscard]] Result<> setSpacing(const FloatVec3& spacing);
+  [[nodiscard]] Result<> setSpacing(const FloatVec3Type& spacing);
 
   /**
    * @brief Sets the spacing (resolution) of the image geometry using individual components.
@@ -149,14 +149,14 @@ public:
    * @brief Gets the origin (lower-left corner) of the image geometry in 3D space.
    * @return FloatVec3 containing the origin coordinates for each dimension
    */
-  FloatVec3 getOrigin() const;
+  FloatVec3Type getOrigin() const;
 
   /**
    * @brief Sets the origin (lower-left corner) of the image geometry in 3D space.
    * @param origin Vector containing the origin coordinates for each dimension
    * @return Success or error -1557 if the origin is nonfinite. The geometry is unchanged on error.
    */
-  [[nodiscard]] Result<> setOrigin(const FloatVec3& origin);
+  [[nodiscard]] Result<> setOrigin(const FloatVec3Type& origin);
 
   /**
    * @brief Sets the origin (lower-left corner) of the image geometry using individual components.
@@ -171,13 +171,13 @@ public:
    * @brief Calculates and returns the 3D bounding box of the image geometry using 32-bit floats.
    * @return BoundingBox3D<float32> representing the spatial extent of the geometry
    */
-  BoundingBox3D<float32> getBoundingBoxf() const;
+  BoundingBox3DType<float32> getBoundingBoxf() const;
 
   /**
    * @brief Calculates and returns the 3D bounding box of the image geometry using 64-bit floats.
    * @return BoundingBox3D<float64> representing the spatial extent of the geometry
    */
-  BoundingBox3D<float64> getBoundingBox() const;
+  BoundingBox3DType<float64> getBoundingBox() const;
 
   /**
    * @brief Calculates the total number of cells in the image geometry.
@@ -220,14 +220,14 @@ public:
    * @brief Returns the dimensions of the image geometry in the order of X, Y, Z.
    * @return SizeVec3 containing the number of cells in each dimension [X, Y, Z]
    */
-  SizeVec3 getDimensions() const override;
+  SizeVec3Type getDimensions() const override;
 
   /**
    * @brief Sets the dimensions of the Image Geometry. Ordering is X (Fastest), then Y, then Z (Slowest). These values
    * become important when calculating things like an index based off of the Dimension values.
    * @param dims Vector containing the number of cells in each dimension [X, Y, Z]
    */
-  void setDimensions(const SizeVec3& dims) override;
+  void setDimensions(const SizeVec3Type& dims) override;
 
   /**
    * @brief Returns the number of cells in the X dimension.
@@ -363,7 +363,7 @@ public:
    * @param index Output parameter to store the computed 3D cell indices [x, y, z]
    * @return ErrorType indicating success or the type of out-of-bounds error if any
    */
-  ErrorType computeCellIndex(const Vec3<float32>& coords, SizeVec3& index) const;
+  ErrorType computeCellIndex(const Vec3<float32>& coords, SizeVec3Type& index) const;
 
 protected:
   /**
@@ -382,8 +382,8 @@ protected:
   ImageGeom(DataStructure& dataStructure, std::string name, IdType importId);
 
 private:
-  FloatVec3 m_Spacing = {1.0f, 1.0f, 1.0f};
-  FloatVec3 m_Origin = {0.0f, 0.0f, 0.0f};
-  SizeVec3 m_Dimensions;
+  FloatVec3Type m_Spacing = {1.0f, 1.0f, 1.0f};
+  FloatVec3Type m_Origin = {0.0f, 0.0f, 0.0f};
+  SizeVec3Type m_Dimensions;
 };
 } // namespace nx::core

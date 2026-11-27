@@ -24,13 +24,13 @@ inline constexpr std::chrono::milliseconds k_FileReplacementTotalWaitLimitMs{200
 struct FileReplacementSteps
 {
   /** @brief Attempts the rename with the replacement and destination paths, in that order. Returns an empty error code on success. */
-  std::function<std::error_code(const std::filesystem::path&, const std::filesystem::path&)> Rename;
+  std::function<std::error_code(const std::filesystem::path&, const std::filesystem::path&)> rename;
   /** @brief Tests if a definite refusal permits a retry for the replacement and destination paths, in that order. */
-  std::function<bool(const std::error_code&, const std::filesystem::path&, const std::filesystem::path&)> IsTransient;
+  std::function<bool(const std::error_code&, const std::filesystem::path&, const std::filesystem::path&)> is_transient;
   /** @brief Waits for the specified duration before the next attempt. */
-  std::function<void(std::chrono::milliseconds)> Wait;
+  std::function<void(std::chrono::milliseconds)> wait;
   /** @brief Optional prerequisite. Transient errors share the rename retry budget. Never called again after success. */
-  std::function<std::error_code(const std::filesystem::path&)> Flush;
+  std::function<std::error_code(const std::filesystem::path&)> flush;
 };
 
 /**

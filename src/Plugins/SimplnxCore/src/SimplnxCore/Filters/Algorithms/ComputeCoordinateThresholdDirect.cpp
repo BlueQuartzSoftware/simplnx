@@ -39,7 +39,7 @@ bool AreEndpointsInBounds(float32 minValue, float32 maxValue, float32 minBound, 
  *
  * Cancellation returns success after complete Z slices. Later slices are not written.
  */
-Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shouldInvert, const VectorFloat32Parameter::ValueType& minPoint, const VectorFloat32Parameter::ValueType& maxPoint,
+Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shouldInvert, const VectorFloat32ParameterType::ValueType& minPoint, const VectorFloat32ParameterType::ValueType& maxPoint,
                               const std::atomic_bool& shouldCancel)
 {
   const uint8 trueValue = shouldInvert ? 0 : 1;
@@ -48,8 +48,8 @@ Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shou
   const usize yCells = imageGeom.getNumYCells();
   const usize zCells = imageGeom.getNumZCells();
   const usize xyCells = xCells * yCells;
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
 
   for(usize zIndex = 0; zIndex < zCells; zIndex++)
   {
@@ -92,7 +92,7 @@ Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shou
 struct SpherePredicate
 {
   // This value stores center x, y, z and radius.
-  VectorFloat32Parameter::ValueType sphere_info;
+  VectorFloat32ParameterType::ValueType sphere_info;
 
   /**
    * @brief Tests one point against the sphere.
@@ -134,8 +134,8 @@ Result<> ComputeCornerMask(const ImageGeom& imageGeom, uint8* mask, bool shouldI
   const usize yCells = imageGeom.getNumYCells();
   const usize zCells = imageGeom.getNumZCells();
   const usize xyCells = xCells * yCells;
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
 
   for(usize zIndex = 0; zIndex < zCells; zIndex++)
   {
@@ -186,21 +186,21 @@ ComputeCoordinateThresholdDirect::ComputeCoordinateThresholdDirect(DataStructure
 
 Result<> ComputeCoordinateThresholdDirect::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
-  auto& maskStore = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath).getDataStoreRef();
-  auto* inMemoryMaskPtr = dynamic_cast<UInt8DataStore*>(&maskStore);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
+  auto& maskStore = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->mask_array_path).getDataStoreRef();
+  auto* inMemoryMaskPtr = dynamic_cast<UInt8DataStoreType*>(&maskStore);
   if(inMemoryMaskPtr == nullptr)
   {
     // A forced direct test can receive an out-of-core store. The scanline fallback keeps I/O bounded.
     return ComputeCoordinateThresholdScanline(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues)();
   }
 
-  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(m_InputValues->ShapeType))
+  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(m_InputValues->shape_type))
   {
   case ComputeCoordinateThreshold::BoundsType::Rectangle:
-    return ComputeRectangleMask(imageGeom, inMemoryMaskPtr->data(), m_InputValues->Invert, m_InputValues->MinCoord, m_InputValues->MaxCoord, m_ShouldCancel);
+    return ComputeRectangleMask(imageGeom, inMemoryMaskPtr->data(), m_InputValues->invert, m_InputValues->min_coord, m_InputValues->max_coord, m_ShouldCancel);
   case ComputeCoordinateThreshold::BoundsType::Sphere:
-    return ComputeCornerMask(imageGeom, inMemoryMaskPtr->data(), m_InputValues->Invert, SpherePredicate{m_InputValues->SphereInfo}, m_ShouldCancel);
+    return ComputeCornerMask(imageGeom, inMemoryMaskPtr->data(), m_InputValues->invert, SpherePredicate{m_InputValues->sphere_info}, m_ShouldCancel);
   }
 
   return {};

@@ -42,8 +42,8 @@ constexpr std::array<uint32, 6> k_XIndexes = {604, 648, 650, 695, 698, 741};
 const std::string k_ClusterData = "ClusterData";
 const std::string k_ClusterDataNX = k_ClusterData + "NX";
 
-const DataPath k_QuadGeomPath = DataPath({Constants::k_DataContainer});
-const DataPath k_CellPath = k_QuadGeomPath.createChildPath(Constants::k_CellData);
+const DataPath k_QuadGeomPath = DataPath({constants::k_DataContainer});
+const DataPath k_CellPath = k_QuadGeomPath.createChildPath(constants::k_CellData);
 const DataPath k_ClusterDataPathNX = k_QuadGeomPath.createChildPath(k_ClusterDataNX);
 
 const std::string k_ClusterIdsName = "ClusterIds";
@@ -76,7 +76,7 @@ std::shared_ptr<AbstractDataStore<T>> CreateKMeansStore(DataStructure& dataStruc
 {
   if(useOocStore)
   {
-    return DataStoreUtilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
+    return data_store_utilities::CreateDataStore<T>(dataStructure, path, tupleShape, componentShape);
   }
   return std::make_shared<DataStore<T>>(tupleShape, componentShape, T{});
 }
@@ -101,7 +101,7 @@ void BuildKMeansMaskParityData(DataStructure& dataStructure, usize tupleCount, b
   imageGeomPtr->setCellData(*cellDataPtr);
 
   auto inputStore = CreateKMeansStore<float32>(dataStructure, k_MaskParityInputPath, tupleShape, {2}, useOocStore);
-  REQUIRE(Float32Array::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Float32ArrayType::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
   std::vector<float32> inputValues(tupleCount * 2);
   for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
   {
@@ -174,7 +174,7 @@ void BuildKMeansFixture(DataStructure& dataStructure, const std::vector<T>& valu
   {
     REQUIRE(mask->size() == tupleCount);
     auto maskStore = CreateKMeansStore<bool>(dataStructure, k_MaskParityMaskPath, tupleShape, {1}, false);
-    REQUIRE(BoolArray::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(BoolArrayType::Create(dataStructure, k_MaskParityMaskPath.getTargetName(), maskStore, cellDataPtr->getId()) != nullptr);
     auto maskValues = std::make_unique<bool[]>(tupleCount);
     for(usize tupleIdx = 0; tupleIdx < tupleCount; ++tupleIdx)
     {
@@ -201,7 +201,7 @@ void BuildKMeansOneClusterData(DataStructure& dataStructure, bool useOocStore)
   imageGeomPtr->setCellData(*cellDataPtr);
 
   auto inputStore = CreateKMeansStore<float32>(dataStructure, k_MaskParityInputPath, tupleShape, {1}, useOocStore);
-  REQUIRE(Float32Array::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
+  REQUIRE(Float32ArrayType::Create(dataStructure, k_MaskParityInputPath.getTargetName(), inputStore, cellDataPtr->getId()) != nullptr);
   const std::array<float32, 3> inputValues = {2.0F, 4.0F, 6.0F};
   auto writeResult = inputStore->copyFromBuffer(0, nonstd::span<const float32>(inputValues.data(), inputValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
@@ -273,10 +273,10 @@ std::vector<float64> ReadMeansAsFloat64(const DataStructure& dataStructure, cons
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Multi-component input iterates to convergence", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   BuildKMeansFixture<float32>(dataStructure, {21, 42, 63, 1, 2, 3, 22, 44, 66, 2, 4, 6, 23, 46, 69, 3, 6, 9, 24, 48, 72, 4, 8, 12}, 3);
@@ -313,19 +313,19 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Multi-component input iterates to converg
     REQUIRE(means[3 * static_cast<usize>(a) + compIdx] == lowMeans[compIdx]);
     REQUIRE(means[3 * static_cast<usize>(b) + compIdx] == highMeans[compIdx]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Mask selecting only the final tuple initializes", "[SimplnxCore][ComputeKMeans][ComputeKMeansF2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   // Before the initialization fix, use [ComputeKMeansF2] --section Scanline: Direct cannot cancel its draw loop.
-  DYNAMIC_SECTION((scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore ? "Scanline" : "Direct"))
+  DYNAMIC_SECTION((scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore ? "Scanline" : "Direct"))
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure;
     BuildKMeansFixture<float32>(dataStructure, {5, 9}, 1, std::vector<bool>{false, true});
     ComputeKMeansFilter filter;
@@ -352,16 +352,16 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Mask selecting only the final tuple initi
     const std::vector<float64> expectedMeans = {5.0, 9.0};
     REQUIRE(ids == expectedIds);
     REQUIRE(means == expectedMeans);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Integer input means are exact", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   BuildKMeansFixture<uint8>(dataStructure, {100, 101, 102, 103}, 1);
@@ -382,15 +382,15 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Integer input means are exact", "[Simplnx
   const std::vector<float64> expectedMeans = {0.0, 101.5};
   REQUIRE(ids == expectedIds);
   REQUIRE(means == expectedMeans);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Large integer clusters divide by the true count", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   std::vector<uint8> values(257, 0);
@@ -410,20 +410,20 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Large integer clusters divide by the true
   REQUIRE(means.size() == 2);
   // One value of 255 and 256 zeros give a sum of 255 across 257 members.
   REQUIRE(means[1] == Approx(255.0 / 257.0));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Valid Filter Execution", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // SIMPLNX_TEST_ALGORITHM_PATH selects the Direct and Scanline scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_means_exemplar.dream3d", unit_test::k_TestFilesDir)));
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_means_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
     ComputeKMeansFilter filter;
@@ -440,7 +440,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Valid Filter Execution", "[SimplnxCore][C
     args.insertOrAssign(ComputeKMeansFilter::k_MeansArrayName_Key, std::make_any<std::string>(k_MeansNameNX));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -458,7 +458,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Valid Filter Execution", "[SimplnxCore][C
    * Those three values must differ before they define the remaining expected positions.
    */
 
-  auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(k_ClusterIdsPathNX);
+  auto& clusterIds = dataStructure.getDataRefAs<Int32ArrayType>(k_ClusterIdsPathNX);
 
   int32 xVal = clusterIds[741];
   int32 cVal = clusterIds[742];
@@ -488,12 +488,12 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Valid Filter Execution", "[SimplnxCore][C
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_means_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const auto checkParity = [](auto maskTag) {
     using MaskTType = decltype(maskTag);
@@ -501,17 +501,17 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
     std::vector<int32> expectedIds;
     std::vector<float64> expectedMeans;
     bool hasExpectedValues = false;
-    const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+    const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
     for(const auto scenario : scenarios)
     {
       CAPTURE(scenario);
-      UnitTest::AlgorithmTestScope scope(scenario);
+      unit_test::AlgorithmTestScope scope(scenario);
       DataStructure dataStructure;
       BuildKMeansMaskParityData<MaskTType>(dataStructure, 24, false, false);
       ComputeKMeansFilter filter;
       Arguments args = CreateKMeansMaskParityArguments();
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
       REQUIRE(dataStructure.getData(DataPath({"temp_mask"})) == nullptr);
@@ -571,7 +571,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
         expectedMeans = means;
         hasExpectedValues = true;
       }
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   };
 
@@ -587,30 +587,30 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Direct and Scanline masked parity", "[Sim
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Scanline rejects an all-false mask", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   BuildKMeansMaskParityData<bool>(dataStructure, 24, true, false);
   ComputeKMeansFilter filter;
   Arguments args = CreateKMeansMaskParityArguments();
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().at(0).code == -54063);
   REQUIRE(dataStructure.getData(DataPath({"temp_mask"})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: default one cluster", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   BuildKMeansOneClusterData(dataStructure, false);
@@ -619,7 +619,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: default one cluster", "[SimplnxCore][Comp
   REQUIRE(args.value<uint64>(ComputeKMeansFilter::k_InitClusters_Key) == 1);
   REQUIRE(args.value<bool>(ComputeKMeansFilter::k_UseMask_Key) == false);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -627,12 +627,12 @@ TEST_CASE("SimplnxCore::ComputeKMeans: default one cluster", "[SimplnxCore][Comp
   CHECK(ReadKMeansValues<float64>(dataStructure, k_MaskParityMeansPath) == std::vector<float64>{0.0, 4.0});
   const auto seedPath = DataPath({args.value<std::string>(ComputeKMeansFilter::k_SeedArrayName_Key)});
   CHECK(ReadKMeansValues<uint64>(dataStructure, seedPath) == std::vector<uint64>{5489});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters fail before output actions", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildKMeansOneClusterData(dataStructure, false);
   ComputeKMeansFilter filter;
@@ -640,10 +640,10 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters fail before output actions"
   args.insertOrAssign(ComputeKMeansFilter::k_InitClusters_Key, std::make_any<uint64>(0));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().front().code == -54061);
-  CHECK(preflightResult.outputActions.errors().front().message.find('0') != std::string::npos);
-  CHECK(preflightResult.outputActions.errors().front().message.find(k_MaskParityInputPath.toString()) != std::string::npos);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().front().code == -54061);
+  CHECK(preflightResult.output_actions.errors().front().message.find('0') != std::string::npos);
+  CHECK(preflightResult.output_actions.errors().front().message.find(k_MaskParityInputPath.toString()) != std::string::npos);
   REQUIRE(dataStructure.getData(k_MaskParityIdsPath) == nullptr);
   REQUIRE(dataStructure.getData(k_MaskParityFeatureDataPath) == nullptr);
 
@@ -653,12 +653,12 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters fail before output actions"
   CHECK(dataStructure.getData(k_MaskParityIdsPath) == nullptr);
   CHECK(dataStructure.getData(k_MaskParityFeatureDataPath) == nullptr);
   CHECK(dataStructure.getData(DataPath({args.value<std::string>(ComputeKMeansFilter::k_SeedArrayName_Key)})) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters leave direct and scanline outputs unchanged", "[SimplnxCore][ComputeKMeans]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   for(const bool useScanline : {false, true})
   {
     for(const bool cancelled : {false, true})
@@ -672,22 +672,22 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters leave direct and scanline o
         REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_MaskParityCellDataPath));
         const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_MaskParityCellDataPath);
         auto idStore = std::make_shared<DataStore<int32>>(ShapeType{3, 1, 1}, ShapeType{1}, int32{-77});
-        REQUIRE(Int32Array::Create(dataStructure, k_MaskParityIdsPath.getTargetName(), idStore, cellData.getId()) != nullptr);
+        REQUIRE(Int32ArrayType::Create(dataStructure, k_MaskParityIdsPath.getTargetName(), idStore, cellData.getId()) != nullptr);
         auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_MaskParityFeatureDataPath.getTargetName(), ShapeType{1}, imageGeom.getId());
         REQUIRE(featureDataPtr != nullptr);
         auto meanStore = std::make_shared<DataStore<float32>>(ShapeType{1}, ShapeType{1}, 91.0F);
-        REQUIRE(Float32Array::Create(dataStructure, k_MaskParityMeansPath.getTargetName(), meanStore, featureDataPtr->getId()) != nullptr);
+        REQUIRE(Float32ArrayType::Create(dataStructure, k_MaskParityMeansPath.getTargetName(), meanStore, featureDataPtr->getId()) != nullptr);
 
         ComputeKMeansInputValues values{};
-        values.InitClusters = 0;
-        values.DistanceMetric = ClusterUtilities::DistanceMetric::Euclidean;
-        values.UseMask = true;
-        values.ClusteringArrayPath = k_MaskParityInputPath;
+        values.init_clusters = 0;
+        values.distance_metric = cluster_utilities::DistanceMetric::Euclidean;
+        values.use_mask = true;
+        values.clustering_array_path = k_MaskParityInputPath;
         // The mask does not exist. The cluster count must fail before mask access.
-        values.MaskArrayPath = k_MaskParityMaskPath;
-        values.FeatureIdsArrayPath = k_MaskParityIdsPath;
-        values.MeansArrayPath = k_MaskParityMeansPath;
-        values.Seed = 5489;
+        values.mask_array_path = k_MaskParityMaskPath;
+        values.feature_ids_array_path = k_MaskParityIdsPath;
+        values.means_array_path = k_MaskParityMeansPath;
+        values.seed = 5489;
         const std::atomic_bool shouldCancel = cancelled;
         const auto result = useScanline ? ComputeKMeansScanline(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)() :
                                           ComputeKMeansDirect(dataStructure, IFilter::MessageHandler{}, shouldCancel, &values)();
@@ -697,7 +697,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters leave direct and scanline o
         CHECK(result.errors().front().message.find(k_MaskParityInputPath.toString()) != std::string::npos);
         CHECK(ReadKMeansValues<int32>(dataStructure, k_MaskParityIdsPath) == std::vector<int32>{-77, -77, -77});
         CHECK(ReadKMeansValues<float32>(dataStructure, k_MaskParityMeansPath) == std::vector<float32>{91.0F});
-        UnitTest::CheckArraysInheritTupleDims(dataStructure);
+        unit_test::CheckArraysInheritTupleDims(dataStructure);
       }
     }
   }
@@ -706,7 +706,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: zero clusters leave direct and scanline o
 TEST_CASE("SimplnxCore::ComputeKMeansFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeKMeansFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -755,10 +755,10 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires 1 component", "[
   DataStructure dataStructure;
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2});
   REQUIRE(cellDataPtr != nullptr);
-  auto* inputPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellDataPtr->getId());
+  auto* inputPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Input", {2}, {1}, cellDataPtr->getId());
   (*inputPtr)[0] = 0.0F;
   (*inputPtr)[1] = 1.0F;
-  auto* maskPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellDataPtr->getId());
+  auto* maskPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Mask", {2}, {2}, cellDataPtr->getId());
   (*maskPtr)[0] = 1;
   (*maskPtr)[1] = 0;
   (*maskPtr)[2] = 1;
@@ -773,9 +773,9 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires 1 component", "[
   args.insertOrAssign(ComputeKMeansFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Cluster Data"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(std::any_of(preflightResult.output_actions.errors().begin(), preflightResult.output_actions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple counts", "[SimplnxCore][ComputeKMeans][ComponentShape]")
@@ -785,8 +785,8 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple c
   auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
   REQUIRE(cellDataPtr != nullptr);
   REQUIRE(maskDataPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
-  REQUIRE(BoolArray::CreateWithStore<BoolDataStore>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskDataPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "Mask", ShapeType{4}, ShapeType{1}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
 
@@ -801,8 +801,8 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple c
   {
     args.insertOrAssign(ComputeKMeansFilter::k_UseMask_Key, std::make_any<bool>(true));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    const auto& errors = preflightResult.outputActions.errors();
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    const auto& errors = preflightResult.output_actions.errors();
     const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7588; });
     REQUIRE(error != errors.end());
     CHECK(error->message.find(inputPath.toString()) != std::string::npos);
@@ -814,9 +814,9 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Cell Mask Array requires matching tuple c
   {
     args.insertOrAssign(ComputeKMeansFilter::k_UseMask_Key, std::make_any<bool>(false));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeKMeans: Reject short StringArray mask in preflight", "[SimplnxCore][ComputeKMeans][ComponentShape]")
@@ -826,7 +826,7 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Reject short StringArray mask in prefligh
   auto* maskDataPtr = AttributeMatrix::Create(dataStructure, "Mask Data", {4});
   REQUIRE(cellDataPtr != nullptr);
   REQUIRE(maskDataPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<float32>(dataStructure, "Input", {6}, {1}, cellDataPtr->getId()) != nullptr);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{4}, {"1", "1", "1", "1"}, maskDataPtr->getId()) != nullptr);
   const DataPath inputPath({"Cell Data", "Input"});
   const DataPath maskPath({"Mask Data", "Mask"});
@@ -840,13 +840,13 @@ TEST_CASE("SimplnxCore::ComputeKMeans: Reject short StringArray mask in prefligh
 
   args.insertOrAssign(ComputeKMeansFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  const auto& errors = preflightResult.outputActions.errors();
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  const auto& errors = preflightResult.output_actions.errors();
   const auto error = std::find_if(errors.begin(), errors.end(), [](const Error& value) { return value.code == -7588; });
   REQUIRE(error != errors.end());
   CHECK(error->message.find(inputPath.toString()) != std::string::npos);
   CHECK(error->message.find(maskPath.toString()) != std::string::npos);
   CHECK(error->message.find("6 tuples") != std::string::npos);
   CHECK(error->message.find("4 tuples") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

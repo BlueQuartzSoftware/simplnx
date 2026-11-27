@@ -35,20 +35,20 @@ inline Result<std::vector<std::string>> ParsePythonFilterNames(const std::string
   const auto isIdentifierStart = [](char value) { return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z') || value == '_'; };
   const auto isIdentifierChar = [&isIdentifierStart](char value) { return isIdentifierStart(value) || (value >= '0' && value <= '9'); };
 
-  if(StringUtilities::trimmed(filterNames).empty())
+  if(string_utilities::Trimmed(filterNames).empty())
   {
     return {std::vector<std::string>{}};
   }
   constexpr std::array<char, 1> k_NameDelimiters = {','};
-  auto names = StringUtilities::Split(filterNames, k_NameDelimiters, true);
-  if(!names.empty() && StringUtilities::trimmed(names.back()).empty())
+  auto names = string_utilities::Split(filterNames, k_NameDelimiters, true);
+  if(!names.empty() && string_utilities::Trimmed(names.back()).empty())
   {
     names.pop_back();
   }
   for(auto& name : names)
   {
     const std::string original = name;
-    name = StringUtilities::trimmed(name);
+    name = string_utilities::Trimmed(name);
     if(name.empty())
     {
       return MakeErrorResult<std::vector<std::string>>(-105150, fmt::format("Filter Names entry '{}' is empty. Remove the extra comma.", original));
@@ -101,9 +101,9 @@ inline std::string GeneratePythonFilter(const std::string& filterName, const std
 {
   std::string content = PythonFilterTemplate();
 
-  content = StringUtilities::replace(content, "#PYTHON_FILTER_NAME#", filterName);
-  content = StringUtilities::replace(content, "#PYTHON_FILTER_HUMAN_NAME#", humanName);
-  content = StringUtilities::replace(content, "#PYTHON_FILTER_UUID#", uuidString);
+  content = string_utilities::Replace(content, "#PYTHON_FILTER_NAME#", filterName);
+  content = string_utilities::Replace(content, "#PYTHON_FILTER_HUMAN_NAME#", humanName);
+  content = string_utilities::Replace(content, "#PYTHON_FILTER_UUID#", uuidString);
 
   return content;
 }
@@ -118,7 +118,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
 {
   Result<> result;
   std::string pluginName = pluginPath.string();
-  if(StringUtilities::ends_with(pluginName, "/"))
+  if(string_utilities::EndsWith(pluginName, "/"))
   {
     pluginName.pop_back();
   }
@@ -144,7 +144,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     buffer << file.rdbuf();
     const std::string content = buffer.str();
     file.close();
-    std::vector<std::string> lines = nx::core::StringUtilities::Split(content, "\n", true);
+    std::vector<std::string> lines = nx::core::string_utilities::Split(content, "\n", true);
     if(lines.back().empty())
     {
       lines.pop_back();
@@ -183,7 +183,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     buffer << file.rdbuf();
     const std::string content = buffer.str();
     file.close();
-    std::vector<std::string> lines = nx::core::StringUtilities::Split(content, "\n", true);
+    std::vector<std::string> lines = nx::core::string_utilities::Split(content, "\n", true);
     if(lines.back().empty())
     {
       lines.pop_back();
@@ -387,11 +387,11 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
 {
   std::string content = PluginPythonFile();
 
-  content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
-  content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
-  content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
+  content = string_utilities::Replace(content, "#PLUGIN_NAME#", pluginName);
+  content = string_utilities::Replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
+  content = string_utilities::Replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
-  content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ", ")));
+  content = string_utilities::Replace(content, "#PLUGIN_FILTER_LIST#", fmt::format("{}", fmt::join(filterList, ", ")));
 
   std::stringstream codeStream;
 
@@ -402,9 +402,9 @@ inline std::string GeneratePythonPlugin(const std::string& pluginName, const std
                << "_filters.append(" << name << ")\n"
                << "# FILTER_END: " << name << "\n\n";
   }
-  content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
+  content = string_utilities::Replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
   // Insert the human name last so its literal text is not interpreted as template tokens.
-  content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", EscapePythonSingleQuotedString(pluginShortName));
+  content = string_utilities::Replace(content, "#PLUGIN_SHORT_NAME#", EscapePythonSingleQuotedString(pluginShortName));
 
   return content;
 }
@@ -490,10 +490,10 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       }
       std::string content = PluginInitPythonFile();
 
-      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
-      content = StringUtilities::replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
-      content = StringUtilities::replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
-      content = StringUtilities::replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
+      content = string_utilities::Replace(content, "#PLUGIN_NAME#", pluginName);
+      content = string_utilities::Replace(content, "#PLUGIN_UUID#", Uuid::GenerateV4().str());
+      content = string_utilities::Replace(content, "#PLUGIN_SHORT_NAME#", pluginShortName);
+      content = string_utilities::Replace(content, "#PLUGIN_DESCRIPTION#", pluginDescription);
 
       std::string aList(fmt::format("'{}', ", pluginName));
       for(const auto& name : filterList)
@@ -501,7 +501,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
         aList.append(fmt::format("'{}', ", name));
       }
       aList.append("'get_plugin'");
-      content = StringUtilities::replace(content, "#PLUGIN_FILTER_LIST#", aList);
+      content = string_utilities::Replace(content, "#PLUGIN_FILTER_LIST#", aList);
 
       std::stringstream codeStream;
       for(const auto& name : filterList)
@@ -511,7 +511,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
                    << "__all__.append('" << name << "')\n"
                    << "# FILTER_END: " << name << "\n\n";
       }
-      content = StringUtilities::replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
+      content = string_utilities::Replace(content, "#PLUGIN_IMPORT_CODE#", codeStream.str());
 
       fout << content;
     }
@@ -540,7 +540,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
       }
       std::string content = PluginEnvironmentPythonFile();
 
-      content = StringUtilities::replace(content, "#PLUGIN_ENV_NAME#", CamelCaseToSnakeCase(pluginName));
+      content = string_utilities::Replace(content, "#PLUGIN_ENV_NAME#", CamelCaseToSnakeCase(pluginName));
 
       fout << content;
     }
@@ -568,7 +568,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
         return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", pyProjTempFile.tempFilePath().string()));
       }
       std::string content = PluginPyProjectPythonFile();
-      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+      content = string_utilities::Replace(content, "#PLUGIN_NAME#", pluginName);
       fout << content;
     }
     Result<> commitResult = pyProjTempFile.commit();
@@ -595,7 +595,7 @@ inline Result<> WritePythonPluginFiles(const std::filesystem::path& outputDirect
         return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", metaTempFile.tempFilePath().string()));
       }
       std::string content = PluginMetaPythonFile();
-      content = StringUtilities::replace(content, "#PLUGIN_NAME#", pluginName);
+      content = string_utilities::Replace(content, "#PLUGIN_NAME#", pluginName);
       fout << content;
     }
     Result<> commitResult = metaTempFile.commit();

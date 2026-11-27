@@ -23,31 +23,31 @@ public:
    * @brief Returns a pointer to the edge list array.
    * @return SharedEdgeList* Pointer to the edge list, or nullptr if not available
    */
-  SharedEdgeList* getEdges();
+  SharedEdgeListType* getEdges();
 
   /**
    * @brief Returns a const pointer to the edge list array.
    * @return const SharedEdgeList* Const pointer to the edge list, or nullptr if not available
    */
-  const SharedEdgeList* getEdges() const;
+  const SharedEdgeListType* getEdges() const;
 
   /**
    * @brief Returns a reference to the edge list array.
    * @return SharedEdgeList& Reference to the edge list
    */
-  SharedEdgeList& getEdgesRef();
+  SharedEdgeListType& getEdgesRef();
 
   /**
    * @brief Returns a const reference to the edge list array.
    * @return const SharedEdgeList& Const reference to the edge list
    */
-  const SharedEdgeList& getEdgesRef() const;
+  const SharedEdgeListType& getEdgesRef() const;
 
   /**
    * @brief Sets the internal reference to the edge list.
    * @param edges The edge list array to use
    */
-  void setEdgeList(const SharedEdgeList& edges);
+  void setEdgeList(const SharedEdgeListType& edges);
 
   /**
    * @brief Returns the optional ID of the edge list array.
@@ -108,7 +108,7 @@ public:
    * @param edgeId The index of the edge to query
    * @param coords Output span to store the vertex coordinates
    */
-  void getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3> coords) const;
+  void getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3Type> coords) const;
 
   /**
    * @brief Pure-Virtual
@@ -122,7 +122,7 @@ public:
    * @brief Returns a pointer to the array of elements containing each vertex.
    * @return const ElementDynamicList* Pointer to the elements containing vertices array, or nullptr if not available
    */
-  const ElementDynamicList* getElementsContainingVert() const;
+  const ElementDynamicListType* getElementsContainingVert() const;
 
   /**
    * @brief Deletes the elements containing vertices array from the geometry.
@@ -142,7 +142,7 @@ public:
    * @brief Returns a pointer to the element neighbors array.
    * @return const ElementDynamicList* Pointer to the element neighbors array, or nullptr if not available
    */
-  const ElementDynamicList* getElementNeighbors() const;
+  const ElementDynamicListType* getElementNeighbors() const;
 
   /**
    * @brief Deletes the element neighbors array from the geometry.
@@ -162,7 +162,7 @@ public:
    * @brief Returns a pointer to the element centroids array.
    * @return const Float32Array* Pointer to the element centroids array, or nullptr if not available
    */
-  const Float32Array* getElementCentroids() const;
+  const Float32ArrayType* getElementCentroids() const;
 
   /**
    * @brief Deletes the element centroids array from the geometry.

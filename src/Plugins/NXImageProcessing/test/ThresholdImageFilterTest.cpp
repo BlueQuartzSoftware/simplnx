@@ -48,7 +48,7 @@ DataPath BuildRampImage(DataStructure& dataStructure, usize dimX, usize dimY, us
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -73,11 +73,11 @@ DataPath BuildRampImage(DataStructure& dataStructure, usize dimX, usize dimY, us
 
 TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImageProcessing][ThresholdImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // The out-of-core store path is retired to the generic SimplnxOoc store tests; this keeps the unique
   // independent computed-expected oracle (every voxel checked against the threshold semantics) as a plain
   // in-memory ForceInCore case.
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
   std::cout << "\n[TEST] ThresholdImageFilter: Small Correctness (in-memory)" << '\n';
 
   constexpr usize k_Dim = 10;
@@ -98,13 +98,13 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
   args.insertOrAssign(ThresholdImageFilter::k_OutsideValue_Key, std::make_any<float64>(outside));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args, nullptr, MakeConsoleMessageHandler("threshold"));
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-  auto& outStore = dataStructure.getDataRefAs<Float32Array>(outputPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+  auto& outStore = dataStructure.getDataRefAs<Float32ArrayType>(outputPath).getDataStoreRef();
   std::cout << "  [verify] checking " << outStore.getSize() << " output values..." << '\n';
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
@@ -112,7 +112,7 @@ TEST_CASE("NXImageProcessing::ThresholdImageFilter: Small Correctness", "[NXImag
     const float32 expected = (v < static_cast<float32>(lower) || v > static_cast<float32>(upper)) ? static_cast<float32>(outside) : v;
     REQUIRE(outStore.getValue(i) == expected);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -125,8 +125,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunThresholdItkGolden(const std::string& inputFile, const std::function<void(Arguments&)>& setParams, const std::string& committedMd5)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -143,7 +143,7 @@ void RunThresholdItkGolden(const std::string& inputFile, const std::function<voi
   setParams(args);
   ThresholdImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -152,7 +152,7 @@ void RunThresholdItkGolden(const std::string& inputFile, const std::function<voi
   INFO(fmt::format("ThresholdImageFilter md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

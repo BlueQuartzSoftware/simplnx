@@ -57,11 +57,11 @@ Parameters ComputeShapesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Feature Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath({"Centroids"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s",
@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPath}, -12806);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   auto featureAttrMatrixPath = pCentroidsArrayPath.getParent();
@@ -122,7 +122,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   const AttributeMatrix* featureAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrixPtr == nullptr)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
   ShapeType tupleShape = featureAttrMatrixPtr->getShape();
@@ -154,7 +154,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -163,20 +163,20 @@ Result<> ComputeShapesFilter::executeImpl(DataStructure& dataStructure, const Ar
 {
   ComputeShapesInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = inputValues.CentroidsArrayPath.getParent();
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.centroids_array_path = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  inputValues.feature_attribute_matrix_path = inputValues.centroids_array_path.getParent();
   auto pOmega3sArrayName = filterArgs.value<std::string>(k_Omega3sArrayName_Key);
   auto pAxisLengthsArrayName = filterArgs.value<std::string>(k_AxisLengthsArrayName_Key);
   auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
   auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
   auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
-  inputValues.Omega3sArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pOmega3sArrayName);
-  inputValues.AxisLengthsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAxisLengthsArrayName);
-  inputValues.AxisEulerAnglesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAxisEulerAnglesArrayName);
-  inputValues.AspectRatiosArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAspectRatiosArrayName);
-  inputValues.VolumesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pVolumesArrayName);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.omega3s_array_path = inputValues.feature_attribute_matrix_path.createChildPath(pOmega3sArrayName);
+  inputValues.axis_lengths_array_path = inputValues.feature_attribute_matrix_path.createChildPath(pAxisLengthsArrayName);
+  inputValues.axis_euler_angles_array_path = inputValues.feature_attribute_matrix_path.createChildPath(pAxisEulerAnglesArrayName);
+  inputValues.aspect_ratios_array_path = inputValues.feature_attribute_matrix_path.createChildPath(pAspectRatiosArrayName);
+  inputValues.volumes_array_path = inputValues.feature_attribute_matrix_path.createChildPath(pVolumesArrayName);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeShapes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

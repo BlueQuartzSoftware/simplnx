@@ -156,7 +156,7 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: validates stores and cancel
   {
     DataStore<int32> inputStore(ShapeType{1}, ShapeType{1}, 0);
     DataStore<int32> outputStore(ShapeType{1}, ShapeType{1}, 0);
-    const Result<> result = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3{0, 1, 1}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
+    const Result<> result = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3Type{0, 1, 1}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -8610);
   }
@@ -165,11 +165,11 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: validates stores and cancel
   {
     DataStore<int32> shortStore(ShapeType{63}, ShapeType{1}, 0);
     DataStore<int32> fullStore(ShapeType{64}, ShapeType{1}, 0);
-    Result<> result = ImageProcessing::ApplyBoxNeighborhood(shortStore, fullStore, SizeVec3{4, 4, 4}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
+    Result<> result = ImageProcessing::ApplyBoxNeighborhood(shortStore, fullStore, SizeVec3Type{4, 4, 4}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -8613);
 
-    result = ImageProcessing::ApplyBoxNeighborhood(fullStore, shortStore, SizeVec3{4, 4, 4}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
+    result = ImageProcessing::ApplyBoxNeighborhood(fullStore, shortStore, SizeVec3Type{4, 4, 4}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().front().code == -8614);
   }
@@ -180,7 +180,7 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: validates stores and cancel
     DataStore<int32> inputStore(ShapeType{4, 4, 4}, ShapeType{1}, 1);
     DataStore<int32> outputStore(ShapeType{4, 4, 4}, ShapeType{1}, k_Poison);
     shouldCancel = true;
-    const Result<> result = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3{4, 4, 4}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
+    const Result<> result = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3Type{4, 4, 4}, std::array<usize, 3>{1, 1, 1}, median, shouldCancel, {});
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     for(const int32 value : outputStore)
     {
@@ -224,10 +224,10 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles
           ImageProcessing::detail::CreateBoxNeighborhood2DPlan(k_MedianTestDimX, k_MedianTestDimY, k_MedianTestRadius[0], k_MedianTestRadius[1], sizeof(int32), targetBytes, workerScratchBytes);
       SIMPLNX_RESULT_REQUIRE_VALID(planResult);
       const auto& plan = planResult.value();
-      REQUIRE(plan.fullWidth == transferCase.full_width);
-      REQUIRE(plan.coreRows == transferCase.core_rows);
-      REQUIRE(plan.coreColumns == transferCase.core_columns);
-      REQUIRE(plan.residentBytes == targetBytes);
+      REQUIRE(plan.full_width == transferCase.full_width);
+      REQUIRE(plan.core_rows == transferCase.core_rows);
+      REQUIRE(plan.core_columns == transferCase.core_columns);
+      REQUIRE(plan.resident_bytes == targetBytes);
 
       OutOfCoreTransferCountingDataStore<int32> inputStore(ShapeType{1, k_MedianTestDimY, k_MedianTestDimX}, ShapeType{1}, int32{0});
       OutOfCoreTransferCountingDataStore<int32> outputStore(ShapeType{1, k_MedianTestDimY, k_MedianTestDimX}, ShapeType{1}, int32{0});
@@ -237,7 +237,7 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles
       }
 
       std::atomic_bool shouldCancel{false};
-      Result<> applyResult = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3{k_MedianTestDimX, k_MedianTestDimY, 1}, k_MedianTestRadius, median, shouldCancel, {}, targetBytes);
+      Result<> applyResult = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3Type{k_MedianTestDimX, k_MedianTestDimY, 1}, k_MedianTestRadius, median, shouldCancel, {}, targetBytes);
       SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
       std::vector<int32> actual(k_MedianTestValues);
@@ -279,7 +279,7 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D cancellation aft
   const usize workerCount = ImageProcessing::detail::BoxNeighborhood2DWorkerCount();
   const usize workerScratchBytes = k_MedianTestNeighborhoodValues * sizeof(int32) * workerCount;
   const usize targetBytes = 216 + workerScratchBytes;
-  Result<> applyResult = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3{k_MedianTestDimX, k_MedianTestDimY, 1}, k_MedianTestRadius, median, shouldCancel, {}, targetBytes);
+  Result<> applyResult = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3Type{k_MedianTestDimX, k_MedianTestDimY, 1}, k_MedianTestRadius, median, shouldCancel, {}, targetBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
   REQUIRE(shouldCancel);
   REQUIRE(inputStore.readCount() == 1);
@@ -301,8 +301,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::string& committedMd5)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -325,7 +325,7 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
   }
   MedianImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -334,7 +334,7 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
   INFO(fmt::format("Median md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

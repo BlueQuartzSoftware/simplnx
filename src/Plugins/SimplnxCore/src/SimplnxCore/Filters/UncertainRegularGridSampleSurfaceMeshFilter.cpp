@@ -67,17 +67,17 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Number of Cells per Axis", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
                                                         std::vector<std::string>{"X Points", "Y Points", "Z Points"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+      std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Uncertainty_Key, "Uncertainty", "uncertainty values associated with X, Y and Z positions of Cells", std::vector<float32>{0.1F, 0.1F, 0.1F},
+      std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Uncertainty_Key, "Uncertainty", "uncertainty values associated with X, Y and Z positions of Cells", std::vector<float32>{0.1F, 0.1F, 0.1F},
                                                          std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType ::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
-                                                          nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Image Geometry", "The name and path for the image geometry to be created", DataPath{}));
@@ -119,9 +119,9 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pDimensionsValue = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
-  auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pUncertaintyValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Uncertainty_Key);
+  auto pSpacingValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+  auto pUncertaintyValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Uncertainty_Key);
   auto pImageGeomPathValue = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
@@ -150,7 +150,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -164,18 +164,18 @@ Result<> UncertainRegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure&
   }
 
   // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   UncertainRegularGridSampleSurfaceMeshInputValues inputValues;
 
-  inputValues.SeedValue = seed;
-  inputValues.Dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  inputValues.Uncertainty = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Uncertainty_Key);
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.FeatureIdsArrayPath =
+  inputValues.seed_value = seed;
+  inputValues.dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
+  inputValues.spacing = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  inputValues.origin = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+  inputValues.uncertainty = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Uncertainty_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.feature_ids_array_path =
       filterArgs.value<DataPath>(k_ImageGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key)).createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
 
   return UncertainRegularGridSampleSurfaceMesh(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -209,10 +209,10 @@ Result<Arguments> UncertainRegularGridSampleSurfaceMeshFilter::FromSIMPLJson(con
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
   results.push_back(
-      simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XPointsKey, simpl::k_YPointsKey, simpl::k_ZPointsKey, k_Dimensions_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_UncertaintyKey, k_Uncertainty_Key));
+      simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverterType>(args, json, simpl::k_XPointsKey, simpl::k_YPointsKey, simpl::k_ZPointsKey, k_Dimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_UncertaintyKey, k_Uncertainty_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));

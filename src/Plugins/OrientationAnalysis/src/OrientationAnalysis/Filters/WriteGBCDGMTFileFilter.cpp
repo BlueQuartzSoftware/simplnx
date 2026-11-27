@@ -58,7 +58,7 @@ Parameters WriteGBCDGMTFileFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32ParameterType>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Axis-Angle", "Axis-Angle pair values for drawing GBCD", std::vector<float32>(4, 0),
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MisorientationRotation_Key, "Misorientation Axis-Angle", "Axis-Angle pair values for drawing GBCD", std::vector<float32>(4, 0),
                                                          std::vector<std::string>{"Angle", "h", "k", "l"}));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output GMT File", "The output .dat file path", FileSystemPathParameter::ValueType{},
                                                           FileSystemPathParameter::ExtensionsType{".dat"}, FileSystemPathParameter::PathType::OutputFile, false));
@@ -68,7 +68,7 @@ Parameters WriteGBCDGMTFileFilter::parameters() const
                                                           DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -90,7 +90,7 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  auto pMisorientationRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
+  auto pMisorientationRotationValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MisorientationRotation_Key);
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pGBCDArrayPathValue = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
@@ -107,12 +107,12 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
     pOutputFileValue = pOutputFileValue.parent_path() / fileName;
   }
 
-  const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
+  const auto& gbcd = dataStructure.getDataRefAs<Float64ArrayType>(pGBCDArrayPathValue);
 
   const auto componentShape = gbcd.getComponentShape();
   if(componentShape.size() != 6 || componentShape[5] != 2 || std::any_of(componentShape.begin(), componentShape.end(), [](usize dimension) { return dimension == 0; }))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -96713, fmt::format("The DataArray '{}' selected for **GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 positive bin "
                                     "dimensions followed by a final dimension of 2 (hemispheres).",
                                     pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
@@ -121,10 +121,10 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
   auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-96712, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-96712, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -140,11 +140,11 @@ Result<> WriteGBCDGMTFileFilter::executeImpl(DataStructure& dataStructure, const
 
   WriteGBCDGMTFileInputValues inputValues;
 
-  inputValues.PhaseOfInterest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  inputValues.MisorientationRotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.GBCDArrayPath = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.phase_of_interest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
+  inputValues.misorientation_rotation = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MisorientationRotation_Key);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.gbcd_array_path = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   auto result = WriteGBCDGMTFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

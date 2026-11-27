@@ -94,7 +94,7 @@ DataObject::IdType CreateReferenceArray(DataStructure& dataStructure, const std:
 struct ReferenceLink
 {
   DataPath target_path;
-  std::function<DataObject::OptionalId(const IGeometry&)> get_id;
+  std::function<DataObject::OptionalIdType(const IGeometry&)> get_id;
 };
 
 std::vector<ReferenceLink> PopulateReferences(DataStructure& dataStructure, IGeometry& geometry)
@@ -159,7 +159,7 @@ std::vector<ReferenceLink> PopulateReferences(DataStructure& dataStructure, IGeo
     const auto makeBounds = [&](const std::string& name) {
       auto store = std::make_unique<DataStore<float32>>(ShapeType{2}, ShapeType{1}, 0.0f);
       (*store)[1] = 1.0f;
-      auto* arrayPtr = Float32Array::Create(dataStructure, name, std::move(store), parentId);
+      auto* arrayPtr = Float32ArrayType::Create(dataStructure, name, std::move(store), parentId);
       REQUIRE(arrayPtr != nullptr);
       return arrayPtr;
     };
@@ -192,7 +192,7 @@ public:
     ++calls;
     const auto geometryPath = path.getParent();
     const auto* geometryPtr = dataStructure.getDataAs<TriangleGeom>(geometryPath);
-    const auto* verticesPtr = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath("Vertices"));
+    const auto* verticesPtr = dataStructure.getDataAs<Float32ArrayType>(geometryPath.createChildPath("Vertices"));
     const auto* facesPtr = dataStructure.getDataAs<DataArray<IGeometry::MeshIndexType>>(geometryPath.createChildPath("Faces"));
     REQUIRE(geometryPtr != nullptr);
     REQUIRE(verticesPtr != nullptr);
@@ -211,9 +211,9 @@ public:
 
 TEST_CASE("Selective import references: geometry aliases use their own child arrays", "[SelectiveImportReferences][GeometryAliases]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const bool bothPlacements = GENERATE(false, true);
   const bool reverse = GENERATE(false, true);
@@ -234,7 +234,7 @@ TEST_CASE("Selective import references: geometry aliases use their own child arr
   const auto writeFaces = faceStore->copyFromBuffer(0, expectedFaces);
   SIMPLNX_RESULT_REQUIRE_VALID(writeVertices);
   SIMPLNX_RESULT_REQUIRE_VALID(writeFaces);
-  auto* verticesPtr = Float32Array::Create(source, "Vertices", vertexStore, meshPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(source, "Vertices", vertexStore, meshPtr->getId());
   auto* facesPtr = DataArray<IGeometry::MeshIndexType>::Create(source, "Faces", faceStore, meshPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
@@ -245,7 +245,7 @@ TEST_CASE("Selective import references: geometry aliases use their own child arr
   auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto handout = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(handout);
-  const auto* cachedMeshPtr = handout.value().dataStructure.getDataAs<TriangleGeom>(DataPath({"First", "Mesh"}));
+  const auto* cachedMeshPtr = handout.value().data_structure.getDataAs<TriangleGeom>(DataPath({"First", "Mesh"}));
   REQUIRE(cachedMeshPtr != nullptr);
   const auto cachedVertexId = cachedMeshPtr->getVertexListId();
   const auto cachedFaceId = cachedMeshPtr->getFaceListId();
@@ -280,7 +280,7 @@ TEST_CASE("Selective import references: geometry aliases use their own child arr
     }
     const DataPath meshPath({parent, "Mesh"});
     const auto* importedPtr = destination.getDataAs<TriangleGeom>(meshPath);
-    const auto* importedVerticesPtr = destination.getDataAs<Float32Array>(meshPath.createChildPath("Vertices"));
+    const auto* importedVerticesPtr = destination.getDataAs<Float32ArrayType>(meshPath.createChildPath("Vertices"));
     const auto* importedFacesPtr = destination.getDataAs<DataArray<IGeometry::MeshIndexType>>(meshPath.createChildPath("Faces"));
     REQUIRE(importedPtr != nullptr);
     REQUIRE(importedVerticesPtr != nullptr);
@@ -327,17 +327,17 @@ TEST_CASE("Selective import references: geometry aliases use their own child arr
   }
   CHECK(cachedMeshPtr->getVertexListId() == cachedVertexId);
   CHECK(cachedMeshPtr->getFaceListId() == cachedFaceId);
-  CHECK(handout.value().dataStructure.getData(DataPath({"First", "Mesh"})) == handout.value().dataStructure.getData(DataPath({"Second", "Mesh"})));
+  CHECK(handout.value().data_structure.getData(DataPath({"First", "Mesh"})) == handout.value().data_structure.getData(DataPath({"Second", "Mesh"})));
   CHECK(meshPtr->getVertexListId() == verticesPtr->getId());
   CHECK(meshPtr->getFaceListId() == facesPtr->getId());
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("Selective import references: omitted local alias keeps a selected shared target", "[SelectiveImportReferences][GeometryAliases]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const bool selectRoot = GENERATE(false, true);
   DataStructure source;
@@ -368,12 +368,12 @@ TEST_CASE("Selective import references: omitted local alias keeps a selected sha
     CHECK(importedPtr->getCellDataId() == selectedCellsPtr->getId());
     CHECK(destination.getData(importedPtr->getCellDataId()) == selectedCellsPtr);
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("Selective import references: nested targets preserve explicit alias rules", "[SelectiveImportReferences][GeometryAliases]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   enum class Scenario
   {
     UniqueNested,
@@ -383,13 +383,13 @@ TEST_CASE("Selective import references: nested targets preserve explicit alias r
     DirectChild
   };
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const auto scenario = GENERATE(Scenario::UniqueNested, Scenario::AmbiguousNested, Scenario::WrongDirectName, Scenario::PrefixSibling, Scenario::DirectChild);
   const bool reverse = GENERATE(false, true);
   CAPTURE(static_cast<int>(mode), static_cast<int>(scenario), reverse);
   DataStructure source;
-  auto* sizesPtr = Float32Array::Create(source, "Sizes", std::make_unique<DataStore<float32>>(ShapeType{1}, ShapeType{1}, 7.0F));
+  auto* sizesPtr = Float32ArrayType::Create(source, "Sizes", std::make_unique<DataStore<float32>>(ShapeType{1}, ShapeType{1}, 7.0F));
   auto* geometryPtr = VertexGeom::Create(source, "Mesh");
   REQUIRE(sizesPtr != nullptr);
   REQUIRE(geometryPtr != nullptr);
@@ -438,7 +438,7 @@ TEST_CASE("Selective import references: nested targets preserve explicit alias r
   const auto result = ImportH5ObjectPathsAction(file.path, paths).apply(destination, mode);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const auto* importedPtr = destination.getDataAs<VertexGeom>(DataPath({"Mesh"}));
-  const auto* expectedPtr = destination.getDataAs<Float32Array>(expectedPath);
+  const auto* expectedPtr = destination.getDataAs<Float32ArrayType>(expectedPath);
   REQUIRE(importedPtr != nullptr);
   REQUIRE(expectedPtr != nullptr);
   CHECK(importedPtr->getElementSizesId() == expectedPtr->getId());
@@ -453,15 +453,15 @@ TEST_CASE("Selective import references: nested targets preserve explicit alias r
     REQUIRE(wrongPtr != nullptr);
     CHECK(importedPtr->getElementSizesId() != wrongPtr->getId());
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("Selective import references: many geometry aliases keep unique nested targets", "[SelectiveImportReferences][GeometryAliases]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_AliasCount = 128;
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DataStructure source;
   auto* firstParentPtr = DataGroup::Create(source, "Alias_0");
@@ -489,7 +489,7 @@ TEST_CASE("Selective import references: many geometry aliases keep unique nested
   {
     const DataPath geometryPath({"Alias_" + std::to_string(index), "Mesh"});
     const auto* importedPtr = destination.getDataAs<VertexGeom>(geometryPath);
-    const auto* targetPtr = destination.getDataAs<Float32Array>(geometryPath.createChildPath("Nested").createChildPath("Sizes"));
+    const auto* targetPtr = destination.getDataAs<Float32ArrayType>(geometryPath.createChildPath("Nested").createChildPath("Sizes"));
     REQUIRE(importedPtr != nullptr);
     REQUIRE(targetPtr != nullptr);
     CAPTURE(geometryPath.toString());
@@ -498,15 +498,15 @@ TEST_CASE("Selective import references: many geometry aliases keep unique nested
     CHECK(geometryIds.insert(importedPtr->getId()).second);
     CHECK(targetIds.insert(targetPtr->getId()).second);
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 TEST_CASE("Selective import references: geometry alias publication rolls back and retries", "[SelectiveImportReferences][GeometryAliases]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DataStructure source;
   auto* firstPtr = DataGroup::Create(source, "First");
@@ -557,7 +557,7 @@ TEST_CASE("Selective import references: geometry alias publication rolls back an
     CHECK(destination.getData(importedPtr->getCellDataId()) == importedCellsPtr);
   }
   CHECK(destination.getData(DataPath({"Existing"})) == markerPtr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 #endif
 
@@ -580,13 +580,13 @@ TEST_CASE("Selective import references: overlapping ElementSizes reset", "[Selec
   REQUIRE(sizesPtr != nullptr);
   REQUIRE(sizesPtr->getId() == 4);
   REQUIRE(geometryPtr->getElementSizesId() == sizesPtr->getId());
-  UnitTest::CheckArraysInheritTupleDims(source);
+  unit_test::CheckArraysInheritTupleDims(source);
 }
 
 TEST_CASE("Selective import references: excluded cell ID cannot alias an ensemble", "[SelectiveImportReferences]")
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DYNAMIC_SECTION("mode " << static_cast<int>(mode))
   {
@@ -634,14 +634,14 @@ TEST_CASE("Selective import references: excluded cell ID cannot alias an ensembl
     REQUIRE(importedPtr->getDimensions() == geometryPtr->getDimensions());
     auto validation = importedPtr->validate();
     SIMPLNX_RESULT_REQUIRE_VALID(validation);
-    UnitTest::CheckArraysInheritTupleDims(destination);
+    unit_test::CheckArraysInheritTupleDims(destination);
   }
 }
 
 TEST_CASE("Selective import references: field matrix and full selection", "[SelectiveImportReferences]")
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   const bool aliases = GENERATE(false, true);
   const auto type = GENERATE(IGeometry::Type::Image, IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Tetrahedral, IGeometry::Type::RectGrid);
@@ -727,7 +727,7 @@ TEST_CASE("Selective import references: field matrix and full selection", "[Sele
           }
         }
       }
-      UnitTest::CheckArraysInheritTupleDims(destination);
+      unit_test::CheckArraysInheritTupleDims(destination);
     }
   }
 }
@@ -735,7 +735,7 @@ TEST_CASE("Selective import references: field matrix and full selection", "[Sele
 TEST_CASE("Selective import references: loader ancestors are not selected targets", "[SelectiveImportReferences]")
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DYNAMIC_SECTION("mode " << static_cast<int>(mode))
   {
@@ -764,14 +764,14 @@ TEST_CASE("Selective import references: loader ancestors are not selected target
     REQUIRE(destination.getData(DataPath({"Cells"})) == existingCellsPtr);
     REQUIRE(destination.containsData(DataPath({"Cells", "SelectedChild"})));
     REQUIRE(destination.getAllDataPaths().size() == 3);
-    UnitTest::CheckArraysInheritTupleDims(destination);
+    unit_test::CheckArraysInheritTupleDims(destination);
   }
 }
 
 TEST_CASE("Selective import references: cached selections and shared targets stay isolated", "[SelectiveImportReferences]")
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DataStructure source;
   auto* firstPtr = ImageGeom::Create(source, "First");
@@ -811,17 +811,17 @@ TEST_CASE("Selective import references: cached selections and shared targets sta
   REQUIRE(importedSecondPtr->getCellDataId() == importedCellsPtr->getId());
   REQUIRE(full.getData(importedFirstPtr->getCellDataId()) == importedCellsPtr);
   REQUIRE(full.getData(importedSecondPtr->getCellDataId()) == importedCellsPtr);
-  const auto* unchangedPtr = cached.value().dataStructure.getDataAs<ImageGeom>(DataPath({"First"}));
+  const auto* unchangedPtr = cached.value().data_structure.getDataAs<ImageGeom>(DataPath({"First"}));
   REQUIRE(unchangedPtr != nullptr);
   REQUIRE(unchangedPtr->getCellDataId() == cellsPtr->getId());
-  UnitTest::CheckArraysInheritTupleDims(partial);
-  UnitTest::CheckArraysInheritTupleDims(full);
+  unit_test::CheckArraysInheritTupleDims(partial);
+  unit_test::CheckArraysInheritTupleDims(full);
 }
 
 TEST_CASE("Selective import references: retained malformed links preserve validation", "[SelectiveImportReferences]")
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DYNAMIC_SECTION("mode " << static_cast<int>(mode))
   {
@@ -847,7 +847,7 @@ TEST_CASE("Selective import references: retained malformed links preserve valida
       const auto validation = importedPtr->validate();
       REQUIRE(validation.invalid());
       REQUIRE(validation.errors().front().code == -4501);
-      UnitTest::CheckArraysInheritTupleDims(destination);
+      unit_test::CheckArraysInheritTupleDims(destination);
     }
     SECTION("Selected wrong-type target remains referenced")
     {
@@ -868,7 +868,7 @@ TEST_CASE("Selective import references: retained malformed links preserve valida
       REQUIRE(importedTargetPtr != nullptr);
       REQUIRE(importedPtr->getCellDataId() == importedTargetPtr->getId());
       REQUIRE(dynamic_cast<const AttributeMatrix*>(importedTargetPtr) == nullptr);
-      UnitTest::CheckArraysInheritTupleDims(destination);
+      unit_test::CheckArraysInheritTupleDims(destination);
     }
     SECTION("Omitted vertices do not suppress vertex-matrix validation")
     {
@@ -892,7 +892,7 @@ TEST_CASE("Selective import references: retained malformed links preserve valida
       const auto validation = importedPtr->validate();
       REQUIRE(validation.invalid());
       REQUIRE(validation.errors().front().code == -4500);
-      UnitTest::CheckArraysInheritTupleDims(destination);
+      unit_test::CheckArraysInheritTupleDims(destination);
     }
   }
 }
@@ -900,7 +900,7 @@ TEST_CASE("Selective import references: retained malformed links preserve valida
 TEST_CASE("Selective import references: selection errors and group shells stay compatible", "[SelectiveImportReferences]")
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DataStructure source;
   auto* groupPtr = DataGroup::Create(source, "Group");
@@ -944,7 +944,7 @@ TEST_CASE("Selective import references: selection errors and group shells stay c
       REQUIRE(destination.containsData(parentPath));
       REQUIRE_FALSE(destination.containsData(childPath));
     }
-    UnitTest::CheckArraysInheritTupleDims(destination);
+    unit_test::CheckArraysInheritTupleDims(destination);
   }
 }
 
@@ -980,14 +980,14 @@ public:
 };
 
 template <usize Count>
-Int32Array* CreateAliasArray(DataStructure& structure, const std::string& name, DataObject::IdType parent, const std::array<int32, Count>& values)
+Int32ArrayType* CreateAliasArray(DataStructure& structure, const std::string& name, DataObject::IdType parent, const std::array<int32, Count>& values)
 {
   auto store = std::make_shared<DataStore<int32>>(ShapeType{Count}, ShapeType{1}, int32{0});
   for(usize valueIdx = 0; valueIdx < Count; ++valueIdx)
   {
     store->setValue(valueIdx, values[valueIdx]);
   }
-  auto* arrayPtr = Int32Array::Create(structure, name, std::move(store), parent);
+  auto* arrayPtr = Int32ArrayType::Create(structure, name, std::move(store), parent);
   REQUIRE(arrayPtr != nullptr);
   return arrayPtr;
 }
@@ -1035,9 +1035,9 @@ void RequireAliasFileValues(const hdf5::FileIO& file, const DataPath& path, cons
 }
 
 template <usize Count>
-const Int32Array* RequireAliasOutput(const DataStructure& structure, const DataPath& path, IDataAction::Mode mode, const std::array<int32, Count>& values)
+const Int32ArrayType* RequireAliasOutput(const DataStructure& structure, const DataPath& path, IDataAction::Mode mode, const std::array<int32, Count>& values)
 {
-  const auto* arrayPtr = structure.getDataAs<Int32Array>(path);
+  const auto* arrayPtr = structure.getDataAs<Int32ArrayType>(path);
   REQUIRE(arrayPtr != nullptr);
   REQUIRE(structure.getData(arrayPtr->getId()) == arrayPtr);
   REQUIRE(arrayPtr->getTupleShape() == ShapeType{Count});
@@ -1137,10 +1137,10 @@ TEST_CASE("C8 distinct paths to a shared array retain independent destination co
   auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto metadata = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
-  REQUIRE(metadata.value().fileVersion == dream3d::k_CurrentFileVersion);
-  const auto& sourceHandout = metadata.value().dataStructure;
-  const auto* sourceFirstPtr = sourceHandout.getDataAs<Int32Array>(firstArrayPath);
-  const auto* sourceSecondPtr = sourceHandout.getDataAs<Int32Array>(secondArrayPath);
+  REQUIRE(metadata.value().file_version == dream3d::k_CurrentFileVersion);
+  const auto& sourceHandout = metadata.value().data_structure;
+  const auto* sourceFirstPtr = sourceHandout.getDataAs<Int32ArrayType>(firstArrayPath);
+  const auto* sourceSecondPtr = sourceHandout.getDataAs<Int32ArrayType>(secondArrayPath);
   REQUIRE(sourceFirstPtr != nullptr);
   REQUIRE(sourceFirstPtr == sourceSecondPtr);
   REQUIRE(sourceFirstPtr->getId() == sharedPtr->getId());
@@ -1150,7 +1150,7 @@ TEST_CASE("C8 distinct paths to a shared array retain independent destination co
   REQUIRE(sourceNext == 6);
   REQUIRE(sourceHandout.getAllDataObjectIds().size() == 5);
   REQUIRE(sourceHandout.getAllDataPaths().size() == 6);
-  const auto* sourceLaterPtr = sourceHandout.getDataAs<Int32Array>(laterArrayPath);
+  const auto* sourceLaterPtr = sourceHandout.getDataAs<Int32ArrayType>(laterArrayPath);
   REQUIRE(sourceLaterPtr != nullptr);
   REQUIRE(sourceLaterPtr->getId() == laterPtr->getId());
   REQUIRE(sourceHandout.getData(sourceLaterPtr->getId()) == sourceLaterPtr);
@@ -1214,7 +1214,7 @@ TEST_CASE("C8 distinct paths to a shared array retain independent destination co
     CHECK(warmArrayPtr != firstCopyPtr);
     CHECK(warmArrayPtr->getIDataStore() != firstCopyPtr->getIDataStore());
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("C8 shared group paths retain independent destination groups and children", "[C8][SelectedImportAliases][SelectiveImportReferences]")
@@ -1259,9 +1259,9 @@ TEST_CASE("C8 shared group paths retain independent destination groups and child
   auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto metadata = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
-  const auto& sourceHandout = metadata.value().dataStructure;
+  const auto& sourceHandout = metadata.value().data_structure;
   const auto* sourceGroupPtr = sourceHandout.getDataAs<DataGroup>(firstGroupPath);
-  const auto* sourceChildPtr = sourceHandout.getDataAs<Int32Array>(firstChildPath);
+  const auto* sourceChildPtr = sourceHandout.getDataAs<Int32ArrayType>(firstChildPath);
   REQUIRE(sourceGroupPtr != nullptr);
   REQUIRE(sourceChildPtr != nullptr);
   REQUIRE(sourceGroupPtr == sourceHandout.getData(secondGroupPath));
@@ -1341,7 +1341,7 @@ TEST_CASE("C8 shared group paths retain independent destination groups and child
     CHECK(warmChildPtr != firstChildPtr);
     CHECK(warmChildPtr->getIDataStore() != firstChildPtr->getIDataStore());
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 namespace
@@ -1415,7 +1415,7 @@ TEST_CASE("C8 alias identifier capacity includes every extra placement", "[C8][S
     CHECK(destination.getNextId() == k_MaximumId);
     RequireAliasPlans(*resolver, {{DataPath({"First", "Shared"}), 16}, {DataPath({"Second", "Shared"}), 16}});
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
@@ -1532,7 +1532,7 @@ TEST_CASE("C8 alias publication rollback removes both copies and restores identi
   destination.setFormatResolver(resolver);
   std::vector<DataObject::IdType> removals;
   nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
-    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    if(message->getMsgType() == DataRemovedMessage::k_MsgType)
     {
       removals.push_back(std::static_pointer_cast<DataRemovedMessage>(message)->getId());
     }
@@ -1589,6 +1589,6 @@ TEST_CASE("C8 alias publication rollback removes both copies and restores identi
   CHECK(destination.getData(DataPath({"AfterAliasRetry"})) == nextPtr);
   CHECK(destination.getData(markerPath) == markerPtr);
   CHECK(markerPtr->getIDataStore() == markerStorePtr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 #endif

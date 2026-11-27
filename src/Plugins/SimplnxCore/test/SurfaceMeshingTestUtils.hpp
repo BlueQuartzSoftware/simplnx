@@ -18,7 +18,7 @@
 #include <set>
 #include <utility>
 
-namespace SurfaceMeshingTest
+namespace surface_meshing_test
 {
 using namespace nx::core;
 
@@ -40,7 +40,7 @@ inline const DataPath k_FeatureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
  * are unaffected; pass an anisotropic value to exercise axis-specific spacing bugs.
  * @return A DataStructure containing ImageGeom/CellData/FeatureIds.
  */
-inline DataStructure CreateCylinderInBox(bool flushWithBottom, const FloatVec3& spacing = {1.0F, 1.0F, 1.0F})
+inline DataStructure CreateCylinderInBox(bool flushWithBottom, const FloatVec3Type& spacing = {1.0F, 1.0F, 1.0F})
 {
   DataStructure dataStructure;
 
@@ -52,7 +52,7 @@ inline DataStructure CreateCylinderInBox(bool flushWithBottom, const FloatVec3& 
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
   featureIdsPtr->fill(0);
 
   const usize minZ = flushWithBottom ? 0 : 2;
@@ -93,7 +93,7 @@ inline DataStructure CreateFullyIndexedPolycrystal()
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
 
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   const usize half = k_BoxDim / 2;
@@ -128,7 +128,7 @@ inline DataStructure CreateAllBackground()
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
   featureIdsPtr->fill(0);
 
   return dataStructure;
@@ -155,7 +155,7 @@ inline DataStructure CreateEnclosedPorosity()
 
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", {dims[2], dims[1], dims[0]}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {dims[2], dims[1], dims[0]}, {1}, cellAMPtr->getId());
   featureIdsPtr->fill(1);
 
   // A 4x4x4 pocket of background centered in the box, at least two voxels inset from every wall on
@@ -179,10 +179,10 @@ inline DataStructure CreateEnclosedPorosity()
 
 struct EdgeUseCounts
 {
-  usize TotalEdges = 0;
-  usize EdgesUsedOnce = 0;
-  usize EdgesUsedTwice = 0;
-  usize EdgesUsedMoreThanTwice = 0;
+  usize total_edges = 0;
+  usize edges_used_once = 0;
+  usize edges_used_twice = 0;
+  usize edges_used_more_than_twice = 0;
 };
 
 /**
@@ -208,20 +208,20 @@ inline EdgeUseCounts CountEdgeUses(const TriangleGeom& triangleGeom)
   }
 
   EdgeUseCounts counts;
-  counts.TotalEdges = edgeUses.size();
+  counts.total_edges = edgeUses.size();
   for(const auto& [edge, useCount] : edgeUses)
   {
     if(useCount == 1)
     {
-      counts.EdgesUsedOnce++;
+      counts.edges_used_once++;
     }
     else if(useCount == 2)
     {
-      counts.EdgesUsedTwice++;
+      counts.edges_used_twice++;
     }
     else
     {
-      counts.EdgesUsedMoreThanTwice++;
+      counts.edges_used_more_than_twice++;
     }
   }
   return counts;
@@ -233,7 +233,7 @@ inline EdgeUseCounts CountEdgeUses(const TriangleGeom& triangleGeom)
 inline bool IsWatertight(const TriangleGeom& triangleGeom)
 {
   const EdgeUseCounts counts = CountEdgeUses(triangleGeom);
-  return counts.TotalEdges > 0 && counts.EdgesUsedOnce == 0 && counts.EdgesUsedMoreThanTwice == 0;
+  return counts.total_edges > 0 && counts.edges_used_once == 0 && counts.edges_used_more_than_twice == 0;
 }
 
 /**
@@ -242,9 +242,9 @@ inline bool IsWatertight(const TriangleGeom& triangleGeom)
  */
 struct MeshResult
 {
-  DataStructure Structure;
-  DataPath TriangleGeomPath;
-  DataPath FaceLabelsPath;
+  DataStructure structure;
+  DataPath triangle_geom_path;
+  DataPath face_labels_path;
 };
 
 /**
@@ -313,29 +313,29 @@ inline Arguments BuildMesherArgs(const DataPath& triangleGeomPath, ChoicesParame
  */
 template <class FilterT, class ExtraArgsFn>
 inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs,
-                            UnitTest::AlgorithmTestScope* algorithmScope = nullptr)
+                            unit_test::AlgorithmTestScope* algorithmScope = nullptr)
 {
   MeshResult meshResult;
-  meshResult.Structure = std::move(dataStructure);
-  meshResult.TriangleGeomPath = triangleGeomPath;
-  meshResult.FaceLabelsPath = triangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
+  meshResult.structure = std::move(dataStructure);
+  meshResult.triangle_geom_path = triangleGeomPath;
+  meshResult.face_labels_path = triangleGeomPath.createChildPath("Face Data").createChildPath("FaceLabels");
 
   FilterT filter;
   Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, boundingBoxSkinMode, addExtraArgs);
 
-  auto preflightResult = filter.preflight(meshResult.Structure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto preflightResult = filter.preflight(meshResult.structure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   if(algorithmScope == nullptr)
   {
-    const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+    const auto scenario = GENERATE_COPY(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
     CAPTURE(scenario);
-    UnitTest::AlgorithmTestScope localScope(scenario);
-    auto executeResult = localScope.executeFilter(filter, meshResult.Structure, args);
+    unit_test::AlgorithmTestScope localScope(scenario);
+    auto executeResult = localScope.executeFilter(filter, meshResult.structure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
   else
   {
-    auto executeResult = algorithmScope->executeFilter(filter, meshResult.Structure, args);
+    auto executeResult = algorithmScope->executeFilter(filter, meshResult.structure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -359,18 +359,18 @@ inline MeshResult RunMesher(DataStructure&& dataStructure, const DataPath& trian
  */
 template <class FilterT, class ExtraArgsFn>
 inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& triangleGeomPath, ChoicesParameter::ValueType boundingBoxSkinMode, ExtraArgsFn addExtraArgs, bool repairWinding = false,
-                             UnitTest::AlgorithmTestScope* algorithmScope = nullptr)
+                             unit_test::AlgorithmTestScope* algorithmScope = nullptr)
 {
   FilterT filter;
   Arguments args = BuildMesherArgs<FilterT>(triangleGeomPath, boundingBoxSkinMode, addExtraArgs, repairWinding);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   if(algorithmScope == nullptr)
   {
-    const auto scenario = GENERATE_COPY(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+    const auto scenario = GENERATE_COPY(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
     CAPTURE(scenario);
-    UnitTest::AlgorithmTestScope localScope(scenario);
+    unit_test::AlgorithmTestScope localScope(scenario);
     return localScope.executeFilter(filter, dataStructure, args).result;
   }
   return algorithmScope->executeFilter(filter, dataStructure, args).result;
@@ -381,8 +381,8 @@ inline Result<> RunMesherRaw(DataStructure& dataStructure, const DataPath& trian
  */
 inline std::set<std::pair<int32, int32>> CollectLabelPairs(const MeshResult& meshResult)
 {
-  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<Int32Array>(meshResult.FaceLabelsPath));
-  const auto& faceLabelsRef = meshResult.Structure.getDataRefAs<Int32Array>(meshResult.FaceLabelsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<Int32ArrayType>(meshResult.face_labels_path));
+  const auto& faceLabelsRef = meshResult.structure.getDataRefAs<Int32ArrayType>(meshResult.face_labels_path).getDataStoreRef();
   std::set<std::pair<int32, int32>> labelPairs;
   for(usize i = 0; i < faceLabelsRef.getNumberOfTuples(); i++)
   {

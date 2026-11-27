@@ -31,10 +31,10 @@ constexpr StringLiteralType k_Array0Name = "array0";
 constexpr StringLiteralType k_Array1Name = "array1";
 constexpr StringLiteralType k_Array2Name = "array2";
 
-std::optional<UnitTest::AlgorithmTestScenario> SelectScanlineInMemoryScenario()
+std::optional<unit_test::AlgorithmTestScenario> SelectScanlineInMemoryScenario()
 {
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto iter = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto iter = std::find(scenarios.cbegin(), scenarios.cend(), unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   if(iter == scenarios.cend())
   {
     return std::nullopt;
@@ -132,7 +132,7 @@ void FillArray(DataArray<T>& data, const std::vector<T>& values)
 }
 
 template <typename T>
-void RunSparseTypeOracle(UnitTest::AlgorithmTestScope& scope)
+void RunSparseTypeOracle(unit_test::AlgorithmTestScope& scope)
 {
   const DataPath inputPath({"Input", "Values"});
   const DataPath featurePath({"Input", "FeatureIds"});
@@ -140,7 +140,7 @@ void RunSparseTypeOracle(UnitTest::AlgorithmTestScope& scope)
   auto* groupPtr = DataGroup::Create(dataStructure, "Input");
   REQUIRE(groupPtr != nullptr);
   auto* inputPtr = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, "Values", {8}, {1}, groupPtr->getId());
-  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {8}, {1}, groupPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {8}, {1}, groupPtr->getId());
   REQUIRE(inputPtr != nullptr);
   REQUIRE(featureIdsPtr != nullptr);
   const std::array<T, 8> values = {T{0}, T{1}, T{2}, T{3}, T{0}, T{1}, T{2}, T{3}};
@@ -164,11 +164,11 @@ void RunSparseTypeOracle(UnitTest::AlgorithmTestScope& scope)
     args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(groupPath));
     auto result = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    const auto& counts = dataStructure.getDataRefAs<UInt64Array>(groupPath.createChildPath("\"Values\" Histogram").createChildPath("Bin Counts"));
+    const auto& counts = dataStructure.getDataRefAs<UInt64ArrayType>(groupPath.createChildPath("\"Values\" Histogram").createChildPath("Bin Counts"));
     std::array<uint64, 20> actual = {};
     auto countsReadResult = counts.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint64>(actual.data(), actual.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(countsReadResult);
-    const auto& mostPopulated = dataStructure.getDataRefAs<UInt64Array>(groupPath.createChildPath("\"Values\" Histogram").createChildPath("Most Populated Bin"));
+    const auto& mostPopulated = dataStructure.getDataRefAs<UInt64ArrayType>(groupPath.createChildPath("\"Values\" Histogram").createChildPath("Most Populated Bin"));
     std::array<uint64, 10> mostPopulatedValues = {};
     auto mostPopulatedReadResult = mostPopulated.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint64>(mostPopulatedValues.data(), mostPopulatedValues.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(mostPopulatedReadResult);
@@ -193,7 +193,7 @@ void RunSparseTypeOracle(UnitTest::AlgorithmTestScope& scope)
   REQUIRE(execute(true, DataPath({"Custom"})) == customExpected);
 }
 
-std::vector<int32> ExecuteInt32ModalCase(UnitTest::AlgorithmTestScope& scope, const std::vector<int32>& values, const std::vector<int32>& featureIds, int32 bins, float64 minimum, float64 maximum,
+std::vector<int32> ExecuteInt32ModalCase(unit_test::AlgorithmTestScope& scope, const std::vector<int32>& values, const std::vector<int32>& featureIds, int32 bins, float64 minimum, float64 maximum,
                                          bool customRange, const DataPath& outputPath, std::vector<uint64>* countsResult = nullptr, std::vector<int32>* rangesResult = nullptr,
                                          std::vector<std::vector<int32>>* modalResults = nullptr)
 {
@@ -202,8 +202,8 @@ std::vector<int32> ExecuteInt32ModalCase(UnitTest::AlgorithmTestScope& scope, co
   DataStructure dataStructure;
   auto* inputGroupPtr = DataGroup::Create(dataStructure, "Input");
   REQUIRE(inputGroupPtr != nullptr);
-  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {values.size()}, {1}, inputGroupPtr->getId());
-  auto* idsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {featureIds.size()}, {1}, inputGroupPtr->getId());
+  auto* inputPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {values.size()}, {1}, inputGroupPtr->getId());
+  auto* idsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {featureIds.size()}, {1}, inputGroupPtr->getId());
   REQUIRE(inputPtr != nullptr);
   REQUIRE(idsPtr != nullptr);
   auto inputWriteResult = inputPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(values.data(), values.size()));
@@ -224,29 +224,29 @@ std::vector<int32> ExecuteInt32ModalCase(UnitTest::AlgorithmTestScope& scope, co
   args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featurePath));
   args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(outputPath));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto execute = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   const DataPath histogramPath = outputPath.createChildPath("\"Values\" Histogram");
   if(countsResult != nullptr)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(histogramPath.createChildPath("Bin Counts")));
-    const auto& counts = dataStructure.getDataRefAs<UInt64Array>(histogramPath.createChildPath("Bin Counts"));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64ArrayType>(histogramPath.createChildPath("Bin Counts")));
+    const auto& counts = dataStructure.getDataRefAs<UInt64ArrayType>(histogramPath.createChildPath("Bin Counts"));
     countsResult->resize(counts.getDataStoreRef().getSize());
     auto countsReadResult = counts.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint64>(countsResult->data(), countsResult->size()));
     SIMPLNX_RESULT_REQUIRE_VALID(countsReadResult);
   }
   if(rangesResult != nullptr)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(histogramPath.createChildPath("Bin Ranges")));
-    const auto& ranges = dataStructure.getDataRefAs<Int32Array>(histogramPath.createChildPath("Bin Ranges"));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(histogramPath.createChildPath("Bin Ranges")));
+    const auto& ranges = dataStructure.getDataRefAs<Int32ArrayType>(histogramPath.createChildPath("Bin Ranges"));
     rangesResult->resize(ranges.getDataStoreRef().getSize());
     auto rangesReadResult = ranges.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(rangesResult->data(), rangesResult->size()));
     SIMPLNX_RESULT_REQUIRE_VALID(rangesReadResult);
   }
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(histogramPath.createChildPath("Modal Bin Ranges")));
   const auto& modal = dataStructure.getDataRefAs<NeighborList<int32>>(histogramPath.createChildPath("Modal Bin Ranges"));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
   if(modal.getNumberOfTuples() == 0)
   {
     return {};
@@ -265,10 +265,10 @@ std::vector<int32> ExecuteInt32ModalCase(UnitTest::AlgorithmTestScope& scope, co
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculations", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, "TestData");
@@ -277,7 +277,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
   DataPath inputArrayPath({"TestData", inputArrayName});
   DataPath featureIdsArrayPath({"TestData", "FeatureIds"});
   DataPath maskArrayPath({"TestData", "Mask"});
-  Int32Array* testInputArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, inputArrayName, {12}, {1}, topLevelGroupPtr->getId());
+  Int32ArrayType* testInputArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, inputArrayName, {12}, {1}, topLevelGroupPtr->getId());
   auto& testInputDataStore = testInputArrayPtr->getDataStoreRef();
   testInputDataStore[0] = 1;
   testInputDataStore[1] = 20;
@@ -291,7 +291,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
   testInputDataStore[9] = 10;
   testInputDataStore[10] = 10;
   testInputDataStore[11] = 22;
-  BoolArray* maskArrayPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {12}, {1}, topLevelGroupPtr->getId());
+  BoolArrayType* maskArrayPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {12}, {1}, topLevelGroupPtr->getId());
   auto& maskDataStore = maskArrayPtr->getDataStoreRef();
   maskDataStore[0] = true;
   maskDataStore[1] = true;
@@ -305,7 +305,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
   maskDataStore[9] = true;
   maskDataStore[10] = true;
   maskDataStore[11] = true;
-  Int32Array* testFeatIdsArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {12}, {1}, topLevelGroupPtr->getId());
+  Int32ArrayType* testFeatIdsArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {12}, {1}, topLevelGroupPtr->getId());
   auto& testFeatIdsDataStore = testFeatIdsArrayPtr->getDataStoreRef();
   testFeatIdsDataStore[0] = 0;
   testFeatIdsDataStore[1] = 1;
@@ -347,7 +347,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
     args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_HistoModalBinRangesName_Key, std::make_any<std::string>(modalBinRanges));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -357,15 +357,15 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
     DataPath histogramPath = histogramsDataPath.createChildPath(fmt::format("\"{}\" Histogram", inputArrayName));
     auto* dataGroupPtr = dataStructure.getDataAs<DataGroup>(histogramPath);
     REQUIRE(dataGroupPtr != nullptr);
-    auto* histArrayPtr = dataStructure.getDataAs<UInt64Array>(histogramPath.createChildPath(histogram));
+    auto* histArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(histogramPath.createChildPath(histogram));
     REQUIRE(histArrayPtr != nullptr);
     REQUIRE(histArrayPtr->getNumberOfTuples() == 3);
     REQUIRE(histArrayPtr->getNumberOfComponents() == 5);
-    auto* rangesArrayPtr = dataStructure.getDataAs<Int32Array>(histogramPath.createChildPath(ranges));
+    auto* rangesArrayPtr = dataStructure.getDataAs<Int32ArrayType>(histogramPath.createChildPath(ranges));
     REQUIRE(rangesArrayPtr != nullptr);
     REQUIRE(rangesArrayPtr->getNumberOfTuples() == 3);
     REQUIRE(rangesArrayPtr->getNumberOfComponents() == 10);
-    auto* mostPopulatedBinArrayPtr = dataStructure.getDataAs<UInt64Array>(histogramPath.createChildPath(mostPopulatedBin));
+    auto* mostPopulatedBinArrayPtr = dataStructure.getDataAs<UInt64ArrayType>(histogramPath.createChildPath(mostPopulatedBin));
     REQUIRE(mostPopulatedBinArrayPtr != nullptr);
     REQUIRE(mostPopulatedBinArrayPtr->getNumberOfTuples() == 3);
     auto* modalBinRangesArrayPtr = dataStructure.getDataAs<NeighborList<int32>>(histogramPath.createChildPath(modalBinRanges));
@@ -453,13 +453,13 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
 
     ComputeArrayHistogramByFeatureFilter filter;
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const DataPath histogramPath = noModalHistogramsPath.createChildPath(fmt::format("\"{}\" Histogram", inputArrayName)).createChildPath(histogram);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(histogramPath));
-    const auto& histogramArray = dataStructure.getDataRefAs<UInt64Array>(histogramPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64ArrayType>(histogramPath));
+    const auto& histogramArray = dataStructure.getDataRefAs<UInt64ArrayType>(histogramPath);
     REQUIRE(histogramArray.getDataStoreRef()[0] == 1);
     REQUIRE(histogramArray.getDataStoreRef()[4] == 1);
     REQUIRE(histogramArray.getDataStoreRef()[9] == 2);
@@ -467,19 +467,19 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: All Histogram Calculatio
     REQUIRE(histogramArray.getDataStoreRef()[14] == 3);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Rejects invalid output shapes before execution", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* dataGroupPtr = DataGroup::Create(dataStructure, "Input");
   REQUIRE(dataGroupPtr != nullptr);
-  auto* inputPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, dataGroupPtr->getId());
-  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {3}, {1}, dataGroupPtr->getId());
-  auto* maskPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {3}, {1}, dataGroupPtr->getId());
+  auto* inputPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {4}, {1}, dataGroupPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {3}, {1}, dataGroupPtr->getId());
+  auto* maskPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Mask", {3}, {1}, dataGroupPtr->getId());
   REQUIRE(inputPtr != nullptr);
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(maskPtr != nullptr);
@@ -494,33 +494,33 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Rejects invalid output s
   {
     args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NumberOfBins_Key, std::make_any<int32>(0));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
   }
 
   SECTION("FeatureIds and selected input must have compatible tuple counts")
   {
     const auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
   }
 
   SECTION("Mask and selected input must have compatible tuple counts")
   {
     args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "Mask"})));
-    auto* matchingFeatureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "MatchingFeatureIds", {4}, {1}, dataGroupPtr->getId());
+    auto* matchingFeatureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "MatchingFeatureIds", {4}, {1}, dataGroupPtr->getId());
     REQUIRE(matchingFeatureIdsPtr != nullptr);
     args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "MatchingFeatureIds"})));
     const auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Numeric-type sparse full and custom range parity", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   RunSparseTypeOracle<int8>(scope);
   RunSparseTypeOracle<uint8>(scope);
   RunSparseTypeOracle<int16>(scope);
@@ -535,7 +535,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Numeric-type sparse full
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline bounded modal fallback preserves exact raw-value modes", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto scanlineScenario = SelectScanlineInMemoryScenario();
   if(!scanlineScenario.has_value())
   {
@@ -544,7 +544,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline bounded modal f
   }
   // Deliberately explicit: the normal in-core cache may be InCoreOnly, while this test must
   // exercise the no-external-sort bounded fallback on an in-memory store.
-  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  unit_test::AlgorithmTestScope scope(*scanlineScenario);
   const std::vector<int32> oneFeature(4, 0);
   // Modes 1 and 2 occupy the two width-2 bins [0, 2] and [2, 4].
   CHECK(ExecuteInt32ModalCase(scope, {2, 1, 2, 1}, oneFeature, 2, 0.0, 4.0, true, DataPath({"TiedAscending"})) == std::vector<int32>{0, 2, 2, 4});
@@ -564,17 +564,17 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline bounded modal f
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: zero and negative FeatureIds are safe", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   CHECK(ExecuteInt32ModalCase(scope, {}, {}, 2, 0.0, 4.0, true, DataPath({"ZeroTuples"})).empty());
   CHECK(ExecuteInt32ModalCase(scope, {1, 2, 3}, {-1, -2, -3}, 2, 0.0, 4.0, true, DataPath({"AllNegative"})).empty());
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline rejects full-range integral maximum", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto scanlineScenario = SelectScanlineInMemoryScenario();
   if(!scanlineScenario.has_value())
   {
@@ -584,8 +584,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline rejects full-ra
   DataStructure dataStructure;
   auto* groupPtr = DataGroup::Create(dataStructure, "Input");
   REQUIRE(groupPtr != nullptr);
-  auto* valuesPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Values", {1}, {1}, groupPtr->getId());
-  auto* idsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {1}, {1}, groupPtr->getId());
+  auto* valuesPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Values", {1}, {1}, groupPtr->getId());
+  auto* idsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {1}, {1}, groupPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(idsPtr != nullptr);
   valuesPtr->getDataStoreRef()[0] = std::numeric_limits<uint8>::max();
@@ -597,8 +597,8 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline rejects full-ra
   args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
   args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histogram"})));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  unit_test::AlgorithmTestScope scope(*scanlineScenario);
   const auto result = scope.executeFilter(filter, dataStructure, args);
   REQUIRE(result.result.invalid());
   REQUIRE(result.result.errors().front().code == -23808);
@@ -611,11 +611,11 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: entry cancellation prese
   auto* outputGroupPtr = DataGroup::Create(dataStructure, "Output");
   REQUIRE(inputGroupPtr != nullptr);
   REQUIRE(outputGroupPtr != nullptr);
-  auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {1}, {1}, inputGroupPtr->getId());
-  auto* idsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {1}, {1}, inputGroupPtr->getId());
-  auto* rangesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
-  auto* countsPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Counts", {1}, {2}, outputGroupPtr->getId());
-  auto* mostPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
+  auto* valuesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Values", {1}, {1}, inputGroupPtr->getId());
+  auto* idsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {1}, {1}, inputGroupPtr->getId());
+  auto* rangesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
+  auto* countsPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Counts", {1}, {2}, outputGroupPtr->getId());
+  auto* mostPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(idsPtr != nullptr);
   REQUIRE(rangesPtr != nullptr);
@@ -626,12 +626,12 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: entry cancellation prese
   mostPtr->fill(13);
   std::atomic_bool shouldCancel = true;
   ComputeArrayHistogramByFeatureInputValues inputValues;
-  inputValues.NumberOfBins = 2;
-  inputValues.SelectedArrayPaths = {DataPath({"Input", "Values"})};
-  inputValues.FeatureIdsArrayPath = DataPath({"Input", "FeatureIds"});
-  inputValues.CreatedBinRangeDataPaths = {DataPath({"Output", "Ranges"})};
-  inputValues.CreatedHistogramCountsDataPaths = {DataPath({"Output", "Counts"})};
-  inputValues.CreatedBinMostPopulatedDataPaths = {DataPath({"Output", "Most"})};
+  inputValues.number_of_bins = 2;
+  inputValues.selected_array_paths = {DataPath({"Input", "Values"})};
+  inputValues.feature_ids_array_path = DataPath({"Input", "FeatureIds"});
+  inputValues.created_bin_range_data_paths = {DataPath({"Output", "Ranges"})};
+  inputValues.created_histogram_counts_data_paths = {DataPath({"Output", "Counts"})};
+  inputValues.created_bin_most_populated_data_paths = {DataPath({"Output", "Most"})};
   const auto executeResult = ComputeArrayHistogramByFeature(dataStructure, {}, shouldCancel, &inputValues)();
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
   std::array<int32, 4> rangeValues = {};
@@ -650,7 +650,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: entry cancellation prese
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline propagates bulk store failures", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto scanlineScenario = SelectScanlineInMemoryScenario();
   if(!scanlineScenario.has_value())
   {
@@ -669,11 +669,11 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline propagates bulk
     REQUIRE(outputGroupPtr != nullptr);
     auto inputStore = std::make_shared<FailingReadDataStore<int32>>(ShapeType{4}, ShapeType{1}, std::optional<int32>{1}, k_ReadError);
     auto featureStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, std::optional<int32>{0});
-    auto* valuesPtr = Int32Array::Create(dataStructure, "Values", inputStore, inputGroupPtr->getId());
-    auto* idsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureStore, inputGroupPtr->getId());
-    auto* rangesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
-    auto* countsPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Counts", {1}, {2}, outputGroupPtr->getId());
-    auto* mostPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
+    auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", inputStore, inputGroupPtr->getId());
+    auto* idsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", featureStore, inputGroupPtr->getId());
+    auto* rangesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
+    auto* countsPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Counts", {1}, {2}, outputGroupPtr->getId());
+    auto* mostPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
     REQUIRE(valuesPtr != nullptr);
     REQUIRE(idsPtr != nullptr);
     REQUIRE(rangesPtr != nullptr);
@@ -681,17 +681,17 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline propagates bulk
     REQUIRE(mostPtr != nullptr);
 
     ComputeArrayHistogramByFeatureInputValues inputValues;
-    inputValues.UserDefinedRange = true;
-    inputValues.NumberOfBins = 2;
-    inputValues.MinRange = 0.0;
-    inputValues.MaxRange = 2.0;
-    inputValues.SelectedArrayPaths = {DataPath({"Input", "Values"})};
-    inputValues.FeatureIdsArrayPath = DataPath({"Input", "FeatureIds"});
-    inputValues.CreatedBinRangeDataPaths = {DataPath({"Output", "Ranges"})};
-    inputValues.CreatedHistogramCountsDataPaths = {DataPath({"Output", "Counts"})};
-    inputValues.CreatedBinMostPopulatedDataPaths = {DataPath({"Output", "Most"})};
+    inputValues.user_defined_range = true;
+    inputValues.number_of_bins = 2;
+    inputValues.min_range = 0.0;
+    inputValues.max_range = 2.0;
+    inputValues.selected_array_paths = {DataPath({"Input", "Values"})};
+    inputValues.feature_ids_array_path = DataPath({"Input", "FeatureIds"});
+    inputValues.created_bin_range_data_paths = {DataPath({"Output", "Ranges"})};
+    inputValues.created_histogram_counts_data_paths = {DataPath({"Output", "Counts"})};
+    inputValues.created_bin_most_populated_data_paths = {DataPath({"Output", "Most"})};
     const std::atomic_bool shouldCancel = false;
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     const auto executeResult = scope.execute([&] { return ComputeArrayHistogramByFeature(dataStructure, {}, shouldCancel, &inputValues)(); });
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().front().code == k_ReadError);
@@ -707,11 +707,11 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline propagates bulk
     auto inputStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, std::optional<int32>{1});
     auto featureStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, std::optional<int32>{0});
     auto countStore = std::make_shared<FailingWriteDataStore<uint64>>(ShapeType{1}, ShapeType{2}, std::optional<uint64>{0}, k_WriteError);
-    auto* valuesPtr = Int32Array::Create(dataStructure, "Values", inputStore, inputGroupPtr->getId());
-    auto* idsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureStore, inputGroupPtr->getId());
-    auto* rangesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
-    auto* countsPtr = UInt64Array::Create(dataStructure, "Counts", countStore, outputGroupPtr->getId());
-    auto* mostPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
+    auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", inputStore, inputGroupPtr->getId());
+    auto* idsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", featureStore, inputGroupPtr->getId());
+    auto* rangesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
+    auto* countsPtr = UInt64ArrayType::Create(dataStructure, "Counts", countStore, outputGroupPtr->getId());
+    auto* mostPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
     REQUIRE(valuesPtr != nullptr);
     REQUIRE(idsPtr != nullptr);
     REQUIRE(rangesPtr != nullptr);
@@ -719,17 +719,17 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline propagates bulk
     REQUIRE(mostPtr != nullptr);
 
     ComputeArrayHistogramByFeatureInputValues inputValues;
-    inputValues.UserDefinedRange = true;
-    inputValues.NumberOfBins = 2;
-    inputValues.MinRange = 0.0;
-    inputValues.MaxRange = 2.0;
-    inputValues.SelectedArrayPaths = {DataPath({"Input", "Values"})};
-    inputValues.FeatureIdsArrayPath = DataPath({"Input", "FeatureIds"});
-    inputValues.CreatedBinRangeDataPaths = {DataPath({"Output", "Ranges"})};
-    inputValues.CreatedHistogramCountsDataPaths = {DataPath({"Output", "Counts"})};
-    inputValues.CreatedBinMostPopulatedDataPaths = {DataPath({"Output", "Most"})};
+    inputValues.user_defined_range = true;
+    inputValues.number_of_bins = 2;
+    inputValues.min_range = 0.0;
+    inputValues.max_range = 2.0;
+    inputValues.selected_array_paths = {DataPath({"Input", "Values"})};
+    inputValues.feature_ids_array_path = DataPath({"Input", "FeatureIds"});
+    inputValues.created_bin_range_data_paths = {DataPath({"Output", "Ranges"})};
+    inputValues.created_histogram_counts_data_paths = {DataPath({"Output", "Counts"})};
+    inputValues.created_bin_most_populated_data_paths = {DataPath({"Output", "Most"})};
     const std::atomic_bool shouldCancel = false;
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     const auto executeResult = scope.execute([&] { return ComputeArrayHistogramByFeature(dataStructure, {}, shouldCancel, &inputValues)(); });
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().front().code == k_WriteError);
@@ -738,7 +738,7 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Scanline propagates bulk
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: mid-scan cancellation preserves unwritten outputs", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto scanlineScenario = SelectScanlineInMemoryScenario();
   if(!scanlineScenario.has_value())
   {
@@ -754,11 +754,11 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: mid-scan cancellation pr
   REQUIRE(outputGroupPtr != nullptr);
   auto inputStore = std::make_shared<CancelAfterReadDataStore<int32>>(ShapeType{k_TupleCount}, ShapeType{1}, std::optional<int32>{1}, shouldCancel);
   auto featureStore = std::make_shared<DataStore<int32>>(ShapeType{k_TupleCount}, ShapeType{1}, std::optional<int32>{0});
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Values", inputStore, inputGroupPtr->getId());
-  auto* idsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureStore, inputGroupPtr->getId());
-  auto* rangesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
-  auto* countsPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Counts", {1}, {2}, outputGroupPtr->getId());
-  auto* mostPtr = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", inputStore, inputGroupPtr->getId());
+  auto* idsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", featureStore, inputGroupPtr->getId());
+  auto* rangesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Ranges", {1}, {4}, outputGroupPtr->getId());
+  auto* countsPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Counts", {1}, {2}, outputGroupPtr->getId());
+  auto* mostPtr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "Most", {1}, {2}, outputGroupPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(idsPtr != nullptr);
   REQUIRE(rangesPtr != nullptr);
@@ -769,16 +769,16 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: mid-scan cancellation pr
   mostPtr->fill(23);
 
   ComputeArrayHistogramByFeatureInputValues inputValues;
-  inputValues.UserDefinedRange = true;
-  inputValues.NumberOfBins = 2;
-  inputValues.MinRange = 0.0;
-  inputValues.MaxRange = 2.0;
-  inputValues.SelectedArrayPaths = {DataPath({"Input", "Values"})};
-  inputValues.FeatureIdsArrayPath = DataPath({"Input", "FeatureIds"});
-  inputValues.CreatedBinRangeDataPaths = {DataPath({"Output", "Ranges"})};
-  inputValues.CreatedHistogramCountsDataPaths = {DataPath({"Output", "Counts"})};
-  inputValues.CreatedBinMostPopulatedDataPaths = {DataPath({"Output", "Most"})};
-  UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+  inputValues.user_defined_range = true;
+  inputValues.number_of_bins = 2;
+  inputValues.min_range = 0.0;
+  inputValues.max_range = 2.0;
+  inputValues.selected_array_paths = {DataPath({"Input", "Values"})};
+  inputValues.feature_ids_array_path = DataPath({"Input", "FeatureIds"});
+  inputValues.created_bin_range_data_paths = {DataPath({"Output", "Ranges"})};
+  inputValues.created_histogram_counts_data_paths = {DataPath({"Output", "Counts"})};
+  inputValues.created_bin_most_populated_data_paths = {DataPath({"Output", "Most"})};
+  unit_test::AlgorithmTestScope scope(*scanlineScenario);
   const auto executeResult = scope.execute([&] { return ComputeArrayHistogramByFeature(dataStructure, {}, shouldCancel, &inputValues)(); });
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
   REQUIRE(shouldCancel.load());
@@ -798,16 +798,16 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: mid-scan cancellation pr
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range modal oracle", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_FeatureCount = 1024;
   const std::vector<int32> values(k_FeatureCount, 7);
   std::vector<int32> featureIds(k_FeatureCount);
   std::iota(featureIds.begin(), featureIds.end(), 0);
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
   for(const auto scenario : scenarios)
   {
     CAPTURE(scenario);
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     std::vector<uint64> counts;
     std::vector<int32> ranges;
     std::vector<std::vector<int32>> modalLists;
@@ -829,15 +829,15 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate custom range 
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate data range modal oracle", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   auto* groupPtr = DataGroup::Create(dataStructure, "Input");
   REQUIRE(groupPtr != nullptr);
-  auto* valuesPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Values", {4}, {1}, groupPtr->getId());
-  auto* idsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {4}, {1}, groupPtr->getId());
+  auto* valuesPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Values", {4}, {1}, groupPtr->getId());
+  auto* idsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "FeatureIds", {4}, {1}, groupPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(idsPtr != nullptr);
   // At 2^25 and 2^26, float32 addition of 1 rounds back to the same value.
@@ -857,14 +857,14 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate data range mo
   args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Input", "FeatureIds"})));
   args.insertOrAssign(ComputeArrayHistogramByFeatureFilter::k_NewDataGroupPath_Key, std::make_any<DataPath>(DataPath({"Histograms"})));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const DataPath output({"Histograms", "\"Values\" Histogram"});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<float32>>(output.createChildPath("Modal Bin Ranges")));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(output.createChildPath("Bin Ranges")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(output.createChildPath("Bin Ranges")));
   const auto& modal = dataStructure.getDataRefAs<NeighborList<float32>>(output.createChildPath("Modal Bin Ranges"));
-  const auto& ranges = dataStructure.getDataRefAs<Float32Array>(output.createChildPath("Bin Ranges"));
+  const auto& ranges = dataStructure.getDataRefAs<Float32ArrayType>(output.createChildPath("Bin Ranges"));
   REQUIRE(modal.getNumberOfTuples() == 2);
   for(usize feature = 0; feature < 2; ++feature)
   {
@@ -874,14 +874,14 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: degenerate data range mo
       CHECK(ranges[feature * 4 + component] == expected[feature]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired bounds in later bins", "[SimplnxCore][ComputeArrayHistogram]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const std::vector<int32> featureIds(4, 0);
   // Width-2 bins over [0, 8) put mode 5 in [4, 6] and mode 7 in [6, 8].
   CHECK(ExecuteInt32ModalCase(scope, {0, 5, 5, 7}, featureIds, 4, 0.0, 8.0, true, DataPath({"LaterBin"})) == std::vector<int32>{4, 6});
@@ -892,9 +892,9 @@ TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired 
 
 TEST_CASE("SimplnxCore::ComputeArrayHistogramByFeature: Modal ranges use paired bin offsets", "[SimplnxCore][ComputeArrayHistogramByFeature]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   std::vector<uint64> counts;
   std::vector<int32> ranges;
   std::vector<std::vector<int32>> modal;

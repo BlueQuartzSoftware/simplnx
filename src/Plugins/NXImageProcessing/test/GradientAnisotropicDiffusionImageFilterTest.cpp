@@ -38,7 +38,7 @@ void RunGradientAniso(IFilter& filter, DataStructure& dataStructure, const DataP
   args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(conductanceScalingUpdateInterval));
   args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -71,8 +71,8 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight guards", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("integer input rejected")
   {
@@ -93,14 +93,14 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
     args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
     args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 0.0f));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<float32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -114,8 +114,8 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
     args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
     args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar float input creates a SameAsInput output")
   {
@@ -143,9 +143,9 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: preflight
     args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
     args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE_FALSE(result.outputActions.warnings().empty());
-    REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE_FALSE(result.output_actions.warnings().empty());
+    REQUIRE(result.output_actions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
   }
 }
 
@@ -180,8 +180,8 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: ITK real-
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: constant image is identity", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;
@@ -203,8 +203,8 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: constant 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: over-large TimeStep warns (3D, ImageDimension=3)", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -221,10 +221,10 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: over-larg
   args.insertOrAssign(GradientAnisoFilterType::k_ConductanceScalingUpdateInterval_Key, std::make_any<uint32>(1u));
   args.insertOrAssign(GradientAnisoFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
   const auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE_FALSE(result.outputActions.warnings().empty());
-  REQUIRE(result.outputActions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
-  REQUIRE(result.outputActions.warnings().front().message.find("ImageDimension=3") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE_FALSE(result.output_actions.warnings().empty());
+  REQUIRE(result.output_actions.warnings().front().code == nx::core::ImageProcessing::k_AnisotropicDiffusionUnstableTimeStep);
+  REQUIRE(result.output_actions.warnings().front().message.find("ImageDimension=3") != std::string::npos);
 }
 
 // -----------------------------------------------------------------------------
@@ -234,8 +234,8 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: over-larg
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero conductance update interval runs cleanly", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;
@@ -255,8 +255,8 @@ TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero cond
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientAnisotropicDiffusionImageFilter: zero iterations is a no-op", "[NXImageProcessing][GradientAnisotropicDiffusionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;

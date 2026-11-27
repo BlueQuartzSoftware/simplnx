@@ -8,7 +8,7 @@
 
 #include <H5Apublic.h>
 
-std::optional<nx::core::DataType> nx::core::hdf5::toCommonType(Type typeEnum)
+std::optional<nx::core::DataType> nx::core::hdf5::ToCommonType(Type typeEnum)
 {
   switch(typeEnum)
   {
@@ -41,7 +41,7 @@ std::optional<nx::core::DataType> nx::core::hdf5::toCommonType(Type typeEnum)
   }
 }
 
-nx::core::hdf5::Type nx::core::hdf5::getTypeFromId(IdType typeId)
+nx::core::hdf5::Type nx::core::hdf5::GetTypeFromId(IdType typeId)
 {
   if(typeId < 0)
   {
@@ -92,7 +92,7 @@ nx::core::hdf5::Type nx::core::hdf5::getTypeFromId(IdType typeId)
   return Type::unknown;
 }
 
-nx::core::hdf5::IdType nx::core::hdf5::getIdForType(Type type)
+nx::core::hdf5::IdType nx::core::hdf5::GetIdForType(Type type)
 {
   switch(type)
   {

@@ -17,10 +17,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ConvertDataInputValues
 {
-  DataType ScalarType;
-  DataPath SelectedArrayPath;
-  DataPath OutputArrayName;
-  bool RescaleValues = false;
+  DataType scalar_type;
+  DataPath selected_array_path;
+  DataPath output_array_name;
+  bool rescale_values = false;
 };
 
 /**

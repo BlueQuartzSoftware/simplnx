@@ -26,7 +26,7 @@ DataAddedMessage::~DataAddedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataAddedMessage::getMsgType() const
 {
-  return DataAddedMessage::MsgType;
+  return DataAddedMessage::k_MsgType;
 }
 
 DataObject::IdType DataAddedMessage::getId() const

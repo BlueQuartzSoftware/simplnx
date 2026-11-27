@@ -32,9 +32,9 @@ const std::atomic_bool& ComputeFeatureRect::getCancel()
 
 Result<> ComputeFeatureRect::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
-  auto& corners = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
+  auto& corners = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->feature_rect_array_path);
   auto& cornersStore = corners.getDataStoreRef();
 
   const usize numFeatures = cornersStore.getNumberOfTuples();
@@ -97,7 +97,7 @@ Result<> ComputeFeatureRect::operator()()
           return writeResult;
         }
 
-        const DataPath parentPath = m_InputValues->FeatureRectArrayPath.getParent();
+        const DataPath parentPath = m_InputValues->feature_rect_array_path.getParent();
         return MakeErrorResult(-31000, fmt::format("The parent data object '{}' of output array '{}' has a smaller tuple count than the maximum feature id in '{}'", parentPath.getTargetName(),
                                                    corners.getName(), featureIds.getName()));
       }

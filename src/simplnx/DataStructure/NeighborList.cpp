@@ -120,7 +120,7 @@ NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
   }
   // Tuple count supplies the existing lower-bound estimate without reading any list values.
   const auto bytes = CalculateStoreCopyBytes(rhs.getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
+  const auto format = array_creation_utilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
   m_Store = rhs.m_Store->deepCopy(format);
   m_IsAllocated = rhs.m_IsAllocated;
   m_InitValue = rhs.m_InitValue;
@@ -154,7 +154,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   }
   // This lower-bound estimate avoids reading lists merely to select destination storage.
   const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(dataStruct, copyPath, GetDataType<T>(), bytes, "");
+  const auto format = array_creation_utilities::ResolveStorageFormat(dataStruct, copyPath, GetDataType<T>(), bytes, "");
   auto copiedStore = m_Store->deepCopy(format);
   // Insertion assigns the identifier for the copy.
   auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), std::shared_ptr<StoreType>(std::move(copiedStore))));
@@ -211,7 +211,7 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
   }
   // Parent order selects the first available path. The estimate does not read list values.
   const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
+  const auto format = array_creation_utilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
   auto copy = m_Store->deepCopy(format);
   Result<> resizeResult = copy->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(arraySize - indicesSize)});
   if(resizeResult.invalid())
@@ -613,7 +613,7 @@ std::string NeighborList<T>::toString(usize tupleIndex, usize compIndex, const s
 template <class T>
 bool NeighborList<T>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
 {
-  Result<T> result = nx::core::StringInterpretationUtilities::Convert<T>(value);
+  Result<T> result = nx::core::string_interpretation_utilities::Convert<T>(value);
   if(result.invalid())
   {
     return false;

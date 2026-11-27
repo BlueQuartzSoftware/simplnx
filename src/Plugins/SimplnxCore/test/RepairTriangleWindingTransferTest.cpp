@@ -240,7 +240,7 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
 
   std::atomic_bool shouldCancel = windingCase.pre_cancelled;
   usize cancellationWitnesses = 0;
-  const IFilter::MessageHandler handler{IFilter::MessageHandler::Callback{[&](const IFilter::Message& message) {
+  const IFilter::MessageHandler handler{IFilter::MessageHandler::CallbackType{[&](const IFilter::Message& message) {
     // reset() opens the first progress gate; this synchronous callback stops traversal before feature 2.
     if(windingCase.cancel_after_feature && message.type == IFilter::Message::Type::Progress && message.progress == 50 && message.message.starts_with("Repairing Feature Windings"))
     {
@@ -251,7 +251,7 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
 
   trace.failure = windingCase.failure;
   trace.armed = true;
-  const auto result = MeshingUtilities::RepairTriangleWinding(triangles, *neighborsPtr, ids, shouldCancel, handler);
+  const auto result = meshing_utilities::RepairTriangleWinding(triangles, *neighborsPtr, ids, shouldCancel, handler);
   trace.armed = false;
 
   REQUIRE(result.warnings().empty());

@@ -56,17 +56,17 @@ Parameters ComputeFeatureReferenceCAxisMisorientationsFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgCAxesArrayPath_Key, "Average C-Axes", "The direction of the Feature's C-axis in the sample reference frame", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureReferenceCAxisMisorientationsArrayName_Key, "Feature Reference C-Axis Misorientations",
                                                           "Misorientation angle (in degrees) between Cell's C-axis and the C-axis of the Feature that owns that Cell",
@@ -113,22 +113,22 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue});
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-9800, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, imageGeometryPath, {pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -9805); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
-  ShapeType tupleShape = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape();
+  ShapeType tupleShape = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue).getTupleShape();
   {
     auto createArrayAction =
         std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pFeatureIdsArrayPathValue.replaceName(pFeatureReferenceCAxisMisorientationsArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
-  tupleShape = dataStructure.getDataRefAs<Float32Array>(pAvgCAxesArrayPathValue).getTupleShape();
+  tupleShape = dataStructure.getDataRefAs<Float32ArrayType>(pAvgCAxesArrayPathValue).getTupleShape();
   {
     auto createArrayAction =
         std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pAvgCAxesArrayPathValue.replaceName(pFeatureAvgCAxisMisorientationsArrayNameValue));
@@ -143,7 +143,7 @@ IFilter::PreflightResult ComputeFeatureReferenceCAxisMisorientationsFilter::pref
   resultOutputActions.warnings().push_back(
       {-9801, "Finding the feature reference c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these two types."});
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -152,17 +152,17 @@ Result<> ComputeFeatureReferenceCAxisMisorientationsFilter::executeImpl(DataStru
 {
   ComputeFeatureReferenceCAxisMisorientationsInputValues inputValues;
 
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  inputValues.AvgCAxesArrayPath = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.quats_array_path = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
+  inputValues.avg_c_axes_array_path = filterArgs.value<DataPath>(k_AvgCAxesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   // Output Cell data
-  inputValues.FeatureReferenceCAxisMisorientationsArrayPath = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
+  inputValues.feature_reference_c_axis_misorientations_array_path = inputValues.feature_ids_array_path.replaceName(filterArgs.value<std::string>(k_FeatureReferenceCAxisMisorientationsArrayName_Key));
   // Output Feature data
-  inputValues.FeatureAvgCAxisMisorientationsArrayPath = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureAvgCAxisMisorientationsArrayName_Key));
-  inputValues.FeatureStdevCAxisMisorientationsArrayPath = inputValues.AvgCAxesArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureStdevCAxisMisorientationsArrayName_Key));
+  inputValues.feature_avg_c_axis_misorientations_array_path = inputValues.avg_c_axes_array_path.replaceName(filterArgs.value<std::string>(k_FeatureAvgCAxisMisorientationsArrayName_Key));
+  inputValues.feature_stdev_c_axis_misorientations_array_path = inputValues.avg_c_axes_array_path.replaceName(filterArgs.value<std::string>(k_FeatureStdevCAxisMisorientationsArrayName_Key));
 
   return ComputeFeatureReferenceCAxisMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

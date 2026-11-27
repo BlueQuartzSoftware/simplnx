@@ -41,9 +41,9 @@ inline constexpr usize k_ChamferRowGroupRows = 8;
 
 struct Chamfer2DBufferPlan
 {
-  usize coreRows = 0;
-  usize coreCols = 0;
-  usize residentBytes = 0;
+  usize core_rows = 0;
+  usize core_cols = 0;
+  usize resident_bytes = 0;
   bool valid = false;
   bool overflow = false;
 };
@@ -71,20 +71,20 @@ inline bool ChamferCheckedMultiply(usize left, usize right, usize& result)
 struct FastChamferResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseFastChamferResidentState(const SizeVec3& dims)
+inline bool ShouldUseFastChamferResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
-inline Result<usize> CalculateFastChamferResidentWorkingMemoryBytes(const SizeVec3& dims)
+inline Result<usize> CalculateFastChamferResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -97,12 +97,12 @@ inline Result<usize> CalculateFastChamferResidentWorkingMemoryBytes(const SizeVe
   usize requiredBytes = 0;
   if(!ChamferCheckedMultiply(dims[0], dims[1], sliceValues) || !ChamferCheckedMultiply(sliceValues, dims[2], volumeValues) || !ChamferCheckedMultiply(volumeValues, sizeof(float32), requiredBytes))
   {
-    return MakeErrorResult<usize>(-8676, fmt::format("Fast chamfer distance dimensions ({}) overflow while sizing the resident float32 image.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8676, fmt::format("Fast chamfer distance dimensions ({}) overflow while sizing the resident float32 image.", string_utilities::FormatDimensions3D(dims)));
   }
   return {requiredBytes};
 }
 
-inline Result<FastChamferResidentMemoryAllocation> ReserveFastChamferResidentWorkingMemory(const SizeVec3& dims)
+inline Result<FastChamferResidentMemoryAllocation> ReserveFastChamferResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateFastChamferResidentWorkingMemoryBytes(dims);
   if(requiredResult.invalid())
@@ -110,7 +110,7 @@ inline Result<FastChamferResidentMemoryAllocation> ReserveFastChamferResidentWor
     return ConvertInvalidResult<FastChamferResidentMemoryAllocation>(std::move(requiredResult));
   }
   auto reservation = ReserveWorkingMemory(requiredResult.value(), requiredResult.value());
-  return {FastChamferResidentMemoryAllocation{.reservation = std::move(reservation), .requiredBytes = requiredResult.value()}};
+  return {FastChamferResidentMemoryAllocation{.reservation = std::move(reservation), .required_bytes = requiredResult.value()}};
 }
 
 inline bool Chamfer2DFullWidthPeak(usize columns, usize rows, usize& peak)
@@ -173,9 +173,9 @@ inline Chamfer2DBufferPlan BuildChamfer2DBufferPlan(usize nx, usize ny, usize re
   usize oneRowPeak = 0;
   if(Chamfer2DFullWidthPeak(nx, 1, oneRowPeak) && oneRowPeak <= residentLimit)
   {
-    plan.coreCols = nx;
-    plan.coreRows = largestFitting(ny, [nx](usize rows, usize& peak) { return Chamfer2DFullWidthPeak(nx, rows, peak); });
-    if(!Chamfer2DFullWidthPeak(nx, plan.coreRows, plan.residentBytes))
+    plan.core_cols = nx;
+    plan.core_rows = largestFitting(ny, [nx](usize rows, usize& peak) { return Chamfer2DFullWidthPeak(nx, rows, peak); });
+    if(!Chamfer2DFullWidthPeak(nx, plan.core_rows, plan.resident_bytes))
     {
       plan.overflow = true;
       return plan;
@@ -183,15 +183,15 @@ inline Chamfer2DBufferPlan BuildChamfer2DBufferPlan(usize nx, usize ny, usize re
   }
   else
   {
-    plan.coreCols = largestFitting(nx, [](usize columns, usize& peak) { return Chamfer2DTiledPeak(columns, peak); });
-    plan.coreRows = 1;
-    if(!Chamfer2DTiledPeak(plan.coreCols, plan.residentBytes))
+    plan.core_cols = largestFitting(nx, [](usize columns, usize& peak) { return Chamfer2DTiledPeak(columns, peak); });
+    plan.core_rows = 1;
+    if(!Chamfer2DTiledPeak(plan.core_cols, plan.resident_bytes))
     {
       plan.overflow = true;
       return plan;
     }
   }
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 
@@ -244,7 +244,7 @@ public:
    * @param negateOutput Selects sign inversion during final backward processing.
    * @param rowGroupRows Sets the row count in each full-width wavefront group. Values less than one select one row.
    */
-  FastChamferDistance(AbstractDataStore<float32>& store, SizeVec3 dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+  FastChamferDistance(AbstractDataStore<float32>& store, SizeVec3Type dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                       usize residentLimit2D = detail::k_Chamfer2DResidentLimit, bool negateOutput = false, usize rowGroupRows = detail::k_ChamferRowGroupRows)
   : m_Store(store)
   , m_Dims(std::move(dims))
@@ -414,7 +414,7 @@ private:
   {
     try
     {
-      auto storeResult = DataStoreUtilities::CreateTemporaryRecordStore(config);
+      auto storeResult = data_store_utilities::CreateTemporaryRecordStore(config);
       if(storeResult.invalid())
       {
         return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-8673, fmt::format("Fast chamfer distance failed to create {}: {}", context, DescribeResultError(storeResult)));
@@ -1038,17 +1038,17 @@ private:
       return MakeErrorResult(-8671, fmt::format("Fast chamfer distance store size ({}) does not match the expected image size ({}) for dimensions {} x {} x 1.", m_Store.getSize(), cellCount, nx, ny));
     }
 
-    const usize tileCount = 1 + (nx - 1) / plan.coreCols;
+    const usize tileCount = 1 + (nx - 1) / plan.core_cols;
     usize recordSize = 0;
     usize recordCount = 0;
-    if(!detail::ChamferCheckedMultiply(plan.coreCols, sizeof(float32), recordSize) || !detail::ChamferCheckedMultiply(ny, tileCount, recordCount))
+    if(!detail::ChamferCheckedMultiply(plan.core_cols, sizeof(float32), recordSize) || !detail::ChamferCheckedMultiply(ny, tileCount, recordCount))
     {
       return MakeErrorResult(-8670, fmt::format("Fast chamfer distance 2D scratch layout cannot represent dimensions {} x {} due to arithmetic overflow.", nx, ny));
     }
     TemporaryRecordStoreConfig config;
-    config.recordSize = static_cast<uint64>(recordSize);
-    config.maxRecordsPerBatch = static_cast<uint64>(plan.coreCols == nx ? std::min(ny, plan.coreRows + 1) : 1);
-    config.initialRecordCount = static_cast<uint64>(recordCount);
+    config.record_size = static_cast<uint64>(recordSize);
+    config.max_records_per_batch = static_cast<uint64>(plan.core_cols == nx ? std::min(ny, plan.core_rows + 1) : 1);
+    config.initial_record_count = static_cast<uint64>(recordCount);
     auto scratchResult = CreateScratchStore(config, "bounded 2D fixed-record scratch store");
     if(scratchResult.invalid())
     {
@@ -1057,11 +1057,11 @@ private:
     std::unique_ptr<ITemporaryRecordStore> scratch = std::move(scratchResult.value());
     try
     {
-      if(plan.coreCols == nx)
+      if(plan.core_cols == nx)
       {
-        return runFullWidth2D(*scratch, nx, ny, plan.coreRows);
+        return runFullWidth2D(*scratch, nx, ny, plan.core_rows);
       }
-      return runTiled2D(*scratch, nx, ny, plan.coreCols, tileCount);
+      return runTiled2D(*scratch, nx, ny, plan.core_cols, tileCount);
     } catch(const std::bad_alloc& exception)
     {
       return MakeErrorResult(-8672, fmt::format("Fast chamfer distance could not allocate its bounded 2D working set: {}", exception.what()));
@@ -1509,9 +1509,9 @@ private:
     }
 
     TemporaryRecordStoreConfig config;
-    config.recordSize = static_cast<uint64>(planeBytes);
-    config.maxRecordsPerBatch = static_cast<uint64>(capacityPlanes);
-    config.initialRecordCount = static_cast<uint64>(nz);
+    config.record_size = static_cast<uint64>(planeBytes);
+    config.max_records_per_batch = static_cast<uint64>(capacityPlanes);
+    config.initial_record_count = static_cast<uint64>(nz);
     auto scratchResult = CreateScratchStore(config, "bounded 3D fixed-record scratch store");
     if(scratchResult.invalid())
     {
@@ -1636,7 +1636,7 @@ private:
   }
 
   AbstractDataStore<float32>& m_Store;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   float32 m_MaxDist;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
@@ -1660,7 +1660,7 @@ private:
  * @param negateOutput Selects sign inversion during final backward processing.
  * @return An error for invalid storage sizes, failed transfers, or failed allocations. Cancellation returns a valid result.
  */
-inline Result<> ApplyFastChamferDistance(AbstractDataStore<float32>& store, const SizeVec3& dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+inline Result<> ApplyFastChamferDistance(AbstractDataStore<float32>& store, const SizeVec3Type& dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                                          bool negateOutput = false)
 {
   FastChamferDistance engine(store, dims, maxDist, shouldCancel, messageHandler, detail::k_Chamfer2DResidentLimit, negateOutput);

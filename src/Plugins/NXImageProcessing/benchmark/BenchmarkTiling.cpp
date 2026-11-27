@@ -195,7 +195,7 @@ struct FillTiledFunctor
     std::shared_ptr<AbstractDataStore<T>> store;
     {
       const StorageModeSentinel storageModeSentinel(p.store_mode);
-      store = DataStoreUtilities::CreateDataStore<T>(dataStructure, arrayPath, tupleShape, componentShape);
+      store = data_store_utilities::CreateDataStore<T>(dataStructure, arrayPath, tupleShape, componentShape);
     }
     if(store == nullptr)
     {
@@ -334,13 +334,13 @@ Result<> BuildTiledInput(DataStructure& dataStructure, const fs::path& realInput
     }
   }
 
-  const SizeVec3 srcDims = srcGeomPtr->getDimensions(); // {X, Y, Z}
+  const SizeVec3Type srcDims = srcGeomPtr->getDimensions(); // {X, Y, Z}
   const usize srcX = srcDims[0];
   const usize srcY = srcDims[1];
   const usize srcZ = srcDims[2];
   if(srcX == 0 || srcY == 0 || srcZ == 0)
   {
-    return MakeErrorResult(-9114, fmt::format("BuildTiledInput: source image '{}' has invalid dimensions ({}).", realInput.string(), StringUtilities::formatDimensions3D(srcDims)));
+    return MakeErrorResult(-9114, fmt::format("BuildTiledInput: source image '{}' has invalid dimensions ({}).", realInput.string(), string_utilities::FormatDimensions3D(srcDims)));
   }
   const usize numComp = srcArrayPtr->getNumberOfComponents();
   const DataType dataType = srcArrayPtr->getDataType();
@@ -357,7 +357,7 @@ Result<> BuildTiledInput(DataStructure& dataStructure, const fs::path& realInput
   if(srcArrayPtr->getNumberOfTuples() != srcVoxelResult.value())
   {
     return MakeErrorResult(-9124, fmt::format("BuildTiledInput: source array '{}' from '{}' has {} tuple(s), but image dimensions ({}) require {} voxel tuple(s).", scratchArray.toString(),
-                                              realInput.string(), srcArrayPtr->getNumberOfTuples(), StringUtilities::formatDimensions3D(srcDims), srcVoxelResult.value()));
+                                              realInput.string(), srcArrayPtr->getNumberOfTuples(), string_utilities::FormatDimensions3D(srcDims), srcVoxelResult.value()));
   }
 
   // --- 2) Tile factors: either select one source slice for an explicit 2-D benchmark, or grow Z first to guarantee
@@ -526,15 +526,15 @@ Result<> AddTiledArray(DataStructure& dataStructure, const fs::path& realInput, 
                                               cellAmPath.toString(), realInput.string()));
   }
 
-  const SizeVec3 srcDims = srcGeomPtr->getDimensions();
-  const SizeVec3 dstDims = dstGeomPtr->getDimensions();
+  const SizeVec3Type srcDims = srcGeomPtr->getDimensions();
+  const SizeVec3Type dstDims = dstGeomPtr->getDimensions();
   for(usize axis = 0; axis < 3; ++axis)
   {
     if(srcDims[axis] == 0 || dstDims[axis] == 0 || dstDims[axis] % srcDims[axis] != 0)
     {
       return MakeErrorResult(-9120, fmt::format("AddTiledArray: source '{}' dimensions ({}) do not tile exactly into destination ImageGeom '{}' dimensions ({}). Use companion images with dimensions "
                                                 "matching the primary benchmark source.",
-                                                realInput.string(), StringUtilities::formatDimensions3D(srcDims), geomPath.toString(), StringUtilities::formatDimensions3D(dstDims)));
+                                                realInput.string(), string_utilities::FormatDimensions3D(srcDims), geomPath.toString(), string_utilities::FormatDimensions3D(dstDims)));
     }
   }
 

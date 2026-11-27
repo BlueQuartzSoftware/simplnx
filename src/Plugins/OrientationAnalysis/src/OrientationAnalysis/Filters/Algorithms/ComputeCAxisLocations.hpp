@@ -15,10 +15,10 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeCAxisLocationsInputValues
 {
-  DataPath QuatsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath CAxisLocationsArrayName;
+  DataPath quats_array_path;
+  DataPath cell_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath c_axis_locations_array_name;
 };
 
 /**

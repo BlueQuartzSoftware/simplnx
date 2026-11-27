@@ -49,7 +49,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mod
   std::string name = path().getTargetName();
 
   const std::string shapeContext = fmt::format("String array '{}' tuple", path().toString());
-  auto tupleCount = ComputeDimensionProduct(m_Dims, shapeContext, DimensionConversion::k_StringTupleOverflow);
+  auto tupleCount = ComputeDimensionProduct(m_Dims, shapeContext, dimension_conversion::k_StringTupleOverflow);
   if(tupleCount.invalid())
   {
     return ConvertResult(std::move(tupleCount));
@@ -58,8 +58,8 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mod
   const usize capacity = std::vector<std::string>().max_size();
   if(totalTuples > capacity)
   {
-    return MakeErrorResult(DimensionConversion::k_StringCapacity, fmt::format("String array '{}' tuple dimensions [{}] require {} strings, above storage capacity {}. Use a smaller shape.",
-                                                                              path().toString(), StringUtilities::formatDimensions(m_Dims), totalTuples, capacity));
+    return MakeErrorResult(dimension_conversion::k_StringCapacity, fmt::format("String array '{}' tuple dimensions [{}] require {} strings, above storage capacity {}. Use a smaller shape.",
+                                                                              path().toString(), string_utilities::FormatDimensions(m_Dims), totalTuples, capacity));
   }
 
   std::vector<std::string> values(totalTuples, m_InitializeValue);

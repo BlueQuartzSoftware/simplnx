@@ -55,16 +55,16 @@ namespace nx::core
 class SIMPLNXCORE_EXPORT CalculateTriangleGroupCurvatures
 {
 public:
-  CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64Array* principleCurvature1,
-                                   Float64Array* principleCurvature2, Float64Array* principleDirection1, Float64Array* principleDirection2, Float64Array* gaussianCurvature,
-                                   Float64Array* meanCurvature, Float64Array* weingartenMatrix, TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
-                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
+  CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64ArrayType* principleCurvature1,
+                                   Float64ArrayType* principleCurvature2, Float64ArrayType* principleDirection1, Float64ArrayType* principleDirection2, Float64ArrayType* gaussianCurvature,
+                                   Float64ArrayType* meanCurvature, Float64ArrayType* weingartenMatrix, TriangleGeom* trianglesGeom, Int32ArrayType* surfaceMeshFaceLabels, Float64ArrayType* surfaceMeshFaceNormals,
+                                   Float64ArrayType* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
 
   virtual ~CalculateTriangleGroupCurvatures();
 
   void operator()() const;
 
-  using UniqueFaceIds_t = std::set<int64_t>;
+  using UniqueFaceIdsTType = std::set<int64_t>;
 
 private:
   /**
@@ -77,17 +77,17 @@ private:
   int64_t m_NRing;
   std::vector<int64_t> m_TriangleIds;
   bool m_UseNormalsForCurveFitting;
-  Float64Array* m_PrincipleCurvature1;
-  Float64Array* m_PrincipleCurvature2;
-  Float64Array* m_PrincipleDirection1;
-  Float64Array* m_PrincipleDirection2;
-  Float64Array* m_GaussianCurvature;
-  Float64Array* m_MeanCurvature;
-  Float64Array* m_WeingartenMatrix;
+  Float64ArrayType* m_PrincipleCurvature1;
+  Float64ArrayType* m_PrincipleCurvature2;
+  Float64ArrayType* m_PrincipleDirection1;
+  Float64ArrayType* m_PrincipleDirection2;
+  Float64ArrayType* m_GaussianCurvature;
+  Float64ArrayType* m_MeanCurvature;
+  Float64ArrayType* m_WeingartenMatrix;
   TriangleGeom* m_TrianglesPtr;
-  Int32Array* m_SurfaceMeshFaceLabels;
-  Float64Array* m_SurfaceMeshFaceNormals;
-  Float64Array* m_SurfaceMeshTriangleCentroids;
+  Int32ArrayType* m_SurfaceMeshFaceLabels;
+  Float64ArrayType* m_SurfaceMeshFaceNormals;
+  Float64ArrayType* m_SurfaceMeshTriangleCentroids;
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
 };

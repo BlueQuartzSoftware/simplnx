@@ -161,7 +161,7 @@ std::optional<DynamicTableInfo::TableDims> DynamicTableInfo::GetTableDims(const 
   usize numRows = table.size();
   if(numRows == 0)
   {
-    return {{.numRows = 0, .numCols = 0}};
+    return {{.num_rows = 0, .num_cols = 0}};
   }
   usize lastNumCols = table.front().size();
   for(usize i = 1; i < numRows; i++)
@@ -173,7 +173,7 @@ std::optional<DynamicTableInfo::TableDims> DynamicTableInfo::GetTableDims(const 
       return {};
     }
   }
-  return {{.numRows = numRows, .numCols = lastNumCols}};
+  return {{.num_rows = numRows, .num_cols = lastNumCols}};
 }
 
 Result<> DynamicTableInfo::validate(const TableDataType& table) const
@@ -184,14 +184,14 @@ Result<> DynamicTableInfo::validate(const TableDataType& table) const
     return MakeErrorResult(-1, "Data does not have the same row lengths");
   }
 
-  if(!m_RowsInfo.validate(dims->numRows))
+  if(!m_RowsInfo.validate(dims->num_rows))
   {
-    return MakeErrorResult(-2, fmt::format("Invalid number of rows: got {}, expected at least {}", dims->numRows, m_RowsInfo.getMinSize()));
+    return MakeErrorResult(-2, fmt::format("Invalid number of rows: got {}, expected at least {}", dims->num_rows, m_RowsInfo.getMinSize()));
   }
 
-  if(!m_ColsInfo.validate(dims->numCols))
+  if(!m_ColsInfo.validate(dims->num_cols))
   {
-    return MakeErrorResult(-3, fmt::format("Invalid number of columns: got {}, expected at least {}", dims->numCols, m_ColsInfo.getMinSize()));
+    return MakeErrorResult(-3, fmt::format("Invalid number of columns: got {}, expected at least {}", dims->num_cols, m_ColsInfo.getMinSize()));
   }
 
   return {};

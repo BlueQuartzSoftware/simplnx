@@ -65,7 +65,7 @@ SIMPLNXCORE_EXPORT IdentifySampleSliceObserverForTesting SetIdentifySampleSliceO
 struct SIMPLNXCORE_EXPORT IdentifySampleExtraAllocationControlForTesting
 {
   void* context = nullptr;
-  void (*beforeAllocate)(void*, const IDataArray*, usize extraValues) = nullptr;
+  void (*before_allocate)(void*, const IDataArray*, usize extraValues) = nullptr;
 };
 
 /**
@@ -85,7 +85,7 @@ SIMPLNXCORE_EXPORT IdentifySampleExtraAllocationControlForTesting SetIdentifySam
 struct SIMPLNXCORE_EXPORT IdentifySampleDiagnosticControlForTesting
 {
   void* context = nullptr;
-  void (*beforeAggregate)(void*, const IDataArray*) = nullptr;
+  void (*before_aggregate)(void*, const IDataArray*) = nullptr;
 };
 
 /**

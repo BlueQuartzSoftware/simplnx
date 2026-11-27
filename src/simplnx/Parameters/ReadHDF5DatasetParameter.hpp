@@ -47,9 +47,9 @@ class SIMPLNX_EXPORT ReadHDF5DatasetParameter : public ValueParameter
 public:
   struct SIMPLNX_EXPORT DatasetImportInfo
   {
-    std::string dataSetPath;
-    std::string componentDimensions;
-    std::string tupleDimensions;
+    std::string data_set_path;
+    std::string component_dimensions;
+    std::string tuple_dimensions;
 
     static constexpr StringLiteralType k_DatasetPath_Key = "dataset_path";
     static constexpr StringLiteralType k_ComponentDimensions_Key = "component_dimensions";
@@ -60,11 +60,11 @@ public:
     nlohmann::json writeJson() const;
   };
 
-  using InputFile = std::string;
+  using InputFileType = std::string;
   struct ValueType
   {
     std::optional<DataPath> parent;
-    InputFile inputFile;
+    InputFileType input_file;
     std::list<DatasetImportInfo> datasets;
   };
 
@@ -88,7 +88,7 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.

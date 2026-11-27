@@ -81,12 +81,12 @@ public:
    */
   struct SurfaceCellRecord
   {
-    MMCellFlag Flag;
-    uint64 VertexId = std::numeric_limits<uint64>::max();
-    int32 Label = 0;
-    std::array<float32, 3> LocalPosition = {0.5f, 0.5f, 0.5f};
-    int8 NodeType = 0;
-    bool IsReferenced = false;
+    MMCellFlag flag;
+    uint64 vertex_id = std::numeric_limits<uint64>::max();
+    int32 label = 0;
+    std::array<float32, 3> local_position = {0.5f, 0.5f, 0.5f};
+    int8 node_type = 0;
+    bool is_referenced = false;
   };
   static_assert(std::is_trivially_copyable_v<SurfaceCellRecord>);
 

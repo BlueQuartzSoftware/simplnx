@@ -275,7 +275,7 @@ protected:
       result = MakeErrorResult<OutputActions>(k_PreflightErrorCode, "The controlled preflight operation failed");
     }
     result.warnings().push_back(Warning{.code = k_PreflightWarningCode, .message = "The controlled preflight warning"});
-    return {.outputActions = std::move(result), .outputValues = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
+    return {.output_actions = std::move(result), .output_values = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
   }
 
   /**
@@ -442,7 +442,7 @@ protected:
     actions.appendDeferredAction(std::make_unique<RecordingDeferredAction>(m_FollowingInvocationCount));
     Result<OutputActions> result{std::move(actions)};
     result.warnings().push_back(Warning{.code = k_PreflightWarningCode, .message = "The controlled preflight warning"});
-    return {.outputActions = std::move(result), .outputValues = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
+    return {.output_actions = std::move(result), .output_values = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
   }
 
   /**
@@ -479,8 +479,8 @@ TEST_CASE("IFilter: An exception thrown by executeImpl becomes an invalid result
   REQUIRE(!executeResult.result.errors().empty());
 
   const std::string& message = executeResult.result.errors().front().message;
-  REQUIRE(StringUtilities::contains(message, filter.name()));
-  REQUIRE(StringUtilities::contains(message, k_ThrowMessage.view()));
+  REQUIRE(string_utilities::Contains(message, filter.name()));
+  REQUIRE(string_utilities::Contains(message, k_ThrowMessage.view()));
 }
 
 TEST_CASE("IFilter: A non-standard exception thrown by executeImpl becomes an invalid result", "[simplnx][IFilter]")
@@ -496,7 +496,7 @@ TEST_CASE("IFilter: A non-standard exception thrown by executeImpl becomes an in
 
   const Error& error = executeResult.result.errors().front();
   REQUIRE(error.code == -2);
-  REQUIRE(StringUtilities::contains(error.message, filter.name()));
+  REQUIRE(string_utilities::Contains(error.message, filter.name()));
 }
 
 TEST_CASE("IFilter: A cancellation does not replace an execution error", "[simplnx][IFilter]")
@@ -516,7 +516,7 @@ TEST_CASE("IFilter: A cancellation does not replace an execution error", "[simpl
 
   const Error& error = executeResult.result.errors().front();
   REQUIRE(error.code == k_ExecuteErrorCode);
-  REQUIRE(StringUtilities::contains(error.message, k_ExecuteErrorMessage.view()));
+  REQUIRE(string_utilities::Contains(error.message, k_ExecuteErrorMessage.view()));
 }
 
 TEST_CASE("IFilter: Preflight cancellation preserves diagnostics and output values", "[simplnx][IFilter]")

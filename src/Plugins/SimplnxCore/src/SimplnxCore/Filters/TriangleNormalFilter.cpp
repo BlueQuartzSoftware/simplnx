@@ -103,7 +103,7 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -111,8 +111,8 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   TriangleNormalInputValues inputValues;
-  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeometryDataPath_Key);
-  inputValues.OutputNormalsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshTriangleNormalsArrayName_Key);
+  inputValues.input_triangle_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeometryDataPath_Key);
+  inputValues.output_normals_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshTriangleNormalsArrayName_Key);
 
   return TriangleNormal(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

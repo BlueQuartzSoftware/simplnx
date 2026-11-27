@@ -40,7 +40,7 @@ Uuid VectorParameter<T>::uuid() const
 }
 
 template <class T>
-IParameter::AcceptedTypes VectorParameter<T>::acceptedTypes() const
+IParameter::AcceptedTypesType VectorParameter<T>::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

@@ -188,7 +188,7 @@ fs::path GetComplexH5File()
   return GetDataDir() / constants::k_ComplexH5File;
 }
 
-bool Equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
+bool Equalsf(const FloatVec3Type& lhs, const FloatVec3Type& rhs)
 {
   for(usize i = 0; i < 3; i++)
   {
@@ -242,7 +242,7 @@ DataStructure CreateDataStructure()
   ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, "Small IN100 Grid", scanDataPtr->getId());
   REQUIRE(imageGeomPtr->setSpacing({0.25f, 0.25f, 0.25f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  SizeVec3 imageGeomDims = {100, 100, 100};
+  SizeVec3Type imageGeomDims = {100, 100, 100};
   imageGeomPtr->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
@@ -250,13 +250,13 @@ DataStructure CreateDataStructure()
   usize numComponents = 1;
   ShapeType tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  Float32Array* ciDataPtr = CreateTestDataArray<float>("Confidence Index", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
-  Int32Array* featureIdsDataPtr = CreateTestDataArray<int32>("FeatureIds", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
-  Float32Array* iqDataPtr = CreateTestDataArray<float>("Image Quality", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
-  Int32Array* phasesDataPtr = CreateTestDataArray<int32>("Phases", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
+  Float32ArrayType* ciDataPtr = CreateTestDataArray<float>("Confidence Index", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
+  Int32ArrayType* featureIdsDataPtr = CreateTestDataArray<int32>("FeatureIds", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
+  Float32ArrayType* iqDataPtr = CreateTestDataArray<float>("Image Quality", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
+  Int32ArrayType* phasesDataPtr = CreateTestDataArray<int32>("Phases", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
 
   numComponents = 3;
-  UInt8Array* ipfColorDataPtr = CreateTestDataArray<uint8_t>("IPF Colors", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
+  UInt8ArrayType* ipfColorDataPtr = CreateTestDataArray<uint8_t>("IPF Colors", dataStructure, tupleShape, {numComponents}, scanDataPtr->getId());
 
   dataStructure.setAdditionalParent(ipfColorDataPtr->getId(), groupPtr->getId());
 
@@ -264,7 +264,7 @@ DataStructure CreateDataStructure()
   DataGroup* phaseGroupPtr = DataGroup::Create(dataStructure, "Phase Data", groupPtr->getId());
   numComponents = 1;
   usize numTuples = 2;
-  Int32Array* laueDataPtr = CreateTestDataArray<int32>("Laue Class", dataStructure, {numTuples}, {numComponents}, phaseGroupPtr->getId());
+  Int32ArrayType* laueDataPtr = CreateTestDataArray<int32>("Laue Class", dataStructure, {numTuples}, {numComponents}, phaseGroupPtr->getId());
 
   return dataStructure;
 }
@@ -295,25 +295,25 @@ void CreateVertexGeometry(DataStructure& dataStructure)
   // Create the Vertex Array with a component size of 3
   DataPath path = DataPath({k_VertexGroupName, k_VertexListName});
   std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
-  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 vertexCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  nx::core::Result result = ArrayCreationUtilities::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = array_creation_utilities::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(vertexArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
   vertexGeometryPtr->setVertices(*vertexArrayPtr);
   REQUIRE(vertexGeometryPtr->getNumberOfVertices() == 144);
 
   // Create cell-level arrays for the Vertex Geometry.
   ShapeType tupleShape = {vertexGeometryPtr->getNumberOfVertices()};
   usize numComponents = 1;
-  Int16Array* ciDataPtr = CreateTestDataArray<int16_t>("Area", dataStructure, tupleShape, {numComponents}, geometryGroupPtr->getId());
-  Float32Array* powerDataPtr = CreateTestDataArray<float>("Power", dataStructure, tupleShape, {numComponents}, geometryGroupPtr->getId());
-  UInt32Array* laserTtlDataPtr = CreateTestDataArray<uint32>("LaserTTL", dataStructure, tupleShape, {numComponents}, geometryGroupPtr->getId());
+  Int16ArrayType* ciDataPtr = CreateTestDataArray<int16_t>("Area", dataStructure, tupleShape, {numComponents}, geometryGroupPtr->getId());
+  Float32ArrayType* powerDataPtr = CreateTestDataArray<float>("Power", dataStructure, tupleShape, {numComponents}, geometryGroupPtr->getId());
+  UInt32ArrayType* laserTtlDataPtr = CreateTestDataArray<uint32>("LaserTTL", dataStructure, tupleShape, {numComponents}, geometryGroupPtr->getId());
   for(usize i = 0; i < vertexGeometryPtr->getNumberOfVertices(); i++)
   {
     ciDataPtr->getDataStore()->setValue(i, static_cast<int16_t>(i * 10));
@@ -334,33 +334,33 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/TriangleConnectivity.csv", unit_test::k_SourceDir.view());
   uint64 skipLines = 1;
   char delimiter = ',';
-  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 faceCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(faceCount == 242);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedFaceList>(path);
+  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedFaceListType>(path);
   if(dataArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
   triangleGeomPtr->setFaceList(*dataArrayPtr);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_TriangleGroupName, k_VertexListName});
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
-  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 vertexCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = ArrayCreationUtilities::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = array_creation_utilities::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(vertexArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
   triangleGeomPtr->setVertices(*vertexArrayPtr);
 }
 
@@ -376,33 +376,33 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/QuadConnectivity.csv", unit_test::k_SourceDir.view());
   uint64 skipLines = 1;
   char delimiter = ',';
-  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 faceCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(faceCount == 121);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedFaceList>(path);
+  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedFaceListType>(path);
   if(dataArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setFaceList(*dataArrayPtr);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_QuadGroupName, k_VertexListName});
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
-  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 vertexCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = array_creation_utilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(vertexArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setVertices(*vertexArrayPtr);
 }
 
@@ -418,33 +418,33 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/EdgeConnectivity.csv", unit_test::k_SourceDir.view());
   uint64 skipLines = 1;
   char delimiter = ',';
-  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 faceCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(faceCount == 264);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedEdgeList>(path);
+  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedEdgeListType>(path);
   if(dataArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setEdgeList(*dataArrayPtr);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_EdgeGroupName, k_VertexListName});
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
-  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 vertexCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = array_creation_utilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(vertexArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setVertices(*vertexArrayPtr);
 }
 
@@ -460,33 +460,33 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/TetraConnectivity.csv", unit_test::k_SourceDir.view());
   uint64 skipLines = 1;
   char delimiter = ',';
-  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 faceCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(faceCount == 3);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedTetList>(path);
+  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedTetListType>(path);
   if(dataArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setPolyhedraList(*dataArrayPtr);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_TetraGroupName, k_VertexListName});
   inputFile = fmt::format("{}/test/Data/TetraVertexCoordinates.csv", unit_test::k_SourceDir.view());
-  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 vertexCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 9);
-  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = array_creation_utilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(vertexArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setVertices(*vertexArrayPtr);
 }
 
@@ -502,33 +502,33 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   std::string inputFile = fmt::format("{}/test/Data/HexaConnectivity.csv", unit_test::k_SourceDir.view());
   uint64 skipLines = 1;
   char delimiter = ',';
-  uint64 faceCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 faceCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(faceCount == 3);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
+  nx::core::Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedHexList>(path);
+  auto* dataArrayPtr = dataStructure.getDataAs<IGeometry::SharedHexListType>(path);
   if(dataArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, dataArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setPolyhedraList(*dataArrayPtr);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_HexaGroupName, k_VertexListName});
   inputFile = fmt::format("{}/test/Data/HexaVertexCoordinates.csv", unit_test::k_SourceDir.view());
-  uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
+  uint64 vertexCount = csv_parser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 20);
-  result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = array_creation_utilities::CreateArray<float32>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(path);
+  auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(path);
   if(vertexArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
   }
-  CsvParser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
+  csv_parser::ReadFile<float, float>(inputFile, vertexArrayPtr->getDataStoreRef(), skipLines, delimiter);
   geometryPtr->setVertices(*vertexArrayPtr);
 }
 
@@ -752,9 +752,9 @@ TEST_CASE("Read Legacy DREAM3D-NX Data")
     const std::string geomName = "Small IN100";
     const auto* imagePtr = dataStructure.getDataAs<ImageGeom>(DataPath({geomName}));
     REQUIRE(imagePtr != nullptr);
-    REQUIRE(Equalsf(imagePtr->getOrigin(), FloatVec3(-47.0f, 0.0f, -29.0f)));
-    REQUIRE(imagePtr->getDimensions() == SizeVec3(189, 201, 117));
-    REQUIRE(Equalsf(imagePtr->getSpacing(), FloatVec3(0.25f, 0.25f, 0.25f)));
+    REQUIRE(Equalsf(imagePtr->getOrigin(), FloatVec3Type(-47.0f, 0.0f, -29.0f)));
+    REQUIRE(imagePtr->getDimensions() == SizeVec3Type(189, 201, 117));
+    REQUIRE(Equalsf(imagePtr->getSpacing(), FloatVec3Type(0.25f, 0.25f, 0.25f)));
 
     {
       const std::string testDCName = "DataContainer";
@@ -765,22 +765,22 @@ TEST_CASE("Read Legacy DREAM3D-NX Data")
       DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
       REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
 
-      REQUIRE(dataStructure.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
-      REQUIRE(dataStructure.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
-      REQUIRE(dataStructure.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
-      REQUIRE(dataStructure.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
-      REQUIRE(dataStructure.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<Int8ArrayType>(testAMPath.createChildPath("Int8")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<UInt8ArrayType>(testAMPath.createChildPath("UInt8")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<Float32ArrayType>(testAMPath.createChildPath("Float32")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<Float64ArrayType>(testAMPath.createChildPath("Float64")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<BoolArrayType>(testAMPath.createChildPath("Bool")) != nullptr);
     }
 
     {
       DataPath grainDataPath({geomName, "Grain Data"});
       REQUIRE(dataStructure.getData(grainDataPath) != nullptr);
       REQUIRE(dataStructure.getDataAs<NeighborList<int32_t>>(grainDataPath.createChildPath("NeighborList")) != nullptr);
-      REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
-      REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<Int32ArrayType>(grainDataPath.createChildPath("NumElements")) != nullptr);
+      REQUIRE(dataStructure.getDataAs<Int32ArrayType>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 #endif
@@ -827,9 +827,9 @@ TEST_CASE("ImageGeometryIO")
     auto* imageGeomPtr = newDataStructure.getDataAs<ImageGeom>(imageGeomPath);
     REQUIRE(imageGeomPtr != nullptr);
 
-    REQUIRE(imageGeomPtr->getDimensions() == SizeVec3(dims));
-    REQUIRE(imageGeomPtr->getOrigin() == FloatVec3(origin));
-    REQUIRE(imageGeomPtr->getSpacing() == FloatVec3(spacing));
+    REQUIRE(imageGeomPtr->getDimensions() == SizeVec3Type(dims));
+    REQUIRE(imageGeomPtr->getOrigin() == FloatVec3Type(origin));
+    REQUIRE(imageGeomPtr->getSpacing() == FloatVec3Type(spacing));
 
     auto* cellDataPtr = imageGeomPtr->getCellData();
     REQUIRE(cellDataPtr != nullptr);
@@ -841,7 +841,7 @@ TEST_CASE("ImageGeometryIO")
 
     REQUIRE(cellDataPtr->getShape() == cellDataShape);
 
-    UnitTest::CheckArraysInheritTupleDims(newDataStructure);
+    unit_test::CheckArraysInheritTupleDims(newDataStructure);
   }
 }
 
@@ -870,7 +870,7 @@ TEST_CASE("HDF5 ObjectIO: Invalid object reads recover gracefully")
 
 TEST_CASE("Node Based Geometry IO")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto app = Application::GetOrCreateInstance();
 
@@ -909,7 +909,7 @@ TEST_CASE("Node Based Geometry IO")
 
     CheckNodeGeomData(dataStructure, nodeData);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -953,7 +953,7 @@ TEST_CASE("NeighborList IO")
     auto* neighborListPtr = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborListPtr != nullptr);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -1004,7 +1004,7 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(dataStructure.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
     REQUIRE(dataStructure.getDataAs<StringArray>(DataPath({"StringArray"})) != nullptr);
 
-    BoolArray* boolArrayPtr = dataStructure.getDataAs<BoolArray>(DataPath({"BoolArray"}));
+    BoolArrayType* boolArrayPtr = dataStructure.getDataAs<BoolArrayType>(DataPath({"BoolArray"}));
     REQUIRE(boolArrayPtr != nullptr);
     AbstractDataStore<bool>& boolStore = boolArrayPtr->getDataStoreRef();
     REQUIRE(boolStore[0] == false);
@@ -1028,7 +1028,7 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(stringArrayPtr != nullptr);
     REQUIRE(stringArrayPtr->size() == 3);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -1060,7 +1060,7 @@ TEST_CASE("xdmf")
   Result<> result = dream3d::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("H5 Utilities")
@@ -1089,7 +1089,7 @@ TEST_CASE("HDF5ImplicitCopyReaderTest")
     Result<> writeFileResult = dream3d::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
   auto fileReader = hdf5::FileIO::ReadFile(filePath);
   hdf5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileReader), "HDF5::FileIO");
@@ -1144,7 +1144,7 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
     Result<> writeFileResult = dream3d::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   auto file1 = hdf5::FileIO::ReadFile(filePath);
@@ -1166,12 +1166,12 @@ TEST_CASE("DataStructureWriter: WriteOptions round-trip", "[DataStructureWriter]
 {
   nx::core::hdf5::DataStructureWriter writer;
   // Default compression level is 0 (off).
-  REQUIRE(writer.getWriteOptions().compressionLevel == 0);
+  REQUIRE(writer.getWriteOptions().compression_level == 0);
 
   nx::core::hdf5::DataStructureWriter::WriteOptions options;
-  options.compressionLevel = 7;
+  options.compression_level = 7;
   writer.setWriteOptions(options);
-  REQUIRE(writer.getWriteOptions().compressionLevel == 7);
+  REQUIRE(writer.getWriteOptions().compression_level == 7);
 }
 
 TEST_CASE("DataStructureAppend")
@@ -1182,15 +1182,15 @@ TEST_CASE("DataStructureAppend")
 
   DataStructure baseDataStructure;
 
-  auto createArrayResult = ArrayCreationUtilities::CreateArray<int32>(baseDataStructure, {10, 10, 10}, {3}, originalArrayPath, IDataAction::Mode::Execute);
+  auto createArrayResult = array_creation_utilities::CreateArray<int32>(baseDataStructure, {10, 10, 10}, {3}, originalArrayPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(createArrayResult);
 
-  const auto& originalArray = baseDataStructure.getDataRefAs<Int32Array>(originalArrayPath);
+  const auto& originalArray = baseDataStructure.getDataRefAs<Int32ArrayType>(originalArrayPath);
 
   Result<> writeResult = dream3d::WriteFile(outputFilePath, baseDataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
   for(const DataObject* objectPtr : exemplarDataStructure.getTopLevelData())
@@ -1200,7 +1200,7 @@ TEST_CASE("DataStructureAppend")
     auto appendResult = dream3d::AppendFile(outputFilePath, exemplarDataStructure, path);
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
 
-    DataStructure appendedDataStructure = UnitTest::LoadDataStructure(outputFilePath);
+    DataStructure appendedDataStructure = unit_test::LoadDataStructure(outputFilePath);
 
     currentTopLevelSize++;
 
@@ -1210,14 +1210,14 @@ TEST_CASE("DataStructureAppend")
     REQUIRE(appendedDataStructure.containsData(path));
 
     const DataObject& appendedOriginalArray = appendedDataStructure.getDataRef(originalArrayPath);
-    REQUIRE(UnitTest::Comparison::CompareDataObject(originalArray, appendedOriginalArray));
+    REQUIRE(unit_test::comparison::CompareDataObject(originalArray, appendedOriginalArray));
 
     const DataObject& appendedObject = appendedDataStructure.getDataRef(path);
     const DataObject& exemplarObject = exemplarDataStructure.getDataRef(path);
 
-    REQUIRE(UnitTest::Comparison::CompareDataObject(exemplarObject, appendedObject));
+    REQUIRE(unit_test::comparison::CompareDataObject(exemplarObject, appendedObject));
 
-    UnitTest::CheckArraysInheritTupleDims(appendedDataStructure);
+    unit_test::CheckArraysInheritTupleDims(appendedDataStructure);
   }
 
   // Failure states
@@ -1254,11 +1254,11 @@ TEST_CASE("DatasetIO: writeSpan uses chunked+deflate when compression level > 0"
     SIMPLNX_RESULT_REQUIRE_VALID(wr);
   }
 
-  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/" + datasetName);
+  auto info = nx::core::unit_test::ProbeHdf5Dataset(outPath, "g/" + datasetName);
   REQUIRE(info.has_value());
-  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(info->hasDeflate);
-  REQUIRE(info->deflateLevel == 5);
+  REQUIRE(info->layout == nx::core::unit_test::DatasetLayout::Chunked);
+  REQUIRE(info->has_deflate);
+  REQUIRE(info->deflate_level == 5);
 }
 
 TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "[DatasetIO][Compression]")
@@ -1278,10 +1278,10 @@ TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "
     SIMPLNX_RESULT_REQUIRE_VALID(wr);
   }
 
-  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/d");
+  auto info = nx::core::unit_test::ProbeHdf5Dataset(outPath, "g/d");
   REQUIRE(info.has_value());
-  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(info->hasDeflate == false);
+  REQUIRE(info->layout == nx::core::unit_test::DatasetLayout::Contiguous);
+  REQUIRE(info->has_deflate == false);
 }
 
 TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with compression on", "[DatasetIO][Compression]")
@@ -1302,10 +1302,10 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
     SIMPLNX_RESULT_REQUIRE_VALID(wr);
   }
 
-  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/d");
+  auto info = nx::core::unit_test::ProbeHdf5Dataset(outPath, "g/d");
   REQUIRE(info.has_value());
-  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(info->hasDeflate == false);
+  REQUIRE(info->layout == nx::core::unit_test::DatasetLayout::Contiguous);
+  REQUIRE(info->has_deflate == false);
 }
 
 TEST_CASE("DatasetIO: value getters release temporary datatype handles", "[simplnx][HDF5][DatasetIO][Lifetime]")
@@ -1523,7 +1523,7 @@ const ConnectivityListsType k_EdgeNeighbors = {{1}, {0}};
 template <typename T>
 DataArray<T>& CreateConnectivityFixtureArray(DataStructure& dataStructure, const DataPath& path, usize tuples, usize components, const std::vector<T>& values)
 {
-  const auto created = ArrayCreationUtilities::CreateArray<T>(dataStructure, {tuples}, {components}, path, IDataAction::Mode::Execute);
+  const auto created = array_creation_utilities::CreateArray<T>(dataStructure, {tuples}, {components}, path, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(created);
   auto* arrayPtr = dataStructure.getDataAs<DataArray<T>>(path);
   REQUIRE(arrayPtr != nullptr);
@@ -1558,7 +1558,7 @@ EdgeGeom& CreateConnectivityEdges(DataStructure& dataStructure)
 ConnectivityListsType ReadConnectivity(const DataStructure& dataStructure, const std::optional<DataObject::IdType>& id)
 {
   REQUIRE(id.has_value());
-  const auto* listPtr = dataStructure.getDataAs<IGeometry::ElementDynamicList>(id.value());
+  const auto* listPtr = dataStructure.getDataAs<IGeometry::ElementDynamicListType>(id.value());
   REQUIRE(listPtr != nullptr);
   ConnectivityListsType lists(listPtr->size());
   for(usize index = 0; index < listPtr->size(); ++index)
@@ -1641,9 +1641,9 @@ std::vector<std::string> TopLevelNamesInFile(const fs::path& filePath, DataObjec
 {
   auto file = hdf5::FileIO::ReadFile(filePath);
   REQUIRE(file.isValid());
-  auto group = file.openGroup(nx::core::Constants::k_DataStructureTag);
+  auto group = file.openGroup(nx::core::constants::k_DataStructureTag);
   REQUIRE(group.isValid());
-  auto nextIdResult = group.readScalarAttribute<DataObject::IdType>(nx::core::Constants::k_NextIdTag);
+  auto nextIdResult = group.readScalarAttribute<DataObject::IdType>(nx::core::constants::k_NextIdTag);
   SIMPLNX_RESULT_REQUIRE_VALID(nextIdResult);
   nextId = nextIdResult.value();
   auto names = group.getChildNames();
@@ -1683,7 +1683,7 @@ TEST_CASE("DataStructureWriter: geometry connectivity is omitted and rebuilt aft
                           DataPath({k_ConnectivityEdgeName, "Edges"})})
   {
     CAPTURE(path.toString());
-    REQUIRE(UnitTest::Comparison::CompareDataObject(dataStructure.getDataRef(path), reloaded.getDataRef(path)));
+    REQUIRE(unit_test::comparison::CompareDataObject(dataStructure.getDataRef(path), reloaded.getDataRef(path)));
   }
 
   auto& reloadedTriangles = reloaded.getDataRefAs<TriangleGeom>(DataPath({k_ConnectivityTriangleName}));
@@ -1696,7 +1696,7 @@ TEST_CASE("DataStructureWriter: geometry connectivity is omitted and rebuilt aft
   CHECK(ReadConnectivity(reloaded, reloadedTriangles.getElementNeighborsId()) == k_TriangleNeighbors);
   CHECK(ReadConnectivity(reloaded, reloadedEdges.getElementContainingVertId()) == k_EdgeIncidence);
   CHECK(ReadConnectivity(reloaded, reloadedEdges.getElementNeighborsId()) == k_EdgeNeighbors);
-  UnitTest::CheckArraysInheritTupleDims(reloaded);
+  unit_test::CheckArraysInheritTupleDims(reloaded);
 }
 
 TEST_CASE("DataStructureWriter: shared connectivity is omitted at every parent", "[simplnx][HDF5][Connectivity]")
@@ -1746,9 +1746,9 @@ TEST_CASE("DataStructureWriter: appended geometry drops its connectivity", "[sim
   const DataStructure& reloaded = readResult.value();
   RequireNoConnectivity(reloaded, DataPath({k_ConnectivityTriangleName}));
   const auto& reloadedTriangles = reloaded.getDataRefAs<TriangleGeom>(DataPath({k_ConnectivityTriangleName}));
-  CHECK(reloadedTriangles.getVertices() == reloaded.getDataAs<Float32Array>(DataPath({k_ConnectivityTriangleName, "Vertices"})));
-  CHECK(reloadedTriangles.getFaces() == reloaded.getDataAs<IGeometry::SharedFaceList>(DataPath({k_ConnectivityTriangleName, "Faces"})));
-  REQUIRE(UnitTest::Comparison::CompareDataObject(dataStructure.getDataRef(DataPath({k_ConnectivityTriangleName, "Faces"})), reloaded.getDataRef(DataPath({k_ConnectivityTriangleName, "Faces"}))));
+  CHECK(reloadedTriangles.getVertices() == reloaded.getDataAs<Float32ArrayType>(DataPath({k_ConnectivityTriangleName, "Vertices"})));
+  CHECK(reloadedTriangles.getFaces() == reloaded.getDataAs<IGeometry::SharedFaceListType>(DataPath({k_ConnectivityTriangleName, "Faces"})));
+  REQUIRE(unit_test::comparison::CompareDataObject(dataStructure.getDataRef(DataPath({k_ConnectivityTriangleName, "Faces"})), reloaded.getDataRef(DataPath({k_ConnectivityTriangleName, "Faces"}))));
   REQUIRE(reloaded.containsData(DataPath({"foo"})));
 }
 
@@ -1764,7 +1764,7 @@ TEST_CASE("DataStructureWriter: appended geometry drops an external connectivity
   // geometry from the file's next ID then assigns the cache's old ID to a retained array.
   DataStructure dataStructure;
   auto& triangles = CreateConnectivityTriangles(dataStructure);
-  auto* externalCachePtr = IGeometry::ElementDynamicList::Create(dataStructure, "ExternalIncidence", std::nullopt);
+  auto* externalCachePtr = IGeometry::ElementDynamicListType::Create(dataStructure, "ExternalIncidence", std::nullopt);
   REQUIRE(externalCachePtr != nullptr);
   triangles.setElementContainingVertId(externalCachePtr->getId());
   const auto incidenceResult = triangles.findElementsContainingVert(false);
@@ -1839,11 +1839,11 @@ TEST_CASE("DataStructureWriter: stale connectivity attributes are removed", "[si
     auto file = hdf5::FileIO::WriteFile(filePath);
     REQUIRE(file.isValid());
     {
-      auto dataStructureGroup = file.createGroup(nx::core::Constants::k_DataStructureTag);
+      auto dataStructureGroup = file.createGroup(nx::core::constants::k_DataStructureTag);
       auto geometryGroup = dataStructureGroup.createGroup(k_ConnectivityTriangleName);
-      const auto staleIncidenceResult = geometryGroup.writeScalarAttribute(IOConstants::k_ElementContainingVertTag, k_StaleId);
+      const auto staleIncidenceResult = geometryGroup.writeScalarAttribute(io_constants::k_ElementContainingVertTag, k_StaleId);
       SIMPLNX_RESULT_REQUIRE_VALID(staleIncidenceResult);
-      const auto staleNeighborsResult = geometryGroup.writeScalarAttribute(IOConstants::k_ElementNeighborsTag, k_StaleId);
+      const auto staleNeighborsResult = geometryGroup.writeScalarAttribute(io_constants::k_ElementNeighborsTag, k_StaleId);
       SIMPLNX_RESULT_REQUIRE_VALID(staleNeighborsResult);
     }
     const auto saveResult = hdf5::DataStructureWriter::WriteFile(dataStructure, file);
@@ -1853,10 +1853,10 @@ TEST_CASE("DataStructureWriter: stale connectivity attributes are removed", "[si
   {
     auto file = hdf5::FileIO::ReadFile(filePath);
     REQUIRE(file.isValid());
-    auto geometryGroup = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup(k_ConnectivityTriangleName);
+    auto geometryGroup = file.openGroup(nx::core::constants::k_DataStructureTag).openGroup(k_ConnectivityTriangleName);
     REQUIRE(geometryGroup.isValid());
-    CHECK_FALSE(geometryGroup.hasAttribute(IOConstants::k_ElementContainingVertTag));
-    CHECK(geometryGroup.hasAttribute(IOConstants::k_ElementNeighborsTag) == plainArray);
+    CHECK_FALSE(geometryGroup.hasAttribute(io_constants::k_ElementContainingVertTag));
+    CHECK(geometryGroup.hasAttribute(io_constants::k_ElementNeighborsTag) == plainArray);
   }
 
   auto readResult = hdf5::DataStructureReader::ReadFile(filePath);
@@ -1920,7 +1920,7 @@ TEST_CASE("DataStructureWriter: a dynamic list that is not geometry connectivity
 {
   const fs::path filePath = GetDataDir() / "ConnectivityStandalone.dream3d";
   DataStructure dataStructure;
-  REQUIRE(IGeometry::ElementDynamicList::Create(dataStructure, "Standalone", std::nullopt) != nullptr);
+  REQUIRE(IGeometry::ElementDynamicListType::Create(dataStructure, "Standalone", std::nullopt) != nullptr);
   const auto result = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
@@ -1934,7 +1934,7 @@ TEST_CASE("DataStructureWriter: an edge geometry reports a failed base write", "
   DataStructure dataStructure;
   auto& edges = CreateConnectivityEdges(dataStructure);
   // A child that no geometry association names is not a cache, so writing the geometry's children fails.
-  REQUIRE(IGeometry::ElementDynamicList::Create(dataStructure, "Unassociated", edges.getId()) != nullptr);
+  REQUIRE(IGeometry::ElementDynamicListType::Create(dataStructure, "Unassociated", edges.getId()) != nullptr);
   const auto result = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
@@ -1955,11 +1955,11 @@ TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGe
     const auto writeResult = hdf5::DataStructureWriter::WriteFile(dataStructure, file);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-    auto group = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup("Stored Image");
+    auto group = file.openGroup(nx::core::constants::k_DataStructureTag).openGroup("Stored Image");
     REQUIRE(group.isValid());
-    const auto removeResult = group.removeAttribute(IOConstants::k_H5_SPACING);
+    const auto removeResult = group.removeAttribute(io_constants::k_H5Spacing);
     SIMPLNX_RESULT_REQUIRE_VALID(removeResult);
-    const auto spacingResult = group.writeVectorAttribute(IOConstants::k_H5_SPACING, std::vector<float32>{0.5f, 2.0f, 0.0f});
+    const auto spacingResult = group.writeVectorAttribute(io_constants::k_H5Spacing, std::vector<float32>{0.5f, 2.0f, 0.0f});
     SIMPLNX_RESULT_REQUIRE_VALID(spacingResult);
   }
 
@@ -1983,7 +1983,7 @@ TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective 
     REQUIRE(geomPtr != nullptr);
     geomPtr->setDimensions({1, 1, 1});
     // This array lives outside the geometry's HDF5 group and is visited after it.
-    auto* boundsPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, boundsPath.getTargetName(), ShapeType{2}, ShapeType{1});
+    auto* boundsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, boundsPath.getTargetName(), ShapeType{2}, ShapeType{1});
     REQUIRE(boundsPtr != nullptr);
     boundsPtr->setValue(0, 0.0f);
     boundsPtr->setValue(1, 1.0f);
@@ -1994,7 +1994,7 @@ TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective 
 
     // Modify the stored dataset directly to model an invalid file from an older producer.
     auto file = hdf5::FileIO::AppendFile(filePath);
-    auto dataGroup = file.openGroup(nx::core::Constants::k_DataStructureTag);
+    auto dataGroup = file.openGroup(nx::core::constants::k_DataStructureTag);
     auto dataset = dataGroup.openDataset(boundsPath.getTargetName());
     REQUIRE(dataset.getId() > 0);
     const std::array<float32, 2> duplicateBounds{0.0F, 0.0F};
@@ -2025,7 +2025,7 @@ TEST_CASE("RectGridGeomIO rejects invalid bounds on write across a validation bl
   auto* gridPtr = RectGridGeom::Create(dataStructure, "Grid");
   REQUIRE(gridPtr != nullptr);
   constexpr usize k_Count = 4097;
-  auto* boundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Y Bounds", ShapeType{k_Count}, ShapeType{1});
+  auto* boundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Y Bounds", ShapeType{k_Count}, ShapeType{1});
   REQUIRE(boundsPtr != nullptr);
   for(usize i = 0; i < k_Count; ++i)
   {

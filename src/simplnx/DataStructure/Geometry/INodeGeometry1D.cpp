@@ -19,7 +19,7 @@ const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeListDataAr
   return m_EdgeDataArrayId;
 }
 
-INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges()
+INodeGeometry1D::SharedEdgeListType* INodeGeometry1D::getEdges()
 {
   if(!m_EdgeDataArrayId.has_value())
   {
@@ -30,10 +30,10 @@ INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges()
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
+  return dataStructurePtr->getDataAs<SharedEdgeListType>(m_EdgeDataArrayId);
 }
 
-const INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges() const
+const INodeGeometry1D::SharedEdgeListType* INodeGeometry1D::getEdges() const
 {
   if(!m_EdgeDataArrayId.has_value())
   {
@@ -44,10 +44,10 @@ const INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges() const
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
+  return dataStructurePtr->getDataAs<SharedEdgeListType>(m_EdgeDataArrayId);
 }
 
-INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef()
+INodeGeometry1D::SharedEdgeListType& INodeGeometry1D::getEdgesRef()
 {
   if(!m_EdgeDataArrayId.has_value())
   {
@@ -60,10 +60,10 @@ INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
+  return dataStructurePtr->getDataRefAs<SharedEdgeListType>(m_EdgeDataArrayId.value());
 }
 
-const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
+const INodeGeometry1D::SharedEdgeListType& INodeGeometry1D::getEdgesRef() const
 {
   if(!m_EdgeDataArrayId.has_value())
   {
@@ -76,10 +76,10 @@ const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry1D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
+  return dataStructurePtr->getDataRefAs<SharedEdgeListType>(m_EdgeDataArrayId.value());
 }
 
-void INodeGeometry1D::setEdgeList(const SharedEdgeList& edges)
+void INodeGeometry1D::setEdgeList(const SharedEdgeListType& edges)
 {
   m_EdgeDataArrayId = edges.getId();
 }
@@ -143,7 +143,7 @@ void INodeGeometry1D::getEdgePointIds(usize edgeId, nonstd::span<usize> vertexId
   }
 }
 
-void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3> coords) const
+void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3Type> coords) const
 {
   std::array<usize, k_NumEdgeVerts> verts = {0, 0};
   getEdgePointIds(edgeId, verts);
@@ -151,14 +151,14 @@ void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3> c
   coords[1] = getVertexCoordinate(verts[1]);
 }
 
-const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementsContainingVert() const
+const INodeGeometry1D::ElementDynamicListType* INodeGeometry1D::getElementsContainingVert() const
 {
   const DataStructure* dataStructurePtr = getDataStructure();
   if(nullptr == dataStructurePtr)
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  return dataStructurePtr->getDataAs<ElementDynamicListType>(m_CellContainingVertDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementsContainingVert()
@@ -167,14 +167,14 @@ void INodeGeometry1D::deleteElementsContainingVert()
   m_CellContainingVertDataArrayId.reset();
 }
 
-const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementNeighbors() const
+const INodeGeometry1D::ElementDynamicListType* INodeGeometry1D::getElementNeighbors() const
 {
   const DataStructure* dataStructurePtr = getDataStructure();
   if(nullptr == dataStructurePtr)
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  return dataStructurePtr->getDataAs<ElementDynamicListType>(m_CellNeighborsDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementNeighbors()
@@ -186,14 +186,14 @@ void INodeGeometry1D::deleteElementNeighbors()
   m_CellNeighborsDataArrayId.reset();
 }
 
-const Float32Array* INodeGeometry1D::getElementCentroids() const
+const Float32ArrayType* INodeGeometry1D::getElementCentroids() const
 {
   const DataStructure* dataStructurePtr = getDataStructure();
   if(nullptr == dataStructurePtr)
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
+  return dataStructurePtr->getDataAs<Float32ArrayType>(m_CellCentroidsDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementCentroids()

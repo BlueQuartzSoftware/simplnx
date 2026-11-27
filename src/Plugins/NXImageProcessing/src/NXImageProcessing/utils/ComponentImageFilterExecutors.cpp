@@ -46,7 +46,7 @@ struct ConnectedComponentExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   bool fully_connected;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
@@ -73,7 +73,7 @@ struct ZeroCrossingExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   uint8 foreground_value;
   uint8 background_value;
   const std::atomic_bool& should_cancel;
@@ -100,7 +100,7 @@ struct BinaryThinningExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
 
@@ -167,7 +167,7 @@ struct DoubleThresholdExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   float64 threshold1;
   float64 threshold2;
   float64 threshold3;
@@ -198,8 +198,8 @@ struct DoubleThresholdExecuteFn
     const T t4 = static_cast<T>(threshold4);
 
     // marker (in [t2,t3]) + mask (in [t1,t4]) uint8 scratch stores, inheriting the input's storage format (OOC-inheriting).
-    auto markerStorePtr = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto maskStorePtr = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto markerStorePtr = data_store_utilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto maskStorePtr = data_store_utilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
     AbstractDataStore<uint8>& markerStore = *markerStorePtr;
     AbstractDataStore<uint8>& maskStore = *maskStorePtr;
 
@@ -293,8 +293,8 @@ struct RelabelComponentExecuteFn
     {
       return MakeErrorResult(k_RelabelComponentInsufficientWorkingMemory, fmt::format("Relabel Component cannot reserve one {}-byte staging value for input array '{}'. Input values: {}; cache "
                                                                                       "budget: {}; maximum working memory: {}; granted bytes: {}. Increase the cache-memory budget.",
-                                                                                      sizeof(T), input_array_path.toString(), num_tuples, CacheMemoryBudgetManager::instance().budgetBytes(),
-                                                                                      CacheMemoryBudgetManager::instance().maximumWorkingMemoryBytes(), grantedBytes));
+                                                                                      sizeof(T), input_array_path.toString(), num_tuples, CacheMemoryBudgetManager::Instance().budgetBytes(),
+                                                                                      CacheMemoryBudgetManager::Instance().maximumWorkingMemoryBytes(), grantedBytes));
     }
     const auto slabPlan = usesOutOfCoreStore ? CreateRelabelChunkSlabPlan(outArray.getTupleShape(), outStore.getChunkShape(), num_tuples, sizeof(T)) : std::nullopt;
     const usize stagingValues = useResidentSpans ? 0 : SelectRelabelStagingValues(num_tuples, grantedBytes, sizeof(T), slabPlan);
@@ -727,7 +727,7 @@ struct ThresholdMaxCCExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   uint32 minimum_object_size_in_pixels;
   float64 upper_boundary;
   uint8 inside_value;
@@ -881,7 +881,7 @@ Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, cons
                                                 .fully_connected = fullyConnected,
                                                 .should_cancel = shouldCancel,
                                                 .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -900,7 +900,7 @@ Result<> ExecuteZeroCrossingImageFilter(DataStructure& dataStructure, const Data
                                           .background_value = backgroundValue,
                                           .should_cancel = shouldCancel,
                                           .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -925,7 +925,7 @@ Result<> ExecuteDoubleThresholdImageFilter(DataStructure& dataStructure, const D
                                              .fully_connected = fullyConnected,
                                              .should_cancel = shouldCancel,
                                              .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -943,7 +943,7 @@ Result<> ExecuteRelabelComponentImageFilter(DataStructure& dataStructure, const 
                                               .sort_by_object_size = sortByObjectSize,
                                               .should_cancel = shouldCancel,
                                               .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -960,7 +960,7 @@ Result<> ExecuteBinaryThinningImageFilter(DataStructure& dataStructure, const Da
                                             .dims = imageGeom.getDimensions(),
                                             .should_cancel = shouldCancel,
                                             .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -982,7 +982,7 @@ Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& da
                                             .outside_value = outsideValue,
                                             .should_cancel = shouldCancel,
                                             .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

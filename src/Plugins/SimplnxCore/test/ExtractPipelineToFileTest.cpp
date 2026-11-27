@@ -14,7 +14,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -25,14 +25,14 @@ fs::path KNxOutputFile(KOutputFileName.string() + Pipeline::k_Extension.str());
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
   ExtractPipelineToFileFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   auto exemplarDream3dFile = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
@@ -41,7 +41,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -51,19 +51,19 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution", "[Simplnx
 
   fs::remove(KNxOutputFile);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
   ExtractPipelineToFileFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   auto exemplarDream3dFile = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
@@ -72,30 +72,30 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter: Valid Execution - incorrect
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  REQUIRE(preflightResult.outputActions.warnings().front().code == -2581);
+  REQUIRE(preflightResult.output_actions.warnings().front().code == -2581);
   REQUIRE(fs::exists(KNxOutputFile));
 
   fs::remove(KNxOutputFile);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missing output extension", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
   Arguments args;
   ExtractPipelineToFileFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   auto exemplarDream3dFile = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
@@ -104,7 +104,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -112,12 +112,12 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - missin
 
   REQUIRE(!fs::exists(KJsonOutputFile));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invalid input file format", "[SimplnxCore][ExtractPipelineToFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   DataStructure dataStructure;
@@ -126,7 +126,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
 
   auto testInvalidInputFile = fs::path(fmt::format("{}/TestDataStructureNoPipeline.dream3d", unit_test::k_BinaryTestOutputDir));
   {
-    DataStructure testDataStructure = UnitTest::CreateDataStructure();
+    DataStructure testDataStructure = unit_test::CreateDataStructure();
     nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(testInvalidInputFile);
     auto writeResult = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     REQUIRE(writeResult.valid());
@@ -140,7 +140,7 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -150,5 +150,5 @@ TEST_CASE("SimplnxCore::ExtractPipelineToFileFilter : Invalid Execution - invali
 
   fs::remove(testInvalidInputFile);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

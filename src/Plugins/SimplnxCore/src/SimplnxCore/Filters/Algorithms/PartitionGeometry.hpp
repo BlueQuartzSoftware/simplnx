@@ -19,24 +19,24 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
 {
-  ChoicesParameter::ValueType PartitioningMode{};
-  int32 StartingFeatureID{};
-  int32 OutOfBoundsFeatureID{};
-  VectorInt32ParameterType::ValueType NumberOfCellsPerAxis;
-  VectorFloat32Parameter::ValueType PartitionGridOrigin;
-  VectorFloat32Parameter::ValueType CellLength;
-  VectorFloat32Parameter::ValueType MinGridCoord;
-  VectorFloat32Parameter::ValueType MaxGridCoord;
-  DataPath InputGeomCellAMPath;
-  DataPath PartitionGridGeomPath;
-  std::string PartitionGridCellAMName;
-  std::string PartitionGridFeatureIDsArrayName;
-  DataPath InputGeometryToPartition;
-  std::string PartitionIdsArrayName;
-  DataPath ExistingPartitionGridPath;
-  bool UseVertexMask{};
-  DataPath VertexMaskPath;
-  std::string FeatureAttrMatrixName;
+  ChoicesParameter::ValueType partitioning_mode{};
+  int32 starting_feature_id{};
+  int32 out_of_bounds_feature_id{};
+  VectorInt32ParameterType::ValueType number_of_cells_per_axis;
+  VectorFloat32ParameterType::ValueType partition_grid_origin;
+  VectorFloat32ParameterType::ValueType cell_length;
+  VectorFloat32ParameterType::ValueType min_grid_coord;
+  VectorFloat32ParameterType::ValueType max_grid_coord;
+  DataPath input_geom_cell_am_path;
+  DataPath partition_grid_geom_path;
+  std::string partition_grid_cell_am_name;
+  std::string partition_grid_feature_i_ds_array_name;
+  DataPath input_geometry_to_partition;
+  std::string partition_ids_array_name;
+  DataPath existing_partition_grid_path;
+  bool use_vertex_mask{};
+  DataPath vertex_mask_path;
+  std::string feature_attr_matrix_name;
 };
 
 /**
@@ -52,7 +52,7 @@ public:
   /**
    * @brief Defines the scalar store used for node coordinates.
    */
-  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using VertexStoreType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
   /**
    * @brief Creates a geometry-partition dispatcher.
@@ -79,10 +79,10 @@ public:
    */
   struct PSGeomInfo
   {
-    USizeVec3 geometryDims;
-    std::optional<FloatVec3> geometryOrigin;
-    std::optional<FloatVec3> geometrySpacing;
-    IGeometry::LengthUnit geometryUnits;
+    USizeVec3Type geometry_dims;
+    std::optional<FloatVec3Type> geometry_origin;
+    std::optional<FloatVec3Type> geometry_spacing;
+    IGeometry::LengthUnit geometry_units;
   };
 
   /**

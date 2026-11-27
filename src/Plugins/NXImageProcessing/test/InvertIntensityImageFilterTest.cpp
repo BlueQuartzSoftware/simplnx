@@ -15,8 +15,8 @@ using namespace nx::core;
 // 150-value straddles 127: bright voxels saturate to the int8 max (127) and the rest stay valid int8.
 TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: int8 output saturates (no out-of-range cast UB)", "[NXImageProcessing][InvertIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int8>(dataStructure, 4, 0.0, 1.0); // 64 values, 0..63
@@ -48,8 +48,8 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: int8 output saturates 
 
 TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: fractional maximum preserves Float64 semantics", "[NXImageProcessing][InvertIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int8>(dataStructure, 2, 0.0, 1.0);
@@ -70,8 +70,8 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: fractional maximum pre
 
 TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: extreme integral maximum uses safe fallback", "[NXImageProcessing][InvertIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int32>(dataStructure, 2, 0.0, 1.0);
@@ -96,8 +96,8 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: extreme integral maxim
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: ITK real-image golden (3d)", "[NXImageProcessing][ItkGolden][InvertIntensityImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -113,7 +113,7 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: ITK real-image golden 
   args.insertOrAssign(InvertIntensityImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   InvertIntensityImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -122,5 +122,5 @@ TEST_CASE("NXImageProcessing::InvertIntensityImageFilter: ITK real-image golden 
   INFO(fmt::format("InvertIntensityImageFilter 3d md5: ours='{}' committed='{}'", ourMd5, "76765a57f26a7979f33efc8ed9801a55"));
   REQUIRE(ourMd5 == "76765a57f26a7979f33efc8ed9801a55");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

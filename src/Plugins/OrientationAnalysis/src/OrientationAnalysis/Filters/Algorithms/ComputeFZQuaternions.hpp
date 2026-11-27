@@ -18,12 +18,12 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFZQuaternionsInputValues
 {
-  ArraySelectionParameter::ValueType CellPhasesArrayPath;
-  ArraySelectionParameter::ValueType CrystalStructuresArrayPath;
-  ArraySelectionParameter::ValueType InputQuatsArrayPath;
-  ArraySelectionParameter::ValueType MaskArrayPath;
-  DataObjectNameParameter::ValueType OutputFzQuatsArrayName;
-  BoolParameter::ValueType UseMask{};
+  ArraySelectionParameter::ValueType cell_phases_array_path;
+  ArraySelectionParameter::ValueType crystal_structures_array_path;
+  ArraySelectionParameter::ValueType input_quats_array_path;
+  ArraySelectionParameter::ValueType mask_array_path;
+  DataObjectNameParameter::ValueType output_fz_quats_array_name;
+  BoolParameter::ValueType use_mask{};
 };
 
 /**

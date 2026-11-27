@@ -37,23 +37,23 @@ TEST_CASE("MemorySafety: WouldExceedAvailableMemory pure overload", "[MemorySafe
   const uint64 oneGiB = uint64{1} * 1024 * 1024 * 1024;
 
   // Fits: 1 GiB used + 1 GiB required < 4 GiB available.
-  REQUIRE_FALSE(ArrayCreationUtilities::WouldExceedAvailableMemory(oneGiB, oneGiB, 4 * oneGiB));
+  REQUIRE_FALSE(array_creation_utilities::WouldExceedAvailableMemory(oneGiB, oneGiB, 4 * oneGiB));
 
   // Exactly at the limit does NOT trigger (strictly-greater semantics):
   // 2 GiB used + 2 GiB required == 4 GiB available.
-  REQUIRE_FALSE(ArrayCreationUtilities::WouldExceedAvailableMemory(2 * oneGiB, 2 * oneGiB, 4 * oneGiB));
+  REQUIRE_FALSE(array_creation_utilities::WouldExceedAvailableMemory(2 * oneGiB, 2 * oneGiB, 4 * oneGiB));
 
   // Over by one byte triggers.
-  REQUIRE(ArrayCreationUtilities::WouldExceedAvailableMemory(2 * oneGiB, 2 * oneGiB + 1, 4 * oneGiB));
+  REQUIRE(array_creation_utilities::WouldExceedAvailableMemory(2 * oneGiB, 2 * oneGiB + 1, 4 * oneGiB));
 
   // Required alone exceeds available (and the sum would overflow if added naively).
-  REQUIRE(ArrayCreationUtilities::WouldExceedAvailableMemory(oneGiB, std::numeric_limits<uint64>::max(), 4 * oneGiB));
+  REQUIRE(array_creation_utilities::WouldExceedAvailableMemory(oneGiB, std::numeric_limits<uint64>::max(), 4 * oneGiB));
 
   // Available of 0 (query failure) -> any non-zero requirement exceeds it.
-  REQUIRE(ArrayCreationUtilities::WouldExceedAvailableMemory(0, 1, 0));
+  REQUIRE(array_creation_utilities::WouldExceedAvailableMemory(0, 1, 0));
 
   // Boundary: required == available with non-zero current usage -> exceeds.
-  REQUIRE(ArrayCreationUtilities::WouldExceedAvailableMemory(1, 4 * oneGiB, 4 * oneGiB));
+  REQUIRE(array_creation_utilities::WouldExceedAvailableMemory(1, 4 * oneGiB, 4 * oneGiB));
 
   // NOTE: the DataStructure overload is intentionally not unit-tested here because it
   // calls Memory::GetSystemMemoryInfo() (the live OS); its arithmetic is covered by the
@@ -100,7 +100,7 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
     DataStructure dataStructure;
     DataGroup::Create(dataStructure, "Group");
     const DataPath path({"Group", "BigInCore"});
-    Result<> r = ArrayCreationUtilities::CreateArray<float32>(dataStructure, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
+    Result<> r = array_creation_utilities::CreateArray<float32>(dataStructure, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
     REQUIRE(count == 1);
@@ -113,7 +113,7 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
     DataStructure dataStructure;
     DataGroup::Create(dataStructure, "Group");
     const DataPath path({"Group", "BigOoc"});
-    Result<> r = ArrayCreationUtilities::CreateArray<float32>(dataStructure, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "HDF5-OOC");
+    Result<> r = array_creation_utilities::CreateArray<float32>(dataStructure, hugeTupleShape, compShape, path, IDataAction::Mode::Preflight, "HDF5-OOC");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
@@ -128,7 +128,7 @@ TEST_CASE("MemorySafety: CreateArray preflight emits -271 only for over-availabl
     DataStructure dataStructure;
     DataGroup::Create(dataStructure, "Group");
     const DataPath path({"Group", "SmallInCore"});
-    Result<> r = ArrayCreationUtilities::CreateArray<float32>(dataStructure, smallTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
+    Result<> r = array_creation_utilities::CreateArray<float32>(dataStructure, smallTupleShape, compShape, path, IDataAction::Mode::Preflight, "");
     REQUIRE_FALSE(r.invalid());
     const auto count = std::count_if(r.warnings().cbegin(), r.warnings().cend(), [](const Warning& w) { return w.code == -271; });
     REQUIRE(count == 0);
@@ -144,8 +144,8 @@ TEST_CASE("MemorySafety: DataStructure::memoryUsage counts OOC preflight arrays 
   const std::vector<usize> compShape{1};
   const uint64 inCoreBytes = uint64{1000} * 1 * sizeof(float32);
 
-  REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, compShape, DataPath({"Group", "InCore"}), IDataAction::Mode::Preflight, "").invalid());
-  REQUIRE_FALSE(ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, compShape, DataPath({"Group", "Ooc"}), IDataAction::Mode::Preflight, "HDF5-OOC").invalid());
+  REQUIRE_FALSE(array_creation_utilities::CreateArray<float32>(dataStructure, tupleShape, compShape, DataPath({"Group", "InCore"}), IDataAction::Mode::Preflight, "").invalid());
+  REQUIRE_FALSE(array_creation_utilities::CreateArray<float32>(dataStructure, tupleShape, compShape, DataPath({"Group", "Ooc"}), IDataAction::Mode::Preflight, "HDF5-OOC").invalid());
 
   // In-core builds normalize an unavailable OOC request to memory. Strict OOC builds preserve the OOC plan.
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT

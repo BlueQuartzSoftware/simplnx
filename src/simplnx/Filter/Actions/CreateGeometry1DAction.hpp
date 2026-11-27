@@ -75,7 +75,7 @@ public:
     static constexpr StringLiteralType k_Prefix = "CreateGeometry1DAction: ";
 
     using MeshIndexType = IGeometry::MeshIndexType;
-    using SharedEdgeListType = IGeometry::SharedEdgeList;
+    using SharedEdgeListType = IGeometry::SharedEdgeListType;
     DataPath edgeDataPath = getEdgeDataPath();
     DataPath vertexDataPath = getVertexDataPath();
 
@@ -104,7 +104,7 @@ public:
       return MakeErrorResult(-5404, fmt::format("{}CreateGeometry1DAction: Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
     }
 
-    auto* const verticesPtr = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    auto* const verticesPtr = dataStructure.getDataAs<Float32ArrayType>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && verticesPtr == nullptr)
     {
       return MakeErrorResult(-5405, fmt::format("{}CreateGeometry1DAction: Could not find vertices array at path '{}'", k_Prefix, m_InputVertices.toString()));
@@ -129,7 +129,7 @@ public:
     if(m_ArrayHandlingType == ArrayHandlingType::Copy)
     {
       std::shared_ptr<DataObject> vertexCopy = verticesPtr->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
-      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
+      const auto vertexArray = std::dynamic_pointer_cast<Float32ArrayType>(vertexCopy);
 
       std::shared_ptr<DataObject> edgesCopy = edgesPtr->deepCopy(getCreatedPath().createChildPath(m_SharedEdgesName));
       const auto edgesArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(edgesCopy);
@@ -175,7 +175,7 @@ public:
     else
     {
       DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
-      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
+      Result result = array_creation_utilities::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", k_Prefix, edgesPath.toString())));
@@ -190,12 +190,12 @@ public:
       // Vertices use three coordinates.
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
+      result = array_creation_utilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", k_Prefix, vertexPath.toString())));
       }
-      auto* vertexArrayPtr = dataStructure.getDataAs<Float32Array>(vertexPath);
+      auto* vertexArrayPtr = dataStructure.getDataAs<Float32ArrayType>(vertexPath);
       if(vertexArrayPtr == nullptr)
       {
         throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", vertexPath.toString()));
@@ -287,5 +287,5 @@ private:
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
 };
 
-using CreateEdgeGeometryAction = CreateGeometry1DAction<EdgeGeom>;
+using CreateEdgeGeometryActionType = CreateGeometry1DAction<EdgeGeom>;
 } // namespace nx::core

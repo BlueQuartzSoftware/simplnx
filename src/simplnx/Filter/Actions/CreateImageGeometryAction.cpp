@@ -48,8 +48,8 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode /*m
     return MakeErrorResult(k_MissingMetadataComponents, fmt::format("Image geometry at '{}' requires three origin and spacing components. Received {} origin and {} spacing components.",
                                                                     getCreatedPath().toString(), m_Origin.size(), m_Spacing.size()));
   }
-  const FloatVec3 origin = m_Origin;
-  const FloatVec3 spacing = m_Spacing;
+  const FloatVec3Type origin = m_Origin;
+  const FloatVec3Type spacing = m_Spacing;
   if(auto result = ImageGeom::ValidateOrigin(origin); result.invalid())
   {
     return addGeometryPath(std::move(result));

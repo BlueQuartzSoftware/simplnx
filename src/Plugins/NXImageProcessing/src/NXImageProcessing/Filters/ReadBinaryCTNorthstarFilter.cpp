@@ -28,10 +28,10 @@ namespace
 struct ReadBinaryCTNorthstarFilterCache
 {
   std::vector<std::pair<fs::path, usize>> data_file_paths;
-  SizeVec3 original_geometry_dims;
-  SizeVec3 imported_geometry_dims;
-  IntVec3 start_voxel_coord;
-  IntVec3 end_voxel_coord;
+  SizeVec3Type original_geometry_dims;
+  SizeVec3Type imported_geometry_dims;
+  IntVec3Type start_voxel_coord;
+  IntVec3Type end_voxel_coord;
 };
 
 std::atomic_int32_t SInstanceId = 0;
@@ -44,7 +44,7 @@ std::string GetNextLine(std::ifstream& inStream, usize& lineCount)
   std::string buffer;
   getline(inStream, buffer);
   lineCount++;
-  buffer = StringUtilities::trimmed(buffer);
+  buffer = string_utilities::Trimmed(buffer);
   return buffer;
 }
 
@@ -52,15 +52,15 @@ std::string GetNextLine(std::ifstream& inStream, usize& lineCount)
 std::vector<std::string> ParseNextLine(std::ifstream& inStream, char delimiter, usize& lineCount)
 {
   std::string line = GetNextLine(inStream, lineCount);
-  return StringUtilities::Split(line, delimiter);
+  return string_utilities::Split(line, delimiter);
 }
 
 // -----------------------------------------------------------------------------
 std::string GenerateGeometryInfoString(const ReadBinaryCTNorthstarFilter::ImageGeometryInfo& info, const IGeometry::LengthUnit& lengthUnit)
 {
-  SizeVec3 dims = info.Dimensions;
-  FloatVec3 origin = info.Origin;
-  FloatVec3 spacing = info.Spacing;
+  SizeVec3Type dims = info.dimensions;
+  FloatVec3Type origin = info.origin;
+  FloatVec3Type spacing = info.spacing;
   std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnit);
   std::string desc;
   for(usize axis = 0; axis < k_Axes.size(); ++axis)
@@ -97,13 +97,13 @@ Result<std::vector<std::pair<fs::path, usize>>> ReadFileList(std::ifstream& inSt
   std::vector<std::pair<fs::path, usize>> fileList;
 
   std::string line = GetNextLine(inStream, lineCount);
-  while(!StringUtilities::starts_with(line, "</Files>"))
+  while(!string_utilities::StartsWith(line, "</Files>"))
   {
-    if(StringUtilities::starts_with(line, "<Name>"))
+    if(string_utilities::StartsWith(line, "<Name>"))
     {
       std::pair<fs::path, usize> filePair;
 
-      filePair.first = headerFilePath.parent_path() / fs::path(StringUtilities::replace(line, "<Name>", ""));
+      filePair.first = headerFilePath.parent_path() / fs::path(string_utilities::Replace(line, "<Name>", ""));
 
       std::vector<std::string> tokens = ParseNextLine(inStream, ' ', lineCount);
       if(tokens.size() != 2)
@@ -115,7 +115,7 @@ Result<std::vector<std::pair<fs::path, usize>>> ReadFileList(std::ifstream& inSt
 
       if(tokens[0] == "<NbSlices>")
       {
-        Result<usize> result = StringInterpretationUtilities::Convert<usize>(tokens[1]);
+        Result<usize> result = string_interpretation_utilities::Convert<usize>(tokens[1]);
         if(result.invalid())
         {
           const Error& err = result.errors()[0];
@@ -168,14 +168,14 @@ Result<std::pair<std::vector<float32>, std::vector<float32>>> ReadLocation(std::
     for(usize i = 0; i < k_AxisOrder.size(); ++i)
     {
       const usize axis = k_AxisOrder[i];
-      const auto value = StringInterpretationUtilities::Convert<float32>(tokens[i + 1]);
+      const auto value = string_interpretation_utilities::Convert<float32>(tokens[i + 1]);
       if(value.invalid())
       {
         const auto& error = value.errors().front();
         const auto field = fmt::format("{} {} coordinate", isMin ? "minimum" : "maximum", k_Axes[axis]);
         const auto detail = fmt::format("Value '{}' at line {} in the 'Location' section could not be converted to float32.", tokens[i + 1], lineCount);
-        const auto message = isMin ? ImageIO::FormatReaderValueError(headerFilePath, field, detail, ImageIO::k_SetOriginLabel, ImageIO::k_SetSpacingLabel) :
-                                     ImageIO::FormatReaderValueError(headerFilePath, field, detail, ImageIO::k_SetSpacingLabel);
+        const auto message = isMin ? image_io::FormatReaderValueError(headerFilePath, field, detail, image_io::k_SetOriginLabel, image_io::k_SetSpacingLabel) :
+                                     image_io::FormatReaderValueError(headerFilePath, field, detail, image_io::k_SetSpacingLabel);
         return MakeErrorResult<LocationType>(error.code, message);
       }
       coordinates[axis] = value.value();
@@ -188,7 +188,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
 {
   std::vector<usize> voxels = {0, 0, 0};
 
-  Result<usize> result = StringInterpretationUtilities::Convert<usize>(tokens[1]);
+  Result<usize> result = string_interpretation_utilities::Convert<usize>(tokens[1]);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];
@@ -197,7 +197,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
   }
   voxels[1] = result.value();
 
-  result = StringInterpretationUtilities::Convert<usize>(tokens[2]);
+  result = string_interpretation_utilities::Convert<usize>(tokens[2]);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];
@@ -206,7 +206,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
   }
   voxels[2] = result.value();
 
-  result = StringInterpretationUtilities::Convert<usize>(tokens[3]);
+  result = string_interpretation_utilities::Convert<usize>(tokens[3]);
   if(result.invalid())
   {
     const Error& err = result.errors()[0];
@@ -220,7 +220,7 @@ Result<std::vector<usize>> ReadVoxels(const std::vector<std::string>& tokens, co
 
 // -----------------------------------------------------------------------------
 Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>> ReadHeaderMetaData(const fs::path& headerFilePath,
-                                                                                                                              const ImageIO::GeometryOverrides& overrides)
+                                                                                                                              const image_io::GeometryOverrides& overrides)
 {
   ReadBinaryCTNorthstarFilter::ImageGeometryInfo imageGeomInfo;
 
@@ -292,15 +292,15 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarF
       {
         return MakeErrorResult<std::pair<std::vector<std::pair<fs::path, usize>>, ReadBinaryCTNorthstarFilter::ImageGeometryInfo>>(
             ImageGeom::k_InvalidSpacing,
-            ImageIO::FormatReaderValueError(headerFilePath, "spacing", fmt::format("Computed {} spacing ({}) is outside the float32 range.", k_Axes[i], spacingValue), ImageIO::k_SetSpacingLabel));
+            image_io::FormatReaderValueError(headerFilePath, "spacing", fmt::format("Computed {} spacing ({}) is outside the float32 range.", k_Axes[i], spacingValue), image_io::k_SetSpacingLabel));
       }
       spacing[i] = static_cast<float32>(spacingValue);
     }
   }
 
-  imageGeomInfo.Dimensions = voxels;
-  imageGeomInfo.Spacing = spacing;
-  imageGeomInfo.Origin = minLocation;
+  imageGeomInfo.dimensions = voxels;
+  imageGeomInfo.spacing = spacing;
+  imageGeomInfo.origin = minLocation;
 
   return {std::make_pair(dataFiles, imageGeomInfo)};
 }
@@ -369,7 +369,7 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(
@@ -412,31 +412,31 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
 
   if(!fs::exists(pInputHeaderFileValue))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-38701, "The input header file does not exist")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-38701, "The input header file does not exist")};
   }
 
-  const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  const auto overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
   auto result = ReadHeaderMetaData(pInputHeaderFileValue, overrides);
   if(result.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(result))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(result))};
   }
 
   ImageGeometryInfo geometryInfo = result.value().second;
-  if(auto geometryResult = overrides.apply(pInputHeaderFileValue, geometryInfo.Origin, geometryInfo.Spacing); geometryResult.invalid())
+  if(auto geometryResult = overrides.apply(pInputHeaderFileValue, geometryInfo.origin, geometryInfo.spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   ImageGeometryInfo importedGeometryInfo;
   if(pImportSubvolumeValue)
   {
-    importedGeometryInfo.Dimensions = {static_cast<usize>(pEndVoxelCoordValue[0] - pStartVoxelCoordValue[0] + 1), static_cast<usize>(pEndVoxelCoordValue[1] - pStartVoxelCoordValue[1] + 1),
+    importedGeometryInfo.dimensions = {static_cast<usize>(pEndVoxelCoordValue[0] - pStartVoxelCoordValue[0] + 1), static_cast<usize>(pEndVoxelCoordValue[1] - pStartVoxelCoordValue[1] + 1),
                                        static_cast<usize>(pEndVoxelCoordValue[2] - pStartVoxelCoordValue[2] + 1)};
-    importedGeometryInfo.Spacing = geometryInfo.Spacing;
-    importedGeometryInfo.Origin = {geometryInfo.Origin[0] + (static_cast<float32>(pStartVoxelCoordValue[0]) * importedGeometryInfo.Spacing[0]),
-                                   geometryInfo.Origin[1] + (static_cast<float32>(pStartVoxelCoordValue[1]) * importedGeometryInfo.Spacing[1]),
-                                   geometryInfo.Origin[2] + (static_cast<float32>(pStartVoxelCoordValue[2]) * importedGeometryInfo.Spacing[2])};
+    importedGeometryInfo.spacing = geometryInfo.spacing;
+    importedGeometryInfo.origin = {geometryInfo.origin[0] + (static_cast<float32>(pStartVoxelCoordValue[0]) * importedGeometryInfo.spacing[0]),
+                                   geometryInfo.origin[1] + (static_cast<float32>(pStartVoxelCoordValue[1]) * importedGeometryInfo.spacing[1]),
+                                   geometryInfo.origin[2] + (static_cast<float32>(pStartVoxelCoordValue[2]) * importedGeometryInfo.spacing[2])};
     SHeaderCache[m_InstanceId].start_voxel_coord = pStartVoxelCoordValue;
     SHeaderCache[m_InstanceId].end_voxel_coord = pEndVoxelCoordValue;
   }
@@ -444,46 +444,46 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   {
     importedGeometryInfo = geometryInfo;
     SHeaderCache[m_InstanceId].start_voxel_coord = {0, 0, 0};
-    SHeaderCache[m_InstanceId].end_voxel_coord = {static_cast<int32_t>(geometryInfo.Dimensions[0] - 1), static_cast<int32_t>(geometryInfo.Dimensions[1] - 1),
-                                                  static_cast<int32_t>(geometryInfo.Dimensions[2] - 1)};
+    SHeaderCache[m_InstanceId].end_voxel_coord = {static_cast<int32_t>(geometryInfo.dimensions[0] - 1), static_cast<int32_t>(geometryInfo.dimensions[1] - 1),
+                                                  static_cast<int32_t>(geometryInfo.dimensions[2] - 1)};
   }
 
-  SHeaderCache[m_InstanceId].original_geometry_dims = geometryInfo.Dimensions;
-  SHeaderCache[m_InstanceId].imported_geometry_dims = importedGeometryInfo.Dimensions;
+  SHeaderCache[m_InstanceId].original_geometry_dims = geometryInfo.dimensions;
+  SHeaderCache[m_InstanceId].imported_geometry_dims = importedGeometryInfo.dimensions;
 
   // Sanity check the Start/End Voxels
   if(pImportSubvolumeValue)
   {
     if(pStartVoxelCoordValue[0] > pEndVoxelCoordValue[0])
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38712, fmt::format("Starting X Voxel > Ending X Voxel ({} > {})", pStartVoxelCoordValue[0], pEndVoxelCoordValue[0]))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38712, fmt::format("Starting X Voxel > Ending X Voxel ({} > {})", pStartVoxelCoordValue[0], pEndVoxelCoordValue[0]))};
     }
     if(pStartVoxelCoordValue[1] > pEndVoxelCoordValue[1])
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38713, fmt::format("Starting Y Voxel > Ending Y Voxel ({} > {})", pStartVoxelCoordValue[1], pEndVoxelCoordValue[1]))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38713, fmt::format("Starting Y Voxel > Ending Y Voxel ({} > {})", pStartVoxelCoordValue[1], pEndVoxelCoordValue[1]))};
     }
     if(pStartVoxelCoordValue[2] > pEndVoxelCoordValue[2])
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38714, fmt::format("Starting Z Voxel > Ending Z Voxel ({} > {})", pStartVoxelCoordValue[2], pEndVoxelCoordValue[2]))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38714, fmt::format("Starting Z Voxel > Ending Z Voxel ({} > {})", pStartVoxelCoordValue[2], pEndVoxelCoordValue[2]))};
     }
 
     if(pStartVoxelCoordValue[0] < 0 || pStartVoxelCoordValue[1] < 0 || pStartVoxelCoordValue[2] < 0)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38715, fmt::format("Start Voxel < ZERO ({}, {}, {})", pStartVoxelCoordValue[0], pStartVoxelCoordValue[1], pStartVoxelCoordValue[2]))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38715, fmt::format("Start Voxel < ZERO ({}, {}, {})", pStartVoxelCoordValue[0], pStartVoxelCoordValue[1], pStartVoxelCoordValue[2]))};
     }
 
-    std::vector<usize> origDims = geometryInfo.Dimensions;
+    std::vector<usize> origDims = geometryInfo.dimensions;
     if(pEndVoxelCoordValue[0] >= origDims[0])
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38716, fmt::format("Ending X Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[0], origDims[0] - 1))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38716, fmt::format("Ending X Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[0], origDims[0] - 1))};
     }
     if(pEndVoxelCoordValue[1] >= origDims[1])
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38717, fmt::format("Ending Y Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[1], origDims[1] - 1))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38717, fmt::format("Ending Y Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[1], origDims[1] - 1))};
     }
     if(pEndVoxelCoordValue[2] >= origDims[2])
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(-38718, fmt::format("Ending Z Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[2], origDims[2] - 1))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-38718, fmt::format("Ending Z Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[2], origDims[2] - 1))};
     }
   }
 
@@ -492,7 +492,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   {
     if(!fs::exists(dataFilePair.first))
     {
-      return {.outputActions =
+      return {.output_actions =
                   MakeErrorResult<OutputActions>(-38704, fmt::format("The input binary CT file: {} could not be found in the path: {}. The input binary CT file name was obtained from the provided "
                                                                      "header.  Please ensure the file is in the same path as the header and the name has not been altered.",
                                                                      dataFilePair.first.string(), pInputHeaderFileValue.parent_path().string()))};
@@ -504,12 +504,12 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   // Set the output actions
   nx::core::Result<OutputActions> resultOutputActions;
   auto createImageGeometryAction =
-      std::make_unique<CreateImageGeometryAction>(pImageGeometryPathValue, importedGeometryInfo.Dimensions, importedGeometryInfo.Origin, importedGeometryInfo.Spacing, pCellAttributeMatrixNameValue);
+      std::make_unique<CreateImageGeometryAction>(pImageGeometryPathValue, importedGeometryInfo.dimensions, importedGeometryInfo.origin, importedGeometryInfo.spacing, pCellAttributeMatrixNameValue);
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   DataPath densityArrayPath = pImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(
-      DataType::float32, std::vector<usize>{importedGeometryInfo.Dimensions[2], importedGeometryInfo.Dimensions[1], importedGeometryInfo.Dimensions[0]}, std::vector<usize>{1}, densityArrayPath));
+      DataType::float32, std::vector<usize>{importedGeometryInfo.dimensions[2], importedGeometryInfo.dimensions[1], importedGeometryInfo.dimensions[0]}, std::vector<usize>{1}, densityArrayPath));
 
   // Set the preflight updated values
   std::string volumeDescription = GenerateGeometryInfoString(geometryInfo, static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
@@ -526,7 +526,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   }
 
   // Return output actions and preflight updated values
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -535,21 +535,21 @@ Result<> ReadBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure, 
 {
   ReadBinaryCTNorthstarInputValues inputValues;
 
-  inputValues.InputHeaderFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.input_header_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
 
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
-  DataPath densityArrayPath = inputValues.ImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
-  inputValues.DensityArrayPath = densityArrayPath;
+  DataPath densityArrayPath = inputValues.image_geometry_path.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
+  inputValues.density_array_path = densityArrayPath;
 
-  inputValues.DataFilePaths = SHeaderCache[m_InstanceId].data_file_paths;
-  inputValues.OriginalGeometryDims = SHeaderCache[m_InstanceId].original_geometry_dims;
-  inputValues.ImportedGeometryDims = SHeaderCache[m_InstanceId].imported_geometry_dims;
-  inputValues.ImportSubvolume = filterArgs.value<bool>(k_ImportSubvolume_Key);
-  inputValues.StartVoxelCoord = SHeaderCache[m_InstanceId].start_voxel_coord;
-  inputValues.EndVoxelCoord = SHeaderCache[m_InstanceId].end_voxel_coord;
-  inputValues.LengthUnit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
+  inputValues.data_file_paths = SHeaderCache[m_InstanceId].data_file_paths;
+  inputValues.original_geometry_dims = SHeaderCache[m_InstanceId].original_geometry_dims;
+  inputValues.imported_geometry_dims = SHeaderCache[m_InstanceId].imported_geometry_dims;
+  inputValues.import_subvolume = filterArgs.value<bool>(k_ImportSubvolume_Key);
+  inputValues.start_voxel_coord = SHeaderCache[m_InstanceId].start_voxel_coord;
+  inputValues.end_voxel_coord = SHeaderCache[m_InstanceId].end_voxel_coord;
+  inputValues.length_unit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
 
   return ReadBinaryCTNorthstar(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -586,8 +586,8 @@ Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::jso
   // Volume description parameter is not applicable in NX
   // Data file info parameter is not applicable in NX
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverterType>(args, json, simpl::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverterType>(args, json, simpl::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
   // Imported Volume Description parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

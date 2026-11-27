@@ -15,9 +15,9 @@
 #include <string_view>
 #include <type_traits>
 
-namespace nx::core::AbaqusElementSets
+namespace nx::core::abaqus_element_sets
 {
-Result<int32> findMaximumGrainId(const Int32AbstractDataStore& featureIdsRef, const std::atomic_bool& shouldCancel)
+Result<int32> FindMaximumGrainId(const Int32AbstractDataStoreType& featureIdsRef, const std::atomic_bool& shouldCancel)
 {
   const usize totalElements = featureIdsRef.getSize();
   if(totalElements == 0)
@@ -66,7 +66,7 @@ constexpr std::array<std::string_view, 5> k_FileSuffixes = {"_nodes.inp", "_elem
  * pass avoids a grain-by-cell rescan. The tradeoff is O(maximum ID plus positive
  * cell count) resident bucket memory.
  */
-Result<std::vector<std::vector<usize>>> GroupElementsByGrain(ThrottledMessageHandler& progressThrottle, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId,
+Result<std::vector<std::vector<usize>>> GroupElementsByGrain(ThrottledMessageHandler& progressThrottle, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId,
                                                              const std::atomic_bool& shouldCancel)
 {
   const usize elsetCount = maxGrainId > 0 ? static_cast<usize>(maxGrainId) + 1 : 0;
@@ -133,7 +133,7 @@ void WriteElementId(std::ostream& output, uint64 elementId, usize& elementsOnSet
  * @param shouldCancel Signals cancellation between grouping chunks.
  * @return Grouping source-read result, or success after cancellation.
  */
-Result<> WriteDirectElsets(ThrottledMessageHandler& progressThrottle, std::ostream& output, const HeaderType& header, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId,
+Result<> WriteDirectElsets(ThrottledMessageHandler& progressThrottle, std::ostream& output, const HeaderType& header, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId,
                            const std::atomic_bool& shouldCancel)
 {
   auto groupedResult = GroupElementsByGrain(progressThrottle, featureIdsRef, maxGrainId, shouldCancel);
@@ -178,7 +178,7 @@ Result<> WriteDirectElsets(ThrottledMessageHandler& progressThrottle, std::ostre
  * This exact bounded fallback is for forced OOC tests on resident data when no
  * sorter exists. Actual OOC input rejects this O(grains times cells) I/O path.
  */
-Result<> WriteRepeatedScanElsets(std::ostream& output, const HeaderType& header, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId, const std::atomic_bool& shouldCancel)
+Result<> WriteRepeatedScanElsets(std::ostream& output, const HeaderType& header, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId, const std::atomic_bool& shouldCancel)
 {
   const usize totalElements = featureIdsRef.getSize();
   auto featurePage = std::make_unique<int32[]>(std::min(k_ChunkSize, totalElements));
@@ -237,11 +237,11 @@ static_assert(std::is_trivially_copyable_v<ElementGrainRecord>);
  * Records sort by grain and one-based element ID. This produces contiguous
  * ascending ELSET runs without cell-scale resident buckets.
  */
-Result<> WriteExternalSortedElsets(std::ostream& output, const HeaderType& header, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId, const std::atomic_bool& shouldCancel)
+Result<> WriteExternalSortedElsets(std::ostream& output, const HeaderType& header, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId, const std::atomic_bool& shouldCancel)
 {
   ExternalSortConfig config;
-  config.recordSize = sizeof(ElementGrainRecord);
-  config.maxRecordsPerBatch = k_ChunkSize;
+  config.record_size = sizeof(ElementGrainRecord);
+  config.max_records_per_batch = k_ChunkSize;
   config.compare = [](nonstd::span<const std::byte> leftBytes, nonstd::span<const std::byte> rightBytes) {
     ElementGrainRecord left;
     ElementGrainRecord right;
@@ -258,7 +258,7 @@ Result<> WriteExternalSortedElsets(std::ostream& output, const HeaderType& heade
     return left.element_id < right.element_id ? int32{-1} : int32{1};
   };
 
-  auto sortResult = DataStoreUtilities::GetIOCollection().createExternalSort(config);
+  auto sortResult = data_store_utilities::GetIOCollection().createExternalSort(config);
   if(sortResult.invalid())
   {
     return ConvertResult(std::move(sortResult));
@@ -361,7 +361,7 @@ Result<> WriteExternalSortedElsets(std::ostream& output, const HeaderType& heade
 
 } // namespace
 
-Result<> write(ThrottledMessageHandler& progressThrottle, std::ostream& output, const HeaderType& header, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
+Result<> Write(ThrottledMessageHandler& progressThrottle, std::ostream& output, const HeaderType& header, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
                const std::atomic_bool& shouldCancel)
 {
   Result<> result;
@@ -369,7 +369,7 @@ Result<> write(ThrottledMessageHandler& progressThrottle, std::ostream& output, 
   {
     result = WriteDirectElsets(progressThrottle, output, header, featureIdsRef, maxGrainId, shouldCancel);
   }
-  else if(DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
+  else if(data_store_utilities::GetIOCollection().hasExternalSortCapability())
   {
     result = WriteExternalSortedElsets(output, header, featureIdsRef, maxGrainId, shouldCancel);
   }
@@ -388,7 +388,7 @@ Result<> write(ThrottledMessageHandler& progressThrottle, std::ostream& output, 
   return result;
 }
 
-Result<> validateFilePrefix(const std::string& prefix, int32 errorCode)
+Result<> ValidateFilePrefix(const std::string& prefix, int32 errorCode)
 {
   if(prefix.empty() || prefix == "." || prefix == ".." || prefix.find_first_of("/\\") != std::string::npos || std::filesystem::path(prefix).filename().string() != prefix ||
      std::any_of(prefix.begin(), prefix.end(), [](unsigned char character) { return std::isspace(character) != 0; }))
@@ -400,7 +400,7 @@ Result<> validateFilePrefix(const std::string& prefix, int32 errorCode)
   return {};
 }
 
-Result<> validateOutputTargets(const std::filesystem::path& outputPath, const std::string& prefix, int32 errorCode)
+Result<> ValidateOutputTargets(const std::filesystem::path& outputPath, const std::string& prefix, int32 errorCode)
 {
   for(const auto suffix : k_FileSuffixes)
   {
@@ -414,7 +414,7 @@ Result<> validateOutputTargets(const std::filesystem::path& outputPath, const st
   return {};
 }
 
-Result<> validateMeshSize(const SizeVec3& dimensions)
+Result<> ValidateMeshSize(const SizeVec3Type& dimensions)
 {
   constexpr uint64 k_MaxLabel = 999'999'999;
   for(const bool nodes : {false, true})

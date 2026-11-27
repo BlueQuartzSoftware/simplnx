@@ -133,10 +133,10 @@ Result<> WriteVtkRectilinearGridFilter::executeImpl(DataStructure& dataStructure
 
   WriteVtkRectilinearGridInputValues inputValues;
 
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.write_binary_file = filterArgs.value<bool>(k_WriteBinaryFile_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   auto result = WriteVtkRectilinearGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

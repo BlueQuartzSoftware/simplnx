@@ -36,8 +36,8 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -134,7 +134,7 @@ void CompareArrayValues(const DataStructure& dataStructure, const DataPath& arra
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Class 1 Analytical Oracle", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_oracle.ctf", MakeToyCtf());
 
@@ -143,7 +143,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Class 1 Analytical Oracle", "
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -156,12 +156,12 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Class 1 Analytical Oracle", "
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath);
   {
-    const SizeVec3 dims = imageGeom.getDimensions(); // XCells=3, YCells=2, no ZCells key -> 1 slice
-    REQUIRE(dims == SizeVec3(3, 2, 1));
-    const FloatVec3 spacing = imageGeom.getSpacing(); // XStep=0.25, YStep=0.5, no ZStep key -> 1.0
-    REQUIRE(spacing == FloatVec3(0.25F, 0.5F, 1.0F));
-    const FloatVec3 origin = imageGeom.getOrigin(); // hard-coded (0,0,0)
-    REQUIRE(origin == FloatVec3(0.0F, 0.0F, 0.0F));
+    const SizeVec3Type dims = imageGeom.getDimensions(); // XCells=3, YCells=2, no ZCells key -> 1 slice
+    REQUIRE(dims == SizeVec3Type(3, 2, 1));
+    const FloatVec3Type spacing = imageGeom.getSpacing(); // XStep=0.25, YStep=0.5, no ZStep key -> 1.0
+    REQUIRE(spacing == FloatVec3Type(0.25F, 0.5F, 1.0F));
+    const FloatVec3Type origin = imageGeom.getOrigin(); // hard-coded (0,0,0)
+    REQUIRE(origin == FloatVec3Type(0.0F, 0.0F, 0.0F));
     REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
   }
 
@@ -211,7 +211,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Class 1 Analytical Oracle", "
     REQUIRE(materialNamesRef[2] == "Copper");
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // The oracle covers DegreesToRadians and EdaxHexagonalAlignment combinations.
@@ -223,7 +223,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Class 1 Analytical Oracle", "
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Laue group 8 is LG_Hexagonal_Low; point 3 exercises it alongside 6/mmm at point 0.
   const std::string phaseBlock = "Phases\t3\n"
@@ -278,7 +278,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
       Arguments args = MakeDefaultArgs(inputCtfFile, conversionCase.degrees_to_radians, conversionCase.edax_hexagonal_alignment);
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -291,7 +291,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
       // The Phase column is never altered by either conversion option.
       CompareArrayValues<int32>(dataStructure, cellAMPath.createChildPath("Phases"), {1, 2, 0, 3, 2, 0});
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -300,7 +300,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Euler Conversion Combinations
 // Missing or zero ZStep uses thickness 1. Data rows remain slice-major.
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 2 cols x 2 rows x 2 slices, single cubic phase. 8 data rows in slice-major order.
   const std::string dataBlock3D = "1\t0\t0\t7\t0\t0.125\t0.25\t0.375\t0.5\t105\t177\n"
@@ -337,15 +337,15 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[Orient
       Arguments args = MakeDefaultArgs(inputCtfFile);
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
       REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
       const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath);
-      REQUIRE(imageGeom.getDimensions() == SizeVec3(2, 2, 2));
-      REQUIRE(imageGeom.getSpacing() == FloatVec3(0.25F, 0.5F, sliceCase.expected_z_spacing));
+      REQUIRE(imageGeom.getDimensions() == SizeVec3Type(2, 2, 2));
+      REQUIRE(imageGeom.getSpacing() == FloatVec3Type(0.25F, 0.5F, sliceCase.expected_z_spacing));
 
       const DataPath cellAMPath = k_DataContainerPath.createChildPath(k_CellData);
       CompareArrayValues<int32>(dataStructure, cellAMPath.createChildPath("Phases"), {1, 1, 0, 1, 1, 0, 1, 1});
@@ -354,7 +354,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[Orient
                                                                                              1.625F, 1.75F, 1.875F, 2.0F, 2.125F, 2.25F, 2.375F, 2.5F, 2.625F, 2.75F, 2.875F, 3.0F});
       CompareArrayValues<float32>(dataStructure, cellAMPath.createChildPath("MAD"), {0.5F, 0.25F, 0.0F, 0.375F, 0.625F, 0.0F, 0.125F, 0.875F});
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -363,7 +363,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: 3D Multi-Slice CTF", "[Orient
 // Execution must return -19600 after preflight accepts the header.
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Empty Phases rejected (-19600)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_no_phase.ctf", MakeToyCtf("", k_ZeroPhaseBlock));
 
@@ -372,19 +372,19 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Empty Phases rejected (-19600
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -19600);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // A data section missing a standard column must return -19601 at execution.
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Missing Data Column rejected (-19601)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string columnHeaderNoBS = "Phase\tX\tY\tBands\tError\tEuler1\tEuler2\tEuler3\tMAD\tBC\n";
   const std::string dataBlockNoBS = "1\t0\t0\t7\t0\t0.125\t0.25\t0.375\t0.5\t105\n"
@@ -400,7 +400,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Missing Data Column rejected 
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -408,14 +408,14 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Missing Data Column rejected 
   // The missing column's name is the user-facing value of this error message.
   REQUIRE(executeResult.result.errors()[0].message.find("'BS'") != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // A data-row phase outside the header range must return -19602.
 // With two phases, identifier 3 is the first invalid value.
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Out-of-Range Phase Value rejected (-19602)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string corruptDataBlock = k_DataBlock;
   corruptDataBlock.replace(0, 1, "3"); // First data row's Phase column: 1 -> 3 (first out-of-range value)
@@ -426,7 +426,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Out-of-Range Phase Value reje
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -435,7 +435,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Out-of-Range Phase Value reje
   REQUIRE(executeResult.result.errors()[0].message.find("phase value 3") != std::string::npos);
   REQUIRE(executeResult.result.errors()[0].message.find("[0, 2]") != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -444,7 +444,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Out-of-Range Phase Value reje
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero ZCells rejected at execute (-102312)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_zero_zcells.ctf", MakeToyCtf("ZCells\t0\n"));
 
@@ -453,7 +453,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero ZCells rejected at execu
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -461,7 +461,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero ZCells rejected at execu
   REQUIRE(executeResult.result.errors()[0].code == -102312);
   REQUIRE(executeResult.result.errors()[0].message.find("ZCells") != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -472,7 +472,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero ZCells rejected at execu
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Invalid Cells Preflight Error (-19604)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::vector<std::pair<std::string, std::string>> cases = {
       {"Zero XCells", MakeToyCtf("", k_TwoPhaseBlock, k_ColumnHeader, k_DataBlock, 0, 2)},
@@ -490,10 +490,10 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Invalid Cells Preflight Error
       Arguments args = MakeDefaultArgs(inputCtfFile);
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-      REQUIRE(preflightResult.outputActions.errors()[0].code == -19604);
+      SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+      REQUIRE(preflightResult.output_actions.errors()[0].code == -19604);
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -510,9 +510,9 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero Step Rejected by Geometr
   const auto file = WriteCtfFile("read_ctf_vv_zero_step.ctf", contents);
   const ReadCtfDataFilter filter;
   auto args = MakeDefaultArgs(file);
-  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {0.25F, 0.5F, 4});
-  UnitTest::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {0.25F, 0.5F, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, file, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {0.25F, 0.5F, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {0.25F, 0.5F, 4});
 }
 
 //------------------------------------------------------------------------------
@@ -521,7 +521,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: Zero Step Rejected by Geometr
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - Truncated Data (-105)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Keep only the first 4 of 6 data rows.
   std::string truncatedData = k_DataBlock;
@@ -536,13 +536,13 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - T
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -105);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -551,7 +551,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - T
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - Unknown Column (-107)", "[OrientationAnalysis][ReadCtfDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string bogusColumnHeader = "Phase\tX\tY\tBands\tError\tEuler1\tEuler2\tEuler3\tMAD\tBC\tBogus\n";
   const fs::path inputCtfFile = WriteCtfFile("read_ctf_vv_unknown_column.ctf", MakeToyCtf("", k_TwoPhaseBlock, bogusColumnHeader, k_DataBlock));
@@ -561,13 +561,13 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - U
   Arguments args = MakeDefaultArgs(inputCtfFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -107);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -576,7 +576,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: EbsdLib Error Passthrough - U
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: real HDF5 65536-block conversion oracle", "[OrientationAnalysis][ReadCtfDataFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BlockTuples = 65536;
@@ -607,12 +607,12 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: real HDF5 65536-block convers
   const auto eulersPath = cellsPath.createChildPath("EulerAngles");
   const auto phasesPath = cellsPath.createChildPath("Phases");
   const auto bandsPath = cellsPath.createChildPath("Bands");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulersPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(bandsPath));
-  const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulersPath);
-  const auto& phases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
-  const auto& bands = dataStructure.getDataRefAs<Int32Array>(bandsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(eulersPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(bandsPath));
+  const auto& eulers = dataStructure.getDataRefAs<Float32ArrayType>(eulersPath);
+  const auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(phasesPath);
+  const auto& bands = dataStructure.getDataRefAs<Int32ArrayType>(bandsPath);
   REQUIRE(eulers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(phases.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(bands.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -626,13 +626,13 @@ TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: real HDF5 65536-block convers
   REQUIRE(phases[k_BlockTuples] == 0);
   REQUIRE(bands[k_BlockTuples - 1] == 5);
   REQUIRE(bands[k_BlockTuples] == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadCtfDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadCtfDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

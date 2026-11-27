@@ -12,7 +12,7 @@ GridTileIndex::GridTileIndex()
 {
 }
 
-GridTileIndex::GridTileIndex(const GridMontage* montage, SizeVec3 pos)
+GridTileIndex::GridTileIndex(const GridMontage* montage, SizeVec3Type pos)
 : AbstractTileIndex(montage)
 , m_Pos(std::move(pos))
 {
@@ -47,7 +47,7 @@ usize GridTileIndex::getDepth() const
   return m_Pos[2];
 }
 
-SizeVec3 GridTileIndex::getTilePos() const
+SizeVec3Type GridTileIndex::getTilePos() const
 {
   return m_Pos;
 }

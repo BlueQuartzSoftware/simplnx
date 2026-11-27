@@ -19,8 +19,8 @@ namespace rt = recon_test;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed central pit kept", "[NXImageProcessing][ValuedRegionalMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 5;
   constexpr usize k_Dy = 5;
@@ -59,8 +59,8 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed cen
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed central pit kept (both algorithm paths)", "[NXImageProcessing][ValuedRegionalMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   constexpr usize k_Dx = 5;
@@ -75,7 +75,7 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed cen
   pattern[rt::FlatIndex(2, 3, 0, k_Dx, k_Dy)] = k_Pit;
   pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Pit;
 
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
@@ -106,8 +106,8 @@ TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: hand-computed cen
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ValuedRegionalMinimaImageFilter: flat image unchanged", "[NXImageProcessing][ValuedRegionalMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 5;

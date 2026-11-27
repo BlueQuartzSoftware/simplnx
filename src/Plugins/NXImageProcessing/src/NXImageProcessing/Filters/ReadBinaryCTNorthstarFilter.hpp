@@ -48,9 +48,9 @@ public:
 
   struct ImageGeometryInfo
   {
-    std::vector<float32> Origin;
-    std::vector<float32> Spacing;
-    std::vector<usize> Dimensions;
+    std::vector<float32> origin;
+    std::vector<float32> spacing;
+    std::vector<usize> dimensions;
   };
 
   /**

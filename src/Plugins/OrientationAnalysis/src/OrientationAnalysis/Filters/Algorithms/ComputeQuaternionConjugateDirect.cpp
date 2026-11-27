@@ -21,8 +21,8 @@ namespace
 class ComputeQuaternionConjugateImpl
 {
 private:
-  const Float32Array* m_Input;
-  Float32Array* m_Output;
+  const Float32ArrayType* m_Input;
+  Float32ArrayType* m_Output;
   const std::atomic_bool* m_ShouldCancel;
 
 public:
@@ -34,7 +34,7 @@ public:
    * @pre The arrays contain matching four-component tuples.
    * @pre Each argument remains valid while the parallel algorithm executes.
    */
-  ComputeQuaternionConjugateImpl(const Float32Array* inputQuat, Float32Array* outputQuat, const std::atomic_bool* shouldCancel)
+  ComputeQuaternionConjugateImpl(const Float32ArrayType* inputQuat, Float32ArrayType* outputQuat, const std::atomic_bool* shouldCancel)
   : m_Input(inputQuat)
   , m_Output(outputQuat)
   , m_ShouldCancel(shouldCancel)
@@ -90,8 +90,8 @@ const std::atomic_bool& ComputeQuaternionConjugateDirect::getCancel()
 
 Result<> ComputeQuaternionConjugateDirect::operator()()
 {
-  const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);
-  auto& output = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
+  const auto& input = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quaternion_data_array_path);
+  auto& output = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->output_data_array_path);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, input.getNumberOfTuples());

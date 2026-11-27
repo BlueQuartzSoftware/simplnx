@@ -53,10 +53,10 @@ Result<std::unique_ptr<ITemporaryRecordStore>> CreateFillPairStore(uint64 maximu
     return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-87022, "FillBadData candidate-pair store configuration is cancelled or overflows.");
   }
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(FillPair);
-  config.maxRecordsPerBatch = k_FillPairBatchRecords;
-  config.initialRecordCount = 0;
-  auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+  config.record_size = sizeof(FillPair);
+  config.max_records_per_batch = k_FillPairBatchRecords;
+  config.initial_record_count = 0;
+  auto result = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.invalid() && allowInMemoryFallback)
   {
     auto fallbackResult = InMemoryTemporaryRecordStore::Create(config);
@@ -95,10 +95,10 @@ Result<std::unique_ptr<ExternalEquivalence>> CreateExternalEquivalence(uint64 ma
     return MakeErrorResult<std::unique_ptr<ExternalEquivalence>>(-87020, "FillBadData external equivalence label capacity overflows.");
   }
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(ExternalEquivalence::Node);
-  config.maxRecordsPerBatch = k_EquivalenceRecordsPerPage;
-  config.initialRecordCount = maximumLabel + 1;
-  auto storeResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+  config.record_size = sizeof(ExternalEquivalence::Node);
+  config.max_records_per_batch = k_EquivalenceRecordsPerPage;
+  config.initial_record_count = maximumLabel + 1;
+  auto storeResult = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
   if(storeResult.invalid() && allowInMemoryFallback)
   {
     auto fallbackResult = InMemoryTemporaryRecordStore::Create(config);
@@ -255,7 +255,7 @@ const std::atomic_bool& FillBadDataCCL::getCancel() const
 
 // Assign provisional labels with -X, -Y, and -Z neighbors. A two-slice label
 // window supports the forward scan, and FeatureIds stores labels for classification.
-Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ExternalEquivalence& equivalences, int32& nextLabel, const std::array<int64, 3>& dims) const
+Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStoreType& featureIdsStore, ExternalEquivalence& equivalences, int32& nextLabel, const std::array<int64, 3>& dims) const
 {
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
@@ -385,20 +385,20 @@ Result<> FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, Ex
 }
 
 // Resolve component roots lazily and classify each provisional label by size.
-Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, int32 startLabel, int32 /*nextLabel*/, ExternalEquivalence& equivalences,
+Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStoreType& featureIdsStore, Int32ArrayType* cellPhasesPtr, int32 startLabel, int32 /*nextLabel*/, ExternalEquivalence& equivalences,
                                               usize maxPhase) const
 {
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  const SizeVec3 udims = selectedImageGeom.getDimensions();
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  const SizeVec3Type udims = selectedImageGeom.getDimensions();
 
   // Values below startLabel are original features and remain unchanged.
   std::vector<int32> sliceData(static_cast<usize>(udims[0]) * static_cast<usize>(udims[1]));
   const usize sliceSize = sliceData.size();
 
   // Optional cellPhases buffer for bulk read/write (avoids per-element OOC access)
-  const bool needPhasesBuffer = m_InputValues->storeAsNewPhase && cellPhasesPtr != nullptr;
+  const bool needPhasesBuffer = m_InputValues->store_as_new_phase && cellPhasesPtr != nullptr;
   std::vector<int32> phasesSlice;
-  Int32AbstractDataStore* cellPhasesStorePtr = nullptr;
+  Int32AbstractDataStoreType* cellPhasesStorePtr = nullptr;
   if(needPhasesBuffer)
   {
     phasesSlice.resize(sliceSize);
@@ -451,7 +451,7 @@ Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIds
             return ConvertResult(std::move(sizeResult));
           }
 
-          if(sizeResult.value() < static_cast<uint64>(m_InputValues->minAllowedDefectSizeValue))
+          if(sizeResult.value() < static_cast<uint64>(m_InputValues->min_allowed_defect_size_value))
           {
             sliceData[inSlice] = -1;
           }
@@ -487,15 +487,15 @@ Result<> FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIds
 }
 
 // Freeze vote results as ordered pairs, then replay Feature IDs and sibling arrays.
-Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures, bool allowInMemoryFallback) const
+Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStoreType& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures, bool allowInMemoryFallback) const
 {
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
 
   // Feature vote counter: O(features) not O(voxels)
   std::vector<int32> featureNumber(numFeatures + 1, 0);
 
   // Get cell arrays that need updating during filling
-  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
+  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
   std::vector<DataPath> voxelArrayNames;
   if(allChildArrays.has_value())
   {
@@ -762,8 +762,8 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     // Three slices and one 4,096-record batch remain resident per replay.
     const int64 sliceStride = dims[0] * dims[1];
     const usize sliceTuples = sliceSize;
-    auto featureIdsResult = ExecuteDataFunction(SliceBufferedCopyFunctor{}, m_DataStructure.getDataAs<IDataArray>(m_InputValues->featureIdsArrayPath)->getDataType(),
-                                                m_DataStructure.getDataAs<IDataArray>(m_InputValues->featureIdsArrayPath), pairStore, pairsWritten, sliceTuples, sliceStride, dims[2], m_ShouldCancel);
+    auto featureIdsResult = ExecuteDataFunction(SliceBufferedCopyFunctor{}, m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path)->getDataType(),
+                                                m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path), pairStore, pairsWritten, sliceTuples, sliceStride, dims[2], m_ShouldCancel);
     if(featureIdsResult.invalid())
     {
       return featureIdsResult;
@@ -772,7 +772,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     // Apply non-featureIds cell array fills, one array at a time
     for(const auto& cellArrayPath : voxelArrayNames)
     {
-      if(cellArrayPath == m_InputValues->featureIdsArrayPath)
+      if(cellArrayPath == m_InputValues->feature_ids_array_path)
       {
         continue;
       }
@@ -796,9 +796,9 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
 
 Result<> FillBadDataCCL::operator()()
 {
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  const SizeVec3 udims = selectedImageGeom.getDimensions();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  const SizeVec3Type udims = selectedImageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -813,12 +813,12 @@ Result<> FillBadDataCCL::operator()()
   }
 
   // Get cell phases array if we need to assign large regions to a new phase
-  Int32Array* cellPhasesPtr = nullptr;
+  Int32ArrayType* cellPhasesPtr = nullptr;
   usize maxPhase = 0;
 
-  if(m_InputValues->storeAsNewPhase)
+  if(m_InputValues->store_as_new_phase)
   {
-    cellPhasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+    cellPhasesPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
   }
 
   // Find maximum Feature ID and phase in fixed chunks. These scans do not check cancellation.
@@ -881,7 +881,7 @@ Result<> FillBadDataCCL::operator()()
   {
     usesOutOfCoreStore = usesOutOfCoreStore || cellPhasesPtr->getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore;
   }
-  const auto childPaths = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
+  const auto childPaths = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
   if(childPaths.has_value())
   {
     for(const DataPath& path : childPaths.value())

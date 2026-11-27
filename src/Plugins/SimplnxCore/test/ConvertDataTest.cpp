@@ -110,7 +110,7 @@ static void TestInt8Signed()
   TestConversion<int8, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int8, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt8Unsigned()
@@ -125,7 +125,7 @@ static void TestInt8Unsigned()
   TestConversion<int8, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int8, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt8Signed()
@@ -143,7 +143,7 @@ static void TestUInt8Signed()
   TestConversion<uint8, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint8, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt8Unsigned()
@@ -158,7 +158,7 @@ static void TestUInt8Unsigned()
   TestConversion<uint8, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint8, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt16Signed()
@@ -176,7 +176,7 @@ static void TestInt16Signed()
   TestConversion<int16, double>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int16, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt16Unsigned()
@@ -191,7 +191,7 @@ static void TestInt16Unsigned()
   TestConversion<int16, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int16, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt16Signed()
@@ -209,7 +209,7 @@ static void TestUInt16Signed()
   TestConversion<uint16, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint16, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt16Unsigned()
@@ -224,7 +224,7 @@ static void TestUInt16Unsigned()
   TestConversion<uint16, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint16, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt32Signed()
@@ -242,7 +242,7 @@ static void TestInt32Signed()
   TestConversion<int32, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int32, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt32Unsigned()
@@ -257,7 +257,7 @@ static void TestInt32Unsigned()
   TestConversion<int32, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int32, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt32Signed()
@@ -275,7 +275,7 @@ static void TestUInt32Signed()
   TestConversion<uint32, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint32, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt32Unsigned()
@@ -290,7 +290,7 @@ static void TestUInt32Unsigned()
   TestConversion<uint32, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint32, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt64Signed()
@@ -308,7 +308,7 @@ static void TestInt64Signed()
   TestConversion<int64, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<int64, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInt64Unsigned()
@@ -323,7 +323,7 @@ static void TestInt64Unsigned()
   TestConversion<int64, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<int64, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt64Signed()
@@ -341,7 +341,7 @@ static void TestUInt64Signed()
   TestConversion<uint64, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<uint64, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestUInt64Unsigned()
@@ -356,7 +356,7 @@ static void TestUInt64Unsigned()
   TestConversion<uint64, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
   TestConversion<uint64, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestFloat()
@@ -374,7 +374,7 @@ static void TestFloat()
   TestConversion<float32, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<float, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestDouble()
@@ -392,7 +392,7 @@ static void TestDouble()
   TestConversion<float64, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
   TestConversion<double, bool>(dataStructure, filter, k_DataArrayName, DataType::boolean, "NewArrayBool");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestBoolSigned()
@@ -409,7 +409,7 @@ static void TestBoolSigned()
   TestConversion<bool, float32>(dataStructure, filter, k_DataArrayName, DataType::float32, "NewArrayFloat");
   TestConversion<bool, float64>(dataStructure, filter, k_DataArrayName, DataType::float64, "NewArrayDouble");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestBoolUnsigned()
@@ -423,7 +423,7 @@ static void TestBoolUnsigned()
   TestConversion<bool, uint32>(dataStructure, filter, k_DataArrayName, DataType::uint32, "NewArrayUInt");
   TestConversion<bool, uint64>(dataStructure, filter, k_DataArrayName, DataType::uint64, "NewArrayULong");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 static void TestInvalidDataArray()
@@ -450,10 +450,10 @@ static void TestOverwriteArray()
 
 TEST_CASE("SimplnxCore::ConvertData: Valid Execution", "[SimplnxCore][ConvertDataFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   std::cout << "#### ConvertDataTest Starting ####" << '\n';
 
@@ -493,10 +493,10 @@ TEST_CASE("SimplnxCore::ConvertData: Valid Execution", "[SimplnxCore][ConvertDat
 
 TEST_CASE("SimplnxCore::ConvertData: In Place Execution", "[SimplnxCore][ConvertDataFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   ConvertDataFilter filter;
   DataStructure dataStructure;
@@ -513,7 +513,7 @@ TEST_CASE("SimplnxCore::ConvertData: In Place Execution", "[SimplnxCore][Convert
 TEST_CASE("SimplnxCore::ConvertDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ConvertDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

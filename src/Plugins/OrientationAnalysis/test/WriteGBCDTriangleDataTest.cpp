@@ -20,7 +20,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -76,23 +76,23 @@ private:
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execution")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
-  DataPath smallIn100Group({Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces);
-  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-  DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
-  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(Constants::k_FaceData);
-  DataPath faceLabels = faceDataGroup.createChildPath(Constants::k_FaceLabels);
-  DataPath faceNormals = faceDataGroup.createChildPath(Constants::k_FaceNormals);
-  DataPath faceAreas = faceDataGroup.createChildPath(Constants::k_FaceAreas);
+  DataPath smallIn100Group({constants::k_SmallIN100});
+  DataPath featureDataPath = smallIn100Group.createChildPath(constants::k_GrainDataWithSpaces);
+  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(constants::k_AvgEulerAngles);
+  DataPath triangleDataContainerPath({constants::k_TriangleDataContainerName});
+  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(constants::k_FaceData);
+  DataPath faceLabels = faceDataGroup.createChildPath(constants::k_FaceLabels);
+  DataPath faceNormals = faceDataGroup.createChildPath(constants::k_FaceNormals);
+  DataPath faceAreas = faceDataGroup.createChildPath(constants::k_FaceAreas);
 
   DataPath exemplarResultsGroupPath({k_ExemplarTriangleDumperResults});
   DataPath generatedResultsGroupPath({k_NXTriangleDumperResults});
@@ -109,7 +109,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     args.insertOrAssign(WriteGBCDTriangleDataFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -123,14 +123,14 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
   {
     Arguments args;
     ReadCSVData data;
-    data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_TestFilesDir);
-    data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
-    data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32,
+    data.input_file_path = fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_TestFilesDir);
+    data.custom_headers = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
+    data.data_types = {CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32,
                       CSVType::float32, CSVType::float64, CSVType::float64, CSVType::float64, CSVType::float64};
-    data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
-    data.startImportRow = 6;
+    data.skipped_array_mask = {false, false, false, false, false, false, false, false, false, false};
+    data.start_import_row = 6;
     data.delimiters = {' '};
-    data.tupleDims = {636474};
+    data.tuple_dims = {636474};
 
     args.insertOrAssign(k_ReadCSVData_Key, std::make_any<ReadCSVData>(data));
     args.insertOrAssign(k_UseExistingGroup_Key, std::make_any<bool>(false));
@@ -145,14 +145,14 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
   {
     Arguments args;
     ReadCSVData data;
-    data.inputFilePath = outputFile.string();
-    data.customHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
-    data.dataTypes = {CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32,
+    data.input_file_path = outputFile.string();
+    data.custom_headers = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
+    data.data_types = {CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32,
                       CSVType::float32, CSVType::float64, CSVType::float64, CSVType::float64, CSVType::float64};
-    data.skippedArrayMask = {false, false, false, false, false, false, false, false, false, false};
-    data.startImportRow = 5;
+    data.skipped_array_mask = {false, false, false, false, false, false, false, false, false, false};
+    data.start_import_row = 5;
     data.delimiters = {' '};
-    data.tupleDims = {636474};
+    data.tuple_dims = {636474};
 
     args.insertOrAssign(k_ReadCSVData_Key, std::make_any<ReadCSVData>(data));
     args.insertOrAssign(k_UseExistingGroup_Key, std::make_any<bool>(false));
@@ -187,55 +187,55 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     DataPath exemplarTriNormal2ArrayPath = exemplarResultsGroupPath.createChildPath(k_TriangleNormal2);
     DataPath exemplarSurfaceAreaArrayPath = exemplarResultsGroupPath.createChildPath(k_SurfaceArea);
 
-    REQUIRE(dataStructure.getDataAs<Float32Array>(phi1RightArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(phiRightArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(phi2RightArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(phi1LeftArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(phiLeftArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(phi2LeftArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(triNormal0ArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(triNormal1ArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(triNormal2ArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(surfaceAreaArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(phi1RightArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(phiRightArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(phi2RightArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(phi1LeftArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(phiLeftArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(phi2LeftArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(triNormal0ArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(triNormal1ArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(triNormal2ArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(surfaceAreaArrayPath) != nullptr);
 
-    REQUIRE(dataStructure.getDataAs<Float32Array>(exemplarPhi1RightArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(exemplarPhiRightArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(exemplarPhi2RightArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(exemplarPhi1LeftArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(exemplarPhiLeftArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float32Array>(exemplarPhi2LeftArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(exemplarTriNormal0ArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(exemplarTriNormal1ArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(exemplarTriNormal2ArrayPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Float64Array>(exemplarSurfaceAreaArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(exemplarPhi1RightArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(exemplarPhiRightArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(exemplarPhi2RightArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(exemplarPhi1LeftArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(exemplarPhiLeftArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32ArrayType>(exemplarPhi2LeftArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(exemplarTriNormal0ArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(exemplarTriNormal1ArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(exemplarTriNormal2ArrayPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64ArrayType>(exemplarSurfaceAreaArrayPath) != nullptr);
 
-    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi1RightArrayPath, phi1RightArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhiRightArrayPath, phiRightArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi2RightArrayPath, phi2RightArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi1LeftArrayPath, phi1LeftArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhiLeftArrayPath, phiLeftArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi2LeftArrayPath, phi2LeftArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal0ArrayPath, triNormal0ArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal1ArrayPath, triNormal1ArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal2ArrayPath, triNormal2ArrayPath, k_EPSILON);
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarSurfaceAreaArrayPath, surfaceAreaArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi1RightArrayPath, phi1RightArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhiRightArrayPath, phiRightArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi2RightArrayPath, phi2RightArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi1LeftArrayPath, phi1LeftArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhiLeftArrayPath, phiLeftArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float32>(dataStructure, exemplarPhi2LeftArrayPath, phi2LeftArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal0ArrayPath, triNormal0ArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal1ArrayPath, triNormal1ArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, exemplarTriNormal2ArrayPath, triNormal2ArrayPath, k_EPSILON);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, exemplarSurfaceAreaArrayPath, surfaceAreaArrayPath, k_EPSILON);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Cancellation before publication preserves the destination", "[OrientationAnalysis][WriteGBCDTriangleDataFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
-  UnitTest::LoadPlugins();
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  unit_test::LoadPlugins();
 
   const fs::path sourcePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
-  const DataPath smallIn100Group({Constants::k_SmallIN100});
-  const DataPath featureEulerAnglesPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces).createChildPath(Constants::k_AvgEulerAngles);
-  const DataPath faceDataPath = DataPath({Constants::k_TriangleDataContainerName}).createChildPath(Constants::k_FaceData);
-  const DataPath faceLabelsPath = faceDataPath.createChildPath(Constants::k_FaceLabels);
-  const DataPath faceNormalsPath = faceDataPath.createChildPath(Constants::k_FaceNormals);
-  const DataPath faceAreasPath = faceDataPath.createChildPath(Constants::k_FaceAreas);
+  const DataPath smallIn100Group({constants::k_SmallIN100});
+  const DataPath featureEulerAnglesPath = smallIn100Group.createChildPath(constants::k_GrainDataWithSpaces).createChildPath(constants::k_AvgEulerAngles);
+  const DataPath faceDataPath = DataPath({constants::k_TriangleDataContainerName}).createChildPath(constants::k_FaceData);
+  const DataPath faceLabelsPath = faceDataPath.createChildPath(constants::k_FaceLabels);
+  const DataPath faceNormalsPath = faceDataPath.createChildPath(constants::k_FaceNormals);
+  const DataPath faceAreasPath = faceDataPath.createChildPath(constants::k_FaceAreas);
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_triangle_cancellation.ph";
   const std::string sentinel = "existing triangle bytes";
 
@@ -253,8 +253,8 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Cancellation before
         outputStream << sentinel;
       }
 
-      DataStructure dataStructure = UnitTest::LoadDataStructure(sourcePath);
-      auto& eulerAnglesArray = dataStructure.getDataRefAs<Float32Array>(featureEulerAnglesPath);
+      DataStructure dataStructure = unit_test::LoadDataStructure(sourcePath);
+      auto& eulerAnglesArray = dataStructure.getDataRefAs<Float32ArrayType>(featureEulerAnglesPath);
       const auto& sourceStore = eulerAnglesArray.getDataStoreRef();
       std::atomic_bool shouldCancel = false;
       auto cancelStore = std::make_shared<CancelAfterReadDataStore<float32>>(eulerAnglesArray.getTupleShape(), eulerAnglesArray.getComponentShape(), 0.0F, shouldCancel);
@@ -274,7 +274,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Cancellation before
       args.insertOrAssign(WriteGBCDTriangleDataFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(faceAreasPath));
       args.insertOrAssign(WriteGBCDTriangleDataFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(featureEulerAnglesPath));
 
-      auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+      auto preflightResult2 = filter.preflight(dataStructure, args).output_actions;
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
       const auto executeResult = filter.execute(dataStructure, args, nullptr, {}, shouldCancel);
 
@@ -294,16 +294,16 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Cancellation before
         REQUIRE_FALSE(fs::exists(outputPath));
       }
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Instantiate the filter and an Arguments Object
   WriteGBCDTriangleDataFilter filter;
@@ -311,18 +311,18 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
-  DataPath smallIn100Group({Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces);
-  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-  DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
-  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(Constants::k_FaceData);
-  DataPath faceLabels = faceDataGroup.createChildPath(Constants::k_FaceLabels);
-  DataPath faceNormals = faceDataGroup.createChildPath(Constants::k_FaceNormals);
-  DataPath faceAreas = faceDataGroup.createChildPath(Constants::k_FaceAreas);
+  DataPath smallIn100Group({constants::k_SmallIN100});
+  DataPath featureDataPath = smallIn100Group.createChildPath(constants::k_GrainDataWithSpaces);
+  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(constants::k_AvgEulerAngles);
+  DataPath triangleDataContainerPath({constants::k_TriangleDataContainerName});
+  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(constants::k_FaceData);
+  DataPath faceLabels = faceDataGroup.createChildPath(constants::k_FaceLabels);
+  DataPath faceNormals = faceDataGroup.createChildPath(constants::k_FaceNormals);
+  DataPath faceAreas = faceDataGroup.createChildPath(constants::k_FaceAreas);
 
-  DataPath gbcd = faceDataGroup.createChildPath(Constants::k_GBCD_Name);
+  DataPath gbcd = faceDataGroup.createChildPath(constants::k_GbcdName);
 
   SECTION("Invalid output file")
   {
@@ -347,19 +347,19 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WriteGBCDTriangleDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

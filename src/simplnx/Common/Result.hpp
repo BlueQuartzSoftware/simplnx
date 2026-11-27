@@ -21,7 +21,7 @@ struct SIMPLNX_EXPORT Error
   std::string message;
 };
 
-using ErrorCollection = std::vector<Error>;
+using ErrorCollectionType = std::vector<Error>;
 
 /**
  * @brief Warning is a simple struct of a warning code and message.
@@ -33,7 +33,7 @@ struct SIMPLNX_EXPORT Warning
   std::string message;
 };
 
-using WarningCollection = std::vector<Warning>;
+using WarningCollectionType = std::vector<Warning>;
 
 namespace detail
 {
@@ -67,7 +67,7 @@ struct SIMPLNX_EXPORT ResultVoid
 };
 
 template <class T>
-using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>;
+using ResultBaseTType = std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>;
 } // namespace detail
 
 /**
@@ -76,7 +76,7 @@ using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVo
  * @tparam T Contained type. May be void.
  */
 template <class T = void>
-struct Result : public detail::ResultBaseT<T>
+struct Result : public detail::ResultBaseTType<T>
 {
   /**
    * @brief Returns true if there are no errors, i.e. it is valid to access the contained type.
@@ -84,7 +84,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   bool valid() const
   {
-    return detail::ResultBaseT<T>::expected.has_value();
+    return detail::ResultBaseTType<T>::expected.has_value();
   }
 
   /**
@@ -102,7 +102,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   std::vector<Error>& errors()
   {
-    return detail::ResultBaseT<T>::expected.error();
+    return detail::ResultBaseTType<T>::expected.error();
   }
 
   /**
@@ -111,7 +111,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   const std::vector<Error>& errors() const
   {
-    return detail::ResultBaseT<T>::expected.error();
+    return detail::ResultBaseTType<T>::expected.error();
   }
 
   /**
@@ -120,7 +120,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   std::vector<Warning>& warnings()
   {
-    return m_Warnings;
+    return m_warnings;
   }
 
   /**
@@ -129,10 +129,10 @@ struct Result : public detail::ResultBaseT<T>
    */
   const std::vector<Warning>& warnings() const
   {
-    return m_Warnings;
+    return m_warnings;
   }
 
-  std::vector<Warning> m_Warnings;
+  std::vector<Warning> m_warnings;
 };
 
 /**
@@ -288,14 +288,14 @@ inline Result<T> MergeResults(Result<T> first, Result<T> second)
 
   Result<T> result = errors.empty() ? Result<T>{} : Result<T>{{nonstd::make_unexpected(std::move(errors))}};
 
-  result.m_Warnings.reserve(first.warnings().size() + second.warnings().size());
+  result.m_warnings.reserve(first.warnings().size() + second.warnings().size());
   for(auto&& warning : first.warnings())
   {
-    result.m_Warnings.push_back(std::move(warning));
+    result.m_warnings.push_back(std::move(warning));
   }
   for(auto&& warning : second.warnings())
   {
-    result.m_Warnings.push_back(std::move(warning));
+    result.m_warnings.push_back(std::move(warning));
   }
 
   return result;

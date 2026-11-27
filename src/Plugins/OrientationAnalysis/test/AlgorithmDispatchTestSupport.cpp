@@ -4,7 +4,7 @@
 
 namespace
 {
-using PathType = nx::core::UnitTest::AlgorithmDispatchPath;
+using PathType = nx::core::unit_test::AlgorithmDispatchPath;
 
 /**
  * @class DirectPathProbe
@@ -51,7 +51,7 @@ private:
 };
 } // namespace
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 AlgorithmDispatchPath GetAlgorithmDispatchPathFromOrientationAnalysisPlugin()
 {

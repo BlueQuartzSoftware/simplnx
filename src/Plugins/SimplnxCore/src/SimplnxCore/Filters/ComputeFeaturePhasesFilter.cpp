@@ -52,9 +52,9 @@ Parameters ComputeFeaturePhasesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Element belongs", DataPath({"Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesAttributeMatrixPath_Key, "Feature Attribute Matrix",
                                                                     "The AttributeMatrix that stores the feature data for the input **Feature Ids**.", DataPath({"Cell Feature Data"})));
@@ -102,7 +102,7 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
     return MakePreflightErrorResult(-61860, "Size mismatch between cell feature indices and cell phases arrays.");
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -110,10 +110,10 @@ Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, c
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeaturePhasesInputValues inputValues;
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CellFeaturesAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
-  inputValues.FeaturePhasesArrayName = filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.feature_ids_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.cell_features_attribute_matrix_path = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
+  inputValues.feature_phases_array_name = filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key);
 
   return ComputeFeaturePhases(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -51,7 +51,7 @@ public:
   /**
    * @brief Pointer is an alias for the pointer arrays used by the BoundingBox.
    */
-  using Pointer = T*;
+  using PointerType = T*;
 
   /**
    * @brief Constructs a new BoundingBox defined by two corner positions.
@@ -194,12 +194,12 @@ protected:
 };
 
 template <typename T>
-using BoundingBox3D = BoundingBox<T, Vec3>;
-using BoundingBox3Df = BoundingBox<float32, Vec3>;
-using BoundingBox3Dd = BoundingBox<float64, Vec3>;
+using BoundingBox3DType = BoundingBox<T, Vec3>;
+using BoundingBox3DfType = BoundingBox<float32, Vec3>;
+using BoundingBox3DdType = BoundingBox<float64, Vec3>;
 
 template <typename T>
-using BoundingBox2D = BoundingBox<T, Vec2>;
-using BoundingBox2Df = BoundingBox<float32, Vec2>;
-using BoundingBox2Dd = BoundingBox<float64, Vec2>;
+using BoundingBox2DType = BoundingBox<T, Vec2>;
+using BoundingBox2DfType = BoundingBox<float32, Vec2>;
+using BoundingBox2DdType = BoundingBox<float64, Vec2>;
 } // namespace nx::core

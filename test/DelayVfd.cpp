@@ -149,7 +149,7 @@ H5FD_class_t MakeDriverClass()
 }
 } // namespace
 
-namespace DelayVfd
+namespace delay_vfd
 {
 hid_t Register()
 {

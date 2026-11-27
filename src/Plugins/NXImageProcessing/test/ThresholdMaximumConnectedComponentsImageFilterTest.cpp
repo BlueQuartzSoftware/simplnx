@@ -37,7 +37,7 @@ void RunTMCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inpu
   args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(insideValue));
   args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -49,15 +49,15 @@ void RunTMCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inpu
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: preflight guards", "[NXImageProcessing][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -71,8 +71,8 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
     args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
     args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input (incl. float) creates a uint8 output")
   {

@@ -51,9 +51,9 @@ Parameters RobustAutomaticThresholdFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   // Input cannot be bool array
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Input Array", "DataArray to Threshold", DataPath(), nx::core::GetAllNumericTypes(),
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath_Key, "Gradient Magnitude Data", "The complete path to the Array specifying the gradient magnitude of the Input Array",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ArrayCreationName_Key, "Mask", "Created mask based on Input Array and Gradient Magnitude", "mask"));
 
   return params;
@@ -91,7 +91,7 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
+    return {.output_actions = MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
                                                             fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -107,9 +107,9 @@ Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructur
                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RobustAutomaticThresholdInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputArrayPath_Key);
-  inputValues.GradientArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_GradientMagnitudePath_Key);
-  inputValues.CreatedMaskName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ArrayCreationName_Key);
+  inputValues.input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputArrayPath_Key);
+  inputValues.gradient_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_GradientMagnitudePath_Key);
+  inputValues.created_mask_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_ArrayCreationName_Key);
 
   return RobustAutomaticThreshold(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

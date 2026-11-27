@@ -24,14 +24,14 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
 
   auto groupReader = parentGroup.openGroup(objectName);
 
-  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+  if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(io_constants::k_H5Units); unitsAttr.valid())
   {
     auto value = unitsAttr.value();
     geometry.setUnits(static_cast<IGeometry::LengthUnit>(value));
   }
 
-  geometry.setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
-  geometry.setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
+  geometry.setVertexListId(ReadDataId(groupReader, io_constants::k_VertexListTag));
+  geometry.setVertexDataId(ReadDataId(groupReader, io_constants::k_VertexDataTag));
 
   return {};
 }
@@ -52,7 +52,7 @@ Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructu
                                                  "was written by an incompatible version of DREAM3D-NX.",
                                                  dataPath.toString(), dataPath.getTargetName(), dataStructureGroup.getObjectPath()));
     }
-    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
+    if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(io_constants::k_H5Units); unitsAttr.valid())
     {
       auto value = unitsAttr.value();
       geomPtr->setUnits(static_cast<IGeometry::LengthUnit>(value));
@@ -72,9 +72,9 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  DataObject::OptionalId vertexListId = geometry.getVertexListId();
+  DataObject::OptionalIdType vertexListId = geometry.getVertexListId();
 
-  AppendWriteResult(result, WriteDataId(groupWriter, vertexListId, IOConstants::k_VertexListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, vertexListId, io_constants::k_VertexListTag));
   if(result.invalid())
   {
     return result;
@@ -99,7 +99,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     }
   }
 
-  AppendWriteResult(result, groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits())));
+  AppendWriteResult(result, groupWriter.writeScalarAttribute(io_constants::k_H5Units, nx::core::to_underlying(geometry.getUnits())));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for '{}'", geometry.getName()));
@@ -107,7 +107,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     return errorResult;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), IOConstants::k_VertexDataTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), io_constants::k_VertexDataTag));
   if(result.invalid())
   {
     auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex attribute matrix for geometry '{}'", geometry.getName()));

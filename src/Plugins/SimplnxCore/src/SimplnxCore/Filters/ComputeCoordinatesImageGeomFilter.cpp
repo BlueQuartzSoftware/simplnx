@@ -53,7 +53,7 @@ Parameters ComputeCoordinatesImageGeomFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Array(s) Type", "The selection here effects which arrays will be produced by the filter",
                                                                     to_underlying(ComputeCoordinatesImageGeom::OutputType::Physical),
-                                                                    ChoicesParameter::Choices{"Physical Coordinates", "Indices", "Both"})); // sequence dependent DO NOT REORDER
+                                                                    ChoicesParameter::ChoicesType{"Physical Coordinates", "Indices", "Both"})); // sequence dependent DO NOT REORDER
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Selected Image Geometry",
@@ -116,7 +116,7 @@ IFilter::PreflightResult ComputeCoordinatesImageGeomFilter::preflightImpl(const 
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -125,10 +125,10 @@ Result<> ComputeCoordinatesImageGeomFilter::executeImpl(DataStructure& dataStruc
 {
   ComputeCoordinatesImageGeomInputValues inputValues;
 
-  inputValues.CoordinateOption = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
-  inputValues.ImageGeomPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeomPath_Key);
-  inputValues.CoordArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_CoordsArrayPath_Key);
-  inputValues.IndexArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_IndicesArrayPath_Key);
+  inputValues.coordinate_option = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
+  inputValues.image_geom_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeomPath_Key);
+  inputValues.coord_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_CoordsArrayPath_Key);
+  inputValues.index_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_IndicesArrayPath_Key);
 
   return ComputeCoordinatesImageGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

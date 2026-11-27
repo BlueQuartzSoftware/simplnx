@@ -28,8 +28,8 @@
 #include <string_view>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
-using namespace nx::core::Constants;
+using namespace nx::core::unit_test;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -93,7 +93,7 @@ struct SurfaceNetsFixture
   {
     auto* imagePtr = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
     REQUIRE(imagePtr != nullptr);
-    imagePtr->setDimensions(SizeVec3{4, 3, 2});
+    imagePtr->setDimensions(SizeVec3Type{4, 3, 2});
     auto* cellDataPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), k_CellShape, imagePtr->getId());
     REQUIRE(cellDataPtr != nullptr);
     imagePtr->setCellData(*cellDataPtr);
@@ -103,25 +103,25 @@ struct SurfaceNetsFixture
     std::shared_ptr<AbstractDataStore<int32>> featureIdsStore;
     if(useConfiguredStores && !featureIdsInMemory)
     {
-      featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_SmallFeatureIdsPath, k_CellShape, {1});
+      featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_SmallFeatureIdsPath, k_CellShape, {1});
     }
     else
     {
       featureIdsStore = std::make_shared<DataStore<int32>>(k_CellShape, ShapeType{1}, std::optional<int32>{});
     }
-    REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId()) != nullptr);
-    auto cellIntStore = useConfiguredStores ? DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_SmallCellIntPath, k_CellShape, {2}) :
+    REQUIRE(Int32ArrayType::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId()) != nullptr);
+    auto cellIntStore = useConfiguredStores ? data_store_utilities::CreateDataStore<int32>(dataStructure, k_SmallCellIntPath, k_CellShape, {2}) :
                                               std::make_shared<DataStore<int32>>(k_CellShape, ShapeType{2}, std::optional<int32>{});
-    auto cellFloatStore = useConfiguredStores && !selectedCellOnly ? DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallCellFloatPath, k_CellShape, {3}) :
+    auto cellFloatStore = useConfiguredStores && !selectedCellOnly ? data_store_utilities::CreateDataStore<float32>(dataStructure, k_SmallCellFloatPath, k_CellShape, {3}) :
                                                                      std::make_shared<DataStore<float32>>(k_CellShape, ShapeType{3}, std::optional<float32>{});
-    auto cellBoolStore = useConfiguredStores && !selectedCellOnly ? DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_SmallCellBoolPath, k_CellShape, {1}) :
+    auto cellBoolStore = useConfiguredStores && !selectedCellOnly ? data_store_utilities::CreateDataStore<bool>(dataStructure, k_SmallCellBoolPath, k_CellShape, {1}) :
                                                                     std::make_shared<DataStore<bool>>(k_CellShape, ShapeType{1}, std::optional<bool>{});
-    auto featureStore = useConfiguredStores && !selectedCellOnly ? DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, k_FeatureShape, {3}) :
+    auto featureStore = useConfiguredStores && !selectedCellOnly ? data_store_utilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, k_FeatureShape, {3}) :
                                                                    std::make_shared<DataStore<float32>>(k_FeatureShape, ShapeType{3}, std::optional<float32>{});
-    REQUIRE(Int32Array::Create(dataStructure, "CellInt", cellIntStore, cellDataPtr->getId()) != nullptr);
-    REQUIRE(Float32Array::Create(dataStructure, "CellFloat", cellFloatStore, cellDataPtr->getId()) != nullptr);
-    REQUIRE(BoolArray::Create(dataStructure, "CellBool", cellBoolStore, cellDataPtr->getId()) != nullptr);
-    REQUIRE(Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureDataPtr->getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(dataStructure, "CellInt", cellIntStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(Float32ArrayType::Create(dataStructure, "CellFloat", cellFloatStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(BoolArrayType::Create(dataStructure, "CellBool", cellBoolStore, cellDataPtr->getId()) != nullptr);
+    REQUIRE(Float32ArrayType::Create(dataStructure, "FeatureVector", featureStore, featureDataPtr->getId()) != nullptr);
 
     std::array<int32, 24> featureIds{};
     std::array<int32, 48> cellInts{};
@@ -203,19 +203,19 @@ void RequireSmallOutputValues(const DataStructure& dataStructure)
   const auto facesPath = k_SmallOutputPath.createChildPath(TriangleGeom::k_SharedFacesListName);
   const auto verticesPath = k_SmallOutputPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<IGeometry::MeshIndexType>>(facesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(verticesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FaceLabelsWithSpaces)));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("CellInt")));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("CellFloat")));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(facePath.createChildPath("CellBool")));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("FeatureVector")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(verticesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(facePath.createChildPath(k_FaceLabelsWithSpaces)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(facePath.createChildPath("CellInt")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(facePath.createChildPath("CellFloat")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(facePath.createChildPath("CellBool")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(facePath.createChildPath("FeatureVector")));
   const auto& faces = dataStructure.getDataRefAs<DataArray<IGeometry::MeshIndexType>>(facesPath);
-  const auto& vertices = dataStructure.getDataRefAs<Float32Array>(verticesPath);
-  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FaceLabelsWithSpaces));
-  const auto& ints = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("CellInt"));
-  const auto& floats = dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("CellFloat"));
-  const auto& bools = dataStructure.getDataRefAs<BoolArray>(facePath.createChildPath("CellBool"));
-  const auto& features = dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("FeatureVector"));
+  const auto& vertices = dataStructure.getDataRefAs<Float32ArrayType>(verticesPath);
+  const auto& labels = dataStructure.getDataRefAs<Int32ArrayType>(facePath.createChildPath(k_FaceLabelsWithSpaces));
+  const auto& ints = dataStructure.getDataRefAs<Int32ArrayType>(facePath.createChildPath("CellInt"));
+  const auto& floats = dataStructure.getDataRefAs<Float32ArrayType>(facePath.createChildPath("CellFloat"));
+  const auto& bools = dataStructure.getDataRefAs<BoolArrayType>(facePath.createChildPath("CellBool"));
+  const auto& features = dataStructure.getDataRefAs<Float32ArrayType>(facePath.createChildPath("FeatureVector"));
   // The 4x3x2 box has 52 exterior voxel faces. Its labels add 12
   // internal y-faces and four internal x-faces. Each face gives two triangles.
   constexpr usize k_TriangleCount = 2 * (52 + 12 + 4);
@@ -284,27 +284,27 @@ void RequireSmallOutputValues(const DataStructure& dataStructure)
 SurfaceNetsInputValues CreateInputValues(const Arguments& args)
 {
   SurfaceNetsInputValues values;
-  values.ApplySmoothing = args.value<bool>(SurfaceNetsFilter::k_ApplySmoothing_Key);
-  values.RepairTriangleWinding = args.value<bool>(SurfaceNetsFilter::k_RepairTriangleWinding_Key);
-  values.SmoothingIterations = args.value<int32>(SurfaceNetsFilter::k_SmoothingIterations_Key);
-  values.MaxDistanceFromVoxel = args.value<float32>(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key);
-  values.RelaxationFactor = args.value<float32>(SurfaceNetsFilter::k_RelaxationFactor_Key);
-  values.GridGeomDataPath = args.value<DataPath>(SurfaceNetsFilter::k_GridGeometryDataPath_Key);
-  values.FeatureIdsArrayPath = args.value<DataPath>(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key);
-  values.SelectedCellDataArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key);
-  values.SelectedFeatureDataArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key);
-  values.TriangleGeometryPath = args.value<DataPath>(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key);
-  values.VertexGroupDataPath = values.TriangleGeometryPath.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_VertexDataGroupName_Key));
-  values.NodeTypesDataPath = values.VertexGroupDataPath.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_NodeTypesArrayName_Key));
-  values.FaceGroupDataPath = values.TriangleGeometryPath.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_FaceDataGroupName_Key));
-  values.FaceLabelsDataPath = values.FaceGroupDataPath.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_FaceLabelsArrayName_Key));
-  for(const auto& path : values.SelectedCellDataArrayPaths)
+  values.apply_smoothing = args.value<bool>(SurfaceNetsFilter::k_ApplySmoothing_Key);
+  values.repair_triangle_winding = args.value<bool>(SurfaceNetsFilter::k_RepairTriangleWinding_Key);
+  values.smoothing_iterations = args.value<int32>(SurfaceNetsFilter::k_SmoothingIterations_Key);
+  values.max_distance_from_voxel = args.value<float32>(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key);
+  values.relaxation_factor = args.value<float32>(SurfaceNetsFilter::k_RelaxationFactor_Key);
+  values.grid_geom_data_path = args.value<DataPath>(SurfaceNetsFilter::k_GridGeometryDataPath_Key);
+  values.feature_ids_array_path = args.value<DataPath>(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key);
+  values.selected_cell_data_array_paths = args.value<MultiArraySelectionParameter::ValueType>(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key);
+  values.selected_feature_data_array_paths = args.value<MultiArraySelectionParameter::ValueType>(SurfaceNetsFilter::k_SelectedFeatureDataArrayPaths_Key);
+  values.triangle_geometry_path = args.value<DataPath>(SurfaceNetsFilter::k_CreatedTriangleGeometryPath_Key);
+  values.vertex_group_data_path = values.triangle_geometry_path.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_VertexDataGroupName_Key));
+  values.node_types_data_path = values.vertex_group_data_path.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_NodeTypesArrayName_Key));
+  values.face_group_data_path = values.triangle_geometry_path.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_FaceDataGroupName_Key));
+  values.face_labels_data_path = values.face_group_data_path.createChildPath(args.value<std::string>(SurfaceNetsFilter::k_FaceLabelsArrayName_Key));
+  for(const auto& path : values.selected_cell_data_array_paths)
   {
-    values.CreatedDataArrayPaths.push_back(values.FaceGroupDataPath.createChildPath(path.getTargetName()));
+    values.created_data_array_paths.push_back(values.face_group_data_path.createChildPath(path.getTargetName()));
   }
-  for(const auto& path : values.SelectedFeatureDataArrayPaths)
+  for(const auto& path : values.selected_feature_data_array_paths)
   {
-    values.CreatedDataArrayPaths.push_back(values.FaceGroupDataPath.createChildPath(path.getTargetName()));
+    values.created_data_array_paths.push_back(values.face_group_data_path.createChildPath(path.getTargetName()));
   }
   return values;
 }
@@ -313,20 +313,20 @@ void CreateOutputs(DataStructure& dataStructure, const Arguments& args)
 {
   SurfaceNetsFilter filter;
   auto preflight = filter.preflight(dataStructure, args);
-  if(preflight.outputActions.invalid())
+  if(preflight.output_actions.invalid())
   {
-    for(const auto& error : preflight.outputActions.errors())
+    for(const auto& error : preflight.output_actions.errors())
     {
       INFO("Preflight error code: " << error.code);
     }
   }
-  REQUIRE(preflight.outputActions.valid());
+  REQUIRE(preflight.output_actions.valid());
   const auto values = CreateInputValues(args);
-  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, 2 + values.CreatedDataArrayPaths.size());
-  std::vector<DataPath> expectedArrayPaths = {values.NodeTypesDataPath, values.FaceLabelsDataPath};
-  expectedArrayPaths.insert(expectedArrayPaths.end(), values.CreatedDataArrayPaths.begin(), values.CreatedDataArrayPaths.end());
-  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, expectedArrayPaths);
-  auto applyResult = preflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  unit_test::RequireAutomaticCreateArrayActions(preflight.output_actions, 2 + values.created_data_array_paths.size());
+  std::vector<DataPath> expectedArrayPaths = {values.node_types_data_path, values.face_labels_data_path};
+  expectedArrayPaths.insert(expectedArrayPaths.end(), values.created_data_array_paths.begin(), values.created_data_array_paths.end());
+  unit_test::RequireAutomaticCreateArrayActions(preflight.output_actions, expectedArrayPaths);
+  auto applyResult = preflight.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
   if(applyResult.invalid())
   {
     for(const auto& error : applyResult.errors())
@@ -368,10 +368,10 @@ void RequireLargeTransferValue(AbstractDataStore<int32>& store, const usize offs
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, std::string(k_SmallGeomName));
@@ -382,15 +382,15 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[Si
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallCellName), {1, 1, 2}, imageGeomPtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_SmallFeatureIdsPath, {1, 1, 2}, {1});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellAmPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_SmallFeatureIdsPath, {1, 1, 2}, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", featureIdsStore, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   (*featureIdsPtr)[0] = 1;
   (*featureIdsPtr)[1] = 2;
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, std::string(k_SmallFeatureName), {2}, imageGeomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto featureStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, {2}, {3});
-  auto* featureValuesPtr = Float32Array::Create(dataStructure, "FeatureVector", featureStore, featureAmPtr->getId());
+  auto featureStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_SmallFeatureVectorPath, {2}, {3});
+  auto* featureValuesPtr = Float32ArrayType::Create(dataStructure, "FeatureVector", featureStore, featureAmPtr->getId());
   REQUIRE(featureValuesPtr != nullptr);
   featureValuesPtr->fill(7.0F);
 
@@ -398,17 +398,17 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Feature DataArray tuple bounds", "[Si
   auto args = SurfaceNetsFixture::ArgumentsFor(false);
   args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>());
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -62073);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data tuple count validation", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   SurfaceNetsFixture::Create(dataStructure, false);
   SurfaceNetsFilter filter;
@@ -419,7 +419,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data tuple count validation", "[
   {
     auto* otherAmPtr = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
     REQUIRE(otherAmPtr != nullptr);
-    auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", ShapeType{12}, {1}, otherAmPtr->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Other Feature Ids", ShapeType{12}, {1}, otherAmPtr->getId());
     REQUIRE(featureIdsPtr != nullptr);
     featureIdsPtr->fill(1);
     args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Other Cell Data", "Other Feature Ids"})));
@@ -428,7 +428,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data tuple count validation", "[
   {
     auto* otherAmPtr = AttributeMatrix::Create(dataStructure, "Other Cell Data", ShapeType{12});
     REQUIRE(otherAmPtr != nullptr);
-    auto* cellValuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", ShapeType{12}, {1}, otherAmPtr->getId());
+    auto* cellValuesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Other Cell Values", ShapeType{12}, {1}, otherAmPtr->getId());
     REQUIRE(cellValuesPtr != nullptr);
     cellValuesPtr->fill(7);
     args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key,
@@ -437,20 +437,20 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell Data tuple count validation", "[
   }
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find("12 tuples") != std::string::npos);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find("24 cells") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == expectedCode);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find("12 tuples") != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find("24 cells") != std::string::npos);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell arrays in another Attribute Matrix", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool assignCellData = GENERATE(false, true);
   CAPTURE(assignCellData);
 
@@ -466,12 +466,12 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell arrays in another Attribute Matr
   const DataPath cellValuesPath = otherDataPath.createChildPath("Other Cell Values");
   auto* otherAmPtr = AttributeMatrix::Create(dataStructure, otherDataPath.getTargetName(), SurfaceNetsFixture::k_CellShape);
   REQUIRE(otherAmPtr != nullptr);
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, SurfaceNetsFixture::k_CellShape, {1});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, otherAmPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, SurfaceNetsFixture::k_CellShape, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, otherAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   featureIdsPtr->fill(1);
-  auto cellValuesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellValuesPath, SurfaceNetsFixture::k_CellShape, {1});
-  auto* cellValuesPtr = Int32Array::Create(dataStructure, cellValuesPath.getTargetName(), cellValuesStore, otherAmPtr->getId());
+  auto cellValuesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, cellValuesPath, SurfaceNetsFixture::k_CellShape, {1});
+  auto* cellValuesPtr = Int32ArrayType::Create(dataStructure, cellValuesPath.getTargetName(), cellValuesStore, otherAmPtr->getId());
   REQUIRE(cellValuesPtr != nullptr);
   cellValuesPtr->fill(7);
 
@@ -480,22 +480,22 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Cell arrays in another Attribute Matr
   args.insertOrAssign(SurfaceNetsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
   args.insertOrAssign(SurfaceNetsFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{cellValuesPath}));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(k_SmallOutputPath);
   REQUIRE(triangleGeomPtr != nullptr);
   REQUIRE(triangleGeomPtr->getNumberOfFaces() > 0);
-  const auto* copiedValuesPtr = dataStructure.getDataAs<Int32Array>(k_SmallOutputPath.createChildPath(k_FaceDataGroupName).createChildPath(cellValuesPath.getTargetName()));
+  const auto* copiedValuesPtr = dataStructure.getDataAs<Int32ArrayType>(k_SmallOutputPath.createChildPath(k_FaceDataGroupName).createChildPath(cellValuesPath.getTargetName()));
   REQUIRE(copiedValuesPtr != nullptr);
   REQUIRE(copiedValuesPtr->getNumberOfTuples() == triangleGeomPtr->getNumberOfFaces());
   REQUIRE(copiedValuesPtr->getNumberOfComponents() == 2);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing range validation", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   SurfaceNetsFixture::Create(dataStructure, false);
   SurfaceNetsFilter filter;
@@ -513,14 +513,14 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing range validation", "[Simpln
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == expectedCode);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == expectedCode);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing validation boundaries", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   SurfaceNetsFixture::Create(dataStructure, false);
   SurfaceNetsFilter filter;
@@ -539,12 +539,12 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing validation boundaries", "[S
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: generated direct and scanline parity", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   for(const bool smoothing : {false, true})
   {
     CAPTURE(smoothing);
@@ -561,7 +561,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: generated direct and scanline parity"
       auto result = scope.executeFilter(filter, dataStructure, SurfaceNetsFixture::ArgumentsFor(smoothing));
       SIMPLNX_RESULT_REQUIRE_VALID(result.result);
       RequireSmallOutputValues(dataStructure);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
       if(hasExpectedData)
       {
         CompareSmallOutputs(expectedData, dataStructure);
@@ -578,7 +578,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: generated direct and scanline parity"
 #if SIMPLNX_TEST_ALGORITHM_PATH != 2
 TEST_CASE("SimplnxCore::SurfaceNets: scanline bulk failures propagate", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr int32 k_ReadError = -73101;
   constexpr int32 k_WriteError = -73102;
 
@@ -589,7 +589,7 @@ TEST_CASE("SimplnxCore::SurfaceNets: scanline bulk failures propagate", "[Simpln
     const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_SmallCellPath);
     dataStructure.removeData(k_SmallFeatureIdsPath);
     auto store = std::make_shared<SurfaceNetsFailingReadStore<int32>>(SurfaceNetsFixture::k_CellShape, ShapeType{1}, int32{1}, k_ReadError);
-    REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", store, cellData.getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(dataStructure, "FeatureIds", store, cellData.getId()) != nullptr);
     const Arguments args = SurfaceNetsFixture::ArgumentsFor(false);
     CreateOutputs(dataStructure, args);
     auto values = CreateInputValues(args);
@@ -606,7 +606,7 @@ TEST_CASE("SimplnxCore::SurfaceNets: scanline bulk failures propagate", "[Simpln
     const auto& cellData = dataStructure.getDataRefAs<AttributeMatrix>(k_SmallCellPath);
     dataStructure.removeData(k_SmallCellIntPath);
     auto store = std::make_shared<SurfaceNetsFailingReadStore<int32>>(SurfaceNetsFixture::k_CellShape, ShapeType{2}, int32{1}, k_ReadError);
-    REQUIRE(Int32Array::Create(dataStructure, "CellInt", store, cellData.getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(dataStructure, "CellInt", store, cellData.getId()) != nullptr);
     const Arguments args = SurfaceNetsFixture::ArgumentsFor(false);
     CreateOutputs(dataStructure, args);
     auto values = CreateInputValues(args);
@@ -626,7 +626,7 @@ TEST_CASE("SimplnxCore::SurfaceNets: scanline bulk failures propagate", "[Simpln
     const auto& faceData = dataStructure.getDataRefAs<AttributeMatrix>(k_SmallOutputPath.createChildPath(k_FaceDataGroupName));
     dataStructure.removeData(outputPath);
     auto store = std::make_shared<SurfaceNetsFailingWriteStore<int32>>(ShapeType{0}, ShapeType{2, 2}, int32{0}, k_WriteError);
-    REQUIRE(Int32Array::Create(dataStructure, "CellInt", store, faceData.getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(dataStructure, "CellInt", store, faceData.getId()) != nullptr);
     auto values = CreateInputValues(args);
     std::atomic_bool shouldCancel = false;
     auto result = SurfaceNetsScanline(dataStructure, {}, shouldCancel, &values)();
@@ -637,7 +637,7 @@ TEST_CASE("SimplnxCore::SurfaceNets: scanline bulk failures propagate", "[Simpln
 
 TEST_CASE("SimplnxCore::SurfaceNets: pre-cancelled scanline does not write", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   SurfaceNetsFixture::Create(dataStructure, false);
   const Arguments args = SurfaceNetsFixture::ArgumentsFor(false);
@@ -653,13 +653,13 @@ TEST_CASE("SimplnxCore::SurfaceNets: pre-cancelled scanline does not write", "[S
 
 TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[SimplnxCore][SurfaceNetsFilter][OOC]")
 {
-  constexpr usize k_Components = detail::kTransferPageValues + 1;
+  constexpr usize k_Components = detail::k_TransferPageValues + 1;
   constexpr usize k_ValuesPerFace = k_Components * 2;
   DataStructure dataStructure;
   const DataPath sourcePath({"Direct Source"});
   const DataPath destinationPath({"Direct Destination"});
-  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_Components});
-  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_Components});
+  auto* sourcePtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_Components});
+  auto* destinationPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_Components});
   REQUIRE(sourcePtr != nullptr);
   REQUIRE(destinationPtr != nullptr);
 
@@ -675,14 +675,14 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[Simpl
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
-      SurfaceNetsTransferData{.face_index = 0, .quadNxArrayIndices = {0, 1}},
-      SurfaceNetsTransferData{.face_index = 1, .quadNxArrayIndices = {2, std::numeric_limits<usize>::max()}},
+      SurfaceNetsTransferData{.face_index = 0, .quad_nx_array_indices = {0, 1}},
+      SurfaceNetsTransferData{.face_index = 1, .quad_nx_array_indices = {2, std::numeric_limits<usize>::max()}},
   };
   TransferTuple<int32> transfer(dataStructure, sourcePath, destinationPath);
   auto surfaceNetsTransferResult = transfer.surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(records.data(), records.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(surfaceNetsTransferResult);
 
-  for(const usize component : {usize{0}, detail::kTransferPageValues - 1, detail::kTransferPageValues})
+  for(const usize component : {usize{0}, detail::k_TransferPageValues - 1, detail::k_TransferPageValues})
   {
     RequireLargeTransferValue(destinationPtr->getDataStoreRef(), component, static_cast<int32>(component));
     RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_Components + component, static_cast<int32>(1000000 + component));
@@ -693,15 +693,15 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[Simpl
 
 TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[SimplnxCore][SurfaceNetsFilter][OOC]")
 {
-  constexpr usize k_Components = detail::kTransferPageValues + 1;
+  constexpr usize k_Components = detail::k_TransferPageValues + 1;
   constexpr usize k_ValuesPerFace = k_Components * 2;
   DataStructure dataStructure;
   const DataPath featureIdsPath({"Feature Ids"});
   const DataPath sourcePath({"Feature Source"});
   const DataPath destinationPath({"Feature Destination"});
-  auto* featureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, featureIdsPath.getTargetName(), ShapeType{3}, ShapeType{1});
-  auto* sourcePtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_Components});
-  auto* destinationPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_Components});
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, featureIdsPath.getTargetName(), ShapeType{3}, ShapeType{1});
+  auto* sourcePtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, sourcePath.getTargetName(), ShapeType{3}, ShapeType{k_Components});
+  auto* destinationPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, destinationPath.getTargetName(), ShapeType{2}, ShapeType{2, k_Components});
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(sourcePtr != nullptr);
   REQUIRE(destinationPtr != nullptr);
@@ -721,14 +721,14 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
-      SurfaceNetsTransferData{.face_index = 0, .quadNxArrayIndices = {0, 1}},
-      SurfaceNetsTransferData{.face_index = 1, .quadNxArrayIndices = {2, std::numeric_limits<usize>::max()}},
+      SurfaceNetsTransferData{.face_index = 0, .quad_nx_array_indices = {0, 1}},
+      SurfaceNetsTransferData{.face_index = 1, .quad_nx_array_indices = {2, std::numeric_limits<usize>::max()}},
   };
   TransferFeatureTuple<int32, int32> transfer(dataStructure, sourcePath, destinationPath, featureIdsPath);
   auto surfaceNetsTransferResult = transfer.surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(records.data(), records.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(surfaceNetsTransferResult);
 
-  for(const usize component : {usize{0}, detail::kTransferPageValues - 1, detail::kTransferPageValues})
+  for(const usize component : {usize{0}, detail::k_TransferPageValues - 1, detail::k_TransferPageValues})
   {
     RequireLargeTransferValue(destinationPtr->getDataStoreRef(), component, static_cast<int32>(2000000 + component));
     RequireLargeTransferValue(destinationPtr->getDataStoreRef(), k_Components + component, static_cast<int32>(component));
@@ -740,17 +740,17 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Load the Small IN100 input.
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -808,7 +808,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -824,8 +824,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+  IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
 
   REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
   REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
@@ -844,22 +844,22 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Load the Small IN100 input.
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -915,7 +915,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -933,8 +933,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+    IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+    IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
     REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
     REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
   }
@@ -953,22 +953,22 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Load the Small IN100 input.
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -1024,7 +1024,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -1041,8 +1041,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+  IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
 
   REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
   REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
@@ -1061,22 +1061,22 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Load the Small IN100 input.
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -1132,7 +1132,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
     args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -1149,8 +1149,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
   // Verify the generated data.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+  IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
 
   REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
   REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
@@ -1169,5 +1169,5 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

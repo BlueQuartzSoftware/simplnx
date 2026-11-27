@@ -26,7 +26,7 @@
  * @namespace nx::core::ArrayCreationUtilities
  * @brief Contains storage-aware array creation utilities.
  */
-namespace nx::core::ArrayCreationUtilities
+namespace nx::core::array_creation_utilities
 {
 /**
  * @brief Tests projected in-memory use against cached total physical memory.
@@ -205,7 +205,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     // OOC manager's disk-backed format) is served by its manager when that plugin is loaded.
     try
     {
-      store = DataStoreUtilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape, chunkShapeHint, effectiveInitializationMode);
+      store = data_store_utilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape, chunkShapeHint, effectiveInitializationMode);
     } catch(const std::bad_alloc&)
     {
       throw;
@@ -240,7 +240,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
   }
   if(!fillValue.empty())
   {
-    Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(fillValue);
+    Result<T> conversionResult = string_interpretation_utilities::Convert<T>(fillValue);
 
     if(conversionResult.invalid())
     {
@@ -268,8 +268,8 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
       auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", StringUtilities::formatDimensions(attrMatrixPtr->getShape()));
-      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", StringUtilities::formatDimensions(store->getTupleShape()));
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", string_utilities::FormatDimensions(attrMatrixPtr->getShape()));
+      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", string_utilities::FormatDimensions(store->getTupleShape()));
       return returnFailure(
           MakeErrorResult(-268, fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                                             "dimensions or the same total number of tuples.\n{}\n{}",

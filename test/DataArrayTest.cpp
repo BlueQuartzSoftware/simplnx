@@ -51,7 +51,7 @@ using namespace nx::core;
 
 TEST_CASE("DataArrayUtilities::ValidateFeatureIds checks every component", "[simplnx][DataArrayUtilities][FeatureIdsValidation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const usize components = GENERATE(usize{1}, usize{2});
   const int32 lastId = GENERATE(-1, 1, 2);
@@ -63,12 +63,12 @@ TEST_CASE("DataArrayUtilities::ValidateFeatureIds checks every component", "[sim
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Features", ShapeType{2});
   REQUIRE(featureAmPtr != nullptr);
   const DataPath featureArrayPath({"Features", "Values"});
-  auto featureStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureArrayPath, ShapeType{2}, ShapeType{1});
-  REQUIRE(Int32Array::Create(dataStructure, "Values", featureStore, featureAmPtr->getId()) != nullptr);
+  auto featureStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featureArrayPath, ShapeType{2}, ShapeType{1});
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Values", featureStore, featureAmPtr->getId()) != nullptr);
 
   const DataPath idsPath({"FeatureIds"});
-  auto idsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, ShapeType{2}, ShapeType{components});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", idsStore);
+  auto idsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, idsPath, ShapeType{2}, ShapeType{components});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", idsStore);
   REQUIRE(featureIdsPtr != nullptr);
   std::vector<int32> ids(2 * components, 0);
   ids.back() = lastId;
@@ -89,22 +89,22 @@ TEST_CASE("DataArrayUtilities::ValidateFeatureIds checks every component", "[sim
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataArrayUtilities::ValidateFeatureIds accepts empty arrays", "[simplnx][DataArrayUtilities][FeatureIdsValidation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const usize components = GENERATE(usize{1}, usize{2});
   DataStructure dataStructure;
   REQUIRE(AttributeMatrix::Create(dataStructure, "Features", ShapeType{0}) != nullptr);
-  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"FeatureIds"}), ShapeType{0}, ShapeType{components});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", store);
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"FeatureIds"}), ShapeType{0}, ShapeType{components});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", store);
   REQUIRE(featureIdsPtr != nullptr);
   const auto result = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, DataPath({"Features"}), *featureIdsPtr, false, {});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtilities]")
@@ -151,7 +151,7 @@ TEST_CASE("DataArrayUtilities::ValidateCellTupleCount", "[simplnx][DataArrayUtil
     CHECK(error.message.find("Select data with one tuple per geometry cell.") != std::string::npos);
   }
   CHECK(result.warnings().empty());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataArrayUtilities::ValidateCellTupleCount arrays", "[simplnx][DataArrayUtilities][TupleCount]")
@@ -164,14 +164,14 @@ TEST_CASE("DataArrayUtilities::ValidateCellTupleCount arrays", "[simplnx][DataAr
   const usize tuples = GENERATE(usize{0}, usize{11}, usize{12}, usize{13});
   auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{tuples});
   REQUIRE(otherAMPtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{2}, 0), otherAMPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{2}, 0), otherAMPtr->getId()) != nullptr);
   auto* stringsPtr = StringArray::Create(dataStructure, "Strings");
   REQUIRE(stringsPtr != nullptr);
   const auto resizeResult = stringsPtr->resizeTuples({tuples});
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   REQUIRE(NeighborList<int32>::Create(dataStructure, "Neighbors", ShapeType{tuples}) != nullptr);
   const DataPath path = GENERATE(DataPath({"Other Data", "Values"}), DataPath({"Strings"}), DataPath({"Neighbors"}));
-  REQUIRE(Int32Array::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
   const auto result = ValidateCellTupleCount(dataStructure, geometryPath, {DataPath({"Matching"}), path}, -98765);
   if(tuples == 12)
   {
@@ -195,9 +195,9 @@ TEST_CASE("DataArrayUtilities::ValidateCellTupleCount arrays first mismatch", "[
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({2, 3, 2});
-  REQUIRE(Int32Array::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Short", std::make_shared<DataStore<int32>>(ShapeType{11}, ShapeType{1}, 0)) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Long", std::make_shared<DataStore<int32>>(ShapeType{13}, ShapeType{1}, 0)) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Matching", std::make_shared<DataStore<int32>>(ShapeType{12}, ShapeType{1}, 0)) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Short", std::make_shared<DataStore<int32>>(ShapeType{11}, ShapeType{1}, 0)) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Long", std::make_shared<DataStore<int32>>(ShapeType{13}, ShapeType{1}, 0)) != nullptr);
   const auto result = ValidateCellTupleCount(dataStructure, DataPath({"Image"}), {DataPath({"Matching"}), DataPath({"Short"}), DataPath({"Long"})}, -98765);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
@@ -214,7 +214,7 @@ TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUt
   REQUIRE(secondParentPtr != nullptr);
   auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1}, firstParentPtr->getId());
   REQUIRE(attributeMatrixPtr != nullptr);
-  auto* childPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0), attributeMatrixPtr->getId());
+  auto* childPtr = Int32ArrayType::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0), attributeMatrixPtr->getId());
   REQUIRE(childPtr != nullptr);
   const DataPath childPath({"First Parent", "Cell Data", "Values"});
 
@@ -227,14 +227,14 @@ TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUt
   {
     auto* siblingPtr = AttributeMatrix::Create(dataStructure, "Other Data", ShapeType{1}, firstParentPtr->getId());
     REQUIRE(siblingPtr != nullptr);
-    auto* siblingChildPtr = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0), siblingPtr->getId());
+    auto* siblingChildPtr = Int32ArrayType::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0), siblingPtr->getId());
     REQUIRE(siblingChildPtr != nullptr);
     REQUIRE_FALSE(IsChildOfAttributeMatrix(dataStructure, DataPath({"First Parent", "Other Data", "Values"}), *attributeMatrixPtr));
   }
 
   SECTION("Top-level DataArray")
   {
-    auto* topLevelPtr = Int32Array::Create(dataStructure, "Top Level Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
+    auto* topLevelPtr = Int32ArrayType::Create(dataStructure, "Top Level Values", std::make_shared<DataStore<int32>>(ShapeType{1}, ShapeType{1}, 0));
     REQUIRE(topLevelPtr != nullptr);
     REQUIRE_FALSE(IsChildOfAttributeMatrix(dataStructure, DataPath({"Top Level Values"}), *attributeMatrixPtr));
   }
@@ -243,8 +243,8 @@ TEST_CASE("DataArrayUtilities::IsChildOfAttributeMatrix", "[simplnx][DataArrayUt
   {
     REQUIRE(dataStructure.setAdditionalParent(attributeMatrixPtr->getId(), secondParentPtr->getId()));
     const DataPath alternateChildPath({"Second Parent", "Cell Data", "Values"});
-    REQUIRE(dataStructure.getDataAs<Int32Array>(childPath) == childPtr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(alternateChildPath) == childPtr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(childPath) == childPtr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(alternateChildPath) == childPtr);
     SECTION("First parent path")
     {
       REQUIRE(IsChildOfAttributeMatrix(dataStructure, childPath, *attributeMatrixPtr));
@@ -283,8 +283,8 @@ TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx]
   const DataPath cellPath({"Geometry", "Cells"});
   const DataPath arrayPath = cellPath.createChildPath("Ids");
   const DataPath otherPath({"Geometry", "Other", "Ids"});
-  REQUIRE(Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), otherPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), otherPtr->getId()) != nullptr);
 
   const auto checkError = [](const Result<>& result, const std::vector<std::string>& messageParts) {
     CHECK(result.invalid());
@@ -351,7 +351,7 @@ TEST_CASE("DataArrayUtilities::Geometry attribute matrix validation", "[simplnx]
              {noCellsPath.toString(), featurePath.toString(), "**Feature Attribute Matrix**", "requires a Cell Attribute Matrix"});
   checkError(ValidateFeatureAttributeMatrixInGeometry(dataStructure, DataPath({"Missing"}), featurePath, -12345, "Feature Attribute Matrix"),
              {"Missing", featurePath.toString(), "requires a Cell Attribute Matrix"});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -413,20 +413,20 @@ private:
 
 TEST_CASE("Array")
 {
-  FloatVec3 vec0(3.0F, 4.0F, 5.0F);
+  FloatVec3Type vec0(3.0F, 4.0F, 5.0F);
 
-  IntVec3 v0(1, 2, 3);
-  IntVec3 v1(0, 0, 0);
+  IntVec3Type v0(1, 2, 3);
+  IntVec3Type v1(0, 0, 0);
   v1.setValues(1, 2, 3);
   REQUIRE(v1[0] == 1);
   REQUIRE(v1[1] == 2);
   REQUIRE(v1[2] == 3);
 
   auto v1Tuple = v1.toTuple();
-  FloatVec3 v1F32 = v1.convertType<float>();
+  FloatVec3Type v1F32 = v1.convertType<float>();
 
-  FloatVec3 v2(-3.0F, -4.0F, -5.0F);
-  FloatVec3 cross = vec0.cross(v2);
+  FloatVec3Type v2(-3.0F, -4.0F, -5.0F);
+  FloatVec3Type cross = vec0.cross(v2);
   REQUIRE(cross[0] == 0);
   REQUIRE(cross[1] == 0);
   REQUIRE(cross[2] == 0);
@@ -447,7 +447,7 @@ TEST_CASE("DataArrayCreation")
   size_t numTuples = dataArray.getNumberOfTuples();
   REQUIRE(numTuples == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEMPLATE_TEST_CASE("CopyUsingIndexList maps data arrays", "[simplnx][DataArray][CopyUsingIndexList]", bool, int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64)
@@ -464,10 +464,10 @@ TEMPLATE_TEST_CASE("CopyUsingIndexList maps data arrays", "[simplnx][DataArray][
   }
   const std::vector<int64> indexMap = {2, -1, 0, 2};
   const nonstd::span<const int64> indexSpan(indexMap);
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm runner;
   runner.setParallelizationEnabled(false);
-  CopyFromArray::RunParallelCopyUsingIndexList(*destArrayPtr, runner, taskResult, *sourceArrayPtr, indexSpan);
+  copy_from_array::RunParallelCopyUsingIndexList(*destArrayPtr, runner, taskResult, *sourceArrayPtr, indexSpan);
   runner.wait();
   REQUIRE(taskResult.takeResult().valid());
   const std::array<TestType, 8> expectedValues = {TestType{1}, TestType{1}, TestType{0}, TestType{0}, TestType{1}, TestType{0}, TestType{1}, TestType{1}};
@@ -475,7 +475,7 @@ TEMPLATE_TEST_CASE("CopyUsingIndexList maps data arrays", "[simplnx][DataArray][
   {
     REQUIRE((*destArrayPtr)[valueIndex] == expectedValues[valueIndex]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CopyUsingIndexList maps neighbor lists", "[simplnx][NeighborList][CopyUsingIndexList]")
@@ -494,17 +494,17 @@ TEST_CASE("CopyUsingIndexList maps neighbor lists", "[simplnx][NeighborList][Cop
   }
   const std::vector<int64> indexMap = {2, -1, 0, 2};
   const nonstd::span<const int64> indexSpan(indexMap);
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm runner;
   runner.setParallelizationEnabled(false);
-  CopyFromArray::RunParallelCopyUsingIndexList(*destListPtr, runner, taskResult, *sourceListPtr, indexSpan);
+  copy_from_array::RunParallelCopyUsingIndexList(*destListPtr, runner, taskResult, *sourceListPtr, indexSpan);
   runner.wait();
   REQUIRE(taskResult.takeResult().valid());
   REQUIRE(destListPtr->getList(0) == std::vector<int32>{10, 11, 12});
   REQUIRE(destListPtr->getList(1).empty());
   REQUIRE(destListPtr->getList(2) == std::vector<int32>{7, 8});
   REQUIRE(destListPtr->getList(3) == std::vector<int32>{10, 11, 12});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("nx::core::IDataStore getPlannedStoreType", "[simplnx][DataStore]")
@@ -560,7 +560,7 @@ TEMPLATE_TEST_CASE("DataArray deepCopy preserves resident initialization", "[sim
   CHECK(sourceArrayPtr->getNumberOfTuples() == 1);
   CHECK(sourceArrayPtr->getDataStoreRef().getValue(0) == TestType{0});
   CHECK(sourceArrayPtr->getDataStoreRef().getValue(1) == TestType{1});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataArray deepCopy preserves signed initialization and destination behavior", "[simplnx][DataArray][DeepCopyInitialization]")
@@ -602,7 +602,7 @@ TEST_CASE("DataArray deepCopy preserves signed initialization and destination be
     CHECK(copyArrayPtr->getDataStoreRef().getValue(valueIndex) == expectedValues[valueIndex]);
   }
   CHECK(resolver->requestedPaths() == expectedRequests);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataArray deepCopy preserves Empty store metadata", "[simplnx][DataArray][DeepCopyInitialization]")
@@ -632,12 +632,12 @@ TEST_CASE("DataArray deepCopy preserves Empty store metadata", "[simplnx][DataAr
   CHECK(copyEmptyStorePtr->getTupleShape() == sourceEmptyStorePtr->getTupleShape());
   CHECK(copyEmptyStorePtr->getComponentShape() == sourceEmptyStorePtr->getComponentShape());
   CHECK(copyEmptyStorePtr->getDataFormat() == sourceEmptyStorePtr->getDataFormat());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string kDataArrayName("DataArray");
   const DataPath kDataPath({kDataArrayName});
@@ -647,7 +647,7 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   DataStructure dataStructure;
   ShapeType tupleShape{kNumTuples};
   ShapeType componentShape{kNumComponents};
-  Result<> result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, tupleShape, componentShape, kDataPath, IDataAction::Mode::Execute);
+  Result<> result = array_creation_utilities::CreateArray<int32>(dataStructure, tupleShape, componentShape, kDataPath, IDataAction::Mode::Execute);
   REQUIRE(result.valid() == true);
 
   auto& dataArray = dataStructure.getDataRefAs<DataArray<int32>>(kDataPath);
@@ -676,7 +676,7 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   REQUIRE(dataArray[13] == 1);
   REQUIRE(dataArray[14] == 1);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataStore Test")
@@ -1132,7 +1132,7 @@ static void TestDataArrayToFromString(DataStructure& datastructure, const std::s
   constexpr usize k_Index6 = 10;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* dataArrayPtr = UnitTest::CreateTestDataArray<T>(datastructure, arrayName, tupleShape, compShape);
+  auto* dataArrayPtr = unit_test::CreateTestDataArray<T>(datastructure, arrayName, tupleShape, compShape);
   constexpr T k_MinVal = std::numeric_limits<T>::min();
   constexpr T k_MaxVal = std::numeric_limits<T>::max();
   dataArrayPtr->setValue(k_Index2, k_MinVal);
@@ -1164,7 +1164,7 @@ void TestDataArrayToFromString<float32>(DataStructure& datastructure, const std:
   constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* dataArrayPtr = UnitTest::CreateTestDataArray<float32>(datastructure, arrayName, tupleShape, compShape);
+  auto* dataArrayPtr = unit_test::CreateTestDataArray<float32>(datastructure, arrayName, tupleShape, compShape);
   constexpr float32 k_LowestVal = std::numeric_limits<float32>::lowest();
   constexpr float32 k_MinVal = std::numeric_limits<float32>::min();
   constexpr float32 k_MaxVal = std::numeric_limits<float32>::max();
@@ -1218,7 +1218,7 @@ void TestDataArrayToFromString<float64>(DataStructure& datastructure, const std:
   constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* dataArrayPtr = UnitTest::CreateTestDataArray<float64>(datastructure, arrayName, tupleShape, compShape);
+  auto* dataArrayPtr = unit_test::CreateTestDataArray<float64>(datastructure, arrayName, tupleShape, compShape);
   constexpr float64 k_LowestVal = std::numeric_limits<float64>::lowest();
   constexpr float64 k_MinVal = std::numeric_limits<float64>::min();
   constexpr float64 k_MaxVal = std::numeric_limits<float64>::max();
@@ -1269,7 +1269,7 @@ static void TestNeighborListArrayToFromString(DataStructure& datastructure, cons
   constexpr usize k_Index6 = 10;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* neighborListArrayPtr = UnitTest::CreateTestNeighborList<T>(datastructure, arrayName, 10, {});
+  auto* neighborListArrayPtr = unit_test::CreateTestNeighborList<T>(datastructure, arrayName, 10, {});
   constexpr T k_MinVal = std::numeric_limits<T>::min();
   constexpr T k_MaxVal = std::numeric_limits<T>::max();
   neighborListArrayPtr->addEntry(k_Index2, k_MinVal);
@@ -1307,7 +1307,7 @@ void TestNeighborListArrayToFromString<float32>(DataStructure& datastructure, co
   constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* neighborListFloat32Ptr = UnitTest::CreateTestNeighborList<float32>(datastructure, arrayName, 10, {});
+  auto* neighborListFloat32Ptr = unit_test::CreateTestNeighborList<float32>(datastructure, arrayName, 10, {});
   constexpr float32 k_LowestVal = std::numeric_limits<float32>::lowest();
   constexpr float32 k_MinVal = std::numeric_limits<float32>::min();
   constexpr float32 k_MaxVal = std::numeric_limits<float32>::max();
@@ -1372,7 +1372,7 @@ void TestNeighborListArrayToFromString<float64>(DataStructure& datastructure, co
   constexpr usize k_Index10 = 14;
   const ShapeType tupleShape = {5, 4, 3};
   const ShapeType compShape = {1};
-  auto* neighborListFloat64Ptr = UnitTest::CreateTestNeighborList<float64>(datastructure, arrayName, 10, {});
+  auto* neighborListFloat64Ptr = unit_test::CreateTestNeighborList<float64>(datastructure, arrayName, 10, {});
   constexpr float64 k_LowestVal = std::numeric_limits<float64>::lowest();
   constexpr float64 k_MinVal = std::numeric_limits<float64>::min();
   constexpr float64 k_MaxVal = std::numeric_limits<float64>::max();
@@ -1668,7 +1668,7 @@ public:
    * @param format Test-only format identifier.
    * @param factory Callback that creates or rejects a copy destination.
    */
-  CopyTestManager(std::string format, DataStoreCreateFnc factory)
+  CopyTestManager(std::string format, DataStoreCreateFncType factory)
   : m_Format(std::move(format))
   {
     addDataStoreCreationFnc(m_Format, std::move(factory));
@@ -2016,11 +2016,11 @@ TEST_CASE("StorageFormatPlan: array creation does not retry a failed selected fa
 
   if(failure == 5)
   {
-    REQUIRE_THROWS_AS(ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format), std::bad_alloc);
+    REQUIRE_THROWS_AS(array_creation_utilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format), std::bad_alloc);
   }
   else
   {
-    auto result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format);
+    auto result = array_creation_utilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, outputPath, IDataAction::Mode::Execute, format);
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
     REQUIRE(result.errors().front().code == -265);
@@ -2240,7 +2240,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   const DataPath scalarPath({"Scalar"});
   const DataPath zeroDimensionPath({"ZeroDimension"});
 
-  auto emptyTupleResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(dataStructure, emptyTuplePath, ShapeType{}, ShapeType{3}, "");
+  auto emptyTupleResult = data_store_utilities::CreatePlannedDataStore<uint64>(dataStructure, emptyTuplePath, ShapeType{}, ShapeType{3}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(emptyTupleResult);
   REQUIRE(emptyTupleResult.value()->getTupleShape().empty());
   REQUIRE(emptyTupleResult.value()->getComponentShape() == ShapeType{3});
@@ -2256,7 +2256,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(emptyComponentResult.value()->getNumberOfComponents() == 1);
   REQUIRE(emptyComponentResult.value()->getSize() == 3);
 
-  auto scalarResult = DataStoreUtilities::CreatePlannedDataStore<uint64>(dataStructure, scalarPath, ShapeType{}, ShapeType{}, "");
+  auto scalarResult = data_store_utilities::CreatePlannedDataStore<uint64>(dataStructure, scalarPath, ShapeType{}, ShapeType{}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(scalarResult);
   REQUIRE(scalarResult.value()->getTupleShape().empty());
   REQUIRE(scalarResult.value()->getComponentShape().empty());
@@ -2276,7 +2276,7 @@ TEST_CASE("StorageFormatPlan: planned helpers preserve scalar and zero-dimension
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(uint64), 3 * sizeof(uint64), sizeof(uint64), 0});
 
   const usize maximum = std::numeric_limits<usize>::max();
-  auto overflowResult = DataStoreUtilities::CreatePlannedDataStore<uint8>(dataStructure, DataPath({"Overflow"}), ShapeType{}, ShapeType{maximum, 2}, "");
+  auto overflowResult = data_store_utilities::CreatePlannedDataStore<uint8>(dataStructure, DataPath({"Overflow"}), ShapeType{}, ShapeType{maximum, 2}, "");
   REQUIRE(overflowResult.invalid());
   REQUIRE_FALSE(overflowResult.errors().empty());
   REQUIRE(overflowResult.errors().front().code == -10614);
@@ -2294,7 +2294,7 @@ TEST_CASE("StorageFormatPlan: value stores retain populated scalar shape semanti
   dataStructure.setFormatResolver(resolver);
   const DataPath valuePath({"ScalarValues"});
 
-  auto store = DataStoreUtilities::CreateDataStore<uint64>(dataStructure, valuePath, ShapeType{3}, ShapeType{});
+  auto store = data_store_utilities::CreateDataStore<uint64>(dataStructure, valuePath, ShapeType{3}, ShapeType{});
 
   REQUIRE(store != nullptr);
   REQUIRE(store->getNumberOfTuples() == 3);
@@ -2355,9 +2355,9 @@ TEST_CASE("StorageFormatPlan: ArrayCreation preflight records plans without valu
   DataStructure dataStructure;
   const DataPath memoryPath({"MemoryPlan"});
   const DataPath oocPath({"OocPlan"});
-  auto memoryResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, memoryPath, IDataAction::Mode::Preflight, Preferences::k_InMemoryFormat.str());
+  auto memoryResult = array_creation_utilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, memoryPath, IDataAction::Mode::Preflight, Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(memoryResult);
-  auto oocResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, oocPath, IDataAction::Mode::Preflight, format);
+  auto oocResult = array_creation_utilities::CreateArray<int32>(dataStructure, ShapeType{3}, ShapeType{2}, oocPath, IDataAction::Mode::Preflight, format);
   SIMPLNX_RESULT_REQUIRE_VALID(oocResult);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(memoryPath));
@@ -2411,7 +2411,7 @@ TEST_CASE("StorageFormatPlan: value helper preserves nullable factory failures",
   dataStructure.setFormatResolver(resolver);
   const DataPath path({"RejectedValueStore"});
 
-  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, ShapeType{2}, ShapeType{1});
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, ShapeType{2}, ShapeType{1});
 
   REQUIRE(store == nullptr);
   REQUIRE(*selectedFactoryCalls == 1);
@@ -2438,9 +2438,9 @@ TEST_CASE("StorageFormatPlan: canonical memory factory identity is accepted", "[
   const DataPath actionPath({"CanonicalActionMemory"});
   const DataPath helperPath({"CanonicalHelperMemory"});
 
-  auto actionResult = ArrayCreationUtilities::CreateArray<int32>(dataStructure, ShapeType{2}, ShapeType{1}, actionPath, IDataAction::Mode::Execute, Preferences::k_InMemoryFormat.str());
+  auto actionResult = array_creation_utilities::CreateArray<int32>(dataStructure, ShapeType{2}, ShapeType{1}, actionPath, IDataAction::Mode::Execute, Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
-  auto helperStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, helperPath, ShapeType{2}, ShapeType{1});
+  auto helperStore = data_store_utilities::CreateDataStore<int32>(dataStructure, helperPath, ShapeType{2}, ShapeType{1});
 
   REQUIRE(helperStore != nullptr);
   REQUIRE(helperStore->getStoreType() == IDataStore::StoreType::InMemory);
@@ -2836,7 +2836,7 @@ public:
 
 TEST_CASE("DataArrayUtilities CopyData overlap", "[DataArrayUtilities][L05]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool buffered = GENERATE(false, true);
   const bool sharedStore = GENERATE(false, true);
   const usize components = GENERATE(usize{1}, usize{3});
@@ -2855,15 +2855,15 @@ TEST_CASE("DataArrayUtilities CopyData overlap", "[DataArrayUtilities][L05]")
   {
     store = std::make_shared<DataStore<int32>>(ShapeType{tuples}, ShapeType{components}, 0);
   }
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Values", store);
+  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", store);
   REQUIRE(valuesPtr != nullptr);
   for(usize i = 0; i < valuesPtr->getSize(); ++i)
   {
     (*valuesPtr)[i] = static_cast<int32>(i);
   }
-  auto* sourceValuesPtr = sharedStore ? Int32Array::Create(dataStructure, "Alias", store) : valuesPtr;
+  auto* sourceValuesPtr = sharedStore ? Int32ArrayType::Create(dataStructure, "Alias", store) : valuesPtr;
   REQUIRE(sourceValuesPtr != nullptr);
-  auto result = CopyFromArray::CopyData(*sourceValuesPtr, *valuesPtr, destination, source, count);
+  auto result = copy_from_array::CopyData(*sourceValuesPtr, *valuesPtr, destination, source, count);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   for(usize i = 0; i < valuesPtr->getSize(); ++i)
   {
@@ -2876,11 +2876,11 @@ TEST_CASE("DataArrayUtilities CopyData overlap", "[DataArrayUtilities][L05]")
 
 TEST_CASE("DataArrayUtilities CopyData string overlap", "[DataArrayUtilities][L05]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   auto* valuesPtr = StringArray::CreateWithValues(dataStructure, "Values", {6}, {"a", "b", "c", "d", "e", "f"});
   REQUIRE(valuesPtr != nullptr);
-  auto result = CopyFromArray::CopyData(*valuesPtr, *valuesPtr, 2, 1, 3);
+  auto result = copy_from_array::CopyData(*valuesPtr, *valuesPtr, 2, 1, 3);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const std::vector<std::string> expected = {"a", "b", "b", "c", "d", "f"};
   for(usize i = 0; i < expected.size(); ++i)

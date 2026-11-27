@@ -20,10 +20,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeCoordinatesImageGeomInputValues
 {
-  ChoicesParameter::ValueType CoordinateOption{};
-  DataPath ImageGeomPath;
-  DataPath CoordArrayPath;
-  DataPath IndexArrayPath;
+  ChoicesParameter::ValueType coordinate_option{};
+  DataPath image_geom_path;
+  DataPath coord_array_path;
+  DataPath index_array_path;
 };
 
 /**

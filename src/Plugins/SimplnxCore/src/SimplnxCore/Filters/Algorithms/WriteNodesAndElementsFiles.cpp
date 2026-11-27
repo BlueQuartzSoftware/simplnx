@@ -47,7 +47,7 @@ Result<> WriteFile(const fs::path& outputFilePath, const DataArray<T>& array, bo
 
   if(includeArrayHeaders)
   {
-    WriteValue(file, StringUtilities::join(arrayHeaders, " "));
+    WriteValue(file, string_utilities::Join(arrayHeaders, " "));
     file << '\n';
   }
   usize numComps = array.getNumberOfComponents();
@@ -100,34 +100,34 @@ const std::atomic_bool& WriteNodesAndElementsFiles::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteNodesAndElementsFiles::operator()()
 {
-  auto& iNodeGeometry = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto& iNodeGeometry = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->selected_geometry_path);
   auto geomType = iNodeGeometry.getGeomType();
-  UInt64Array* cellsArrayPtr = nullptr;
+  UInt64ArrayType* cellsArrayPtr = nullptr;
 
   switch(geomType)
   {
   case IGeometry::Type::Edge: {
-    auto& geom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SelectedGeometryPath);
+    auto& geom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->selected_geometry_path);
     cellsArrayPtr = geom.getEdges();
     break;
   }
   case IGeometry::Type::Triangle: {
-    auto& geom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->SelectedGeometryPath);
+    auto& geom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->selected_geometry_path);
     cellsArrayPtr = geom.getFaces();
     break;
   }
   case IGeometry::Type::Quad: {
-    auto& geom = m_DataStructure.getDataRefAs<QuadGeom>(m_InputValues->SelectedGeometryPath);
+    auto& geom = m_DataStructure.getDataRefAs<QuadGeom>(m_InputValues->selected_geometry_path);
     cellsArrayPtr = geom.getFaces();
     break;
   }
   case IGeometry::Type::Tetrahedral: {
-    auto& geom = m_DataStructure.getDataRefAs<TetrahedralGeom>(m_InputValues->SelectedGeometryPath);
+    auto& geom = m_DataStructure.getDataRefAs<TetrahedralGeom>(m_InputValues->selected_geometry_path);
     cellsArrayPtr = geom.getPolyhedra();
     break;
   }
   case IGeometry::Type::Hexahedral: {
-    auto& geom = m_DataStructure.getDataRefAs<HexahedralGeom>(m_InputValues->SelectedGeometryPath);
+    auto& geom = m_DataStructure.getDataRefAs<HexahedralGeom>(m_InputValues->selected_geometry_path);
     cellsArrayPtr = geom.getPolyhedra();
     break;
   }
@@ -141,12 +141,12 @@ Result<> WriteNodesAndElementsFiles::operator()()
   }
   }
 
-  const Float32Array& vertices = iNodeGeometry.getVerticesRef();
+  const Float32ArrayType& vertices = iNodeGeometry.getVerticesRef();
 
-  if(m_InputValues->WriteNodeFile)
+  if(m_InputValues->write_node_file)
   {
     std::vector<std::string> arrayHeaders;
-    if(m_InputValues->NumberNodes)
+    if(m_InputValues->number_nodes)
     {
       arrayHeaders.emplace_back("NODE_NUM");
     }
@@ -154,17 +154,17 @@ Result<> WriteNodesAndElementsFiles::operator()()
 
     std::vector<std::string_view> arrayHeadersViews(arrayHeaders.size());
     std::transform(arrayHeaders.begin(), arrayHeaders.end(), arrayHeadersViews.begin(), [](const std::string& s) { return std::string_view(s); });
-    auto result = WriteFile(m_InputValues->NodeFilePath, vertices, m_InputValues->IncludeNodeFileHeader, arrayHeadersViews, m_InputValues->NumberNodes, false);
+    auto result = WriteFile(m_InputValues->node_file_path, vertices, m_InputValues->include_node_file_header, arrayHeadersViews, m_InputValues->number_nodes, false);
     if(result.invalid())
     {
       return result;
     }
   }
 
-  if(m_InputValues->WriteElementFile && geomType != IGeometry::Type::Vertex)
+  if(m_InputValues->write_element_file && geomType != IGeometry::Type::Vertex)
   {
     std::vector<std::string> arrayHeaders;
-    if(m_InputValues->NumberElements)
+    if(m_InputValues->number_elements)
     {
       arrayHeaders.emplace_back("ELEMENT_NUM");
     }
@@ -177,7 +177,7 @@ Result<> WriteNodesAndElementsFiles::operator()()
 
     std::vector<std::string_view> arrayHeadersViews(arrayHeaders.size());
     std::transform(arrayHeaders.begin(), arrayHeaders.end(), arrayHeadersViews.begin(), [](const std::string& s) { return std::string_view(s); });
-    auto result = WriteFile(m_InputValues->ElementFilePath, *cellsArrayPtr, m_InputValues->IncludeElementFileHeader, arrayHeadersViews, m_InputValues->NumberElements, true);
+    auto result = WriteFile(m_InputValues->element_file_path, *cellsArrayPtr, m_InputValues->include_element_file_header, arrayHeadersViews, m_InputValues->number_elements, true);
     if(result.invalid())
     {
       return result;

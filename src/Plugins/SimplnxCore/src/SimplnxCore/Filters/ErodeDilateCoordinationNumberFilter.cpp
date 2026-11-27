@@ -63,11 +63,11 @@ Parameters ErodeDilateCoordinationNumberFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
 
   return params;
 }
@@ -96,13 +96,13 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -16801, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, pIgnoredDataArrayPathsValue, -16802, "Attribute Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path so that the ignored paths match the modified paths.
@@ -111,7 +111,7 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
 
   if(pCoordinationNumberValue < 0 || pCoordinationNumberValue > 6)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-16800, fmt::format("Coordination Number must be between 0 and 6. Current value: {}", pCoordinationNumberValue))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-16800, fmt::format("Coordination Number must be between 0 and 6. Current value: {}", pCoordinationNumberValue))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -119,10 +119,10 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, pIgnoredDataArrayPathsValue);
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, cellDataPath, pIgnoredDataArrayPathsValue);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -131,16 +131,16 @@ Result<> ErodeDilateCoordinationNumberFilter::executeImpl(DataStructure& dataStr
 {
   ErodeDilateCoordinationNumberInputValues inputValues;
 
-  inputValues.CoordinationNumber = filterArgs.value<int32>(k_CoordinationNumber_Key);
-  inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.coordination_number = filterArgs.value<int32>(k_CoordinationNumber_Key);
+  inputValues.loop = filterArgs.value<bool>(k_Loop_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.ignored_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
-  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.input_image_geometry).getCellDataPath();
+  inputValues.feature_ids_array_path = MapToGeometryCellDataPath(cellDataPath, inputValues.feature_ids_array_path);
+  inputValues.ignored_data_array_paths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignored_data_array_paths);
 
   return ErodeDilateCoordinationNumber(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

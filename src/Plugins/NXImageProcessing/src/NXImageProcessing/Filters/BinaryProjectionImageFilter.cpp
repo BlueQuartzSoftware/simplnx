@@ -174,7 +174,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   if(resultOutputActions.invalid())
   {
-    return {.outputActions = std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   // BinaryReduce casts the Float64 foreground/background parameters to the input element type. For an
@@ -184,17 +184,17 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
   if(ImageProcessing::GetIntegerScalarTypes().contains(inputType))
   {
-    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{.foreground_value = foregroundValue, .background_value = backgroundValue});
+    Result<> paramGuard = ImageProcessing::IntegerOnly::Dispatch(inputType, BinaryIntegerParamGuard{.foreground_value = foregroundValue, .background_value = backgroundValue});
     if(paramGuard.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
     }
     for(Warning& warning : paramGuard.warnings())
     {
       resultOutputActions.warnings().push_back(std::move(warning));
     }
   }
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -215,7 +215,7 @@ Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, 
   // deferred swap renames afterward; the original geometry is still intact here.
   const DataPath outputArrayPath = ImageProcessing::ProjectionOutputArrayPath(dataStructure, imageGeomPath, performInPlace, outputGeomName, outputArrayName);
 
-  const ImageProcessing::BinaryReduce reduce{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue};
+  const ImageProcessing::BinaryReduce reduce{.foreground_value = foregroundValue, .background_value = backgroundValue};
   return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric>(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, static_cast<usize>(projectionDimension),
                                                                                         reduce, shouldCancel, messageHandler);
 }
@@ -239,8 +239,8 @@ Result<Arguments> BinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));

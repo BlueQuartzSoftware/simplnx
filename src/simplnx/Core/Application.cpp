@@ -81,7 +81,7 @@ std::string GetApplicationName(Application* app)
 }
 } // namespace
 
-std::shared_ptr<Application> Application::s_Instance = nullptr;
+std::shared_ptr<Application> Application::SInstance = nullptr;
 
 Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
@@ -149,35 +149,35 @@ Application::~Application()
     // The destructor cannot return an error, so it logs the preference-write failure.
     fmt::print(stderr, "Error saving preferences in destructor: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
   }
-  s_Instance = nullptr;
+  SInstance = nullptr;
 }
 
 std::shared_ptr<Application> Application::Instance()
 {
-  return s_Instance;
+  return SInstance;
 }
 
 std::shared_ptr<Application> Application::GetOrCreateInstance()
 {
-  if(s_Instance == nullptr)
+  if(SInstance == nullptr)
   {
-    s_Instance = std::shared_ptr<Application>(new Application());
+    SInstance = std::shared_ptr<Application>(new Application());
   }
-  return s_Instance;
+  return SInstance;
 }
 
 void Application::DeleteInstance()
 {
-  if(s_Instance != nullptr)
+  if(SInstance != nullptr)
   {
-    auto result = s_Instance->savePreferences();
+    auto result = SInstance->savePreferences();
     if(result.invalid())
     {
       // The static shutdown API cannot return an error, so it logs the failure.
       fmt::print(stderr, "Error saving preferences on shutdown: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
     }
   }
-  s_Instance = nullptr;
+  SInstance = nullptr;
 }
 
 std::filesystem::path Application::getCurrentPath() const
@@ -205,7 +205,7 @@ Result<> Application::loadPreferences(const std::filesystem::path& filepath)
   m_PendingPreferenceLoadWarnings.insert(m_PendingPreferenceLoadWarnings.end(), result.warnings().begin(), result.warnings().end());
   if(result.invalid())
   {
-    if(!result.errors().empty() && result.errors()[0].code == Preferences::k_FileDoesNotExist_Code)
+    if(!result.errors().empty() && result.errors()[0].code == Preferences::k_FileDoesNotExistCode)
     {
       // On the first run, defaults are used and the preferences file is written on shutdown.
       return {};
@@ -215,9 +215,9 @@ Result<> Application::loadPreferences(const std::filesystem::path& filepath)
   return result;
 }
 
-WarningCollection Application::takePreferenceLoadWarnings()
+WarningCollectionType Application::takePreferenceLoadWarnings()
 {
-  return std::exchange(m_PendingPreferenceLoadWarnings, WarningCollection{});
+  return std::exchange(m_PendingPreferenceLoadWarnings, WarningCollectionType{});
 }
 
 Result<> Application::savePreferences()
@@ -298,7 +298,7 @@ Result<> Application::loadPlugins(const std::filesystem::path& pluginDir, bool v
     {
       const std::filesystem::path& path = entry.path();
 #ifdef NDEBUG // Release mode
-      if(!StringUtilities::ends_with(path.string(), "_d.simplnx") && StringUtilities::ends_with(path.string(), ".simplnx"))
+      if(!string_utilities::EndsWith(path.string(), "_d.simplnx") && string_utilities::EndsWith(path.string(), ".simplnx"))
 #else
       if(StringUtilities::ends_with(path.string(), "_d.simplnx"))
 #endif
@@ -347,7 +347,7 @@ Preferences* Application::getPreferences()
   return m_Preferences.get();
 }
 
-JsonPipelineBuilder* Application::getPipelineBuilder()
+JsonPipelineBuilder* Application::GetPipelineBuilder()
 {
   return nullptr;
 }
@@ -394,7 +394,7 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
       }
     }
     m_SimplUuids.push_back(simplUuid);
-    m_SimplnxUuids.push_back(simplData.simplnxUuid);
+    m_SimplnxUuids.push_back(simplData.simplnx_uuid);
   }
 
   if(m_SimplUuids.size() != m_SimplnxUuids.size())

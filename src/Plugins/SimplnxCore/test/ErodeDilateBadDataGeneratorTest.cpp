@@ -15,8 +15,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -43,15 +43,15 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
+  auto featureIdsDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1});
   auto* featureIdsArrayPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
   auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
 
-  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3});
+  auto eulerDataStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3});
   auto* eulerArrayPtr = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAmPtr->getId());
   auto& eulerStore = eulerArrayPtr->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellDataPath.createChildPath("Phases"), cellTupleShape, {1});
+  auto phasesDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_CellDataPath.createChildPath("Phases"), cellTupleShape, {1});
   auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAmPtr->getId());
   auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
@@ -98,7 +98,7 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
 
 usize CountBadVoxels(const DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
 {
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath).getDataStoreRef();
   const usize sliceSize = dimX * dimY;
   std::vector<int32> buf(sliceSize);
   usize count = 0;
@@ -127,13 +127,13 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Generate Test Data", "[Simplnx
   {
     DataStructure buildDS;
     BuildTestData(buildDS, 20, 20, 20, 5);
-    UnitTest::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
+    unit_test::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
   }
 
   // The large fixture uses a 200-cubed volume and block size 25.
   {
     DataStructure buildDS;
     BuildTestData(buildDS, 200, 200, 200, 25);
-    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
+    unit_test::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
   }
 }

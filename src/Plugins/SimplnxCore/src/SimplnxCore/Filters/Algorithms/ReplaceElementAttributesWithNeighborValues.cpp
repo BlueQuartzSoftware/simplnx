@@ -191,9 +191,9 @@ struct ExecuteTemplate
     };
 
     // Precompute face-neighbor offsets and their deterministic tie order.
-    constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-    const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-    constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+    const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+    constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
     usize count = 0;
     bool keepGoing = true;
@@ -287,7 +287,7 @@ struct ExecuteTemplate
               count++;
               T best = inputSlices[1][inSlice];
 
-              const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+              const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
               // Map each face direction to its in-slice position.
               const std::array<usize, 6> neighborInSlice = {
@@ -379,9 +379,9 @@ const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel() 
 
 Result<> ReplaceElementAttributesWithNeighborValues::operator()()
 {
-  auto* srcIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
+  auto* srcIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->input_array_path);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->selected_image_geometry_path);
 
-  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArrayPtr->getDataType(), imageGeom, srcIDataArrayPtr, m_InputValues->InputArrayPath, m_InputValues->SelectedComparison,
-                             m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel, m_MessageHandler);
+  return ExecuteDataFunction(ExecuteTemplate{}, srcIDataArrayPtr->getDataType(), imageGeom, srcIDataArrayPtr, m_InputValues->input_array_path, m_InputValues->selected_comparison,
+                             m_InputValues->min_confidence, m_InputValues->loop, m_ShouldCancel, m_MessageHandler);
 }

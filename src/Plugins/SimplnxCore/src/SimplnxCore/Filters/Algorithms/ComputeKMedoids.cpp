@@ -28,12 +28,12 @@ const std::atomic_bool& ComputeKMedoids::getCancel()
 Result<> ComputeKMedoids::operator()()
 {
   // Include every scanline input and output in storage-path selection.
-  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto* medoidsArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath);
-  if(m_InputValues->UseMask)
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  auto* medoidsArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->medoids_array_path);
+  if(m_InputValues->use_mask)
   {
-    auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+    auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
     return DispatchAlgorithm<ComputeKMedoidsDirect, ComputeKMedoidsScanline>({clusteringArrayPtr, featureIdsArrayPtr, medoidsArrayPtr, maskArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
                                                                              m_InputValues);
   }

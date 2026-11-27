@@ -32,18 +32,18 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
   {
     return {};
   }
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   const usize tuplesPerScan = imageGeom.getNumXCells() * imageGeom.getNumYCells();
   const usize sliceTupleStart = sliceIndex * tuplesPerScan;
 
   // Map nonpositive phase IDs to phase one for downstream ensemble indexing.
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::Phases));
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::AngFile::Phases));
   auto* phasePtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::Ang::PhaseData));
 
   const auto* phi1Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi1));
   const auto* phiPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi));
   const auto* phi2Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi2));
-  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::EulerAngles));
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::AngFile::EulerAngles));
 
   // EbsdLib owns one resident scan. Use bounded destination pages to avoid
   // per-value disk writes and a second scan-sized allocation.
@@ -108,14 +108,14 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
       return MakeErrorResult(
           -34881, fmt::format("Could not read scalar channel '{}' for scan '{}' in file '{}'. Check that the scan contains this dataset.", name, m_Reader->getHDF5Path(), m_Reader->getFileName()));
     }
-    auto& array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(name));
+    auto& array = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(name));
     auto result = copyScalar(array, values);
     if(result.invalid())
     {
       return result;
     }
   }
-  if(m_InputValues->ReadPatternData)
+  if(m_InputValues->read_pattern_data)
   {
     const uint8* patternDataPtr = m_Reader->getPatternData();
     if(patternDataPtr == nullptr)
@@ -129,7 +129,7 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
       std::vector<usize> pDimsV(2);
       pDimsV[0] = pDims[0];
       pDimsV[1] = pDims[1];
-      auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::PatternData));
+      auto& patternData = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::Ang::PatternData));
       const usize numComponents = patternData.getNumberOfComponents();
       for(usize tupleOffset = 0; tupleOffset < tuplesPerScan; tupleOffset += k_TuplesPerBatch)
       {

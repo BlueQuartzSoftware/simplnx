@@ -36,7 +36,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -45,10 +45,10 @@ constexpr float64 k_MaxDifference = 0.0001;
 
 TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
@@ -72,7 +72,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -102,7 +102,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -119,8 +119,8 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
 
     // Let's compare the normals.
     DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
-    auto& officialNormals = dataStructure.getDataRefAs<Float64Array>(normalsDataPath);
-    Float64Array& calculatedNormals = dataStructure.getDataRefAs<Float64Array>(triangleNormalsDataPath);
+    auto& officialNormals = dataStructure.getDataRefAs<Float64ArrayType>(normalsDataPath);
+    Float64ArrayType& calculatedNormals = dataStructure.getDataRefAs<Float64ArrayType>(triangleNormalsDataPath);
     std::vector<double> offNorms;
     std::vector<double> calcNorms;
     for(int64 i = 0; i < officialNormals.getSize(); i++)
@@ -130,13 +130,13 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::TriangleNormalFilter: SIMPL Backwards Compatibility", "[SimplnxCore][TriangleNormalFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -358,7 +358,7 @@ struct NormalFixture
 {
   DataStructure data_structure;
   TriangleGeom* geometry_ptr = nullptr;
-  Float32Array* vertices_ptr = nullptr;
+  Float32ArrayType* vertices_ptr = nullptr;
   DataArray<IGeometry::MeshIndexType>* faces_ptr = nullptr;
   AttributeMatrix* face_data_ptr = nullptr;
   AttributeMatrix* vertex_data_ptr = nullptr;
@@ -387,12 +387,12 @@ struct NormalFixture
     }
     else
     {
-      verticesStore = DataStoreUtilities::CreateDataStore<float32>(data_structure, k_NormalVerticesPath, {6}, {3});
-      facesStore = DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(data_structure, k_NormalFacesPath, {faceCount}, {3});
+      verticesStore = data_store_utilities::CreateDataStore<float32>(data_structure, k_NormalVerticesPath, {6}, {3});
+      facesStore = data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(data_structure, k_NormalFacesPath, {faceCount}, {3});
     }
     REQUIRE(verticesStore != nullptr);
     REQUIRE(facesStore != nullptr);
-    vertices_ptr = Float32Array::Create(data_structure, "Vertices", verticesStore, geometry_ptr->getId());
+    vertices_ptr = Float32ArrayType::Create(data_structure, "Vertices", verticesStore, geometry_ptr->getId());
     faces_ptr = DataArray<IGeometry::MeshIndexType>::Create(data_structure, "Faces", facesStore, geometry_ptr->getId());
     REQUIRE(vertices_ptr != nullptr);
     REQUIRE(faces_ptr != nullptr);
@@ -428,10 +428,10 @@ struct NormalFixture
     return args;
   }
 
-  Float64Array& output()
+  Float64ArrayType& output()
   {
-    REQUIRE_NOTHROW(data_structure.getDataRefAs<Float64Array>(k_NormalOutputPath));
-    return data_structure.getDataRefAs<Float64Array>(k_NormalOutputPath);
+    REQUIRE_NOTHROW(data_structure.getDataRefAs<Float64ArrayType>(k_NormalOutputPath));
+    return data_structure.getDataRefAs<Float64ArrayType>(k_NormalOutputPath);
   }
 };
 
@@ -501,7 +501,7 @@ void CheckNormalFixture(NormalFixture& fixture, usize completedFaces)
       CHECK(std::abs(normal[component] - expected) <= 1.0e-14);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 /**
@@ -510,15 +510,15 @@ void CheckNormalFixture(NormalFixture& fixture, usize completedFaces)
  * @param state Outlives the fixture and records the direct algorithm's transfers.
  * @return The created resident output array.
  */
-Float64Array* AddNormalReportingOutput(NormalFixture& fixture, NormalTransferState& state)
+Float64ArrayType* AddNormalReportingOutput(NormalFixture& fixture, NormalTransferState& state)
 {
   TriangleNormalFilter filter;
   REQUIRE(fixture.data_structure.getData(k_NormalOutputPath) == nullptr);
   const auto preflight = filter.preflight(fixture.data_structure, fixture.arguments());
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto store = std::make_shared<NormalReportingStore<float64>>(fixture.faces_ptr->getNumberOfTuples(), state, NormalStoreRole::Normals);
   store->fill(k_NormalSentinel);
-  auto* outputPtr = Float64Array::Create(fixture.data_structure, "Normals", store, fixture.face_data_ptr->getId());
+  auto* outputPtr = Float64ArrayType::Create(fixture.data_structure, "Normals", store, fixture.face_data_ptr->getId());
   REQUIRE(outputPtr != nullptr);
   return outputPtr;
 }
@@ -526,10 +526,10 @@ Float64Array* AddNormalReportingOutput(NormalFixture& fixture, NormalTransferSta
 
 TEST_CASE("SimplnxCore::TriangleNormalFilter: computation block tail", "[SimplnxCore][TriangleNormalFilter][N2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   NormalFixture fixture(k_NormalBlockFaces + 1);
   scope.requireExpectedStore(*fixture.vertices_ptr);
   scope.requireExpectedStore(*fixture.faces_ptr);
@@ -537,7 +537,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter: computation block tail", "[Simplnx
   TriangleNormalFilter filter;
   const auto args = fixture.arguments();
   const auto preflight = filter.preflight(fixture.data_structure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = scope.executeFilter(filter, fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   scope.requireExpectedStore(fixture.output());
@@ -547,8 +547,8 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter: computation block tail", "[Simplnx
 #if SIMPLNX_TEST_ALGORITHM_PATH != 2
 TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore][TriangleNormalFilter][N2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenarios({UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenarios({unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
   const usize caseIndex = GENERATE(usize{0}, usize{1}, usize{2}, usize{3}, usize{4}, usize{5}, usize{6});
   struct ContractCase
   {
@@ -619,7 +619,7 @@ TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore
                                                .context_message = ""}}};
   const auto& contract = cases[caseIndex];
   CAPTURE(scenario, contract.name);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   NormalTransferState state;
   NormalFixture fixture(k_NormalBlockFaces + 1, &state);
   auto* outputPtr = AddNormalReportingOutput(fixture, state);
@@ -630,7 +630,7 @@ TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore
   state.failing_write = contract.failing_write;
   state.failing_call = contract.failing_call;
   state.cancel_after_first_write = caseIndex == 6;
-  TriangleNormalInputValues inputValues{.InputTriangleGeometryPath = k_NormalGeometryPath, .OutputNormalsArrayName = "Normals"};
+  TriangleNormalInputValues inputValues{.input_triangle_geometry_path = k_NormalGeometryPath, .output_normals_array_name = "Normals"};
   const IFilter::MessageHandler messages{};
   NormalTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleNormal(fixture.data_structure, messages, state.should_cancel, &inputValues)(); });
@@ -671,11 +671,11 @@ TEST_CASE("SimplnxCore::TriangleNormal: block transfer contracts", "[SimplnxCore
 
 TEST_CASE("SimplnxCore::TriangleNormal: early exit controls", "[SimplnxCore][TriangleNormalFilter][N2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool preCancelled = GENERATE(false, true);
   CAPTURE(scenario, preCancelled);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   NormalTransferState state;
   NormalFixture fixture(preCancelled ? 4 : 0, &state);
   auto* outputPtr = AddNormalReportingOutput(fixture, state);
@@ -683,7 +683,7 @@ TEST_CASE("SimplnxCore::TriangleNormal: early exit controls", "[SimplnxCore][Tri
   scope.requireExpectedStore(*fixture.faces_ptr);
   scope.requireExpectedStore(*outputPtr);
   state.should_cancel = preCancelled;
-  TriangleNormalInputValues inputValues{.InputTriangleGeometryPath = k_NormalGeometryPath, .OutputNormalsArrayName = "Normals"};
+  TriangleNormalInputValues inputValues{.input_triangle_geometry_path = k_NormalGeometryPath, .output_normals_array_name = "Normals"};
   const IFilter::MessageHandler messages{};
   NormalTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleNormal(fixture.data_structure, messages, state.should_cancel, &inputValues)(); });
@@ -698,10 +698,10 @@ TEST_CASE("SimplnxCore::TriangleNormal: early exit controls", "[SimplnxCore][Tri
 
 TEST_CASE("SimplnxCore::TriangleNormalFilter: empty geometry", "[SimplnxCore][TriangleNormalFilter][N2]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   NormalFixture fixture(0);
   scope.requireExpectedStore(*fixture.vertices_ptr);
   scope.requireExpectedStore(*fixture.faces_ptr);
@@ -709,7 +709,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter: empty geometry", "[SimplnxCore][Tr
   TriangleNormalFilter filter;
   const auto args = fixture.arguments();
   const auto preflight = filter.preflight(fixture.data_structure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = scope.executeFilter(filter, fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   scope.requireExpectedStore(fixture.output());
@@ -719,13 +719,13 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter: empty geometry", "[SimplnxCore][Tr
 #if SIMPLNX_TEST_ALGORITHM_PATH != 2
 TEST_CASE("SimplnxCore::TriangleNormal: buffered invalid connectivity", "[SimplnxCore][TriangleNormalFilter][N2][InvalidConnectivity]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenarios({UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenarios({unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore})));
   const auto invalidVertex = GENERATE(IGeometry::MeshIndexType{3}, std::numeric_limits<IGeometry::MeshIndexType>::max());
   const usize invalidFace = GENERATE(usize{0}, usize{1});
   const usize invalidCorner = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(scenario, invalidVertex, invalidFace, invalidCorner);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   NormalTransferState state;
   NormalFixture fixture(2, &state);
   auto resizeVertices = fixture.geometry_ptr->resizeVertexList(3);
@@ -741,7 +741,7 @@ TEST_CASE("SimplnxCore::TriangleNormal: buffered invalid connectivity", "[Simpln
   scope.requireExpectedStore(*fixture.vertices_ptr);
   scope.requireExpectedStore(*fixture.faces_ptr);
   scope.requireExpectedStore(*outputPtr);
-  TriangleNormalInputValues inputValues{.InputTriangleGeometryPath = k_NormalGeometryPath, .OutputNormalsArrayName = "Normals"};
+  TriangleNormalInputValues inputValues{.input_triangle_geometry_path = k_NormalGeometryPath, .output_normals_array_name = "Normals"};
   const IFilter::MessageHandler messages{};
   const NormalTraceGuard traceGuard(state);
   const auto result = scope.execute([&] { return TriangleNormal(fixture.data_structure, messages, state.should_cancel, &inputValues)(); });
@@ -767,6 +767,6 @@ TEST_CASE("SimplnxCore::TriangleNormal: buffered invalid connectivity", "[Simpln
   auto verticesRead = fixture.vertices_ptr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(actualVertices.data(), actualVertices.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(verticesRead);
   CHECK(std::equal(actualVertices.begin(), actualVertices.end(), k_NormalVertices.begin()));
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 #endif

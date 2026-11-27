@@ -29,8 +29,8 @@ constexpr usize k_TargetChunkValues = 65536;
  */
 DataPath GetOutputArrayPath(const SplitDataArrayByComponentInputValues& inputValues, usize component)
 {
-  const std::string arrayName = inputValues.InputArrayPath.getTargetName() + inputValues.SplitArraysSuffix + StringUtilities::number(component);
-  return inputValues.InputArrayPath.replaceName(arrayName);
+  const std::string arrayName = inputValues.input_array_path.getTargetName() + inputValues.split_arrays_suffix + string_utilities::Number(component);
+  return inputValues.input_array_path.replaceName(arrayName);
 }
 
 /**
@@ -55,14 +55,14 @@ Result<> SplitArraysInChunks(DataStructure& dataStructure, const IDataArray& inp
   const auto& inputStore = inputIDataArray.template getIDataStoreRefAs<StoreType>();
   const usize numTuples = inputStore.getNumberOfTuples();
   const usize numComponents = inputStore.getNumberOfComponents();
-  if(numTuples == 0 || inputValues.ExtractComponents.empty())
+  if(numTuples == 0 || inputValues.extract_components.empty())
   {
     return {};
   }
 
   std::vector<StoreType*> outputStores;
-  outputStores.reserve(inputValues.ExtractComponents.size());
-  for(const usize component : inputValues.ExtractComponents)
+  outputStores.reserve(inputValues.extract_components.size());
+  for(const usize component : inputValues.extract_components)
   {
     auto& outputArray = dataStructure.getDataRefAs<DataArray<T>>(GetOutputArrayPath(inputValues, component));
     outputStores.push_back(&outputArray.getDataStoreRef());
@@ -96,7 +96,7 @@ Result<> SplitArraysInChunks(DataStructure& dataStructure, const IDataArray& inp
         return {};
       }
 
-      const usize component = inputValues.ExtractComponents[outputIndex];
+      const usize component = inputValues.extract_components[outputIndex];
       for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
       {
         outputBuffer[tupleIndex] = inputBuffer[tupleIndex * numComponents + component];
@@ -203,8 +203,8 @@ struct SplitArraysDirectFunctor
     }
 
     std::vector<T*> outputData;
-    outputData.reserve(inputValues.ExtractComponents.size());
-    for(const usize component : inputValues.ExtractComponents)
+    outputData.reserve(inputValues.extract_components.size());
+    for(const usize component : inputValues.extract_components)
     {
       auto& outputArray = dataStructure.getDataRefAs<DataArray<T>>(GetOutputArrayPath(inputValues, component));
       auto* contiguousOutputStorePtr = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
@@ -224,7 +224,7 @@ struct SplitArraysDirectFunctor
     ParallelDataAlgorithm parallelAlgorithm;
     parallelAlgorithm.setRange(0, numTuples);
     parallelAlgorithm.execute(SplitContiguousData<T>(contiguousInputStorePtr->data(), nonstd::span<T*>(outputData.data(), outputData.size()),
-                                                     nonstd::span<const usize>(inputValues.ExtractComponents.data(), inputValues.ExtractComponents.size()),
+                                                     nonstd::span<const usize>(inputValues.extract_components.data(), inputValues.extract_components.size()),
                                                      contiguousInputStorePtr->getNumberOfComponents(), shouldCancel));
     if(shouldCancel)
     {
@@ -283,7 +283,7 @@ public:
    */
   Result<> operator()() const
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_array_path);
     return ExecuteDataFunction(SplitArraysDirectFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, *m_InputValues, m_ShouldCancel);
   }
 
@@ -320,7 +320,7 @@ public:
    */
   Result<> operator()() const
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_array_path);
     return ExecuteDataFunction(SplitArraysScanlineFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, *m_InputValues, m_ShouldCancel);
   }
 
@@ -347,6 +347,6 @@ const std::atomic_bool& SplitDataArrayByComponent::getCancel()
 
 Result<> SplitDataArrayByComponent::operator()()
 {
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_array_path);
   return DispatchAlgorithm<SplitDataArrayByComponentDirect, SplitDataArrayByComponentScanline>({&inputArray}, m_DataStructure, m_ShouldCancel, m_InputValues);
 }

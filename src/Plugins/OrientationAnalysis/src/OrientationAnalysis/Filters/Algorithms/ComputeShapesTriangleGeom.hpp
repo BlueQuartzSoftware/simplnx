@@ -23,7 +23,7 @@ namespace nx::core
  * @namespace ComputeShapesTriangleGeomDetail
  * @brief Internal mesh-ray measurements shared with direct contract tests.
  */
-namespace ComputeShapesTriangleGeomDetail
+namespace compute_shapes_triangle_geom_detail
 {
 /**
  * @struct AxialLengths
@@ -33,9 +33,9 @@ struct AxialLengths
 {
   AxialLengths() = default;
   AxialLengths(float64 x, float64 y, float64 z)
-  : xLength(x)
-  , yLength(y)
-  , zLength(z)
+  : x_length(x)
+  , y_length(y)
+  , z_length(z)
   {
   }
   ~AxialLengths() noexcept = default;
@@ -45,9 +45,9 @@ struct AxialLengths
   AxialLengths& operator=(const AxialLengths&) = default;
   AxialLengths& operator=(AxialLengths&&) noexcept = default;
 
-  float64 xLength = 0.0;
-  float64 yLength = 0.0;
-  float64 zLength = 0.0;
+  float64 x_length = 0.0;
+  float64 y_length = 0.0;
+  float64 z_length = 0.0;
 };
 
 /**
@@ -70,24 +70,24 @@ ORIENTATIONANALYSIS_EXPORT AxialLengths FindIntersections(const Eigen::Matrix<fl
 
 struct ShapeResultValues
 {
-  int32 featureId;
+  int32 feature_id;
   float32 omega3;
-  std::array<float32, 3> axisEulerAngles;
-  std::array<float32, 3> axisLengths;
-  std::array<float32, 2> aspectRatios;
+  std::array<float32, 3> axis_euler_angles;
+  std::array<float32, 3> axis_lengths;
+  std::array<float32, 2> aspect_ratios;
 };
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeShapesTriangleGeomInputValues
 {
-  DataPath TriangleGeometryPath;
-  DataPath FaceLabelsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath CentroidsArrayPath;
-  DataPath Omega3sArrayPath;
-  DataPath AxisLengthsArrayPath;
-  DataPath AxisEulerAnglesArrayPath;
-  DataPath AspectRatiosArrayPath;
-  DataPath EulerCharacteristicPath;
+  DataPath triangle_geometry_path;
+  DataPath face_labels_array_path;
+  DataPath feature_attribute_matrix_path;
+  DataPath centroids_array_path;
+  DataPath omega3s_array_path;
+  DataPath axis_lengths_array_path;
+  DataPath axis_euler_angles_array_path;
+  DataPath aspect_ratios_array_path;
+  DataPath euler_characteristic_path;
 };
 
 /**
@@ -118,9 +118,9 @@ private:
   usize m_NumFeatures = 0;
   ThrottledMessageHandler m_Throttle;
 
-  Float32Array* m_Omega3s = nullptr;
-  Float32Array* m_AxisEulerAngles = nullptr;
-  Float32Array* m_AxisLengths = nullptr;
-  Float32Array* m_AspectRatios = nullptr;
+  Float32ArrayType* m_Omega3s = nullptr;
+  Float32ArrayType* m_AxisEulerAngles = nullptr;
+  Float32ArrayType* m_AxisLengths = nullptr;
+  Float32ArrayType* m_AspectRatios = nullptr;
 };
 } // namespace nx::core

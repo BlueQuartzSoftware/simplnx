@@ -53,7 +53,7 @@ Parameters ComputeNumFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
                                                           DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
@@ -95,7 +95,7 @@ IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStruc
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellEnsembleData.getShape(), std::vector<usize>{1}, pNumFeaturesArrayPathValue);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -106,8 +106,8 @@ Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, con
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
   auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
 
-  const auto& featurePhasesStore = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
-  auto& numFeaturesStore = dataStructure.getDataAs<Int32Array>(pNumFeaturesArrayPathValue)->getDataStoreRef();
+  const auto& featurePhasesStore = dataStructure.getDataAs<Int32ArrayType>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
+  auto& numFeaturesStore = dataStructure.getDataAs<Int32ArrayType>(pNumFeaturesArrayPathValue)->getDataStoreRef();
 
   const usize ensembleTupleCount = numFeaturesStore.getNumberOfTuples();
   for(usize index = 1; index < featurePhasesStore.getNumberOfTuples(); index++)

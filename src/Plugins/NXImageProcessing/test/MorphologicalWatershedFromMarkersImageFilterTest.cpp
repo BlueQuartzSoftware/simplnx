@@ -85,7 +85,7 @@ std::pair<DataPath, DataPath> BuildGrayscaleAndMarker(DataStructure& dataStructu
 
   const ShapeType cellShape = {dz, dy, dx};
   const DataPath markerPath({"Image Geometry", "CellData", "Marker"});
-  auto markerStore = DataStoreUtilities::CreateDataStore<TLabel>(dataStructure, markerPath, cellShape, {1});
+  auto markerStore = data_store_utilities::CreateDataStore<TLabel>(dataStructure, markerPath, cellShape, {1});
   const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
   auto* markerArrayPtr = DataArray<TLabel>::Create(dataStructure, "Marker", markerStore, cellAM.getId());
   auto& ref = markerArrayPtr->getDataStoreRef();
@@ -112,7 +112,7 @@ void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath&
   args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
   args.insertOrAssign(WsFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -152,8 +152,8 @@ std::vector<TLabel> MakeNegativeMarkerField(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight guards", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   auto setArgs = [](Arguments& args, const DataPath& geomPath, const DataPath& inputPath, const DataPath& markerPath) {
     args.insertOrAssign(WsFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
@@ -172,15 +172,15 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     const auto [inputPath, markerPath] = BuildGrayscaleAndMarker<int16, uint32>(dataStructure, 8, 8, 1, gray, markers);
     // Add a multi-component grayscale array and select it as the input.
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int16>(dataStructure, vecPath, {1, 8, 8}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int16>(dataStructure, vecPath, {1, 8, 8}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int16>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     WsFilterType filter;
     Arguments args;
     setArgs(args, DataPath({"Image Geometry"}), vecPath, markerPath);
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("float marker rejected")
   {
@@ -195,7 +195,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     // A float32 marker is rejected: the marker ArraySelectionParameter admits only integer scalar types, so the
     // parameter layer rejects it before preflightImpl (the filter's own -8600 integer-type guard is the defensive
     // backstop for any non-GUI caller). Either way the marker cannot be non-integer.
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   SECTION("multi-component marker rejected (-8601)")
   {
@@ -207,15 +207,15 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     // integer (so the -8600 integer-type guard passes), and the tuple count matches the grayscale (so the -8602
     // tuple-mismatch guard does not fire first) -- this isolates the non-scalar-marker guard, which had no coverage.
     const DataPath markerPath({"Image Geometry", "CellData", "Marker"});
-    auto markerStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, markerPath, {1, 8, 8}, {3});
+    auto markerStore = data_store_utilities::CreateDataStore<int32>(dataStructure, markerPath, {1, 8, 8}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Marker", markerStore, cellAM.getId());
     WsFilterType filter;
     Arguments args;
     setArgs(args, DataPath({"Image Geometry"}), inputPath, markerPath);
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8601); // non-scalar (multi-component) marker
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8601); // non-scalar (multi-component) marker
   }
   SECTION("marker tuple-count mismatch rejected")
   {
@@ -227,14 +227,14 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image Geometry"}));
     auto* otherAmPtr = AttributeMatrix::Create(dataStructure, "Other", ShapeType{50}, imageGeom.getId());
     const DataPath markerPath({"Image Geometry", "Other", "Marker"});
-    auto markerStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, markerPath, ShapeType{50}, {1});
+    auto markerStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, markerPath, ShapeType{50}, {1});
     DataArray<uint32>::Create(dataStructure, "Marker", markerStore, otherAmPtr->getId());
     WsFilterType filter;
     Arguments args;
     setArgs(args, DataPath({"Image Geometry"}), inputPath, markerPath);
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8602); // tuple-count mismatch
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8602); // tuple-count mismatch
   }
   SECTION("valid pair creates an output of the MARKER's type")
   {
@@ -286,8 +286,8 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: marker value 0 is unmarked (flooded)", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const bool markWatershedLine = GENERATE(true, false);
   const bool fullyConnected = GENERATE(false, true);
@@ -334,8 +334,8 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: mark
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -361,7 +361,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK 
   REQUIRE(markerArray.getNumberOfComponents() == 1);
   REQUIRE(markerArray.getNumberOfTuples() == grayArray.getNumberOfTuples());
 
-  const SizeVec3 dims = dataStructure.getDataRefAs<ImageGeom>(geom).getDimensions();
+  const SizeVec3Type dims = dataStructure.getDataRefAs<ImageGeom>(geom).getDimensions();
   const usize dx = dims[0];
   const usize dy = dims[1];
   const usize dz = dims[2];
@@ -385,12 +385,12 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: ITK 
   UNSCOPED_INFO("MorphologicalWatershedFromMarkers md5 = " + ourMd5);
   REQUIRE(ourMd5 == "c32759ecb10cbff555c750b8b7a8d32e");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: preflight rejects missing temporary provider", "[NXImageProcessing][MorphologicalWatershedFromMarkersImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
   auto& collection = application->getIOCollection();
   const DataIOCollection::MapType originalManagers(collection.begin(), collection.end());
@@ -432,16 +432,16 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     auto inputStoreResult = EmptyDataStore<int16>::Create(tupleShape, componentShape, plannedFormat);
     SIMPLNX_RESULT_REQUIRE_VALID(inputStoreResult);
     const auto* inputStorePtr = inputStoreResult.value().get();
-    auto* inputArrayPtr = Int16Array::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellDataPtr->getId());
+    auto* inputArrayPtr = Int16ArrayType::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellDataPtr->getId());
     REQUIRE(inputArrayPtr != nullptr);
     auto markerStoreResult = EmptyDataStore<uint32>::Create(tupleShape, componentShape, "");
     SIMPLNX_RESULT_REQUIRE_VALID(markerStoreResult);
     const auto* markerStorePtr = markerStoreResult.value().get();
-    auto* markerArrayPtr = UInt32Array::Create(dataStructure, markerPath.getTargetName(), std::move(markerStoreResult.value()), cellDataPtr->getId());
+    auto* markerArrayPtr = UInt32ArrayType::Create(dataStructure, markerPath.getTargetName(), std::move(markerStoreResult.value()), cellDataPtr->getId());
     REQUIRE(markerArrayPtr != nullptr);
 
     const auto checkInputs = [&] {
-      REQUIRE(dataStructure.getDataAs<Int16Array>(inputPath) == inputArrayPtr);
+      REQUIRE(dataStructure.getDataAs<Int16ArrayType>(inputPath) == inputArrayPtr);
       REQUIRE(inputArrayPtr->getIDataStore() == inputStorePtr);
       REQUIRE(inputArrayPtr->getDataType() == DataType::int16);
       REQUIRE(inputArrayPtr->getTupleShape() == tupleShape);
@@ -449,7 +449,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
       REQUIRE(inputArrayPtr->getStoreType() == IDataStore::StoreType::Empty);
       REQUIRE(inputStorePtr->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
       REQUIRE(inputArrayPtr->getDataFormat() == plannedFormat);
-      REQUIRE(dataStructure.getDataAs<UInt32Array>(markerPath) == markerArrayPtr);
+      REQUIRE(dataStructure.getDataAs<UInt32ArrayType>(markerPath) == markerArrayPtr);
       REQUIRE(markerArrayPtr->getIDataStore() == markerStorePtr);
       REQUIRE(markerArrayPtr->getDataType() == DataType::uint32);
       REQUIRE(markerArrayPtr->getTupleShape() == tupleShape);
@@ -471,15 +471,15 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedFromMarkersImageFilter: pref
     args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     args.insertOrAssign(WsFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputPath.getTargetName()));
     const auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors().front().code == -79047);
-    REQUIRE(result.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
-    REQUIRE(result.outputActions.warnings().empty());
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors().front().code == -79047);
+    REQUIRE(result.output_actions.errors().front().message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.warnings().empty());
     REQUIRE(dataStructure.getData(outputPath) == nullptr);
     REQUIRE(dataStructure.getAllDataObjectIds() == originalIds);
     checkInputs();
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("manager slots restore after a controlled throw")

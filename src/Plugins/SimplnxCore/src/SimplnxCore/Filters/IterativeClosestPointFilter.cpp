@@ -93,7 +93,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   if(numIterations < 1)
   {
     auto ss = fmt::format("Must perform at least 1 iteration. Current value: {}", numIterations);
-    return {.outputActions = MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformArrayPath);
@@ -105,10 +105,10 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   auto applyTransformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
   if(applyTransformation)
   {
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, movingVertexPath, {});
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, movingVertexPath, {});
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -117,11 +117,11 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, 
 {
   IterativeClosestPointInputValues inputValues;
 
-  inputValues.ApplyTransformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
-  inputValues.NumIterations = filterArgs.value<uint64>(k_NumIterations_Key);
-  inputValues.MovingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
-  inputValues.TargetVertexPath = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
-  inputValues.TransformArrayPath = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
+  inputValues.apply_transformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
+  inputValues.num_iterations = filterArgs.value<uint64>(k_NumIterations_Key);
+  inputValues.moving_vertex_path = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
+  inputValues.target_vertex_path = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
+  inputValues.transform_array_path = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
 
   return IterativeClosestPoint(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

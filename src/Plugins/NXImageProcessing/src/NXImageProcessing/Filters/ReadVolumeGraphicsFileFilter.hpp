@@ -42,10 +42,10 @@ public:
 
   struct HeaderMetadata
   {
-    SizeVec3 Dimensions;
-    FloatVec3 Spacing;
-    IGeometry::LengthUnit Units = IGeometry::LengthUnit::Unspecified;
-    std::string DataFilePath;
+    SizeVec3Type dimensions;
+    FloatVec3Type spacing;
+    IGeometry::LengthUnit units = IGeometry::LengthUnit::Unspecified;
+    std::string data_file_path;
   };
 
   /**

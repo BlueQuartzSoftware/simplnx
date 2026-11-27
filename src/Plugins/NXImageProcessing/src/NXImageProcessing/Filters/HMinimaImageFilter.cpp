@@ -97,19 +97,19 @@ IFilter::PreflightResult HMinimaImageFilter::preflightImpl(const DataStructure& 
   // value; reject it here so the offset is always well-defined.
   if(!std::isfinite(height))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Minima requires a finite Height, but the supplied value was {}.", height))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Minima requires a finite Height, but the supplied value was {}.", height))};
   }
   // A negative Height has no meaning (no regional minimum has negative depth) and would push the (input + Height)
   // marker BELOW the mask, violating reconstruction-by-erosion's marker>=mask precondition (ITK throws). Require
   // Height >= 0; 0 is a valid no-op.
   if(height < 0.0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Minima requires a non-negative Height, but the supplied value was {}.", height))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Minima requires a non-negative Height, but the supplied value was {}.", height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
-  return {.outputActions =
+  return {.output_actions =
               ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                             /*requireScalar=*/true)};
 }
@@ -147,7 +147,7 @@ Result<Arguments> HMinimaImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_HeightKey, k_Height_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_HeightKey, k_Height_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));

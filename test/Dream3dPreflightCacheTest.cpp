@@ -118,7 +118,7 @@ struct CacheTestContext
     REQUIRE(Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<CacheTestDataIOManager>(factory_calls)).valid());
     cache.clear();
     cache.resetStats();
-    DataStructure::setDefaultFormatResolver(resolver);
+    DataStructure::SetDefaultFormatResolver(resolver);
   }
 
   ~CacheTestContext()
@@ -127,7 +127,7 @@ struct CacheTestContext
     dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(false);
 #endif
     cache.clear();
-    DataStructure::setDefaultFormatResolver(in_memory_resolver);
+    DataStructure::SetDefaultFormatResolver(in_memory_resolver);
   }
 
   CacheTestContext(const CacheTestContext&) = delete;
@@ -180,16 +180,16 @@ fs::path WriteNumericPolicyFile(const std::string& fileName, DataPath& expectedF
   REQUIRE(secondGroupPtr != nullptr);
 
   auto sharedStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, 7);
-  auto* sharedArrayPtr = Int32Array::Create(dataStructure, "Shared", sharedStore, firstGroupPtr->getId());
+  auto* sharedArrayPtr = Int32ArrayType::Create(dataStructure, "Shared", sharedStore, firstGroupPtr->getId());
   REQUIRE(sharedArrayPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(sharedArrayPtr->getId(), secondGroupPtr->getId()));
   REQUIRE_FALSE(sharedArrayPtr->getDataPaths().empty());
   expectedFirstSharedPath = sharedArrayPtr->getDataPaths().front();
 
   auto scalarStore = std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{}, 0);
-  REQUIRE(Int32Array::Create(dataStructure, "ScalarComponents", scalarStore) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "ScalarComponents", scalarStore) != nullptr);
   auto zeroStore = std::make_shared<DataStore<float32>>(ShapeType{2, 0}, ShapeType{3}, 0.0F);
-  REQUIRE(Float32Array::Create(dataStructure, "ExplicitZero", zeroStore) != nullptr);
+  REQUIRE(Float32ArrayType::Create(dataStructure, "ExplicitZero", zeroStore) != nullptr);
 
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName;
   fs::remove(filePath);
@@ -213,17 +213,17 @@ fs::path WriteLegacyStatisticsWarningFile(const std::string& fileName)
     REQUIRE(attributeMatrix.writeScalarAttribute<uint32>("AttributeMatrixType", 13).valid());
 
     auto statistics = attributeMatrix.createGroup("StatisticsSource");
-    REQUIRE(statistics.writeStringAttribute(Constants::k_ObjectTypeTag, "Statistics").valid());
+    REQUIRE(statistics.writeStringAttribute(constants::k_ObjectTypeTag, "Statistics").valid());
     auto values = statistics.createDataset("Values");
     const std::vector<float32> payload = {1.0F};
     REQUIRE(values.writeSpan<float32>({1, 1}, nonstd::span<const float32>(payload.data(), payload.size())).valid());
-    REQUIRE(values.writeStringAttribute(Constants::k_ObjectTypeTag, DataArray<float32>::GetTypeName()).valid());
+    REQUIRE(values.writeStringAttribute(constants::k_ObjectTypeTag, DataArray<float32>::GetTypeName()).valid());
     REQUIRE(values.writeVectorAttribute("TupleDimensions", ShapeType{1}).valid());
     REQUIRE(values.writeVectorAttribute("ComponentDimensions", ShapeType{1}).valid());
     REQUIRE(values.writeVectorAttribute<float32>("Mean", {4.0F, 5.0F, 6.0F}).valid());
 
     auto unsupported = attributeMatrix.createGroup("Unsupported");
-    REQUIRE(unsupported.writeStringAttribute(Constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
+    REQUIRE(unsupported.writeStringAttribute(constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
   }
   AgeFile(filePath);
   return filePath;
@@ -274,7 +274,7 @@ TEST_CASE("Dream3dPreflightCache: miss then hit with equivalent structure", "[Dr
     INFO(path.toString());
     REQUIRE(second.value().containsData(path));
   }
-  const auto* floatsPtr = second.value().getDataAs<Float32Array>(DataPath({"TestGroup", "CellData", "Floats"}));
+  const auto* floatsPtr = second.value().getDataAs<Float32ArrayType>(DataPath({"TestGroup", "CellData", "Floats"}));
   REQUIRE(floatsPtr != nullptr);
   REQUIRE(floatsPtr->getTupleShape() == ShapeType{10});
   REQUIRE(floatsPtr->getComponentShape() == ShapeType{3});
@@ -330,8 +330,8 @@ TEST_CASE("Dream3dPreflightCache: handouts are isolated from master and each oth
   DataStructure handoutA = std::move(resultA.value());
   DataStructure handoutB = std::move(resultB.value());
 
-  auto* arrayAPtr = handoutA.getDataAs<Float32Array>(floatsPath);
-  auto* arrayBPtr = handoutB.getDataAs<Float32Array>(floatsPath);
+  auto* arrayAPtr = handoutA.getDataAs<Float32ArrayType>(floatsPath);
+  auto* arrayBPtr = handoutB.getDataAs<Float32ArrayType>(floatsPath);
   REQUIRE(arrayAPtr != nullptr);
   REQUIRE(arrayBPtr != nullptr);
 
@@ -340,7 +340,7 @@ TEST_CASE("Dream3dPreflightCache: handouts are isolated from master and each oth
   Result<DataStructure> resultC = cache.fetch(filePath);
   REQUIRE(resultC.valid());
   DataStructure handoutC = std::move(resultC.value());
-  auto* arrayCPtr = handoutC.getDataAs<Float32Array>(floatsPath);
+  auto* arrayCPtr = handoutC.getDataAs<Float32ArrayType>(floatsPath);
   REQUIRE(arrayCPtr != nullptr);
   REQUIRE(arrayAPtr->getIDataStore() != arrayBPtr->getIDataStore());
   REQUIRE(arrayAPtr->getIDataStore() != arrayCPtr->getIDataStore());
@@ -384,7 +384,7 @@ TEST_CASE("Dream3dPreflightCache: modified file is detected and re-read", "[Drea
   Result<DataStructure> refreshed = cache.fetch(filePath);
   REQUIRE(refreshed.valid());
   REQUIRE(cache.missCount() == 2);
-  REQUIRE(refreshed.value().getDataAs<Float32Array>(DataPath({"TestGroup", "CellData", "Floats"}))->getTupleShape() == ShapeType{20});
+  REQUIRE(refreshed.value().getDataAs<Float32ArrayType>(DataPath({"TestGroup", "CellData", "Floats"}))->getTupleShape() == ShapeType{20});
 }
 
 TEST_CASE("Dream3dPreflightCache: files younger than the trust window are never served from cache", "[Dream3dPreflightCache]")
@@ -473,7 +473,7 @@ TEST_CASE("Dream3dPreflightCache: concurrent fetches are safe and consistent", "
         const fs::path& target = (t + i) % 2 == 0 ? fileA : fileB;
         const usize expectedTuples = (t + i) % 2 == 0 ? 10 : 20;
         Result<DataStructure> result = cache.fetch(target);
-        if(result.invalid() || result.value().getDataAs<Float32Array>(floatsPath) == nullptr || result.value().getDataAs<Float32Array>(floatsPath)->getTupleShape() != ShapeType{expectedTuples})
+        if(result.invalid() || result.value().getDataAs<Float32ArrayType>(floatsPath) == nullptr || result.value().getDataAs<Float32ArrayType>(floatsPath)->getTupleShape() != ShapeType{expectedTuples})
         {
           failures++;
         }
@@ -503,7 +503,7 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
   for(usize i = 0; i < 150; i++)
   {
     auto store = std::make_shared<DataStore<float32>>(ShapeType{8}, ShapeType{1}, 0.0f);
-    Float32Array::Create(dataStructure, fmt::format("Array_{}", i), store, groupPtr->getId());
+    Float32ArrayType::Create(dataStructure, fmt::format("Array_{}", i), store, groupPtr->getId());
   }
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "preflight_cache_benchmark.dream3d";
   fs::remove(filePath);
@@ -511,9 +511,9 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
   // The delay driver adds 2 ms to each HDF5 open or read.
-  const hid_t driverId = DelayVfd::Register();
+  const hid_t driverId = delay_vfd::Register();
   REQUIRE(driverId != H5I_INVALID_HID);
-  DelayVfd::SetDelayMicroseconds(2000);
+  delay_vfd::SetDelayMicroseconds(2000);
   hdf5::FileIO::SetFaplConfigurator([driverId](hid_t faplId) { H5Pset_driver(faplId, driverId, nullptr); });
 
   using ClockType = std::chrono::steady_clock;
@@ -531,7 +531,7 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
   const auto warmUs = std::chrono::duration_cast<std::chrono::microseconds>(ClockType::now() - warmStart).count();
 
   hdf5::FileIO::SetFaplConfigurator({});
-  DelayVfd::SetDelayMicroseconds(0);
+  delay_vfd::SetDelayMicroseconds(0);
 
   WARN(fmt::format("PreflightCache benchmark @2ms/op: cold (uncached, = old per-edit cost) {} us | warm (cached) {} us", coldUs, warmUs));
   REQUIRE(warmUs * 10 < coldUs); // the cache must be at least 10x faster under latency
@@ -540,7 +540,7 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
 TEST_CASE("StorageFormatPlan: cache isolates numeric list and string handout stores", "[Dream3dPreflightCache][StorageFormatPlan][T16]")
 {
   DataStructure source;
-  auto* numericPtr = Int32Array::Create(source, "Numeric", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, 9));
+  auto* numericPtr = Int32ArrayType::Create(source, "Numeric", std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, 9));
   REQUIRE(numericPtr != nullptr);
   auto* listsPtr = NeighborList<int32>::Create(source, "Lists", ShapeType{3});
   REQUIRE(listsPtr != nullptr);
@@ -562,8 +562,8 @@ TEST_CASE("StorageFormatPlan: cache isolates numeric list and string handout sto
   REQUIRE(context.cache.hitCount() == 1);
   REQUIRE(std::find(context.resolver->paths.begin(), context.resolver->paths.end(), DataPath({"Numeric"})) != context.resolver->paths.end());
   REQUIRE(std::find(context.resolver->paths.begin(), context.resolver->paths.end(), DataPath({"Lists"})) != context.resolver->paths.end());
-  auto* firstNumericPtr = first.value().getDataAs<Int32Array>(DataPath({"Numeric"}));
-  auto* secondNumericPtr = second.value().getDataAs<Int32Array>(DataPath({"Numeric"}));
+  auto* firstNumericPtr = first.value().getDataAs<Int32ArrayType>(DataPath({"Numeric"}));
+  auto* secondNumericPtr = second.value().getDataAs<Int32ArrayType>(DataPath({"Numeric"}));
   auto* firstListsPtr = first.value().getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
   auto* secondListsPtr = second.value().getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
   auto* firstStringsPtr = first.value().getDataAs<StringArray>(DataPath({"Strings"}));
@@ -712,7 +712,7 @@ TEST_CASE("StorageFormatPlan: cache preserves populated legacy Statistics values
 
   auto cold = context.cache.fetch(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(cold);
-  auto* coldArrayPtr = cold.value().getDataAs<Float32Array>(statisticsPath);
+  auto* coldArrayPtr = cold.value().getDataAs<Float32ArrayType>(statisticsPath);
   REQUIRE(coldArrayPtr != nullptr);
   REQUIRE(coldArrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(std::find(context.resolver->paths.begin(), context.resolver->paths.end(), statisticsPath) != context.resolver->paths.end());
@@ -721,7 +721,7 @@ TEST_CASE("StorageFormatPlan: cache preserves populated legacy Statistics values
 
   auto warm = context.cache.fetch(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(warm);
-  auto* warmArrayPtr = warm.value().getDataAs<Float32Array>(statisticsPath);
+  auto* warmArrayPtr = warm.value().getDataAs<Float32ArrayType>(statisticsPath);
   REQUIRE(warmArrayPtr != nullptr);
   REQUIRE(warmArrayPtr->getIDataStore() != coldArrayPtr->getIDataStore());
   CHECK(warmArrayPtr->getDataStoreRef().getValue(0) == 4.0F);
@@ -729,7 +729,7 @@ TEST_CASE("StorageFormatPlan: cache preserves populated legacy Statistics values
 
   auto third = context.cache.fetch(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(third);
-  auto* thirdArrayPtr = third.value().getDataAs<Float32Array>(statisticsPath);
+  auto* thirdArrayPtr = third.value().getDataAs<Float32ArrayType>(statisticsPath);
   REQUIRE(thirdArrayPtr != nullptr);
   REQUIRE(thirdArrayPtr->getIDataStore() != coldArrayPtr->getIDataStore());
   REQUIRE(thirdArrayPtr->getIDataStore() != warmArrayPtr->getIDataStore());
@@ -753,8 +753,8 @@ TEST_CASE("StorageFormatPlan: cache preserves populated legacy Statistics values
   context.resolver->selected_format.clear();
   auto restored = context.cache.fetch(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(restored);
-  REQUIRE_NOTHROW(restored.value().getDataRefAs<Float32Array>(statisticsPath));
-  CHECK(restored.value().getDataRefAs<Float32Array>(statisticsPath).getDataStoreRef().getValue(0) == 4.0F);
+  REQUIRE_NOTHROW(restored.value().getDataRefAs<Float32ArrayType>(statisticsPath));
+  CHECK(restored.value().getDataRefAs<Float32ArrayType>(statisticsPath).getDataStoreRef().getValue(0) == 4.0F);
 }
 
 TEST_CASE("StorageFormatPlan: disk warnings survive cache bypass preparation", "[Dream3dPreflightCache][StorageFormatPlan][T16][T30]")
@@ -830,19 +830,19 @@ TEST_CASE("C8 neutral metadata bypasses process policy on every cache route", "[
   auto second = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(first);
   SIMPLNX_RESULT_REQUIRE_VALID(second);
-  CHECK(first.value().fileVersion == dream3d::k_CurrentFileVersion);
-  CHECK(second.value().fileVersion == first.value().fileVersion);
+  CHECK(first.value().file_version == dream3d::k_CurrentFileVersion);
+  CHECK(second.value().file_version == first.value().file_version);
   CHECK(context.resolver->paths.empty());
   CHECK(context.cache.missCount() == (route == 0 ? 1 : 2));
   CHECK(context.cache.hitCount() == (route == 0 ? 1 : 0));
   const DataPath arrayPath({"TestGroup", "CellData", "Ints"});
-  const auto& firstArray = RequirePlannedArray<int32>(first.value().dataStructure, arrayPath, "", {4}, {1});
-  const auto& secondArray = RequirePlannedArray<int32>(second.value().dataStructure, arrayPath, "", {4}, {1});
+  const auto& firstArray = RequirePlannedArray<int32>(first.value().data_structure, arrayPath, "", {4}, {1});
+  const auto& secondArray = RequirePlannedArray<int32>(second.value().data_structure, arrayPath, "", {4}, {1});
   CHECK(firstArray.getIDataStore() != secondArray.getIDataStore());
   CHECK(firstArray.getId() == secondArray.getId());
-  CHECK(first.value().dataStructure.getData(firstArray.getId()) == &firstArray);
-  CHECK(second.value().dataStructure.getData(secondArray.getId()) == &secondArray);
-  UnitTest::CheckArraysInheritTupleDims(second.value().dataStructure);
+  CHECK(first.value().data_structure.getData(firstArray.getId()) == &firstArray);
+  CHECK(second.value().data_structure.getData(secondArray.getId()) == &secondArray);
+  unit_test::CheckArraysInheritTupleDims(second.value().data_structure);
 }
 
 TEST_CASE("C8 neutral and ordinary cache modes stay separate and invalidate together", "[C8][Dream3dPreflightCache]")
@@ -894,10 +894,10 @@ TEST_CASE("C8 neutral legacy metadata replays warnings and isolates eager values
   const DataPath valuesPath({"StatsContainer", "Statistics", "Values_Mean"});
   auto cold = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(cold);
-  REQUIRE(cold.value().fileVersion == dream3d::k_LegacyFileVersion);
+  REQUIRE(cold.value().file_version == dream3d::k_LegacyFileVersion);
   REQUIRE(cold.warnings().size() == 1);
   CHECK(cold.warnings().front().code == -298012);
-  auto* firstPtr = cold.value().dataStructure.getDataAs<Float32Array>(valuesPath);
+  auto* firstPtr = cold.value().data_structure.getDataAs<Float32ArrayType>(valuesPath);
   REQUIRE(firstPtr != nullptr);
   REQUIRE(firstPtr->getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(firstPtr->size() == 3);
@@ -907,14 +907,14 @@ TEST_CASE("C8 neutral legacy metadata replays warnings and isolates eager values
   (*firstPtr)[0] = 99.0F;
   auto warm = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(warm);
-  REQUIRE(warm.value().fileVersion == dream3d::k_LegacyFileVersion);
+  REQUIRE(warm.value().file_version == dream3d::k_LegacyFileVersion);
   REQUIRE(warm.warnings().size() == cold.warnings().size());
   for(usize index = 0; index < cold.warnings().size(); ++index)
   {
     CHECK(warm.warnings()[index].code == cold.warnings()[index].code);
     CHECK(warm.warnings()[index].message == cold.warnings()[index].message);
   }
-  const auto* secondPtr = warm.value().dataStructure.getDataAs<Float32Array>(valuesPath);
+  const auto* secondPtr = warm.value().data_structure.getDataAs<Float32ArrayType>(valuesPath);
   REQUIRE(secondPtr != nullptr);
   REQUIRE(secondPtr->size() == 3);
   REQUIRE(firstPtr->getIDataStore() != secondPtr->getIDataStore());
@@ -924,7 +924,7 @@ TEST_CASE("C8 neutral legacy metadata replays warnings and isolates eager values
   CHECK(context.resolver->paths.empty());
   CHECK(context.cache.hitCount() == (route == 0 ? 1 : 0));
   CHECK(context.cache.missCount() == (route == 0 ? 1 : 2));
-  UnitTest::CheckArraysInheritTupleDims(warm.value().dataStructure);
+  unit_test::CheckArraysInheritTupleDims(warm.value().data_structure);
 }
 
 TEST_CASE("C8 neutral cache isolates list and string placeholders", "[C8][Dream3dPreflightCache]")
@@ -950,10 +950,10 @@ TEST_CASE("C8 neutral cache isolates list and string placeholders", "[C8][Dream3
   auto second = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(first);
   SIMPLNX_RESULT_REQUIRE_VALID(second);
-  auto* firstListPtr = first.value().dataStructure.getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
-  const auto* secondListPtr = second.value().dataStructure.getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
-  auto* firstStringPtr = first.value().dataStructure.getDataAs<StringArray>(DataPath({"Strings"}));
-  const auto* secondStringPtr = second.value().dataStructure.getDataAs<StringArray>(DataPath({"Strings"}));
+  auto* firstListPtr = first.value().data_structure.getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
+  const auto* secondListPtr = second.value().data_structure.getDataAs<NeighborList<int32>>(DataPath({"Lists"}));
+  auto* firstStringPtr = first.value().data_structure.getDataAs<StringArray>(DataPath({"Strings"}));
+  const auto* secondStringPtr = second.value().data_structure.getDataAs<StringArray>(DataPath({"Strings"}));
   REQUIRE(firstListPtr != nullptr);
   REQUIRE(secondListPtr != nullptr);
   REQUIRE(firstStringPtr != nullptr);
@@ -967,7 +967,7 @@ TEST_CASE("C8 neutral cache isolates list and string placeholders", "[C8][Dream3
   CHECK(secondListPtr->getTupleShape() == ShapeType{3});
   CHECK(secondStringPtr->getTupleShape() == ShapeType{2});
   CHECK(context.resolver->paths.empty());
-  UnitTest::CheckArraysInheritTupleDims(second.value().dataStructure);
+  unit_test::CheckArraysInheritTupleDims(second.value().data_structure);
 }
 
 TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCache]")
@@ -980,7 +980,7 @@ TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCa
   auto* statisticsPtr = DataGroup::Create(source, "Statistics", containerPtr->getId());
   REQUIRE(statisticsPtr != nullptr);
   auto values = std::make_shared<DataStore<float32>>(ShapeType{3}, ShapeType{1}, 17.0F);
-  REQUIRE(Float32Array::Create(source, "Values_Mean", values, statisticsPtr->getId()) != nullptr);
+  REQUIRE(Float32ArrayType::Create(source, "Values_Mean", values, statisticsPtr->getId()) != nullptr);
   const fs::path path = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "c8_nx_statistics.dream3d";
   const auto cleanup = MakeScopeGuard([&path]() noexcept {
     std::error_code error;
@@ -996,10 +996,10 @@ TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCa
   auto warm = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(cold);
   SIMPLNX_RESULT_REQUIRE_VALID(warm);
-  REQUIRE(cold.value().fileVersion == dream3d::k_CurrentFileVersion);
-  REQUIRE(warm.value().fileVersion == dream3d::k_CurrentFileVersion);
-  const auto& first = RequirePlannedArray<float32>(cold.value().dataStructure, valuesPath, "", {3}, {1});
-  const auto& second = RequirePlannedArray<float32>(warm.value().dataStructure, valuesPath, "", {3}, {1});
+  REQUIRE(cold.value().file_version == dream3d::k_CurrentFileVersion);
+  REQUIRE(warm.value().file_version == dream3d::k_CurrentFileVersion);
+  const auto& first = RequirePlannedArray<float32>(cold.value().data_structure, valuesPath, "", {3}, {1});
+  const auto& second = RequirePlannedArray<float32>(warm.value().data_structure, valuesPath, "", {3}, {1});
   CHECK(first.getIDataStore() != second.getIDataStore());
   CHECK(cold.warnings().empty());
   CHECK(warm.warnings().empty());
@@ -1011,7 +1011,7 @@ TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCa
   auto preflight = action.apply(destination, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight);
   RequirePlannedArray<float32>(destination, valuesPath, "", {3}, {1});
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("C8 legacy Statistics action preserves literal values and warning on planning failure", "[C8][Dream3dPreflightCache][StorageFormatPlan]")
@@ -1070,8 +1070,8 @@ TEST_CASE("C8 legacy Statistics action preserves literal values and warning on p
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     CHECK(attributeDecisions == 1);
-    auto* valuesPtr = destination.getDataAs<Float32Array>(valuesPath);
-    auto* datasetPtr = destination.getDataAs<Float32Array>(datasetPath);
+    auto* valuesPtr = destination.getDataAs<Float32ArrayType>(valuesPath);
+    auto* datasetPtr = destination.getDataAs<Float32ArrayType>(datasetPath);
     REQUIRE(valuesPtr != nullptr);
     REQUIRE(datasetPtr != nullptr);
     REQUIRE(valuesPtr->getStoreType() == IDataStore::StoreType::InMemory);
@@ -1086,8 +1086,8 @@ TEST_CASE("C8 legacy Statistics action preserves literal values and warning on p
     (*datasetPtr)[0] = -88.0F;
     auto laterHandout = context.cache.fetchNeutralMetadata(path);
     SIMPLNX_RESULT_REQUIRE_VALID(laterHandout);
-    const auto* originalPtr = laterHandout.value().dataStructure.getDataAs<Float32Array>(valuesPath);
-    const auto* originalDatasetPtr = laterHandout.value().dataStructure.getDataAs<Float32Array>(datasetPath);
+    const auto* originalPtr = laterHandout.value().data_structure.getDataAs<Float32ArrayType>(valuesPath);
+    const auto* originalDatasetPtr = laterHandout.value().data_structure.getDataAs<Float32ArrayType>(datasetPath);
     REQUIRE(originalPtr != nullptr);
     REQUIRE(originalDatasetPtr != nullptr);
     REQUIRE(originalPtr->getIDataStore() != valuesPtr->getIDataStore());
@@ -1097,7 +1097,7 @@ TEST_CASE("C8 legacy Statistics action preserves literal values and warning on p
     CHECK((*originalPtr)[0] == 4.0F);
     CHECK((*originalPtr)[1] == 5.0F);
     CHECK((*originalPtr)[2] == 6.0F);
-    UnitTest::CheckArraysInheritTupleDims(destination);
+    unit_test::CheckArraysInheritTupleDims(destination);
   }
 }
 

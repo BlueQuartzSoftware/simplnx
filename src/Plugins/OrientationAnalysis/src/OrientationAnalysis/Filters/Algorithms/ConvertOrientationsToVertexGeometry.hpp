@@ -20,15 +20,15 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsToVertexGeometryInputValues
 {
-  ebsdlib::orientations::Type InputOrientationType;
-  DataPath InputOrientationArrayPath;
-  std::vector<DataPath> DataPathCopySources;
-  bool ConvertToFundamentalZone{};
-  DataPath CellPhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath OutputVertexGeometryPath;
-  std::string OutputVertexAttrMatrixName;
-  std::string OutputSharedVertexListName;
+  ebsdlib::orientations::Type input_orientation_type;
+  DataPath input_orientation_array_path;
+  std::vector<DataPath> data_path_copy_sources;
+  bool convert_to_fundamental_zone{};
+  DataPath cell_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath output_vertex_geometry_path;
+  std::string output_vertex_attr_matrix_name;
+  std::string output_shared_vertex_list_name;
 };
 
 /**

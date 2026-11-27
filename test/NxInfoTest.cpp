@@ -83,7 +83,7 @@ NxInfoRunResult RunNxInfo(const std::vector<std::string>& arguments)
   std::ostringstream output;
   std::ostringstream errors;
   const nxinfo::LoadPluginsFunctionType doNotLoadPlugins = [](std::ostream&) {};
-  const int exitCode = nxinfo::Run(arguments, {.Output = output, .Error = errors}, doNotLoadPlugins);
+  const int exitCode = nxinfo::Run(arguments, {.output = output, .error = errors}, doNotLoadPlugins);
   return {.exit_code = exitCode, .output = output.str(), .errors = errors.str()};
 }
 
@@ -297,7 +297,7 @@ TEST_CASE("NXInfo::Run loads plugins only before reading valid input")
     std::ostringstream output;
     std::ostringstream errors;
     const nxinfo::LoadPluginsFunctionType countPluginLoads = [&pluginLoadCallCount](std::ostream&) { ++pluginLoadCallCount; };
-    const int result = nxinfo::Run({"-d", inputPath.string()}, {.Output = output, .Error = errors}, countPluginLoads);
+    const int result = nxinfo::Run({"-d", inputPath.string()}, {.output = output, .error = errors}, countPluginLoads);
     REQUIRE(result == 0);
     REQUIRE(pluginLoadCallCount == 1);
   }
@@ -308,7 +308,7 @@ TEST_CASE("NXInfo::Run loads plugins only before reading valid input")
     std::ostringstream output;
     std::ostringstream errors;
     const nxinfo::LoadPluginsFunctionType countPluginLoads = [&pluginLoadCallCount](std::ostream&) { ++pluginLoadCallCount; };
-    const int result = nxinfo::Run({"--help"}, {.Output = output, .Error = errors}, countPluginLoads);
+    const int result = nxinfo::Run({"--help"}, {.output = output, .error = errors}, countPluginLoads);
     REQUIRE(result == 0);
     REQUIRE(pluginLoadCallCount == 0);
   }
@@ -319,7 +319,7 @@ TEST_CASE("NXInfo::Run loads plugins only before reading valid input")
     std::ostringstream output;
     std::ostringstream errors;
     const nxinfo::LoadPluginsFunctionType countPluginLoads = [&pluginLoadCallCount](std::ostream&) { ++pluginLoadCallCount; };
-    const int result = nxinfo::Run({"-d", "missing.dream3d"}, {.Output = output, .Error = errors}, countPluginLoads);
+    const int result = nxinfo::Run({"-d", "missing.dream3d"}, {.output = output, .error = errors}, countPluginLoads);
     REQUIRE(result == -102);
     REQUIRE(pluginLoadCallCount == 0);
   }
@@ -480,7 +480,7 @@ TEST_CASE("NXInfo::Run reports stream write failures")
     std::ostream output(&outputBuffer);
     std::ostringstream errors;
 
-    const int result = nxinfo::Run({"-d", inputPath.string()}, {.Output = output, .Error = errors});
+    const int result = nxinfo::Run({"-d", inputPath.string()}, {.output = output, .error = errors});
 
     REQUIRE(result == -104);
     REQUIRE(errors.str().find("standard output") != std::string::npos);
@@ -492,7 +492,7 @@ TEST_CASE("NXInfo::Run reports stream write failures")
     std::ostream output(&outputBuffer);
     std::ostringstream errors;
 
-    const int result = nxinfo::Run({"--help"}, {.Output = output, .Error = errors});
+    const int result = nxinfo::Run({"--help"}, {.output = output, .error = errors});
 
     REQUIRE(result == -104);
     REQUIRE(errors.str().find("standard output") != std::string::npos);
@@ -504,7 +504,7 @@ TEST_CASE("NXInfo::Run reports stream write failures")
     std::ostream output(&outputBuffer);
     std::ostringstream errors;
 
-    const int result = nxinfo::Run({"--version"}, {.Output = output, .Error = errors});
+    const int result = nxinfo::Run({"--version"}, {.output = output, .error = errors});
 
     REQUIRE(result == -104);
     REQUIRE(errors.str().find("standard output") != std::string::npos);

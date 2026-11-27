@@ -20,7 +20,7 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
     return result;
   }
 
-  geometry.setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
+  geometry.setElementSizesId(ReadDataId(groupReader, io_constants::k_ElementSizesTag));
 
   return result;
 }
@@ -40,7 +40,7 @@ Result<> IGeometryIO::WriteGeometryData(DataStructureWriter& dataStructureWriter
 {
   auto groupWriter = parentGroup.createGroup(geometry.getName());
 
-  Result<> result = WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_ElementSizesTag);
+  Result<> result = WriteDataId(groupWriter, geometry.getElementSizesId(), io_constants::k_ElementSizesTag);
   if(result.invalid())
   {
     return result;

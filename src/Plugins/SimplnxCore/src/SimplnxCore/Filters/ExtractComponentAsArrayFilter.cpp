@@ -103,11 +103,11 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   const usize selectedArrayComp = selectedArray.getNumberOfComponents();
   if(selectedArrayComp < 2)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
   }
   if(selectedArrayComp < pCompNumberValue)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ",
                                                                    pCompNumberValue, 0, (selectedArrayComp - 1)))};
   }
@@ -141,7 +141,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -150,15 +150,15 @@ Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure
 {
   ExtractComponentAsArrayInputValues inputValues;
 
-  inputValues.MoveComponentsToNewArray = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
-  inputValues.RemoveComponentsFromArray = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
-  inputValues.CompNumber = filterArgs.value<int32>(k_CompNumber_Key);
+  inputValues.move_components_to_new_array = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
+  inputValues.remove_components_from_array = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
+  inputValues.comp_number = filterArgs.value<int32>(k_CompNumber_Key);
   // This is the original array if remove components is true OR  move components is false
-  inputValues.TempArrayPath = DataPath::FromString(filterArgs.value<DataPath>(k_SelectedArrayPath_Key).toString() + "Temp", '/').value();
+  inputValues.temp_array_path = DataPath::FromString(filterArgs.value<DataPath>(k_SelectedArrayPath_Key).toString() + "Temp", '/').value();
   // This is the array on the original array path whether it's removed or not
-  inputValues.BaseArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  inputValues.base_array_path = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   // If move components to new array is true this is a valid path
-  inputValues.NewArrayPath = inputValues.BaseArrayPath.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
+  inputValues.new_array_path = inputValues.base_array_path.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
 
   return ExtractComponentAsArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

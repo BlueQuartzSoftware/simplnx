@@ -79,7 +79,7 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
                                                              DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Specifies if the Cell is to be counted in the algorithm.", DataPath({"Mask"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Alignment Output"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAlignmentShifts_Key, "Store Alignment Shifts",
@@ -145,7 +145,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, inputImageGeometry, {pGoodVoxelsArrayPath}, -68071);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -195,10 +195,10 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pGoodVoxelsArrayPath.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pGoodVoxelsArrayPath.getParent(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -207,17 +207,17 @@ Result<> AlignSectionsFeatureCentroidFilter::executeImpl(DataStructure& dataStru
 {
   AlignSectionsFeatureCentroidInputValues inputValues;
 
-  inputValues.UseReferenceSlice = filterArgs.value<bool>(k_UseReferenceSlice_Key);
-  inputValues.ReferenceSlice = filterArgs.value<int32>(k_ReferenceSlice_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.use_reference_slice = filterArgs.value<bool>(k_UseReferenceSlice_Key);
+  inputValues.reference_slice = filterArgs.value<int32>(k_ReferenceSlice_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  inputValues.StoreAlignmentShifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
-  inputValues.AlignmentAMPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key));
-  inputValues.SlicesArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key));
-  inputValues.RelativeShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key));
-  inputValues.CumulativeShiftsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key));
-  inputValues.CentroidsArrayPath = inputValues.AlignmentAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key));
+  inputValues.store_alignment_shifts = filterArgs.value<bool>(k_StoreAlignmentShifts_Key);
+  inputValues.alignment_am_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_AlignmentAMName_Key));
+  inputValues.slices_array_path = inputValues.alignment_am_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key));
+  inputValues.relative_shifts_array_path = inputValues.alignment_am_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_RelativeShiftsArrayName_Key));
+  inputValues.cumulative_shifts_array_path = inputValues.alignment_am_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CumulativeShiftsArrayName_Key));
+  inputValues.centroids_array_path = inputValues.alignment_am_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key));
 
   return AlignSectionsFeatureCentroid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

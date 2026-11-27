@@ -88,17 +88,17 @@ uint64 CacheMemoryBudgetManager::TotalSystemRamBytes()
 }
 
 CacheMemoryBudgetManager::CacheMemoryBudgetManager()
-: m_BudgetBytes(defaultBudgetBytes())
+: m_BudgetBytes(DefaultBudgetBytes())
 {
 }
 
-CacheMemoryBudgetManager& CacheMemoryBudgetManager::instance()
+CacheMemoryBudgetManager& CacheMemoryBudgetManager::Instance()
 {
   static CacheMemoryBudgetManager sInstance;
   return sInstance;
 }
 
-uint64 CacheMemoryBudgetManager::defaultBudgetBytes()
+uint64 CacheMemoryBudgetManager::DefaultBudgetBytes()
 {
   const uint64 totalRam = TotalSystemRamBytes();
   if(totalRam == 0)
@@ -107,10 +107,10 @@ uint64 CacheMemoryBudgetManager::defaultBudgetBytes()
   }
   // Start with half of RAM and apply the 1-GiB floor.
   // The maximum budget then preserves the required operating-system and application reserve.
-  return std::min(std::max(totalRam / 2, k_MinBudget), maxBudgetBytes());
+  return std::min(std::max(totalRam / 2, k_MinBudget), MaxBudgetBytes());
 }
 
-uint64 CacheMemoryBudgetManager::maxBudgetBytes()
+uint64 CacheMemoryBudgetManager::MaxBudgetBytes()
 {
   const uint64 totalRam = TotalSystemRamBytes();
   if(totalRam == 0)
@@ -125,32 +125,32 @@ uint64 CacheMemoryBudgetManager::maxBudgetBytes()
   return std::max(cap, k_MinBudget);
 }
 
-std::pair<CacheMemoryBudgetManager::AllocationHandle, std::vector<CacheMemoryBudgetManager::AllocationHandle>> CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key,
-                                                                                                                                                  uint64 sizeBytes, EvictionCallback onEvict)
+std::pair<CacheMemoryBudgetManager::AllocationHandleType, std::vector<CacheMemoryBudgetManager::AllocationHandleType>> CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key,
+                                                                                                                                                  uint64 sizeBytes, EvictionCallbackType onEvict)
 {
   return allocate(subsystem, key, sizeBytes, std::move(onEvict), AllocationOptions{});
 }
 
-std::pair<CacheMemoryBudgetManager::AllocationHandle, std::vector<CacheMemoryBudgetManager::AllocationHandle>> CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key,
-                                                                                                                                                  uint64 sizeBytes, EvictionCallback onEvict,
+std::pair<CacheMemoryBudgetManager::AllocationHandleType, std::vector<CacheMemoryBudgetManager::AllocationHandleType>> CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key,
+                                                                                                                                                  uint64 sizeBytes, EvictionCallbackType onEvict,
                                                                                                                                                   const AllocationOptions& options)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
 
-  std::vector<AllocationHandle> evicted = makeRoom(sizeBytes);
+  std::vector<AllocationHandleType> evicted = makeRoom(sizeBytes);
 
-  AllocationHandle handle = m_NextHandle++;
+  AllocationHandleType handle = m_NextHandle++;
   Entry entry;
   entry.subsystem = subsystem;
   entry.key = key;
-  entry.sizeBytes = sizeBytes;
-  entry.pinCount = options.initiallyPinned ? 1 : 0;
-  entry.lastAccessed = std::chrono::steady_clock::now();
-  entry.onEvict = std::move(onEvict);
+  entry.size_bytes = sizeBytes;
+  entry.pin_count = options.initially_pinned ? 1 : 0;
+  entry.last_accessed = std::chrono::steady_clock::now();
+  entry.on_evict = std::move(onEvict);
 
   m_Entries.emplace(handle, std::move(entry));
   m_UsedBytes += sizeBytes;
-  if(options.initiallyPinned)
+  if(options.initially_pinned)
   {
     m_PinnedBytes += sizeBytes;
   }
@@ -158,7 +158,7 @@ std::pair<CacheMemoryBudgetManager::AllocationHandle, std::vector<CacheMemoryBud
   return {handle, std::move(evicted)};
 }
 
-std::optional<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager::reservePinned(const std::string& subsystem, const std::string& key, uint64 sizeBytes)
+std::optional<CacheMemoryBudgetManager::AllocationHandleType> CacheMemoryBudgetManager::reservePinned(const std::string& subsystem, const std::string& key, uint64 sizeBytes)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   if(m_PinnedBytes > m_BudgetBytes || sizeBytes > m_BudgetBytes - m_PinnedBytes)
@@ -168,20 +168,20 @@ std::optional<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManag
 
   (void)makeRoom(sizeBytes);
 
-  const AllocationHandle handle = m_NextHandle++;
+  const AllocationHandleType handle = m_NextHandle++;
   Entry entry;
   entry.subsystem = subsystem;
   entry.key = key;
-  entry.sizeBytes = sizeBytes;
-  entry.pinCount = 1;
-  entry.lastAccessed = std::chrono::steady_clock::now();
+  entry.size_bytes = sizeBytes;
+  entry.pin_count = 1;
+  entry.last_accessed = std::chrono::steady_clock::now();
   m_Entries.emplace(handle, std::move(entry));
   m_UsedBytes += sizeBytes;
   m_PinnedBytes += sizeBytes;
   return handle;
 }
 
-bool CacheMemoryBudgetManager::pin(AllocationHandle handle)
+bool CacheMemoryBudgetManager::pin(AllocationHandleType handle)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   auto iter = m_Entries.find(handle);
@@ -190,16 +190,16 @@ bool CacheMemoryBudgetManager::pin(AllocationHandle handle)
     return false;
   }
 
-  if(iter->second.pinCount == 0)
+  if(iter->second.pin_count == 0)
   {
-    m_PinnedBytes += iter->second.sizeBytes;
+    m_PinnedBytes += iter->second.size_bytes;
   }
-  iter->second.pinCount++;
-  iter->second.lastAccessed = std::chrono::steady_clock::now();
+  iter->second.pin_count++;
+  iter->second.last_accessed = std::chrono::steady_clock::now();
   return true;
 }
 
-CacheMemoryBudgetManager::PinResult CacheMemoryBudgetManager::pinWithinBudget(AllocationHandle handle)
+CacheMemoryBudgetManager::PinResult CacheMemoryBudgetManager::pinWithinBudget(AllocationHandleType handle)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   auto iter = m_Entries.find(handle);
@@ -208,20 +208,20 @@ CacheMemoryBudgetManager::PinResult CacheMemoryBudgetManager::pinWithinBudget(Al
     return PinResult::UnknownHandle;
   }
 
-  if(iter->second.pinCount == 0)
+  if(iter->second.pin_count == 0)
   {
-    if(m_PinnedBytes > m_BudgetBytes || iter->second.sizeBytes > m_BudgetBytes - m_PinnedBytes)
+    if(m_PinnedBytes > m_BudgetBytes || iter->second.size_bytes > m_BudgetBytes - m_PinnedBytes)
     {
       return PinResult::BudgetExceeded;
     }
-    m_PinnedBytes += iter->second.sizeBytes;
+    m_PinnedBytes += iter->second.size_bytes;
   }
-  iter->second.pinCount++;
-  iter->second.lastAccessed = std::chrono::steady_clock::now();
+  iter->second.pin_count++;
+  iter->second.last_accessed = std::chrono::steady_clock::now();
   return PinResult::Success;
 }
 
-bool CacheMemoryBudgetManager::unpin(AllocationHandle handle)
+bool CacheMemoryBudgetManager::unpin(AllocationHandleType handle)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   auto iter = m_Entries.find(handle);
@@ -230,47 +230,47 @@ bool CacheMemoryBudgetManager::unpin(AllocationHandle handle)
     return false;
   }
 
-  if(iter->second.pinCount == 0)
+  if(iter->second.pin_count == 0)
   {
     return true;
   }
 
-  iter->second.pinCount--;
-  if(iter->second.pinCount == 0)
+  iter->second.pin_count--;
+  if(iter->second.pin_count == 0)
   {
-    m_PinnedBytes -= iter->second.sizeBytes;
-    iter->second.lastAccessed = std::chrono::steady_clock::now();
+    m_PinnedBytes -= iter->second.size_bytes;
+    iter->second.last_accessed = std::chrono::steady_clock::now();
   }
   return true;
 }
 
-void CacheMemoryBudgetManager::touch(AllocationHandle handle)
+void CacheMemoryBudgetManager::touch(AllocationHandleType handle)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   auto it = m_Entries.find(handle);
   if(it != m_Entries.end())
   {
-    it->second.lastAccessed = std::chrono::steady_clock::now();
+    it->second.last_accessed = std::chrono::steady_clock::now();
   }
 }
 
-void CacheMemoryBudgetManager::registerSubsystem(const std::string& subsystem, SubsystemEvictionHandler handler)
+void CacheMemoryBudgetManager::registerSubsystem(const std::string& subsystem, SubsystemEvictionHandlerType handler)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   m_SubsystemHandlers[subsystem] = std::move(handler);
 }
 
-void CacheMemoryBudgetManager::release(AllocationHandle handle)
+void CacheMemoryBudgetManager::release(AllocationHandleType handle)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
   auto it = m_Entries.find(handle);
   if(it != m_Entries.end())
   {
-    if(it->second.pinCount > 0)
+    if(it->second.pin_count > 0)
     {
-      m_PinnedBytes -= it->second.sizeBytes;
+      m_PinnedBytes -= it->second.size_bytes;
     }
-    m_UsedBytes -= it->second.sizeBytes;
+    m_UsedBytes -= it->second.size_bytes;
     m_Entries.erase(it);
   }
 }
@@ -311,7 +311,7 @@ CacheMemoryBudgetManager::WorkingMemoryReservation CacheMemoryBudgetManager::try
 bool CacheMemoryBudgetManager::setBudgetBytes(uint64 bytes)
 {
   // Clamp only the upper bound. Calculate the machine limit before acquiring m_Mutex.
-  const uint64 maxAllowed = maxBudgetBytes();
+  const uint64 maxAllowed = MaxBudgetBytes();
   bool clamped = false;
   if(bytes > maxAllowed)
   {
@@ -375,9 +375,9 @@ void CacheMemoryBudgetManager::clear()
  *
  * A delegated handler receives the absolute byte deficit at the time of the call.
  */
-std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager::makeRoom(uint64 needed)
+std::vector<CacheMemoryBudgetManager::AllocationHandleType> CacheMemoryBudgetManager::makeRoom(uint64 needed)
 {
-  std::vector<AllocationHandle> evicted;
+  std::vector<AllocationHandleType> evicted;
 
   const uint64 effectiveCacheBudget = m_BudgetBytes > m_ReservedWorkingMemoryBytes ? m_BudgetBytes - m_ReservedWorkingMemoryBytes : 0;
   auto exceedsEffectiveBudget = [this, effectiveCacheBudget, needed]() { return m_UsedBytes > effectiveCacheBudget || needed > effectiveCacheBudget - m_UsedBytes; };
@@ -387,11 +387,11 @@ std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager
     auto oldest = m_Entries.end();
     for(auto it = m_Entries.begin(); it != m_Entries.end(); ++it)
     {
-      if(it->second.pinCount != 0)
+      if(it->second.pin_count != 0)
       {
         continue;
       }
-      if(oldest == m_Entries.end() || it->second.lastAccessed < oldest->second.lastAccessed)
+      if(oldest == m_Entries.end() || it->second.last_accessed < oldest->second.last_accessed)
       {
         oldest = it;
       }
@@ -413,12 +413,12 @@ std::vector<CacheMemoryBudgetManager::AllocationHandle> CacheMemoryBudgetManager
     }
 
     // The callback runs under m_Mutex and can only mark its entry for later removal.
-    if(oldest->second.onEvict)
+    if(oldest->second.on_evict)
     {
-      oldest->second.onEvict();
+      oldest->second.on_evict();
     }
 
-    m_UsedBytes -= oldest->second.sizeBytes;
+    m_UsedBytes -= oldest->second.size_bytes;
     evicted.push_back(oldest->first);
     m_Entries.erase(oldest);
   }

@@ -19,7 +19,7 @@ namespace
 constexpr int32 k_BoundsCopyFailed = -5913;
 constexpr int32 k_BoundsCountTooSmall = -5914;
 
-Result<> InitializeBounds(Float32Array& array)
+Result<> InitializeBounds(Float32ArrayType& array)
 {
   auto& store = array.getDataStoreRef();
   std::array<float32, 4096> buffer{};
@@ -84,17 +84,17 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   {
     return MakeErrorResult(-5902, fmt::format("{}CreateRectGridGeometryAction: DataObject already exists at path '{}'", k_Prefix, getCreatedPath().toString()));
   }
-  auto* const xBoundsPtr = dataStructure.getDataAs<Float32Array>(m_InputXBounds);
+  auto* const xBoundsPtr = dataStructure.getDataAs<Float32ArrayType>(m_InputXBounds);
   if(m_ArrayHandlingType != ArrayHandlingType::Create && xBoundsPtr == nullptr)
   {
     return MakeErrorResult(-5905, fmt::format("{}CreateRectGridGeometryAction: Could not find x bounds array at path '{}'", k_Prefix, m_InputXBounds.toString()));
   }
-  auto* const yBoundsPtr = dataStructure.getDataAs<Float32Array>(m_InputYBounds);
+  auto* const yBoundsPtr = dataStructure.getDataAs<Float32ArrayType>(m_InputYBounds);
   if(m_ArrayHandlingType != ArrayHandlingType::Create && yBoundsPtr == nullptr)
   {
     return MakeErrorResult(-5906, fmt::format("{}CreateRectGridGeometryAction: Could not find y bounds array at path '{}'", k_Prefix, m_InputYBounds.toString()));
   }
-  auto* const zBoundsPtr = dataStructure.getDataAs<Float32Array>(m_InputZBounds);
+  auto* const zBoundsPtr = dataStructure.getDataAs<Float32ArrayType>(m_InputZBounds);
   if(m_ArrayHandlingType != ArrayHandlingType::Create && zBoundsPtr == nullptr)
   {
     return MakeErrorResult(-5907, fmt::format("{}CreateRectGridGeometryAction: Could not find z bounds array at path '{}'", k_Prefix, m_InputZBounds.toString()));
@@ -165,9 +165,9 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
     std::shared_ptr<DataObject> xCopy = xBoundsPtr->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
     std::shared_ptr<DataObject> yCopy = yBoundsPtr->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
     std::shared_ptr<DataObject> zCopy = zBoundsPtr->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
-    const auto xBoundsArray = std::dynamic_pointer_cast<Float32Array>(xCopy);
-    const auto yBoundsArray = std::dynamic_pointer_cast<Float32Array>(yCopy);
-    const auto zBoundsArray = std::dynamic_pointer_cast<Float32Array>(zCopy);
+    const auto xBoundsArray = std::dynamic_pointer_cast<Float32ArrayType>(xCopy);
+    const auto yBoundsArray = std::dynamic_pointer_cast<Float32ArrayType>(yCopy);
+    const auto zBoundsArray = std::dynamic_pointer_cast<Float32ArrayType>(zCopy);
     if(xBoundsArray == nullptr || yBoundsArray == nullptr || zBoundsArray == nullptr)
     {
       return MakeErrorResult(k_BoundsCopyFailed, fmt::format("Failed to copy bounds arrays for rectilinear grid geometry at '{}'.", getCreatedPath().toString()));
@@ -266,16 +266,16 @@ IDataAction::UniquePointerType CreateRectGridGeometryAction::clone() const
   return action;
 }
 
-Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const
+Float32ArrayType* CreateRectGridGeometryAction::createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const
 {
   const DimensionType componentShape = {1};
   const DataPath boundsPath = getCreatedPath().createChildPath(arrayName);
-  if(Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {numTuples}, componentShape, boundsPath, mode); result.invalid())
+  if(Result<> result = array_creation_utilities::CreateArray<float32>(dataStructure, {numTuples}, componentShape, boundsPath, mode); result.invalid())
   {
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;
   }
-  auto* boundsArrayPtr = dataStructure.getDataAs<Float32Array>(boundsPath);
+  auto* boundsArrayPtr = dataStructure.getDataAs<Float32ArrayType>(boundsPath);
   if(boundsArrayPtr == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", boundsPath.toString()));

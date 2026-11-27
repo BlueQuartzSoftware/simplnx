@@ -21,7 +21,7 @@
 #endif
 #endif
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @brief Isolates one test process without taking ownership of borrowed fixtures.
@@ -123,8 +123,8 @@ public:
       {
         throw std::runtime_error("Test profile path cannot round-trip through the core environment");
       }
-      SetEnvironment(homeVariable(), rootString.c_str());
-      const char* installedPtr = std::getenv(homeVariable());
+      SetEnvironment(HomeVariable(), rootString.c_str());
+      const char* installedPtr = std::getenv(HomeVariable());
       if(installedPtr == nullptr || std::filesystem::path(installedPtr) != m_Root)
       {
         throw std::runtime_error("Core environment did not retain the test profile path");
@@ -281,7 +281,7 @@ public:
     return result > 0 && result <= 255 ? result : 1;
   }
 
-  static const char* homeVariable() noexcept
+  static const char* HomeVariable() noexcept
   {
 #ifdef _WIN32
     return "USERPROFILE";

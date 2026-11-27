@@ -13,7 +13,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -43,13 +43,13 @@ const DataPath k_VoxelIndicesExistingMaskComputed = k_VertexDataPath.createChild
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Manual Geometry", "[MapPointCloudToRegularGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   MapPointCloudToRegularGridFilter filter;
   Arguments args;
@@ -67,27 +67,27 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareImageGeometry(dataStructure, k_ManualImageGeomPathExemplar, k_ManualImageGeomPathComputed);
-  UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualExemplar, k_VoxelIndicesManualComputed);
+  unit_test::CompareImageGeometry(dataStructure, k_ManualImageGeomPathExemplar, k_ManualImageGeomPathComputed);
+  unit_test::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualExemplar, k_VoxelIndicesManualComputed);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Manual Geometry with Mask", "[MapPointCloudToRegularGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   MapPointCloudToRegularGridFilter filter;
   Arguments args;
@@ -106,27 +106,27 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareImageGeometry(dataStructure, k_ManualMaskImageGeomPathExemplar, k_ManualMaskImageGeomPathComputed);
-  UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualMaskExemplar, k_VoxelIndicesManualMaskComputed);
+  unit_test::CompareImageGeometry(dataStructure, k_ManualMaskImageGeomPathExemplar, k_ManualMaskImageGeomPathComputed);
+  unit_test::CompareArrays<uint64>(dataStructure, k_VoxelIndicesManualMaskExemplar, k_VoxelIndicesManualMaskComputed);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Existing Geometry with Mask", "[MapPointCloudToRegularGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   MapPointCloudToRegularGridFilter filter;
   Arguments args;
@@ -142,26 +142,26 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareArrays<uint64>(dataStructure, k_VoxelIndicesExistingMaskExemplar, k_VoxelIndicesExistingMaskComputed);
+  unit_test::CompareArrays<uint64>(dataStructure, k_VoxelIndicesExistingMaskExemplar, k_VoxelIndicesExistingMaskComputed);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Execution", "[MapPointCloudToRegularGridFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   MapPointCloudToRegularGridFilter filter;
   Arguments args;
@@ -185,26 +185,26 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Executi
   SECTION("Mismatching mask & voxel indices array tuples")
   {
     const std::string invalidMask = "Invalid Mask Array";
-    UnitTest::CreateTestDataArray<bool>(dataStructure, invalidMask, std::vector<usize>{100}, std::vector<usize>{1});
+    unit_test::CreateTestDataArray<bool>(dataStructure, invalidMask, std::vector<usize>{100}, std::vector<usize>{1});
     args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
     args.insertOrAssign(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key, std::make_any<DataPath>(DataPath({invalidMask})));
   }
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MapPointCloudToRegularGridFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

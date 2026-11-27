@@ -24,18 +24,18 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShapesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   const std::string kOmega3sArrayName("Omega3s");
   const std::string kAxisLengthsArrayName("AxisLengths");
@@ -75,7 +75,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
     args.insertOrAssign(ComputeShapesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(kSelectedGeometryPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -91,15 +91,15 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
       const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, comparisonName + "NX"});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      UnitTest::CompareDataArrays<float>(exemplarData, calculatedData);
+      unit_test::CompareDataArrays<float>(exemplarData, calculatedData);
     }
 
     const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, kAxisEulerAnglesArrayName});
     const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, kAxisEulerAnglesArrayNameNx});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(exemplarPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(calculatedPath));
-    const auto& exemplar = dataStructure.getDataRefAs<Float32Array>(exemplarPath);
-    const auto& calculated = dataStructure.getDataRefAs<Float32Array>(calculatedPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(exemplarPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(calculatedPath));
+    const auto& exemplar = dataStructure.getDataRefAs<Float32ArrayType>(exemplarPath);
+    const auto& calculated = dataStructure.getDataRefAs<Float32ArrayType>(calculatedPath);
     REQUIRE(exemplar.getNumberOfComponents() == 3);
     REQUIRE(calculated.getNumberOfComponents() == 3);
     REQUIRE(exemplar.getNumberOfTuples() == calculated.getNumberOfTuples());
@@ -115,7 +115,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
       bool equalsExemplar = true;
       for(usize component = 0; component < 3; component++)
       {
-        equalsExemplar = equalsExemplar && std::abs(exemplar[offset + component] - calculated[offset + component]) <= UnitTest::EPSILON;
+        equalsExemplar = equalsExemplar && std::abs(exemplar[offset + component] - calculated[offset + component]) <= unit_test::k_Epsilon;
       }
       if(equalsExemplar)
       {
@@ -131,7 +131,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
         CAPTURE(component);
         const float32 legacyValue = static_cast<float32>(legacyEuler[component]);
         CAPTURE(exemplar[offset + component], calculated[offset + component], legacyValue);
-        REQUIRE(std::abs(exemplar[offset + component] - legacyValue) <= UnitTest::EPSILON);
+        REQUIRE(std::abs(exemplar[offset + component] - legacyValue) <= unit_test::k_Epsilon);
       }
       mirroredFeatures++;
     }
@@ -145,13 +145,13 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_shapes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeShapesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeShapesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -224,13 +224,13 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Geometry cell tuple count",
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -12806);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);
@@ -249,14 +249,14 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Cell Feature Ids requires 1
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, 2}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Ids", {1, 1, 2}, {2}, cellDataPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Ids", {1, 1, 2}, {2}, cellDataPtr->getId());
   (*featureIdsPtr)[0] = 1;
   (*featureIdsPtr)[1] = 0;
   (*featureIdsPtr)[2] = 2;
   (*featureIdsPtr)[3] = 0;
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", {3}, imageGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
-  auto* centroidsPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {3}, {3}, featureDataPtr->getId());
+  auto* centroidsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Centroids", {3}, {3}, featureDataPtr->getId());
   (*centroidsPtr)[3] = 0.5F;
   (*centroidsPtr)[4] = 0.5F;
   (*centroidsPtr)[5] = 0.5F;
@@ -271,9 +271,9 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Cell Feature Ids requires 1
   args.insertOrAssign(ComputeShapesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Feature Data", "Centroids"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(std::any_of(preflightResult.output_actions.errors().begin(), preflightResult.output_actions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -310,10 +310,10 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Planar rectangle uses activ
   const usize plane = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(plane);
   // XY, YZ and XZ contain the same 2-by-3 rectangle with active spacings 2 and 4.
-  const std::array<SizeVec3, 3> dims = {{{2, 3, 1}, {1, 2, 3}, {2, 1, 3}}};
-  const std::array<FloatVec3, 3> spacing = {{{2, 4, 8}, {8, 2, 4}, {2, 8, 4}}};
-  const std::array<FloatVec3, 3> origin = {{{10, 20, 30}, {30, 10, 20}, {10, 30, 20}}};
-  const std::array<FloatVec3, 3> centroid = {{{12, 26, 34}, {34, 12, 26}, {12, 34, 26}}};
+  const std::array<SizeVec3Type, 3> dims = {{{2, 3, 1}, {1, 2, 3}, {2, 1, 3}}};
+  const std::array<FloatVec3Type, 3> spacing = {{{2, 4, 8}, {8, 2, 4}, {2, 8, 4}}};
+  const std::array<FloatVec3Type, 3> origin = {{{10, 20, 30}, {30, 10, 20}, {10, 30, 20}}};
+  const std::array<FloatVec3Type, 3> centroid = {{{12, 26, 34}, {34, 12, 26}, {12, 34, 26}}};
   DataStructure dataStructure;
   auto* geometryPtr = ImageGeom::Create(dataStructure, "Grid");
   REQUIRE(geometryPtr != nullptr);
@@ -324,12 +324,12 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Planar rectangle uses activ
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", shape, geometryPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geometryPtr->setCellData(*cellsPtr);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   idsPtr->fill(1);
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {2}, geometryPtr->getId());
   REQUIRE(featuresPtr != nullptr);
-  auto* centersPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {3}, featuresPtr->getId());
+  auto* centersPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {3}, featuresPtr->getId());
   REQUIRE(centersPtr != nullptr);
   for(usize axis = 0; axis < 3; axis++)
   {
@@ -339,14 +339,14 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Planar rectangle uses activ
   const auto args = ShapeArguments();
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const Float32Array* areasPtr = nullptr;
-  const Float32Array* lengthsPtr = nullptr;
-  const Float32Array* ratiosPtr = nullptr;
-  const Float32Array* eulersPtr = nullptr;
-  REQUIRE_NOTHROW(areasPtr = &dataStructure.getDataRefAs<Float32Array>(DataPath({"Grid", "Features", "Areas"})));
-  REQUIRE_NOTHROW(lengthsPtr = &dataStructure.getDataRefAs<Float32Array>(DataPath({"Grid", "Features", "Lengths"})));
-  REQUIRE_NOTHROW(ratiosPtr = &dataStructure.getDataRefAs<Float32Array>(DataPath({"Grid", "Features", "Ratios"})));
-  REQUIRE_NOTHROW(eulersPtr = &dataStructure.getDataRefAs<Float32Array>(DataPath({"Grid", "Features", "Eulers"})));
+  const Float32ArrayType* areasPtr = nullptr;
+  const Float32ArrayType* lengthsPtr = nullptr;
+  const Float32ArrayType* ratiosPtr = nullptr;
+  const Float32ArrayType* eulersPtr = nullptr;
+  REQUIRE_NOTHROW(areasPtr = &dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Grid", "Features", "Areas"})));
+  REQUIRE_NOTHROW(lengthsPtr = &dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Grid", "Features", "Lengths"})));
+  REQUIRE_NOTHROW(ratiosPtr = &dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Grid", "Features", "Ratios"})));
+  REQUIRE_NOTHROW(eulersPtr = &dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Grid", "Features", "Eulers"})));
   // A=6*2*4=48. Four quarter-cell samples give E[x^2]=2^2*(2^2-1)/12+2^2/16=1.25.
   // E[y^2]=4^2*(3^2-1)/12+4^2/16=35/3, hence Ixx=560, Iyy=60 and Ixy=0.
   // a=(4/pi)^(1/4)*(560^3/60)^(1/8); b=(4/pi)^(1/4)*(60^3/560)^(1/8).
@@ -360,7 +360,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Planar rectangle uses activ
   CHECK((*eulersPtr)[3] == Approx(1.5707963267948966).margin(1.0e-6));
   CHECK((*eulersPtr)[4] == 0.0F);
   CHECK((*eulersPtr)[5] == 0.0F);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Principal Euler frame preserves ordered axes", "[OrientationAnalysis][ComputeShapesFilter]")
@@ -397,13 +397,13 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Discrete grain preserves or
   auto* geometryPtr = ImageGeom::Create(dataStructure, "Grid");
   REQUIRE(geometryPtr != nullptr);
   geometryPtr->setDimensions({3, 3, 3});
-  const std::array<FloatVec3, 3> spacings = {{{2, 4, 8}, {8, 2, 4}, {4, 2, 8}}};
+  const std::array<FloatVec3Type, 3> spacings = {{{2, 4, 8}, {8, 2, 4}, {4, 2, 8}}};
   REQUIRE(geometryPtr->setSpacing(spacings[transform]).valid());
   REQUIRE(geometryPtr->setOrigin({10, 20, 30}).valid());
   auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", {3, 3, 3}, geometryPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   geometryPtr->setCellData(*cellsPtr);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", {3, 3, 3}, {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", {3, 3, 3}, {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   idsPtr->fill(0);
   for(usize z = 0; z < 3; z++)
@@ -432,14 +432,14 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Discrete grain preserves or
   }
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {2}, geometryPtr->getId());
   REQUIRE(featuresPtr != nullptr);
-  auto* centersPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {3}, featuresPtr->getId());
+  auto* centersPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {3}, featuresPtr->getId());
   REQUIRE(centersPtr != nullptr);
   // The eleven centers have mean (17/11,6,12) before translation.
   // Var(X)=43/11-(17/11)^2+2^2/16=857/484.
   // Var(Y)=96/11+4^2/16=107/11; Var(Z)=384/11+8^2/16=428/11.
   // Cross moments vanish by Y/Z symmetry.
   // Inertia is trace(C)*I-C, so its increasing eigenvalues have axis lines Z,Y,X.
-  const std::array<FloatVec3, 3> means = {{{17.0F / 11.0F, 6, 12}, {12, 17.0F / 11.0F, 6}, {6, 17.0F / 11.0F, 12}}};
+  const std::array<FloatVec3Type, 3> means = {{{17.0F / 11.0F, 6, 12}, {12, 17.0F / 11.0F, 6}, {6, 17.0F / 11.0F, 12}}};
   for(usize axis = 0; axis < 3; axis++)
   {
     (*centersPtr)[3 + axis] = geometryPtr->getOrigin()[axis] + means[transform][axis];
@@ -447,8 +447,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Discrete grain preserves or
   ComputeShapesFilter filter;
   const auto result = filter.execute(dataStructure, ShapeArguments());
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const Float32Array* eulersPtr = nullptr;
-  REQUIRE_NOTHROW(eulersPtr = &dataStructure.getDataRefAs<Float32Array>(DataPath({"Grid", "Features", "Eulers"})));
+  const Float32ArrayType* eulersPtr = nullptr;
+  REQUIRE_NOTHROW(eulersPtr = &dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Grid", "Features", "Eulers"})));
   orientation_utilities::Matrix3dRType expected;
   if(transform == 0)
   {
@@ -463,5 +463,5 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Discrete grain preserves or
     expected << 0, 0, 1, -1, 0, 0, 0, 1, 0;
   }
   CheckOrderedAxisLines({(*eulersPtr)[3], (*eulersPtr)[4], (*eulersPtr)[5]}, expected);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

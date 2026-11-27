@@ -18,10 +18,10 @@ enum AlignSectionsInputType : uint8
 
 struct SIMPLNXCORE_EXPORT AlignSectionsListInputValues
 {
-  ChoicesParameter::ValueType AlignSectionsType{};
+  ChoicesParameter::ValueType align_sections_type{};
 
-  DataPath ImageGeometryPath;
-  DataPath ShiftsArrayPath;
+  DataPath image_geometry_path;
+  DataPath shifts_array_path;
 };
 
 /**

@@ -58,7 +58,7 @@ Parameters RemoveFlaggedTrianglesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "The Triangle Geometry that will be processed.", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Geometry", "The name of the created Triangle Geometry", DataPath({"ReducedGeometry"})));
@@ -154,15 +154,15 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
     {
       if(!selectedTriangleArrays.empty() && nullptr == srcTriangleAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5251, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5251, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
+      transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
     }
     else if(pTriangleArrayHandling == detail::k_CopyAllTriangleArraysIdx)
     {
       if(nullptr == srcTriangleAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5252, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5252, fmt::format("'{}' must have face data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -170,7 +170,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       if(getChildrenResult.has_value())
       {
         selectedTriangleArrays = getChildrenResult.value();
-        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
+        transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcTriangleAttrMatPtr, selectedTriangleArrays, reducedFaceAttributeMatrixPath, resultOutputActions);
       }
     }
   }
@@ -184,15 +184,15 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
     {
       if(!selectedVertexArrays.empty() && nullptr == srcVertexAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5553, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5553, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
-      TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+      transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
     }
     else if(pVertexArrayHandling == detail::k_CopyAllVertexArraysIdx)
     {
       if(nullptr == srcVertexAttrMatPtr)
       {
-        return {.outputActions = MakeErrorResult<OutputActions>(-5554, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-5554, fmt::format("'{}' must have Vertex data attribute matrix", pInitialGeometryPathValue.toString()))};
       }
       std::vector<DataPath> ignorePaths;
 
@@ -200,13 +200,13 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
       if(getChildrenResult.has_value())
       {
         selectedVertexArrays = getChildrenResult.value();
-        TransferGeometryElementData::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
+        transfer_geometry_element_data::CreateDataArrayActions(dataStructure, srcVertexAttrMatPtr, selectedVertexArrays, reducedVertexAttributeMatrixPath, resultOutputActions);
       }
     }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -215,17 +215,17 @@ Result<> RemoveFlaggedTrianglesFilter::executeImpl(DataStructure& dataStructure,
 {
   RemoveFlaggedTrianglesInputValues inputValues;
 
-  inputValues.TriangleGeometry = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.ReducedTriangleGeometry = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  inputValues.triangle_geometry = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.reduced_triangle_geometry = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
 
-  inputValues.TriangleDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_TriangleDataHandling_Key);
-  inputValues.TriangleAttributeMatrixPath = filterArgs.value<DataPath>(k_TriangleDataSelectedAttributeMatrix_Key);
-  inputValues.SelectedTriangleData = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TriangleDataSelectedArrays_Key);
+  inputValues.triangle_data_handling = filterArgs.value<ChoicesParameter::ValueType>(k_TriangleDataHandling_Key);
+  inputValues.triangle_attribute_matrix_path = filterArgs.value<DataPath>(k_TriangleDataSelectedAttributeMatrix_Key);
+  inputValues.selected_triangle_data = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TriangleDataSelectedArrays_Key);
 
-  inputValues.VertexDataHandling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
-  inputValues.VertexAttributeMatrixPath = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
-  inputValues.SelectedVertexData = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
+  inputValues.vertex_data_handling = filterArgs.value<ChoicesParameter::ValueType>(k_VertexDataHandling_Key);
+  inputValues.vertex_attribute_matrix_path = filterArgs.value<DataPath>(k_VertexDataSelectedAttributeMatrix_Key);
+  inputValues.selected_vertex_data = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_VertexDataSelectedArrays_Key);
 
   return RemoveFlaggedTriangles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

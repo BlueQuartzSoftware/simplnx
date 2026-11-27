@@ -81,7 +81,7 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
   Result<nlohmann::json> pipelineResult = dream3d::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
   }
 
   Result<OutputActions> results;
@@ -114,7 +114,7 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
                                        outputFile.string(), extension, finalOutputPath.string())});
   }
 
-  return {.outputActions = results};
+  return {.output_actions = results};
 }
 
 //------------------------------------------------------------------------------
@@ -122,8 +122,8 @@ Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractPipelineToFileInputValues inputValues;
-  inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
-  inputValues.OutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
+  inputValues.input_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
+  inputValues.output_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
   return ExtractPipelineToFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

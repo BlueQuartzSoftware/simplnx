@@ -71,12 +71,12 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                    "wall as normal. 'Background-Backed Walls Only' omits wall faces where the wall borders the "
                                                    "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
                                                    "Features flush with the box stay closed.",
-                                                   bounding_box_skin_mode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
+                                                   bounding_box_skin_mode::k_Off, ChoicesParameter::ChoicesType{"Off", "Background-Backed Walls Only"}));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Cell Attribute Arrays to Transfer", "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
       MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
@@ -158,7 +158,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, pGridGeomDataPath, pFeatureIdsArrayPathValue, -76532, "Cell Feature Ids");
     if(featureIdsResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
     }
   }
 
@@ -179,7 +179,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, k_NumElements, 1, pVertexGroupDataName, pFaceGroupDataName,
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, k_NumElements, 1, pVertexGroupDataName, pFaceGroupDataName,
                                                                                        TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
@@ -202,7 +202,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     const IDataArray* elementArrayPtr = dataStructure.getDataAs<IDataArray>(selectedDataPath);
     if(elementArrayPtr->getNumberOfTuples() != elementTupleCount)
     {
-      return {.outputActions =
+      return {.output_actions =
                   MakeErrorResult<OutputActions>(-76531, fmt::format("Cannot copy element data at path '{}'. DataArray does not have the correct tuple count.", selectedDataPath.toString()))};
     }
 
@@ -230,7 +230,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -239,32 +239,32 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
 {
   nx::core::QuickSurfaceMeshInputValues inputValues;
 
-  inputValues.FixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
-  inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
-  inputValues.BoundingBoxSkinMode = filterArgs.value<ChoicesParameter::ValueType>(k_BoundingBoxSkinMode_Key);
+  inputValues.fix_problem_voxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
+  inputValues.repair_triangle_winding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
+  inputValues.bounding_box_skin_mode = filterArgs.value<ChoicesParameter::ValueType>(k_BoundingBoxSkinMode_Key);
 
-  inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.SelectedCellDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  inputValues.SelectedFeatureDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureDataArrayPaths_Key);
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
-  inputValues.VertexGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));
-  inputValues.NodeTypesDataPath = inputValues.VertexGroupDataPath.createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key));
-  inputValues.FaceGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_FaceDataGroupName_Key));
-  inputValues.FaceLabelsDataPath = inputValues.FaceGroupDataPath.createChildPath(filterArgs.value<std::string>(k_FaceLabelsArrayName_Key));
+  inputValues.grid_geom_data_path = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.selected_cell_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.selected_feature_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureDataArrayPaths_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  inputValues.vertex_group_data_path = inputValues.triangle_geometry_path.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));
+  inputValues.node_types_data_path = inputValues.vertex_group_data_path.createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key));
+  inputValues.face_group_data_path = inputValues.triangle_geometry_path.createChildPath(filterArgs.value<std::string>(k_FaceDataGroupName_Key));
+  inputValues.face_labels_data_path = inputValues.face_group_data_path.createChildPath(filterArgs.value<std::string>(k_FaceLabelsArrayName_Key));
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
-  for(const auto& selectedDataPath : inputValues.SelectedCellDataArrayPaths)
+  for(const auto& selectedDataPath : inputValues.selected_cell_data_array_paths)
   {
-    DataPath createdDataPath = inputValues.FaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
+    DataPath createdDataPath = inputValues.face_group_data_path.createChildPath(selectedDataPath.getTargetName());
     createdDataPaths.push_back(createdDataPath);
   }
-  for(const auto& selectedDataPath : inputValues.SelectedFeatureDataArrayPaths)
+  for(const auto& selectedDataPath : inputValues.selected_feature_data_array_paths)
   {
-    DataPath createdDataPath = inputValues.FaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
+    DataPath createdDataPath = inputValues.face_group_data_path.createChildPath(selectedDataPath.getTargetName());
     createdDataPaths.push_back(createdDataPath);
   }
-  inputValues.CreatedDataArrayPaths = createdDataPaths;
+  inputValues.created_data_array_paths = createdDataPaths;
 
   return nx::core::QuickSurfaceMesh(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

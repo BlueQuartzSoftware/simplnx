@@ -292,8 +292,8 @@ struct ColorizeVolumeFunctor
           }
 
           const T sourceValue = sliceValues[dstPixel];
-          const float32 nValue = ColorTableUtilities::NormalizeValue(sourceValue, arrayMin, arrayMax);
-          const std::array<uint8, 3> rgb = ColorTableUtilities::ComputeRgbFromControlPoints(nValue, binPoints, controlPoints, numControlColors);
+          const float32 nValue = color_table_utilities::NormalizeValue(sourceValue, arrayMin, arrayMax);
+          const std::array<uint8, 3> rgb = color_table_utilities::ComputeRgbFromControlPoints(nValue, binPoints, controlPoints, numControlColors);
           sliceBuffer[dst + 0] = rgb[0];
           sliceBuffer[dst + 1] = rgb[1];
           sliceBuffer[dst + 2] = rgb[2];
@@ -329,11 +329,11 @@ WriteImageDirect::WriteImageDirect(DataStructure& dataStructure, const IFilter::
 // -----------------------------------------------------------------------------
 Result<> WriteImageDirect::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues.imageGeometryPath);
-  const auto& imageArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.imageDataArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues.image_geometry_path);
+  const auto& imageArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.image_data_array_path);
 
   // ImageGeom stores dimensions in X, Y, Z order.
-  SizeVec3 dims = imageGeom.getDimensions();
+  SizeVec3Type dims = imageGeom.getDimensions();
   usize dimX = dims[0];
   usize dimY = dims[1];
   usize dimZ = dims[2];
@@ -346,7 +346,7 @@ Result<> WriteImageDirect::operator()()
   usize sliceW = 0;
   usize sliceH = 0;
 
-  switch(m_InputValues.planeIndex)
+  switch(m_InputValues.plane_index)
   {
   case 0: // XY
     sliceCount = dimZ;
@@ -364,33 +364,33 @@ Result<> WriteImageDirect::operator()()
     sliceH = dimZ;
     break;
   default:
-    return MakeErrorResult(-27000, fmt::format("Invalid plane index: {}", m_InputValues.planeIndex));
+    return MakeErrorResult(-27000, fmt::format("Invalid plane index: {}", m_InputValues.plane_index));
   }
 
-  const bool addScaleBar = m_InputValues.addScaleBar;
+  const bool addScaleBar = m_InputValues.add_scale_bar;
   usize bandHeight = 0;
   std::vector<uint8> bandRgb;
   if(addScaleBar)
   {
-    FloatVec3 spacing = imageGeom.getSpacing();
-    const float64 unitsPerPixel = static_cast<float64>((m_InputValues.planeIndex == 2) ? spacing[1] : spacing[0]);
-    bandHeight = ScaleBarRenderer::ComputeBandHeight(sliceH);
-    bandRgb = ScaleBarRenderer::RenderScaleBarBandRgb(sliceW, sliceH, unitsPerPixel, imageGeom.getUnits());
+    FloatVec3Type spacing = imageGeom.getSpacing();
+    const float64 unitsPerPixel = static_cast<float64>((m_InputValues.plane_index == 2) ? spacing[1] : spacing[0]);
+    bandHeight = scale_bar_renderer::ComputeBandHeight(sliceH);
+    bandRgb = scale_bar_renderer::RenderScaleBarBandRgb(sliceW, sliceH, unitsPerPixel, imageGeom.getUnits());
   }
 
   // The component count and byte size are constant across slices.
   // Calculate them once outside writeSlice.
-  const usize incomingComps = m_InputValues.createColorTable ? 3 : nComp;
-  const usize incomingTypeSize = m_InputValues.createColorTable ? GetDataTypeSize(DataType::uint8) : bytesPerComponent;
+  const usize incomingComps = m_InputValues.create_color_table ? 3 : nComp;
+  const usize incomingTypeSize = m_InputValues.create_color_table ? GetDataTypeSize(DataType::uint8) : bytesPerComponent;
 
-  auto imageIOResult = CreateImageIO(m_InputValues.outputFilePath);
+  auto imageIOResult = CreateImageIO(m_InputValues.output_file_path);
   if(imageIOResult.invalid())
   {
     return ConvertResult(std::move(imageIOResult));
   }
   const auto& imageIO = imageIOResult.value();
 
-  fs::path parentDir = fs::absolute(m_InputValues.outputFilePath).parent_path();
+  fs::path parentDir = fs::absolute(m_InputValues.output_file_path).parent_path();
   if(!fs::exists(parentDir))
   {
     if(!fs::create_directories(parentDir))
@@ -399,33 +399,33 @@ Result<> WriteImageDirect::operator()()
     }
   }
 
-  fs::path stem = m_InputValues.outputFilePath.stem();
-  fs::path ext = m_InputValues.outputFilePath.extension();
-  fs::path parent = fs::absolute(m_InputValues.outputFilePath).parent_path();
+  fs::path stem = m_InputValues.output_file_path.stem();
+  fs::path ext = m_InputValues.output_file_path.extension();
+  fs::path parent = fs::absolute(m_InputValues.output_file_path).parent_path();
 
   // All slices share metadata. Color and scale-bar modes write three UInt8 components.
   ImageMetadata metadata;
   metadata.width = sliceW;
   metadata.height = sliceH + bandHeight;
-  metadata.numComponents = (m_InputValues.createColorTable || addScaleBar) ? 3 : nComp;
-  metadata.dataType = (m_InputValues.createColorTable || addScaleBar) ? DataType::uint8 : dataType;
-  metadata.numPages = 1;
-  const FloatVec3 origin = imageGeom.getOrigin();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  if(m_InputValues.planeIndex == 0)
+  metadata.num_components = (m_InputValues.create_color_table || addScaleBar) ? 3 : nComp;
+  metadata.data_type = (m_InputValues.create_color_table || addScaleBar) ? DataType::uint8 : dataType;
+  metadata.num_pages = 1;
+  const FloatVec3Type origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  if(m_InputValues.plane_index == 0)
   {
-    metadata.origin = FloatVec3{origin[0], origin[1], 0.0f};
-    metadata.spacing = FloatVec3{spacing[0], spacing[1], 1.0f};
+    metadata.origin = FloatVec3Type{origin[0], origin[1], 0.0f};
+    metadata.spacing = FloatVec3Type{spacing[0], spacing[1], 1.0f};
   }
-  else if(m_InputValues.planeIndex == 1)
+  else if(m_InputValues.plane_index == 1)
   {
-    metadata.origin = FloatVec3{origin[0], origin[2], 0.0f};
-    metadata.spacing = FloatVec3{spacing[0], spacing[2], 1.0f};
+    metadata.origin = FloatVec3Type{origin[0], origin[2], 0.0f};
+    metadata.spacing = FloatVec3Type{spacing[0], spacing[2], 1.0f};
   }
   else
   {
-    metadata.origin = FloatVec3{origin[1], origin[2], 0.0f};
-    metadata.spacing = FloatVec3{spacing[1], spacing[2], 1.0f};
+    metadata.origin = FloatVec3Type{origin[1], origin[2], 0.0f};
+    metadata.spacing = FloatVec3Type{spacing[1], spacing[2], 1.0f};
   }
 
   // All dispatch and image callbacks below run synchronously on this thread.
@@ -446,7 +446,7 @@ Result<> WriteImageDirect::operator()()
     fs::path slicePath = parent / fmt::format("{}{}", stem.string(), ext.string());
     if(sliceCount > 1)
     {
-      std::string indexStr = CreateIndexString(slice + m_InputValues.indexOffset, static_cast<usize>(m_InputValues.totalIndexDigits), m_InputValues.leadingDigitCharacter);
+      std::string indexStr = CreateIndexString(slice + m_InputValues.index_offset, static_cast<usize>(m_InputValues.total_index_digits), m_InputValues.leading_digit_character);
       slicePath = parent / fmt::format("{}_{}{}", stem.string(), indexStr, ext.string());
     }
 
@@ -458,7 +458,7 @@ Result<> WriteImageDirect::operator()()
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     // Flip before padding so the scale bar stays upright at the output bottom.
-    ApplyImageFlip(sliceBuffer, sliceW, sliceH, incomingComps * incomingTypeSize, m_InputValues.flipMode);
+    ApplyImageFlip(sliceBuffer, sliceW, sliceH, incomingComps * incomingTypeSize, m_InputValues.flip_mode);
 
     std::vector<uint8>* writeBufferPtr = &sliceBuffer;
     std::vector<uint8> paddedBuffer;
@@ -495,9 +495,9 @@ Result<> WriteImageDirect::operator()()
     return commitResult;
   };
 
-  if(m_InputValues.createColorTable)
+  if(m_InputValues.create_color_table)
   {
-    auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues.presetName);
+    auto controlPointsResult = color_table_utilities::ExtractControlPoints(m_InputValues.preset_name);
     if(controlPointsResult.invalid())
     {
       return ConvertResult(std::move(controlPointsResult));
@@ -505,25 +505,25 @@ Result<> WriteImageDirect::operator()()
     std::vector<float32> controlPoints = controlPointsResult.value();
     if(controlPoints.empty())
     {
-      return MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.presetName));
+      return MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.preset_name));
     }
     // Each control color has four values in [A,R,G,B] order.
     // Interpolation requires two colors to prevent an out-of-bounds read.
     if(controlPoints.size() < 8)
     {
-      return MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName));
+      return MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.preset_name));
     }
-    std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
+    std::vector<float32> binPoints = color_table_utilities::NormalizeBinPoints(controlPoints);
     const usize numControlColors = controlPoints.size() / 4;
 
     const IDataArray* maskArrayPtr = nullptr;
-    if(m_InputValues.useMask)
+    if(m_InputValues.use_mask)
     {
-      maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues.maskArrayPath);
+      maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues.mask_array_path);
     }
 
-    return ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.planeIndex, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, binPoints, controlPoints, numControlColors,
-                               maskArrayPtr, m_InputValues.invalidColor, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange, reportRows);
+    return ExecuteDataFunction(ColorizeVolumeFunctor{}, dataType, imageArray, m_InputValues.plane_index, dimX, dimY, dimZ, sliceCount, sliceW, sliceH, binPoints, controlPoints, numControlColors,
+                               maskArrayPtr, m_InputValues.invalid_color, m_ShouldCancel, std::function<Result<>(std::vector<uint8>&, usize)>(writeSlice), reportRange, reportRows);
   }
 
   // The non-color path preserves typed bytes for one slice at a time.
@@ -535,7 +535,7 @@ Result<> WriteImageDirect::operator()()
     {
       return {};
     }
-    auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.planeIndex, dimX, dimY, dimZ, nComp, reportRows);
+    auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.plane_index, dimX, dimY, dimZ, nComp, reportRows);
     if(extractResult.invalid())
     {
       return extractResult;

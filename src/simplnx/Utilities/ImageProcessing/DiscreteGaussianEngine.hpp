@@ -27,9 +27,9 @@ struct DiscreteGaussianPassOptions
 {
   static constexpr usize k_MaxStagingBytes = 16ULL * 1024ULL * 1024ULL;
   static constexpr usize k_Default2DResidentLimit = 64ULL * 1024ULL * 1024ULL;
-  usize stagingByteBudget = k_MaxStagingBytes;
+  usize staging_byte_budget = k_MaxStagingBytes;
   usize resident_limit_2d = k_Default2DResidentLimit;
-  bool forceFusedPlanePass = false;
+  bool force_fused_plane_pass = false;
   bool force_bounded_2d = false;
 };
 
@@ -37,16 +37,16 @@ namespace detail
 {
 struct DiscreteGaussianStoragePlan
 {
-  bool useFusedPlanePass = false;
-  bool useTemporaryRecordStore = false;
-  std::string workingDataFormat;
+  bool use_fused_plane_pass = false;
+  bool use_temporary_record_store = false;
+  std::string working_data_format;
 };
 
 struct DiscreteGaussian2DBufferPlan
 {
-  usize coreRows = 0;
-  usize coreCols = 0;
-  usize residentBytes = 0;
+  usize core_rows = 0;
+  usize core_cols = 0;
+  usize resident_bytes = 0;
   bool valid = false;
   bool overflow = false;
 };
@@ -99,14 +99,14 @@ inline DiscreteGaussian2DBufferPlan BuildDiscreteGaussian2DBufferPlan(usize dimX
     usize totalValues = 0;
     if(coreRows == 0 || !DiscreteGaussianCheckedAdd(coreRows, twiceRadiusY, sourceRows) || !DiscreteGaussianCheckedMultiply(sourceRows, dimX, sourceValues) ||
        !DiscreteGaussianCheckedMultiply(coreRows, dimX, coreValues) || !DiscreteGaussianCheckedAdd(sourceValues, coreValues, totalValues) ||
-       !DiscreteGaussianCheckedAdd(totalValues, coreValues, totalValues) || !DiscreteGaussianCheckedMultiply(totalValues, valueBytes, plan.residentBytes))
+       !DiscreteGaussianCheckedAdd(totalValues, coreValues, totalValues) || !DiscreteGaussianCheckedMultiply(totalValues, valueBytes, plan.resident_bytes))
     {
       plan.overflow = coreRows != 0;
       return plan;
     }
-    plan.coreRows = coreRows;
-    plan.coreCols = dimX;
-    plan.valid = plan.residentBytes <= residentLimit;
+    plan.core_rows = coreRows;
+    plan.core_cols = dimX;
+    plan.valid = plan.resident_bytes <= residentLimit;
     return plan;
   }
 
@@ -129,14 +129,14 @@ inline DiscreteGaussian2DBufferPlan BuildDiscreteGaussian2DBufferPlan(usize dimX
   usize sourceValues = 0;
   usize totalValues = 0;
   if(coreCols == 0 || !DiscreteGaussianCheckedAdd(coreCols, twiceRadiusX, inputCols) || !DiscreteGaussianCheckedMultiply(rowsPlusIntermediate, inputCols, sourceValues) ||
-     !DiscreteGaussianCheckedAdd(sourceValues, coreCols, totalValues) || !DiscreteGaussianCheckedMultiply(totalValues, valueBytes, plan.residentBytes))
+     !DiscreteGaussianCheckedAdd(sourceValues, coreCols, totalValues) || !DiscreteGaussianCheckedMultiply(totalValues, valueBytes, plan.resident_bytes))
   {
     plan.overflow = coreCols != 0;
     return plan;
   }
-  plan.coreRows = 1;
-  plan.coreCols = coreCols;
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.core_rows = 1;
+  plan.core_cols = coreCols;
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 
@@ -145,13 +145,13 @@ inline DiscreteGaussianStoragePlan SelectDiscreteGaussianStoragePlan(IDataStore:
 {
   if(inputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {.useFusedPlanePass = true, .useTemporaryRecordStore = true, .workingDataFormat = std::move(inputDataFormat)};
+    return {.use_fused_plane_pass = true, .use_temporary_record_store = true, .working_data_format = std::move(inputDataFormat)};
   }
   if(outputStoreType == IDataStore::StoreType::OutOfCore)
   {
-    return {.useFusedPlanePass = true, .useTemporaryRecordStore = true, .workingDataFormat = std::move(outputDataFormat)};
+    return {.use_fused_plane_pass = true, .use_temporary_record_store = true, .working_data_format = std::move(outputDataFormat)};
   }
-  return {.useFusedPlanePass = forceFusedPlanePass, .useTemporaryRecordStore = false, .workingDataFormat = std::move(inputDataFormat)};
+  return {.use_fused_plane_pass = forceFusedPlanePass, .use_temporary_record_store = false, .working_data_format = std::move(inputDataFormat)};
 }
 
 // Verbatim port of itk::GaussianOperator's modified-Bessel functions (all double).
@@ -262,7 +262,7 @@ inline std::vector<double> GaussianKernelCoefficients(double variance, double ma
 // Applies the Y pass into a T-typed intermediate plane and then the X pass into the reusable source plane. Keeping the
 // intermediate plane in T preserves the per-axis cast/truncation performed by the ordinary store-backed cascade.
 template <class T, class SrcStoreT, class DstStoreT>
-Result<> DiscreteGaussianYXPlanePass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3& dims, const std::vector<double>& yKernel, const std::vector<double>& xKernel,
+Result<> DiscreteGaussianYXPlanePass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3Type& dims, const std::vector<double>& yKernel, const std::vector<double>& xKernel,
                                      const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
@@ -363,7 +363,7 @@ Result<> DiscreteGaussianYXPlanePass(const SrcStoreT& src, DstStoreT& dst, const
 }
 
 template <class T, class SrcStoreT, class DstStoreT>
-Result<> DiscreteGaussian2DBounded(const SrcStoreT& src, DstStoreT& dst, const SizeVec3& dims, const std::vector<double>& yKernel, const std::vector<double>& xKernel,
+Result<> DiscreteGaussian2DBounded(const SrcStoreT& src, DstStoreT& dst, const SizeVec3Type& dims, const std::vector<double>& yKernel, const std::vector<double>& xKernel,
                                    const std::atomic_bool& shouldCancel, usize residentLimit)
 {
   const usize dimX = dims[0];
@@ -388,9 +388,9 @@ Result<> DiscreteGaussian2DBounded(const SrcStoreT& src, DstStoreT& dst, const S
   const int64 radiusY64 = static_cast<int64>(radiusY);
   auto clampIndex = [](int64 value, int64 high) { return value < 0 ? int64{0} : (value > high ? high : value); };
 
-  if(plan.coreCols == dimX)
+  if(plan.core_cols == dimX)
   {
-    usize coreRowsPerBlock = plan.coreRows;
+    usize coreRowsPerBlock = plan.core_rows;
     const std::optional<ShapeType> outputChunkShape = dst.getChunkShape();
     if(outputChunkShape.has_value() && outputChunkShape->size() >= 3 && (*outputChunkShape)[0] == 1 && (*outputChunkShape)[1] > 0 && (*outputChunkShape)[1] <= coreRowsPerBlock &&
        (*outputChunkShape)[2] == dimX)
@@ -498,13 +498,13 @@ Result<> DiscreteGaussian2DBounded(const SrcStoreT& src, DstStoreT& dst, const S
     const usize inputYBegin = y > radiusY ? y - radiusY : 0;
     const usize inputYEnd = std::min(dimY, y + radiusY + 1);
     const usize inputRows = inputYEnd - inputYBegin;
-    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.coreCols)
+    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.core_cols)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize xEnd = std::min(dimX, xBegin + plan.coreCols);
+      const usize xEnd = std::min(dimX, xBegin + plan.core_cols);
       const usize inputXBegin = xBegin > radiusX ? xBegin - radiusX : 0;
       const usize inputXEnd = std::min(dimX, xEnd + radiusX);
       const usize inputCols = inputXEnd - inputXBegin;
@@ -571,7 +571,7 @@ Result<> DiscreteGaussian2DBounded(const SrcStoreT& src, DstStoreT& dst, const S
 // (edge-clamp). `src` may alias `dst` (each line is fully gathered before write). `kernel` is the symmetric double
 // kernel (odd length, radius = size/2).
 template <class T, class SrcStoreT, class DstStoreT>
-Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3& dims, uint32 axis, const std::vector<double>& kernel, const std::atomic_bool& shouldCancel,
+Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const SizeVec3Type& dims, uint32 axis, const std::vector<double>& kernel, const std::atomic_bool& shouldCancel,
                                   const IFilter::MessageHandler& /*messageHandler*/, const DiscreteGaussianPassOptions& options = {})
 {
   const int64 nX = static_cast<int64>(dims[0]);
@@ -696,7 +696,7 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
   // axis == 2 (Z): stage consecutive Y rows across every Z plane. This converts many small per-row HDF5 operations
   // into one contiguous read and write per Z plane while retaining a fixed memory budget. The one-row minimum is an
   // indivisible XZ staging unit and may exceed the requested budget for exceptionally wide/tall data.
-  const usize stagingByteBudget = std::min(options.stagingByteBudget, DiscreteGaussianPassOptions::k_MaxStagingBytes);
+  const usize stagingByteBudget = std::min(options.staging_byte_budget, DiscreteGaussianPassOptions::k_MaxStagingBytes);
   const usize maxStagedValues = std::max<usize>(1, stagingByteBudget / (2 * sizeof(T)));
   const usize maxYRows = (dims[0] == 0 || dims[2] == 0) ? 1 : std::max<usize>(1, std::min<usize>(dims[1], maxStagedValues / dims[0] / dims[2]));
   std::vector<T> srcSlab;
@@ -775,8 +775,8 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
 // raw fixed-record scratch and the plane-local Y/X passes are fused; 2D fuses Y/X directly without a working store.
 // `variance`/`maximumError` are per-axis (3-long). This is the engine entry point the facade and tests call.
 template <class T>
-Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const std::vector<float64>& variance, uint32 maximumKernelWidth,
-                               const std::vector<float64>& maximumError, bool useImageSpacing, FloatVec3 spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const std::vector<float64>& variance, uint32 maximumKernelWidth,
+                               const std::vector<float64>& maximumError, bool useImageSpacing, FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                                const DiscreteGaussianPassOptions& options = {})
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
@@ -815,9 +815,9 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
 
   const uint32 effDim = (dims[2] > 1) ? 3u : 2u;
   const detail::DiscreteGaussianStoragePlan storagePlan =
-      detail::SelectDiscreteGaussianStoragePlan(in.getStoreType(), in.getDataFormat(), out.getStoreType(), out.getDataFormat(), options.forceFusedPlanePass);
+      detail::SelectDiscreteGaussianStoragePlan(in.getStoreType(), in.getDataFormat(), out.getStoreType(), out.getDataFormat(), options.force_fused_plane_pass);
 
-  if(storagePlan.useFusedPlanePass)
+  if(storagePlan.use_fused_plane_pass)
   {
     double yVariance = variance[1];
     double xVariance = variance[0];
@@ -832,7 +832,7 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
     const std::vector<double> xKernel = detail::GaussianKernelCoefficients(xVariance, maximumError[0], maximumKernelWidth);
     if(effDim == 2)
     {
-      if(storagePlan.useTemporaryRecordStore || options.force_bounded_2d)
+      if(storagePlan.use_temporary_record_store || options.force_bounded_2d)
       {
         return detail::DiscreteGaussian2DBounded<T>(in, out, dims, yKernel, xKernel, shouldCancel, options.resident_limit_2d);
       }
@@ -850,7 +850,7 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
       zVariance /= zSpacing * zSpacing;
     }
     const std::vector<double> zKernel = detail::GaussianKernelCoefficients(zVariance, maximumError[2], maximumKernelWidth);
-    if(storagePlan.useTemporaryRecordStore)
+    if(storagePlan.use_temporary_record_store)
     {
       auto temporaryResult = detail::CreateGaussianTemporaryStore<T>(volumeValues, planeValues, shouldCancel);
       if(temporaryResult.invalid())
@@ -865,7 +865,7 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
       return detail::DiscreteGaussianYXPlanePass<T>(*work, out, dims, yKernel, xKernel, shouldCancel);
     }
 
-    auto work = DataStoreUtilities::CreateDataStoreWithFormat<T>(storagePlan.workingDataFormat, std::vector<usize>{dims[2], dims[1], dims[0]}, std::vector<usize>{1});
+    auto work = data_store_utilities::CreateDataStoreWithFormat<T>(storagePlan.working_data_format, std::vector<usize>{dims[2], dims[1], dims[0]}, std::vector<usize>{1});
     if(Result<> result = DiscreteGaussianAxisPass<T>(in, *work, dims, 2, zKernel, shouldCancel, messageHandler, options); result.invalid())
     {
       return result;
@@ -873,7 +873,7 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
     return detail::DiscreteGaussianYXPlanePass<T>(*work, out, dims, yKernel, xKernel, shouldCancel);
   }
 
-  auto workPtr = DataStoreUtilities::CreateDataStoreWithFormat<T>(in.getDataFormat(), std::vector<usize>{static_cast<usize>(dims[2]), static_cast<usize>(dims[1]), static_cast<usize>(dims[0])},
+  auto workPtr = data_store_utilities::CreateDataStoreWithFormat<T>(in.getDataFormat(), std::vector<usize>{static_cast<usize>(dims[2]), static_cast<usize>(dims[1]), static_cast<usize>(dims[0])},
                                                                   std::vector<usize>{1});
   AbstractDataStore<T>& work = *workPtr;
 

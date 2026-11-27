@@ -12,7 +12,7 @@ namespace nx::core::hdf5
 IDataIO::IDataIO() = default;
 IDataIO::~IDataIO() noexcept = default;
 
-DataObject::OptionalId IDataIO::ReadDataId(const ObjectReaderType& groupReader, const std::string& tag)
+DataObject::OptionalIdType IDataIO::ReadDataId(const ObjectReaderType& groupReader, const std::string& tag)
 {
   if(!groupReader.isValid())
   {
@@ -43,11 +43,11 @@ Result<> IDataIO::WriteDataId(ObjectWriterType& objectWriter, const std::optiona
 Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, ObjectWriterType& objectWriter, bool importable)
 {
   std::string dataTypeName = dataObject.getTypeName();
-  objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataTypeName);
-  objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject.getId());
+  objectWriter.writeStringAttribute(constants::k_ObjectTypeTag, dataTypeName);
+  objectWriter.writeScalarAttribute(constants::k_ObjectIdTag, dataObject.getId());
 
   int32 value = (importable ? 1 : 0);
-  objectWriter.writeScalarAttribute(Constants::k_ImportableTag, value);
+  objectWriter.writeScalarAttribute(constants::k_ImportableTag, value);
 
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addWriter(objectWriter, dataObject.getId());

@@ -16,14 +16,14 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeNeighborhoodsInputValues
 {
-  uint64 SearchRadiusType{};
-  float32 MultiplesOfAverage{};
-  float32 SearchRadius{};
-  DataPath EquivalentDiametersArrayPath;
-  DataPath CentroidsArrayPath;
-  DataPath NeighborhoodsArrayName;
-  DataPath NeighborhoodListArrayName;
-  DataPath InputImageGeometry;
+  uint64 search_radius_type{};
+  float32 multiples_of_average{};
+  float32 search_radius{};
+  DataPath equivalent_diameters_array_path;
+  DataPath centroids_array_path;
+  DataPath neighborhoods_array_name;
+  DataPath neighborhood_list_array_name;
+  DataPath input_image_geometry;
 };
 
 /**
@@ -58,7 +58,7 @@ private:
   std::mutex m_Mutex;
   mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
-  Int32Array* m_Neighborhoods = nullptr;
+  Int32ArrayType* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
 };
 

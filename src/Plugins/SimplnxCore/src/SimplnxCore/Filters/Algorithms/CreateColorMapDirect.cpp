@@ -31,7 +31,7 @@ template <typename T>
 class AbstractStoreAccess
 {
 public:
-  AbstractStoreAccess(const AbstractDataStore<T>& arrayStore, UInt8AbstractDataStore& colorStore, const IDataArray* maskArray)
+  AbstractStoreAccess(const AbstractDataStore<T>& arrayStore, UInt8AbstractDataStoreType& colorStore, const IDataArray* maskArray)
   : m_ArrayStore(arrayStore)
   , m_ColorStore(colorStore)
   , m_MaskArray(maskArray)
@@ -81,7 +81,7 @@ public:
 
 private:
   const AbstractDataStore<T>& m_ArrayStore;
-  UInt8AbstractDataStore& m_ColorStore;
+  UInt8AbstractDataStoreType& m_ColorStore;
   const IDataArray* m_MaskArray = nullptr;
   const AbstractDataStore<bool>* m_BoolMaskStore = nullptr;
   const AbstractDataStore<uint8>* m_UInt8MaskStore = nullptr;
@@ -98,7 +98,7 @@ template <typename T>
 class ContiguousStoreAccess
 {
 public:
-  ContiguousStoreAccess(const DataStore<T>& arrayStore, UInt8DataStore& colorStore, const IDataArray* maskArray, const BoolDataStore* boolMaskStore, const UInt8DataStore* uint8MaskStore)
+  ContiguousStoreAccess(const DataStore<T>& arrayStore, UInt8DataStoreType& colorStore, const IDataArray* maskArray, const BoolDataStoreType* boolMaskStore, const UInt8DataStoreType* uint8MaskStore)
   : m_ArrayData(arrayStore.data())
   , m_ColorData(colorStore.data())
   , m_MaskArray(maskArray)
@@ -196,8 +196,8 @@ public:
         continue;
       }
 
-      const float32 normalizedValue = ColorTableUtilities::NormalizeValue(m_DataAccess.inputValue(i), m_ArrayMin, m_ArrayMax);
-      const std::array<uint8, 3> rgb = ColorTableUtilities::ComputeRgbFromControlPoints(normalizedValue, m_BinPoints, m_ControlPoints, static_cast<usize>(m_NumControlColors));
+      const float32 normalizedValue = color_table_utilities::NormalizeValue(m_DataAccess.inputValue(i), m_ArrayMin, m_ArrayMax);
+      const std::array<uint8, 3> rgb = color_table_utilities::ComputeRgbFromControlPoints(normalizedValue, m_BinPoints, m_ControlPoints, static_cast<usize>(m_NumControlColors));
       m_DataAccess.setColor(i, rgb[0], rgb[1], rgb[2]);
     }
   }
@@ -252,53 +252,53 @@ struct GenerateColorArrayFunctor
     // Control points store scalar position followed by RGB components.
     const usize numControlColors = controlPoints.size() / k_ControlPointCompSize;
 
-    std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
+    std::vector<float32> binPoints = color_table_utilities::NormalizeBinPoints(controlPoints);
 
-    auto& colorStoreRef = dataStructure.getDataRefAs<UInt8Array>(inputValues->RgbArrayPath).getDataStoreRef();
+    auto& colorStoreRef = dataStructure.getDataRefAs<UInt8ArrayType>(inputValues->rgb_array_path).getDataStoreRef();
 
     const IDataArray* goodVoxelsArrayPtr = nullptr;
-    if(inputValues->UseMask)
+    if(inputValues->use_mask)
     {
-      goodVoxelsArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
+      goodVoxelsArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues->mask_array_path);
     }
 
-    const auto& arrayStoreRef = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath).getDataStoreRef();
+    const auto& arrayStoreRef = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->selected_data_array_path).getDataStoreRef();
     const usize numTuples = arrayStoreRef.getNumberOfTuples();
     if(numTuples == 0)
     {
-      return MakeErrorResult(-34381, fmt::format("Array {} is empty", inputValues->SelectedDataArrayPath.getTargetName()));
+      return MakeErrorResult(-34381, fmt::format("Array {} is empty", inputValues->selected_data_array_path.getTargetName()));
     }
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numTuples);
 
     const auto* arrayStorePtr = dynamic_cast<const DataStore<ScalarType>*>(&arrayStoreRef);
-    auto* colorStorePtr = dynamic_cast<UInt8DataStore*>(&colorStoreRef);
-    const BoolDataStore* boolMaskStorePtr = nullptr;
-    const UInt8DataStore* uint8MaskStorePtr = nullptr;
+    auto* colorStorePtr = dynamic_cast<UInt8DataStoreType*>(&colorStoreRef);
+    const BoolDataStoreType* boolMaskStorePtr = nullptr;
+    const UInt8DataStoreType* uint8MaskStorePtr = nullptr;
     bool hasContiguousMask = goodVoxelsArrayPtr == nullptr;
     if(goodVoxelsArrayPtr != nullptr && goodVoxelsArrayPtr->getDataType() == DataType::boolean)
     {
-      const auto* maskArrayPtr = dynamic_cast<const BoolArray*>(goodVoxelsArrayPtr);
-      boolMaskStorePtr = maskArrayPtr == nullptr ? nullptr : dynamic_cast<const BoolDataStore*>(&maskArrayPtr->getDataStoreRef());
+      const auto* maskArrayPtr = dynamic_cast<const BoolArrayType*>(goodVoxelsArrayPtr);
+      boolMaskStorePtr = maskArrayPtr == nullptr ? nullptr : dynamic_cast<const BoolDataStoreType*>(&maskArrayPtr->getDataStoreRef());
       hasContiguousMask = boolMaskStorePtr != nullptr;
     }
     else if(goodVoxelsArrayPtr != nullptr && goodVoxelsArrayPtr->getDataType() == DataType::uint8)
     {
-      const auto* maskArrayPtr = dynamic_cast<const UInt8Array*>(goodVoxelsArrayPtr);
-      uint8MaskStorePtr = maskArrayPtr == nullptr ? nullptr : dynamic_cast<const UInt8DataStore*>(&maskArrayPtr->getDataStoreRef());
+      const auto* maskArrayPtr = dynamic_cast<const UInt8ArrayType*>(goodVoxelsArrayPtr);
+      uint8MaskStorePtr = maskArrayPtr == nullptr ? nullptr : dynamic_cast<const UInt8DataStoreType*>(&maskArrayPtr->getDataStoreRef());
       hasContiguousMask = uint8MaskStorePtr != nullptr;
     }
 
     if(arrayStorePtr != nullptr && colorStorePtr != nullptr && hasContiguousMask)
     {
       ContiguousStoreAccess<ScalarType> dataAccess(*arrayStorePtr, *colorStorePtr, goodVoxelsArrayPtr, boolMaskStorePtr, uint8MaskStorePtr);
-      dataAlg.execute(CreateColorMapImpl<ScalarType, ContiguousStoreAccess<ScalarType>>(dataAccess, numTuples, binPoints, controlPoints, numControlColors, inputValues->InvalidColor));
+      dataAlg.execute(CreateColorMapImpl<ScalarType, ContiguousStoreAccess<ScalarType>>(dataAccess, numTuples, binPoints, controlPoints, numControlColors, inputValues->invalid_color));
     }
     else
     {
       AbstractStoreAccess<ScalarType> dataAccess(arrayStoreRef, colorStoreRef, goodVoxelsArrayPtr);
-      dataAlg.execute(CreateColorMapImpl<ScalarType, AbstractStoreAccess<ScalarType>>(dataAccess, numTuples, binPoints, controlPoints, numControlColors, inputValues->InvalidColor));
+      dataAlg.execute(CreateColorMapImpl<ScalarType, AbstractStoreAccess<ScalarType>>(dataAccess, numTuples, binPoints, controlPoints, numControlColors, inputValues->invalid_color));
     }
     return {};
   }
@@ -315,9 +315,9 @@ CreateColorMapDirect::CreateColorMapDirect(DataStructure& dataStructure, const I
 
 Result<> CreateColorMapDirect::operator()()
 {
-  const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
+  const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_data_array_path);
 
-  auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues->PresetName);
+  auto controlPointsResult = color_table_utilities::ExtractControlPoints(m_InputValues->preset_name);
   if(controlPointsResult.invalid())
   {
     auto error = *controlPointsResult.errors().begin();
@@ -326,11 +326,11 @@ Result<> CreateColorMapDirect::operator()()
   auto controlPoints = controlPointsResult.value();
   if(controlPoints.empty())
   {
-    return MakeErrorResult(-34380, fmt::format("No valid points found from preset {}", m_InputValues->PresetName));
+    return MakeErrorResult(-34380, fmt::format("No valid points found from preset {}", m_InputValues->preset_name));
   }
   if(controlPoints.size() < 8)
   {
-    return MakeErrorResult(-34382, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues->PresetName));
+    return MakeErrorResult(-34382, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues->preset_name));
   }
 
   // Current direct behavior does not propagate the typed generator Result.

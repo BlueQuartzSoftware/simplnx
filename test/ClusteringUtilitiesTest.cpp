@@ -26,7 +26,7 @@ TEST_CASE("ClusterUtilities::RandomizeFeatureIds preserves feature tuples throug
     }
 
     DataStructure dataStructure;
-    auto* valuesPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {totalFeatures + 2}, {2});
+    auto* valuesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Feature Values", {totalFeatures + 2}, {2});
     REQUIRE(valuesPtr != nullptr);
     for(usize index = 0; index < valuesPtr->getSize(); ++index)
     {
@@ -34,7 +34,7 @@ TEST_CASE("ClusterUtilities::RandomizeFeatureIds preserves feature tuples throug
     }
 
     std::vector<IArray*> featureArrays{valuesPtr};
-    const auto result = ClusterUtilities::RandomizeFeatureIds(ids, totalFeatures, featureArrays);
+    const auto result = cluster_utilities::RandomizeFeatureIds(ids, totalFeatures, featureArrays);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(ids[0] == 0);
     std::vector<bool> seen(totalFeatures, false);

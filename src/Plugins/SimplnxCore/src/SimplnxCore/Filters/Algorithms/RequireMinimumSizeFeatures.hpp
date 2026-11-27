@@ -19,13 +19,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RequireMinimumSizeFeaturesInputValues
 {
-  BoolParameter::ValueType ApplySinglePhase{};
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  ArraySelectionParameter::ValueType FeaturePhasesPath;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  Int64ParameterType::ValueType MinAllowedFeaturesSize{};
-  ArraySelectionParameter::ValueType FeatureNumCellsPath;
-  Int32ParameterType::ValueType PhaseNumber{};
+  BoolParameter::ValueType apply_single_phase{};
+  ArraySelectionParameter::ValueType feature_ids_path;
+  ArraySelectionParameter::ValueType feature_phases_path;
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  Int64ParameterType::ValueType min_allowed_features_size{};
+  ArraySelectionParameter::ValueType feature_num_cells_path;
+  Int32ParameterType::ValueType phase_number{};
 };
 
 /**
@@ -89,7 +89,7 @@ protected:
    *
    * Sibling arrays update sequentially. Feature IDs update last.
    */
-  Result<> assignBadVoxels(const SizeVec3& dimensions);
+  Result<> assignBadVoxels(const SizeVec3Type& dimensions);
 
   /**
    * @brief Selects active features and applies their compacted IDs to cells.
@@ -106,7 +106,7 @@ protected:
    *
    * Cancellation or a storage failure can leave earlier Feature ID chunks compacted.
    */
-  Result<std::vector<bool>> removeSmallFeatures(Int32AbstractDataStore& featureIdsStoreRef, const Int32AbstractDataStore& featureNumCellsStoreRef, const Int32AbstractDataStore* featurePhases,
+  Result<std::vector<bool>> removeSmallFeatures(Int32AbstractDataStoreType& featureIdsStoreRef, const Int32AbstractDataStoreType& featureNumCellsStoreRef, const Int32AbstractDataStoreType* featurePhases,
                                                 int32_t phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize, Error& errorReturn);
 
 private:

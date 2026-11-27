@@ -13,10 +13,10 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT LabelTriangleGeometryInputValues
 {
-  DataPath TriangleGeomPath;
-  DataPath RegionIdsPath;
-  DataPath TriangleAMPath;
-  DataPath NumTrianglesPath;
+  DataPath triangle_geom_path;
+  DataPath region_ids_path;
+  DataPath triangle_am_path;
+  DataPath num_triangles_path;
 };
 
 /**

@@ -10,16 +10,16 @@ using namespace nx::core;
 
 TEST_CASE("NXImageProcessing::NotImageFilter: full-overwrite preflight defers OOC zero fill", "[NXImageProcessing][NotImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath inputPath = ip_test::BuildRampImage<int32>(dataStructure, /*dimension=*/8, /*start=*/0.0, /*step=*/1.0);
   const DataPath geometryPath = inputPath.getParent().getParent();
   const auto requireCreateAction = [](const IFilter::PreflightResult& preflightResult) -> const CreateArrayAction& {
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-    const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.outputActions.value().actions.front().get());
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.value().actions.size() == 1);
+    const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflightResult.output_actions.value().actions.front().get());
     REQUIRE(actionPtr != nullptr);
     return *actionPtr;
   };
@@ -50,8 +50,8 @@ TEST_CASE("NXImageProcessing::NotImageFilter: full-overwrite preflight defers OO
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::NotImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][NotImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -67,7 +67,7 @@ TEST_CASE("NXImageProcessing::NotImageFilter: ITK real-image golden (defaults)",
   args.insertOrAssign(NotImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   NotImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -76,5 +76,5 @@ TEST_CASE("NXImageProcessing::NotImageFilter: ITK real-image golden (defaults)",
   INFO(fmt::format("NotImageFilter defaults md5: ours='{}' committed='{}'", ourMd5, "2004dccdb2d68b953fd858a5b6a37d35"));
   REQUIRE(ourMd5 == "2004dccdb2d68b953fd858a5b6a37d35");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

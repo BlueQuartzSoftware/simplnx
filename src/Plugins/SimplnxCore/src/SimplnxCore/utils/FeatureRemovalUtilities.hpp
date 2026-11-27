@@ -10,18 +10,18 @@
 #include <atomic>
 #include <vector>
 
-namespace nx::core::FeatureRemovalUtilities
+namespace nx::core::feature_removal_utilities
 {
 /**
  * @brief Inputs describing where the feature data lives and how the removal should behave.
  */
 struct SIMPLNXCORE_EXPORT RemovalArgs
 {
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  std::vector<DataPath> IgnoredDataArrayPaths;
-  bool FillRemovedFeatures = false;
+  DataPath image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath feature_attribute_matrix_path;
+  std::vector<DataPath> ignored_data_array_paths;
+  bool fill_removed_features = false;
 };
 
 /**
@@ -44,6 +44,6 @@ struct SIMPLNXCORE_EXPORT RemovalArgs
  * - -45436 when fill is enabled and a pass fills no remaining vacated cell. Removed cells are left at -1.
  * - -45437 when the Feature Ids tuple count differs from the geometry cell count. Nothing is modified.
  */
-SIMPLNXCORE_EXPORT Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<bool>& flaggedFeatures, const RemovalArgs& args, const IFilter::MessageHandler& messageHandler,
+SIMPLNXCORE_EXPORT Result<> RemoveFlaggedFeatures(DataStructure& dataStructure, const std::vector<bool>& flaggedFeatures, const RemovalArgs& args, const IFilter::MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel);
 } // namespace nx::core::FeatureRemovalUtilities

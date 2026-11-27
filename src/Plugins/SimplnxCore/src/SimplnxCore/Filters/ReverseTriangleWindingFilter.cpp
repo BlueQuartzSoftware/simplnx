@@ -75,9 +75,9 @@ IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataS
 
   // Inform users that the following arrays are going to be modified in place
   // Triangle geometry face list is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriGeomPathValue, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pTriGeomPathValue, {});
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure,
                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReverseTriangleWindingInputValues inputValues;
-  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeomPath_Key);
+  inputValues.input_triangle_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeomPath_Key);
 
   return ReverseTriangleWinding(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

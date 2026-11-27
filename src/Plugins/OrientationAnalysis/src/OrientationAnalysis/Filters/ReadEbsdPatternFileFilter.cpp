@@ -91,29 +91,29 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
   auto readerResult = CreateEbsdPatternFileReader(inputFile);
   if(readerResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(readerResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(readerResult))};
   }
   auto fileInfoResult = readerResult.value()->readFileInfo();
   if(fileInfoResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(fileInfoResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(fileInfoResult))};
   }
   const EbsdPatternFileInfo& fileInfo = fileInfoResult.value();
 
-  auto patternCountSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.numberOfPatterns, "the imported pattern count", inputFile);
+  auto patternCountSizeResult = ebsd_pattern_file_utilities::CheckedToSize(fileInfo.number_of_patterns, "the imported pattern count", inputFile);
   if(patternCountSizeResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(patternCountSizeResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(patternCountSizeResult))};
   }
-  auto patternHeightSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.patternHeight, "the pattern height", inputFile);
+  auto patternHeightSizeResult = ebsd_pattern_file_utilities::CheckedToSize(fileInfo.pattern_height, "the pattern height", inputFile);
   if(patternHeightSizeResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(patternHeightSizeResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(patternHeightSizeResult))};
   }
-  auto patternWidthSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.patternWidth, "the pattern width", inputFile);
+  auto patternWidthSizeResult = ebsd_pattern_file_utilities::CheckedToSize(fileInfo.pattern_width, "the pattern width", inputFile);
   if(patternWidthSizeResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(patternWidthSizeResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(patternWidthSizeResult))};
   }
 
   Result<OutputActions> outputActions;
@@ -123,13 +123,13 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
   if(parentAttributeMatrixPtr != nullptr)
   {
     tupleShape = parentAttributeMatrixPtr->getShape();
-    if(parentAttributeMatrixPtr->getNumberOfTuples() != fileInfo.numberOfPatterns)
+    if(parentAttributeMatrixPtr->getNumberOfTuples() != fileInfo.number_of_patterns)
     {
       return {
-          .outputActions = MakeErrorResult<OutputActions>(
+          .output_actions = MakeErrorResult<OutputActions>(
               -78040, fmt::format("Output Attribute Matrix '{}' has {} tuples, but EBSD pattern file '{}' contains {} importable patterns. Select an Attribute Matrix with exactly {} tuples or create "
                                   "the output array outside an Attribute Matrix.",
-                                  outputArrayPath.getParent().toString(), parentAttributeMatrixPtr->getNumberOfTuples(), inputFile.string(), fileInfo.numberOfPatterns, fileInfo.numberOfPatterns))};
+                                  outputArrayPath.getParent().toString(), parentAttributeMatrixPtr->getNumberOfTuples(), inputFile.string(), fileInfo.number_of_patterns, fileInfo.number_of_patterns))};
     }
     if(setScanDimensions)
     {
@@ -138,83 +138,83 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
                                                               outputArrayPath.toString(), outputArrayPath.getParent().toString())});
     }
   }
-  else if(fileInfo.headerVersion == 1 && setScanDimensions)
+  else if(fileInfo.header_version == 1 && setScanDimensions)
   {
     if(numberOfRows == 0 || numberOfColumns == 0)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -78042, fmt::format("Version 1 scan dimensions for EBSD pattern file '{}' must be positive. Rows: {}. Columns: {}.", inputFile.string(), numberOfRows, numberOfColumns))};
     }
-    auto patternCountResult = EbsdPatternFileUtilities::CheckedMultiply(numberOfRows, numberOfColumns, "the user-supplied version 1 scan pattern count", inputFile);
+    auto patternCountResult = ebsd_pattern_file_utilities::CheckedMultiply(numberOfRows, numberOfColumns, "the user-supplied version 1 scan pattern count", inputFile);
     if(patternCountResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(patternCountResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(patternCountResult))};
     }
-    if(patternCountResult.value() != fileInfo.numberOfPatterns)
+    if(patternCountResult.value() != fileInfo.number_of_patterns)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -78043, fmt::format("Version 1 scan dimensions for EBSD pattern file '{}' describe {} patterns ({} rows x {} columns), but the file contains {} complete "
                                       "patterns.",
-                                      inputFile.string(), patternCountResult.value(), numberOfRows, numberOfColumns, fileInfo.numberOfPatterns))};
+                                      inputFile.string(), patternCountResult.value(), numberOfRows, numberOfColumns, fileInfo.number_of_patterns))};
     }
     tupleShape = {static_cast<usize>(numberOfRows), static_cast<usize>(numberOfColumns)};
   }
-  else if(fileInfo.headerVersion == 1)
+  else if(fileInfo.header_version == 1)
   {
     tupleShape = {patternCountSizeResult.value()};
   }
   else
   {
-    auto numberOfRowsSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.numberOfRows.value(), "the stored scan row count", inputFile);
+    auto numberOfRowsSizeResult = ebsd_pattern_file_utilities::CheckedToSize(fileInfo.number_of_rows.value(), "the stored scan row count", inputFile);
     if(numberOfRowsSizeResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(numberOfRowsSizeResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(numberOfRowsSizeResult))};
     }
-    auto numberOfColumnsSizeResult = EbsdPatternFileUtilities::CheckedToSize(fileInfo.numberOfColumns.value(), "the stored scan column count", inputFile);
+    auto numberOfColumnsSizeResult = ebsd_pattern_file_utilities::CheckedToSize(fileInfo.number_of_columns.value(), "the stored scan column count", inputFile);
     if(numberOfColumnsSizeResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(numberOfColumnsSizeResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(numberOfColumnsSizeResult))};
     }
     tupleShape = {numberOfRowsSizeResult.value(), numberOfColumnsSizeResult.value()};
     if(setScanDimensions)
     {
       outputActions.warnings().push_back({-78044, fmt::format("Version 1 scan dimensions were supplied for EBSD pattern file '{}', but header version {} stores its own scan dimensions. The file "
                                                               "dimensions will be used.",
-                                                              inputFile.string(), fileInfo.headerVersion)});
+                                                              inputFile.string(), fileInfo.header_version)});
     }
   }
 
   const ShapeType componentShape = {patternHeightSizeResult.value(), patternWidthSizeResult.value()};
-  outputActions.value().appendAction(std::make_unique<CreateArrayAction>(fileInfo.pixelDataType, tupleShape, componentShape, outputArrayPath));
+  outputActions.value().appendAction(std::make_unique<CreateArrayAction>(fileInfo.pixel_data_type, tupleShape, componentShape, outputArrayPath));
 
   std::vector<PreflightValue> updatedValues;
-  std::string fileSummary = fmt::format("Format: {}\nHeader Version: {}\nPixel Type: {}\nPattern Size: {} x {} pixels\nImported Patterns: {}", fileInfo.formatName, fileInfo.headerVersion,
-                                        DataTypeToString(fileInfo.pixelDataType), fileInfo.patternWidth, fileInfo.patternHeight, fileInfo.numberOfPatterns);
-  if(fileInfo.numberOfRows.has_value() && fileInfo.numberOfColumns.has_value())
+  std::string fileSummary = fmt::format("Format: {}\nHeader Version: {}\nPixel Type: {}\nPattern Size: {} x {} pixels\nImported Patterns: {}", fileInfo.format_name, fileInfo.header_version,
+                                        DataTypeToString(fileInfo.pixel_data_type), fileInfo.pattern_width, fileInfo.pattern_height, fileInfo.number_of_patterns);
+  if(fileInfo.number_of_rows.has_value() && fileInfo.number_of_columns.has_value())
   {
     fileSummary +=
-        fmt::format("\nStored Scan Grid: {} rows x {} columns\nGrid Type: {}", fileInfo.numberOfRows.value(), fileInfo.numberOfColumns.value(), fileInfo.isHexagonal ? "Hexagonal" : "Square");
-    fileSummary += fmt::format("\nX Step: {}\nY Step: {}", fileInfo.xStep.has_value() ? fmt::format("{} micrometers", fileInfo.xStep.value()) : std::string("unknown"),
-                               fileInfo.yStep.has_value() ? fmt::format("{} micrometers", fileInfo.yStep.value()) : std::string("unknown"));
+        fmt::format("\nStored Scan Grid: {} rows x {} columns\nGrid Type: {}", fileInfo.number_of_rows.value(), fileInfo.number_of_columns.value(), fileInfo.is_hexagonal ? "Hexagonal" : "Square");
+    fileSummary += fmt::format("\nX Step: {}\nY Step: {}", fileInfo.x_step.has_value() ? fmt::format("{} micrometers", fileInfo.x_step.value()) : std::string("unknown"),
+                               fileInfo.y_step.has_value() ? fmt::format("{} micrometers", fileInfo.y_step.value()) : std::string("unknown"));
   }
-  if(fileInfo.extraPatterns > 0)
+  if(fileInfo.extra_patterns > 0)
   {
-    fileSummary += fmt::format("\nSkipped Extra Patterns: {}", fileInfo.extraPatterns);
+    fileSummary += fmt::format("\nSkipped Extra Patterns: {}", fileInfo.extra_patterns);
   }
   fileSummary += fmt::format("\nOutput Tuple Shape: [{}]\nOutput Component Shape: [{}]", fmt::join(tupleShape, ", "), fmt::join(componentShape, ", "));
   updatedValues.push_back({"EBSD Pattern File Information", std::move(fileSummary)});
-  return {.outputActions = std::move(outputActions), .outputValues = std::move(updatedValues)};
+  return {.output_actions = std::move(outputActions), .output_values = std::move(updatedValues)};
 }
 
 Result<> ReadEbsdPatternFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ReadEbsdPatternFileInputValues inputValues;
-  inputValues.inputFile = executionContext.getAbsolutePath(filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key));
-  inputValues.outputArrayPath = filterArgs.value<DataPath>(k_OutputArrayPath_Key);
-  inputValues.setScanDimensions = filterArgs.value<bool>(k_SetScanDimensions_Key);
-  inputValues.numberOfRows = filterArgs.value<uint64>(k_NumberOfRows_Key);
-  inputValues.numberOfColumns = filterArgs.value<uint64>(k_NumberOfColumns_Key);
+  inputValues.input_file = executionContext.getAbsolutePath(filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key));
+  inputValues.output_array_path = filterArgs.value<DataPath>(k_OutputArrayPath_Key);
+  inputValues.set_scan_dimensions = filterArgs.value<bool>(k_SetScanDimensions_Key);
+  inputValues.number_of_rows = filterArgs.value<uint64>(k_NumberOfRows_Key);
+  inputValues.number_of_columns = filterArgs.value<uint64>(k_NumberOfColumns_Key);
   return ReadEbsdPatternFile(dataStructure, inputValues, shouldCancel, messageHandler)();
 }
 

@@ -60,21 +60,21 @@ Parameters ConvertOrientationsToVertexGeometryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "Specifies the incoming orientation representation enumeration index", 0,
-                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}, {4}, {9}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}, {4}, {9}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays",
                                                                "Paths to vertex-related DataArrays that should be copied to the output rodrigues vertex geometry", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypesType{}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToFundamentalZone_Key, "Convert To Fundamental Zone", "Convert the orientations to the fundamental zone.", false));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Input Phases", "The phases of the data. The data should be the indices into the Crystal Structures Data Array.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(
@@ -118,7 +118,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto& inputOrientationsArray = dataStructure.getDataRefAs<Float32Array>(inputOrientationsArrayPath);
+  const auto& inputOrientationsArray = dataStructure.getDataRefAs<Float32ArrayType>(inputOrientationsArrayPath);
 
   std::vector<usize> inputCompShape = inputOrientationsArray.getComponentShape();
 
@@ -130,15 +130,15 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<usize>(inputRepType)] << " should have "
             << representationElementCount[static_cast<usize>(inputRepType)] << " components but the selected input array has " << inputCompShape[0];
-    return {.outputActions = MakeErrorResult<OutputActions>(-1003, message.str())};
+    return {.output_actions = MakeErrorResult<OutputActions>(-1003, message.str())};
   }
 
   if(convertToFundamentalZone)
   {
-    const auto& phaseData = dataStructure.getDataRefAs<Int32Array>(cellPhasesArrayPath);
+    const auto& phaseData = dataStructure.getDataRefAs<Int32ArrayType>(cellPhasesArrayPath);
     if(phaseData.getNumberOfTuples() != inputOrientationsArray.getNumberOfTuples())
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -49001, fmt::format("Orientation and Phase Arrays must have the same number of tuples. '{} != {}'", inputOrientationsArray.getNumberOfTuples(), phaseData.getNumberOfTuples()))};
     }
   }
@@ -159,7 +159,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     auto components = sourceDataArray.getComponentShape();
     if(numTuples != inputOrientationsArray.getNumberOfTuples())
     {
-      return {.outputActions =
+      return {.output_actions =
                   MakeErrorResult<OutputActions>(-1004, fmt::format("Array at path {} only has {} tuples, but it MUST have {} tuples to be copied into output vertex attribute matrix at path {}!",
                                                                     sourceDataPath.toString(), numTuples, inputOrientationsArray.getNumberOfTuples(), vertexAttrMatrixPath.toString()))};
     }
@@ -173,7 +173,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -182,15 +182,15 @@ Result<> ConvertOrientationsToVertexGeometryFilter::executeImpl(DataStructure& d
 {
   ConvertOrientationsToVertexGeometryInputValues inputValues;
 
-  inputValues.InputOrientationType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
-  inputValues.InputOrientationArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
-  inputValues.DataPathCopySources = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
-  inputValues.ConvertToFundamentalZone = filterArgs.value<BoolParameter::ValueType>(k_ConvertToFundamentalZone_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellPhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
-  inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_VertexGeometryPath_Key);
-  inputValues.OutputVertexAttrMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttrMatrixName_Key);
-  inputValues.OutputSharedVertexListName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedVertexListName_Key);
+  inputValues.input_orientation_type = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
+  inputValues.input_orientation_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
+  inputValues.data_path_copy_sources = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
+  inputValues.convert_to_fundamental_zone = filterArgs.value<BoolParameter::ValueType>(k_ConvertToFundamentalZone_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellPhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
+  inputValues.output_vertex_geometry_path = filterArgs.value<DataGroupCreationParameter::ValueType>(k_VertexGeometryPath_Key);
+  inputValues.output_vertex_attr_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttrMatrixName_Key);
+  inputValues.output_shared_vertex_list_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedVertexListName_Key);
 
   return ConvertOrientationsToVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

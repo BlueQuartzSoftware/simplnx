@@ -19,8 +19,8 @@ namespace rt = recon_test;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 7;
   constexpr usize k_Dy = 7;
@@ -65,11 +65,11 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region (both algorithm paths)", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_Dx = 7;
   constexpr usize k_Dy = 7;
@@ -106,7 +106,7 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
   REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == k_Peak);  // border voxel of the border region
   REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)) == k_Peak);  // non-border voxel of the border region, still not ground
   REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Field); // untouched field voxel
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -115,8 +115,8 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar guard", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   GrayscaleGrindPeakImageFilter filter;
 
@@ -134,7 +134,7 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar gu
     DataStructure dataStructure;
     const DataPath inputPath = rt::BuildPeakImage<uint8>(dataStructure, 8, 8, 8, uint8{40}, uint8{220});
     auto result = filter.preflight(dataStructure, makeArgs(inputPath));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("multi-component input is rejected")
@@ -142,13 +142,13 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar gu
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildPeakImage<uint8>(dataStructure, 8, 8, 8, uint8{40}, uint8{220}); // creates the geometry + CellData
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
+    auto vecStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<uint8>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
 
     auto result = filter.preflight(dataStructure, makeArgs(vecPath));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
 }
 

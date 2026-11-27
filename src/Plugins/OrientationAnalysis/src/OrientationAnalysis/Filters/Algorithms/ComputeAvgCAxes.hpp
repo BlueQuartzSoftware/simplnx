@@ -15,12 +15,12 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeAvgCAxesInputValues
 {
-  DataPath QuatsArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath CellFeatureDataPath;
-  DataPath AvgCAxesArrayPath;
-  DataPath CrystalStructuresArrayPath;
+  DataPath quats_array_path;
+  DataPath feature_ids_array_path;
+  DataPath cell_phases_array_path;
+  DataPath cell_feature_data_path;
+  DataPath avg_c_axes_array_path;
+  DataPath crystal_structures_array_path;
 };
 
 /**

@@ -57,10 +57,10 @@ struct GenerateColorArrayScanlineFunctor
   {
     const int numControlColors = static_cast<int>(controlPoints.size() / k_ControlPointCompSize);
 
-    std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
+    std::vector<float32> binPoints = color_table_utilities::NormalizeBinPoints(controlPoints);
 
-    const auto& inputStore = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath).getDataStoreRef();
-    auto& colorStore = dataStructure.getDataRefAs<UInt8Array>(inputValues->RgbArrayPath).getDataStoreRef();
+    const auto& inputStore = dataStructure.getDataRefAs<DataArray<ScalarType>>(inputValues->selected_data_array_path).getDataStoreRef();
+    auto& colorStore = dataStructure.getDataRefAs<UInt8ArrayType>(inputValues->rgb_array_path).getDataStoreRef();
     const usize numTuples = inputStore.getNumberOfTuples();
     if(numTuples == 0)
     {
@@ -69,7 +69,7 @@ struct GenerateColorArrayScanlineFunctor
       return {};
     }
 
-    const IDataArray* maskArrayPtr = inputValues->UseMask ? dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath) : nullptr;
+    const IDataArray* maskArrayPtr = inputValues->use_mask ? dataStructure.getDataAs<IDataArray>(inputValues->mask_array_path) : nullptr;
     const bool hasBoolMask = maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::boolean;
     const bool hasUInt8Mask = maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::uint8;
 
@@ -164,14 +164,14 @@ struct GenerateColorArrayScanlineFunctor
           const bool valid = maskArrayPtr == nullptr || (hasBoolMask ? boolMaskBuffer[index] : uint8MaskBuffer[index] != 0);
           if(!valid)
           {
-            colorBuffer[colorIndex] = inputValues->InvalidColor[0];
-            colorBuffer[colorIndex + 1] = inputValues->InvalidColor[1];
-            colorBuffer[colorIndex + 2] = inputValues->InvalidColor[2];
+            colorBuffer[colorIndex] = inputValues->invalid_color[0];
+            colorBuffer[colorIndex + 1] = inputValues->invalid_color[1];
+            colorBuffer[colorIndex + 2] = inputValues->invalid_color[2];
             continue;
           }
 
-          const float32 normalizedValue = ColorTableUtilities::NormalizeValue(inputBuffer[index], arrayMin, arrayMax);
-          const std::array<uint8, 3> rgb = ColorTableUtilities::ComputeRgbFromControlPoints(normalizedValue, binPoints, controlPoints, static_cast<usize>(numControlColors));
+          const float32 normalizedValue = color_table_utilities::NormalizeValue(inputBuffer[index], arrayMin, arrayMax);
+          const std::array<uint8, 3> rgb = color_table_utilities::ComputeRgbFromControlPoints(normalizedValue, binPoints, controlPoints, static_cast<usize>(numControlColors));
           colorBuffer[colorIndex] = rgb[0];
           colorBuffer[colorIndex + 1] = rgb[1];
           colorBuffer[colorIndex + 2] = rgb[2];
@@ -201,9 +201,9 @@ CreateColorMapScanline::CreateColorMapScanline(DataStructure& dataStructure, con
 
 Result<> CreateColorMapScanline::operator()()
 {
-  const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
+  const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_data_array_path);
 
-  auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues->PresetName);
+  auto controlPointsResult = color_table_utilities::ExtractControlPoints(m_InputValues->preset_name);
   if(controlPointsResult.invalid())
   {
     const auto& error = *controlPointsResult.errors().begin();
@@ -212,11 +212,11 @@ Result<> CreateColorMapScanline::operator()()
   const auto& controlPoints = controlPointsResult.value();
   if(controlPoints.empty())
   {
-    return MakeErrorResult(-34380, fmt::format("No valid points found from preset {}", m_InputValues->PresetName));
+    return MakeErrorResult(-34380, fmt::format("No valid points found from preset {}", m_InputValues->preset_name));
   }
   if(controlPoints.size() < 8)
   {
-    return MakeErrorResult(-34382, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues->PresetName));
+    return MakeErrorResult(-34382, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues->preset_name));
   }
 
   return ExecuteDataFunction(GenerateColorArrayScanlineFunctor{}, selectedIDataArray.getDataType(), m_DataStructure, m_InputValues, controlPoints, m_ShouldCancel);

@@ -19,7 +19,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -31,22 +31,22 @@ const fs::path k_WrittenFilePath = fs::path(fmt::format("{}/7_0_spparks_sites_wr
 TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Single File Valid", "[SimplnxCore][WriteSPParksSitesFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, "6_5_spparks_sites_writer.tar.gz", "6_5_spparks_sites_writer");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, "6_5_spparks_sites_writer.tar.gz", "6_5_spparks_sites_writer");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
 
   WriteSPParksSitesFilter filter;
   Arguments args;
 
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteSPParksSitesFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_WrittenFilePath));
-  args.insertOrAssign(WriteSPParksSitesFilter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100})));
-  args.insertOrAssign(WriteSPParksSitesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
+  args.insertOrAssign(WriteSPParksSitesFilter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({constants::k_SmallIN100})));
+  args.insertOrAssign(WriteSPParksSitesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_FeatureIds})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -55,15 +55,15 @@ TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Single File Valid", "[SimplnxCo
   std::ifstream computedFile1(k_WrittenFilePath);
   std::ifstream exemplarFile1(k_ExemplarFilePath);
 
-  UnitTest::CompareAsciiFiles(computedFile1, exemplarFile1, {0});
+  unit_test::CompareAsciiFiles(computedFile1, exemplarFile1, {0});
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteSPParksSitesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -102,7 +102,7 @@ TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: SIMPL Backwards Compatibility",
 
 TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Geometry cell tuple count", "[SimplnxCore][WriteSPParksSitesFilter][TupleCount]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FilterType = WriteSPParksSitesFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -131,13 +131,13 @@ TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Geometry cell tuple count", "[S
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -77453);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;

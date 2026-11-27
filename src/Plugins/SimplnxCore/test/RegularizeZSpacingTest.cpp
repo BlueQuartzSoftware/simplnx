@@ -48,15 +48,15 @@ DataStructure CreateTestDataStructure()
   DataStructure dataStructure;
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
-  imageGeomPtr->setDimensions(SizeVec3{2, 1, 4}); // X, Y, Z
-  REQUIRE(imageGeomPtr->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F}).valid());
-  REQUIRE(imageGeomPtr->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F}).valid());
+  imageGeomPtr->setDimensions(SizeVec3Type{2, 1, 4}); // X, Y, Z
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3Type{0.5F, 0.75F, 1.0F}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{1.0F, 2.0F, 3.0F}).valid());
 
   // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, std::vector<usize>{4, 1, 2}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* dataArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_DataArrayName, {4, 1, 2}, {1}, cellAmPtr->getId());
+  auto* dataArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_DataArrayName, {4, 1, 2}, {1}, cellAmPtr->getId());
   auto& dataStore = dataArrayPtr->getDataStoreRef();
   for(usize i = 0; i < dataStore.getNumberOfTuples(); i++)
   {
@@ -65,7 +65,7 @@ DataStructure CreateTestDataStructure()
 
   // A loose DataArray directly under the geometry (outside the cell AttributeMatrix) to exercise
   // the loose-child copy path in preflight.
-  auto* looseArrayPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_LooseArrayName, {4}, {1}, imageGeomPtr->getId());
+  auto* looseArrayPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_LooseArrayName, {4}, {1}, imageGeomPtr->getId());
   auto& looseStore = looseArrayPtr->getDataStoreRef();
   for(usize i = 0; i < looseStore.getNumberOfTuples(); i++)
   {
@@ -106,7 +106,7 @@ DataStructure CreateFeatureRegularizeFixture()
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{4, 1, 1}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellDataPtr->getShape(), {1}, cellDataPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellDataPtr->getShape(), {1}, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   for(usize z = 0; z < 4; ++z)
   {
@@ -115,7 +115,7 @@ DataStructure CreateFeatureRegularizeFixture()
 
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Cell Feature Data", ShapeType{5}, imageGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
-  auto* numElementsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureDataPtr->getId());
+  auto* numElementsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureDataPtr->getId());
   REQUIRE(numElementsPtr != nullptr);
   numElementsPtr->fill(1);
   (*numElementsPtr)[0] = 0;
@@ -126,7 +126,7 @@ DataStructure CreateFeatureRegularizeFixture()
 
   auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", ShapeType{2}, imageGeomPtr->getId());
   REQUIRE(ensembleDataPtr != nullptr);
-  auto* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleDataPtr->getId());
+  auto* crystalStructuresPtr = unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleDataPtr->getId());
   REQUIRE(crystalStructuresPtr != nullptr);
   (*crystalStructuresPtr)[0] = 999;
   (*crystalStructuresPtr)[1] = 1;
@@ -165,9 +165,9 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Preflight warns for unchanged 
   SECTION("Feature clearing leaves Ensemble data")
   {
     auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, false));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE(result.outputActions.warnings().size() == 1);
-    const auto& warning = result.outputActions.warnings().front();
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE(result.output_actions.warnings().size() == 1);
+    const auto& warning = result.output_actions.warnings().front();
     CHECK(warning.code == -4041);
     CHECK(warning.message.find("\n" + ensemblePath.toString() + "\n") != std::string::npos);
     CHECK(warning.message.find("\n" + featurePath.toString() + "\n") == std::string::npos);
@@ -178,14 +178,14 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Preflight warns for unchanged 
     REQUIRE(ds.removeData(featurePath));
     REQUIRE(ds.removeData(ensemblePath));
     auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(false, false));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    CHECK(result.outputActions.warnings().empty());
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    CHECK(result.output_actions.warnings().empty());
   }
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateTestDataStructure();
 
   // Irregular Z boundaries: slices span [0,1], [1,3], [3,6], [6,10]; total Z extent = 10.
@@ -205,7 +205,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
   args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -214,19 +214,19 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
   const auto& outputGeom = dataStructure.getDataRefAs<ImageGeom>(k_OutputGeometryPath);
 
   // newZDim = (size_t)(10 / 2) = 5; X and Y unchanged.
-  const SizeVec3 outDims = outputGeom.getDimensions();
+  const SizeVec3Type outDims = outputGeom.getDimensions();
   REQUIRE(outDims[0] == 2);
   REQUIRE(outDims[1] == 1);
   REQUIRE(outDims[2] == 5);
 
   // Spacing: X and Y preserved, Z becomes newZRes.
-  const FloatVec3 outSpacing = outputGeom.getSpacing();
+  const FloatVec3Type outSpacing = outputGeom.getSpacing();
   REQUIRE(outSpacing[0] == Approx(0.5F));
   REQUIRE(outSpacing[1] == Approx(0.75F));
   REQUIRE(outSpacing[2] == Approx(2.0F));
 
   // Origin preserved.
-  const FloatVec3 outOrigin = outputGeom.getOrigin();
+  const FloatVec3Type outOrigin = outputGeom.getOrigin();
   REQUIRE(outOrigin[0] == Approx(1.0F));
   REQUIRE(outOrigin[1] == Approx(2.0F));
   REQUIRE(outOrigin[2] == Approx(3.0F));
@@ -243,8 +243,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
   // tuples (X=2,Y=1), so plane p contributes source tuples {2p, 2p+1}. Expected output:
   //   plane0<-src0: 0,1 | plane1<-src1: 2,3 | plane2<-src2: 4,5 | plane3<-src2: 4,5 | plane4<-src3: 6,7
   const DataPath outputArrayPath = k_OutputGeometryPath.createChildPath(k_CellDataName).createChildPath(k_DataArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputArrayPath));
-  const auto& outStore = dataStructure.getDataRefAs<Int32Array>(outputArrayPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputArrayPath));
+  const auto& outStore = dataStructure.getDataRefAs<Int32ArrayType>(outputArrayPath).getDataStoreRef();
 
   const std::vector<int32> expected = {0, 1, 2, 3, 4, 5, 4, 5, 6, 7};
   REQUIRE(outStore.getNumberOfTuples() == expected.size());
@@ -256,8 +256,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
 
   // Loose child data (outside the cell AM) is copied into the new geometry with values intact.
   const DataPath outputLoosePath = k_OutputGeometryPath.createChildPath(k_LooseArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputLoosePath));
-  const auto& outLooseStore = dataStructure.getDataRefAs<Int32Array>(outputLoosePath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputLoosePath));
+  const auto& outLooseStore = dataStructure.getDataRefAs<Int32ArrayType>(outputLoosePath).getDataStoreRef();
   REQUIRE(outLooseStore.getNumberOfTuples() == 4);
   for(usize i = 0; i < 4; i++)
   {
@@ -270,7 +270,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (New Geometry)
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Supported Extensions", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::string extension = GENERATE(".dat", ".csv");
   CAPTURE(extension);
   DataStructure dataStructure = CreateTestDataStructure();
@@ -289,15 +289,15 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Supported Extensions", "[Simpl
   args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Unsupported Extension", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const DataStructure dataStructure = CreateTestDataStructure();
   const fs::path zBoundsFile = WriteZBoundsFile("RegularizeZSpacing_unsupported.zpos", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
 
@@ -314,13 +314,13 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Unsupported Extension", "[Simp
   args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == -3003);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == -3003);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Missing Extension", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const DataStructure dataStructure = CreateTestDataStructure();
   const fs::path zBoundsFile = WriteZBoundsFile("RegularizeZSpacing_no_extension", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
   REQUIRE(fs::exists(zBoundsFile));
@@ -339,13 +339,13 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Missing Extension", "[SimplnxC
   args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == -3002);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == -3002);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Exceeds Extent)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateTestDataStructure();
 
   const fs::path zBoundsFile = WriteZBoundsFile("RegularizeZSpacing_clamp.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
@@ -368,21 +368,21 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Excee
   args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const auto& outputGeom = dataStructure.getDataRefAs<ImageGeom>(k_OutputGeometryPath);
-  const SizeVec3 outDims = outputGeom.getDimensions();
+  const SizeVec3Type outDims = outputGeom.getDimensions();
   REQUIRE(outDims[0] == 2);
   REQUIRE(outDims[1] == 1);
   REQUIRE(outDims[2] == 1);
   REQUIRE(outputGeom.getSpacing()[2] == Approx(20.0F));
 
   const DataPath outputArrayPath = k_OutputGeometryPath.createChildPath(k_CellDataName).createChildPath(k_DataArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputArrayPath));
-  const auto& outStore = dataStructure.getDataRefAs<Int32Array>(outputArrayPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputArrayPath));
+  const auto& outStore = dataStructure.getDataRefAs<Int32ArrayType>(outputArrayPath).getDataStoreRef();
   REQUIRE(outStore.getNumberOfTuples() == 2);
   REQUIRE(outStore[0] == 0);
   REQUIRE(outStore[1] == 1);
@@ -390,7 +390,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (Spacing Excee
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (In Place)", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateTestDataStructure();
 
   const fs::path zBoundsFile = WriteZBoundsFile("RegularizeZSpacing_bounds.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
@@ -408,7 +408,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (In Place)", "
   args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -424,7 +424,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Valid Execution (In Place)", "
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateTestDataStructure();
   RegularizeZSpacingFilter filter;
 
@@ -443,8 +443,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -5555);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -5555);
   }
 
   SECTION("File with too few values")
@@ -462,8 +462,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -5557);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -5557);
   }
 
   SECTION("Non-monotonic Z boundary values")
@@ -481,8 +481,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -5558);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -5558);
   }
 
   SECTION("Zero total Z extent")
@@ -501,17 +501,17 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -5559);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -5559);
   }
 
   SECTION("Missing cell Attribute Matrix")
   {
     DataStructure geomOnlyDataStructure;
     auto* geomOnlyPtr = ImageGeom::Create(geomOnlyDataStructure, k_ImageGeometryName);
-    geomOnlyPtr->setDimensions(SizeVec3{2, 1, 4});
-    REQUIRE(geomOnlyPtr->setSpacing(FloatVec3{0.5F, 0.75F, 1.0F}).valid());
-    REQUIRE(geomOnlyPtr->setOrigin(FloatVec3{1.0F, 2.0F, 3.0F}).valid());
+    geomOnlyPtr->setDimensions(SizeVec3Type{2, 1, 4});
+    REQUIRE(geomOnlyPtr->setSpacing(FloatVec3Type{0.5F, 0.75F, 1.0F}).valid());
+    REQUIRE(geomOnlyPtr->setOrigin(FloatVec3Type{1.0F, 2.0F, 3.0F}).valid());
 
     const fs::path zBoundsFile = WriteZBoundsFile("RegularizeZSpacing_noam.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F});
     Arguments args;
@@ -526,8 +526,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
     auto preflightResult = filter.preflight(geomOnlyDataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -5560);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -5560);
   }
 
   SECTION("Non-DataArray member in cell Attribute Matrix")
@@ -550,17 +550,17 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Invalid Parameters", "[Simplnx
     args.insertOrAssign(RegularizeZSpacingFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_OutputGeometryPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -5561);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -5561);
   }
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle", "[SimplnxCore][RegularizeZSpacingFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool inPlace = GENERATE(false, true);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   auto dataStructure = CreateTestDataStructure();
   for(const auto& path : {k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath(k_DataArrayName), k_InputGeometryPath.createChildPath(k_LooseArrayName)})
   {
@@ -585,10 +585,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle", 
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto resultPath = inPlace ? k_InputGeometryPath : k_OutputGeometryPath;
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(resultPath));
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(resultPath).getDimensions() == SizeVec3(2, 1, 5));
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(resultPath).getDimensions() == SizeVec3Type(2, 1, 5));
   const auto outputPath = resultPath.createChildPath(k_CellDataName).createChildPath(k_DataArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(outputPath));
-  const auto& output = dataStructure.getDataRefAs<Int32Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<Int32ArrayType>(outputPath);
   REQUIRE(output.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   // The independently derived source-plane map is [0,1,2,2,3].
   const std::array<int32, 10> expected = {0, 1, 2, 3, 4, 5, 4, 5, 6, 7};
@@ -598,19 +598,19 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: real HDF5 slice-copy oracle", 
     REQUIRE(output[tupleIdx] == expected[tupleIdx]);
   }
   const auto loosePath = resultPath.createChildPath(k_LooseArrayName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(loosePath));
-  const auto& loose = dataStructure.getDataRefAs<Int32Array>(loosePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(loosePath));
+  const auto& loose = dataStructure.getDataRefAs<Int32ArrayType>(loosePath);
   REQUIRE(loose.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   for(usize tupleIdx = 0; tupleIdx < 4; tupleIdx++)
   {
     REQUIRE(loose[tupleIdx] == static_cast<int32>(100 + tupleIdx));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RegularizeZSpacingFilter][BackwardsCompatibility]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto app = Application::GetOrCreateInstance();
   auto* filterListPtr = app->getFilterList();
 
@@ -661,84 +661,84 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: SIMPL Backwards Compatibility"
                           std::make_any<FileSystemPathParameter::ValueType>(WriteZBoundsFile("RegularizeZSpacing_legacy.txt", {0.0F, 1.0F, 3.0F, 6.0F, 10.0F})));
       pipelineFilterPtr->setArguments(args);
       CHECK(pipeline.preflight(ds, false));
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      unit_test::CheckArraysInheritTupleDims(ds);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF preflight", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   auto result = filter.preflight(dataStructure, MakeFeatureRegularizeArgs(true, false));
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  CHECK(result.outputActions.warnings().front().code == -4041);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
-  const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
-  REQUIRE(it != result.outputValues.end());
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  CHECK(result.output_actions.warnings().front().code == -4041);
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  const auto it = std::find_if(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
+  REQUIRE(it != result.output_values.end());
   CHECK(it->value.find("Image/Cell Feature Data/NumElements") != std::string::npos);
   CHECK(it->value.find("Image/Cell Feature Data/NeighborList") != std::string::npos);
   CHECK(it->value.find("Image/Cell Feature Data/Names") != std::string::npos);
   CHECK(it->value.find("Ensemble") == std::string::npos);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Invalidated NeighborLists" || v.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Invalidated NeighborLists" || v.name == "Feature Data Not Cleared"; }));
   CHECK(filter.parametersVersion() == 2);
   CHECK(filter.getDefaultArguments().value<bool>(RegularizeZSpacingFilter::k_ClearFeatureAttributeMatrix_Key));
   CHECK_FALSE(filter.getDefaultArguments().value<bool>(RegularizeZSpacingFilter::k_RenumberFeatures_Key));
-  auto applyResult = result.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  auto applyResult = result.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
   const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{5});
   CHECK(amPtr->getSize() == 0);
-  const auto* ensemblePtr = dataStructure.getDataAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  const auto* ensemblePtr = dataStructure.getDataAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(ensemblePtr != nullptr);
   REQUIRE(ensemblePtr->getNumberOfTuples() == 2);
   CHECK((*ensemblePtr)[0] == 999);
   CHECK((*ensemblePtr)[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF preflight", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   auto result = filter.preflight(dataStructure, MakeFeatureRegularizeArgs(false, false));
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  CHECK(result.outputActions.warnings().front().code == -4041);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
-  CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  CHECK(result.output_actions.warnings().front().code == -4041);
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  CHECK(std::any_of(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF ignores stored renumber", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   Arguments args = MakeFeatureRegularizeArgs(false, true);
   args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "DoesNotExist"})));
   args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{5});
   CHECK(amPtr->getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  CHECK(result.outputActions.warnings().front().code == -4041);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  CHECK(result.output_actions.warnings().front().code == -4041);
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: StrictFeatureIds preflight", "[SimplnxCore][RegularizeZSpacingFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(imageGeomPtr != nullptr);
@@ -746,7 +746,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: StrictFeatureIds preflight", "
   REQUIRE(cellDataPtr != nullptr);
   auto* otherDataPtr = AttributeMatrix::Create(dataStructure, "Other Cell Data", cellDataPtr->getShape(), imageGeomPtr->getId());
   REQUIRE(otherDataPtr != nullptr);
-  auto* misplacedIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "MisplacedFeatureIds", otherDataPtr->getShape(), {1}, otherDataPtr->getId());
+  auto* misplacedIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "MisplacedFeatureIds", otherDataPtr->getShape(), {1}, otherDataPtr->getId());
   REQUIRE(misplacedIdsPtr != nullptr);
   misplacedIdsPtr->fill(1);
 
@@ -757,10 +757,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: StrictFeatureIds preflight", "
   SECTION("Renumber ON rejects Feature Ids in another Attribute Matrix")
   {
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == -67433);
-    CHECK(result.outputActions.errors().front().message ==
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == -67433);
+    CHECK(result.output_actions.errors().front().message ==
           "**Cell Feature Ids** DataArray 'Image/Other Cell Data/MisplacedFeatureIds' must be in the Cell Attribute Matrix 'Image/Cell Data' of the selected geometry 'Image'. "
           "Select the DataArray from that Attribute Matrix.");
   }
@@ -768,13 +768,13 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: StrictFeatureIds preflight", "
   {
     args.insertOrAssign(RegularizeZSpacingFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   SECTION("Renumber ON accepts Feature Ids in the Cell Attribute Matrix")
   {
     args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "FeatureIds"})));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   SECTION("Renumber ON accepts another path to the same Cell Attribute Matrix")
   {
@@ -784,18 +784,18 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: StrictFeatureIds preflight", "
     args.insertOrAssign(RegularizeZSpacingFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Alias", "Cell Data", "FeatureIds"})));
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    const auto* idsPtr = dataStructure.getDataAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+    const auto* idsPtr = dataStructure.getDataAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
     REQUIRE(idsPtr != nullptr);
     REQUIRE(idsPtr->getNumberOfTuples() == 2);
     CHECK((*idsPtr)[0] == 1);
     CHECK((*idsPtr)[1] == 2);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber requires one Feature Id per cell", "[SimplnxCore][RegularizeZSpacingFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRegularizeFixture();
   auto* cellDataPtr = ds.getDataAs<AttributeMatrix>(DataPath({"Image", "Cell Data"}));
   REQUIRE(cellDataPtr != nullptr);
@@ -803,17 +803,17 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber requires one Feature 
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   RegularizeZSpacingFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, true));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors().front().code == -67434);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors().front().code == -67434);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber validates source Feature Id range", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRegularizeFixture();
-  auto* idsPtr = ds.getDataAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  auto* idsPtr = ds.getDataAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"}));
   REQUIRE(idsPtr != nullptr);
   const int32 invalidId = GENERATE(-1, 5);
   // Slice 1 is not sampled. Validation must still reject its invalid source ID.
@@ -821,7 +821,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber validates source Feat
   RegularizeZSpacingFilter filter;
   auto args = MakeFeatureRegularizeArgs(true, true);
   auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(ds, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
@@ -830,7 +830,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Renumber validates source Feat
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON Feature AM errors", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   // An Attribute Matrix that is not a child of "Image".
   REQUIRE(AttributeMatrix::Create(dataStructure, "Elsewhere", std::vector<usize>{5}) != nullptr);
@@ -839,25 +839,25 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON Feature AM errors", "
   Arguments args = MakeFeatureRegularizeArgs(true, false);
   args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Elsewhere"})));
   auto notChild = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
-  REQUIRE(notChild.outputActions.errors().size() == 1);
-  CHECK(notChild.outputActions.errors().front().code == -67431);
-  CHECK(notChild.outputActions.errors().front().message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(notChild.output_actions);
+  REQUIRE(notChild.output_actions.errors().size() == 1);
+  CHECK(notChild.output_actions.errors().front().code == -67431);
+  CHECK(notChild.output_actions.errors().front().message.find("Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.") != std::string::npos);
 
   args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data"})));
   auto isCellAm = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.outputActions);
-  REQUIRE(isCellAm.outputActions.errors().size() == 1);
-  CHECK(isCellAm.outputActions.errors().front().code == -67432);
+  SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.output_actions);
+  REQUIRE(isCellAm.output_actions.errors().size() == 1);
+  CHECK(isCellAm.output_actions.errors().front().code == -67432);
 
   args.insertOrAssign(RegularizeZSpacingFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Missing"})));
   auto missing = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(missing.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(missing.output_actions);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON accepts shared parent paths", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRegularizeFixture();
   auto* aliasesPtr = DataGroup::Create(ds, "Aliases");
   REQUIRE(aliasesPtr != nullptr);
@@ -878,18 +878,18 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON accepts shared parent
   const auto& am = ds.getDataRefAs<AttributeMatrix>(DataPath({"Regularized", "Cell Feature Data"}));
   CHECK(am.getSize() == 0);
   CHECK(am.getNumberOfTuples() == (renumber ? 3 : 5));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
-  const auto& ids = ds.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(ds.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = ds.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   CHECK(ids[0] == 1);
   CHECK(ids[1] == (renumber ? 2 : 3));
   CHECK(featureAmPtr->getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(ds);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF execute", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   auto result = filter.execute(dataStructure, MakeFeatureRegularizeArgs(true, false));
@@ -899,8 +899,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF execute
   CHECK(am.getShape() == std::vector<usize>{5});
   CHECK(am.getSize() == 0);
   // The cell FeatureIds keep their original values (1 and 3 for source Z slices 0 and 2).
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {1, 3};
   for(usize i = 0; i < expectedIds.size(); ++i)
@@ -908,26 +908,26 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber OFF execute
     CHECK(ids[i] == expectedIds[i]);
   }
   // The Ensemble AM is copied unchanged.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
   // The source geometry is untouched (debugging route).
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})));
   CHECK(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})).getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber ON execute", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   auto preflight = filter.preflight(dataStructure, MakeFeatureRegularizeArgs(true, true));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto info = std::find_if(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
-  REQUIRE(info != preflight.outputValues.end());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  const auto info = std::find_if(preflight.output_values.begin(), preflight.output_values.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
+  REQUIRE(info != preflight.output_values.end());
   CHECK(info->value.find("Recompute any of the following Data Arrays:\n") != std::string::npos);
   CHECK(info->value.find("\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.") != std::string::npos);
   auto result = filter.execute(dataStructure, MakeFeatureRegularizeArgs(true, true));
@@ -937,33 +937,33 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON, renumber ON execute"
   // Features 1 and 3 remain, plus row 0.
   CHECK(am.getShape() == std::vector<usize>{3});
   CHECK(am.getSize() == 0);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {1, 2};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF execute copies Feature AM unchanged", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   const bool renumber = GENERATE(false, true);
   CAPTURE(renumber);
   auto result = filter.execute(dataStructure, MakeFeatureRegularizeArgs(false, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Feature Data", "NumElements"})));
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Feature Data", "NumElements"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Feature Data", "NumElements"})));
+  const auto& numElements = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Feature Data", "NumElements"}));
   REQUIRE(numElements.getNumberOfTuples() == 5);
   const std::array<int32, 5> expectedNumElements = {0, 1, 1, 1, 1};
   for(usize i = 0; i < expectedNumElements.size(); ++i)
@@ -991,25 +991,25 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear OFF execute copies Featu
     CHECK(names[i] == expectedNames[i]);
   }
   // The stored renumber=true is ignored.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Regularized", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {1, 3};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Regularized", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON in place", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureRegularizeFixture();
   RegularizeZSpacingFilter filter;
   Arguments args = MakeFeatureRegularizeArgs(true, true);
@@ -1022,9 +1022,9 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON in place", "[SimplnxC
   CHECK(am.getShape() == std::vector<usize>{3});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image"})));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image"}));
-  CHECK(imageGeom.getDimensions() == SizeVec3(1, 1, 2));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  CHECK(imageGeom.getDimensions() == SizeVec3Type(1, 1, 2));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 2);
   const std::array<int32, 2> expectedIds = {1, 2};
   for(usize i = 0; i < expectedIds.size(); ++i)
@@ -1034,17 +1034,17 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Clear ON in place", "[SimplnxC
   CHECK(dataStructure.getData(DataPath({"Regularized"})) == nullptr);
   CHECK(dataStructure.getData(DataPath({".Image"})) == nullptr);
   CHECK(dataStructure.getData(DataPath({".regularized_image_geometry"})) == nullptr);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regression", "[SimplnxCore][RegularizeZSpacingFilter][NestedFeatureAlias]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool clear = GENERATE(true, false);
   const bool renumber = GENERATE(false, true);
   const bool selectNested = GENERATE(false, true);
@@ -1057,7 +1057,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regres
   const auto featureId = featuresPtr->getId();
   const auto shape = featuresPtr->getShape();
   const auto countsPath = featurePath.createChildPath("NumElements");
-  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
+  const auto& counts = ds.getDataRefAs<Int32ArrayType>(countsPath);
   std::vector<int32> originalCounts(counts.getSize());
   for(usize i = 0; i < originalCounts.size(); ++i)
   {
@@ -1065,7 +1065,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regres
   }
   auto* nestedPtr = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
   REQUIRE(nestedPtr != nullptr);
-  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
+  auto* keepPtr = unit_test::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
   REQUIRE(keepPtr != nullptr);
   (*keepPtr)[0] = 123;
   REQUIRE(ds.setAdditionalParent(featureId, nestedPtr->getId()));
@@ -1080,10 +1080,10 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regres
   }
   RegularizeZSpacingFilter filter;
   auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool foundNestedCopy = false;
   const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
-  for(const auto& action : preflight.outputActions.value().actions)
+  for(const auto& action : preflight.output_actions.value().actions)
   {
     const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
     if(copyPtr != nullptr && copyPtr->path() == sourcePath.createChildPath("Misc"))
@@ -1107,7 +1107,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regres
   REQUIRE(outputFeaturesPtr != nullptr);
   CHECK(outputFeaturesPtr->getSize() == (clear ? 0 : 3));
   CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
-  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
+  CHECK(ds.getDataRefAs<Int32ArrayType>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
   CHECK(ds.getData(featurePath)->getId() == featureId);
   CHECK(ds.getData(featurePath)->getParentIds() == parents);
   CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
@@ -1115,21 +1115,21 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Feature AM nested alias regres
   CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
   for(usize i = 0; i < originalCounts.size(); ++i)
   {
-    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
+    CHECK(ds.getDataRefAs<Int32ArrayType>(countsPath)[i] == originalCounts[i]);
     if(!clear)
     {
-      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
+      CHECK(ds.getDataRefAs<Int32ArrayType>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Reject nonnumeric Feature Ids", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool strings = GENERATE(true, false);
   auto ds = CreateFeatureRegularizeFixture();
   const auto idsPath = DataPath({"Image", "Cell Data", "FeatureIds"});
-  const auto* originalPtr = ds.getDataAs<Int32Array>(idsPath);
+  const auto* originalPtr = ds.getDataAs<Int32ArrayType>(idsPath);
   REQUIRE(originalPtr != nullptr);
   const auto shape = originalPtr->getTupleShape();
   const auto tuples = originalPtr->getNumberOfTuples();
@@ -1147,32 +1147,32 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Reject nonnumeric Feature Ids"
   auto args = MakeFeatureRegularizeArgs(true, true);
   REQUIRE_NOTHROW(filter.preflight(ds, args));
   auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -5561);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -5561);
 }
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Reject another geometry element Feature AM", "[SimplnxCore][RegularizeZSpacingFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRegularizeFixture();
   const auto featurePath = DataPath({"Image", "Cell Feature Data"});
   const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = VertexGeom::Create(ds, "OtherGeometry");
   REQUIRE(otherPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   otherPtr->setVertices(*verticesPtr);
   REQUIRE(ds.setAdditionalParent(featuresPtr->getId(), otherPtr->getId()));
   otherPtr->setVertexAttributeMatrix(*featuresPtr);
   RegularizeZSpacingFilter filter;
   auto result = filter.preflight(ds, MakeFeatureRegularizeArgs(true, false));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -67460);
-  CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -67460);
+  CHECK(result.output_actions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find("OtherGeometry") != std::string::npos);
   CHECK(otherPtr->getVertexAttributeMatrix() == featuresPtr);
   CHECK(featuresPtr->getSize() > 0);
 }
@@ -1218,12 +1218,12 @@ public:
 
 TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Transfer failure preserves source", "[SimplnxCore][RegularizeZSpacingFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureRegularizeFixture();
   auto* sourcePtr = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(sourcePtr != nullptr);
   const auto sourceId = sourcePtr->getId();
-  auto* idsPtr = ds.getDataAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  auto* idsPtr = ds.getDataAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"}));
   REQUIRE(idsPtr != nullptr);
   const auto arrayId = idsPtr->getId();
   auto store = std::make_shared<RegularizeFailingReadStore>();
@@ -1244,8 +1244,8 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Transfer failure preserves sou
   const auto* retainedPtr = ds.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(retainedPtr != nullptr);
   CHECK(retainedPtr->getId() == sourceId);
-  CHECK(retainedPtr->getDimensions() == SizeVec3{1, 1, 4});
-  const auto* retainedIdsPtr = ds.getDataAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  CHECK(retainedPtr->getDimensions() == SizeVec3Type{1, 1, 4});
+  const auto* retainedIdsPtr = ds.getDataAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"}));
   REQUIRE(retainedIdsPtr != nullptr);
   CHECK(retainedIdsPtr->getId() == arrayId);
   for(usize i = 0; i < 4; ++i)
@@ -1257,7 +1257,7 @@ TEST_CASE("SimplnxCore::RegularizeZSpacingFilter: Transfer failure preserves sou
   CHECK(featuresPtr->getNumberOfTuples() == 5);
   CHECK(featuresPtr->getSize() == 3);
   // The successful first slice remains in the temporary output, without compaction.
-  const auto* partialIdsPtr = ds.getDataAs<Int32Array>(DataPath({".regularized_image_geometry", "Cell Data", "FeatureIds"}));
+  const auto* partialIdsPtr = ds.getDataAs<Int32ArrayType>(DataPath({".regularized_image_geometry", "Cell Data", "FeatureIds"}));
   REQUIRE(partialIdsPtr != nullptr);
   CHECK((*partialIdsPtr)[0] == 1);
   CHECK((*partialIdsPtr)[1] == 0);

@@ -29,37 +29,37 @@ const std::string k_MetaDataName("MetaData");
  */
 struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 {
-  StringParameter::ValueType Title;
-  ChoicesParameter::ValueType GenerationAlgorithm{};
-  int32 LambertSize{};
-  int32 NumColors{};
-  float32 DiscreteMarkerRadius{};
-  ChoicesParameter::ValueType ImageFormat{};
-  ChoicesParameter::ValueType ImageLayout{};
-  FileSystemPathParameter::ValueType OutputPath;
-  StringParameter::ValueType ImagePrefix;
-  int32 ImageSize{};
-  bool UseMask{};
-  DataPath CellEulerAnglesArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath MaskArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath MaterialNameArrayPath;
+  StringParameter::ValueType title;
+  ChoicesParameter::ValueType generation_algorithm{};
+  int32 lambert_size{};
+  int32 num_colors{};
+  float32 discrete_marker_radius{};
+  ChoicesParameter::ValueType image_format{};
+  ChoicesParameter::ValueType image_layout{};
+  FileSystemPathParameter::ValueType output_path;
+  StringParameter::ValueType image_prefix;
+  int32 image_size{};
+  bool use_mask{};
+  DataPath cell_euler_angles_array_path;
+  DataPath cell_phases_array_path;
+  DataPath mask_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath material_name_array_path;
 
-  bool SaveAsImageGeometry{};
-  bool WriteImageToDisk{};
-  DataPath OutputImageGeometryPath;
+  bool save_as_image_geometry{};
+  bool write_image_to_disk{};
+  DataPath output_image_geometry_path;
 
-  bool SaveIntensityData{};
-  bool NormalizeToMRD{};
+  bool save_intensity_data{};
+  bool normalize_to_mrd{};
 
-  bool FlipFinalImage{};
-  DataPath IntensityGeometryDataPath;
-  std::string IntensityPlot1Name;
-  std::string IntensityPlot2Name;
-  std::string IntensityPlot3Name;
+  bool flip_final_image{};
+  DataPath intensity_geometry_data_path;
+  std::string intensity_plot1_name;
+  std::string intensity_plot2_name;
+  std::string intensity_plot3_name;
 
-  ebsdlib::HexConvention HexConvention = ebsdlib::HexConvention::XParallelA;
+  ebsdlib::HexConvention hex_convention = ebsdlib::HexConvention::XParallelA;
 };
 
 /**

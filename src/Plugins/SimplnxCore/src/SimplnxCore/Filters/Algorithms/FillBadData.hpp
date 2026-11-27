@@ -17,12 +17,12 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT FillBadDataInputValues
 {
-  int32 minAllowedDefectSizeValue{};
-  bool storeAsNewPhase{};
-  DataPath featureIdsArrayPath;
-  DataPath cellPhasesArrayPath;
-  std::vector<DataPath> ignoredDataArrayPaths;
-  DataPath inputImageGeometry;
+  int32 min_allowed_defect_size_value{};
+  bool store_as_new_phase{};
+  DataPath feature_ids_array_path;
+  DataPath cell_phases_array_path;
+  std::vector<DataPath> ignored_data_array_paths;
+  DataPath input_image_geometry;
 };
 
 /**

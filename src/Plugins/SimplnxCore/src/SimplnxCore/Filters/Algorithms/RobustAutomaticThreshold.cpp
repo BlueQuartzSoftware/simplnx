@@ -36,7 +36,7 @@ struct FindThresholdFunctor
    * mask chunks.
    */
   template <class T>
-  Result<> operator()(const IDataArray* inputObject, const Float32AbstractDataStore& gradMag, BoolAbstractDataStore& maskStore, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const IDataArray* inputObject, const Float32AbstractDataStoreType& gradMag, BoolAbstractDataStoreType& maskStore, const std::atomic_bool& shouldCancel)
   {
     const auto& inputData = inputObject->template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numTuples = inputData.getNumberOfTuples();
@@ -112,9 +112,9 @@ RobustAutomaticThreshold::RobustAutomaticThreshold(DataStructure& dataStructure,
 
 Result<> RobustAutomaticThreshold::operator()()
 {
-  const auto* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
-  const auto* gradientArrayPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->GradientArrayPath);
-  auto* maskArrayPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->InputArrayPath.replaceName(m_InputValues->CreatedMaskName));
+  const auto* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->input_array_path);
+  const auto* gradientArrayPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->gradient_array_path);
+  auto* maskArrayPtr = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->input_array_path.replaceName(m_InputValues->created_mask_name));
   const auto& gradientStoreRef = gradientArrayPtr->getDataStoreRef();
   auto& maskStoreRef = maskArrayPtr->getDataStoreRef();
 

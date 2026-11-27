@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 // Advertises numeric-store capability for metadata planning without allocating storage.
 class PlaceholderPlanManager : public IDataIOManager

@@ -78,19 +78,19 @@ Result<> FeatureFaceCurvature::operator()()
 {
 
   // Get DataObjects
-  auto* surfaceMeshPrincipalCurvature1sArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshPrincipalCurvature1sPath);
-  auto* surfaceMeshPrincipalCurvature2sArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshPrincipalCurvature2sPath);
-  auto* surfaceMeshPrincipalDirection1sArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshPrincipalDirection1sPath);
-  auto* surfaceMeshPrincipalDirection2sArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshPrincipalDirection2sPath);
-  auto* surfaceMeshMeanCurvaturesArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshMeanCurvaturesPath);
-  auto* surfaceMeshGaussianCurvaturesArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshGaussianCurvaturesPath);
-  auto* surfaceMeshFaceLabelsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->surfaceMeshFaceLabelsPath);
-  auto* surfaceMeshFaceNormalsArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshFaceNormalsPath);
-  auto* surfaceMeshTriangleCentroidsArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshTriangleCentroidsPath);
-  auto* surfaceMeshWeingartenMatrixArrayPtr = m_DataStructure.getDataAs<Float64Array>(m_InputValues->surfaceMeshWeingartenMatrixPath);
+  auto* surfaceMeshPrincipalCurvature1sArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_principal_curvature1s_path);
+  auto* surfaceMeshPrincipalCurvature2sArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_principal_curvature2s_path);
+  auto* surfaceMeshPrincipalDirection1sArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_principal_direction1s_path);
+  auto* surfaceMeshPrincipalDirection2sArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_principal_direction2s_path);
+  auto* surfaceMeshMeanCurvaturesArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_mean_curvatures_path);
+  auto* surfaceMeshGaussianCurvaturesArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_gaussian_curvatures_path);
+  auto* surfaceMeshFaceLabelsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_path);
+  auto* surfaceMeshFaceNormalsArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_face_normals_path);
+  auto* surfaceMeshTriangleCentroidsArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_triangle_centroids_path);
+  auto* surfaceMeshWeingartenMatrixArrayPtr = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->surface_mesh_weingarten_matrix_path);
 
-  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangleGeomPath);
-  auto* surfaceMeshFeatureFaceIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->surfaceMeshFeatureFaceIdsPath);
+  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangle_geom_path);
+  auto* surfaceMeshFeatureFaceIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->surface_mesh_feature_face_ids_path);
   auto& surfaceMeshFeatureFaceIds = surfaceMeshFeatureFaceIdsArrayPtr->getDataStoreRef();
 
   // Just to double-check we have everything.
@@ -98,11 +98,11 @@ Result<> FeatureFaceCurvature::operator()()
 
   // FindNRingNeighbors requires vertex incidence before its workers start.
   const auto entryIncidenceId = triangleGeomPtr->getElementContainingVertId();
-  const bool incidenceChildExisted = m_DataStructure.getData(m_InputValues->triangleGeomPath.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr;
+  const bool incidenceChildExisted = m_DataStructure.getData(m_InputValues->triangle_geom_path.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr;
   const auto incidenceResult = triangleGeomPtr->findElementsContainingVert(false);
   if(incidenceResult.invalid())
   {
-    CleanupCreatedIncidence(m_DataStructure, *triangleGeomPtr, m_InputValues->triangleGeomPath, entryIncidenceId, incidenceChildExisted);
+    CleanupCreatedIncidence(m_DataStructure, *triangleGeomPtr, m_InputValues->triangle_geom_path, entryIncidenceId, incidenceChildExisted);
     return incidenceResult;
   }
 
@@ -158,7 +158,7 @@ Result<> FeatureFaceCurvature::operator()()
       continue;
     }
 
-    CalculateTriangleGroupCurvatures func(this, m_InputValues->NRingCount, triangleIds, m_InputValues->useNormalsForCurveFitting, surfaceMeshPrincipalCurvature1sArrayPtr,
+    CalculateTriangleGroupCurvatures func(this, m_InputValues->n_ring_count, triangleIds, m_InputValues->use_normals_for_curve_fitting, surfaceMeshPrincipalCurvature1sArrayPtr,
                                           surfaceMeshPrincipalCurvature2sArrayPtr, surfaceMeshPrincipalDirection1sArrayPtr, surfaceMeshPrincipalDirection2sArrayPtr,
                                           surfaceMeshGaussianCurvaturesArrayPtr, surfaceMeshMeanCurvaturesArrayPtr, surfaceMeshWeingartenMatrixArrayPtr, triangleGeomPtr, surfaceMeshFaceLabelsArrayPtr,
                                           surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel);
@@ -182,6 +182,6 @@ Result<> FeatureFaceCurvature::operator()()
   // All workers have joined, so the throttle can send its final value before the cleanup step.
   m_Throttle.flush();
 
-  CleanupCreatedIncidence(m_DataStructure, *triangleGeomPtr, m_InputValues->triangleGeomPath, entryIncidenceId, incidenceChildExisted);
+  CleanupCreatedIncidence(m_DataStructure, *triangleGeomPtr, m_InputValues->triangle_geom_path, entryIncidenceId, incidenceChildExisted);
   return {};
 }

@@ -34,11 +34,11 @@ struct SignedMaurerDistanceMapExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   bool inside_is_positive;
   bool squared_distance;
   bool use_spacing;
-  FloatVec3 spacing;
+  FloatVec3Type spacing;
   float64 background_value;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
@@ -67,11 +67,11 @@ struct DanielssonDistanceMapExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   bool input_is_binary;
   bool squared_distance;
   bool use_spacing;
-  FloatVec3 spacing;
+  FloatVec3Type spacing;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
 
@@ -96,11 +96,11 @@ struct SignedDanielssonDistanceMapExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   bool inside_is_positive;
   bool squared_distance;
   bool use_spacing;
-  FloatVec3 spacing;
+  FloatVec3Type spacing;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
 
@@ -118,9 +118,9 @@ struct SignedDanielssonDistanceMapExecuteFn
     // d1 scratch is needed; peak scratch is one T image (dil; inv is freed after the dilate) plus one float32 image (d2).
     const std::string format = detail::SelectDanielssonWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
     const std::vector<usize> tupleShape = inArray.getTupleShape();
-    auto invStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto dilStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto d2Store = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto invStore = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto dilStore = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto d2Store = data_store_utilities::CreateDataStoreWithFormat<float32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
 
     // (1) inv = InvertIntensity(input): (input != 0) ? 0 : 1.
     if(Result<> r = InvertBinaryStore<T>(inStore, *invStore, should_cancel); r.invalid())
@@ -170,10 +170,10 @@ struct IsoContourDistanceExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   float64 level_set_value;
   float64 far_value;
-  FloatVec3 spacing;
+  FloatVec3Type spacing;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
 
@@ -197,10 +197,10 @@ struct ApproximateSignedDistanceMapExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   float64 inside_value;
   float64 outside_value;
-  FloatVec3 spacing;
+  FloatVec3Type spacing;
   const std::atomic_bool& should_cancel;
   const IFilter::MessageHandler& message_handler;
 
@@ -243,8 +243,8 @@ Result<> ExecuteSignedMaurerDistanceMapImageFilter(DataStructure& dataStructure,
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   detail::SignedMaurerDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
                                                      .input_array_path = inputArrayPath,
                                                      .output_array_path = outputArrayPath,
@@ -256,7 +256,7 @@ Result<> ExecuteSignedMaurerDistanceMapImageFilter(DataStructure& dataStructure,
                                                      .background_value = backgroundValue,
                                                      .should_cancel = shouldCancel,
                                                      .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -267,8 +267,8 @@ Result<> ExecuteDanielssonDistanceMapImageFilter(DataStructure& dataStructure, c
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   detail::DanielssonDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
                                                    .input_array_path = inputArrayPath,
                                                    .output_array_path = outputArrayPath,
@@ -279,7 +279,7 @@ Result<> ExecuteDanielssonDistanceMapImageFilter(DataStructure& dataStructure, c
                                                    .spacing = spacing,
                                                    .should_cancel = shouldCancel,
                                                    .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -291,8 +291,8 @@ Result<> ExecuteSignedDanielssonDistanceMapImageFilter(DataStructure& dataStruct
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   detail::SignedDanielssonDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
                                                          .input_array_path = inputArrayPath,
                                                          .output_array_path = outputArrayPath,
@@ -303,7 +303,7 @@ Result<> ExecuteSignedDanielssonDistanceMapImageFilter(DataStructure& dataStruct
                                                          .spacing = spacing,
                                                          .should_cancel = shouldCancel,
                                                          .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -314,8 +314,8 @@ Result<> ExecuteIsoContourDistanceImageFilter(DataStructure& dataStructure, cons
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   detail::IsoContourDistanceExecuteFn executeFn{.data_structure = dataStructure,
                                                 .input_array_path = inputArrayPath,
                                                 .output_array_path = outputArrayPath,
@@ -325,7 +325,7 @@ Result<> ExecuteIsoContourDistanceImageFilter(DataStructure& dataStructure, cons
                                                 .spacing = spacing,
                                                 .should_cancel = shouldCancel,
                                                 .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -336,8 +336,8 @@ Result<> ExecuteApproximateSignedDistanceMapImageFilter(DataStructure& dataStruc
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
   detail::ApproximateSignedDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
                                                           .input_array_path = inputArrayPath,
                                                           .output_array_path = outputArrayPath,
@@ -347,7 +347,7 @@ Result<> ExecuteApproximateSignedDistanceMapImageFilter(DataStructure& dataStruc
                                                           .spacing = spacing,
                                                           .should_cancel = shouldCancel,
                                                           .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

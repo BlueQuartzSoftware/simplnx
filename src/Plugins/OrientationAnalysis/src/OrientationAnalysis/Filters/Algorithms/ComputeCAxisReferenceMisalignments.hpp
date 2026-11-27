@@ -19,13 +19,13 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeCAxisReferenceMisalignmentsInputValues
 {
-  std::vector<float32> ReferenceDirection;
-  bool UseMask = false;
-  DataPath QuatsArrayPath;
-  DataPath PhasesArrayPath;
-  DataPath MaskArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath OutputArrayPath;
+  std::vector<float32> reference_direction;
+  bool use_mask = false;
+  DataPath quats_array_path;
+  DataPath phases_array_path;
+  DataPath mask_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath output_array_path;
 };
 
 /**

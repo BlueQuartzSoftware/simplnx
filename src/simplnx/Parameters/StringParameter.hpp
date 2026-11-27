@@ -33,7 +33,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
@@ -118,7 +118,7 @@ extern template struct NumberToStringFilterParameterConverter<uint64>;
 extern template struct NumberToStringFilterParameterConverter<float32>;
 extern template struct NumberToStringFilterParameterConverter<float64>;
 
-using DoubleToStringFilterParameterConverter = NumberToStringFilterParameterConverter<float64>;
+using DoubleToStringFilterParameterConverterType = NumberToStringFilterParameterConverter<float64>;
 
 struct SIMPLNX_EXPORT StringFilterParameterConverter
 {

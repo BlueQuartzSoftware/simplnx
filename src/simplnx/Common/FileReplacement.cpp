@@ -160,14 +160,14 @@ FileReplacementSteps PlatformFileReplacementSteps(FileReplacementDurability dura
           .Flush = durability == FileReplacementDurability::WriteThrough ? flushOnWindows : std::function<std::error_code(const fs::path&)>{}};
 #else
   static_cast<void>(durability);
-  return {.Rename =
+  return {.rename =
               [](const fs::path& replacement, const fs::path& destination) {
                 std::error_code error;
                 fs::rename(replacement, destination, error);
                 return error;
               },
-          .IsTransient = [](const std::error_code&, const fs::path&, const fs::path&) { return false; },
-          .Wait = wait};
+          .is_transient = [](const std::error_code&, const fs::path&, const fs::path&) { return false; },
+          .wait = wait};
 #endif
 }
 
@@ -175,33 +175,33 @@ FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const
 {
   assert(steps.Rename && steps.IsTransient && steps.Wait);
   FileReplacementOutcome outcome;
-  bool flushed = !steps.Flush;
+  bool flushed = !steps.flush;
   std::chrono::milliseconds nextWait = k_FileReplacementFirstWaitMs;
   while(true)
   {
-    ++outcome.Attempts;
+    ++outcome.attempts;
     if(!flushed)
     {
-      outcome.Error = steps.Flush(replacement);
-      flushed = !outcome.Error;
+      outcome.error = steps.flush(replacement);
+      flushed = !outcome.error;
     }
     if(flushed)
     {
-      outcome.RenameAttempted = true;
-      outcome.Error = steps.Rename(replacement, destination);
+      outcome.rename_attempted = true;
+      outcome.error = steps.rename(replacement, destination);
     }
-    if(!outcome.Error || !steps.IsTransient(outcome.Error, replacement, destination))
+    if(!outcome.error || !steps.is_transient(outcome.error, replacement, destination))
     {
       return outcome;
     }
-    if(outcome.Waited >= k_FileReplacementTotalWaitLimitMs)
+    if(outcome.waited >= k_FileReplacementTotalWaitLimitMs)
     {
-      outcome.RetriesExhausted = true;
+      outcome.retries_exhausted = true;
       return outcome;
     }
-    const auto wait = (std::min)(nextWait, k_FileReplacementTotalWaitLimitMs - outcome.Waited);
-    steps.Wait(wait);
-    outcome.Waited += wait;
+    const auto wait = (std::min)(nextWait, k_FileReplacementTotalWaitLimitMs - outcome.waited);
+    steps.wait(wait);
+    outcome.waited += wait;
     nextWait = (std::min)(nextWait * 2, k_FileReplacementLongestWaitMs);
   }
 }
@@ -217,21 +217,21 @@ FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const
 std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& outcome)
 {
   assert(outcome.Error);
-  if(outcome.Attempts > 1)
+  if(outcome.attempts > 1)
   {
-    return fmt::format("Operating system error: {} (tried {} times over {} ms).", outcome.Error.message(), outcome.Attempts, outcome.Waited.count());
+    return fmt::format("Operating system error: {} (tried {} times over {} ms).", outcome.error.message(), outcome.attempts, outcome.waited.count());
   }
-  return fmt::format("Operating system error: {}", outcome.Error.message());
+  return fmt::format("Operating system error: {}", outcome.error.message());
 }
 
 bool FileReplacementLeftDestinationUnchanged(const FileReplacementOutcome& outcome)
 {
   assert(outcome.Error);
-  if(!outcome.RenameAttempted || outcome.RetriesExhausted)
+  if(!outcome.rename_attempted || outcome.retries_exhausted)
   {
     return true;
   }
-  const auto& error = outcome.Error;
+  const auto& error = outcome.error;
   if(error == std::errc::permission_denied || error == std::errc::operation_not_permitted || error == std::errc::read_only_file_system || error == std::errc::is_a_directory ||
      error == std::errc::not_a_directory || error == std::errc::directory_not_empty || error == std::errc::file_exists || error == std::errc::no_such_file_or_directory ||
      error == std::errc::cross_device_link || error == std::errc::filename_too_long || error == std::errc::device_or_resource_busy || error == std::errc::text_file_busy)
@@ -257,7 +257,7 @@ std::string DescribeFileReplacementFailure(const FileReplacementOutcome& outcome
   else
   {
     description = fmt::format("Could not replace output file '{}'. The destination is unchanged. ", destination);
-    if(outcome.RetriesExhausted)
+    if(outcome.retries_exhausted)
     {
       description += "It may be open in another program, or you may not have permission to replace it. Close it and run again.";
     }

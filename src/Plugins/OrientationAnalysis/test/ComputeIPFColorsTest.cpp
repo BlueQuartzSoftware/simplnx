@@ -37,7 +37,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -119,7 +119,7 @@ DataStructure BuildAnalyticalDataset()
 Arguments MakeArgs(bool useMask, const DataPath& maskPath, const std::vector<float32>& refDir, ChoicesParameter::ValueType colorKey, const std::string& outputName)
 {
   Arguments args;
-  args.insertOrAssign(ComputeIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>(refDir));
+  args.insertOrAssign(ComputeIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32ParameterType::ValueType>(refDir));
   args.insertOrAssign(ComputeIPFColorsFilter::k_ColorKey_Key, std::make_any<ChoicesParameter::ValueType>(colorKey));
   args.insertOrAssign(ComputeIPFColorsFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(ComputeIPFColorsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
@@ -137,13 +137,13 @@ std::array<uint8, 3> EbsdLibReferenceColor(const std::array<double, 3>& euler, u
   std::array<double, 3> dEuler = euler;
   std::array<double, 3> dRefDir = refDir;
   ebsdlib::Rgb argb = ops[crystalStruct]->generateIPFColor(dEuler.data(), dRefDir.data(), false, kind);
-  return {static_cast<uint8>(RgbColor::dRed(argb)), static_cast<uint8>(RgbColor::dGreen(argb)), static_cast<uint8>(RgbColor::dBlue(argb))};
+  return {static_cast<uint8>(rgb_color::DRed(argb)), static_cast<uint8>(rgb_color::DGreen(argb)), static_cast<uint8>(rgb_color::DBlue(argb))};
 }
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: real HDF5 65536-block color oracle", "[OrientationAnalysis][ComputeIPFColorsFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool byteMask = GENERATE(false, true);
   CAPTURE(byteMask);
@@ -155,14 +155,14 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: real HDF5 65536-block co
   SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_GeomPath));
   dataStructure.getDataRefAs<ImageGeom>(k_GeomPath).setDimensions({k_BlockTuples + 1, 1, 1});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_EulersPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_MaskPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_MaskU8Path));
-  auto& eulers = dataStructure.getDataRefAs<Float32Array>(k_EulersPath);
-  auto& phases = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath);
-  auto& boolMaskArray = dataStructure.getDataRefAs<BoolArray>(k_MaskPath);
-  auto& byteMaskArray = dataStructure.getDataRefAs<UInt8Array>(k_MaskU8Path);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_EulersPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(k_MaskPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskU8Path));
+  auto& eulers = dataStructure.getDataRefAs<Float32ArrayType>(k_EulersPath);
+  auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath);
+  auto& boolMaskArray = dataStructure.getDataRefAs<BoolArrayType>(k_MaskPath);
+  auto& byteMaskArray = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskU8Path);
   eulers.fill(0);
   phases.fill(1);
   boolMaskArray.fill(false);
@@ -172,7 +172,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: real HDF5 65536-block co
   byteMaskArray[k_BlockTuples - 1] = 1;
   byteMaskArray[k_BlockTuples] = 1;
   phases[k_BlockTuples] = 2;
-  eulers[k_BlockTuples * 3] = numbers::pi_v<float32> / 3.0F;
+  eulers[k_BlockTuples * 3] = numbers::k_PiV<float32> / 3.0F;
   const auto maskPath = byteMask ? k_MaskU8Path : k_MaskPath;
   for(const auto& path : {k_EulersPath, k_PhasesPath, maskPath, k_CrystalStructuresPath})
   {
@@ -187,10 +187,10 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: real HDF5 65536-block co
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto after = GetAlgorithmPathExecutionCounts();
-  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(after.InCore == before.InCore);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath));
-  const auto& colors = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath);
+  REQUIRE(after.out_of_core_on_out_of_core_store == before.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(after.in_core == before.in_core);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_IpfColorsPath));
+  const auto& colors = dataStructure.getDataRefAs<UInt8ArrayType>(k_IpfColorsPath);
   REQUIRE(colors.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const std::array<usize, 3> indices = {0, k_BlockTuples - 1, k_BlockTuples};
   const std::array<std::array<uint8, 3>, 3> expected = {{{0, 0, 0}, {255, 0, 0}, {0, 255, 0}}};
@@ -201,17 +201,17 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: real HDF5 65536-block co
       REQUIRE(colors[indices[witnessIdx] * 3 + compIdx] == expected[witnessIdx][compIdx]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inline analytical dataset)", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
@@ -219,20 +219,20 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inli
   const Arguments args = MakeArgs(true, k_MaskPath, {0.0F, 0.0F, 1.0F}, 0 /*TSL*/, k_IpfColorsName);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath));
-  const auto& colors = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_IpfColorsPath));
+  const auto& colors = dataStructure.getDataRefAs<UInt8ArrayType>(k_IpfColorsPath);
   // Class 4 checks the output shape.
   REQUIRE(colors.getNumberOfTuples() == k_NumCells);
   REQUIRE(colors.getNumberOfComponents() == 3);
 
   // Use the filter inputs for the independent EbsdLib reference.
-  const auto& eulerStore = dataStructure.getDataRefAs<Float32Array>(k_EulersPath).getDataStoreRef();
-  const auto& phaseStore = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath).getDataStoreRef();
-  const auto& csStore = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath).getDataStoreRef();
+  const auto& eulerStore = dataStructure.getDataRefAs<Float32ArrayType>(k_EulersPath).getDataStoreRef();
+  const auto& phaseStore = dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath).getDataStoreRef();
+  const auto& csStore = dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresPath).getDataStoreRef();
   const auto& colorStore = colors.getDataStoreRef();
 
   auto colorAt = [&](usize cell) { return std::array<uint8, 3>{colorStore[cell * 3], colorStore[cell * 3 + 1], colorStore[cell * 3 + 2]}; };
@@ -272,17 +272,17 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Class 1/2/3 Oracle (inli
     REQUIRE(colorAt(k_InvalidCsCell) == std::array<uint8, 3>{0, 0, 0});
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: uint8 mask array drives the black-out path", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
@@ -291,28 +291,28 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: uint8 mask array drives 
   const Arguments args = MakeArgs(true, k_MaskU8Path, {0.0F, 0.0F, 1.0F}, 0 /*TSL*/, k_IpfColorsName);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& colorStore = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath).getDataStoreRef();
+  const auto& colorStore = dataStructure.getDataRefAs<UInt8ArrayType>(k_IpfColorsPath).getDataStoreRef();
   auto colorAt = [&](usize cell) { return std::array<uint8, 3>{colorStore[cell * 3], colorStore[cell * 3 + 1], colorStore[cell * 3 + 2]}; };
 
   REQUIRE(colorAt(k_MaskedCell) == std::array<uint8, 3>{0, 0, 0});
   const std::array<uint8, 3> c0 = colorAt(0);
   REQUIRE((c0[0] != 0 || c0[1] != 0 || c0[2] != 0));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: no-mask path colors every valid cell", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
@@ -321,14 +321,14 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: no-mask path colors ever
   const Arguments args = MakeArgs(false, DataPath{}, {0.0F, 0.0F, 1.0F}, 0 /*TSL*/, k_IpfColorsName);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& eulerStore = dataStructure.getDataRefAs<Float32Array>(k_EulersPath).getDataStoreRef();
-  const auto& phaseStore = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath).getDataStoreRef();
-  const auto& csStore = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath).getDataStoreRef();
-  const auto& colorStore = dataStructure.getDataRefAs<UInt8Array>(k_IpfColorsPath).getDataStoreRef();
+  const auto& eulerStore = dataStructure.getDataRefAs<Float32ArrayType>(k_EulersPath).getDataStoreRef();
+  const auto& phaseStore = dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath).getDataStoreRef();
+  const auto& csStore = dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresPath).getDataStoreRef();
+  const auto& colorStore = dataStructure.getDataRefAs<UInt8ArrayType>(k_IpfColorsPath).getDataStoreRef();
   auto colorAt = [&](usize cell) { return std::array<uint8, 3>{colorStore[cell * 3], colorStore[cell * 3 + 1], colorStore[cell * 3 + 2]}; };
 
   const std::array<double, 3> euler3 = {eulerStore[k_MaskedCell * 3], eulerStore[k_MaskedCell * 3 + 1], eulerStore[k_MaskedCell * 3 + 2]};
@@ -336,17 +336,17 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: no-mask path colors ever
   REQUIRE(colorAt(k_MaskedCell) == expected3);
   REQUIRE(colorAt(k_InvalidCsCell) == std::array<uint8, 3>{0, 0, 0});
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: reference direction is normalized", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
@@ -356,7 +356,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: reference direction is n
     ComputeIPFColorsFilter f;
     const Arguments args = MakeArgs(true, k_MaskPath, refDir, 0 /*TSL*/, outputName);
     auto preflightResult = f.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(f, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   };
@@ -364,34 +364,34 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: reference direction is n
   runWith({0.0F, 0.0F, 1.0F}, "IPF_Unit");
   runWith({0.0F, 0.0F, 5.0F}, "IPF_NonUnit");
 
-  const auto& unitColors = dataStructure.getDataRefAs<UInt8Array>(k_CellDataPath.createChildPath("IPF_Unit"));
-  const auto& nonUnitColors = dataStructure.getDataRefAs<UInt8Array>(k_CellDataPath.createChildPath("IPF_NonUnit"));
+  const auto& unitColors = dataStructure.getDataRefAs<UInt8ArrayType>(k_CellDataPath.createChildPath("IPF_Unit"));
+  const auto& nonUnitColors = dataStructure.getDataRefAs<UInt8ArrayType>(k_CellDataPath.createChildPath("IPF_NonUnit"));
   REQUIRE(unitColors.getSize() == nonUnitColors.getSize());
   REQUIRE(std::equal(unitColors.cbegin(), unitColors.cend(), nonUnitColors.cbegin()));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: phase index out of range returns -48000", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
   // Phase five exceeds the three-entry ensemble array and must report -48000.
-  auto& phaseStore = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath).getDataStoreRef();
+  auto& phaseStore = dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath).getDataStoreRef();
   phaseStore[0] = 5;
 
   ComputeIPFColorsFilter filter;
   const Arguments args = MakeArgs(false, DataPath{}, {0.0F, 0.0F, 1.0F}, 0 /*TSL*/, k_IpfColorsName);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -48000);
@@ -399,14 +399,14 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: phase index out of range
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: negative Phase bounds", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
-  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath));
+  auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath);
   cellPhasesArrayRef.getDataStoreRef()[0] = -1;
 
   ComputeIPFColorsFilter filter;
@@ -421,8 +421,8 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: negative Phase bounds", 
 
   SECTION("Masked negative Phase is ignored")
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_MaskPath));
-    auto& maskArrayRef = dataStructure.getDataRefAs<BoolArray>(k_MaskPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(k_MaskPath));
+    auto& maskArrayRef = dataStructure.getDataRefAs<BoolArrayType>(k_MaskPath);
     maskArrayRef.getDataStoreRef()[0] = false;
     const Arguments args = MakeArgs(true, k_MaskPath, {0.0F, 0.0F, 1.0F}, 0, k_IpfColorsName);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -436,10 +436,10 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
 {
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure = BuildAnalyticalDataset();
 
@@ -447,7 +447,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
     ComputeIPFColorsFilter filter;
     const Arguments args = MakeArgs(true, k_MaskPath, {0.0F, 0.0F, 1.0F}, kindIndex, outputName);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   };
@@ -456,9 +456,9 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
   runWithKind(1, "IPFColors_PUCM");
   runWithKind(2, "IPFColors_NH");
 
-  const auto& tslColors = dataStructure.getDataRefAs<UInt8Array>(k_CellDataPath.createChildPath("IPFColors_TSL"));
-  const auto& pucmColors = dataStructure.getDataRefAs<UInt8Array>(k_CellDataPath.createChildPath("IPFColors_PUCM"));
-  const auto& nhColors = dataStructure.getDataRefAs<UInt8Array>(k_CellDataPath.createChildPath("IPFColors_NH"));
+  const auto& tslColors = dataStructure.getDataRefAs<UInt8ArrayType>(k_CellDataPath.createChildPath("IPFColors_TSL"));
+  const auto& pucmColors = dataStructure.getDataRefAs<UInt8ArrayType>(k_CellDataPath.createChildPath("IPFColors_PUCM"));
+  const auto& nhColors = dataStructure.getDataRefAs<UInt8ArrayType>(k_CellDataPath.createChildPath("IPFColors_NH"));
 
   REQUIRE(tslColors.getSize() == pucmColors.getSize());
   REQUIRE(tslColors.getSize() == nhColors.getSize());
@@ -470,7 +470,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell array tuple count mismatch (-651)", "[OrientationAnalysis][ComputeIPFColorsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // EulerAngles and Phases have different tuple counts. The disabled mask keeps
   // the preflight check limited to these two arrays.
@@ -479,18 +479,18 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell a
   imageGeomPtr->setDimensions({10, 1, 1});
 
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {10}, {3}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {10}, {3}, cellAmPtr->getId());
 
   // The separate group makes Phases contain nine tuples instead of ten.
   auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
   auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
+  unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   ComputeIPFColorsFilter filter;
   Arguments args;
-  args.insertOrAssign(ComputeIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F}));
+  args.insertOrAssign(ComputeIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32ParameterType::ValueType>({0.0F, 0.0F, 1.0F}));
   args.insertOrAssign(ComputeIPFColorsFilter::k_ColorKey_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(ComputeIPFColorsFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(ComputeIPFColorsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
@@ -500,14 +500,14 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: Preflight Error - Cell a
   args.insertOrAssign(ComputeIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<std::string>("IPFColors"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -651);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeIPFColorsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

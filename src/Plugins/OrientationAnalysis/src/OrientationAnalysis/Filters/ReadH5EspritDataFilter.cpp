@@ -71,7 +71,7 @@ Parameters ReadH5EspritDataFilter::parameters() const
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{ebsdlib::OEM::Bruker, ebsdlib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the euler angles to radians", true));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data", "Whether or not to import the pattern data", false));
@@ -105,7 +105,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
   auto pDegreesToRadiansValue = filterArgs.value<bool>(k_DegreesToRadians_Key);
   auto pReadPatternDataValue = filterArgs.value<bool>(k_ReadPatternData_Key);
   auto pImageGeometryNameValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -123,23 +123,23 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   {
     return MakePreflightErrorResult(-9680, fmt::format("The Z Spacing field contains a value ({}) that is non-positive.  The Z Spacing field must be set to a positive value.", pZSpacingValue));
   }
-  if(pSelectedScanNamesValue.scanNames.empty())
+  if(pSelectedScanNamesValue.scan_names.empty())
   {
     return MakePreflightErrorResult(-9681, "At least one scan must be chosen.  Please select a scan from the list.");
   }
 
   // read in the necessary info from the input h5 file
   ebsdlib::H5EspritReader::Pointer reader = ebsdlib::H5EspritReader::New();
-  reader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
+  reader->setFileName(pSelectedScanNamesValue.input_file_path.string());
   reader->setReadPatternData(pReadPatternDataValue);
-  reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
+  reader->setHDF5Path(pSelectedScanNamesValue.scan_names.front());
   if(const int err = reader->readHeaderOnly(); err < 0)
   {
     return MakePreflightErrorResult(-9682, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
   }
 
   // create the Image Geometry and it's attribute matrices
-  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
+  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scan_names.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {
     CreateImageGeometryAction::SpacingType spacing = {static_cast<float32>(reader->getXStep()), static_cast<float32>(reader->getYStep()), pZSpacingValue};
@@ -151,8 +151,8 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
 
   const auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -213,7 +213,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -223,12 +223,12 @@ Result<> ReadH5EspritDataFilter::executeImpl(DataStructure& dataStructure, const
   ReadH5DataInputValues inputValues;
   ReadH5EspritDataInputValues espritInputValues{};
 
-  inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
-  inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
-  inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
-  espritInputValues.DegreesToRadians = filterArgs.value<bool>(k_DegreesToRadians_Key);
+  inputValues.selected_scan_names = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
+  inputValues.read_pattern_data = filterArgs.value<bool>(k_ReadPatternData_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_ensemble_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
+  inputValues.cell_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
+  espritInputValues.degrees_to_radians = filterArgs.value<bool>(k_DegreesToRadians_Key);
 
   return ReadH5EspritData(dataStructure, messageHandler, shouldCancel, &inputValues, &espritInputValues)();
 }
@@ -259,7 +259,7 @@ Result<Arguments> ReadH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& js
   results.push_back(
       simpl_conversion::Convert2Parameters<simpl_conversion::OEMEbsdScanSelectionFilterParameterConverter>(args, json, simpl::k_InputFileKey, simpl::k_SelectedScanNamesKey, k_SelectedScanNames_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ZSpacingKey, k_ZSpacing_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_OriginKey, k_Origin_Key));
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CombineEulerAnglesKey, ));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DegreesToRadiansKey, k_DegreesToRadians_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ReadPatternDataKey, k_ReadPatternData_Key));

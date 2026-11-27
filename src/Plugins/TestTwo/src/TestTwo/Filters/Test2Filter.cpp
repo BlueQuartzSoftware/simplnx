@@ -54,7 +54,7 @@ nx::core::Parameters Test2Filter::parameters() const
   Parameters params;
   params.insert(std::make_unique<Int32ParameterType>(k_Param1, "Parameter 1", "The 1st parameter", 0));
   params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
-  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::ChoicesType{"foo", "bar", "baz"}));
   return params;
 }
 

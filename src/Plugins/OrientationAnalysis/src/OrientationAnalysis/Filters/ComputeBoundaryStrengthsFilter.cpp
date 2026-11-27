@@ -58,18 +58,18 @@ Parameters ComputeBoundaryStrengthsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Data Array that specifies which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions",
                                                           "Data Array that specifies the average orientation of each Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Data Array that specifies to which Ensemble each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each phase", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshF1sArrayName_Key, "F1s", "DataArray Name to store the calculated F1s Values", "F1s"));
@@ -106,7 +106,7 @@ IFilter::PreflightResult ComputeBoundaryStrengthsFilter::preflightImpl(const Dat
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  std::vector<usize> faceLabelsTupShape = dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue)->getTupleShape();
+  std::vector<usize> faceLabelsTupShape = dataStructure.getDataAs<Int32ArrayType>(pSurfaceMeshFaceLabelsArrayPathValue)->getTupleShape();
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2}, pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshF1sArrayNameValue));
     resultOutputActions.value().appendAction(std::move(action));
@@ -129,7 +129,7 @@ IFilter::PreflightResult ComputeBoundaryStrengthsFilter::preflightImpl(const Dat
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -138,17 +138,17 @@ Result<> ComputeBoundaryStrengthsFilter::executeImpl(DataStructure& dataStructur
 {
   ComputeBoundaryStrengthsInputValues inputValues;
 
-  inputValues.Loading = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_Loading_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.loading = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_Loading_Key);
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
-  DataPath surfaceMeshParentPath = inputValues.SurfaceMeshFaceLabelsArrayPath.getParent();
-  inputValues.SurfaceMeshF1sArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF1sArrayName_Key));
-  inputValues.SurfaceMeshF1sptsArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF1sptsArrayName_Key));
-  inputValues.SurfaceMeshF7sArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF7sArrayName_Key));
-  inputValues.SurfaceMeshmPrimesArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshmPrimesArrayName_Key));
+  DataPath surfaceMeshParentPath = inputValues.surface_mesh_face_labels_array_path.getParent();
+  inputValues.surface_mesh_f1s_array_name = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF1sArrayName_Key));
+  inputValues.surface_mesh_f1spts_array_name = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF1sptsArrayName_Key));
+  inputValues.surface_mesh_f7s_array_name = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF7sArrayName_Key));
+  inputValues.surface_meshm_primes_array_name = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshmPrimesArrayName_Key));
 
   return ComputeBoundaryStrengths(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -175,7 +175,7 @@ Result<Arguments> ComputeBoundaryStrengthsFilter::FromSIMPLJson(const nlohmann::
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverter>(args, json, simpl::k_LoadingKey, k_Loading_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverterType>(args, json, simpl::k_LoadingKey, k_Loading_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));

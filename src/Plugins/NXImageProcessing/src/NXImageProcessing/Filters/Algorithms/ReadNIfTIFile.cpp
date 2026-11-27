@@ -76,20 +76,20 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
 
   if(opts.type == _Type::VoxelSubvolume)
   {
-    if(opts.cropX)
+    if(opts.crop_x)
     {
-      b.x_start = opts.xBoundVoxels[0];
-      b.x_end = opts.xBoundVoxels[1];
+      b.x_start = opts.x_bound_voxels[0];
+      b.x_end = opts.x_bound_voxels[1];
     }
-    if(opts.cropY)
+    if(opts.crop_y)
     {
-      b.y_start = opts.yBoundVoxels[0];
-      b.y_end = opts.yBoundVoxels[1];
+      b.y_start = opts.y_bound_voxels[0];
+      b.y_end = opts.y_bound_voxels[1];
     }
-    if(opts.cropZ)
+    if(opts.crop_z)
     {
-      b.z_start = opts.zBoundVoxels[0];
-      b.z_end = opts.zBoundVoxels[1];
+      b.z_start = opts.z_bound_voxels[0];
+      b.z_end = opts.z_bound_voxels[1];
     }
   }
   else // PhysicalSubvolume
@@ -109,9 +109,9 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
     const auto startCoords = srcImageGeomPtr->getCoordsf(b.x_start, b.y_start, b.z_start);
     const auto endCoords = srcImageGeomPtr->getCoordsf(b.x_end, b.y_end, b.z_end);
 
-    FloatVec2Type xBoundPhysical = opts.cropX ? opts.xBoundPhysical : FloatVec2Type{startCoords[0], endCoords[0]};
-    FloatVec2Type yBoundPhysical = opts.cropY ? opts.yBoundPhysical : FloatVec2Type{startCoords[1], endCoords[1]};
-    FloatVec2Type zBoundPhysical = opts.cropZ ? opts.zBoundPhysical : FloatVec2Type{startCoords[2], endCoords[2]};
+    FloatVec2Type xBoundPhysical = opts.crop_x ? opts.x_bound_physical : FloatVec2Type{startCoords[0], endCoords[0]};
+    FloatVec2Type yBoundPhysical = opts.crop_y ? opts.y_bound_physical : FloatVec2Type{startCoords[1], endCoords[1]};
+    FloatVec2Type zBoundPhysical = opts.crop_z ? opts.z_bound_physical : FloatVec2Type{startCoords[2], endCoords[2]};
 
     auto startIndex = srcImageGeomPtr->getIndex(xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]);
     if(!startIndex.has_value())
@@ -194,11 +194,11 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
   const usize srcNx = md.dimensions[0];
   const usize srcNy = md.dimensions[1];
   const usize srcNz = md.dimensions[2];
-  const usize componentCount = md.componentCount;
-  const bool byteSwap = md.byteSwapRequired;
-  const float32 slope = md.sclSlope;
-  const float32 inter = std::isfinite(md.sclInter) ? md.sclInter : 0.0f;
-  const std::string& filePath = md.filePath;
+  const usize componentCount = md.component_count;
+  const bool byteSwap = md.byte_swap_required;
+  const float32 slope = md.scl_slope;
+  const float32 inter = std::isfinite(md.scl_inter) ? md.scl_inter : 0.0f;
+  const std::string& filePath = md.file_path;
 
   const usize srcScanlineElements = srcNx * componentCount;
   const usize srcScanlineBytes = srcScanlineElements * sizeof(NativeT);
@@ -258,7 +258,7 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
           NativeT raw = srcScanline[baseIdx + c];
           if(byteSwap)
           {
-            raw = nx::core::byteswap(raw);
+            raw = nx::core::Byteswap(raw);
           }
           if constexpr(std::is_same_v<OutputT, float32>)
           {
@@ -277,7 +277,7 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
         }
       }
 
-      Result<> copyResult = CopyFromArray::CopyData(destScanline, store, destTupleOffset, 0, destNx, componentCount);
+      Result<> copyResult = copy_from_array::CopyData(destScanline, store, destTupleOffset, 0, destNx, componentCount);
       if(copyResult.invalid())
       {
         return copyResult;
@@ -311,7 +311,7 @@ template <class OutputT>
 Result<> DispatchByNiftiType(gzFile gz, AbstractDataStore<OutputT>& store, const nx::core::nifti::NiftiMetadata& md, const CropBounds& b, bool applyScaling, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler)
 {
-  switch(md.niftiDatatype)
+  switch(md.nifti_datatype)
   {
   case NIFTI_TYPE_UINT8:
   case NIFTI_TYPE_RGB24:
@@ -336,7 +336,7 @@ Result<> DispatchByNiftiType(gzFile gz, AbstractDataStore<OutputT>& store, const
   case NIFTI_TYPE_FLOAT64:
     return StreamCroppedVoxels<float64, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   default:
-    return MakeErrorResult(-34731, fmt::format("Unsupported NIfTI datatype code {} encountered during voxel read (header validation should have rejected this).", md.niftiDatatype));
+    return MakeErrorResult(-34731, fmt::format("Unsupported NIfTI datatype code {} encountered during voxel read (header validation should have rejected this).", md.nifti_datatype));
   }
 }
 
@@ -359,30 +359,30 @@ ReadNIfTIFile::ReadNIfTIFile(DataStructure& dataStructure, const IFilter::Messag
 // -----------------------------------------------------------------------------
 Result<> ReadNIfTIFile::operator()()
 {
-  auto metadataResult = nifti::ReadNiftiHeader(m_InputValues->InputFilePath, m_InputValues->UseAffineIfPresent);
+  auto metadataResult = nifti::ReadNiftiHeader(m_InputValues->input_file_path, m_InputValues->use_affine_if_present);
   if(metadataResult.invalid())
   {
     return ConvertResult(std::move(metadataResult));
   }
   auto md = std::move(metadataResult).value();
-  if(auto geometryResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFilePath, md.origin, md.spacing); geometryResult.invalid())
+  if(auto geometryResult = m_InputValues->geometry_overrides.apply(m_InputValues->input_file_path, md.origin, md.spacing); geometryResult.invalid())
   {
     return geometryResult;
   }
 
-  auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
+  auto boundsResult = ComputeCropBounds(md, m_InputValues->cropping_options);
   if(boundsResult.invalid())
   {
     return ConvertResult(std::move(boundsResult));
   }
   const CropBounds bounds = boundsResult.value();
 
-  const bool applyScaling = m_InputValues->ApplyScalingTransform && md.hasNontrivialScaling && md.componentCount == 1;
+  const bool applyScaling = m_InputValues->apply_scaling_transform && md.has_nontrivial_scaling && md.component_count == 1;
 
-  gzFile gzPtr = gzopen(m_InputValues->InputFilePath.string().c_str(), "rb");
+  gzFile gzPtr = gzopen(m_InputValues->input_file_path.string().c_str(), "rb");
   if(gzPtr == nullptr)
   {
-    return MakeErrorResult(-34720, fmt::format("Could not open NIfTI file for reading: '{}'", m_InputValues->InputFilePath.string()));
+    return MakeErrorResult(-34720, fmt::format("Could not open NIfTI file for reading: '{}'", m_InputValues->input_file_path.string()));
   }
 
   // Enlarge zlib's internal buffer before the first read/seek so the file is
@@ -391,14 +391,14 @@ Result<> ReadNIfTIFile::operator()()
   // lives on a NAS. See nifti::k_GzReadBufferSize for the rationale.
   gzbuffer(gzPtr, static_cast<unsigned int>(nx::core::nifti::k_GzReadBufferSize));
 
-  const z_off_t targetOffset = static_cast<z_off_t>(md.voxOffset);
+  const z_off_t targetOffset = static_cast<z_off_t>(md.vox_offset);
   if(gzseek(gzPtr, targetOffset, SEEK_SET) != targetOffset)
   {
     gzclose(gzPtr);
-    return MakeErrorResult(-34721, fmt::format("Failed to seek to voxel offset {} in '{}'", md.voxOffset, m_InputValues->InputFilePath.string()));
+    return MakeErrorResult(-34721, fmt::format("Failed to seek to voxel offset {} in '{}'", md.vox_offset, m_InputValues->input_file_path.string()));
   }
 
-  const DataPath dataArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->ImageDataArrayName);
+  const DataPath dataArrayPath = m_InputValues->image_geometry_path.createChildPath(m_InputValues->cell_attribute_matrix_name).createChildPath(m_InputValues->image_data_array_name);
   auto& dataArrayBase = m_DataStructure.getDataRefAs<IDataArray>(dataArrayPath);
 
   Result<> streamResult;

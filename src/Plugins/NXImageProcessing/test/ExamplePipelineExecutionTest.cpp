@@ -56,9 +56,9 @@ usize CountOocArrays(const DataStructure& dataStructure)
 
 TEST_CASE("NXImageProcessing::Real-world examples execute with the selected storage mode", "[NXImageProcessing][ExamplePipelines][Execution]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool hasOocManager = Application::Instance()->getIOCollection().getManager("HDF5-OOC") != nullptr;
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 0);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 0);
 
   const fs::path pluginSourceDir(unit_test::k_SourceDir.str());
   const fs::path pipelineDir = pluginSourceDir / "pipelines";

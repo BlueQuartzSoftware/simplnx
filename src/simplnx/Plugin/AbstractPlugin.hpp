@@ -13,7 +13,7 @@
 namespace nx::core
 {
 
-namespace H5
+namespace h5
 {
 class IDataFactory;
 }
@@ -34,9 +34,9 @@ public:
 
   using FilterContainerType = std::unordered_set<FilterHandle>;
 
-  using IOManagerPointer = std::shared_ptr<IDataIOManager>;
+  using IoManagerPointerType = std::shared_ptr<IDataIOManager>;
 
-  using IOManagersContainerType = std::vector<IOManagerPointer>;
+  using IOManagersContainerType = std::vector<IoManagerPointerType>;
 
   /**
    * @struct SIMPLData
@@ -44,10 +44,10 @@ public:
    */
   struct SIMPLNX_EXPORT SIMPLData
   {
-    using ConversionFunction = std::function<Result<Arguments>(const nlohmann::json&)>;
+    using ConversionFunctionType = std::function<Result<Arguments>(const nlohmann::json&)>;
 
-    Uuid simplnxUuid;               // Simplnx filter UUID that receives the converted arguments.
-    ConversionFunction convertJson; // Converts legacy JSON to simplnx Arguments.
+    Uuid simplnx_uuid;               // Simplnx filter UUID that receives the converted arguments.
+    ConversionFunctionType convert_json; // Converts legacy JSON to simplnx Arguments.
   };
 
   using SIMPLMapType = std::map<Uuid, SIMPLData>;
@@ -104,7 +104,7 @@ protected:
    */
   void addFilter(const FilterCreationFuncType& filterFunc);
 
-  void addDataIOManager(const IOManagerPointer& ioManager);
+  void addDataIOManager(const IoManagerPointerType& ioManager);
 
   /**
    * @brief Registers a plugin default preference value.
@@ -130,14 +130,14 @@ private:
  *
  * The caller owns the returned plugin and releases it through DestroyPluginFunc.
  */
-using CreatePluginFunc = AbstractPlugin* (*)();
+using CreatePluginFuncType = AbstractPlugin* (*)();
 
 /**
  * @brief Defines a C ABI plugin destruction function.
  *
  * The function deletes a plugin only when its concrete type matches the export.
  */
-using DestroyPluginFunc = bool (*)(AbstractPlugin*);
+using DestroyPluginFuncType = bool (*)(AbstractPlugin*);
 } // namespace nx::core
 
 #define SIMPLNX_CREATE_PLUGIN_FUNC SIMPLNX_CreatePlugin

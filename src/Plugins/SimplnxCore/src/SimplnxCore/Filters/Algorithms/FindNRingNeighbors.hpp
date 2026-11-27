@@ -17,20 +17,20 @@ class TriangleGeom;
 
 struct SIMPLNXCORE_EXPORT FindNRingNeighborsInputValues
 {
-  TriangleGeom* TriangleGeomPtr = nullptr;
-  int64 TriangleId = {-1};
-  int32 RegionId0 = {0};
-  int32 RegionId1 = {0};
-  int64 Ring = {2};
-  Int32Array* FaceLabelsArray = nullptr;
-  bool WriteBinaryFile = {false};
-  bool WriteConformalMesh = {true};
+  TriangleGeom* triangle_geom_ptr = nullptr;
+  int64 triangle_id = {-1};
+  int32 region_id0 = {0};
+  int32 region_id1 = {0};
+  int64 ring = {2};
+  Int32ArrayType* face_labels_array = nullptr;
+  bool write_binary_file = {false};
+  bool write_conformal_mesh = {true};
 };
 
 class SIMPLNXCORE_EXPORT FindNRingNeighbors
 {
 public:
-  using UniqueFaceIds_t = std::set<IGeometry::MeshIndexType>;
+  using UniqueFaceIdsTType = std::set<IGeometry::MeshIndexType>;
 
   FindNRingNeighbors(FindNRingNeighborsInputValues* inputValues);
   ~FindNRingNeighbors() noexcept;
@@ -42,10 +42,10 @@ public:
 
   Result<> operator()(const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel);
 
-  UniqueFaceIds_t getNRingTriangles() const;
+  UniqueFaceIdsTType getNRingTriangles() const;
 
 private:
   const FindNRingNeighborsInputValues* m_InputValues = nullptr;
-  UniqueFaceIds_t m_NRingTriangles;
+  UniqueFaceIdsTType m_NRingTriangles;
 };
 } // namespace nx::core

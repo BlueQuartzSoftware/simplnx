@@ -21,19 +21,19 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
 {
-  bool RepairTriangleWinding{};
-  ChoicesParameter::ValueType BoundingBoxSkinMode{};
-  bool SharpBoundingBoxEdges{};
-  DataPath GridGeomDataPath;
-  DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;
-  MultiArraySelectionParameter::ValueType SelectedFeatureDataArrayPaths;
-  DataPath TriangleGeometryPath;
-  DataPath VertexGroupDataPath;
-  DataPath NodeTypesDataPath;
-  DataPath FaceGroupDataPath;
-  DataPath FaceLabelsDataPath;
-  MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
+  bool repair_triangle_winding{};
+  ChoicesParameter::ValueType bounding_box_skin_mode{};
+  bool sharp_bounding_box_edges{};
+  DataPath grid_geom_data_path;
+  DataPath feature_ids_array_path;
+  MultiArraySelectionParameter::ValueType selected_cell_data_array_paths;
+  MultiArraySelectionParameter::ValueType selected_feature_data_array_paths;
+  DataPath triangle_geometry_path;
+  DataPath vertex_group_data_path;
+  DataPath node_types_data_path;
+  DataPath face_group_data_path;
+  DataPath face_labels_data_path;
+  MultiArraySelectionParameter::ValueType created_data_array_paths;
 };
 
 /**

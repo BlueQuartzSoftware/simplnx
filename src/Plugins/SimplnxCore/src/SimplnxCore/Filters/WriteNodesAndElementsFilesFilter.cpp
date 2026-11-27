@@ -105,14 +105,14 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
 
   if(!writeNodeFile && !writeElementFile)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
                                                             "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
   const auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
                                                             "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a "
                                                             "different geometry with a type other than Vertex.")};
   }
@@ -126,15 +126,15 @@ Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStruct
 {
   WriteNodesAndElementsFilesInputValues inputValues;
 
-  inputValues.SelectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
-  inputValues.WriteNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
-  inputValues.NumberNodes = filterArgs.value<BoolParameter::ValueType>(k_NumberNodes);
-  inputValues.IncludeNodeFileHeader = filterArgs.value<BoolParameter::ValueType>(k_IncludeNodeFileHeader);
-  inputValues.NodeFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
-  inputValues.WriteElementFile = filterArgs.value<BoolParameter::ValueType>(k_WriteElementFile);
-  inputValues.NumberElements = filterArgs.value<BoolParameter::ValueType>(k_NumberElements);
-  inputValues.IncludeElementFileHeader = filterArgs.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
-  inputValues.ElementFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
+  inputValues.selected_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
+  inputValues.write_node_file = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
+  inputValues.number_nodes = filterArgs.value<BoolParameter::ValueType>(k_NumberNodes);
+  inputValues.include_node_file_header = filterArgs.value<BoolParameter::ValueType>(k_IncludeNodeFileHeader);
+  inputValues.node_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
+  inputValues.write_element_file = filterArgs.value<BoolParameter::ValueType>(k_WriteElementFile);
+  inputValues.number_elements = filterArgs.value<BoolParameter::ValueType>(k_NumberElements);
+  inputValues.include_element_file_header = filterArgs.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
+  inputValues.element_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
 
   return WriteNodesAndElementsFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

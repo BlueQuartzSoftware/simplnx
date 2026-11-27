@@ -73,7 +73,7 @@ IFilter::PreflightResult BinaryThinningImageFilter::preflightImpl(const DataStru
   // IntegerOnly admits ONLY integer scalar types (the legacy IntegerScalarPixelIdTypeList); float input is rejected.
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 Result<> BinaryThinningImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,

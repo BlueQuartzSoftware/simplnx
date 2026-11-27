@@ -28,7 +28,7 @@ Uuid StringParameter::uuid() const
   return ParameterTraits<StringParameter>::uuid;
 }
 
-IParameter::AcceptedTypes StringParameter::acceptedTypes() const
+IParameter::AcceptedTypesType StringParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

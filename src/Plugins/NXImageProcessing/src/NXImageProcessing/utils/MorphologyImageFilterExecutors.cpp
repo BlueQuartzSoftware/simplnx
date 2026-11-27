@@ -26,7 +26,7 @@ struct MorphologyExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   MorphOp op;
   const std::atomic_bool& should_cancel;
@@ -48,7 +48,7 @@ struct MorphologyCompositeExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   MorphCompositeOp op;
   bool safe_border;
@@ -95,7 +95,7 @@ struct MorphologyCompositeExecuteFn
         // SafeBorder == false (== ITK with SafeBorder off): plain two-pass composition with skip-OOB
         // (extremum-fill) at the true image edge. ONE same-extent scratch: firstOp(in) -> scratch;
         // secondOp(scratch) -> dst. Each pass reads a store distinct from the one it writes.
-        auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+        auto scratch = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
         if(Result<> r = ApplyMorphology<T>(inStore, *scratch, dims, se, firstOp, inArray, outArray, should_cancel, message_handler); r.invalid())
         {
           return r;
@@ -109,12 +109,12 @@ struct MorphologyCompositeExecuteFn
       // the radius, the second pass never reaches the padded edge over the cropped region, so its own
       // boundary handling is irrelevant to the result -- reproducing ITK's Pad/erode/dilate/Crop exactly.
       const std::array<usize, 3> r = SafeBorderPadRadius(se, dims);
-      const SizeVec3 pdims = {dims[0] + 2 * r[0], dims[1] + 2 * r[1], dims[2] + 2 * r[2]};
+      const SizeVec3Type pdims = {dims[0] + 2 * r[0], dims[1] + 2 * r[1], dims[2] + 2 * r[2]};
       const std::vector<usize> paddedShape = {pdims[2], pdims[1], pdims[0]}; // ZYX tuple shape
       const T padValue = (firstOp == MorphOp::Erode) ? std::numeric_limits<T>::max() : std::numeric_limits<T>::lowest();
 
-      auto paddedIn = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-      auto paddedTmp = DataStoreUtilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto paddedIn = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto paddedTmp = data_store_utilities::CreateDataStoreWithFormat<T>(scratchFormat, paddedShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
 
       if(Result<> r2 = PadIntoStore<T>(inStore, *paddedIn, dims, r, padValue, should_cancel); r2.invalid())
       {
@@ -212,7 +212,7 @@ Result<> ExecuteMorphologyImageFilter(DataStructure& dataStructure, const DataPa
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -226,7 +226,7 @@ Result<> ExecuteMorphologyImageFilter(DataStructure& dataStructure, const DataPa
                                         .op = op,
                                         .should_cancel = shouldCancel,
                                         .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -237,7 +237,7 @@ Result<> ExecuteMorphologyCompositeImageFilter(DataStructure& dataStructure, con
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder && op != MorphCompositeOp::Gradient, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -252,7 +252,7 @@ Result<> ExecuteMorphologyCompositeImageFilter(DataStructure& dataStructure, con
                                                  .safe_border = safeBorder,
                                                  .should_cancel = shouldCancel,
                                                  .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

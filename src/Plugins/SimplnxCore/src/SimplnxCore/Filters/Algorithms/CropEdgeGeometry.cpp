@@ -35,7 +35,7 @@ public:
    * @param taskResult Stores the first copy error from all array tasks.
    */
   CropEdgeGeomArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const std::vector<usize>& sourceIndices, const std::atomic_bool& shouldCancel,
-                    CopyFromArray::ParallelTaskResult& taskResult)
+                    copy_from_array::ParallelTaskResult& taskResult)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SourceIndices(sourceIndices)
@@ -59,7 +59,7 @@ public:
       {
         return;
       }
-      Result<> copyResult = CopyFromArray::CopyData(m_OldCellStore, m_NewCellStore, i, m_SourceIndices[i], 1);
+      Result<> copyResult = copy_from_array::CopyData(m_OldCellStore, m_NewCellStore, i, m_SourceIndices[i], 1);
       if(copyResult.invalid())
       {
         m_TaskResult.store(std::move(copyResult));
@@ -73,7 +73,7 @@ private:
   AbstractDataStore<T>& m_NewCellStore;
   const std::vector<usize>& m_SourceIndices;
   const std::atomic_bool& m_ShouldCancel;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 struct CopyGatheredNeighborLists
@@ -108,7 +108,7 @@ Result<> CopyAttributeArrays(const AttributeMatrix& source, AttributeMatrix& des
                              const IFilter::MessageHandler& messageHandler)
 {
   // The runner joins workers before the result holder or the borrowed gather list can be destroyed.
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   for(const auto& [dataId, object] : source)
   {
@@ -264,24 +264,24 @@ const std::atomic_bool& CropEdgeGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CropEdgeGeometry::operator()()
 {
-  DataPath destEdgeGeomPath = m_InputValues->destEdgeGeomPath;
-  if(m_InputValues->removeOriginalGeometry)
+  DataPath destEdgeGeomPath = m_InputValues->dest_edge_geom_path;
+  if(m_InputValues->remove_original_geometry)
   {
-    auto tempPathVector = m_InputValues->srcEdgeGeomPath.getPathVector();
+    auto tempPathVector = m_InputValues->src_edge_geom_path.getPathVector();
     auto tempName = k_TempGeometryName;
     tempPathVector.back() = tempName;
     destEdgeGeomPath = DataPath({tempPathVector});
   }
 
-  float32 xMin = m_InputValues->cropXDim ? m_InputValues->minCoords[0] : std::numeric_limits<float32>::lowest();
-  float32 xMax = m_InputValues->cropXDim ? m_InputValues->maxCoords[0] : std::numeric_limits<float32>::max();
-  float32 yMin = m_InputValues->cropYDim ? m_InputValues->minCoords[1] : std::numeric_limits<float32>::lowest();
-  float32 yMax = m_InputValues->cropYDim ? m_InputValues->maxCoords[1] : std::numeric_limits<float32>::max();
-  float32 zMin = m_InputValues->cropZDim ? m_InputValues->minCoords[2] : std::numeric_limits<float32>::lowest();
-  float32 zMax = m_InputValues->cropZDim ? m_InputValues->maxCoords[2] : std::numeric_limits<float32>::max();
+  float32 xMin = m_InputValues->crop_x_dim ? m_InputValues->min_coords[0] : std::numeric_limits<float32>::lowest();
+  float32 xMax = m_InputValues->crop_x_dim ? m_InputValues->max_coords[0] : std::numeric_limits<float32>::max();
+  float32 yMin = m_InputValues->crop_y_dim ? m_InputValues->min_coords[1] : std::numeric_limits<float32>::lowest();
+  float32 yMax = m_InputValues->crop_y_dim ? m_InputValues->max_coords[1] : std::numeric_limits<float32>::max();
+  float32 zMin = m_InputValues->crop_z_dim ? m_InputValues->min_coords[2] : std::numeric_limits<float32>::lowest();
+  float32 zMax = m_InputValues->crop_z_dim ? m_InputValues->max_coords[2] : std::numeric_limits<float32>::max();
   std::array<float32, 6> boundingBox = {xMin, yMin, zMin, xMax, yMax, zMax};
 
-  auto& srcEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->srcEdgeGeomPath);
+  auto& srcEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->src_edge_geom_path);
   auto& srcVertices = srcEdgeGeom.getVerticesRef();
   auto& srcEdges = srcEdgeGeom.getEdgesRef();
   auto& srcVertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
@@ -296,7 +296,7 @@ Result<> CropEdgeGeometry::operator()()
   usize numVertices = srcVertices.getNumberOfTuples();
   usize numEdges = srcEdges.getNumberOfTuples();
 
-  auto behavior = static_cast<BoundaryIntersectionBehavior>(m_InputValues->boundaryIntersectionBehavior);
+  auto behavior = static_cast<BoundaryIntersectionBehavior>(m_InputValues->boundary_intersection_behavior);
 
   std::vector<usize> edgeSources;
   std::vector<std::array<uint64, 2>> keptEdges;
@@ -486,18 +486,18 @@ Result<> CropEdgeGeometry::operator()()
     return copyResult;
   }
 
-  if(m_InputValues->clearFeatureAttributeMatrix && m_InputValues->renumberFeatures)
+  if(m_InputValues->clear_feature_attribute_matrix && m_InputValues->renumber_features)
   {
     // Validate all source IDs, including edges removed by the crop, as Crop Image does.
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->edgeFeatureIdsPath);
-    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->featureAttributeMatrixPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->edge_feature_ids_path);
+    auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->feature_attribute_matrix_path, featureIds, false, m_MessageHandler, &m_ShouldCancel);
     if(validateResult.invalid() || m_ShouldCancel)
     {
       return validateResult;
     }
-    const auto destFeatureAmPath = destEdgeGeomPath.createChildPath(m_InputValues->featureAttributeMatrixPath.getTargetName());
-    const auto destFeatureIdsPath = destEdgeGeomPath.createChildPath(srcEdgesAttrMatrix.getName()).createChildPath(m_InputValues->edgeFeatureIdsPath.getTargetName());
-    return Sampling::RenumberFeatures(m_DataStructure, destFeatureAmPath, m_InputValues->edgeFeatureIdsPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+    const auto destFeatureAmPath = destEdgeGeomPath.createChildPath(m_InputValues->feature_attribute_matrix_path.getTargetName());
+    const auto destFeatureIdsPath = destEdgeGeomPath.createChildPath(srcEdgesAttrMatrix.getName()).createChildPath(m_InputValues->edge_feature_ids_path.getTargetName());
+    return sampling::RenumberFeatures(m_DataStructure, destFeatureAmPath, m_InputValues->edge_feature_ids_path, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
   return {};
 }

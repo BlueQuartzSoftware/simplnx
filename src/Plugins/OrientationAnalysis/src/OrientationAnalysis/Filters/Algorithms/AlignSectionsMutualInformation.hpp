@@ -23,20 +23,20 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationInputValues
 {
-  DataPath ImageGeometryPath;
-  bool UseMask = false;
-  DataPath MaskArrayPath;
+  DataPath image_geometry_path;
+  bool use_mask = false;
+  DataPath mask_array_path;
 
-  float32 MisorientationTolerance = 0.0f;
-  DataPath QuatsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
+  float32 misorientation_tolerance = 0.0f;
+  DataPath quats_array_path;
+  DataPath cell_phases_array_path;
+  DataPath crystal_structures_array_path;
 
-  bool StoreAlignmentShifts = false;
-  DataPath AlignmentAMPath;
-  DataPath SlicesArrayPath;
-  DataPath RelativeShiftsArrayPath;
-  DataPath CumulativeShiftsArrayPath;
+  bool store_alignment_shifts = false;
+  DataPath alignment_am_path;
+  DataPath slices_array_path;
+  DataPath relative_shifts_array_path;
+  DataPath cumulative_shifts_array_path;
 };
 
 /**

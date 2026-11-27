@@ -77,24 +77,24 @@ float32 SmoothingLambda(int8 nodeType, const LaplacianSmoothingInputValues& inpu
 {
   switch(nodeType)
   {
-  case node_type::Default:
-    return input.pLambda;
-  case node_type::TriplePoint:
-    return input.pTripleLineLambda;
-  case node_type::QuadPoint:
-    return input.pQuadPointLambda;
-  case node_type::SurfaceDefault:
-    return input.pSurfacePointLambda;
-  case node_type::SurfaceTriplePoint:
-    return input.pSurfaceTripleLineLambda;
-  case node_type::SurfaceQuadPoint:
-    return input.pSurfaceQuadPointLambda;
+  case node_type::k_Default:
+    return input.p_lambda;
+  case node_type::k_TriplePoint:
+    return input.p_triple_line_lambda;
+  case node_type::k_QuadPoint:
+    return input.p_quad_point_lambda;
+  case node_type::k_SurfaceDefault:
+    return input.p_surface_point_lambda;
+  case node_type::k_SurfaceTriplePoint:
+    return input.p_surface_triple_line_lambda;
+  case node_type::k_SurfaceQuadPoint:
+    return input.p_surface_quad_point_lambda;
   default:
     return 0.0F;
   }
 }
 
-Result<> ReadSmoothingLambdas(const Int8AbstractDataStore& nodes, std::vector<float32>& lambdas, const LaplacianSmoothingInputValues& input)
+Result<> ReadSmoothingLambdas(const Int8AbstractDataStoreType& nodes, std::vector<float32>& lambdas, const LaplacianSmoothingInputValues& input)
 {
   const usize count = nodes.getNumberOfTuples();
   lambdas.assign(count, 0.0F);
@@ -102,12 +102,12 @@ Result<> ReadSmoothingLambdas(const Int8AbstractDataStore& nodes, std::vector<fl
   {
     return {};
   }
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   auto reservation = budget.reserveWorkingMemory(std::min<uint64>(count, budget.maximumWorkingMemoryBytes()));
   const usize capacity = static_cast<usize>(std::min<uint64>(count, reservation.sizeBytes() / sizeof(int8)));
   if(capacity == 0)
   {
-    return MakeErrorResult(-564, fmt::format("Smoothing node types at '{}' requested {} working bytes and received {}. At least {} bytes are required.", input.pSurfaceMeshNodeTypeArrayPath.toString(),
+    return MakeErrorResult(-564, fmt::format("Smoothing node types at '{}' requested {} working bytes and received {}. At least {} bytes are required.", input.p_surface_mesh_node_type_array_path.toString(),
                                              count, reservation.sizeBytes(), sizeof(int8)));
   }
   std::vector<int8> page(capacity);
@@ -115,11 +115,11 @@ Result<> ReadSmoothingLambdas(const Int8AbstractDataStore& nodes, std::vector<fl
   for(usize first = 0; first < count;)
   {
     const usize size = std::min(capacity, count - first);
-    result = MeshingUtilities::detail::MergeTransferResult(result, nodes.copyIntoBuffer(first, {page.data(), size}));
+    result = meshing_utilities::detail::MergeTransferResult(result, nodes.copyIntoBuffer(first, {page.data(), size}));
     if(result.invalid())
     {
-      return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] {
-        return MakeErrorResult(-560, fmt::format("Error reading node types at path '{}' (first vertex {}, count {}).", input.pSurfaceMeshNodeTypeArrayPath.toString(), first, size));
+      return meshing_utilities::detail::WithTransferFailureContext(std::move(result), [&] {
+        return MakeErrorResult(-560, fmt::format("Error reading node types at path '{}' (first vertex {}, count {}).", input.p_surface_mesh_node_type_array_path.toString(), first, size));
       });
     }
     for(usize index = 0; index < size; ++index)
@@ -156,7 +156,7 @@ Result<> WriteTemporaryCoordinates(ITemporaryRecordStore& temporary, usize first
   return temporary.write(first, page.size() / 3, {bytes.data(), bytes.size()}, active);
 }
 
-Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32AbstractDataStore& vertices, const AbstractDataStore<SmoothingIndexType>& edges)
+Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32AbstractDataStoreType& vertices, const AbstractDataStore<SmoothingIndexType>& edges)
 {
   constexpr usize k_Maximum = std::numeric_limits<usize>::max();
   constexpr usize k_VertexUnit = 3 * sizeof(float32);
@@ -171,7 +171,7 @@ Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32Abstra
   const usize vertexBytes = vertexCount * k_VertexUnit;
   const usize edgeBytes = edgeCount * k_EdgeUnit;
   const usize requested = vertexBytes + edgeBytes;
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   work.reservation = budget.reserveWorkingMemory(std::min<uint64>(requested, budget.maximumWorkingMemoryBytes()));
   const usize granted = static_cast<usize>(std::min<uint64>(work.reservation.sizeBytes(), k_Maximum));
   const usize gatherEdges = std::min(std::max(usize{1}, edgeCount), granted / k_GatherUnit);
@@ -198,10 +198,10 @@ Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32Abstra
   Result<> result;
   if(work.cache_vertices)
   {
-    result = MeshingUtilities::detail::MergeTransferResult(result, vertices.copyIntoBuffer(0, {work.Vertices.data(), work.Vertices.size()}));
+    result = meshing_utilities::detail::MergeTransferResult(result, vertices.copyIntoBuffer(0, {work.Vertices.data(), work.Vertices.size()}));
     if(result.invalid())
     {
-      return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-561, "Error reading smoothing vertex coordinates."); });
+      return meshing_utilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-561, "Error reading smoothing vertex coordinates."); });
     }
   }
   else
@@ -212,14 +212,14 @@ Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32Abstra
     work.Page.resize(pageVertices * 3);
     work.publication_capacity = pageVertices;
     TemporaryRecordStoreConfig config;
-    config.recordSize = k_VertexUnit;
-    config.initialRecordCount = vertexCount;
-    config.maxRecordsPerBatch = pageVertices;
-    config.readOnly = false;
-    auto created = DataStoreUtilities::CreateTemporaryRecordStore(config);
+    config.record_size = k_VertexUnit;
+    config.initial_record_count = vertexCount;
+    config.max_records_per_batch = pageVertices;
+    config.read_only = false;
+    auto created = data_store_utilities::CreateTemporaryRecordStore(config);
     if(created.invalid())
     {
-      return MeshingUtilities::detail::PreserveTransferFailure(result, ConvertResult(std::move(created)));
+      return meshing_utilities::detail::PreserveTransferFailure(result, ConvertResult(std::move(created)));
     }
     if(created.value() == nullptr)
     {
@@ -230,16 +230,16 @@ Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32Abstra
     for(usize first = 0; first < vertexCount;)
     {
       const usize count = std::min(pageVertices, vertexCount - first);
-      result = MeshingUtilities::detail::MergeTransferResult(result, vertices.copyIntoBuffer(first * 3, {work.Page.data(), count * 3}));
+      result = meshing_utilities::detail::MergeTransferResult(result, vertices.copyIntoBuffer(first * 3, {work.Page.data(), count * 3}));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(
+        return meshing_utilities::detail::WithTransferFailureContext(
             std::move(result), [&] { return MakeErrorResult(-561, fmt::format("Error reading smoothing coordinates at vertex {} ({} vertices).", first, count)); });
       }
-      result = MeshingUtilities::detail::MergeTransferResult(result, WriteTemporaryCoordinates(*work.Temporary, first, {work.Page.data(), count * 3}));
+      result = meshing_utilities::detail::MergeTransferResult(result, WriteTemporaryCoordinates(*work.Temporary, first, {work.Page.data(), count * 3}));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(
+        return meshing_utilities::detail::WithTransferFailureContext(
             std::move(result), [&] { return MakeErrorResult(-569, fmt::format("Error initializing temporary smoothing coordinates at vertex {} ({} vertices).", first, count)); });
       }
       first += count;
@@ -247,10 +247,10 @@ Result<> PrepareSmoothingWorkspace(SmoothingWorkspace& work, const Float32Abstra
   }
   if(work.cache_edges)
   {
-    result = MeshingUtilities::detail::MergeTransferResult(result, edges.copyIntoBuffer(0, {work.Edges.data(), work.Edges.size()}));
+    result = meshing_utilities::detail::MergeTransferResult(result, edges.copyIntoBuffer(0, {work.Edges.data(), work.Edges.size()}));
     if(result.invalid())
     {
-      return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-562, "Error reading smoothing edges."); });
+      return meshing_utilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-562, "Error reading smoothing edges."); });
     }
   }
   return result;
@@ -265,10 +265,10 @@ Result<> AccumulateSmoothingDeltas(SmoothingWorkspace& work, const AbstractDataS
     const usize count = std::min(work.edge_capacity, edgeCount - first);
     if(!work.cache_edges)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(result, edges.copyIntoBuffer(first * 2, {work.Edges.data(), count * 2}));
+      result = meshing_utilities::detail::MergeTransferResult(result, edges.copyIntoBuffer(first * 2, {work.Edges.data(), count * 2}));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+        return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
                                                                     [&] { return MakeErrorResult(-562, fmt::format("Error reading smoothing edges at edge {} ({} edges).", first, count)); });
       }
     }
@@ -283,11 +283,11 @@ Result<> AccumulateSmoothingDeltas(SmoothingWorkspace& work, const AbstractDataS
     }
     if(!work.cache_vertices)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(
-          result, MeshingUtilities::detail::GatherVertexCoordinates(*work.Temporary, block, {work.order.data(), count * 2}, {work.gathered.data(), count * 6}, {work.Page.data(), work.Page.size()}));
+      result = meshing_utilities::detail::MergeTransferResult(
+          result, meshing_utilities::detail::GatherVertexCoordinates(*work.Temporary, block, {work.order.data(), count * 2}, {work.gathered.data(), count * 6}, {work.Page.data(), work.Page.size()}));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+        return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
                                                                     [&] { return MakeErrorResult(-571, fmt::format("Error gathering smoothing coordinates for edge {} ({} edges).", first, count)); });
       }
     }
@@ -327,7 +327,7 @@ Result<> UpdateSmoothingCoordinates(SmoothingWorkspace& work, const std::vector<
                                                    nonstd::span<float32>(work.Page.data(), work.Page.size()).first(count * 3);
     if(!work.cache_vertices)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(result, ReadTemporaryCoordinates(*work.Temporary, first, coordinates));
+      result = meshing_utilities::detail::MergeTransferResult(result, ReadTemporaryCoordinates(*work.Temporary, first, coordinates));
       if(result.invalid())
       {
         return result;
@@ -348,10 +348,10 @@ Result<> UpdateSmoothingCoordinates(SmoothingWorkspace& work, const std::vector<
     }
     if(!work.cache_vertices)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(result, WriteTemporaryCoordinates(*work.Temporary, first, {coordinates.data(), coordinates.size()}));
+      result = meshing_utilities::detail::MergeTransferResult(result, WriteTemporaryCoordinates(*work.Temporary, first, {coordinates.data(), coordinates.size()}));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(
+        return meshing_utilities::detail::WithTransferFailureContext(
             std::move(result), [&] { return MakeErrorResult(-572, fmt::format("Error updating temporary smoothing coordinates at vertex {} ({} vertices).", first, count)); });
       }
     }
@@ -386,7 +386,7 @@ Result<> ReadPublicationCoordinates(ITemporaryRecordStore* temporaryPtr, std::sp
  * After byte staging, terminalDelta provides storage only. Do not read or resize its double elements.
  * Publication does not check cancellation. Completed passes can still be published after cancellation.
  */
-Result<> PublishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDataStore& vertices, std::vector<double> terminalDelta)
+Result<> PublishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDataStoreType& vertices, std::vector<double> terminalDelta)
 {
   const usize vertexCount = vertices.getNumberOfTuples();
   constexpr usize k_Maximum = std::numeric_limits<usize>::max();
@@ -413,7 +413,7 @@ Result<> PublishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDat
   }
   const usize preferredCapacity = work.publication_capacity;
   ReleaseSmoothingCompute(work);
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   Result<> result;
   {
     auto firstReservation = budget.reserveWorkingMemory(3 * sizeof(float32));
@@ -422,16 +422,16 @@ Result<> PublishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDat
       return MakeErrorResult(-575, fmt::format("Smoothing publication needs {} working bytes for its first XYZ tuple, but received {}.", 3 * sizeof(float32), firstReservation.sizeBytes()));
     }
     std::array<float32, 3> first{};
-    result = MeshingUtilities::detail::MergeTransferResult(result, ReadPublicationCoordinates(work.Temporary.get(), staged, 0, {first.data(), first.size()}));
+    result = meshing_utilities::detail::MergeTransferResult(result, ReadPublicationCoordinates(work.Temporary.get(), staged, 0, {first.data(), first.size()}));
     if(result.invalid())
     {
       return result;
     }
     // This real first output tuple permits an imported store to reserve its own COW buffers.
-    result = MeshingUtilities::detail::MergeTransferResult(result, vertices.copyFromBuffer(0, {first.data(), first.size()}));
+    result = meshing_utilities::detail::MergeTransferResult(result, vertices.copyFromBuffer(0, {first.data(), first.size()}));
     if(result.invalid())
     {
-      return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-563, "Error writing the first smoothed XYZ tuple."); });
+      return meshing_utilities::detail::WithTransferFailureContext(std::move(result), [&] { return MakeErrorResult(-563, "Error writing the first smoothed XYZ tuple."); });
     }
   }
   if(vertexCount == 1)
@@ -449,15 +449,15 @@ Result<> PublishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDat
   for(usize first = 1; first < vertexCount;)
   {
     const usize count = std::min(capacity, vertexCount - first);
-    result = MeshingUtilities::detail::MergeTransferResult(result, ReadPublicationCoordinates(work.Temporary.get(), staged, first, {page.data(), count * 3}));
+    result = meshing_utilities::detail::MergeTransferResult(result, ReadPublicationCoordinates(work.Temporary.get(), staged, first, {page.data(), count * 3}));
     if(result.invalid())
     {
       return result;
     }
-    result = MeshingUtilities::detail::MergeTransferResult(result, vertices.copyFromBuffer(first * 3, {page.data(), count * 3}));
+    result = meshing_utilities::detail::MergeTransferResult(result, vertices.copyFromBuffer(first * 3, {page.data(), count * 3}));
     if(result.invalid())
     {
-      return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
+      return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
                                                                   [&] { return MakeErrorResult(-563, fmt::format("Error writing smoothed XYZ tuples at vertex {} ({} vertices).", first, count)); });
     }
     first += count;
@@ -470,9 +470,9 @@ Result<> SmoothOutOfCoreMesh(DataStructure& dataStructure, const LaplacianSmooth
   Result<> result;
   try
   {
-    auto& geometry = dataStructure.getDataRefAs<INodeGeometry1D>(input.pTriangleGeometryDataPath);
+    auto& geometry = dataStructure.getDataRefAs<INodeGeometry1D>(input.p_triangle_geometry_data_path);
     auto& vertices = geometry.getVertices()->getDataStoreRef();
-    auto& nodes = dataStructure.getDataRefAs<Int8Array>(input.pSurfaceMeshNodeTypeArrayPath).getDataStoreRef();
+    auto& nodes = dataStructure.getDataRefAs<Int8ArrayType>(input.p_surface_mesh_node_type_array_path).getDataStoreRef();
     const usize vertexCount = vertices.getNumberOfTuples();
     constexpr usize k_Maximum = std::numeric_limits<usize>::max();
     if(vertices.getNumberOfComponents() != 3 || nodes.getNumberOfComponents() != 1 || nodes.getNumberOfTuples() != vertexCount || vertexCount > k_Maximum / (3 * sizeof(double)))
@@ -480,14 +480,14 @@ Result<> SmoothOutOfCoreMesh(DataStructure& dataStructure, const LaplacianSmooth
       return MakeErrorResult(-576, "Smoothing requires addressable XYZ vertices and one node classification per vertex. Repair the array shapes or reduce the mesh size.");
     }
     std::vector<float32> lambdas;
-    result = MeshingUtilities::detail::MergeTransferResult(result, ReadSmoothingLambdas(nodes, lambdas, input));
+    result = meshing_utilities::detail::MergeTransferResult(result, ReadSmoothingLambdas(nodes, lambdas, input));
     if(result.invalid())
     {
       return result;
     }
-    if(auto* trianglesPtr = dataStructure.getDataAs<INodeGeometry2D>(input.pTriangleGeometryDataPath); trianglesPtr != nullptr)
+    if(auto* trianglesPtr = dataStructure.getDataAs<INodeGeometry2D>(input.p_triangle_geometry_data_path); trianglesPtr != nullptr)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(result, trianglesPtr->findEdges(false));
+      result = meshing_utilities::detail::MergeTransferResult(result, trianglesPtr->findEdges(false));
       if(result.invalid())
       {
         return result;
@@ -500,7 +500,7 @@ Result<> SmoothOutOfCoreMesh(DataStructure& dataStructure, const LaplacianSmooth
     }
     auto& edges = edgeArrayPtr->getDataStoreRef();
     SmoothingWorkspace work;
-    result = MeshingUtilities::detail::MergeTransferResult(result, PrepareSmoothingWorkspace(work, vertices, edges));
+    result = meshing_utilities::detail::MergeTransferResult(result, PrepareSmoothingWorkspace(work, vertices, edges));
     if(result.invalid())
     {
       return result;
@@ -511,38 +511,38 @@ Result<> SmoothOutOfCoreMesh(DataStructure& dataStructure, const LaplacianSmooth
     bool modified = false;
     ProgressEstimator progressEstimator;
     progressEstimator.restart();
-    const usize iterationCount = input.pIterationSteps > 0 ? static_cast<usize>(input.pIterationSteps) : 0;
+    const usize iterationCount = input.p_iteration_steps > 0 ? static_cast<usize>(input.p_iteration_steps) : 0;
     messages.sendProgressCount("Smoothing Iterations", 0, iterationCount);
-    for(int32 iteration = 0; iteration < input.pIterationSteps; ++iteration)
+    for(int32 iteration = 0; iteration < input.p_iteration_steps; ++iteration)
     {
       if(shouldCancel)
       {
         break;
       }
-      result = MeshingUtilities::detail::MergeTransferResult(result, AccumulateSmoothingDeltas(work, edges, vertexCount, deltas, connections));
+      result = meshing_utilities::detail::MergeTransferResult(result, AccumulateSmoothingDeltas(work, edges, vertexCount, deltas, connections));
       if(result.invalid())
       {
         return result;
       }
-      result = MeshingUtilities::detail::MergeTransferResult(result, UpdateSmoothingCoordinates(work, lambdas, deltas, connections, false, input.pMuFactor));
+      result = meshing_utilities::detail::MergeTransferResult(result, UpdateSmoothingCoordinates(work, lambdas, deltas, connections, false, input.p_mu_factor));
       if(result.invalid())
       {
         return result;
       }
       modified = true;
-      if(input.pUseTaubinSmoothing)
+      if(input.p_use_taubin_smoothing)
       {
         messages.sendProgressCount("Smoothing Iterations", static_cast<usize>(iteration), iterationCount, "Starting Taubin pass");
         if(shouldCancel)
         {
           break;
         }
-        result = MeshingUtilities::detail::MergeTransferResult(result, AccumulateSmoothingDeltas(work, edges, vertexCount, deltas, connections));
+        result = meshing_utilities::detail::MergeTransferResult(result, AccumulateSmoothingDeltas(work, edges, vertexCount, deltas, connections));
         if(result.invalid())
         {
           return result;
         }
-        result = MeshingUtilities::detail::MergeTransferResult(result, UpdateSmoothingCoordinates(work, lambdas, deltas, connections, true, input.pMuFactor));
+        result = meshing_utilities::detail::MergeTransferResult(result, UpdateSmoothingCoordinates(work, lambdas, deltas, connections, true, input.p_mu_factor));
         if(result.invalid())
         {
           return result;
@@ -552,17 +552,17 @@ Result<> SmoothOutOfCoreMesh(DataStructure& dataStructure, const LaplacianSmooth
     }
     if(modified)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(result, PublishSmoothedCoordinates(work, vertices, std::move(deltas)));
+      result = meshing_utilities::detail::MergeTransferResult(result, PublishSmoothedCoordinates(work, vertices, std::move(deltas)));
     }
     return result;
   } catch(const std::bad_alloc&)
   {
     return MergeResults(std::move(result), MakeErrorResult(-578, fmt::format("Smoothing could not allocate its working buffers for '{}'. Free memory or reduce the mesh size.",
-                                                                             input.pTriangleGeometryDataPath.toString())));
+                                                                             input.p_triangle_geometry_data_path.toString())));
   } catch(const std::length_error&)
   {
     return MergeResults(std::move(result),
-                        MakeErrorResult(-578, fmt::format("Smoothing exceeded an addressable buffer size for '{}'. Reduce the mesh size.", input.pTriangleGeometryDataPath.toString())));
+                        MakeErrorResult(-578, fmt::format("Smoothing exceeded an addressable buffer size for '{}'. Reduce the mesh size.", input.p_triangle_geometry_data_path.toString())));
   }
 }
 } // namespace
@@ -577,9 +577,9 @@ LaplacianSmoothing::LaplacianSmoothing(DataStructure& dataStructure, LaplacianSm
 
 Result<> LaplacianSmoothing::operator()()
 {
-  auto* nodeGeom2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  auto* nodeGeom2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->p_triangle_geometry_data_path);
   const bool hadEdges = nodeGeom2DPtr != nullptr && nodeGeom2DPtr->getEdges() != nullptr;
-  const DataPath edgesPath = m_InputValues->pTriangleGeometryDataPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName);
+  const DataPath edgesPath = m_InputValues->p_triangle_geometry_data_path.createChildPath(INodeGeometry1D::k_SharedEdgeListName);
   const bool hadNamedChild = nodeGeom2DPtr != nullptr && m_DataStructure.getData(edgesPath) != nullptr;
 
   auto result = edgeBasedSmoothing();
@@ -605,19 +605,19 @@ Result<> LaplacianSmoothing::operator()()
 // -----------------------------------------------------------------------------
 Result<> LaplacianSmoothing::edgeBasedSmoothing()
 {
-  auto& nodeGeom1DRef = m_DataStructure.getDataRefAs<INodeGeometry1D>(m_InputValues->pTriangleGeometryDataPath);
+  auto& nodeGeom1DRef = m_DataStructure.getDataRefAs<INodeGeometry1D>(m_InputValues->p_triangle_geometry_data_path);
 
   if(nodeGeom1DRef.getVertices() == nullptr)
   {
-    return MakeErrorResult(-559, fmt::format("Error finding vertices for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString()));
+    return MakeErrorResult(-559, fmt::format("Error finding vertices for geometry at path '{}'.", m_InputValues->p_triangle_geometry_data_path.toString()));
   }
 
-  Float32AbstractDataStore& vertDataStoreRef = nodeGeom1DRef.getVertices()->getDataStoreRef();
+  Float32AbstractDataStoreType& vertDataStoreRef = nodeGeom1DRef.getVertices()->getDataStoreRef();
   IGeometry::MeshIndexType numberOfVertices = nodeGeom1DRef.getNumberOfVertices();
 
-  const auto* surfacePtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  const auto* surfacePtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->p_triangle_geometry_data_path);
   const bool usesOutOfCoreStore = AnyOutOfCore({nodeGeom1DRef.getVertices(), nodeGeom1DRef.getEdges(), surfacePtr == nullptr ? nullptr : surfacePtr->getFaces(),
-                                                m_DataStructure.getDataAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath)});
+                                                m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->p_surface_mesh_node_type_array_path)});
   const bool useOutOfCoreAlgorithm = ShouldUseOutOfCoreAlgorithm(usesOutOfCoreStore);
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
   if(useOutOfCoreAlgorithm)
@@ -633,7 +633,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     return result;
   }
 
-  auto* inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  auto* inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->p_triangle_geometry_data_path);
   if(nullptr != inode2DPtr)
   {
     //  Generate the Unique Edges
@@ -644,7 +644,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
   }
 
-  const AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edgeDataStore = nodeGeom1DRef.getEdges()->getDataStoreRef();
+  const AbstractDataStore<IGeometry::SharedEdgeListType::value_type>& edgeDataStore = nodeGeom1DRef.getEdges()->getDataStoreRef();
   const IGeometry::MeshIndexType numEdges = edgeDataStore.getNumberOfTuples();
 
   // Cache coordinates and edges once to avoid per-element OOC I/O in every iteration.
@@ -653,14 +653,14 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   result = MergeResults(std::move(result), vertDataStoreRef.copyIntoBuffer(0, nonstd::span<float>(vertices.data(), vertices.size())));
   if(result.invalid())
   {
-    return MergeResults(std::move(result), MakeErrorResult(-561, fmt::format("Error reading vertices for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString())));
+    return MergeResults(std::move(result), MakeErrorResult(-561, fmt::format("Error reading vertices for geometry at path '{}'.", m_InputValues->p_triangle_geometry_data_path.toString())));
   }
 
   std::vector<IGeometry::MeshIndexType> edges(numEdges * 2);
   result = MergeResults(std::move(result), edgeDataStore.copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(edges.data(), edges.size())));
   if(result.invalid())
   {
-    return MergeResults(std::move(result), MakeErrorResult(-562, fmt::format("Error reading edges for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString())));
+    return MergeResults(std::move(result), MakeErrorResult(-562, fmt::format("Error reading edges for geometry at path '{}'.", m_InputValues->p_triangle_geometry_data_path.toString())));
   }
 
   bool verticesModified = false;
@@ -671,7 +671,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       result = MergeResults(std::move(result), vertDataStoreRef.copyFromBuffer(0, nonstd::span<const float>(vertices.data(), vertices.size())));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-563, fmt::format("Error writing smoothed vertices for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString())));
+        return MergeResults(std::move(result), MakeErrorResult(-563, fmt::format("Error writing smoothed vertices for geometry at path '{}'.", m_InputValues->p_triangle_geometry_data_path.toString())));
       }
     }
     return std::move(result);
@@ -684,9 +684,9 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 
   ProgressEstimator progressEstimator;
   progressEstimator.restart();
-  const usize iterationCount = m_InputValues->pIterationSteps > 0 ? static_cast<usize>(m_InputValues->pIterationSteps) : 0;
+  const usize iterationCount = m_InputValues->p_iteration_steps > 0 ? static_cast<usize>(m_InputValues->p_iteration_steps) : 0;
   m_MessageHandler.sendProgressCount("Smoothing Iterations", 0, iterationCount);
-  for(int32_t q = 0; q < m_InputValues->pIterationSteps; q++)
+  for(int32_t q = 0; q < m_InputValues->p_iteration_steps; q++)
   {
     if(m_ShouldCancel)
     {
@@ -732,7 +732,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     // Now optionally apply a negative lambda based on the mu Factor value.
     // This is from Taubin's paper on smoothing without shrinkage. This effectively
     // runs a low pass filter on the data
-    if(m_InputValues->pUseTaubinSmoothing)
+    if(m_InputValues->p_use_taubin_smoothing)
     {
       m_MessageHandler.sendProgressCount("Smoothing Iterations", static_cast<usize>(q), iterationCount, "Starting Taubin pass");
       if(m_ShouldCancel)
@@ -767,7 +767,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
           const IGeometry::MeshIndexType in0 = (3 * i) + j;
           dlta = deltaArray[in0] / numConnections[i];
 
-          float ll = lambdas[i] * m_InputValues->pMuFactor;
+          float ll = lambdas[i] * m_InputValues->p_mu_factor;
           vertices[(3 * i) + j] += static_cast<float>(ll * dlta);
           deltaArray[in0] = 0.0; // reset for next iteration
         }
@@ -783,7 +783,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 // -----------------------------------------------------------------------------
 Result<> LaplacianSmoothing::generateLambdaArray(std::vector<float>& lambdas) const
 {
-  auto& surfaceMeshNode = m_DataStructure.getDataAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath)->getDataStoreRef();
+  auto& surfaceMeshNode = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->p_surface_mesh_node_type_array_path)->getDataStoreRef();
 
   size_t numNodes = surfaceMeshNode.getNumberOfTuples();
 
@@ -791,7 +791,7 @@ Result<> LaplacianSmoothing::generateLambdaArray(std::vector<float>& lambdas) co
   Result<> result = surfaceMeshNode.copyIntoBuffer(0, nonstd::span<int8>(nodeTypes.data(), nodeTypes.size()));
   if(result.invalid())
   {
-    return MergeResults(std::move(result), MakeErrorResult(-560, fmt::format("Error reading node types at path '{}'.", m_InputValues->pSurfaceMeshNodeTypeArrayPath.toString())));
+    return MergeResults(std::move(result), MakeErrorResult(-560, fmt::format("Error reading node types at path '{}'.", m_InputValues->p_surface_mesh_node_type_array_path.toString())));
   }
 
   lambdas.assign(numNodes, 0.0f);
@@ -800,25 +800,25 @@ Result<> LaplacianSmoothing::generateLambdaArray(std::vector<float>& lambdas) co
   {
     switch(nodeTypes[i])
     {
-    case nx::core::node_type::Unused:
+    case nx::core::node_type::k_Unused:
       break;
-    case nx::core::node_type::Default:
-      lambdas[i] = m_InputValues->pLambda;
+    case nx::core::node_type::k_Default:
+      lambdas[i] = m_InputValues->p_lambda;
       break;
-    case nx::core::node_type::TriplePoint:
-      lambdas[i] = m_InputValues->pTripleLineLambda;
+    case nx::core::node_type::k_TriplePoint:
+      lambdas[i] = m_InputValues->p_triple_line_lambda;
       break;
-    case nx::core::node_type::QuadPoint:
-      lambdas[i] = m_InputValues->pQuadPointLambda;
+    case nx::core::node_type::k_QuadPoint:
+      lambdas[i] = m_InputValues->p_quad_point_lambda;
       break;
-    case nx::core::node_type::SurfaceDefault:
-      lambdas[i] = m_InputValues->pSurfacePointLambda;
+    case nx::core::node_type::k_SurfaceDefault:
+      lambdas[i] = m_InputValues->p_surface_point_lambda;
       break;
-    case nx::core::node_type::SurfaceTriplePoint:
-      lambdas[i] = m_InputValues->pSurfaceTripleLineLambda;
+    case nx::core::node_type::k_SurfaceTriplePoint:
+      lambdas[i] = m_InputValues->p_surface_triple_line_lambda;
       break;
-    case nx::core::node_type::SurfaceQuadPoint:
-      lambdas[i] = m_InputValues->pSurfaceQuadPointLambda;
+    case nx::core::node_type::k_SurfaceQuadPoint:
+      lambdas[i] = m_InputValues->p_surface_quad_point_lambda;
       break;
     default:
       break;

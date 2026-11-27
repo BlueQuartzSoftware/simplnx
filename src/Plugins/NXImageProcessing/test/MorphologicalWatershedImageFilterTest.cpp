@@ -46,7 +46,7 @@ void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath&
   args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(markWatershedLine));
   args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -59,15 +59,15 @@ void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath&
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guards", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -80,8 +80,8 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guard
     args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(true));
     args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input creates a uint32 output")
   {
@@ -169,7 +169,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: ITK real-image 
 
 TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejects missing temporary provider", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
   auto& collection = application->getIOCollection();
   const DataIOCollection::MapType originalManagers(collection.begin(), collection.end());
@@ -209,11 +209,11 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejec
     auto inputStoreResult = EmptyDataStore<int16>::Create(tupleShape, componentShape, plannedFormat);
     SIMPLNX_RESULT_REQUIRE_VALID(inputStoreResult);
     const auto* inputStorePtr = inputStoreResult.value().get();
-    auto* inputArrayPtr = Int16Array::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellDataPtr->getId());
+    auto* inputArrayPtr = Int16ArrayType::Create(dataStructure, inputPath.getTargetName(), std::move(inputStoreResult.value()), cellDataPtr->getId());
     REQUIRE(inputArrayPtr != nullptr);
 
     const auto checkInput = [&] {
-      REQUIRE(dataStructure.getDataAs<Int16Array>(inputPath) == inputArrayPtr);
+      REQUIRE(dataStructure.getDataAs<Int16ArrayType>(inputPath) == inputArrayPtr);
       REQUIRE(inputArrayPtr->getIDataStore() == inputStorePtr);
       REQUIRE(inputArrayPtr->getDataType() == DataType::int16);
       REQUIRE(inputArrayPtr->getTupleShape() == tupleShape);
@@ -235,15 +235,15 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejec
     args.insertOrAssign(WsFilterType::k_MarkWatershedLine_Key, std::make_any<bool>(true));
     args.insertOrAssign(WsFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
     const auto result = filter.preflight(dataStructure, args);
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors().front().code == -79048);
-    REQUIRE(result.outputActions.errors().front().message.find(inputPath.toString()) != std::string::npos);
-    REQUIRE(result.outputActions.warnings().empty());
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors().front().code == -79048);
+    REQUIRE(result.output_actions.errors().front().message.find(inputPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.warnings().empty());
     REQUIRE(dataStructure.getData(outputPath) == nullptr);
     REQUIRE(dataStructure.getAllDataObjectIds() == originalIds);
     checkInput();
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   const DataIOCollection::MapType restoredManagers(collection.begin(), collection.end());

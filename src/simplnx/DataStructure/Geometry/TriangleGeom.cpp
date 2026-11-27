@@ -82,9 +82,9 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
 
     INodeGeometry2D::copyMembersInto(*copy, copyPath);
     copy->m_FaceListId = deepCopyOwnedChild(copyPath, getFaces());
-    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltsContainingVert);
-    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicList>(copyPath, k_EltNeighbors);
-    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32Array>(copyPath, k_EltCentroids);
+    copy->m_CellContainingVertDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltsContainingVert);
+    copy->m_CellNeighborsDataArrayId = adoptCopiedChild<ElementDynamicListType>(copyPath, k_EltNeighbors);
+    copy->m_CellCentroidsDataArrayId = adoptCopiedChild<Float32ArrayType>(copyPath, k_EltCentroids);
 
     return copy;
   }
@@ -103,7 +103,7 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
 
 Result<> TriangleGeom::findElementSizes(bool recalculate)
 {
-  auto* triangleSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  auto* triangleSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_ElementSizesId);
   if(triangleSizesPtr != nullptr && !recalculate)
   {
     return {};
@@ -120,7 +120,7 @@ Result<> TriangleGeom::findElementSizes(bool recalculate)
     }
   }
 
-  GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizesPtr);
+  geometry_helpers::topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizesPtr);
   m_ElementSizesId = triangleSizesPtr->getId();
 
   return {};
@@ -128,7 +128,7 @@ Result<> TriangleGeom::findElementSizes(bool recalculate)
 
 Result<> TriangleGeom::findElementsContainingVert(bool recalculate)
 {
-  auto* trianglesContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
+  auto* trianglesContainingVertPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellContainingVertDataArrayId);
   if(trianglesContainingVertPtr != nullptr && !recalculate)
   {
     return {};
@@ -144,7 +144,7 @@ Result<> TriangleGeom::findElementsContainingVert(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVertPtr, getNumberOfVertices());
+  auto findResult = geometry_helpers::connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVertPtr, getNumberOfVertices());
   if(findResult.invalid())
   {
     m_CellContainingVertDataArrayId.reset();
@@ -157,7 +157,7 @@ Result<> TriangleGeom::findElementsContainingVert(bool recalculate)
 
 Result<> TriangleGeom::findElementNeighbors(bool recalculate)
 {
-  auto* triangleNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
+  auto* triangleNeighborsPtr = getDataStructureRef().getDataAsUnsafe<ElementDynamicListType>(m_CellNeighborsDataArrayId);
   if(triangleNeighborsPtr != nullptr && !recalculate)
   {
     return {};
@@ -171,7 +171,7 @@ Result<> TriangleGeom::findElementNeighbors(bool recalculate)
   }
   if(triangleNeighborsPtr == nullptr)
   {
-    triangleNeighborsPtr = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+    triangleNeighborsPtr = ElementDynamicListType::Create(*getDataStructure(), k_EltNeighbors, getId());
     if(triangleNeighborsPtr == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
@@ -181,7 +181,7 @@ Result<> TriangleGeom::findElementNeighbors(bool recalculate)
 
   m_CellNeighborsDataArrayId = triangleNeighborsPtr->getId();
 
-  auto findResult = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighborsPtr, Type::Triangle);
+  auto findResult = geometry_helpers::connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighborsPtr, Type::Triangle);
   if(findResult.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
@@ -193,7 +193,7 @@ Result<> TriangleGeom::findElementNeighbors(bool recalculate)
 
 Result<> TriangleGeom::findElementCentroids(bool recalculate)
 {
-  auto* triangleCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
+  auto* triangleCentroidsPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_CellCentroidsDataArrayId);
   if(triangleCentroidsPtr != nullptr && !recalculate)
   {
     return {};
@@ -210,7 +210,7 @@ Result<> TriangleGeom::findElementCentroids(bool recalculate)
     return MakeErrorResult(-2233, "TriangleGeom Error: Unable to find or create a valid element centroids array or data store.");
   }
 
-  GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroidsPtr);
+  geometry_helpers::topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroidsPtr);
   m_CellCentroidsDataArrayId = triangleCentroidsPtr->getId();
 
   return {};
@@ -236,7 +236,7 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Vec3<float64>& pCoor
 
 Result<> TriangleGeom::findEdges(bool recalculate)
 {
-  auto* edgeListPtr = getDataStructureRef().getDataAsUnsafe<UInt64Array>(m_EdgeDataArrayId);
+  auto* edgeListPtr = getDataStructureRef().getDataAsUnsafe<UInt64ArrayType>(m_EdgeDataArrayId);
   if(edgeListPtr != nullptr && !recalculate)
   {
     return {};
@@ -253,7 +253,7 @@ Result<> TriangleGeom::findEdges(bool recalculate)
     }
   }
 
-  auto findResult = GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeListPtr);
+  auto findResult = geometry_helpers::connectivity::Find2DElementEdges(getFaces(), edgeListPtr);
   if(findResult.invalid())
   {
     m_EdgeDataArrayId.reset();
@@ -283,7 +283,7 @@ Result<> TriangleGeom::findUnsharedEdges(bool recalculate)
     return MakeErrorResult(-2235, "TriangleGeom Error: Unable to find or create a valid unshared edges array or data store.");
   }
 
-  auto findResult = GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeListPtr);
+  auto findResult = geometry_helpers::connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeListPtr);
   if(findResult.invalid())
   {
     m_UnsharedEdgeListId.reset();

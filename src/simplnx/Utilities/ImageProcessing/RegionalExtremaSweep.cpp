@@ -30,26 +30,26 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
     return ConvertInvalidResult<void>(std::move(planResult));
   }
   detail::Sweep2DPlan plan = planResult.value();
-  if(plan.fullWidth)
+  if(plan.full_width)
   {
     const std::optional<ShapeType> chunkShape = workStore.getChunkShape();
-    if(chunkShape.has_value() && chunkShape->size() >= 3 && (*chunkShape)[0] == 1 && (*chunkShape)[1] > 0 && (*chunkShape)[1] <= plan.coreRows && (*chunkShape)[2] == dimX)
+    if(chunkShape.has_value() && chunkShape->size() >= 3 && (*chunkShape)[0] == 1 && (*chunkShape)[1] > 0 && (*chunkShape)[1] <= plan.core_rows && (*chunkShape)[2] == dimX)
     {
-      plan.coreRows = (plan.coreRows / (*chunkShape)[1]) * (*chunkShape)[1];
+      plan.core_rows = (plan.core_rows / (*chunkShape)[1]) * (*chunkShape)[1];
     }
   }
 
-  if(plan.fullWidth)
+  if(plan.full_width)
   {
-    const usize maximumReadRows = std::min(dimY, plan.coreRows + 2);
+    const usize maximumReadRows = std::min(dimY, plan.core_rows + 2);
     const usize maximumReadValues = maximumReadRows * dimX;
     auto inputBuffer = std::make_unique<T[]>(maximumReadValues);
     auto workBuffer = std::make_unique<T[]>(maximumReadValues);
 
-    const usize blockCount = (dimY - 1) / plan.coreRows + 1;
+    const usize blockCount = (dimY - 1) / plan.core_rows + 1;
     auto blockBounds = [dimY, &plan](usize blockIndex) {
-      const usize coreBegin = blockIndex * plan.coreRows;
-      const usize coreRows = std::min(plan.coreRows, dimY - coreBegin);
+      const usize coreBegin = blockIndex * plan.core_rows;
+      const usize coreRows = std::min(plan.core_rows, dimY - coreBegin);
       const usize coreEnd = coreBegin + coreRows;
       const usize readBegin = coreBegin > 0 ? coreBegin - 1 : coreBegin;
       const usize readEnd = coreEnd < dimY ? coreEnd + 1 : coreEnd;
@@ -234,7 +234,7 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
     return {};
   }
 
-  const usize maximumTileColumns = plan.coreColumns + 2;
+  const usize maximumTileColumns = plan.core_columns + 2;
   auto inputTile = std::make_unique<T[]>(3 * maximumTileColumns);
   auto workTile = std::make_unique<T[]>(3 * maximumTileColumns);
 
@@ -252,13 +252,13 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
 
   for(usize y = 0; y < dimY; ++y)
   {
-    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.coreColumns)
+    for(usize xBegin = 0; xBegin < dimX; xBegin += plan.core_columns)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize coreColumns = std::min(plan.coreColumns, dimX - xBegin);
+      const usize coreColumns = std::min(plan.core_columns, dimX - xBegin);
       const usize xEnd = xBegin + coreColumns;
       const usize readXBegin = xBegin > 0 ? xBegin - 1 : xBegin;
       const usize readXEnd = xEnd < dimX ? xEnd + 1 : xEnd;
@@ -328,13 +328,13 @@ Result<> RegionalExtremaSweep<T>::run2D(WorkStore& workStore, usize dimX, usize 
       for(usize rowIndex = 0; rowIndex < dimY; ++rowIndex)
       {
         const usize y = forward ? rowIndex : dimY - 1 - rowIndex;
-        for(usize processedColumns = 0; processedColumns < dimX; processedColumns += plan.coreColumns)
+        for(usize processedColumns = 0; processedColumns < dimX; processedColumns += plan.core_columns)
         {
           if(m_ShouldCancel)
           {
             return {};
           }
-          const usize coreColumns = std::min(plan.coreColumns, dimX - processedColumns);
+          const usize coreColumns = std::min(plan.core_columns, dimX - processedColumns);
           const usize xBegin = forward ? processedColumns : dimX - processedColumns - coreColumns;
           const usize xEnd = xBegin + coreColumns;
           const usize readXBegin = xBegin > 0 ? xBegin - 1 : xBegin;
@@ -459,7 +459,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
   {
     auto fixedPlanResult = detail::CreateSweep2DPlan(dimX, dimY, m_Fixed2DBufferValues, /*fullWidthHaloRows=*/2, /*tiledRows=*/3);
     if(m_Fixed2DWorkValues > 0 && m_Fixed2DBufferValues > 0 && m_In.getStoreType() == IDataStore::StoreType::OutOfCore && vol <= m_Fixed2DWorkValues && fixedPlanResult.valid() &&
-       fixedPlanResult.value().fullWidth)
+       fixedPlanResult.value().full_width)
     {
       auto fixedStoreResult = detail::BoundedMemorySweepStore<T>::Create(vol, m_Fixed2DWorkValues);
       if(fixedStoreResult.invalid())
@@ -499,7 +499,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
       }
       return {};
     }
-    if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+    if(!data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
     {
       return run2D<Maxima>(m_Out, dimX, dimY, m_MaxSlabValues);
     }
@@ -823,7 +823,7 @@ Result<> RegionalExtremaSweep<T>::runImpl()
     return {};
   };
 
-  if(dimZ == 1 || !DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+  if(dimZ == 1 || !data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
   {
     return runSweep(m_Out);
   }

@@ -16,9 +16,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT SplitDataArrayByTupleInputValues
 {
-  DataPath InputArrayPath;
-  std::vector<DataPath> OutputArrayPaths;
-  usize SplitDimension{};
+  DataPath input_array_path;
+  std::vector<DataPath> output_array_paths;
+  usize split_dimension{};
 };
 
 /**

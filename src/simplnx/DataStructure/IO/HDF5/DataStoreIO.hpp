@@ -41,7 +41,7 @@ inline Result<> WriteDataStore(nx::core::hdf5::DatasetIO& datasetWriter, const A
 
   const auto& tupleShape = dataStore.getTupleShape();
   const auto& componentShape = dataStore.getComponentShape();
-  auto shapeResult = datasetWriter.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape);
+  auto shapeResult = datasetWriter.writeVectorAttribute(io_constants::k_TupleShapeTag, tupleShape);
   if(shapeResult.invalid())
   {
     shapeResult.warnings().insert(shapeResult.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
@@ -51,7 +51,7 @@ inline Result<> WriteDataStore(nx::core::hdf5::DatasetIO& datasetWriter, const A
   {
     warnings.push_back(std::move(warning));
   }
-  shapeResult = datasetWriter.writeVectorAttribute(IOConstants::k_ComponentShapeTag, componentShape);
+  shapeResult = datasetWriter.writeVectorAttribute(io_constants::k_ComponentShapeTag, componentShape);
   if(shapeResult.invalid())
   {
     shapeResult.warnings().insert(shapeResult.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));

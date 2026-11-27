@@ -85,14 +85,14 @@ Eigen::Matrix3f CreateRotationMatrix(float32 angle, Axis axis)
   return matrix;
 }
 
-Eigen::Matrix3f DetermineRotationMatrix(const SizeVec3& dimensions)
+Eigen::Matrix3f DetermineRotationMatrix(const SizeVec3Type& dimensions)
 {
   // DREAM.3D 6.6 built a 3x3 table that Rotate Sample Reference Frame rejected because it required a 4x4 table. Thus, the legacy reorder always failed with error -10115. This port implements
   // the intended reorder with a valid 4x4 table.
   // The fixed swap order and left multiplication reproduce the intended DREAM.3D 6.6 axis-reorder matrix.
   std::vector<Eigen::Matrix3f> rotationMatrices;
-  SizeVec3 reorderedDimensions = dimensions;
-  SizeVec3 sortedDimensions = dimensions;
+  SizeVec3Type reorderedDimensions = dimensions;
+  SizeVec3Type sortedDimensions = dimensions;
   std::sort(sortedDimensions.begin(), sortedDimensions.end(), std::greater<usize>());
 
   if(reorderedDimensions[0] != sortedDimensions[0])
@@ -170,7 +170,7 @@ WriteStatus WriteImageCoordinates(std::ofstream& output, std::string_view label,
   return FlushBuffer(output, buffer);
 }
 
-WriteStatus WriteRectGridCoordinates(std::ofstream& output, std::string_view label, const Float32Array& bounds)
+WriteStatus WriteRectGridCoordinates(std::ofstream& output, std::string_view label, const Float32ArrayType& bounds)
 {
   fmt::memory_buffer buffer;
   fmt::format_to(std::back_inserter(buffer), "{} {}\n", label, bounds.getNumberOfTuples());
@@ -222,7 +222,7 @@ struct CopyFeatureIds
   {
     const auto& typedSource = dynamic_cast<const DataArray<T>&>(sourceArray);
     auto destinationStore =
-        DataStoreUtilities::CreateDataStore<T>(destinationDataStructure, k_ScratchCellDataPath.createChildPath(sourceArray.getName()), destinationTupleShape, typedSource.getComponentShape());
+        data_store_utilities::CreateDataStore<T>(destinationDataStructure, k_ScratchCellDataPath.createChildPath(sourceArray.getName()), destinationTupleShape, typedSource.getComponentShape());
     auto* destinationArrayPtr = DataArray<T>::Create(destinationDataStructure, sourceArray.getName(), destinationStore, destinationParentId);
     if(destinationArrayPtr == nullptr)
     {
@@ -243,7 +243,7 @@ struct CopyFeatureIds
 struct WriteFeatureIds
 {
   template <class T>
-  WriteStatus operator()(std::ofstream& output, const IDataArray& featureIds, const SizeVec3& dimensions, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle) const
+  WriteStatus operator()(std::ofstream& output, const IDataArray& featureIds, const SizeVec3Type& dimensions, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progressThrottle) const
   {
     const auto& typedFeatureIds = dynamic_cast<const DataArray<T>&>(featureIds);
     const usize cellsPerSlice = dimensions[0] * dimensions[1];
@@ -289,20 +289,20 @@ WriteOnScaleTableFile::WriteOnScaleTableFile(DataStructure& dataStructure, const
 
 Result<> WriteOnScaleTableFile::operator()()
 {
-  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);
-  const auto& inputFeatureIds = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-  const auto& phaseNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->PhaseNamesArrayPath);
+  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->input_geometry_path);
+  const auto& inputFeatureIds = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path);
+  const auto& phaseNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->phase_names_array_path);
 
   if(inputFeatureIds.getNumberOfTuples() == 0)
   {
-    return MakeErrorResult(-12027, fmt::format("The feature IDs array '{}' has 0 tuples. Select an array with at least one tuple.", m_InputValues->FeatureIdsArrayPath.toString()));
+    return MakeErrorResult(-12027, fmt::format("The feature IDs array '{}' has 0 tuples. Select an array with at least one tuple.", m_InputValues->feature_ids_array_path.toString()));
   }
 
   const IGridGeometry* exportGeometryPtr = &inputGeometry;
   const IDataArray* exportFeatureIdsPtr = &inputFeatureIds;
   FeatureIdStats featureIdStats;
   DataStructure rotatedDataStructure;
-  const SizeVec3 inputDimensions = inputGeometry.getDimensions();
+  const SizeVec3Type inputDimensions = inputGeometry.getDimensions();
   if(inputDimensions[0] < inputDimensions[1] || inputDimensions[1] < inputDimensions[2])
   {
     // The sub-filter rotates a private copy so the export does not change the input data structure. Peak memory is three times the feature ID bytes while the sub-filter runs: the input, the scratch
@@ -315,7 +315,7 @@ Result<> WriteOnScaleTableFile::operator()()
     const auto* inputImageGeometryPtr = dynamic_cast<const ImageGeom*>(&inputGeometry);
     if(inputImageGeometryPtr == nullptr)
     {
-      return MakeErrorResult(k_InvalidImageGeometryError, fmt::format("The grid geometry '{}' requires reordering but is not an Image Geometry.", m_InputValues->InputGeometryPath.toString()));
+      return MakeErrorResult(k_InvalidImageGeometryError, fmt::format("The grid geometry '{}' requires reordering but is not an Image Geometry.", m_InputValues->input_geometry_path.toString()));
     }
     scratchGeometryPtr->setDimensions(inputImageGeometryPtr->getDimensions());
     if(auto result = scratchGeometryPtr->setOrigin(inputImageGeometryPtr->getOrigin()); result.invalid())
@@ -338,12 +338,12 @@ Result<> WriteOnScaleTableFile::operator()()
     featureIdStats = ExecuteDataFunctionIntType(CopyFeatureIds{}, inputFeatureIds.getDataType(), inputFeatureIds, rotatedDataStructure, scratchCellDataPtr->getId(), scratchCellShape);
     if(!featureIdStats.copied)
     {
-      return MakeErrorResult(-12030, fmt::format("Failed to copy the feature IDs array '{}' for the Rotate Sample Reference Frame sub-filter.", m_InputValues->FeatureIdsArrayPath.toString()));
+      return MakeErrorResult(-12030, fmt::format("Failed to copy the feature IDs array '{}' for the Rotate Sample Reference Frame sub-filter.", m_InputValues->feature_ids_array_path.toString()));
     }
     if(featureIdStats.negative_count > 0)
     {
       return MakeErrorResult(k_NegativeFeatureIdsError, fmt::format("Found {} negative feature ids in '{}'. OnScale material indices must be 0 or greater.", featureIdStats.negative_count,
-                                                                    m_InputValues->FeatureIdsArrayPath.toString()));
+                                                                    m_InputValues->feature_ids_array_path.toString()));
     }
 
     RotateSampleRefFrameFilter rotateFilter;
@@ -368,21 +368,21 @@ Result<> WriteOnScaleTableFile::operator()()
     }
     if(rotateExecute.result.invalid())
     {
-      return MakeErrorResult(-12032, fmt::format("The Rotate Sample Reference Frame sub-filter failed while reordering geometry '{}': {}", m_InputValues->InputGeometryPath.toString(),
+      return MakeErrorResult(-12032, fmt::format("The Rotate Sample Reference Frame sub-filter failed while reordering geometry '{}': {}", m_InputValues->input_geometry_path.toString(),
                                                  rotateExecute.result.errors().front().message));
     }
 
     exportGeometryPtr = &rotatedDataStructure.getDataRefAs<ImageGeom>(k_ScratchGeometryPath);
-    const SizeVec3 reorderedDimensions = exportGeometryPtr->getDimensions();
-    SizeVec3 expectedDimensions = inputDimensions;
+    const SizeVec3Type reorderedDimensions = exportGeometryPtr->getDimensions();
+    SizeVec3Type expectedDimensions = inputDimensions;
     std::sort(expectedDimensions.begin(), expectedDimensions.end(), std::greater<usize>());
     // Check that the rotation preserved the intended axis permutation before exporting.
     if(reorderedDimensions != expectedDimensions)
     {
       return MakeErrorResult(k_UnexpectedReorderedDimensionsError, fmt::format("Rotate Sample Reference Frame produced dimensions ({}) for geometry '{}' but the OnScale reorder expected ({}). "
                                                                                "The rotated geometry cannot be exported with the required axis order.",
-                                                                               StringUtilities::formatDimensions3D(reorderedDimensions), m_InputValues->InputGeometryPath.toString(),
-                                                                               StringUtilities::formatDimensions3D(expectedDimensions)));
+                                                                               string_utilities::FormatDimensions3D(reorderedDimensions), m_InputValues->input_geometry_path.toString(),
+                                                                               string_utilities::FormatDimensions3D(expectedDimensions)));
     }
     exportFeatureIdsPtr = &rotatedDataStructure.getDataRefAs<IDataArray>(k_ScratchCellDataPath.createChildPath(inputFeatureIds.getName()));
     m_MessageHandler.sendInfoMessage(
@@ -394,17 +394,17 @@ Result<> WriteOnScaleTableFile::operator()()
     if(featureIdStats.negative_count > 0)
     {
       return MakeErrorResult(k_NegativeFeatureIdsError, fmt::format("Found {} negative feature ids in '{}'. OnScale material indices must be 0 or greater.", featureIdStats.negative_count,
-                                                                    m_InputValues->FeatureIdsArrayPath.toString()));
+                                                                    m_InputValues->feature_ids_array_path.toString()));
     }
   }
 
   const usize maxGrainId = featureIdStats.max_grain_id;
   if(maxGrainId == 0)
   {
-    m_MessageHandler.sendWarningMessage(fmt::format("No positive feature ids were found in '{}'; the name section is empty.", m_InputValues->FeatureIdsArrayPath.toString()));
+    m_MessageHandler.sendWarningMessage(fmt::format("No positive feature ids were found in '{}'; the name section is empty.", m_InputValues->feature_ids_array_path.toString()));
   }
 
-  const fs::path outputPath = m_InputValues->OutputPath / fmt::format("{}.flxtbl", m_InputValues->FilePrefix);
+  const fs::path outputPath = m_InputValues->output_path / fmt::format("{}.flxtbl", m_InputValues->file_prefix);
   auto atomicFileResult = AtomicFile::Create(outputPath);
   if(atomicFileResult.invalid())
   {
@@ -431,11 +431,11 @@ Result<> WriteOnScaleTableFile::operator()()
   m_MessageHandler.sendInfoMessage("Writing OnScale header...");
   output << "hedr 0\ninfo 1\n";
 
-  const SizeVec3 dimensions = exportGeometryPtr->getDimensions();
+  const SizeVec3Type dimensions = exportGeometryPtr->getDimensions();
   if(const auto* imageGeometryPtr = dynamic_cast<const ImageGeom*>(exportGeometryPtr); imageGeometryPtr != nullptr)
   {
-    const FloatVec3 origin = imageGeometryPtr->getOrigin();
-    const FloatVec3 spacing = imageGeometryPtr->getSpacing();
+    const FloatVec3Type origin = imageGeometryPtr->getOrigin();
+    const FloatVec3Type spacing = imageGeometryPtr->getSpacing();
     const std::array<std::string_view, 3> labels = {"xcrd", "ycrd", "zcrd"};
     for(usize axis = 0; axis < labels.size(); axis++)
     {
@@ -456,9 +456,9 @@ Result<> WriteOnScaleTableFile::operator()()
     if(rectGridGeometryPtr == nullptr)
     {
       return MakeErrorResult(k_InvalidRectGridGeometryError,
-                             fmt::format("The grid geometry '{}' is neither an Image Geometry nor a Rectilinear Grid Geometry.", m_InputValues->InputGeometryPath.toString()));
+                             fmt::format("The grid geometry '{}' is neither an Image Geometry nor a Rectilinear Grid Geometry.", m_InputValues->input_geometry_path.toString()));
     }
-    const std::array<std::pair<std::string_view, const Float32Array*>, 3> bounds = {
+    const std::array<std::pair<std::string_view, const Float32ArrayType*>, 3> bounds = {
         {{"xcrd", rectGridGeometryPtr->getXBounds()}, {"ycrd", rectGridGeometryPtr->getYBounds()}, {"zcrd", rectGridGeometryPtr->getZBounds()}}};
     for(const auto& [label, boundsArray] : bounds)
     {
@@ -479,7 +479,7 @@ Result<> WriteOnScaleTableFile::operator()()
     return {};
   }
   m_MessageHandler.sendInfoMessage("Writing OnScale keypoints...");
-  output << "keypoints\n" << m_InputValues->NumKeypoints[0] << ' ' << m_InputValues->NumKeypoints[1] << ' ' << m_InputValues->NumKeypoints[2] << '\n';
+  output << "keypoints\n" << m_InputValues->num_keypoints[0] << ' ' << m_InputValues->num_keypoints[1] << ' ' << m_InputValues->num_keypoints[2] << '\n';
 
   if(m_ShouldCancel)
   {

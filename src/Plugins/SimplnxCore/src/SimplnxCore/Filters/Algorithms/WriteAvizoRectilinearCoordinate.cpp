@@ -29,9 +29,9 @@ Result<> WriteAvizoRectilinearCoordinate::operator()()
 
 Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
 {
-  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
+  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
 
-  if(m_InputValues->WriteBinaryFile)
+  if(m_InputValues->write_binary_file)
   {
     if constexpr(endian::big == endian::native)
     {
@@ -63,7 +63,7 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  SizeVec3 geoDim = geom.getDimensions();
+  SizeVec3Type geoDim = geom.getDimensions();
 
   if(auto outputResult =
          printOutput(outputFile, "define Lattice %llu %llu %llu\n", static_cast<unsigned long long>(geoDim[0]), static_cast<unsigned long long>(geoDim[1]), static_cast<unsigned long long>(geoDim[2]));
@@ -95,7 +95,7 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  if(auto outputResult = printOutput(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->FeatureIdsArrayPath.toString().c_str()); outputResult.invalid())
+  if(auto outputResult = printOutput(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->feature_ids_array_path.toString().c_str()); outputResult.invalid())
   {
     return outputResult;
   }
@@ -108,7 +108,7 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
   {
     return outputResult;
   }
-  if(auto outputResult = printOutput(outputFile, "         Coordinates \"%s\"\n", m_InputValues->Units.c_str()); outputResult.invalid())
+  if(auto outputResult = printOutput(outputFile, "         Coordinates \"%s\"\n", m_InputValues->units.c_str()); outputResult.invalid())
   {
     return outputResult;
   }
@@ -146,24 +146,24 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
 Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 {
   Result<> result;
-  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
-  SizeVec3 dims = geom.getDimensions();
-  FloatVec3 origin = geom.getOrigin();
-  FloatVec3 res = geom.getSpacing();
+  const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
+  SizeVec3Type dims = geom.getDimensions();
+  FloatVec3Type origin = geom.getOrigin();
+  FloatVec3Type res = geom.getSpacing();
 
   if(auto outputResult = printOutput(outputFile, "@1 # FeatureIds in z, y, x with X moving fastest, then Y, then Z\n"); outputResult.invalid())
   {
     return MergeResults(std::move(result), std::move(outputResult));
   }
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   constexpr usize k_ChunkSize = 65536;
   std::vector<int32> buffer(k_ChunkSize);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
 
-  if(m_InputValues->WriteBinaryFile)
+  if(m_InputValues->write_binary_file)
   {
     for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
     {
@@ -242,7 +242,7 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
     return MergeResults(std::move(result), std::move(outputResult));
   }
 
-  if(m_InputValues->WriteBinaryFile)
+  if(m_InputValues->write_binary_file)
   {
     constexpr std::array<char, 3> k_AxisNames = {'X', 'Y', 'Z'};
     for(int d = 0; d < 3; ++d)
@@ -250,7 +250,7 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
       if(dims[d] > std::numeric_limits<usize>::max() / sizeof(float32))
       {
         auto overflowError = MakeErrorResult(
-            -5833, fmt::format("Cannot write {} coordinates to Avizo output '{}': {} float values exceed the byte-count limit.", k_AxisNames[d], m_InputValues->OutputFile.string(), dims[d]));
+            -5833, fmt::format("Cannot write {} coordinates to Avizo output '{}': {} float values exceed the byte-count limit.", k_AxisNames[d], m_InputValues->output_file.string(), dims[d]));
         return MergeResults(std::move(result), std::move(overflowError));
       }
       const usize axisBytes = dims[d] * sizeof(float32);

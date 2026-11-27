@@ -15,7 +15,7 @@
  * privileges, no network, identical on every platform -- so benchmarks can
  * demonstrate the before/after effect of the preflight metadata cache.
  */
-namespace DelayVfd
+namespace delay_vfd
 {
 /**
  * @brief Registers the driver with HDF5 (idempotent) and returns its id for use

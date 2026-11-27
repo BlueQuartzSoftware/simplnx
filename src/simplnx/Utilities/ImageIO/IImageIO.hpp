@@ -37,7 +37,7 @@ public:
    * order is backend-dependent. Invocation is synchronous. The span expires when
    * the callback returns. An invalid callback result stops decoding and propagates.
    */
-  using ReadRowCallback = std::function<Result<>(usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels)>;
+  using ReadRowCallbackType = std::function<Result<>(usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels)>;
 
   virtual ~IImageIO() noexcept = default;
 
@@ -88,7 +88,7 @@ public:
    * so pageIndex is in the range [0, numPages). The delivered segments describe THAT page's geometry,
    * which may differ from page 0.
    */
-  virtual Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const = 0;
+  virtual Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallbackType& callback, usize pageIndex = 0) const = 0;
 
   /**
    * @brief Writes a 2D image from a raw byte buffer.

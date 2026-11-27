@@ -76,7 +76,7 @@ IFilter::PreflightResult GrayscaleGrindPeakImageFilter::preflightImpl(const Data
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
-  return {.outputActions =
+  return {.output_actions =
               ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                             /*requireScalar=*/true)};
 }

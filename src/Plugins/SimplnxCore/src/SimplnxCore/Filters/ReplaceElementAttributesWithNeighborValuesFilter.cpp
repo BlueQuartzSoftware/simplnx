@@ -76,7 +76,7 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComparisonDataPath, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{},
-                                                          nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -102,7 +102,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, k_TupleCountMismatchError); tupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   {
     if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, k_ComparisonNotInCellDataError, "Input Comparison Array"); cellDataResult.invalid())
     {
-      return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
     }
   }
 
@@ -127,7 +127,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
     }
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -136,11 +136,11 @@ Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStruc
 {
   ReplaceElementAttributesWithNeighborValuesInputValues inputValues;
 
-  inputValues.MinConfidence = filterArgs.value<float32>(k_MinConfidence_Key);
-  inputValues.SelectedComparison = filterArgs.value<ChoicesParameter::ValueType>(k_SelectedComparison_Key);
-  inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.min_confidence = filterArgs.value<float32>(k_MinConfidence_Key);
+  inputValues.selected_comparison = filterArgs.value<ChoicesParameter::ValueType>(k_SelectedComparison_Key);
+  inputValues.loop = filterArgs.value<bool>(k_Loop_Key);
+  inputValues.input_array_path = filterArgs.value<DataPath>(k_ComparisonDataPath);
+  inputValues.selected_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ReplaceElementAttributesWithNeighborValues(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -58,17 +58,17 @@ Parameters WriteGBCDTriangleDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face",
                                                           DataPath({"[Triangle Geometry]", "Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face",
                                                           DataPath({"[Triangle Geometry]", "Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Specifies the area of each Face",
                                                           DataPath({"[Triangle Geometry]", "Face Data", "FaceAreas"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z).",
-      DataPath({"[Image Geometry]", "Cell Feature Data", "AvgEulerAngles"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+      DataPath({"[Image Geometry]", "Cell Feature Data", "AvgEulerAngles"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   return params;
 }
@@ -104,11 +104,11 @@ IFilter::PreflightResult WriteGBCDTriangleDataFilter::preflightImpl(const DataSt
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(triangleArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-48320, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -124,11 +124,11 @@ Result<> WriteGBCDTriangleDataFilter::executeImpl(DataStructure& dataStructure, 
 
   WriteGBCDTriangleDataInputValues inputValues;
 
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.SurfaceMeshFaceNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
-  inputValues.SurfaceMeshFaceAreasArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
-  inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.surface_mesh_face_normals_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
+  inputValues.surface_mesh_face_areas_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
+  inputValues.feature_euler_angles_array_path = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
 
   auto result = WriteGBCDTriangleData(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

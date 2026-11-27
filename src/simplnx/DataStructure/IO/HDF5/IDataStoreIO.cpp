@@ -12,10 +12,10 @@ using namespace nx::core;
 
 Result<ShapeType> nx::core::hdf5::i_data_store_io::ReadTupleShape(const nx::core::hdf5::DatasetIO& datasetReader)
 {
-  return datasetReader.readVectorAttribute<usize>(IOConstants::k_TupleShapeTag);
+  return datasetReader.readVectorAttribute<usize>(io_constants::k_TupleShapeTag);
 }
 
 Result<ShapeType> nx::core::hdf5::i_data_store_io::ReadComponentShape(const nx::core::hdf5::DatasetIO& datasetReader)
 {
-  return datasetReader.readVectorAttribute<usize>(IOConstants::k_ComponentShapeTag);
+  return datasetReader.readVectorAttribute<usize>(io_constants::k_ComponentShapeTag);
 }

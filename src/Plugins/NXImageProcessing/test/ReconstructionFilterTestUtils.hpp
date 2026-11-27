@@ -180,7 +180,7 @@ inline DataPath BuildImageFromPattern(DataStructure& dataStructure, usize dimX, 
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
   auto& ref = arrayPtr->getDataStoreRef();
 
@@ -234,25 +234,25 @@ inline DataPath BuildPeakImage(DataStructure& dataStructure, usize dimX, usize d
  *        filter exposes some subset of {FullyConnected, Height}: fillhole -> FullyConnected only; HMaxima ->
  *        Height only; HMinima -> both. The injected setter lets one runner drive all three filters.
  */
-using ReconParamSetter = std::function<void(Arguments&, bool fullyConnected, float64 height)>;
+using ReconParamSetterType = std::function<void(Arguments&, bool fullyConnected, float64 height)>;
 
 /// Parameter setter for a filter with a FullyConnected flag only (GrayscaleFillhole). Ignores height.
 template <class NewFilterT>
-inline ReconParamSetter FullyConnectedParamSetter()
+inline ReconParamSetterType FullyConnectedParamSetter()
 {
   return [](Arguments& args, bool fullyConnected, float64 /*height*/) { args.insertOrAssign(NewFilterT::k_FullyConnected_Key, std::make_any<bool>(fullyConnected)); };
 }
 
 /// Parameter setter for a filter with a Height value only (HMaxima). Ignores fullyConnected.
 template <class NewFilterT>
-inline ReconParamSetter HeightParamSetter()
+inline ReconParamSetterType HeightParamSetter()
 {
   return [](Arguments& args, bool /*fullyConnected*/, float64 height) { args.insertOrAssign(NewFilterT::k_Height_Key, std::make_any<float64>(height)); };
 }
 
 /// Parameter setter for a filter with both a Height value and a FullyConnected flag (HMinima).
 template <class NewFilterT>
-inline ReconParamSetter HeightAndFullyConnectedParamSetter()
+inline ReconParamSetterType HeightAndFullyConnectedParamSetter()
 {
   return [](Arguments& args, bool fullyConnected, float64 height) {
     args.insertOrAssign(NewFilterT::k_Height_Key, std::make_any<float64>(height));
@@ -264,7 +264,7 @@ inline ReconParamSetter HeightAndFullyConnectedParamSetter()
 /// type + radius + preserveIntensities, and takes FullyConnected from the grid config (height is unused). The
 /// stored any types match exactly what the filter reads (ChoicesParameter::ValueType, std::vector<uint32>, bool).
 template <class NewFilterT>
-inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, bool preserveIntensities)
+inline ReconParamSetterType SEReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, bool preserveIntensities)
 {
   return [kernelType, kernelRadius, preserveIntensities](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(kernelType));
@@ -277,7 +277,7 @@ inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelTyp
 /// Parameter setter for the binary reconstruction filters (BinaryOpeningByReconstruction): captures the kernel type
 /// + radius + foreground + background, and takes FullyConnected from the grid config (height unused).
 template <class NewFilterT>
-inline ReconParamSetter BinaryReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, float64 foreground, float64 background)
+inline ReconParamSetterType BinaryReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, float64 foreground, float64 background)
 {
   return [kernelType, kernelRadius, foreground, background](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(kernelType));
@@ -294,7 +294,7 @@ inline ReconParamSetter BinaryReconParamSetter(ChoicesParameter::ValueType kerne
  *        @p outputName is the created output array's name.
  */
 template <class NewFilterT>
-inline void RunReconstructionFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const ReconParamSetter& setParams, bool fullyConnected, float64 height,
+inline void RunReconstructionFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const ReconParamSetterType& setParams, bool fullyConnected, float64 height,
                                     const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -304,7 +304,7 @@ inline void RunReconstructionFilter(IFilter& filter, DataStructure& dataStructur
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   setParams(args, fullyConnected, height);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -417,8 +417,8 @@ inline void RequireExact(const IDataArray& left, const IDataArray& right)
 // an embedded md5 of OUR output (md5-validity-first, plan Sec.4), or a stored baseline compared via CompareImages at
 // the case's tolerance. Each case is pinned ForceInCore.
 
-using ExtraParamSetter = std::function<void(Arguments&)>;
-inline ExtraParamSetter NoExtraParams()
+using ExtraParamSetterType = std::function<void(Arguments&)>;
+inline ExtraParamSetterType NoExtraParams()
 {
   return [](Arguments&) {};
 }
@@ -428,10 +428,10 @@ inline ExtraParamSetter NoExtraParams()
 // against the committed hash. @p setExtraParams sets the case's op-specific params (Height / kernel / foreground /
 // etc.); it defaults to none for the parameter-free filters.
 template <class FilterT>
-inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, const ExtraParamSetter& setExtraParams = NoExtraParams())
+inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, const ExtraParamSetterType& setExtraParams = NoExtraParams())
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -451,7 +451,7 @@ inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const st
   setExtraParams(args);
   FilterT filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -460,7 +460,7 @@ inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const st
   INFO(fmt::format("{} md5: ours='{}' committed='{}'", inputFile, ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -468,11 +468,11 @@ inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const st
 // via CompareImages @ @p tolerance. All five distance filters emit a fixed float32 output on an integer
 // (2th_cthead1.png) input.
 template <class FilterT>
-inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, float64 tolerance, const ExtraParamSetter& setExtraParams = NoExtraParams(),
-                                            UnitTest::AlgorithmTestScope* scope = nullptr)
+inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, float64 tolerance, const ExtraParamSetterType& setExtraParams = NoExtraParams(),
+                                            unit_test::AlgorithmTestScope* scope = nullptr)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -496,7 +496,7 @@ inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const 
   setExtraParams(args);
   FilterT filter;
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -508,6 +508,6 @@ inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const 
   const Result<> compareResult = ip_golden::CompareImages(dataStructure, baselineGeom, baselineData, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace recon_test

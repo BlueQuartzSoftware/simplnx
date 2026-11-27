@@ -18,7 +18,7 @@ Uuid BoolParameter::uuid() const
   return ParameterTraits<BoolParameter>::uuid;
 }
 
-IParameter::AcceptedTypes BoolParameter::acceptedTypes() const
+IParameter::AcceptedTypesType BoolParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

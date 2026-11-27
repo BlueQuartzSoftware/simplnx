@@ -35,8 +35,8 @@ void WriteHeader(std::ofstream& out, const WriteStatsGenOdfAngleFileInputValues&
   out << "# DREAM3D-NX StatsGenerator ODF Angles Input File\n";
   out << "# " << nx::core::Version::PackageComplete() << "\n";
 
-  out << "# Angle Data is " << k_DelimiterStr[inputValues.Delimiter] << " delimited.\n";
-  if(inputValues.ConvertToDegrees)
+  out << "# Angle Data is " << k_DelimiterStr[inputValues.delimiter] << " delimited.\n";
+  if(inputValues.convert_to_degrees)
   {
     out << "# Euler angles are expressed in degrees\n";
   }
@@ -50,15 +50,15 @@ void WriteHeader(std::ofstream& out, const WriteStatsGenOdfAngleFileInputValues&
 
 void WriteEulerLine(std::ofstream& out, const WriteStatsGenOdfAngleFileInputValues& inputValues, float32 euler0, float32 euler1, float32 euler2)
 {
-  if(inputValues.ConvertToDegrees)
+  if(inputValues.convert_to_degrees)
   {
-    euler0 = euler0 * Constants::k_180OverPiF;
-    euler1 = euler1 * Constants::k_180OverPiF;
-    euler2 = euler2 * Constants::k_180OverPiF;
+    euler0 = euler0 * constants::k_180OverPiF;
+    euler1 = euler1 * constants::k_180OverPiF;
+    euler2 = euler2 * constants::k_180OverPiF;
   }
 
-  const char delimiter = k_Delimiters[inputValues.Delimiter];
-  out << std::fixed << std::setprecision(8) << euler0 << delimiter << euler1 << delimiter << euler2 << delimiter << inputValues.Weight << delimiter << inputValues.Sigma << "\n";
+  const char delimiter = k_Delimiters[inputValues.delimiter];
+  out << std::fixed << std::setprecision(8) << euler0 << delimiter << euler1 << delimiter << euler2 << delimiter << inputValues.weight << delimiter << inputValues.sigma << "\n";
 }
 
 Result<> MakeInvalidMaskTypeError(const IDataArray& maskArray, const DataPath& maskPath)
@@ -69,7 +69,7 @@ Result<> MakeInvalidMaskTypeError(const IDataArray& maskArray, const DataPath& m
 constexpr StringLiteralType k_InvalidMaskCompareMessage = "Mask comparator must be a BoolMaskCompare or UInt8MaskCompare.";
 
 template <typename MaskT>
-Result<int32> DetermineOutputLineCount(const Int32AbstractDataStore& phasesStore, const AbstractDataStore<MaskT>* maskStore, usize totalPoints, int32 phase)
+Result<int32> DetermineOutputLineCount(const Int32AbstractDataStoreType& phasesStore, const AbstractDataStore<MaskT>* maskStore, usize totalPoints, int32 phase)
 {
   auto phasesBuffer = std::make_unique<int32[]>(k_ChunkTuples);
   std::unique_ptr<MaskT[]> maskBuffer;
@@ -109,7 +109,7 @@ Result<int32> DetermineOutputLineCount(const Int32AbstractDataStore& phasesStore
 }
 
 template <typename MaskT>
-Result<> WriteOutputFile(std::ofstream& out, const Int32AbstractDataStore& phasesStore, const Float32AbstractDataStore& eulersStore, const AbstractDataStore<MaskT>* maskStore,
+Result<> WriteOutputFile(std::ofstream& out, const Int32AbstractDataStoreType& phasesStore, const Float32AbstractDataStoreType& eulersStore, const AbstractDataStore<MaskT>* maskStore,
                          const WriteStatsGenOdfAngleFileInputValues& inputValues, int32 lineCount, usize totalPoints, int32 phase)
 {
   WriteHeader(out, inputValues, lineCount);
@@ -182,9 +182,9 @@ Result<> WritePhaseFiles(const std::map<int32, int32>& phaseLineCounts, const Wr
                          const std::atomic_bool& shouldCancel, WritePhaseFunction&& writePhase)
 {
   Result<> results;
-  const std::string absPath = std::filesystem::absolute(inputValues.OutputFile).parent_path().string();
-  const std::string fileName = inputValues.OutputFile.stem().string();
-  const std::string suffix = inputValues.OutputFile.extension().string();
+  const std::string absPath = std::filesystem::absolute(inputValues.output_file).parent_path().string();
+  const std::string fileName = inputValues.output_file.stem().string();
+  const std::string suffix = inputValues.output_file.extension().string();
 
   for(const auto& [phase, lineCount] : phaseLineCounts)
   {
@@ -221,7 +221,7 @@ Result<> WritePhaseFiles(const std::map<int32, int32>& phaseLineCounts, const Wr
 }
 
 template <typename MaskT>
-Result<> ExecuteDirect(const Int32DataStore& phasesStore, const Float32DataStore& eulersStore, const DataStore<MaskT>* maskStore, const WriteStatsGenOdfAngleFileInputValues& inputValues,
+Result<> ExecuteDirect(const Int32DataStoreType& phasesStore, const Float32DataStoreType& eulersStore, const DataStore<MaskT>* maskStore, const WriteStatsGenOdfAngleFileInputValues& inputValues,
                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = phasesStore.getNumberOfTuples();
@@ -279,7 +279,7 @@ Result<> ExecuteDirect(const Int32DataStore& phasesStore, const Float32DataStore
 }
 
 template <typename MaskT>
-Result<> ExecuteScanline(const Int32AbstractDataStore& phasesStore, const Float32AbstractDataStore& eulersStore, const AbstractDataStore<MaskT>* maskStore,
+Result<> ExecuteScanline(const Int32AbstractDataStoreType& phasesStore, const Float32AbstractDataStoreType& eulersStore, const AbstractDataStore<MaskT>* maskStore,
                          const WriteStatsGenOdfAngleFileInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = phasesStore.getNumberOfTuples();
@@ -410,14 +410,14 @@ public:
 
   Result<> operator()()
   {
-    const auto& phasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
-    const auto& eulersStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath).getDataStoreRef();
-    if(!m_InputValues->UseMask)
+    const auto& phasesStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+    const auto& eulersStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path).getDataStoreRef();
+    if(!m_InputValues->use_mask)
     {
       return ExecuteScanline<uint8>(phasesStore, eulersStore, nullptr, *m_InputValues, m_MessageHandler, m_ShouldCancel);
     }
 
-    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     switch(maskArray.getDataType())
     {
     case DataType::boolean: {
@@ -429,7 +429,7 @@ public:
       return ExecuteScanline(phasesStore, eulersStore, &maskStore, *m_InputValues, m_MessageHandler, m_ShouldCancel);
     }
     default:
-      return MakeInvalidMaskTypeError(maskArray, m_InputValues->MaskArrayPath);
+      return MakeInvalidMaskTypeError(maskArray, m_InputValues->mask_array_path);
     }
   }
 
@@ -460,26 +460,26 @@ public:
 
   Result<> operator()()
   {
-    const auto& phasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
-    const auto& eulersStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath).getDataStoreRef();
-    const auto* directPhasesStorePtr = dynamic_cast<const Int32DataStore*>(&phasesStore);
-    const auto* directEulersStorePtr = dynamic_cast<const Float32DataStore*>(&eulersStore);
+    const auto& phasesStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+    const auto& eulersStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path).getDataStoreRef();
+    const auto* directPhasesStorePtr = dynamic_cast<const Int32DataStoreType*>(&phasesStore);
+    const auto* directEulersStorePtr = dynamic_cast<const Float32DataStoreType*>(&eulersStore);
     if(directPhasesStorePtr == nullptr || directEulersStorePtr == nullptr)
     {
       return WriteStatsGenOdfAngleFileScanline(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues)();
     }
 
-    if(!m_InputValues->UseMask)
+    if(!m_InputValues->use_mask)
     {
       return ExecuteDirect<uint8>(*directPhasesStorePtr, *directEulersStorePtr, nullptr, *m_InputValues, m_MessageHandler, m_ShouldCancel);
     }
 
-    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     switch(maskArray.getDataType())
     {
     case DataType::boolean: {
       const auto& maskStore = maskArray.getIDataStoreRefAs<AbstractDataStore<bool>>();
-      const auto* directMaskStorePtr = dynamic_cast<const BoolDataStore*>(&maskStore);
+      const auto* directMaskStorePtr = dynamic_cast<const BoolDataStoreType*>(&maskStore);
       if(directMaskStorePtr == nullptr)
       {
         return WriteStatsGenOdfAngleFileScanline(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues)();
@@ -488,7 +488,7 @@ public:
     }
     case DataType::uint8: {
       const auto& maskStore = maskArray.getIDataStoreRefAs<AbstractDataStore<uint8>>();
-      const auto* directMaskStorePtr = dynamic_cast<const UInt8DataStore*>(&maskStore);
+      const auto* directMaskStorePtr = dynamic_cast<const UInt8DataStoreType*>(&maskStore);
       if(directMaskStorePtr == nullptr)
       {
         return WriteStatsGenOdfAngleFileScanline(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues)();
@@ -496,7 +496,7 @@ public:
       return ExecuteDirect(*directPhasesStorePtr, *directEulersStorePtr, directMaskStorePtr, *m_InputValues, m_MessageHandler, m_ShouldCancel);
     }
     default:
-      return MakeInvalidMaskTypeError(maskArray, m_InputValues->MaskArrayPath);
+      return MakeInvalidMaskTypeError(maskArray, m_InputValues->mask_array_path);
     }
   }
 
@@ -522,11 +522,11 @@ const std::atomic_bool& WriteStatsGenOdfAngleFile::getCancel()
   return m_ShouldCancel;
 }
 
-int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, usize totalPoints, int32 phase) const
+int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32ArrayType& cellPhases, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, usize totalPoints, int32 phase) const
 {
   const auto& phasesStore = cellPhases.getDataStoreRef();
   Result<int32> countResult;
-  if(!m_InputValues->UseMask)
+  if(!m_InputValues->use_mask)
   {
     countResult = DetermineOutputLineCount<uint8>(phasesStore, nullptr, totalPoints, phase);
   }
@@ -534,13 +534,13 @@ int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPh
   {
     throw std::invalid_argument(k_InvalidMaskCompareMessage);
   }
-  else if(const auto* boolMaskPtr = dynamic_cast<const MaskCompareUtilities::BoolMaskCompare*>(mask.get()); boolMaskPtr != nullptr)
+  else if(const auto* boolMaskPtr = dynamic_cast<const mask_compare_utilities::BoolMaskCompare*>(mask.get()); boolMaskPtr != nullptr)
   {
-    countResult = DetermineOutputLineCount(phasesStore, &boolMaskPtr->m_DataStore, totalPoints, phase);
+    countResult = DetermineOutputLineCount(phasesStore, &boolMaskPtr->m_data_store, totalPoints, phase);
   }
-  else if(const auto* uint8MaskPtr = dynamic_cast<const MaskCompareUtilities::UInt8MaskCompare*>(mask.get()); uint8MaskPtr != nullptr)
+  else if(const auto* uint8MaskPtr = dynamic_cast<const mask_compare_utilities::UInt8MaskCompare*>(mask.get()); uint8MaskPtr != nullptr)
   {
-    countResult = DetermineOutputLineCount(phasesStore, &uint8MaskPtr->m_DataStore, totalPoints, phase);
+    countResult = DetermineOutputLineCount(phasesStore, &uint8MaskPtr->m_data_store, totalPoints, phase);
   }
   else
   {
@@ -555,12 +555,12 @@ int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPh
   return countResult.value();
 }
 
-Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, int32 lineCount,
+Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const Int32ArrayType& cellPhases, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, int32 lineCount,
                                                     usize totalPoints, int32 phase) const
 {
   const auto& phasesStore = cellPhases.getDataStoreRef();
-  const auto& eulersStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath).getDataStoreRef();
-  if(!m_InputValues->UseMask)
+  const auto& eulersStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path).getDataStoreRef();
+  if(!m_InputValues->use_mask)
   {
     return WriteOutputFile<uint8>(out, phasesStore, eulersStore, nullptr, *m_InputValues, lineCount, totalPoints, phase);
   }
@@ -568,30 +568,30 @@ Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const In
   {
     return MakeErrorResult(-9405, k_InvalidMaskCompareMessage);
   }
-  if(const auto* boolMaskPtr = dynamic_cast<const MaskCompareUtilities::BoolMaskCompare*>(mask.get()); boolMaskPtr != nullptr)
+  if(const auto* boolMaskPtr = dynamic_cast<const mask_compare_utilities::BoolMaskCompare*>(mask.get()); boolMaskPtr != nullptr)
   {
-    return WriteOutputFile(out, phasesStore, eulersStore, &boolMaskPtr->m_DataStore, *m_InputValues, lineCount, totalPoints, phase);
+    return WriteOutputFile(out, phasesStore, eulersStore, &boolMaskPtr->m_data_store, *m_InputValues, lineCount, totalPoints, phase);
   }
-  if(const auto* uint8MaskPtr = dynamic_cast<const MaskCompareUtilities::UInt8MaskCompare*>(mask.get()); uint8MaskPtr != nullptr)
+  if(const auto* uint8MaskPtr = dynamic_cast<const mask_compare_utilities::UInt8MaskCompare*>(mask.get()); uint8MaskPtr != nullptr)
   {
-    return WriteOutputFile(out, phasesStore, eulersStore, &uint8MaskPtr->m_DataStore, *m_InputValues, lineCount, totalPoints, phase);
+    return WriteOutputFile(out, phasesStore, eulersStore, &uint8MaskPtr->m_data_store, *m_InputValues, lineCount, totalPoints, phase);
   }
   return MakeErrorResult(-9405, k_InvalidMaskCompareMessage);
 }
 
 Result<> WriteStatsGenOdfAngleFile::operator()()
 {
-  Result<> createDirectoriesResult = CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  if(m_InputValues->UseMask)
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path);
+  if(m_InputValues->use_mask)
   {
-    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     return DispatchAlgorithm<WriteStatsGenOdfAngleFileDirect, WriteStatsGenOdfAngleFileScanline>({&cellPhases, &eulerAngles, &maskArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
                                                                                                  m_InputValues);
   }

@@ -20,9 +20,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureRectInputValues
 {
-  DataPath FeatureIdsArrayPath;
-  DataPath FeatureDataAttributeMatrixPath;
-  DataPath FeatureRectArrayPath;
+  DataPath feature_ids_array_path;
+  DataPath feature_data_attribute_matrix_path;
+  DataPath feature_rect_array_path;
 };
 
 /**

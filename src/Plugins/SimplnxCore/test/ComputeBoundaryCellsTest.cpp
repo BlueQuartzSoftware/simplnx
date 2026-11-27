@@ -17,9 +17,9 @@ namespace
 const std::string k_ExemplarDataContainer = "SyntheticVolumeDataContainer";
 const std::string k_ComputedBoundaryCellsName = "ComputedBoundaryCells";
 const DataPath k_GeometryPath({k_ExemplarDataContainer});
-const DataPath k_FeatureIdsPath({k_ExemplarDataContainer, Constants::k_CellData, Constants::k_FeatureIds});
-const DataPath k_ExemplarBoundaryCellsPath({k_ExemplarDataContainer, Constants::k_CellData, "BoundaryCellsWithBoundary"});
-const DataPath k_ComputedBoundaryCellsPath({k_ExemplarDataContainer, Constants::k_CellData, k_ComputedBoundaryCellsName});
+const DataPath k_FeatureIdsPath({k_ExemplarDataContainer, constants::k_CellData, constants::k_FeatureIds});
+const DataPath k_ExemplarBoundaryCellsPath({k_ExemplarDataContainer, constants::k_CellData, "BoundaryCellsWithBoundary"});
+const DataPath k_ComputedBoundaryCellsPath({k_ExemplarDataContainer, constants::k_CellData, k_ComputedBoundaryCellsName});
 
 constexpr usize k_DimX = 200;
 constexpr usize k_DimY = 200;
@@ -36,12 +36,12 @@ void BuildOctantFeatureIds(DataStructure& dataStructure)
   REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, constants::k_CellData, cellTupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
-  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
-  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, Constants::k_FeatureIds, store, cellAmPtr->getId());
+  const DataPath featureIdsPath = DataPath({k_GeomName, constants::k_CellData, constants::k_FeatureIds});
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, constants::k_FeatureIds, store, cellAmPtr->getId());
   auto& fidsRef = featureIdsPtr->getDataStoreRef();
   const usize sliceSize = k_DimY * k_DimX;
   std::vector<int32> sliceBuffer(sliceSize);
@@ -65,17 +65,17 @@ void BuildOctantFeatureIds(DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Valid filter execution", "[ComputeBoundaryCellsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz", "6_6_FindBoundaryCellsExemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz", "6_6_FindBoundaryCellsExemplar.dream3d");
 
   // Load the exemplar output.
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_FindBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Configure the filter arguments.
   ComputeBoundaryCellsFilter filter;
@@ -88,31 +88,31 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Valid filter execution", "[C
   args.insertOrAssign(ComputeBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareArrays<int8>(dataStructure, k_ExemplarBoundaryCellsPath, k_ComputedBoundaryCellsPath);
+  unit_test::CompareArrays<int8>(dataStructure, k_ExemplarBoundaryCellsPath, k_ComputedBoundaryCellsPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "[ComputeBoundaryCellsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz", "6_6_FindBoundaryCellsExemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_boundary_cells.tar.gz", "6_6_FindBoundaryCellsExemplar.dream3d");
   // Load the exemplar output.
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_FindBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
-  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, constants::k_ImageGeometry);
   imageGeomPtr->setDimensions({250, 250, 250});
   REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
 
-  const DataPath kWrongGeometryPath({Constants::k_ImageGeometry});
+  const DataPath kWrongGeometryPath({constants::k_ImageGeometry});
 
   // Configure the filter arguments.
   ComputeBoundaryCellsFilter filter;
@@ -126,17 +126,17 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Invalid filter execution", "
   args.insertOrAssign(ComputeBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Generate Large Test Dataset", "[SimplnxCore][ComputeBoundaryCellsFilter][.GenerateTestData]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure buildDS;
   BuildOctantFeatureIds(buildDS);
@@ -144,22 +144,22 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: Generate Large Test Dataset"
   const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data";
   fs::create_directories(outputDir);
   const auto outputFile = outputDir / "compute_boundary_cells_data.dream3d";
-  UnitTest::WriteTestDataStructure(buildDS, outputFile);
+  unit_test::WriteTestDataStructure(buildDS, outputFile);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: 200x200x200 octant features", "[SimplnxCore][ComputeBoundaryCellsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   BuildOctantFeatureIds(dataStructure);
 
   const DataPath benchGeomPath({k_GeomName});
-  const DataPath benchFeatureIdsPath = benchGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds);
+  const DataPath benchFeatureIdsPath = benchGeomPath.createChildPath(constants::k_CellData).createChildPath(constants::k_FeatureIds);
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(benchFeatureIdsPath));
 
   {
@@ -172,13 +172,13 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: 200x200x200 octant features"
     args.insertOrAssign(ComputeBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>("BoundaryCells"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // BoundaryCells must contain varied values.
-  const DataPath boundaryCellsPath = benchGeomPath.createChildPath(Constants::k_CellData).createChildPath("BoundaryCells");
+  const DataPath boundaryCellsPath = benchGeomPath.createChildPath(constants::k_CellData).createChildPath("BoundaryCells");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int8>>(boundaryCellsPath));
   const auto& boundaryCells = dataStructure.getDataRefAs<DataArray<int8>>(boundaryCellsPath).getDataStoreRef();
   int8 minVal = boundaryCells[0];
@@ -191,5 +191,5 @@ TEST_CASE("SimplnxCore::ComputeBoundaryCellsFilter: 200x200x200 octant features"
   REQUIRE(minVal == 0);
   REQUIRE(maxVal > 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

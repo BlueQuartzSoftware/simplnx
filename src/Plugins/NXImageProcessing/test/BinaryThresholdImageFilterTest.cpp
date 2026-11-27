@@ -14,8 +14,8 @@ namespace
 // -----------------------------------------------------------------------------
 void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParams, const std::string& committedMd5)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -32,7 +32,7 @@ void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParam
   setParams(args);
   BinaryThresholdImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -41,7 +41,7 @@ void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParam
   INFO(fmt::format("BinaryThresholdImageFilter md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -67,8 +67,8 @@ TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: ITK real-image golden 
 // ascending thresholds must preflight cleanly.
 TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: Preflight rejects Lower > Upper", "[NXImageProcessing][BinaryThresholdImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildRampImage<float32>(dataStructure, 4, 0.0, 1.0);
@@ -88,10 +88,10 @@ TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: Preflight rejects Lowe
   };
 
   // Lower > Upper -> rejected at preflight.
-  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(500.0, 100.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(500.0, 100.0)).output_actions.valid());
   // Lower == Upper and Lower < Upper -> preflight cleanly.
   auto equalThresholdResult = filter.preflight(dataStructure, makeArgs(250.0, 250.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(equalThresholdResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(equalThresholdResult.output_actions);
   auto orderedThresholdResult = filter.preflight(dataStructure, makeArgs(100.0, 500.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(orderedThresholdResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(orderedThresholdResult.output_actions);
 }

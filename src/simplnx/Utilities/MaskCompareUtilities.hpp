@@ -6,7 +6,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 
-namespace nx::core::MaskCompareUtilities
+namespace nx::core::mask_compare_utilities
 {
 /**
  * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier
@@ -62,80 +62,80 @@ struct MaskCompare
 struct BoolMaskCompare : public MaskCompare
 {
   BoolMaskCompare(AbstractDataStore<bool>& dataStore)
-  : m_DataStore(dataStore)
+  : m_data_store(dataStore)
   {
   }
   ~BoolMaskCompare() noexcept override = default;
 
-  AbstractDataStore<bool>& m_DataStore;
+  AbstractDataStore<bool>& m_data_store;
   bool bothTrue(usize indexA, usize indexB) const override
   {
-    return m_DataStore.at(indexA) && m_DataStore.at(indexB);
+    return m_data_store.at(indexA) && m_data_store.at(indexB);
   }
   bool bothFalse(usize indexA, usize indexB) const override
   {
-    return !m_DataStore.at(indexA) && !m_DataStore.at(indexB);
+    return !m_data_store.at(indexA) && !m_data_store.at(indexB);
   }
   bool isTrue(usize index) const override
   {
-    return m_DataStore.at(index);
+    return m_data_store.at(index);
   }
   void setValue(usize index, bool val) override
   {
-    m_DataStore[index] = val;
+    m_data_store[index] = val;
   }
   usize getNumberOfTuples() const override
   {
-    return m_DataStore.getNumberOfTuples();
+    return m_data_store.getNumberOfTuples();
   }
   usize getNumberOfComponents() const override
   {
-    return m_DataStore.getNumberOfComponents();
+    return m_data_store.getNumberOfComponents();
   }
 
   usize countTrueValues() const override
   {
-    return std::count(m_DataStore.begin(), m_DataStore.end(), true);
+    return std::count(m_data_store.begin(), m_data_store.end(), true);
   }
 };
 
 struct UInt8MaskCompare : public MaskCompare
 {
   UInt8MaskCompare(AbstractDataStore<uint8>& dataStore)
-  : m_DataStore(dataStore)
+  : m_data_store(dataStore)
   {
   }
   ~UInt8MaskCompare() noexcept override = default;
 
-  AbstractDataStore<uint8>& m_DataStore;
+  AbstractDataStore<uint8>& m_data_store;
   bool bothTrue(usize indexA, usize indexB) const override
   {
-    return m_DataStore.at(indexA) != 0 && m_DataStore.at(indexB) != 0;
+    return m_data_store.at(indexA) != 0 && m_data_store.at(indexB) != 0;
   }
   bool bothFalse(usize indexA, usize indexB) const override
   {
-    return m_DataStore.at(indexA) == 0 && m_DataStore.at(indexB) == 0;
+    return m_data_store.at(indexA) == 0 && m_data_store.at(indexB) == 0;
   }
   bool isTrue(usize index) const override
   {
-    return m_DataStore.at(index) != 0;
+    return m_data_store.at(index) != 0;
   }
   void setValue(usize index, bool val) override
   {
-    m_DataStore[index] = static_cast<uint8>(val);
+    m_data_store[index] = static_cast<uint8>(val);
   }
   usize getNumberOfTuples() const override
   {
-    return m_DataStore.getNumberOfTuples();
+    return m_data_store.getNumberOfTuples();
   }
   usize getNumberOfComponents() const override
   {
-    return m_DataStore.getNumberOfComponents();
+    return m_data_store.getNumberOfComponents();
   }
 
   usize countTrueValues() const override
   {
-    const usize falseCount = std::count(m_DataStore.begin(), m_DataStore.end(), 0);
+    const usize falseCount = std::count(m_data_store.begin(), m_data_store.end(), 0);
     return getNumberOfTuples() - falseCount;
   }
 };

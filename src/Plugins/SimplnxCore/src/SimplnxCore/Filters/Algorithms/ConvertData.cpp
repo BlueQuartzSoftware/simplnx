@@ -120,7 +120,7 @@ public:
       return {};
     }
 
-    typename IParallelAlgorithm::AlgorithmArrays algArrays;
+    typename IParallelAlgorithm::AlgorithmArraysType algArrays;
     algArrays.push_back(&m_InputArray);
     algArrays.push_back(&m_OutputArray);
 
@@ -230,8 +230,8 @@ private:
 template <typename InputType, typename OutputType>
 static Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues, const std::atomic_bool& shouldCancel)
 {
-  const auto& inputArray = dataStructure.getDataRefAs<DataArray<InputType>>(inputValues->SelectedArrayPath);
-  auto& outputArray = dataStructure.getDataRefAs<DataArray<OutputType>>(inputValues->OutputArrayName);
+  const auto& inputArray = dataStructure.getDataRefAs<DataArray<InputType>>(inputValues->selected_array_path);
+  auto& outputArray = dataStructure.getDataRefAs<DataArray<OutputType>>(inputValues->output_array_name);
   return DispatchAlgorithm<ConvertDataDirect<InputType, OutputType>, ConvertDataBulk<InputType, OutputType>>({&inputArray, &outputArray}, inputArray, outputArray, shouldCancel);
 }
 
@@ -246,8 +246,8 @@ static Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInput
 template <typename InputType>
 static Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues* inputValues, const std::atomic_bool& shouldCancel)
 {
-  const auto& inputArray = dataStructure.getDataRefAs<DataArray<InputType>>(inputValues->SelectedArrayPath);
-  switch(inputValues->ScalarType)
+  const auto& inputArray = dataStructure.getDataRefAs<DataArray<InputType>>(inputValues->selected_array_path);
+  switch(inputValues->scalar_type)
   {
   case DataType::int8:
     return ConvertData<InputType, int8>(dataStructure, inputValues, shouldCancel);
@@ -273,7 +273,7 @@ static Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInput
     return ConvertData<InputType, bool>(dataStructure, inputValues, shouldCancel);
   default:
     return MakeErrorResult(
-        -399, fmt::format("Error Converting DataArray '{}' from type '{}' to type '{}'", inputArray.getName(), DataTypeToString(inputArray.getDataType()), DataTypeToString(inputValues->ScalarType)));
+        -399, fmt::format("Error Converting DataArray '{}' from type '{}' to type '{}'", inputArray.getName(), DataTypeToString(inputArray.getDataType()), DataTypeToString(inputValues->scalar_type)));
   }
 }
 
@@ -306,6 +306,6 @@ const std::atomic_bool& ConvertData::getCancel()
 
 Result<> ConvertData::operator()()
 {
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
+  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_array_path);
   return ExecuteDataFunction(convert_data_detail::ConvertDataFunctor{}, inputArray.getDataType(), m_DataStructure, m_InputValues, m_ShouldCancel);
 }

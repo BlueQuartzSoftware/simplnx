@@ -13,27 +13,27 @@
 #include <catch2/catch.hpp>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
-using namespace nx::core::Constants;
+using namespace nx::core::unit_test;
+using namespace nx::core::constants;
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Anisotropic spacing places Z correctly", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Regression test for a bug where the Z half-voxel relocation offset used voxelSize[1] (Y
   // spacing) instead of voxelSize[2] (Z spacing). On isotropic data (the exemplar dataset used
   // by the other SurfaceNetsFilter tests above) voxelSize[1] == voxelSize[2], so the bug is
   // invisible there. Y and Z spacing are chosen sharply different here (1.0 vs 4.0) so a
   // Y-for-Z substitution is unmistakable in the resulting mesh's Z bounding box.
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const FloatVec3 kSpacing = {0.25F, 1.0F, 4.0F};
-  DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(/*flushWithBottom=*/true, kSpacing);
+  const FloatVec3Type kSpacing = {0.25F, 1.0F, 4.0F};
+  DataStructure dataStructure = surface_meshing_test::CreateCylinderInBox(/*flushWithBottom=*/true, kSpacing);
   const DataPath kTriangleGeomPath({"SurfaceNets"});
 
-  SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(
+  surface_meshing_test::MeshResult meshResult = surface_meshing_test::RunMesher<SurfaceNetsFilter>(
       std::move(dataStructure), kTriangleGeomPath, bounding_box_skin_mode::k_Off,
       [](Arguments& args) {
         args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
@@ -43,8 +43,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Anisotropic spacing places Z corr
       },
       &scope);
 
-  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(kTriangleGeomPath));
-  const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(kTriangleGeomPath);
+  REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<TriangleGeom>(kTriangleGeomPath));
+  const auto& triangleGeom = meshResult.structure.getDataRefAs<TriangleGeom>(kTriangleGeomPath);
   const auto boundingBox = triangleGeom.getBoundingBox();
 
   // The cylinder is flush with the box's bottom Z wall, and the box's top Z wall is pure
@@ -52,29 +52,29 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Anisotropic spacing places Z corr
   // [0, dimZ * spacingZ]. With the bug (Y spacing substituted for Z spacing), every vertex's Z
   // is shifted by 0.5*(spacingZ - spacingY) = 1.5, moving both bounds to [1.5, 49.5].
   const float32 kExpectedMinZ = 0.0F;
-  const float32 kExpectedMaxZ = static_cast<float32>(SurfaceMeshingTest::k_BoxDim) * kSpacing[2];
+  const float32 kExpectedMaxZ = static_cast<float32>(surface_meshing_test::k_BoxDim) * kSpacing[2];
   const float32 kTolerance = 1.0e-4F;
 
   REQUIRE_THAT(boundingBox.getMinPoint()[2], Catch::Matchers::WithinAbs(kExpectedMinZ, kTolerance));
   REQUIRE_THAT(boundingBox.getMaxPoint()[2], Catch::Matchers::WithinAbs(kExpectedMaxZ, kTolerance));
 
-  UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+  unit_test::CheckArraysInheritTupleDims(meshResult.structure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -132,7 +132,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceN
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -145,8 +145,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceN
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+  IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
 
   REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
   REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
@@ -163,23 +163,23 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceN
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -235,7 +235,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][Surfac
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -249,8 +249,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][Surfac
   // Check a few things about the generated data.
   {
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-    IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-    IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+    IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+    IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
     REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
     REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
   }
@@ -267,23 +267,23 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][Surfac
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -339,7 +339,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceN
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -352,8 +352,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceN
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+  IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
 
   REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
   REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
@@ -370,23 +370,23 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceN
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v4.tar.gz", "SurfaceNetsTest_v4");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v4/SurfaceNetsTest_v4.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath celDataPath({k_DataContainer, k_CellData});
@@ -442,7 +442,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -455,8 +455,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* trianglePtr = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* verticesPtr = triangleGeom.getVertices();
+  IGeometry::SharedTriListType* trianglePtr = triangleGeom.getFaces();
+  IGeometry::SharedVertexListType* verticesPtr = triangleGeom.getVertices();
 
   REQUIRE(trianglePtr->getNumberOfTuples() == 668786);
   REQUIRE(verticesPtr->getNumberOfTuples() == 319447);
@@ -473,5 +473,5 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore
   DataPath exemplarVertexAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

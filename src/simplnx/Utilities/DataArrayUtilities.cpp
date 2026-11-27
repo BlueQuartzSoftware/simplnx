@@ -50,7 +50,7 @@ Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, co
   auto& castInputArray = dynamic_cast<const DataArray<T>&>(inputDataArray);
   const ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
   dataStructure.removeData(dataPath);
-  return ArrayCreationUtilities::CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
+  return array_creation_utilities::CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
 }
 
 /**
@@ -95,7 +95,7 @@ struct CreateDefaultValueDataArrayFunctor
   Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::string& defaultValue,
                              const std::optional<DataObject::IdType> parentId)
   {
-    auto result = StringInterpretationUtilities::Convert<T>(defaultValue);
+    auto result = string_interpretation_utilities::Convert<T>(defaultValue);
     if(result.invalid())
     {
       return ConvertResultTo<IArray*>(ConvertResult(std::move(result)), {});
@@ -112,7 +112,7 @@ struct CreateDefaultValueDataArrayFunctor
       arrayPath = parentPaths.front().createChildPath(name);
     }
 
-    auto dataStore = DataStoreUtilities::CreateDataStore<T>(destDataStructure, arrayPath, tupleShape, componentShape);
+    auto dataStore = data_store_utilities::CreateDataStore<T>(destDataStructure, arrayPath, tupleShape, componentShape);
     if(dataStore == nullptr)
     {
       return MakeErrorResult<IArray*>(-1054, fmt::format("Unable to allocate storage for default-initialized data array '{}'.", name));
@@ -358,47 +358,47 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 {
   auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
 
-  if(template_helpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float32ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<float32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float64ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<float64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int8ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<int8>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt8ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint8>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int16ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<int16>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt16ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint16>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int32ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<int32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt32ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int64ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<int64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt64ArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(template_helpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<BoolArrayType>()(inputDataArrayPtr))
   {
     return ReplaceArray<bool>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
@@ -406,16 +406,16 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
 }
 
-Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
+Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds, bool ignoreNegativeValues,
                                                             const IFilter::MessageHandler& messageHandler)
 {
   return ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, sourceDataPath, featureIds, ignoreNegativeValues, messageHandler, nullptr);
 }
 
-Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
+Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds, bool ignoreNegativeValues,
                                                             const IFilter::MessageHandler& messageHandler, const std::atomic_bool* shouldCancel)
 {
-  messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
+  messageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::ProgressMessageType::Type::Info, fmt::format("Validating range of values within input array '{}'...", featureIds.getName())});
 
   usize numFeatures = 0;
 
@@ -560,9 +560,9 @@ Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructur
   }
 }
 
-namespace TransferGeometryElementData
+namespace transfer_geometry_element_data
 {
-void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
+void TransferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
                          const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler)
 {
   // Each task owns one source and destination array pair. No two tasks access the
@@ -614,7 +614,7 @@ Result<usize> nx::core::ComputeDimensionProduct(nonstd::span<const usize> dimens
     if(dimension > std::numeric_limits<usize>::max() / product)
     {
       return MakeErrorResult<usize>(errorCode, fmt::format("{} dimensions [{}] have a product that exceeds {}. Use a shape with a representable count.", name,
-                                                           StringUtilities::formatDimensions(dimensions), std::numeric_limits<usize>::max()));
+                                                           string_utilities::FormatDimensions(dimensions), std::numeric_limits<usize>::max()));
     }
     product *= dimension;
   }
@@ -661,7 +661,7 @@ Result<ShapeType> nx::core::ConvertDimensions(nonstd::span<const float64> dimens
       {
         reason = "is not a whole number";
       }
-      return MakeErrorResult<ShapeType>(legacyFailure ? legacyErrorCode : DimensionConversion::k_InvalidValue,
+      return MakeErrorResult<ShapeType>(legacyFailure ? legacyErrorCode : dimension_conversion::k_InvalidValue,
                                         fmt::format("{} dimension at index {} {} (value {}). Use finite whole numbers in [{}, {}).", name, index, reason, value, minimum, upperExclusive));
     }
     shape.push_back(static_cast<usize>(value));
@@ -710,7 +710,7 @@ Result<ShapeType> nx::core::ConvertDimensions(const std::string& dimensions, con
     }
     if(value == 0 && zeroPolicy == ZeroDimensionPolicy::Reject)
     {
-      return MakeErrorResult<ShapeType>(DimensionConversion::k_ZeroDimension, fmt::format("{} dimension token '{}' at index {} cannot be 0. Use unsigned decimal integers in [1, {}].", name, token,
+      return MakeErrorResult<ShapeType>(dimension_conversion::k_ZeroDimension, fmt::format("{} dimension token '{}' at index {} cannot be 0. Use unsigned decimal integers in [1, {}].", name, token,
                                                                                           index, std::numeric_limits<usize>::max()));
     }
     shape.push_back(static_cast<usize>(value));

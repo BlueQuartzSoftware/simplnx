@@ -109,7 +109,7 @@ public:
 TEST_CASE("Save Filters To Json")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
   REQUIRE(filterListPtr != nullptr);
 
@@ -136,7 +136,7 @@ TEST_CASE("Save Filters To Json")
 TEST_CASE("Save Pipeline To Json")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
   REQUIRE(filterListPtr != nullptr);
 

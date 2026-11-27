@@ -23,26 +23,26 @@ namespace nx::core
 /**
  * @brief These constants can be used as standard error codes when parsing JSON
  */
-namespace FilterParameter::Constants
+namespace filter_parameter::constants
 {
-inline constexpr int32 k_Json_Missing_Entry = -100;
-inline constexpr int32 k_Json_Value_Not_Object = -101;
-inline constexpr int32 k_Json_Value_Not_String = -102;
-inline constexpr int32 k_Json_Value_Not_Integer = -103;
-inline constexpr int32 k_Json_Value_Not_Unsigned = -104;
-inline constexpr int32 k_Json_Value_Not_Enumeration = -105;
-inline constexpr int32 k_Json_Value_Not_Value_Type = -106;
+inline constexpr int32 k_JsonMissingEntry = -100;
+inline constexpr int32 k_JsonValueNotObject = -101;
+inline constexpr int32 k_JsonValueNotString = -102;
+inline constexpr int32 k_JsonValueNotInteger = -103;
+inline constexpr int32 k_JsonValueNotUnsigned = -104;
+inline constexpr int32 k_JsonValueNotEnumeration = -105;
+inline constexpr int32 k_JsonValueNotValueType = -106;
 
-inline constexpr int32 k_Validate_Empty_Value = -201;
-inline constexpr int32 k_Validate_ExistingValue = -202;
-inline constexpr int32 k_Validate_DuplicateValue = -203;
-inline constexpr int32 k_Validate_Does_Not_Exist = -204;
-inline constexpr int32 k_Validate_Type_Error = -205;
-inline constexpr int32 k_Validate_OutOfRange_Error = -206;
-inline constexpr int32 k_Validate_AllowedType_Error = -207;
-inline constexpr int32 k_Validate_TupleShapeValue = -208;
-inline constexpr int32 k_Validate_DataLocation_Error = -209;
-inline constexpr int32 k_Validate_InvalidDataObjectName = -210;
+inline constexpr int32 k_ValidateEmptyValue = -201;
+inline constexpr int32 k_ValidateExistingValue = -202;
+inline constexpr int32 k_ValidateDuplicateValue = -203;
+inline constexpr int32 k_ValidateDoesNotExist = -204;
+inline constexpr int32 k_ValidateTypeError = -205;
+inline constexpr int32 k_ValidateOutOfRangeError = -206;
+inline constexpr int32 k_ValidateAllowedTypeError = -207;
+inline constexpr int32 k_ValidateTupleShapeValue = -208;
+inline constexpr int32 k_ValidateDataLocationError = -209;
+inline constexpr int32 k_ValidateInvalidDataObjectName = -210;
 } // namespace FilterParameter::Constants
 
 /**
@@ -52,7 +52,7 @@ inline constexpr int32 k_Validate_InvalidDataObjectName = -210;
 class SIMPLNX_EXPORT IParameter
 {
 public:
-  using AcceptedTypes = std::vector<std::type_index>;
+  using AcceptedTypesType = std::vector<std::type_index>;
   using UniquePointerType = std::unique_ptr<IParameter>;
   using VersionType = uint64;
 
@@ -110,7 +110,7 @@ public:
    * @brief Returns a list of accepted input types.
    * @return AcceptedTypes Vector of accepted type indices
    */
-  virtual AcceptedTypes acceptedTypes() const = 0;
+  virtual AcceptedTypesType acceptedTypes() const = 0;
 
   /**
    * @brief Returns version integer.
@@ -176,5 +176,5 @@ protected:
   virtual Result<std::any> fromJsonImpl(const nlohmann::json& json, uint64 version) const = 0;
 };
 
-using AnyParameter = AnyCloneable<IParameter>;
+using AnyParameterType = AnyCloneable<IParameter>;
 } // namespace nx::core

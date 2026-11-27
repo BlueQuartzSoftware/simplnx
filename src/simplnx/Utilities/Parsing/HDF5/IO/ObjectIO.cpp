@@ -78,7 +78,7 @@ std::string ObjectIO::getObjectPath() const
   return path;
 }
 
-std::string ObjectIO::getParentName()
+std::string ObjectIO::GetParentName()
 {
   return "";
 }
@@ -360,7 +360,7 @@ usize ObjectIO::GetNumElementsInAttribute(hid_t attribId)
     typeSize = H5Tget_size(attrType);
     dataspaceId = H5Aget_space(attribId);
   }
-  const Type type = getTypeFromId(attrType);
+  const Type type = GetTypeFromId(attrType);
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     if(dataspaceId >= 0)

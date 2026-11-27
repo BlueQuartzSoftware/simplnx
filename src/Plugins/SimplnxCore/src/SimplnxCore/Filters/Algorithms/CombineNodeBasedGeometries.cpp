@@ -131,8 +131,8 @@ Result<> CombineGeometryElements(DataStructure& dataStructure, NodeGeomType* out
     }
 
     ConcatenateDataArraysInputValues inputValues;
-    inputValues.InputArrayPaths = arrayPaths;
-    inputValues.OutputArrayPath = outputArrayPathsMap[arrayName][0];
+    inputValues.input_array_paths = arrayPaths;
+    inputValues.output_array_path = outputArrayPathsMap[arrayName][0];
     auto result = ConcatenateDataArrays(dataStructure, msgHandler, shouldCancel, &inputValues)();
     if(result.invalid())
     {
@@ -403,23 +403,23 @@ Result<> CombineNodeBasedGeometries::operator()()
 {
   // Each stage resizes the output arrays before it copies into them, so the first failure
   // must stop the chain: continuing would copy into arrays that were never resized.
-  Result<> vertexResult = CombineVertexElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  Result<> vertexResult = CombineVertexElements(m_DataStructure, m_InputValues->output_geometry_path, m_InputValues->input_geometry_paths, m_MessageHandler, m_ShouldCancel);
   if(vertexResult.invalid())
   {
     return vertexResult;
   }
 
-  Result<> edgeResult = CombineEdgeElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  Result<> edgeResult = CombineEdgeElements(m_DataStructure, m_InputValues->output_geometry_path, m_InputValues->input_geometry_paths, m_MessageHandler, m_ShouldCancel);
   if(edgeResult.invalid())
   {
     return edgeResult;
   }
 
-  Result<> faceResult = CombineFaceElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  Result<> faceResult = CombineFaceElements(m_DataStructure, m_InputValues->output_geometry_path, m_InputValues->input_geometry_paths, m_MessageHandler, m_ShouldCancel);
   if(faceResult.invalid())
   {
     return faceResult;
   }
 
-  return CombinePolyElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
+  return CombinePolyElements(m_DataStructure, m_InputValues->output_geometry_path, m_InputValues->input_geometry_paths, m_MessageHandler, m_ShouldCancel);
 }

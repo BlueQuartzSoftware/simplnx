@@ -21,7 +21,7 @@ namespace nx::core::orientation_utilities
  */
 std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
 
-using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
+using Matrix3fRType = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
 using Matrix3dRType = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
 
 /**
@@ -32,8 +32,8 @@ using Matrix3dRType = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
  */
 ORIENTATIONANALYSIS_EXPORT std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dRType frame);
 
-using Matrix1dR = Eigen::Matrix<double, 3, 1, Eigen::RowMajor>;
-using Matrix1fR = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;
+using Matrix1dRType = Eigen::Matrix<double, 3, 1, Eigen::RowMajor>;
+using Matrix1fRType = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;
 
 #if 0
 template <typename T>

@@ -18,10 +18,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT CreateFeatureArrayFromElementArrayInputValues
 {
-  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  DataObjectNameParameter::ValueType CreatedArrayName;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  ArraySelectionParameter::ValueType SelectedCellArrayPath;
+  AttributeMatrixSelectionParameter::ValueType cell_feature_attribute_matrix_path;
+  DataObjectNameParameter::ValueType created_array_name;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  ArraySelectionParameter::ValueType selected_cell_array_path;
 };
 
 /**

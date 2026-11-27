@@ -95,11 +95,11 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "The feature ID for each cell.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Cell Euler Angles", "The Euler angles in radians for each cell.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
 
@@ -124,9 +124,9 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
                                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -12018); prefixResult.invalid())
+  if(auto prefixResult = abaqus_element_sets::ValidateFilePrefix(prefix, -12018); prefixResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
   }
 
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -135,9 +135,9 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
     return MakePreflightErrorResult(-12001, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
   }
 
-  if(auto targetsResult = AbaqusElementSets::validateOutputTargets(outputPath, prefix, -12019); targetsResult.invalid())
+  if(auto targetsResult = abaqus_element_sets::ValidateOutputTargets(outputPath, prefix, -12019); targetsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
   const int32 numDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
@@ -168,9 +168,9 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
 
   const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
-  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  if(auto sizeResult = abaqus_element_sets::ValidateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
   }
   const usize cellCount = imageGeom.getNumberOfCells();
 
@@ -193,22 +193,22 @@ Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStru
                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteAbaqusCrystalPlasticityInputValues inputValues;
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
-  inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
-  inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
-  inputValues.WriteEulerAnglesInDegrees = filterArgs.value<bool>(k_WriteEulerAnglesInDegrees_Key);
-  inputValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
-  inputValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
-  inputValues.UseUnsymmetricSolver = filterArgs.value<bool>(k_UseUnsymmetricSolver_Key);
-  inputValues.IncludeGrainAndPhaseIds = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
-  inputValues.EulerAnglesStartIndex = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
-  inputValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.file_prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  inputValues.job_name = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
+  inputValues.use_reduced_integration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
+  inputValues.hourglass_stiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
+  inputValues.write_euler_angles_in_degrees = filterArgs.value<bool>(k_WriteEulerAnglesInDegrees_Key);
+  inputValues.num_depvar = filterArgs.value<int32>(k_NumDepvar_Key);
+  inputValues.num_user_out_var = filterArgs.value<int32>(k_NumUserOutVar_Key);
+  inputValues.use_unsymmetric_solver = filterArgs.value<bool>(k_UseUnsymmetricSolver_Key);
+  inputValues.include_grain_and_phase_ids = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
+  inputValues.euler_angles_start_index = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
+  inputValues.material_constants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.cell_euler_angles_array_path = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   return WriteAbaqusCrystalPlasticity(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

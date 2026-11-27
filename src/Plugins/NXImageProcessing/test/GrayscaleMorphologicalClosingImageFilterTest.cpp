@@ -67,11 +67,11 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Computed
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][GrayscaleMorphologicalClosingImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 32;
   constexpr int64 k_Rx = 2;
@@ -145,7 +145,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalClosingImageFilter: Ramp com
     UNSCOPED_INFO("slot=" << badSlot << " got=" << badGot << " expected=" << badExp);
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

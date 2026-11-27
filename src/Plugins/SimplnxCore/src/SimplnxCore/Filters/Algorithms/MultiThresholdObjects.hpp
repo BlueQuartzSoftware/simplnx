@@ -20,13 +20,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT MultiThresholdObjectsInputValues
 {
-  ArrayThresholdsParameter::ValueType ArrayThresholdsObject;
-  DataTypeParameter::ValueType CreatedMaskType;
-  Float64ParameterType::ValueType CustomFalseValue = 0.0;
-  Float64ParameterType::ValueType CustomTrueValue = 1.0;
-  DataObjectNameParameter::ValueType OutputDataArrayName;
-  BoolParameter::ValueType UseCustomFalseValue = false;
-  BoolParameter::ValueType UseCustomTrueValue = false;
+  ArrayThresholdsParameter::ValueType array_thresholds_object;
+  DataTypeParameter::ValueType created_mask_type;
+  Float64ParameterType::ValueType custom_false_value = 0.0;
+  Float64ParameterType::ValueType custom_true_value = 1.0;
+  DataObjectNameParameter::ValueType output_data_array_name;
+  BoolParameter::ValueType use_custom_false_value = false;
+  BoolParameter::ValueType use_custom_true_value = false;
 };
 
 /**

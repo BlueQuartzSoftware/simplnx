@@ -52,7 +52,7 @@ Parameters ComputeFeatureRectFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{{"FeatureIds"}},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
                                                                     "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -95,7 +95,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
     const auto& dim = tDims[i];
     if(dim > std::numeric_limits<uint32>::max())
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -2000,
                   fmt::format("Data Object at '{}': Dimension {} has a value of {}, which is larger than the maximum uint32 value ({}).  Please contact BlueQuartz Software for further information.",
                               featureRectArrayPath.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
@@ -108,7 +108,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -117,9 +117,9 @@ Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, con
 {
   ComputeFeatureRectInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.FeatureDataAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
-  inputValues.FeatureRectArrayPath = inputValues.FeatureDataAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureRectArrayName_Key));
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.feature_data_attribute_matrix_path = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
+  inputValues.feature_rect_array_path = inputValues.feature_data_attribute_matrix_path.createChildPath(filterArgs.value<std::string>(k_FeatureRectArrayName_Key));
 
   return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

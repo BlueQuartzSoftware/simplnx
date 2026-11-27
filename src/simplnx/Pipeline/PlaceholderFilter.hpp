@@ -56,7 +56,7 @@ public:
    * @param allowRenaming
    * @return bool
    */
-  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
+  bool preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.

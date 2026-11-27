@@ -50,10 +50,10 @@ constexpr StringLiteralType k_Unit = "unit";
 
 struct FileBlock
 {
-  SizeVec3 region_of_interest_start = {0, 0, 0};
-  SizeVec3 region_of_interest_end = {0, 0, 0};
+  SizeVec3Type region_of_interest_start = {0, 0, 0};
+  SizeVec3Type region_of_interest_end = {0, 0, 0};
   std::string file_format = "raw";
-  SizeVec3 size = {0, 0, 0};
+  SizeVec3Type size = {0, 0, 0};
   std::string name;
   std::string datatype = "float";
   FloatVec2Type data_range = {0.0F, 0.0F};
@@ -63,11 +63,11 @@ struct FileBlock
 struct GeometryBlock
 {
   std::string status = "visible";
-  FloatVec3 relative_position = {0.0F, 0.0F, 0.0F};
-  FloatVec3 position = {0.0F, 0.0F, 0.0F};
-  FloatVec3 resolution = {0.0F, 0.0F, 0.0F};
-  FloatVec3 scale = {1.0F, 1.0F, 1.0F};
-  FloatVec3 center = {0.0F, 0.0F, 0.0F};
+  FloatVec3Type relative_position = {0.0F, 0.0F, 0.0F};
+  FloatVec3Type position = {0.0F, 0.0F, 0.0F};
+  FloatVec3Type resolution = {0.0F, 0.0F, 0.0F};
+  FloatVec3Type scale = {1.0F, 1.0F, 1.0F};
+  FloatVec3Type center = {0.0F, 0.0F, 0.0F};
   std::array<int32, 9> rotation_matrix = {1, 0, 0, 0, 1, 0, 0, 0, 1};
   std::string unit = "mm";
 };
@@ -140,11 +140,11 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
   std::streampos currentPos = inputFile.tellg();
   getline(inputFile, buf);
   lineCount++;
-  buf = StringUtilities::trimmed(buf);
+  buf = string_utilities::Trimmed(buf);
 
   while(buf[0] != '[' && !inputFile.eof())
   {
-    std::vector<std::string> tokens = StringUtilities::Split(buf, ' ');
+    std::vector<std::string> tokens = string_utilities::Split(buf, ' ');
     if(tokens[0] == k_FileFormat)
     {
       fileBlock.file_format = tokens[2];
@@ -203,7 +203,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
     currentPos = inputFile.tellg();
     getline(inputFile, buf); // Read the next line
     lineCount++;
-    buf = StringUtilities::trimmed(buf);
+    buf = string_utilities::Trimmed(buf);
   }
   inputFile.seekg(currentPos); // Put the file position back before the last read.
   return {fileBlock};
@@ -217,12 +217,12 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::pat
   const std::streampos currentPos = inputFile.tellg();
   getline(inputFile, buf);
   lineCount++;
-  buf = StringUtilities::trimmed(buf);
+  buf = string_utilities::Trimmed(buf);
   std::vector<std::string> tokens;
 
   while(buf[0] != '[' && !inputFile.eof())
   {
-    tokens = StringUtilities::Split(buf, ' ');
+    tokens = string_utilities::Split(buf, ' ');
     if(tokens[0] == k_Status)
     {
       block.status = tokens[2];
@@ -249,7 +249,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::pat
         const bool isResolutionConversionError = tokens[0] == k_Resolution && error.code == k_VgiParseError;
         if(isResolutionConversionError && !replaceSpacing)
         {
-          error.message = ImageIO::FormatReaderValueError(headerPath, k_Resolution, error.message, ImageIO::k_SetSpacingLabel);
+          error.message = image_io::FormatReaderValueError(headerPath, k_Resolution, error.message, image_io::k_SetSpacingLabel);
         }
         if(!isResolutionConversionError || !replaceSpacing)
         {
@@ -280,7 +280,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::pat
 
     getline(inputFile, buf); // Read the next line
     lineCount++;
-    buf = StringUtilities::trimmed(buf);
+    buf = string_utilities::Trimmed(buf);
   }
 
   inputFile.seekg(currentPos); // Put the file position back before the last read.
@@ -300,7 +300,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const fs
   while(getline(vgHeaderFile, buf))
   {
     lineCount++;
-    buf = StringUtilities::trimmed(buf);
+    buf = string_utilities::Trimmed(buf);
 
     if(buf == k_File1Block)
     {
@@ -334,14 +334,14 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const fs
   vgHeaderFile.seekg(0);
 
   ReadVolumeGraphicsFileFilter::HeaderMetadata metadata;
-  metadata.Dimensions = fileBlock.size;
-  metadata.Spacing = geomBlock.resolution;
+  metadata.dimensions = fileBlock.size;
+  metadata.spacing = geomBlock.resolution;
   if(geomBlock.unit == k_Millimeter)
   {
-    metadata.Units = IGeometry::LengthUnit::Millimeter;
+    metadata.units = IGeometry::LengthUnit::Millimeter;
   }
 
-  metadata.DataFilePath = (fs::absolute(vgHeaderFilePath.parent_path()) / fileBlock.name).string();
+  metadata.data_file_path = (fs::absolute(vgHeaderFilePath.parent_path()) / fileBlock.name).string();
   return {metadata};
 }
 
@@ -409,7 +409,7 @@ Parameters ReadVolumeGraphicsFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "Volume Graphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".vgi"}, FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"VolumeGraphics"})));
@@ -443,41 +443,41 @@ IFilter::PreflightResult ReadVolumeGraphicsFileFilter::preflightImpl(const DataS
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
 
-  const auto overrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  const auto overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
   auto metadataResult = ReadHeaderMetaData(pVGHeaderFileValue, overrides.Spacing.has_value());
   if(metadataResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
 
   HeaderMetadata metadata = metadataResult.value();
-  FloatVec3 origin{0.0F, 0.0F, 0.0F};
-  if(auto geometryResult = overrides.apply(pVGHeaderFileValue, origin, metadata.Spacing); geometryResult.invalid())
+  FloatVec3Type origin{0.0F, 0.0F, 0.0F};
+  if(auto geometryResult = overrides.apply(pVGHeaderFileValue, origin, metadata.spacing); geometryResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
-      pNewImageGeometryPathValue, CreateImageGeometryAction::DimensionType{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, origin.toContainer<std::vector<float32>>(),
-      CreateImageGeometryAction::SpacingType{metadata.Spacing[0], metadata.Spacing[1], metadata.Spacing[2]}, pCellAttributeMatrixNameValue);
+      pNewImageGeometryPathValue, CreateImageGeometryAction::DimensionType{metadata.dimensions[0], metadata.dimensions[1], metadata.dimensions[2]}, origin.toContainer<std::vector<float32>>(),
+      CreateImageGeometryAction::SpacingType{metadata.spacing[0], metadata.spacing[1], metadata.spacing[2]}, pCellAttributeMatrixNameValue);
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
-  const fs::path fiData = fs::path(metadata.DataFilePath);
+  const fs::path fiData = fs::path(metadata.data_file_path);
   SHeaderCache[m_InstanceId].vgi_data_file_path = fiData; // Store the data file path in the cache
 
   if(!fs::exists(fiData))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_FileDoesNotExist, fmt::format("The Volume Graphics data file does not exist. '{}'", metadata.DataFilePath))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_FileDoesNotExist, fmt::format("The Volume Graphics data file does not exist. '{}'", metadata.data_file_path))};
   }
 
   const DataPath dap = pNewImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   auto createArrayAction =
-      std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.Dimensions[2], metadata.Dimensions[1], metadata.Dimensions[0]}, std::vector<usize>{1}, dap);
+      std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.dimensions[2], metadata.dimensions[1], metadata.dimensions[0]}, std::vector<usize>{1}, dap);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -487,10 +487,10 @@ Result<> ReadVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructure,
 
   ReadVolumeGraphicsFileInputValues inputValues;
 
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.DensityArrayName = filterArgs.value<std::string>(k_DensityArrayName_Key);
-  inputValues.VGDataFile = SHeaderCache[m_InstanceId].vgi_data_file_path;
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.density_array_name = filterArgs.value<std::string>(k_DensityArrayName_Key);
+  inputValues.vg_data_file = SHeaderCache[m_InstanceId].vgi_data_file_path;
 
   return ReadVolumeGraphicsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

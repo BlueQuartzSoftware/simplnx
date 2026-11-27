@@ -92,19 +92,19 @@ IFilter::PreflightResult HMaximaImageFilter::preflightImpl(const DataStructure& 
   // value; reject it here so the offset is always well-defined.
   if(!std::isfinite(height))
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Maxima requires a finite Height, but the supplied value was {}.", height))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NonFiniteHeight, fmt::format("H Maxima requires a finite Height, but the supplied value was {}.", height))};
   }
   // A negative Height has no meaning (no regional maximum has negative depth) and would push the (input - Height)
   // marker ABOVE the mask, violating reconstruction-by-dilation's marker<=mask precondition (ITK throws). Require
   // Height >= 0; 0 is a valid no-op.
   if(height < 0.0)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Maxima requires a non-negative Height, but the supplied value was {}.", height))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_NegativeHeight, fmt::format("H Maxima requires a non-negative Height, but the supplied value was {}.", height))};
   }
 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
-  return {.outputActions = ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
+  return {.output_actions = ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
                                                                                                                             /*requireScalar=*/true)};
 }
 Result<> HMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -139,7 +139,7 @@ Result<Arguments> HMaximaImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_HeightKey, k_Height_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_HeightKey, k_Height_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));

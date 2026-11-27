@@ -27,13 +27,13 @@ const int32 k_TupleDimMismatchWarningCode = -27361;
 
 TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][CopyDataObjectFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  static const DataPath kDataPath1({Constants::k_SmallIN100, "Phase Data"});
-  static const DataPath kDataPath2({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
+  static const DataPath kDataPath1({constants::k_SmallIN100, "Phase Data"});
+  static const DataPath kDataPath2({constants::k_SmallIN100, constants::k_EbsdScanData, "Phases"});
 
   CopyDataObjectFilter filter;
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = unit_test::CreateDataStructure();
   Arguments args;
 
   SECTION("Copy to Same Parent")
@@ -43,19 +43,19 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
     args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    const auto* path1CopyPtr = dataStructure.getDataAs<DataGroup>(DataPath({Constants::k_SmallIN100, "Phase Data_COPY"}));
-    const auto* path2CopyPtr = dataStructure.getDataAs<Int32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases_COPY"}));
+    const auto* path1CopyPtr = dataStructure.getDataAs<DataGroup>(DataPath({constants::k_SmallIN100, "Phase Data_COPY"}));
+    const auto* path2CopyPtr = dataStructure.getDataAs<Int32ArrayType>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, "Phases_COPY"}));
     REQUIRE(path1CopyPtr != nullptr);
     REQUIRE(path2CopyPtr != nullptr);
   }
   SECTION("Copy to New Parent")
   {
-    static const DataPath kCopyPath({Constants::k_SmallIN100});
+    static const DataPath kCopyPath({constants::k_SmallIN100});
 
     args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({kDataPath1, kDataPath2}));
     args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(true));
@@ -63,54 +63,54 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Valid Execution)", "[SimplnxCore][C
     args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
     DataGroup* copiedDataGroupPtr = dataStructure.getDataAs<DataGroup>(kCopyPath.createChildPath(kDataPath1.getTargetName() + "_COPY"));
-    Int32Array* copiedArrayPtr = dataStructure.getDataAs<Int32Array>(kCopyPath.createChildPath(kDataPath2.getTargetName() + "_COPY"));
+    Int32ArrayType* copiedArrayPtr = dataStructure.getDataAs<Int32ArrayType>(kCopyPath.createChildPath(kDataPath2.getTargetName() + "_COPY"));
     REQUIRE(copiedDataGroupPtr != nullptr);
     REQUIRE(copiedArrayPtr != nullptr);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore][CopyDataObjectFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   CopyDataObjectFilter filter;
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = unit_test::CreateDataStructure();
   Arguments args;
 
   SECTION("Data to be copied does not exist")
   {
-    const DataPath dataPath({Constants::k_SmallIN100, "Bad Data Foo"});
+    const DataPath dataPath({constants::k_SmallIN100, "Bad Data Foo"});
 
     args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({dataPath}));
 
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   SECTION("Same parent copy data suffix is empty")
   {
-    const DataPath dataPath({Constants::k_SmallIN100, "Phase Data"});
-    const DataPath copyPath({Constants::k_SmallIN100, Constants::k_EbsdScanData});
+    const DataPath dataPath({constants::k_SmallIN100, "Phase Data"});
+    const DataPath copyPath({constants::k_SmallIN100, constants::k_EbsdScanData});
 
     args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({dataPath}));
     args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(false));
     args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>(""));
 
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   SECTION("Copy data new parent tuple mismatch")
   {
     auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "TestAttributeMatrix", {10, 5, 1});
 
-    const DataPath dataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
+    const DataPath dataPath({constants::k_SmallIN100, constants::k_EbsdScanData, "Phases"});
     const DataPath copyPath({"TestAttributeMatrix"});
 
     args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({dataPath}));
@@ -121,10 +121,10 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
 
-    REQUIRE_FALSE(preflightResult.outputActions.warnings().empty());
+    REQUIRE_FALSE(preflightResult.output_actions.warnings().empty());
 
     bool found = false;
-    for(const auto& warning : preflightResult.outputActions.warnings())
+    for(const auto& warning : preflightResult.output_actions.warnings())
     {
       if(warning.code == ::k_TupleDimMismatchWarningCode)
       {
@@ -138,13 +138,13 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter(Invalid Parameters)", "[SimplnxCore
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CopyDataObjectFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CopyDataObjectFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -179,14 +179,14 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter: SIMPL Backwards Compatibility", "[
 
 TEST_CASE("SimplnxCore::CopyDataObject: Child names containing the geometry name are kept", "[SimplnxCore][CopyDataObject]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   auto* groupPtr = DataGroup::Create(dataStructure, "A");
   REQUIRE(groupPtr != nullptr);
   auto* childPtr = DataGroup::Create(dataStructure, "A child", groupPtr->getId());
   REQUIRE(childPtr != nullptr);
   auto* arrayPtr =
-      Int32Array::Create(dataStructure, "x", DataStoreUtilities::CreateDataStore<int32>(dataStructure, childPtr->getDataPaths().front().createChildPath("x"), {2}, {1}), childPtr->getId());
+      Int32ArrayType::Create(dataStructure, "x", data_store_utilities::CreateDataStore<int32>(dataStructure, childPtr->getDataPaths().front().createChildPath("x"), {2}, {1}), childPtr->getId());
   REQUIRE(arrayPtr != nullptr);
   arrayPtr->fill(7);
   CopyDataObjectFilter filter;
@@ -194,12 +194,12 @@ TEST_CASE("SimplnxCore::CopyDataObject: Child names containing the geometry name
   args.insertOrAssign(CopyDataObjectFilter::k_DataPath_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({"A"})}));
   args.insertOrAssign(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_copy"));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   SECTION("Declared recursive paths keep child names")
   {
     const CopyDataObjectAction* copyActionPtr = nullptr;
-    for(const auto& action : preflightResult.outputActions.value().actions)
+    for(const auto& action : preflightResult.output_actions.value().actions)
     {
       const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
       if(candidatePtr != nullptr && candidatePtr->path() == DataPath({"A"}))
@@ -218,14 +218,14 @@ TEST_CASE("SimplnxCore::CopyDataObject: Child names containing the geometry name
   {
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(DataPath({"A_copy", "A child", "x"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(DataPath({"A_copy", "A child", "x"})) != nullptr);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CopyDataObject: Recursive paths use the new parent", "[SimplnxCore][CopyDataObject]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   auto* oldParentPtr = DataGroup::Create(dataStructure, "OldParent");
   REQUIRE(oldParentPtr != nullptr);
@@ -246,9 +246,9 @@ TEST_CASE("SimplnxCore::CopyDataObject: Recursive paths use the new parent", "[S
   args.insertOrAssign(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(DataPath({"NewParent"})));
   args.insertOrAssign(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_copy"));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.value().actions.size() == 1);
-  const auto* copyActionPtr = dynamic_cast<const CopyDataObjectAction*>(preflightResult.outputActions.value().actions.front().get());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.value().actions.size() == 1);
+  const auto* copyActionPtr = dynamic_cast<const CopyDataObjectAction*>(preflightResult.output_actions.value().actions.front().get());
   REQUIRE(copyActionPtr != nullptr);
   REQUIRE(copyActionPtr->path() == sourcePath);
   REQUIRE(copyActionPtr->newPath() == copiedPath);
@@ -270,5 +270,5 @@ TEST_CASE("SimplnxCore::CopyDataObject: Recursive paths use the new parent", "[S
   REQUIRE(dataStructure.getDataAs<DataGroup>(DataPath({"OldParent", "A_copy", "child"})) == nullptr);
   REQUIRE(dataStructure.getDataAs<DataGroup>(sourcePath) == groupPtr);
   REQUIRE(dataStructure.getDataAs<DataGroup>(sourcePath.createChildPath("child")) == childPtr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

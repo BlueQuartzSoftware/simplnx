@@ -73,7 +73,7 @@ Parameters ExampleFilter2Filter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"1rst Group of Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "Example bool help text", true));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "Choices Parameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "Choices Parameter", "Example choices help text", 0, ChoicesParameter::ChoicesType{"foo", "bar", "baz"}));
 
   params.insertSeparator(Parameters::Separator{"2nd Group of Parameters"});
   DynamicTableInfo tableInfo;

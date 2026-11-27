@@ -22,22 +22,22 @@ namespace nx::core
 class TriangleGeom;
 class VertexGeom;
 
-namespace GeometryMath
+namespace geometry_math
 {
 namespace detail
 {
 struct GeometryStoreCache
 {
   GeometryStoreCache(const AbstractDataStore<float32>& verticesStore, const AbstractDataStore<IGeometry::MeshIndexType>& facesStore, usize numVertsPerFace)
-  : VerticesStoreRef(verticesStore)
-  , FacesStoreRef(facesStore)
-  , NumVertsPerFace(numVertsPerFace)
+  : vertices_store_ref(verticesStore)
+  , faces_store_ref(facesStore)
+  , num_verts_per_face(numVertsPerFace)
   {
   }
 
-  const AbstractDataStore<float32>& VerticesStoreRef;
-  const AbstractDataStore<IGeometry::MeshIndexType>& FacesStoreRef;
-  usize NumVertsPerFace;
+  const AbstractDataStore<float32>& vertices_store_ref;
+  const AbstractDataStore<IGeometry::MeshIndexType>& faces_store_ref;
+  usize num_verts_per_face;
 };
 
 template <std::floating_point FloatT>
@@ -45,21 +45,21 @@ std::array<Vec3<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, 
 {
   std::array<Vec3<FloatT>, 3> points;
   {
-    const usize offset = faceId * cache.NumVertsPerFace;
-    if(offset + cache.NumVertsPerFace <= cache.FacesStoreRef.getSize())
+    const usize offset = faceId * cache.num_verts_per_face;
+    if(offset + cache.num_verts_per_face <= cache.faces_store_ref.getSize())
     {
-      for(usize i = 0; i < cache.NumVertsPerFace; i++)
+      for(usize i = 0; i < cache.num_verts_per_face; i++)
       {
-        verts[i] = cache.FacesStoreRef[offset + i];
+        verts[i] = cache.faces_store_ref[offset + i];
       }
     }
   }
-  for(usize index = 0; index < cache.NumVertsPerFace; index++)
+  for(usize index = 0; index < cache.num_verts_per_face; index++)
   {
     const usize offset = verts[index] * 3;
-    points[index][0] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset));
-    points[index][1] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + 1));
-    points[index][2] = static_cast<FloatT>(cache.VerticesStoreRef.at(offset + 2));
+    points[index][0] = static_cast<FloatT>(cache.vertices_store_ref.at(offset));
+    points[index][1] = static_cast<FloatT>(cache.vertices_store_ref.at(offset + 1));
+    points[index][2] = static_cast<FloatT>(cache.vertices_store_ref.at(offset + 2));
   }
   return points;
 }
@@ -121,7 +121,7 @@ T CosThetaBetweenVectors(const Eigen::Vector3<T>& a, const Eigen::Vector3<T>& b)
  * @param b
  * @return float
  */
-float32 SIMPLNX_EXPORT AngleBetweenVectors(const nx::core::ZXZEuler& a, const nx::core::ZXZEuler& b);
+float32 SIMPLNX_EXPORT AngleBetweenVectors(const nx::core::ZxzEulerType& a, const nx::core::ZxzEulerType& b);
 
 /**
  * @brief Returns the distance between two points.
@@ -269,7 +269,7 @@ T FindDistanceFromPlane(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1
  * @return bool
  */
 template <typename T>
-inline bool IsPointInBox(const nx::core::Vec3<T>& point, const nx::core::BoundingBox3D<T>& box)
+inline bool IsPointInBox(const nx::core::Vec3<T>& point, const nx::core::BoundingBox3DType<T>& box)
 {
   const auto& min = box.getMinPoint();
   const auto& max = box.getMaxPoint();
@@ -284,7 +284,7 @@ inline bool IsPointInBox(const nx::core::Vec3<T>& point, const nx::core::Boundin
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
+bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3DType<T>& bounds)
 {
   const auto& origin = ray.getOriginRef();
   const auto& min = bounds.getMinPoint();
@@ -306,7 +306,7 @@ bool DoesRayIntersectBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBo
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::BoundingBox3D<T>& bounds)
+bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::BoundingBox3DType<T>& bounds)
 {
   const auto& origin = ray.getOriginRef();
   const auto& min = bounds.getMinPoint();
@@ -404,7 +404,7 @@ uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>& /*ray*/, const nx::
  * @return float
  */
 template <typename T>
-T GetLengthOfRayInBox(const nx::core::Ray<T>& /*ray*/, const nx::core::BoundingBox3D<T>& /*box*/)
+T GetLengthOfRayInBox(const nx::core::Ray<T>& /*ray*/, const nx::core::BoundingBox3DType<T>& /*box*/)
 {
   throw std::runtime_error("GeometryMath::GetLengthOfRayInBox() is not implemented");
 }
@@ -414,7 +414,7 @@ T GetLengthOfRayInBox(const nx::core::Ray<T>& /*ray*/, const nx::core::BoundingB
  * @param verts
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INodeGeometry0D& geom);
+nx::core::BoundingBox3DfType SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INodeGeometry0D& geom);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
@@ -424,20 +424,20 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INod
  * @return nx::core::BoundingBox<float32>
  */
 template <typename T>
-nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& /*triangleGeom*/, T faceId, std::vector<usize>& verts)
+nx::core::BoundingBox3DfType FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& /*triangleGeom*/, T faceId, std::vector<usize>& verts)
 {
   // Unavoidable branch to verify integrity of subsequent function
   // specifically because this an exposed function, however, the
   // CPU should quickly be able to predict once it has run a few
   // iterations of the function making it relatively lightweight
-  if(verts.size() != cache.NumVertsPerFace)
+  if(verts.size() != cache.num_verts_per_face)
   {
-    verts = std::vector<usize>(cache.NumVertsPerFace);
+    verts = std::vector<usize>(cache.num_verts_per_face);
   }
-  std::array<FloatVec3, 3> points = GeometryMath::detail::GetFaceCoordinates<float32>(cache, faceId, verts);
+  std::array<FloatVec3Type, 3> points = geometry_math::detail::GetFaceCoordinates<float32>(cache, faceId, verts);
 
-  FloatVec3 ll = points[0];
-  FloatVec3 ur = points[0];
+  FloatVec3Type ll = points[0];
+  FloatVec3Type ur = points[0];
 
   ll[0] = std::min(points[1][0], ll[0]);
   ur[0] = std::max(points[1][0], ur[0]);
@@ -461,10 +461,10 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
  * @return nx::core::BoundingBox<float32>
  */
 template <typename T>
-nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<T>& faceIds)
+nx::core::BoundingBox3DfType FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<T>& faceIds)
 {
-  FloatVec3 ll(0, 0, 0);
-  FloatVec3 ur(0, 0, 0);
+  FloatVec3Type ll(0, 0, 0);
+  FloatVec3Type ur(0, 0, 0);
 
   if(faceIds.empty())
   {
@@ -475,12 +475,12 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
 
   // initialize temp storage 'verts' vector to avoid expensive
   // calls during tight loops below
-  std::vector<usize> verts(cache.NumVertsPerFace);
+  std::vector<usize> verts(cache.num_verts_per_face);
   for(const auto& id : faceIds)
   {
     auto bounds = FindBoundingBoxOfFace(cache, triangleGeom, id, verts);
-    const FloatVec3& min = bounds.getMinPoint();
-    const FloatVec3& max = bounds.getMaxPoint();
+    const FloatVec3Type& min = bounds.getMinPoint();
+    const FloatVec3Type& max = bounds.getMaxPoint();
 
     ll[0] = std::min(min[0], ll[0]);
     ll[1] = std::min(min[1], ll[1]);
@@ -765,8 +765,8 @@ char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Vec3<T>& p0,
  * @return bool
  */
 template <typename T, typename FaceIdsT = int32>
-char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Vec3<T>& point,
-                         const nx::core::BoundingBox3D<T>& bounds, T radius)
+char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3DType<T>>& faceBBs, const Vec3<T>& point,
+                         const nx::core::BoundingBox3DType<T>& bounds, T radius)
 {
   usize iter = 0;
   usize crossings = 0;
@@ -785,7 +785,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
 
   // initialize temp storage 'verts' vector to avoid expensive
   // calls during tight loops below
-  std::vector<usize> verts(cache.NumVertsPerFace);
+  std::vector<usize> verts(cache.num_verts_per_face);
 
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)
@@ -798,13 +798,13 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
     float rand2 = distribution(generator);
 
     eulerAngles[2] = (2.0f * rand1) - 1.0f;
-    float t = Constants::k_2PiF * rand2;
+    float t = constants::k_2PiF * rand2;
     float w = std::sqrt(1.0f - (eulerAngles[2] * eulerAngles[2]));
     eulerAngles[0] = w * std::cos(t);
     eulerAngles[1] = w * std::sin(t);
 
     // Generate and add ray to point to find other end [optimized version with lifetime caching]
-    CachedRay<T> ray(point, ZXZEuler(eulerAngles.data()), radius);
+    CachedRay<T> ray(point, ZxzEulerType(eulerAngles.data()), radius);
 
     bool doNextCheck = false;
     for(usize face = 0; face < numFaces; face++)

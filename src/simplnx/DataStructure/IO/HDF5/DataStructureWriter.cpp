@@ -101,7 +101,7 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::
 {
   hdf5::DataStructureWriter dataStructureWriter;
   dataStructureWriter.setWriteOptions(options);
-  auto groupIO = FileIO.createGroup(Constants::k_DataStructureTag);
+  auto groupIO = FileIO.createGroup(constants::k_DataStructureTag);
   return dataStructureWriter.writeDataStructure(dataStructure, groupIO);
 }
 
@@ -136,7 +136,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return {};
   }
 
-  GroupIO dataStructureGroup = file.openGroup(Constants::k_DataStructureTag);
+  GroupIO dataStructureGroup = file.openGroup(constants::k_DataStructureTag);
   if(!dataStructureGroup.isValid())
   {
     return MakeErrorResult(-5, fmt::format("Failed to open top-level DataStructure group in file '{}'", file.getFilePath().string()));
@@ -149,7 +149,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return MakeErrorResult(-6, fmt::format("Cannot append because object '{}' already exists", targetName));
   }
 
-  auto idResult = dataStructureGroup.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  auto idResult = dataStructureGroup.readScalarAttribute<DataObject::IdType>(constants::k_NextIdTag);
   if(idResult.invalid())
   {
     return ConvertResult(std::move(idResult));
@@ -194,7 +194,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
 
   dataStructureShallowCopy.resetIds(nextObjectId);
 
-  auto writeNextIdResult = dataStructureGroup.writeScalarAttribute(Constants::k_NextIdTag, dataStructureShallowCopy.getNextId());
+  auto writeNextIdResult = dataStructureGroup.writeScalarAttribute(constants::k_NextIdTag, dataStructureShallowCopy.getNextId());
   if(writeNextIdResult.invalid())
   {
     return writeNextIdResult;
@@ -276,7 +276,7 @@ Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStruct
     std::string ss = "Failed to write DataStructure to HDF5 group";
     return MakeErrorResult(-700, ss);
   }
-  groupIO.writeScalarAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
+  groupIO.writeScalarAttribute(constants::k_NextIdTag, dataStructure.getNextId());
   m_OmittedConnectivityIds = FindConnectivityCaches(dataStructure);
   return writeDataMap(dataStructure.getDataMap(), groupIO);
 }

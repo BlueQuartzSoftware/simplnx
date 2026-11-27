@@ -62,13 +62,13 @@ Parameters IdentifySampleFilter::parameters() const
   params.insert(
       std::make_unique<ChoicesParameter>(k_SliceBySlicePlane_Key, "Slice-By-Slice Plane",
                                          "Set the plane that the data will be processed slice-by-slice.  For example, if you pick the XY plane, the data will be processed in the Z direction.", 0,
-                                         ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
+                                         ChoicesParameter::ChoicesType{"XY", "XZ", "YZ"}));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the mask array defining what is sample and what is not", DataPath(),
                                                           ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::boolean, nx::core::DataType::uint8},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.linkParameters(k_SliceBySlice_Key, k_SliceBySlicePlane_Key, true);
 
@@ -96,14 +96,14 @@ IFilter::PreflightResult IdentifySampleFilter::preflightImpl(const DataStructure
 
   if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, {goodVoxelsArrayPath}, -45463); result.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, goodVoxelsArrayPath);
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -111,11 +111,11 @@ Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   IdentifySampleInputValues inputValues;
-  inputValues.FillHoles = filterArgs.value<bool>(k_FillHoles_Key);
-  inputValues.SliceBySlice = filterArgs.value<bool>(k_SliceBySlice_Key);
-  inputValues.SliceBySlicePlaneIndex = filterArgs.value<ChoicesParameter::ValueType>(k_SliceBySlicePlane_Key);
-  inputValues.InputImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.fill_holes = filterArgs.value<bool>(k_FillHoles_Key);
+  inputValues.slice_by_slice = filterArgs.value<bool>(k_SliceBySlice_Key);
+  inputValues.slice_by_slice_plane_index = filterArgs.value<ChoicesParameter::ValueType>(k_SliceBySlicePlane_Key);
+  inputValues.input_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   return IdentifySample(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

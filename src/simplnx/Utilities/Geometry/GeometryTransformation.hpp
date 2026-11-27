@@ -26,7 +26,7 @@ static inline constexpr StringLiteralType k_ManualTransformationMatrix = "Manual
 static inline constexpr StringLiteralType k_Rotation = "Rotation";
 static inline constexpr StringLiteralType k_Translation = "Translation";
 static inline constexpr StringLiteralType k_Scale = "Scale";
-static inline const ChoicesParameter::Choices k_TransformationChoices = {k_NoTransform, k_PrecomputedTransformationMatrix, k_ManualTransformationMatrix, k_Rotation, k_Translation, k_Scale};
+static inline const ChoicesParameter::ChoicesType k_TransformationChoices = {k_NoTransform, k_PrecomputedTransformationMatrix, k_ManualTransformationMatrix, k_Rotation, k_Translation, k_Scale};
 
 static inline constexpr ChoicesParameter::ValueType k_NoTransformIdx = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_PrecomputedTransformationMatrixIdx = 1ULL;
@@ -38,7 +38,7 @@ static inline constexpr ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 static inline constexpr StringLiteralType k_NearestNeighborInterpolation = "Nearest Neighbor Resampling";
 static inline constexpr StringLiteralType k_LinearInterpolation = "Linear Interpolation";
 static inline constexpr StringLiteralType k_NoInterpolation = "No Interpolation";
-static inline const ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation, k_NoInterpolation};
+static inline const ChoicesParameter::ChoicesType k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation, k_NoInterpolation};
 
 static inline constexpr ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
@@ -51,26 +51,26 @@ static inline constexpr ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
  */
 struct SIMPLNX_EXPORT ApplyTransformationToGeometryInputValues
 {
-  DataPath SelectedGeometryPath;
+  DataPath selected_geometry_path;
 
-  ChoicesParameter::ValueType TransformationSelection{};
-  ChoicesParameter::ValueType InterpolationSelection{};
+  ChoicesParameter::ValueType transformation_selection{};
+  ChoicesParameter::ValueType interpolation_selection{};
 
-  DataPath ComputedTransformationMatrix;
-  DynamicTableParameter::ValueType ManualMatrixTableData;
-  VectorFloat32Parameter::ValueType Rotation;
-  VectorFloat32Parameter::ValueType Translation;
-  VectorFloat32Parameter::ValueType Scale;
+  DataPath computed_transformation_matrix;
+  DynamicTableParameter::ValueType manual_matrix_table_data;
+  VectorFloat32ParameterType::ValueType rotation;
+  VectorFloat32ParameterType::ValueType translation;
+  VectorFloat32ParameterType::ValueType scale;
 
-  DataPath CellAttributeMatrixPath;
-  bool ClearFeatureAttributeMatrix = false;
-  bool RenumberFeatures = false;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath FeatureIdsPath;
-  DataPath TransformMatrixPath;
-  bool RemoveOriginalGeometry{};
-  bool TranslateGeometryToGlobalOrigin{};
-  bool SaveTransformMatrix = false;
+  DataPath cell_attribute_matrix_path;
+  bool clear_feature_attribute_matrix = false;
+  bool renumber_features = false;
+  DataPath feature_attribute_matrix_path;
+  DataPath feature_ids_path;
+  DataPath transform_matrix_path;
+  bool remove_original_geometry{};
+  bool translate_geometry_to_global_origin{};
+  bool save_transform_matrix = false;
 };
 
 /**
@@ -143,7 +143,7 @@ private:
    */
   Result<> applyNodeGeometryTransformation();
 
-  ImageRotationUtilities::Matrix4fRType m_TransformationMatrix;
+  image_rotation_utilities::Matrix4fRType m_TransformationMatrix;
 };
 
 /**

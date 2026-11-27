@@ -61,12 +61,12 @@ Parameters ComputeFeatureNeighborCAxisMisalignmentsFilter::parameters() const
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", DataPath{},
                                                                  NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Defines the average orientation of the Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each **Feature** belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CAxisMisalignmentListArrayName_Key, "Feature C-Axis Misalignment NeighborList",
                                                           "NeighborList of the C-axis misalignment angles (in degrees) with the contiguous neighboring Features for a given Feature",
@@ -110,11 +110,11 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pNeighborListArrayPathValue, pAvgQuatsArrayPathValue, pFeaturePhasesArrayPathValue});
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-1560, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(pFeaturePhasesArrayPathValue);
   {
     auto createArrayAction =
         std::make_unique<CreateNeighborListAction>(DataType::float32, featurePhases.getTupleShape(), pFeaturePhasesArrayPathValue.replaceName(pCAxisMisalignmentListArrayNameValue));
@@ -130,7 +130,7 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
 
   preflightUpdatedValues.push_back(
       {"Crystal Symmetry Warning:", "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure at least 1 phase is of this type."});
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -139,13 +139,13 @@ Result<> ComputeFeatureNeighborCAxisMisalignmentsFilter::executeImpl(DataStructu
 {
   ComputeFeatureNeighborCAxisMisalignmentsInputValues inputValues;
 
-  inputValues.FindAvgMisals = filterArgs.value<bool>(k_FindAvgMisals_Key);
-  inputValues.NeighborListArrayPath = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.CAxisMisalignmentListArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_CAxisMisalignmentListArrayName_Key));
-  inputValues.AvgCAxisMisalignmentsArrayName = inputValues.FeaturePhasesArrayPath.replaceName(filterArgs.value<std::string>(k_AvgCAxisMisalignmentsArrayName_Key));
+  inputValues.find_avg_misals = filterArgs.value<bool>(k_FindAvgMisals_Key);
+  inputValues.neighbor_list_array_path = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.c_axis_misalignment_list_array_name = inputValues.feature_phases_array_path.replaceName(filterArgs.value<std::string>(k_CAxisMisalignmentListArrayName_Key));
+  inputValues.avg_c_axis_misalignments_array_name = inputValues.feature_phases_array_path.replaceName(filterArgs.value<std::string>(k_AvgCAxisMisalignmentsArrayName_Key));
 
   return ComputeFeatureNeighborCAxisMisalignments(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

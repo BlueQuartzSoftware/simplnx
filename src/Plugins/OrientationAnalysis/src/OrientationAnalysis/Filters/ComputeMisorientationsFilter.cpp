@@ -77,22 +77,22 @@ Parameters ComputeMisorientationsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ComputationType_Key, "Computation Type", "The type of computation to perform",
                                                                     compute_misorientations_constants::k_UseArraysIndex, compute_misorientations_constants::k_ComputationTypeStrings));
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_ReferenceOrientation_Key, "Reference Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0f, 0.0f, 1.0f, 0.0f},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_ReferenceOrientation_Key, "Reference Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0f, 0.0f, 1.0f, 0.0f},
                                                          std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath1_Key, "Euler Angles 1", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath2_Key, "Euler Angles 2", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_PhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputMisorientationArrayName_Key, "Output Misorientations",
@@ -122,7 +122,7 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
 {
   auto inputPath1 = filterArgs.value<DataPath>(k_InputOrientationArrayPath1_Key);
   auto inputPath2 = filterArgs.value<DataPath>(k_InputOrientationArrayPath2_Key);
-  auto pReferenceDirValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceOrientation_Key);
+  auto pReferenceDirValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_ReferenceOrientation_Key);
   auto computationType = filterArgs.value<ChoicesParameter::ValueType>(k_ComputationType_Key);
   auto outputMisorientationPath = inputPath1.replaceName(filterArgs.value<std::string>(k_OutputMisorientationArrayName_Key));
 
@@ -137,13 +137,13 @@ IFilter::PreflightResult ComputeMisorientationsFilter::preflightImpl(const DataS
     auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
     if(!tupleValidityCheck)
     {
-      return {.outputActions =
+      return {.output_actions =
                   MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
     }
   }
 
   // Get the number of tuples
-  const auto* eulersArrayPtr = dataStructure.getDataAs<Float32Array>(inputPath1);
+  const auto* eulersArrayPtr = dataStructure.getDataAs<Float32ArrayType>(inputPath1);
 
   // Create output DataStructure Items
   auto createDataAction = std::make_unique<CreateArrayAction>(DataType::float32, eulersArrayPtr->getIDataStore()->getTupleShape(), std::vector<usize>{4}, outputMisorientationPath);
@@ -161,13 +161,13 @@ Result<> ComputeMisorientationsFilter::executeImpl(DataStructure& dataStructure,
 {
   ComputeMisorientationsInputValues inputValues;
 
-  inputValues.InputOrientationPath1 = filterArgs.value<DataPath>(k_InputOrientationArrayPath1_Key);
-  inputValues.InputOrientationPath2 = filterArgs.value<DataPath>(k_InputOrientationArrayPath2_Key);
-  inputValues.ComputationType = filterArgs.value<ChoicesParameter::ValueType>(k_ComputationType_Key);
-  inputValues.ReferenceOrientation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceOrientation_Key);
-  inputValues.OutputMisorientationsPath = inputValues.InputOrientationPath1.replaceName(filterArgs.value<std::string>(k_OutputMisorientationArrayName_Key));
-  inputValues.InputPhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  inputValues.InputCrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.input_orientation_path1 = filterArgs.value<DataPath>(k_InputOrientationArrayPath1_Key);
+  inputValues.input_orientation_path2 = filterArgs.value<DataPath>(k_InputOrientationArrayPath2_Key);
+  inputValues.computation_type = filterArgs.value<ChoicesParameter::ValueType>(k_ComputationType_Key);
+  inputValues.reference_orientation = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_ReferenceOrientation_Key);
+  inputValues.output_misorientations_path = inputValues.input_orientation_path1.replaceName(filterArgs.value<std::string>(k_OutputMisorientationArrayName_Key));
+  inputValues.input_phases_array_path = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
+  inputValues.input_crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   return ComputeMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

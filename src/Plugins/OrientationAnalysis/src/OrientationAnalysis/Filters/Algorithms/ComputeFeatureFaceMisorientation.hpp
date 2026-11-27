@@ -15,11 +15,11 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureFaceMisorientationInputValues
 {
-  DataPath surfaceMeshFaceLabelsArrayPath;
-  DataPath avgQuatsArrayPath;
-  DataPath featurePhasesArrayPath;
-  DataPath crystalStructuresArrayPath;
-  DataPath misorientationArrayPath;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath misorientation_array_path;
 };
 
 /**

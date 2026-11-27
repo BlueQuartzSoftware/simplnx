@@ -34,7 +34,7 @@ struct MorphologicalReconstructionExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   ReconstructOp op;
   bool fully_connected;
   ReconMarker marker_kind;
@@ -73,7 +73,7 @@ struct MorphologicalReconstructionExecuteFn
     {
       // Marker scratch inherits the input's storage format (out-of-core input -> out-of-core scratch), keeping the
       // whole filter memory-bounded through the streamed sweep path.
-      markerStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+      markerStore = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
       if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerStore, dims, marker_kind, height, should_cancel); r.invalid())
       {
         return r;
@@ -157,7 +157,7 @@ struct ReconstructionOpenCloseExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   MorphOp first_op;
   bool fully_connected;
@@ -176,7 +176,7 @@ struct ReconstructionOpenCloseExecuteFn
     const ReconstructOp reconOp = (first_op == MorphOp::Erode) ? ReconstructOp::Dilation : ReconstructOp::Erosion;
 
     // Step 1: grayscale erode (Opening) / dilate (Closing) into an OOC-inheriting scratch.
-    auto morph = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto morph = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
     if(Result<> r = ApplyMorphology<T>(inStore, *morph, dims, se, first_op, inArray, outArray, should_cancel, message_handler); r.invalid())
     {
       return r;
@@ -190,7 +190,7 @@ struct ReconstructionOpenCloseExecuteFn
 
     // PreserveIntensities: reconstruct into a scratch, re-seed the original input where the first reconstruction was
     // a fixpoint of the morphology result, then reconstruct that marker into the output.
-    auto recon = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto recon = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
     if(Result<> r = ApplyMorphologicalReconstruction<T>(*morph, inStore, *recon, dims, reconOp, fully_connected, inArray, outArray, should_cancel, message_handler); r.invalid())
     {
       return r;
@@ -220,7 +220,7 @@ struct BinaryReconstructionOpeningExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   float64 foreground;
   float64 background;
@@ -246,7 +246,7 @@ struct BinaryReconstructionOpeningExecuteFn
     }
 
     // Binary erosion into an OOC-inheriting scratch. boundaryToForeground=true matches ITK's internal BinaryErode.
-    auto erode = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto erode = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
     if(Result<> r = ApplyBinaryMorphology<T>(inStore, *erode, dims, se, MorphOp::Erode, foregroundT, backgroundT, /*boundaryToForeground=*/true, inArray, outArray, should_cancel, message_handler);
        r.invalid())
     {
@@ -278,7 +278,7 @@ Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStruct
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   detail::MorphologicalReconstructionExecuteFn executeFn{.data_structure = dataStructure,
                                                          .input_array_path = inputArrayPath,
                                                          .output_array_path = outputArrayPath,
@@ -290,7 +290,7 @@ Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStruct
                                                          .should_cancel = shouldCancel,
                                                          .message_handler = messageHandler,
                                                          .difference_from_input = differenceFromInput};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -302,7 +302,7 @@ Result<> ExecuteReconstructionOpenCloseImageFilter(DataStructure& dataStructure,
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -318,7 +318,7 @@ Result<> ExecuteReconstructionOpenCloseImageFilter(DataStructure& dataStructure,
                                                      .preserve_intensities = preserveIntensities,
                                                      .should_cancel = shouldCancel,
                                                      .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -330,7 +330,7 @@ Result<> ExecuteBinaryOpeningByReconstructionImageFilter(DataStructure& dataStru
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -346,7 +346,7 @@ Result<> ExecuteBinaryOpeningByReconstructionImageFilter(DataStructure& dataStru
                                                          .fully_connected = fullyConnected,
                                                          .should_cancel = shouldCancel,
                                                          .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

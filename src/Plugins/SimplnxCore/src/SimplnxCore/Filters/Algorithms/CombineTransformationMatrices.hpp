@@ -15,8 +15,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CombineTransformationMatricesInputValues
 {
-  MultiArraySelectionParameter::ValueType SelectedPaths;
-  ArrayCreationParameter::ValueType OutputPath;
+  MultiArraySelectionParameter::ValueType selected_paths;
+  ArrayCreationParameter::ValueType output_path;
 };
 
 /**

@@ -12,7 +12,7 @@
 #include <vector>
 
 class H5EbsdVolumeReader;
-using H5EbsdVolumeReaderShrPtr = std::shared_ptr<H5EbsdVolumeReader>;
+using H5EbsdVolumeReaderShrPtrType = std::shared_ptr<H5EbsdVolumeReader>;
 
 namespace nx::core::h5_ebsd_ensemble_data
 {
@@ -30,15 +30,15 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
 {
-  std::string inputFilePath;
-  int32 startSlice = 0;
-  int32 endSlice = 0;
-  int32 eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-  std::vector<std::string> hdf5DataPaths;
-  bool useRecommendedTransform = {true};
-  DataPath dataContainerPath;
-  DataPath cellAttributeMatrixPath;
-  DataPath cellEnsembleMatrixPath;
+  std::string input_file_path;
+  int32 start_slice = 0;
+  int32 end_slice = 0;
+  int32 euler_representation = ebsdlib::AngleRepresentation::Radians;
+  std::vector<std::string> hdf5_data_paths;
+  bool use_recommended_transform = {true};
+  DataPath data_container_path;
+  DataPath cell_attribute_matrix_path;
+  DataPath cell_ensemble_matrix_path;
 };
 
 /**

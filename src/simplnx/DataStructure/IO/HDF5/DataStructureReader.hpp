@@ -26,7 +26,7 @@ public:
    * owns this map and keeps it alive for the read. With this map, callers must validate selected rectilinear
    * bounds and install validated image metadata before publishing imported geometries.
    */
-  DataStructureReader(DataIOManager* ioManager = nullptr, dream3d::DeferredImageMetadata* deferredImageMetadata = nullptr);
+  DataStructureReader(DataIOManager* ioManager = nullptr, dream3d::DeferredImageMetadataType* deferredImageMetadata = nullptr);
   ~DataStructureReader() noexcept;
 
   /**
@@ -56,13 +56,13 @@ public:
    * @return Imported structure and read diagnostics.
    */
   static Result<DataStructure> ReadFile(const nx::core::hdf5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver,
-                                        dream3d::DeferredImageMetadata* deferredImageMetadata = nullptr);
+                                        dream3d::DeferredImageMetadataType* deferredImageMetadata = nullptr);
 
   /**
    * @brief Gets the caller-owned map that receives image metadata during selective discovery.
    * @return The map, or nullptr when the reader validates geometry metadata during the read.
    */
-  [[nodiscard]] dream3d::DeferredImageMetadata* deferredImageMetadata() const;
+  [[nodiscard]] dream3d::DeferredImageMetadataType* deferredImageMetadata() const;
 
   /**
    * @brief Reads a single DataObject from an HDF5 file at the specified path.
@@ -142,6 +142,6 @@ protected:
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
-  dream3d::DeferredImageMetadata* m_DeferredImageMetadata = nullptr;
+  dream3d::DeferredImageMetadataType* m_DeferredImageMetadata = nullptr;
 };
 } // namespace nx::core::hdf5

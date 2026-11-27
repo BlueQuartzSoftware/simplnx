@@ -30,20 +30,20 @@ const std::atomic_bool& ComputeTriangleGeomCentroids::getCancel()
 Result<> ComputeTriangleGeomCentroids::operator()()
 {
   using MeshIndexType = IGeometry::MeshIndexType;
-  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
-  using SharedFaceListType = AbstractDataStore<IGeometry::SharedFaceList::value_type>;
+  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
+  using SharedFaceListType = AbstractDataStore<IGeometry::SharedFaceListType::value_type>;
 
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
   const SharedFaceListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
   IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
-  const BoundingBox3Df boundingBox = triangleGeom.getBoundingBox();
+  const BoundingBox3DfType boundingBox = triangleGeom.getBoundingBox();
 
   // Get the faceLabels array and then get the min and max values
-  const Int32AbstractDataStore& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
+  const Int32AbstractDataStoreType& faceLabels = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_array_path)->getDataStoreRef();
   auto [minFeatureId, maxFeatureId] = std::minmax_element(faceLabels.begin(), faceLabels.end());
 
-  auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
+  auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->feature_attribute_matrix_path);
   if(featAttrMat.getNumberOfTuples() < *maxFeatureId + 1)
   {
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Increasing Number of tuples in target feature attribute matrix...");
@@ -54,7 +54,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
     }
   }
   MeshIndexType numFeatures = featAttrMat.getNumberOfTuples();
-  auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  auto& centroids = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
 
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Gathering unique vertices for {} triangles", numTriangles));
@@ -90,7 +90,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
       return {};
     }
     const std::set<MeshIndexType>& vertexSet = vertexSets[i];
-    auto periodicFaces = GeometryHelpers::Topology::FindElementPeriodicFaces(boundingBox, vertexCoords, vertexSet);
+    auto periodicFaces = geometry_helpers::topology::FindElementPeriodicFaces(boundingBox, vertexCoords, vertexSet);
 
     for(const auto& vert : vertexSets[i])
     {
@@ -104,9 +104,9 @@ Result<> ComputeTriangleGeomCentroids::operator()()
       centroids[3 * i + 1] /= static_cast<float32>(vertexSets[i].size());
       centroids[3 * i + 2] /= static_cast<float32>(vertexSets[i].size());
 
-      if(m_InputValues->IsPeriodic)
+      if(m_InputValues->is_periodic)
       {
-        if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(boundingBox, periodicFaces, vertexCoords, vertexSets[i], centroids, i))
+        if(geometry_helpers::topology::AdjustCentroidsForPeriodicFaces(boundingBox, periodicFaces, vertexCoords, vertexSets[i], centroids, i))
         {
           // Use MessageHandler::sendMessage (which guards against an empty callback) rather than
           // invoking m_Callback directly, which throws std::bad_function_call when no handler is installed.

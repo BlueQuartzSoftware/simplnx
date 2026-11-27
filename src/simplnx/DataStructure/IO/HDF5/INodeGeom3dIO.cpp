@@ -22,9 +22,9 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
 
   auto groupReader = parentGroup.openGroup(objectName);
 
-  geom.setPolyhedronListId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
-  geom.setPolyhedraDataId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
-  geom.setUnsharedFacedId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
+  geom.setPolyhedronListId(ReadDataId(groupReader, io_constants::k_PolyhedronListTag));
+  geom.setPolyhedraDataId(ReadDataId(groupReader, io_constants::k_PolyhedronDataTag));
+  geom.setUnsharedFacedId(ReadDataId(groupReader, io_constants::k_UnsharedFaceListTag));
 
   return {};
 }
@@ -50,19 +50,19 @@ Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWr
 
   auto groupWriter = parentGroup.createGroup(geom.getName());
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geom.getPolyhedronListId(), IOConstants::k_PolyhedronListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geom.getPolyhedronListId(), io_constants::k_PolyhedronListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geom.getPolyhedraDataId(), IOConstants::k_PolyhedronDataTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geom.getPolyhedraDataId(), io_constants::k_PolyhedronDataTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geom.getUnsharedFacesId(), IOConstants::k_UnsharedFaceListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geom.getUnsharedFacesId(), io_constants::k_UnsharedFaceListTag));
   if(result.invalid())
   {
     return result;

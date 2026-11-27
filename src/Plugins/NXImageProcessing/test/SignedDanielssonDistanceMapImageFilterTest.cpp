@@ -20,7 +20,7 @@ using SignedDanielssonFilterType = SignedDanielssonDistanceMapImageFilter;
 // Sets the geometry, input, and output keys plus the three parameters on the Arguments. The helper runs preflight
 // and execute, and requires that both steps succeed.
 void RunSignedDanielsson(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool insideIsPositive, bool squaredDistance, bool useImageSpacing,
-                         UnitTest::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
+                         unit_test::AlgorithmTestScope* scope = nullptr, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -31,7 +31,7 @@ void RunSignedDanielsson(IFilter& filter, DataStructure& dataStructure, const Da
   args.insertOrAssign(SignedDanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(squaredDistance));
   args.insertOrAssign(SignedDanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(useImageSpacing));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -43,8 +43,8 @@ void RunSignedDanielsson(IFilter& filter, DataStructure& dataStructure, const Da
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orientation", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_D = 11;
   std::vector<int32> pattern(k_D * k_D * k_D, 0);
@@ -60,10 +60,10 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orien
   }
   const usize cornerIdx = rt::FlatIndex(0, 0, 0, k_D, k_D); // well outside the object
   const usize centerIdx = rt::FlatIndex(5, 5, 5, k_D, k_D); // deep inside the object
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
 
   auto runSign = [&](bool insideIsPositive) {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure;
     const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_D, k_D, k_D, pattern);
     scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
@@ -92,11 +92,11 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orien
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orientation (both algorithm paths)", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_D = 11;
   std::vector<int32> pattern(k_D * k_D * k_D, 0);
@@ -135,7 +135,7 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orien
   const auto& out = outArray.getDataStoreRef();
   REQUIRE(out.getValue(cornerIdx) > 0.0f); // outside is positive when InsideIsPositive is Off
   REQUIRE(out.getValue(centerIdx) < 0.0f); // inside is negative
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -143,8 +143,8 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: sign orien
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-integer input", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 6;
   constexpr usize k_Dy = 6;
@@ -162,12 +162,12 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight 
   args.insertOrAssign(SignedDanielssonFilterType::k_SquaredDistance_Key, std::make_any<bool>(true));
   args.insertOrAssign(SignedDanielssonFilterType::k_UseImageSpacing_Key, std::make_any<bool>(false));
   auto result = filter.preflight(dataStructure, args);
-  REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+  REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight rejects non-scalar and tuple mismatch", "[NXImageProcessing][SignedDanielssonDistanceMapImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath input = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
   const DataPath geomPath = input.getParent().getParent();
@@ -185,22 +185,22 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: preflight 
   SECTION("non-scalar")
   {
     const DataPath path({"Image Geometry", "CellData", "Vec"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, {1, 6, 6}, {3});
     DataArray<int32>::Create(dataStructure, "Vec", store, dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"})).getId());
     const auto result = filter.preflight(dataStructure, argsFor(path));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8550);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8550);
   }
   SECTION("tuple mismatch")
   {
     const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
     auto* wrongAmPtr = AttributeMatrix::Create(dataStructure, "WrongCellData", {35}, geom.getId());
     const DataPath path({"Image Geometry", "WrongCellData", "Short"});
-    auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
+    auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, {35}, {1});
     DataArray<int32>::Create(dataStructure, "Short", store, wrongAmPtr->getId());
     const auto result = filter.preflight(dataStructure, argsFor(path));
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == -8001);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == -8001);
   }
 }
 
@@ -232,7 +232,7 @@ TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: FromSIMPLJ
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SignedDanielssonDistanceMapImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][SignedDanielssonDistanceMapImageFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   rt::RunDistanceMapItkGoldenBaseline<SignedDanielssonDistanceMapImageFilter>("2th_cthead1.png", "BasicFilters_SignedDanielssonDistanceMapImageFilter_default.nrrd", 0.01, rt::NoExtraParams(), &scope);
 }

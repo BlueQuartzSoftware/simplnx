@@ -29,21 +29,21 @@ const std::atomic_bool& ResampleRectGridToImageGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ResampleRectGridToImageGeom::operator()()
 {
-  const auto& rectGridGeom = m_DataStructure.getDataRefAs<RectGridGeom>(m_InputValues->RectilinearGridPath);
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& rectGridGeom = m_DataStructure.getDataRefAs<RectGridGeom>(m_InputValues->rectilinear_grid_path);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   imageGeom.setUnits(rectGridGeom.getUnits());
 
   auto originResults = rectGridGeom.getOrigin();
   if(originResults.invalid())
   {
-    return MakeErrorResult(-7367, fmt::format("Could not retrieve origin value from input rectilinear grid geometry at path {}", m_InputValues->RectilinearGridPath.toString()));
+    return MakeErrorResult(-7367, fmt::format("Could not retrieve origin value from input rectilinear grid geometry at path {}", m_InputValues->rectilinear_grid_path.toString()));
   }
-  const Float32Array* xGridValuesPtr = rectGridGeom.getXBounds();
-  const Float32Array* yGridValuesPtr = rectGridGeom.getYBounds();
-  const Float32Array* zGridValuesPtr = rectGridGeom.getZBounds();
-  FloatVec3 origin = rectGridGeom.getOrigin().value();
-  const SizeVec3 rectGridDims = rectGridGeom.getDimensions();
-  const SizeVec3 imageGeomDims = imageGeom.getDimensions();
+  const Float32ArrayType* xGridValuesPtr = rectGridGeom.getXBounds();
+  const Float32ArrayType* yGridValuesPtr = rectGridGeom.getYBounds();
+  const Float32ArrayType* zGridValuesPtr = rectGridGeom.getZBounds();
+  FloatVec3Type origin = rectGridGeom.getOrigin().value();
+  const SizeVec3Type rectGridDims = rectGridGeom.getDimensions();
+  const SizeVec3Type imageGeomDims = imageGeom.getDimensions();
   const std::vector<float32> max = {xGridValuesPtr->back(), yGridValuesPtr->back(), zGridValuesPtr->back()};
   const std::vector<float32> imageGeomSpacing = {(max[0] - origin[0]) / imageGeomDims[0], (max[1] - origin[1]) / imageGeomDims[1], (max[2] - origin[2]) / imageGeomDims[2]};
 
@@ -62,12 +62,12 @@ Result<> ResampleRectGridToImageGeom::operator()()
   }
 
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   auto& destCellDataAM = imageGeom.getCellDataRef();
 
   // copy over/resample the cell data
-  for(const auto& srcArrayPath : m_InputValues->SelectedDataArrayPaths)
+  for(const auto& srcArrayPath : m_InputValues->selected_data_array_paths)
   {
     if(m_ShouldCancel)
     {
@@ -79,7 +79,7 @@ Result<> ResampleRectGridToImageGeom::operator()()
     auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
     m_MessageHandler.sendInfoMessage(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
-    CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, taskResult, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValuesPtr, yGridValuesPtr, zGridValuesPtr);
+    copy_from_array::RunParallelMapRectToImage(destDataArray, taskRunner, taskResult, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValuesPtr, yGridValuesPtr, zGridValuesPtr);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

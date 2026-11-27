@@ -16,13 +16,13 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT RemoveFlaggedVerticesInputValues
 {
-  GeometrySelectionParameter::ValueType InputVertexGeometryPath;
-  ArraySelectionParameter::ValueType MaskPath;
-  DataGroupCreationParameter::ValueType OutputVertexGeometryPath;
-  BoolParameter::ValueType ClearFeatureAttributeMatrix = false;
-  BoolParameter::ValueType RenumberFeatures = false;
-  ArraySelectionParameter::ValueType VertexFeatureIdsPath;
-  AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
+  GeometrySelectionParameter::ValueType input_vertex_geometry_path;
+  ArraySelectionParameter::ValueType mask_path;
+  DataGroupCreationParameter::ValueType output_vertex_geometry_path;
+  BoolParameter::ValueType clear_feature_attribute_matrix = false;
+  BoolParameter::ValueType renumber_features = false;
+  ArraySelectionParameter::ValueType vertex_feature_ids_path;
+  AttributeMatrixSelectionParameter::ValueType feature_attribute_matrix_path;
 };
 
 /**

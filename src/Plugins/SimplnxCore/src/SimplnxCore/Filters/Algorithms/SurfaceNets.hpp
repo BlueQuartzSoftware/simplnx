@@ -17,23 +17,23 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 {
-  bool ApplySmoothing{};        ///< When true, run iterative relaxation smoothing on mesh vertices
-  bool RepairTriangleWinding{}; ///< When true, run winding repair on the output triangle mesh
-  ChoicesParameter::ValueType BoundingBoxSkinMode{};
-  int32 SmoothingIterations{};    ///< Number of smoothing iterations to perform
-  float32 MaxDistanceFromVoxel{}; ///< Maximum distance a vertex can move from its voxel center during smoothing
-  float32 RelaxationFactor{};     ///< Blending factor for neighbor-averaging during smoothing (0..1)
+  bool apply_smoothing{};        ///< When true, run iterative relaxation smoothing on mesh vertices
+  bool repair_triangle_winding{}; ///< When true, run winding repair on the output triangle mesh
+  ChoicesParameter::ValueType bounding_box_skin_mode{};
+  int32 smoothing_iterations{};    ///< Number of smoothing iterations to perform
+  float32 max_distance_from_voxel{}; ///< Maximum distance a vertex can move from its voxel center during smoothing
+  float32 relaxation_factor{};     ///< Blending factor for neighbor-averaging during smoothing (0..1)
 
-  DataPath GridGeomDataPath;
-  DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;
-  MultiArraySelectionParameter::ValueType SelectedFeatureDataArrayPaths;
-  DataPath TriangleGeometryPath;
-  DataPath VertexGroupDataPath;
-  DataPath NodeTypesDataPath;
-  DataPath FaceGroupDataPath;
-  DataPath FaceLabelsDataPath;
-  MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
+  DataPath grid_geom_data_path;
+  DataPath feature_ids_array_path;
+  MultiArraySelectionParameter::ValueType selected_cell_data_array_paths;
+  MultiArraySelectionParameter::ValueType selected_feature_data_array_paths;
+  DataPath triangle_geometry_path;
+  DataPath vertex_group_data_path;
+  DataPath node_types_data_path;
+  DataPath face_group_data_path;
+  DataPath face_labels_data_path;
+  MultiArraySelectionParameter::ValueType created_data_array_paths;
 };
 
 /**

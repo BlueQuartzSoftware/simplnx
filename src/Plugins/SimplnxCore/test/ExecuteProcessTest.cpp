@@ -44,7 +44,7 @@ usize CountOccurrences(std::string_view text, std::string_view marker)
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
@@ -66,7 +66,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -78,17 +78,17 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
   buffer << processOutputFile.rdbuf();
 
   std::string firstLine;
-  std::vector<std::string> outputLines = nx::core::StringUtilities::Split(buffer.str(), '\n');
-  firstLine = StringUtilities::trimmed(outputLines[0]);
+  std::vector<std::string> outputLines = nx::core::string_utilities::Split(buffer.str(), '\n');
+  firstLine = string_utilities::Trimmed(outputLines[0]);
   const std::string correctOutput = fmt::format("nxrunner: Version {} Build Date:{}", nx::core::Version::Package(), nx::core::Version::BuildDate());
   REQUIRE(firstLine == correctOutput);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
@@ -106,7 +106,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -120,20 +120,20 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: InValid filter execution")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExecuteProcessFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ExecuteProcessFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -182,7 +182,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Argument separator regression", "[
   {
     DYNAMIC_SECTION(command)
     {
-      const auto actual = ExecuteProcess::splitArgumentsString(command);
+      const auto actual = ExecuteProcess::SplitArgumentsString(command);
       REQUIRE(actual == expected);
     }
   }
@@ -216,5 +216,5 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Execution captures standard error"
   // The log must therefore hold each marker exactly once.
   CHECK(CountOccurrences(logText, "C01_STDOUT") == 1);
   CHECK(CountOccurrences(logText, "C01_STDERR") == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

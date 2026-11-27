@@ -129,7 +129,7 @@ protected:
 TEST_CASE("PipelineTest:Execute Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const AbstractPlugin* test1PluginPtr = app->getPlugin(k_Test1PluginId);
@@ -153,11 +153,11 @@ TEST_CASE("PipelineTest:Execute Pipeline")
 
   Arguments args;
   GeneratedFileListParameter::ValueType defaultValue;
-  defaultValue.startIndex = 0;
-  defaultValue.endIndex = 1;
-  defaultValue.filePrefix = "test_";
-  defaultValue.fileExtension = ".txt";
-  defaultValue.inputPath = nx::core::unit_test::k_BinaryTestOutputDir;
+  defaultValue.start_index = 0;
+  defaultValue.end_index = 1;
+  defaultValue.file_prefix = "test_";
+  defaultValue.file_extension = ".txt";
+  defaultValue.input_path = nx::core::unit_test::k_BinaryTestOutputDir;
 
   const std::vector<std::string> fileList = defaultValue.generate();
   // We need to actually have files available for the test to pass so generate some files
@@ -177,7 +177,7 @@ TEST_CASE("PipelineTest:Execute Pipeline")
 TEST_CASE("PipelineTest:Simplnx Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   auto* filterListPtr = app->getFilterList();
   REQUIRE(filterListPtr->size() != 0);
@@ -231,7 +231,7 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
 TEST_CASE("PipelineTest:PipelineJson")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   Pipeline pipeline("test");
 
@@ -295,7 +295,7 @@ TEST_CASE("PipelineTest:PipelineJson")
 TEST_CASE("PipelineTest:Rename Output")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string group1Name = "Foo";
   std::string group2Name = "Bar";
@@ -338,7 +338,7 @@ TEST_CASE("PipelineTest:Rename Output")
 TEST_CASE("PipelineTest:Not Renaming")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string group1Name = "Foo";
   std::string group2Name = "Bar";
@@ -452,13 +452,13 @@ TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[Simp
   extractorArgs.insertOrAssign(ExtractPipelineToFileFilter::k_ImportFileData, writtenFile);
   extractorArgs.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, extractedFile);
   auto extractPreflightResult = extractor.preflight(dataStructure, extractorArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(extractPreflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(extractPreflightResult.output_actions);
   auto extractResult = extractor.execute(dataStructure, extractorArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(extractResult.result);
   REQUIRE(fs::exists(extractedFile));
 
   // Loading the extracted pipeline resolves filter UUIDs through the plugin registry.
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto replayResult = Pipeline::FromFile(extractedFile);
   SIMPLNX_RESULT_REQUIRE_VALID(replayResult);
   auto& replayRef = replayResult.value();
@@ -490,6 +490,6 @@ TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[Simp
   CHECK(readerPtr->getComments() == "Skip the missing reader during replay.");
   CHECK(writerPtr->getComments() == "Keep the writer comment in the embedded pipeline.");
   CHECK(writerPtr->getArguments().value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == writtenFile);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(replayDataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(replayDataStructure);
 }

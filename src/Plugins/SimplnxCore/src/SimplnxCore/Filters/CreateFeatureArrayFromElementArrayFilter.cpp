@@ -51,7 +51,7 @@ Parameters CreateFeatureArrayFromElementArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Data to Copy to Feature Data", "Element Data to Copy to Feature Data", DataPath{}, GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
                                                                     "The path to the cell feature attribute matrix where the converted output feature array will be stored",
@@ -103,7 +103,7 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -111,10 +111,10 @@ Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& da
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CreateFeatureArrayFromElementArrayInputValues inputValues;
-  inputValues.SelectedCellArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedCellArrayPath_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
-  inputValues.CreatedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedArrayName_Key);
+  inputValues.selected_cell_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedCellArrayPath_Key);
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.cell_feature_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
+  inputValues.created_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedArrayName_Key);
 
   return CreateFeatureArrayFromElementArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

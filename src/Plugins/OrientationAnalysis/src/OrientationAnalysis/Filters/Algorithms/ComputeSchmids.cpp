@@ -30,20 +30,20 @@ Result<> ComputeSchmids::operator()()
 {
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const auto& avgQuatsRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  const auto& featurePhasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& crystalStructuresRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& schmidsRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SchmidsArrayName);
-  auto& slipSystemsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SlipSystemsArrayName);
-  auto& polesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->PolesArrayName);
+  const auto& avgQuatsRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path);
+  const auto& featurePhasesRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  const auto& crystalStructuresRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  auto& schmidsRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->schmids_array_name);
+  auto& slipSystemsRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->slip_systems_array_name);
+  auto& polesRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->poles_array_name);
 
-  auto* phisPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->PhisArrayName);
-  auto* lambdasPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->LambdasArrayName);
+  auto* phisPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->phis_array_name);
+  auto* lambdasPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->lambdas_array_name);
   // Feature 0 is the conventional unassigned-Feature sentinel and is never computed; the loop below
   // starts at 1. Preflight now creates all five arrays with a "0" fill value so every tuple is
   // defined regardless, but these explicit writes are kept because they are what documents the
   // sentinel row's meaning at the point of use.
-  if(m_InputValues->StoreAngleComponents)
+  if(m_InputValues->store_angle_components)
   {
     (*phisPtr)[0] = 0.0F;
     (*lambdasPtr)[0] = 0.0F;
@@ -57,17 +57,17 @@ Result<> ComputeSchmids::operator()()
   const usize featureCount = avgQuatsRef.getNumberOfTuples();
   const usize ensembleCount = crystalStructuresRef.getNumberOfTuples();
 
-  Eigen::Vector3d sampleLoading = {m_InputValues->LoadingDirection[0], m_InputValues->LoadingDirection[1], m_InputValues->LoadingDirection[2]};
+  Eigen::Vector3d sampleLoading = {m_InputValues->loading_direction[0], m_InputValues->loading_direction[1], m_InputValues->loading_direction[2]};
   sampleLoading.normalize();
 
   Eigen::Vector3d plane;
   Eigen::Vector3d direction;
-  if(m_InputValues->OverrideSystem)
+  if(m_InputValues->override_system)
   {
-    plane = {m_InputValues->SlipPlane[0], m_InputValues->SlipPlane[1], m_InputValues->SlipPlane[2]};
+    plane = {m_InputValues->slip_plane[0], m_InputValues->slip_plane[1], m_InputValues->slip_plane[2]};
     plane.normalize();
 
-    direction = {m_InputValues->SlipDirection[0], m_InputValues->SlipDirection[1], m_InputValues->SlipDirection[2]};
+    direction = {m_InputValues->slip_direction[0], m_InputValues->slip_direction[1], m_InputValues->slip_direction[2]};
     direction.normalize();
   }
 
@@ -85,12 +85,12 @@ Result<> ComputeSchmids::operator()()
     if(phaseId < 0)
     {
       return MakeErrorResult(-13502, fmt::format("Feature {} has a negative phase value of {}. Phase values index the Crystal Structures array '{}' and must be zero or greater.", featureIdx, phaseId,
-                                                 m_InputValues->CrystalStructuresArrayPath.toString()));
+                                                 m_InputValues->crystal_structures_array_path.toString()));
     }
     if(static_cast<usize>(phaseId) >= ensembleCount)
     {
       return MakeErrorResult(-13501, fmt::format("Feature {} has a phase value of {} but the Crystal Structures array '{}' only has {} entries (valid phase values are 0 through {}).", featureIdx,
-                                                 phaseId, m_InputValues->CrystalStructuresArrayPath.toString(), ensembleCount, ensembleCount - 1));
+                                                 phaseId, m_InputValues->crystal_structures_array_path.toString(), ensembleCount, ensembleCount - 1));
     }
 
     const uint32_t laueClass = crystalStructuresRef[phaseId];
@@ -112,7 +112,7 @@ Result<> ComputeSchmids::operator()()
         ebsdlib::QuaternionDType(avgQuatsRef[featureIdx * 4 + 0], avgQuatsRef[featureIdx * 4 + 1], avgQuatsRef[featureIdx * 4 + 2], avgQuatsRef[featureIdx * 4 + 3]).toOrientationMatrix();
     Eigen::Vector3d crystalLoading = orientationMatrix * sampleLoading;
 
-    if(!m_InputValues->OverrideSystem)
+    if(!m_InputValues->override_system)
     {
       orientationOps[laueClass]->getSchmidFactorAndSS(crystalLoading.data(), schmid, angleComponents, slipSystem);
     }
@@ -122,7 +122,7 @@ Result<> ComputeSchmids::operator()()
     }
 
     schmidsRef[featureIdx] = static_cast<float>(schmid);
-    if(m_InputValues->StoreAngleComponents)
+    if(m_InputValues->store_angle_components)
     {
       (*phisPtr)[featureIdx] = angleComponents[0];
       (*lambdasPtr)[featureIdx] = angleComponents[1];

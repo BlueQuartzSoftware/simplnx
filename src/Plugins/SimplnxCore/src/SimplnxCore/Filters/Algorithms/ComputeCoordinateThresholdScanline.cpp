@@ -28,7 +28,7 @@ constexpr usize k_ChunkTuples = 65536;
  * A cell passes only when all eight corners pass. Cancellation returns success
  * after completed batches. Later cells are not written.
  */
-Result<> ComputeImageMask(const ImageGeom& imageGeom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBounds,
+Result<> ComputeImageMask(const ImageGeom& imageGeom, UInt8AbstractDataStoreType& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBounds,
                           const std::atomic_bool& shouldCancel)
 {
   const uint8 trueValue = shouldInvert ? 0 : 1;
@@ -37,8 +37,8 @@ Result<> ComputeImageMask(const ImageGeom& imageGeom, UInt8AbstractDataStore& ma
   const usize yCells = imageGeom.getNumYCells();
   const usize xyCells = xCells * yCells;
   const usize totalCells = imageGeom.getNumberOfCells();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
   auto maskBuffer = std::make_unique<uint8[]>(k_ChunkTuples);
   for(usize offset = 0; offset < totalCells; offset += k_ChunkTuples)
   {
@@ -99,11 +99,11 @@ ComputeCoordinateThresholdScanline::ComputeCoordinateThresholdScanline(DataStruc
 Result<> ComputeCoordinateThresholdScanline::operator()()
 {
   std::function<uint8(float32, float32, float32)> isInBounds;
-  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(m_InputValues->ShapeType))
+  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(m_InputValues->shape_type))
   {
   case ComputeCoordinateThreshold::BoundsType::Rectangle: {
-    const VectorFloat32Parameter::ValueType minPoint = m_InputValues->MinCoord;
-    const VectorFloat32Parameter::ValueType maxPoint = m_InputValues->MaxCoord;
+    const VectorFloat32ParameterType::ValueType minPoint = m_InputValues->min_coord;
+    const VectorFloat32ParameterType::ValueType maxPoint = m_InputValues->max_coord;
     isInBounds = [minPoint, maxPoint](float32 x, float32 y, float32 z) -> uint8 {
       if(minPoint[0] > x || maxPoint[0] < x)
       {
@@ -122,7 +122,7 @@ Result<> ComputeCoordinateThresholdScanline::operator()()
     break;
   }
   case ComputeCoordinateThreshold::BoundsType::Sphere: {
-    const VectorFloat32Parameter::ValueType sphereInfo = m_InputValues->SphereInfo;
+    const VectorFloat32ParameterType::ValueType sphereInfo = m_InputValues->sphere_info;
     isInBounds = [sphereInfo](float32 x, float32 y, float32 z) -> uint8 {
       const float32 xDiff = x - sphereInfo[0];
       const float32 yDiff = y - sphereInfo[1];
@@ -133,7 +133,7 @@ Result<> ComputeCoordinateThresholdScanline::operator()()
   }
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
-  auto& mask = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath).getDataStoreRef();
-  return ComputeImageMask(imageGeom, mask, m_InputValues->Invert, isInBounds, m_ShouldCancel);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
+  auto& mask = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->mask_array_path).getDataStoreRef();
+  return ComputeImageMask(imageGeom, mask, m_InputValues->invert, isInBounds, m_ShouldCancel);
 }

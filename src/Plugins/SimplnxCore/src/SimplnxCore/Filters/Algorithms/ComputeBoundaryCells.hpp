@@ -15,11 +15,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeBoundaryCellsInputValues
 {
-  bool IgnoreFeatureZero{};
-  bool IncludeVolumeBoundary{};
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath BoundaryCellsArrayName;
+  bool ignore_feature_zero{};
+  bool include_volume_boundary{};
+  DataPath image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath boundary_cells_array_name;
 };
 
 /**

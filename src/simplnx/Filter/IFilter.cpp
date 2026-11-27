@@ -175,11 +175,11 @@ std::pair<std::map<std::string, std::vector<std::string>>, std::set<std::string>
  * @throws std::invalid_argument if the argument type is not accepted.
  * @throws std::runtime_error if the parameter category is invalid.
  */
-Result<> ValidateParameter(std::string_view name, const AnyParameter& parameter, const Arguments& args, const DataStructure& data, const IFilter& filter)
+Result<> ValidateParameter(std::string_view name, const AnyParameterType& parameter, const Arguments& args, const DataStructure& data, const IFilter& filter)
 {
   const auto& arg = args.at(name);
 
-  IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+  IParameter::AcceptedTypesType acceptedTypes = parameter->acceptedTypes();
   if(std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), arg.type()) == acceptedTypes.cend())
   {
     std::stringstream acceptedTypesStr;
@@ -266,21 +266,21 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     Result<OutputActions> preflightActions;
     preflightActions.expected = nonstd::make_unexpected(std::move(errors));
     preflightActions.warnings() = std::move(warnings);
-    return {.outputActions = std::move(preflightActions)};
+    return {.output_actions = std::move(preflightActions)};
   }
 
   PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler, shouldCancel, executionContext);
   for(auto&& warning : warnings)
   {
-    implResult.outputActions.warnings().push_back(std::move(warning));
+    implResult.output_actions.warnings().push_back(std::move(warning));
   }
 
   // Preserve a preflight failure when cancellation is observed after preflight returns.
-  if(shouldCancel && implResult.outputActions.valid())
+  if(shouldCancel && implResult.output_actions.valid())
   {
     Result<OutputActions> cancellationResult = MakeErrorResult<OutputActions>(-1, "Filter cancelled");
-    cancellationResult.warnings() = std::move(implResult.outputActions.warnings());
-    return {.outputActions = std::move(cancellationResult), .outputValues = std::move(implResult.outputValues)};
+    cancellationResult.warnings() = std::move(implResult.output_actions.warnings());
+    return {.output_actions = std::move(cancellationResult), .output_values = std::move(implResult.output_values)};
   }
 
   return implResult;
@@ -290,14 +290,14 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   PreflightResult preflightResult = preflight(dataStructure, filterArgs, messageHandler, shouldCancel, executionContext);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
-    return ExecuteResult{.result = ConvertResult(std::move(preflightResult.outputActions)), .output_values = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = ConvertResult(std::move(preflightResult.output_actions)), .output_values = std::move(preflightResult.output_values)};
   }
 
-  OutputActions outputActions = std::move(preflightResult.outputActions.value());
+  OutputActions outputActions = std::move(preflightResult.output_actions.value());
 
-  Result<> outputActionsResult = ConvertResult(std::move(preflightResult.outputActions));
+  Result<> outputActionsResult = ConvertResult(std::move(preflightResult.output_actions));
 
   Result<> actionsResult = outputActions.applyRegular(dataStructure, IDataAction::Mode::Execute);
 
@@ -305,7 +305,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   if(preflightActionsResult.invalid())
   {
-    return ExecuteResult{.result = std::move(preflightActionsResult), .output_values = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = std::move(preflightActionsResult), .output_values = std::move(preflightResult.output_values)};
   }
 
   Parameters params = parameters();
@@ -333,7 +333,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
     {
       message = "A filter ran out of memory while executing.";
     }
-    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-272, std::move(message))), .output_values = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-272, std::move(message))), .output_values = std::move(preflightResult.output_values)};
   } catch(const std::exception& e)
   {
     // Backstop any other exception that escapes executeImpl. The backstop converts an escaped
@@ -370,20 +370,20 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
   // error is only reported when execution itself succeeded.
   if(shouldCancel && executeImplResult.valid())
   {
-    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), .output_values = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = MergeResults(std::move(preflightActionsResult), MakeErrorResult(-1, "Filter cancelled")), .output_values = std::move(preflightResult.output_values)};
   }
 
   Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
 
   if(preflightActionsExecuteResult.invalid())
   {
-    return ExecuteResult{.result = std::move(preflightActionsExecuteResult), .output_values = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = std::move(preflightActionsExecuteResult), .output_values = std::move(preflightResult.output_values)};
   }
   Result<> deferredActionsResult = outputActions.applyDeferred(dataStructure, IDataAction::Mode::Execute);
   Result<> postDeferredResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
   if(postDeferredResult.invalid())
   {
-    return ExecuteResult{.result = std::move(postDeferredResult), .output_values = std::move(preflightResult.outputValues)};
+    return ExecuteResult{.result = std::move(postDeferredResult), .output_values = std::move(preflightResult.output_values)};
   }
 
   Result<> geometryValidationResult = dataStructure.validateGeometries();
@@ -392,7 +392,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& dataStructure, const Argu
 
   Result<> finalResult = MergeResults(std::move(postDeferredResult), std::move(validationResult));
 
-  return ExecuteResult{.result = std::move(finalResult), .output_values = std::move(preflightResult.outputValues)};
+  return ExecuteResult{.result = std::move(finalResult), .output_values = std::move(preflightResult.output_values)};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
@@ -465,7 +465,7 @@ Result<Arguments> IFilter::fromJson(const nlohmann::json& json) const
 
   // Suggest closest known parameter keys for unknown JSON keys. The heuristic can
   // produce an unrelated suggestion.
-  auto bestMatches = StringUtilities::FindBestMatches(jsonKeyNotFound, paramKeyNotFound);
+  auto bestMatches = string_utilities::FindBestMatches(jsonKeyNotFound, paramKeyNotFound);
   for(const auto& match : bestMatches)
   {
     if(!std::get<0>(match).empty() && !std::get<1>(match).empty())

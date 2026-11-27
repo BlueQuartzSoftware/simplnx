@@ -108,15 +108,15 @@ Result<> ReconstructVincent<T>::runImpl()
         // iteration begins -- an ordinary read of already-settled memory, not a race.
         auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
           bool blockChanged = false;
-          const usize rowSpan = block.rowEnd - block.rowBegin;
-          const usize colSpan = block.colEnd - block.colBegin;
+          const usize rowSpan = block.row_end - block.row_begin;
+          const usize colSpan = block.col_end - block.col_begin;
           for(usize localRow = 0; localRow < rowSpan; ++localRow)
           {
-            const usize rowIndex = forward ? block.rowBegin + localRow : block.rowEnd - 1 - localRow;
+            const usize rowIndex = forward ? block.row_begin + localRow : block.row_end - 1 - localRow;
             const int64 y = static_cast<int64>(rowIndex);
             for(usize localCol = 0; localCol < colSpan; ++localCol)
             {
-              const usize columnIndex = forward ? block.colBegin + localCol : block.colEnd - 1 - localCol;
+              const usize columnIndex = forward ? block.col_begin + localCol : block.col_end - 1 - localCol;
               const int64 x = static_cast<int64>(columnIndex);
               const usize position = flat(x, y, z);
               T value = work[position];
@@ -124,10 +124,10 @@ Result<> ReconstructVincent<T>::runImpl()
               {
                 if(inBounds(x + neighbor.off.dx, y + neighbor.off.dy, z + neighbor.off.dz))
                 {
-                  value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+                  value = TraitsType::Fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
                 }
               }
-              const T newValue = TraitsType::clampToMask(value, mask[position]);
+              const T newValue = TraitsType::ClampToMask(value, mask[position]);
               if(newValue != work[position])
               {
                 work[position] = newValue;
@@ -163,10 +163,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + neighbor.off.dx, y + neighbor.off.dy, z + neighbor.off.dz))
             {
-              value = TraitsType::fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
+              value = TraitsType::Fold(value, work[static_cast<usize>(static_cast<int64>(position) + neighbor.delta)]);
             }
           }
-          const T newValue = TraitsType::clampToMask(value, mask[position]);
+          const T newValue = TraitsType::ClampToMask(value, mask[position]);
           if(newValue != work[position])
           {
             work[position] = newValue;
@@ -230,10 +230,10 @@ Result<> ReconstructVincent<T>::runImpl()
       // begins -- an ordinary read of already-settled memory, not a race.
       auto processBlock = [&](const detail::ReconstructionPlaneBlock& block) -> bool {
         bool blockChanged = false;
-        for(usize row = block.rowBegin; row < block.rowEnd; ++row)
+        for(usize row = block.row_begin; row < block.row_end; ++row)
         {
           const int64 y = static_cast<int64>(row);
-          for(usize col = block.colBegin; col < block.colEnd; ++col)
+          for(usize col = block.col_begin; col < block.col_end; ++col)
           {
             const int64 x = static_cast<int64>(col);
             const usize p = flat(x, y, z);
@@ -242,13 +242,13 @@ Result<> ReconstructVincent<T>::runImpl()
             {
               if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
               {
-                v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+                v = TraitsType::Fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
               }
             }
             // The wavefront path writes conditionally, tracking blockChanged for RunPlaneWavefront's per-block
             // changed-flag contract, unlike the unconditional assignment in the serial path below; both leave
             // work[p] holding the identical final value.
-            const T newValue = TraitsType::clampToMask(v, mask[p]);
+            const T newValue = TraitsType::ClampToMask(v, mask[p]);
             if(newValue != work[p])
             {
               work[p] = newValue;
@@ -281,10 +281,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
             {
-              v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+              v = TraitsType::Fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
             }
           }
-          work[p] = TraitsType::clampToMask(v, mask[p]);
+          work[p] = TraitsType::ClampToMask(v, mask[p]);
         }
       }
     }
@@ -304,15 +304,15 @@ Result<> ReconstructVincent<T>::runImpl()
       // fully finished and synchronized before this iteration begins -- an ordinary read of already-settled
       // memory, not a race.
       auto processBlock = [&](const detail::ReconstructionPlaneBlock& block, std::vector<uint64>& seeds) {
-        const usize rowSpan = block.rowEnd - block.rowBegin;
-        const usize colSpan = block.colEnd - block.colBegin;
+        const usize rowSpan = block.row_end - block.row_begin;
+        const usize colSpan = block.col_end - block.col_begin;
         for(usize localRow = 0; localRow < rowSpan; ++localRow)
         {
-          const usize rowIndex = block.rowEnd - 1 - localRow;
+          const usize rowIndex = block.row_end - 1 - localRow;
           const int64 y = static_cast<int64>(rowIndex);
           for(usize localCol = 0; localCol < colSpan; ++localCol)
           {
-            const usize colIndex = block.colEnd - 1 - localCol;
+            const usize colIndex = block.col_end - 1 - localCol;
             const int64 x = static_cast<int64>(colIndex);
             const usize p = flat(x, y, z);
             T v = work[p];
@@ -320,10 +320,10 @@ Result<> ReconstructVincent<T>::runImpl()
             {
               if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
               {
-                v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+                v = TraitsType::Fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
               }
             }
-            v = TraitsType::clampToMask(v, mask[p]);
+            v = TraitsType::ClampToMask(v, mask[p]);
             work[p] = v;
             for(const NeighborDelta& nd : laterN)
             {
@@ -370,10 +370,10 @@ Result<> ReconstructVincent<T>::runImpl()
           {
             if(inBounds(x + nd.off.dx, y + nd.off.dy, z + nd.off.dz))
             {
-              v = TraitsType::fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
+              v = TraitsType::Fold(v, work[static_cast<usize>(static_cast<int64>(p) + nd.delta)]);
             }
           }
-          v = TraitsType::clampToMask(v, mask[p]);
+          v = TraitsType::ClampToMask(v, mask[p]);
           work[p] = v;
           for(const NeighborDelta& nd : laterN)
           {

@@ -168,7 +168,7 @@ protected:
    * @return First partition-count or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+  Result<> dataCheckBasicMode(const SizeVec3Type& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
                               const DataPath& attrMatrixPath) const;
 
   /**
@@ -182,7 +182,7 @@ protected:
    * @return First partition-count or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+  Result<> dataCheckAdvancedMode(const SizeVec3Type& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
                                  const DataPath& attrMatrixPath) const;
 
   /**
@@ -198,7 +198,7 @@ protected:
    * @return First partition-count, bounds, or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
+  Result<> dataCheckBoundingBoxMode(const SizeVec3Type& numOfPartitionsPerAxis, const FloatVec3Type& llCoord, const FloatVec3Type& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
                                     const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
 
   static Result<> DataCheckExistingGeometryMode();
@@ -220,7 +220,7 @@ protected:
   /**
    * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
    */
-  static Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
+  static Result<> DataCheckNumberOfPartitions(const SizeVec3Type& numberOfPartitionsPerAxis);
 
   static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
 

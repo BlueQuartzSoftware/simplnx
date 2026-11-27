@@ -821,7 +821,7 @@ public:
       }
     }
 
-    WarningCollection warnings;
+    WarningCollectionType warnings;
     for(usize extentIndex = 0; extentIndex < extents.size(); ++extentIndex)
     {
       Result<> readResult = readExtentIntoBuffer(extents[extentIndex], destinations[extentIndex]);
@@ -850,7 +850,7 @@ public:
   {
     std::vector<std::vector<T>> results;
     results.reserve(extents.size());
-    WarningCollection warnings;
+    WarningCollectionType warnings;
     for(const Extent& extent : extents)
     {
       Result<std::vector<T>> readResult = readExtent(extent);
@@ -1360,18 +1360,18 @@ private:
   std::optional<T> m_InitValue;
 };
 
-using UInt8AbstractDataStore = AbstractDataStore<uint8>;
-using UInt16AbstractDataStore = AbstractDataStore<uint16>;
-using UInt32AbstractDataStore = AbstractDataStore<uint32>;
-using UInt64AbstractDataStore = AbstractDataStore<uint64>;
+using UInt8AbstractDataStoreType = AbstractDataStore<uint8>;
+using UInt16AbstractDataStoreType = AbstractDataStore<uint16>;
+using UInt32AbstractDataStoreType = AbstractDataStore<uint32>;
+using UInt64AbstractDataStoreType = AbstractDataStore<uint64>;
 
-using Int8AbstractDataStore = AbstractDataStore<int8>;
-using Int16AbstractDataStore = AbstractDataStore<int16>;
-using Int32AbstractDataStore = AbstractDataStore<int32>;
-using Int64AbstractDataStore = AbstractDataStore<int64>;
+using Int8AbstractDataStoreType = AbstractDataStore<int8>;
+using Int16AbstractDataStoreType = AbstractDataStore<int16>;
+using Int32AbstractDataStoreType = AbstractDataStore<int32>;
+using Int64AbstractDataStoreType = AbstractDataStore<int64>;
 
-using BoolAbstractDataStore = AbstractDataStore<bool>;
+using BoolAbstractDataStoreType = AbstractDataStore<bool>;
 
-using Float32AbstractDataStore = AbstractDataStore<float32>;
-using Float64AbstractDataStore = AbstractDataStore<float64>;
+using Float32AbstractDataStoreType = AbstractDataStore<float32>;
+using Float64AbstractDataStoreType = AbstractDataStore<float64>;
 } // namespace nx::core

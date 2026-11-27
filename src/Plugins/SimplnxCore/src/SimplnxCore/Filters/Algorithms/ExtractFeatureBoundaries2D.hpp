@@ -27,12 +27,12 @@ struct SIMPLNXCORE_EXPORT ExtractFeatureBoundaries2DInputValues
     UseCustomZValue = 2 // Uses CustomZValue.
   };
 
-  DataPath InputImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath OutputEdgeGeometryPath;
-  ZValueChoiceType ZValueChoice = ZValueChoiceType::UseMinZValue;
-  float32 CustomZValue = 0.0f;
-  bool ExtractVirtualSampleEdges = false;
+  DataPath input_image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath output_edge_geometry_path;
+  ZValueChoiceType z_value_choice = ZValueChoiceType::UseMinZValue;
+  float32 custom_z_value = 0.0f;
+  bool extract_virtual_sample_edges = false;
 };
 
 /**

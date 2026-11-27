@@ -12,11 +12,11 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoInputValues
 {
-  EnsembleInfoParameter::ValueType Ensemble;
-  DataPath CellEnsembleAttributeMatrixName;
-  std::string CrystalStructuresArrayName;
-  std::string PhaseTypesArrayName;
-  std::string PhaseNamesArrayName;
+  EnsembleInfoParameter::ValueType ensemble;
+  DataPath cell_ensemble_attribute_matrix_name;
+  std::string crystal_structures_array_name;
+  std::string phase_types_array_name;
+  std::string phase_names_array_name;
 };
 
 /**

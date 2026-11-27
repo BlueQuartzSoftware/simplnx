@@ -30,7 +30,7 @@
  * @namespace nx::core::UnitTest::AvizoWriterFailure
  * @brief Provides source-read failure fixtures for the Avizo filters.
  */
-namespace nx::core::UnitTest::AvizoWriterFailure
+namespace nx::core::unit_test::avizo_writer_failure
 {
 /**
  * @class SecondBlockFailureStore
@@ -58,15 +58,15 @@ public:
    */
   Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
   {
-    if(readCalls < readOffsets.size())
+    if(read_calls < read_offsets.size())
     {
-      readOffsets[readCalls] = startIndex;
-      readCounts[readCalls] = buffer.size();
+      read_offsets[read_calls] = startIndex;
+      read_counts[read_calls] = buffer.size();
     }
-    ++readCalls;
-    if(readCalls == 2)
+    ++read_calls;
+    if(read_calls == 2)
     {
-      if(throwAllocation)
+      if(throw_allocation)
       {
         throw std::bad_alloc{};
       }
@@ -75,18 +75,18 @@ public:
     Result<> result = BaseStore::copyIntoBuffer(startIndex, buffer);
     if(result.valid())
     {
-      ++successfulReads;
-      firstBufferHasExpectedValues = std::all_of(buffer.begin(), buffer.end(), [](int32 value) { return value == 7; });
+      ++successful_reads;
+      first_buffer_has_expected_values = std::all_of(buffer.begin(), buffer.end(), [](int32 value) { return value == 7; });
     }
     return result;
   }
 
-  bool throwAllocation = false;
-  mutable bool firstBufferHasExpectedValues = false;
-  mutable usize readCalls = 0;
-  mutable usize successfulReads = 0;
-  mutable std::array<usize, 2> readOffsets{};
-  mutable std::array<usize, 2> readCounts{};
+  bool throw_allocation = false;
+  mutable bool first_buffer_has_expected_values = false;
+  mutable usize read_calls = 0;
+  mutable usize successful_reads = 0;
+  mutable std::array<usize, 2> read_offsets{};
+  mutable std::array<usize, 2> read_counts{};
 };
 
 /**
@@ -137,8 +137,8 @@ void CheckSecondBlockFailure(bool writeBinary, bool existingDestination,
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 65537}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  store->throwAllocation = throwAllocation;
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, "FeatureIds", store, cellDataPtr->getId());
+  store->throw_allocation = throwAllocation;
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", store, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
 
   FilterType filter;
@@ -149,11 +149,11 @@ void CheckSecondBlockFailure(bool writeBinary, bool existingDestination,
   args.insertOrAssign(FilterType::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeom", "CellData", "FeatureIds"})));
 
   const auto executeResult = filter.execute(dataStructure, args);
-  CHECK(store->readCalls == 2);
-  CHECK(store->successfulReads == 1);
-  CHECK(store->firstBufferHasExpectedValues);
-  CHECK(store->readOffsets == std::array<usize, 2>{0, 65536});
-  CHECK(store->readCounts == std::array<usize, 2>{65536, 1});
+  CHECK(store->read_calls == 2);
+  CHECK(store->successful_reads == 1);
+  CHECK(store->first_buffer_has_expected_values);
+  CHECK(store->read_offsets == std::array<usize, 2>{0, 65536});
+  CHECK(store->read_counts == std::array<usize, 2>{65536, 1});
   REQUIRE(executeResult.result.invalid());
   bool foundReadError = false;
   for(const auto& error : executeResult.result.errors())
@@ -185,6 +185,6 @@ void CheckSecondBlockFailure(bool writeBinary, bool existingDestination,
   fs::remove_all(outputRoot, cleanupError);
   CHECK_FALSE(cleanupError);
   CHECK_FALSE(fs::exists(outputRoot));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace nx::core::UnitTest::AvizoWriterFailure

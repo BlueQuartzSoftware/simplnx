@@ -59,7 +59,7 @@ Parameters ComputeFeatureSizesFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"Cell Feature Data"})));
@@ -104,7 +104,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, geometryPath, {featureIdsPath}, -74771);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
@@ -159,13 +159,13 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
 {
   ComputeFeatureSizesInputValues inputValues;
 
-  inputValues.EquivalentDiametersName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EquivalentDiametersName_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_GeometryPath_Key);
-  inputValues.NumElementsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_NumElementsName_Key);
-  inputValues.SaveElementSizes = filterArgs.value<BoolParameter::ValueType>(k_SaveElementSizes_Key);
-  inputValues.VolumesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesName_Key);
+  inputValues.equivalent_diameters_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_EquivalentDiametersName_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.input_image_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_GeometryPath_Key);
+  inputValues.num_elements_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_NumElementsName_Key);
+  inputValues.save_element_sizes = filterArgs.value<BoolParameter::ValueType>(k_SaveElementSizes_Key);
+  inputValues.volumes_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesName_Key);
 
   return ComputeFeatureSizes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

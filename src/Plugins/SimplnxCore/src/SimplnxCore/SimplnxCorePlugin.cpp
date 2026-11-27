@@ -24,7 +24,7 @@ SimplnxCorePlugin::~SimplnxCorePlugin() = default;
 
 AbstractPlugin::SIMPLMapType SimplnxCorePlugin::getSimplToSimplnxMap() const
 {
-  return nx::core::k_SIMPL_to_SimplnxCore;
+  return nx::core::k_SimplToSimplnxCore;
 }
 
 AbstractPlugin::FilterReplacementMapType SimplnxCorePlugin::getFilterReplacementMap() const

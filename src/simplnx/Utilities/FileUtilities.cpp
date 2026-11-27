@@ -33,7 +33,7 @@ constexpr int k_CheckWritable = W_OK;
 constexpr int k_HasAccess = 0;
 }; // namespace
 
-namespace nx::core::FileUtilities
+namespace nx::core::file_utilities
 {
 std::string detail::PathForDiagnostic(const fs::path& path)
 {
@@ -276,7 +276,7 @@ std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath)
   return {false, 0};
 }
 
-namespace CSV
+namespace csv
 {
 const int32 k_InconsistentCols = -104;
 const int32 k_InvalidArrayType = -106;
@@ -291,7 +291,7 @@ namespace
  * @param dataParsers Supplies parsers aligned with all CSV columns.
  * @return Merged result from every attempted flush.
  */
-Result<> FlushParsersImpl(const ParsersVector& dataParsers)
+Result<> FlushParsersImpl(const ParsersVectorType& dataParsers)
 {
   std::vector<Result<>> flushResults;
   flushResults.reserve(dataParsers.size());
@@ -338,10 +338,10 @@ const IArray& AbstractDataParser::array() const
   return m_Array;
 }
 
-Result<ParsersVector> CreateParsers(const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+Result<ParsersVectorType> CreateParsers(const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
                                     DataStructure& dataStructure)
 {
-  ParsersVector dataParsers(dataTypes.size());
+  ParsersVectorType dataParsers(dataTypes.size());
 
   for(usize i = 0; i < dataTypes.size() && i < headers.size() && i < skippedArrays.size(); i++)
   {
@@ -360,85 +360,85 @@ Result<ParsersVector> CreateParsers(const std::vector<CSVType>& dataTypes, const
     switch(csvType)
     {
     case nx::core::CSVType::int8: {
-      auto& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int8ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int8ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint8: {
-      auto& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt8ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt8ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::int16: {
-      auto& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int16ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int16ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint16: {
-      auto& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt16ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt16ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::int32: {
-      auto& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int32ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int32ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint32: {
-      auto& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt32ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt32ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::int64: {
-      auto& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int64ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int64ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint64: {
-      auto& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt64ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt64ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::float32: {
-      auto& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Float32ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Float32ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::float64: {
-      auto& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Float64ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Float64ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::boolean: {
-      auto& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
-      dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<BoolArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<BoolParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::string: {
       auto& data = dataStructure.getDataRefAs<StringArray>(arrayPath);
-      dataParsers[i] = std::make_unique<StringParser>(data, name, i);
+      dataParsers[i] = std::make_unique<StringParserType>(data, name, i);
       break;
     }
     default:
-      return {MakeErrorResult<ParsersVector>(k_InvalidArrayType, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
+      return {MakeErrorResult<ParsersVectorType>(k_InvalidArrayType, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
     }
   }
 
   return {std::move(dataParsers)};
 }
 
-Result<> FlushParsers(const ParsersVector& dataParsers)
+Result<> FlushParsers(const ParsersVectorType& dataParsers)
 {
   return FlushParsersImpl(dataParsers);
 }
 
-Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters, usize lineNumber,
+Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters, usize lineNumber,
                    usize beginIndex, bool& flushRequired)
 {
   std::string line;
   std::getline(inStream, line);
-  line = StringUtilities::replace(line, "\r", "");
-  std::vector<std::string> tokens = StringUtilities::Split(line, delimiters, !consecutiveDelimiters);
+  line = string_utilities::Replace(line, "\r", "");
+  std::vector<std::string> tokens = string_utilities::Split(line, delimiters, !consecutiveDelimiters);
   if(tokens.empty())
   {
     // An empty interior row cannot provide one token for each configured column.
@@ -497,11 +497,11 @@ std::vector<std::string> RemoveIllegalCharacters(std::vector<std::string>& heade
   {
     // Filter-level callers include Python and nxrunner, which do not apply GUI name validation.
     // Normalize each header before it becomes a data-array name.
-    headerName = StringUtilities::replace(headerName, "&", "_");
-    headerName = StringUtilities::replace(headerName, ":", "_");
-    headerName = StringUtilities::replace(headerName, "/", "_");
-    headerName = StringUtilities::replace(headerName, "\\", "_");
-    headerName = StringUtilities::replace(headerName, "\"", "");
+    headerName = string_utilities::Replace(headerName, "&", "_");
+    headerName = string_utilities::Replace(headerName, ":", "_");
+    headerName = string_utilities::Replace(headerName, "/", "_");
+    headerName = string_utilities::Replace(headerName, "\\", "_");
+    headerName = string_utilities::Replace(headerName, "\"", "");
   }
   return headers;
 }
@@ -537,7 +537,7 @@ Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, u
 
   std::string headersLine;
   std::getline(in, headersLine);
-  auto headers = StringUtilities::Split(headersLine, delimiters, !consecutiveDelimiters);
+  auto headers = string_utilities::Split(headersLine, delimiters, !consecutiveDelimiters);
   return {headers};
 }
 } // namespace CSV

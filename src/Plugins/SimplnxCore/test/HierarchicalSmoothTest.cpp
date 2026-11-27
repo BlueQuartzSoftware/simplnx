@@ -112,7 +112,7 @@ F64Vec3Type QuadPoint(const F64Vec3Type& p, const F64Vec3Type& q, const F64Vec3T
 bool IsQuadNode(int8 type)
 {
   // Quad junctions: 4 (interior) or 14 (on the sample surface). The filter holds these fixed.
-  return type == node_type::QuadPoint || type == node_type::SurfaceQuadPoint;
+  return type == node_type::k_QuadPoint || type == node_type::k_SurfaceQuadPoint;
 }
 
 // Distinct grain ids touching a vertex (exterior label 0 excluded), capped at 4: a Voronoi vertex
@@ -143,7 +143,7 @@ struct IncidentGrains
 // Test geometry: off-axis seeds make the Voronoi bisectors oblique to the voxel grid, so the meshed
 // interface is genuinely stair-stepped (an axis-aligned cut would mesh perfectly flat and give the
 // smoother nothing to do).
-const SizeVec3 k_GridDims = {40, 40, 40};
+const SizeVec3Type k_GridDims = {40, 40, 40};
 const std::vector<F64Vec3Type> k_BicrystalSeeds = {{12.3, 16.1, 20.7}, {28.4, 24.9, 19.2}};
 // Tetrahedral corners about the center (20,20,20): the point equidistant to all four is interior,
 // giving one quad point with four triple lines radiating to the box surface.
@@ -164,7 +164,7 @@ struct MeshPaths
 // Build an ImageGeom whose FeatureIds are the nearest-seed Voronoi assignment, then run
 // QuickSurfaceMesh to obtain a stair-stepped TriangleGeom carrying Node Type + Face Labels.
 // Seeds are grain ids 1..N (FeatureIds never 0, so QuickSurfaceMesh uses 0 for the exterior).
-MeshPaths BuildVoronoiMesh(DataStructure& dataStructure, const SizeVec3& dims, const std::vector<F64Vec3Type>& seeds)
+MeshPaths BuildVoronoiMesh(DataStructure& dataStructure, const SizeVec3Type& dims, const std::vector<F64Vec3Type>& seeds)
 {
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Grid");
   imageGeomPtr->setDimensions(dims);
@@ -177,7 +177,7 @@ MeshPaths BuildVoronoiMesh(DataStructure& dataStructure, const SizeVec3& dims, c
 
   // FeatureIds lives in a DataArray (disk-backed in an out-of-core build), written element-by-element
   // below — never materialized into an in-core voxel-sized std::vector.
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", tupleShape, {1}, cellDataPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", tupleShape, {1}, cellDataPtr->getId());
 
   const int32 seedCount = static_cast<int32>(seeds.size());
   for(usize z = 0; z < dims[2]; z++)
@@ -224,7 +224,7 @@ MeshPaths BuildVoronoiMesh(DataStructure& dataStructure, const SizeVec3& dims, c
   args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>("Face Labels"));
 
   auto preflight = qsm.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto execute = qsm.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -245,14 +245,14 @@ void RunHierarchicalSmooth(DataStructure& dataStructure, const MeshPaths& paths)
   args.insertOrAssign(HierarchicalSmoothFilter::k_ErrorThreshold_Key, std::make_any<float64>(k_ErrorThreshold));
 
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 }
 
 // Distinct grain ids per vertex from the face labels (exterior label 0 excluded). One contiguous
 // allocation sized to the vertex count; arrays are read element-wise (out-of-core safe).
-std::vector<IncidentGrains> BuildIncidentGrains(const TriangleGeom& triangleGeom, const Int32Array& faceLabels)
+std::vector<IncidentGrains> BuildIncidentGrains(const TriangleGeom& triangleGeom, const Int32ArrayType& faceLabels)
 {
   const usize numVertices = triangleGeom.getNumberOfVertices();
   const usize numFaces = triangleGeom.getNumberOfFaces();
@@ -276,7 +276,7 @@ std::vector<IncidentGrains> BuildIncidentGrains(const TriangleGeom& triangleGeom
   return incident;
 }
 
-F64Vec3Type VertexCoord(const Float32Array& vertices, usize v)
+F64Vec3Type VertexCoord(const Float32ArrayType& vertices, usize v)
 {
   return {static_cast<float64>(vertices[(v * 3) + 0]), static_cast<float64>(vertices[(v * 3) + 1]), static_cast<float64>(vertices[(v * 3) + 2])};
 }
@@ -300,7 +300,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: oracle math", "[SimplnxCore][H
 
 TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Quad junction", "[SimplnxCore][HierarchicalSmoothFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   MeshPaths paths = BuildVoronoiMesh(dataStructure, k_GridDims, k_QuadSeeds);
 
@@ -308,12 +308,12 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Quad junction", "[SimplnxCore]
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(paths.triangle_geom));
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(paths.triangle_geom);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(paths.face_labels));
-  const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(paths.face_labels);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(paths.node_type));
-  const auto& nodeType = dataStructure.getDataRefAs<Int8Array>(paths.node_type);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(paths.vertices));
-  const auto& smoothed = dataStructure.getDataRefAs<Float32Array>(paths.vertices);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(paths.face_labels));
+  const auto& faceLabels = dataStructure.getDataRefAs<Int32ArrayType>(paths.face_labels);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(paths.node_type));
+  const auto& nodeType = dataStructure.getDataRefAs<Int8ArrayType>(paths.node_type);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(paths.vertices));
+  const auto& smoothed = dataStructure.getDataRefAs<Float32ArrayType>(paths.vertices);
   const std::vector<IncidentGrains> incident = BuildIncidentGrains(triangleGeom, faceLabels);
 
   // Tolerances are fixed literals calibrated from one-time measured maxima on this mesh
@@ -328,17 +328,17 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Quad junction", "[SimplnxCore]
   for(usize v = 0; v < numVertices; v++)
   {
     const F64Vec3Type x = VertexCoord(smoothed, v);
-    if(nodeType[v] == node_type::Default && incident[v].count == 2)
+    if(nodeType[v] == node_type::k_Default && incident[v].count == 2)
     {
       REQUIRE(DistanceToPlane(x, BisectorPlane(k_QuadSeeds[incident[v].ids[0] - 1], k_QuadSeeds[incident[v].ids[1] - 1])) < k_TolPlane);
       interiorNodes++;
     }
-    else if(nodeType[v] == node_type::TriplePoint && incident[v].count == 3)
+    else if(nodeType[v] == node_type::k_TriplePoint && incident[v].count == 3)
     {
       REQUIRE(DistanceToLine(x, TripleLine(k_QuadSeeds[incident[v].ids[0] - 1], k_QuadSeeds[incident[v].ids[1] - 1], k_QuadSeeds[incident[v].ids[2] - 1])) < k_TolLine);
       tripleNodes++;
     }
-    else if(nodeType[v] == node_type::QuadPoint && incident[v].count == 4)
+    else if(nodeType[v] == node_type::k_QuadPoint && incident[v].count == 4)
     {
       // Interior quad points are held fixed by the filter and must sit at the analytic point where all four cells meet.
       const F64Vec3Type q = QuadPoint(k_QuadSeeds[incident[v].ids[0] - 1], k_QuadSeeds[incident[v].ids[1] - 1], k_QuadSeeds[incident[v].ids[2] - 1], k_QuadSeeds[incident[v].ids[3] - 1]);
@@ -352,23 +352,23 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Quad junction", "[SimplnxCore]
   REQUIRE(tripleNodes > 0);
   REQUIRE(quadJunctionNodes > 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Bicrystal planar boundary", "[SimplnxCore][HierarchicalSmoothFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   MeshPaths paths = BuildVoronoiMesh(dataStructure, k_GridDims, k_BicrystalSeeds);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(paths.triangle_geom));
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(paths.triangle_geom);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(paths.face_labels));
-  const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(paths.face_labels);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(paths.node_type));
-  const auto& nodeType = dataStructure.getDataRefAs<Int8Array>(paths.node_type);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(paths.vertices));
-  auto& vertices = dataStructure.getDataRefAs<Float32Array>(paths.vertices); // smoothed in place below
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(paths.face_labels));
+  const auto& faceLabels = dataStructure.getDataRefAs<Int32ArrayType>(paths.face_labels);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(paths.node_type));
+  const auto& nodeType = dataStructure.getDataRefAs<Int8ArrayType>(paths.node_type);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(paths.vertices));
+  auto& vertices = dataStructure.getDataRefAs<Float32ArrayType>(paths.vertices); // smoothed in place below
   const std::vector<IncidentGrains> incident = BuildIncidentGrains(triangleGeom, faceLabels);
   const usize numVertices = triangleGeom.getNumberOfVertices();
 
@@ -383,7 +383,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Bicrystal planar boundary", "[
     {
       sawQuad = true;
     }
-    if(nodeType[v] == node_type::Default && incident[v].count == 2)
+    if(nodeType[v] == node_type::k_Default && incident[v].count == 2)
     {
       const Plane plane = BisectorPlane(k_BicrystalSeeds[incident[v].ids[0] - 1], k_BicrystalSeeds[incident[v].ids[1] - 1]);
       sumBefore += DistanceToPlane(VertexCoord(vertices, v), plane);
@@ -399,7 +399,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Bicrystal planar boundary", "[
   usize n = 0;
   for(usize v = 0; v < numVertices; v++)
   {
-    if(nodeType[v] != node_type::Default || incident[v].count != 2)
+    if(nodeType[v] != node_type::k_Default || incident[v].count != 2)
     {
       continue;
     }
@@ -416,12 +416,12 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Bicrystal planar boundary", "[
   REQUIRE_FALSE(sawQuad);
   REQUIRE(sumAfter <= k_MaxErrorRatio * sumBefore);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Displacement rejection", "[SimplnxCore][HierarchicalSmoothFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // buildVoronoiMesh is deterministic, so an identical control mesh has the same vertex indices.
   // Choose the interior node farthest from the analytic plane (it will move the most when smoothed).
@@ -429,12 +429,12 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Displacement rejection", "[Sim
   MeshPaths controlPaths = BuildVoronoiMesh(controlDs, k_GridDims, k_BicrystalSeeds);
   REQUIRE_NOTHROW(controlDs.getDataRefAs<TriangleGeom>(controlPaths.triangle_geom));
   const auto& controlGeom = controlDs.getDataRefAs<TriangleGeom>(controlPaths.triangle_geom);
-  REQUIRE_NOTHROW(controlDs.getDataRefAs<Int32Array>(controlPaths.face_labels));
-  const auto& controlFaceLabels = controlDs.getDataRefAs<Int32Array>(controlPaths.face_labels);
-  REQUIRE_NOTHROW(controlDs.getDataRefAs<Int8Array>(controlPaths.node_type));
-  const auto& controlNodeType = controlDs.getDataRefAs<Int8Array>(controlPaths.node_type);
-  REQUIRE_NOTHROW(controlDs.getDataRefAs<Float32Array>(controlPaths.vertices));
-  auto& controlVerts = controlDs.getDataRefAs<Float32Array>(controlPaths.vertices);
+  REQUIRE_NOTHROW(controlDs.getDataRefAs<Int32ArrayType>(controlPaths.face_labels));
+  const auto& controlFaceLabels = controlDs.getDataRefAs<Int32ArrayType>(controlPaths.face_labels);
+  REQUIRE_NOTHROW(controlDs.getDataRefAs<Int8ArrayType>(controlPaths.node_type));
+  const auto& controlNodeType = controlDs.getDataRefAs<Int8ArrayType>(controlPaths.node_type);
+  REQUIRE_NOTHROW(controlDs.getDataRefAs<Float32ArrayType>(controlPaths.vertices));
+  auto& controlVerts = controlDs.getDataRefAs<Float32ArrayType>(controlPaths.vertices);
   const std::vector<IncidentGrains> incident = BuildIncidentGrains(controlGeom, controlFaceLabels);
 
   const usize numVertices = controlGeom.getNumberOfVertices();
@@ -442,7 +442,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Displacement rejection", "[Sim
   float64 worstDist = -1.0;
   for(usize v = 0; v < numVertices; v++)
   {
-    if(controlNodeType[v] != node_type::Default || incident[v].count != 2)
+    if(controlNodeType[v] != node_type::k_Default || incident[v].count != 2)
     {
       continue;
     }
@@ -466,8 +466,8 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Displacement rejection", "[Sim
   // displacement exceeds the error threshold, so the filter resets it to this injected position.
   DataStructure dataStructure;
   MeshPaths paths = BuildVoronoiMesh(dataStructure, k_GridDims, k_BicrystalSeeds);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(paths.vertices));
-  auto& verts = dataStructure.getDataRefAs<Float32Array>(paths.vertices);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(paths.vertices));
+  auto& verts = dataStructure.getDataRefAs<Float32ArrayType>(paths.vertices);
   const std::array<float32, 3> injected = {verts[target * 3] + 25.0f, verts[target * 3 + 1] + 25.0f, verts[target * 3 + 2] + 25.0f};
   verts[target * 3] = injected[0];
   verts[target * 3 + 1] = injected[1];
@@ -479,12 +479,12 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Displacement rejection", "[Sim
   REQUIRE(verts[target * 3 + 1] == Approx(injected[1]));
   REQUIRE(verts[target * 3 + 2] == Approx(injected[2]));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Idempotency", "[SimplnxCore][HierarchicalSmoothFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Two independent meshes (buildVoronoiMesh is deterministic, so they are identical): one smoothed
   // once, one smoothed twice. Comparing them streams element-wise from both live arrays, avoiding a
@@ -500,10 +500,10 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Idempotency", "[SimplnxCore][H
 
   REQUIRE_NOTHROW(onceDs.getDataRefAs<TriangleGeom>(oncePaths.triangle_geom));
   const auto& onceGeom = onceDs.getDataRefAs<TriangleGeom>(oncePaths.triangle_geom);
-  REQUIRE_NOTHROW(onceDs.getDataRefAs<Float32Array>(oncePaths.vertices));
-  const auto& onceVerts = onceDs.getDataRefAs<Float32Array>(oncePaths.vertices);
-  REQUIRE_NOTHROW(twiceDs.getDataRefAs<Float32Array>(twicePaths.vertices));
-  const auto& twiceVerts = twiceDs.getDataRefAs<Float32Array>(twicePaths.vertices);
+  REQUIRE_NOTHROW(onceDs.getDataRefAs<Float32ArrayType>(oncePaths.vertices));
+  const auto& onceVerts = onceDs.getDataRefAs<Float32ArrayType>(oncePaths.vertices);
+  REQUIRE_NOTHROW(twiceDs.getDataRefAs<Float32ArrayType>(twicePaths.vertices));
+  const auto& twiceVerts = twiceDs.getDataRefAs<Float32ArrayType>(twicePaths.vertices);
   REQUIRE(onceVerts.getNumberOfTuples() == twiceVerts.getNumberOfTuples());
 
   float64 maxDisp = 0.0;
@@ -519,5 +519,5 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Idempotency", "[SimplnxCore][H
   constexpr float64 k_TolIdempotent = 0.5;
   REQUIRE(maxDisp < k_TolIdempotent);
 
-  UnitTest::CheckArraysInheritTupleDims(twiceDs);
+  unit_test::CheckArraysInheritTupleDims(twiceDs);
 }

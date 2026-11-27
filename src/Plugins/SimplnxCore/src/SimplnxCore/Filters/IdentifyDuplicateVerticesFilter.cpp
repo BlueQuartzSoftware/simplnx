@@ -97,8 +97,8 @@ Result<> IdentifyDuplicateVerticesFilter::executeImpl(DataStructure& dataStructu
 {
   IdentifyDuplicateVerticesInputValues inputValues;
 
-  inputValues.TargetGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputGeomPath_Key);
-  inputValues.DuplicatesMaskPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_DuplicateMaskPath_Key);
+  inputValues.target_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputGeomPath_Key);
+  inputValues.duplicates_mask_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_DuplicateMaskPath_Key);
 
   return IdentifyDuplicateVertices(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

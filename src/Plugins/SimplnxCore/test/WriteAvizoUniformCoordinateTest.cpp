@@ -30,11 +30,11 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
-DataPath CreateUniformWriterInput(DataStructure& dataStructure, const SizeVec3& dims, const std::vector<int32>& labels)
+DataPath CreateUniformWriterInput(DataStructure& dataStructure, const SizeVec3Type& dims, const std::vector<int32>& labels)
 {
   auto* geometryPtr = ImageGeom::Create(dataStructure, "Image");
   REQUIRE(geometryPtr != nullptr);
@@ -46,7 +46,7 @@ DataPath CreateUniformWriterInput(DataStructure& dataStructure, const SizeVec3& 
   REQUIRE(cellsPtr != nullptr);
   geometryPtr->setCellData(cellsPtr->getId());
   const DataPath labelsPath({"Image", "Cells", "Labels"});
-  auto* arrayPtr = Int32Array::Create(dataStructure, "Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, labelsPath, shape, {1}), cellsPtr->getId());
+  auto* arrayPtr = Int32ArrayType::Create(dataStructure, "Labels", data_store_utilities::CreateDataStore<int32>(dataStructure, labelsPath, shape, {1}), cellsPtr->getId());
   REQUIRE(arrayPtr != nullptr);
   REQUIRE(labels.size() == arrayPtr->getNumberOfTuples());
   auto writeResult = arrayPtr->getDataStoreRef().copyFromBuffer(0, labels);
@@ -65,7 +65,7 @@ std::string WriteUniformFile(DataStructure& dataStructure, const DataPath& label
   args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(labelsPath));
   args.insertOrAssign(WriteAvizoUniformCoordinateFilter::k_Units_Key, std::make_any<std::string>("microns"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   std::ifstream file(path, std::ios::binary);
@@ -96,7 +96,7 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Tiny spacing bounds r
   const bool binary = GENERATE(false, true);
   CAPTURE(binary);
   DataStructure dataStructure;
-  const SizeVec3 dims = {3, 2, 1};
+  const SizeVec3Type dims = {3, 2, 1};
   const DataPath labelsPath = CreateUniformWriterInput(dataStructure, dims, {101, 102, 103, 104, 105, 106});
   auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(imageGeomPtr != nullptr);
@@ -126,7 +126,7 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Tiny spacing bounds r
       REQUIRE(value == expected);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoUniformCoordinateFilter]")
@@ -211,7 +211,7 @@ Lattice { int FeatureIds } = @1
   {
     WARN("The explicit little-endian byte comparison is skipped on a big-endian platform.");
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Preserve every value across transfer blocks", "[SimplnxCore][WriteAvizoUniformCoordinateFilter]")
@@ -302,13 +302,13 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Preserve every value 
     CHECK(lineCount == 3572);
     CHECK(valueCount == k_Count);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteAvizoUniformCoordinateFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -349,7 +349,7 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: SIMPL Backwards Compa
 
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Geometry cell tuple count", "[SimplnxCore][WriteAvizoUniformCoordinateFilter][TupleCount]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FilterType = WriteAvizoUniformCoordinateFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -378,13 +378,13 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Geometry cell tuple c
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -5835);
     const DataPath& expectedPath = inputPath;
     const usize expectedTuples = tuples;
@@ -396,13 +396,13 @@ TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Geometry cell tuple c
 
 TEST_CASE("SimplnxCore::WriteAvizoUniformCoordinateFilter: Source read failure preserves destination", "[SimplnxCore][WriteAvizoUniformCoordinateFilter][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool writeBinary = GENERATE(false, true);
   const bool existingDestination = GENERATE(false, true);
   const bool throwAllocation = GENERATE(false, true);
   DYNAMIC_SECTION("binary=" << writeBinary << ", existing destination=" << existingDestination << ", allocation failure=" << throwAllocation)
   {
-    auto store = std::make_shared<UnitTest::AvizoWriterFailure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
-    UnitTest::AvizoWriterFailure::CheckSecondBlockFailure<WriteAvizoUniformCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
+    auto store = std::make_shared<unit_test::avizo_writer_failure::SecondBlockFailureStore<DataStore<int32>>>(ShapeType{1, 1, 65537}, ShapeType{1}, std::optional<int32>{7});
+    unit_test::avizo_writer_failure::CheckSecondBlockFailure<WriteAvizoUniformCoordinateFilter>(writeBinary, existingDestination, store, throwAllocation);
   }
 }

@@ -65,7 +65,7 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SliceRange_Key, "Slice Range", "Type of slice range to use, either Full Range or User Defined Range", 0,
-                                                                    ChoicesParameter::Choices{"Full Range", "User Defined Range"}));
+                                                                    ChoicesParameter::ChoicesType{"Full Range", "User Defined Range"}));
   params.insert(std::make_unique<Float32ParameterType>(k_Zstart_Key, "Slicing Start", "The z axis start value. Only needed for 'User Defined Range'", 0.0f));
   params.insert(std::make_unique<Float32ParameterType>(k_Zend_Key, "Slicing End", "The z axis stop value. Only needed for 'User Defined Range'", 0.0f));
   params.insert(std::make_unique<Float32ParameterType>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
@@ -79,7 +79,7 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Input Region Ids"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_HaveRegionIds_Key, "Have Region Ids", "Whether to supply an id array that propagates to the created edges", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_RegionIdArrayPath_Key, "Region Ids", "Optional identifier array, if Have Region Ids is selected", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Edge Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputEdgeGeometryPath_Key, "Created Edge Geometry", "The name of the created Edge Geometry", DataPath({"Edge Geometry"})));
@@ -143,7 +143,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
 
   // create the edge geometry
   {
-    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
+    auto createGeometryAction = std::make_unique<CreateEdgeGeometryActionType>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
                                                                            EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
@@ -158,7 +158,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
 
   if(pHaveRegionIdsValue)
   {
-    const auto& regionIds = dataStructure.getDataRefAs<Int32Array>(pRegionIdArrayPathValue);
+    const auto& regionIds = dataStructure.getDataRefAs<Int32ArrayType>(pRegionIdArrayPathValue);
     if(regionIds.getNumberOfTuples() != triGeom.getNumberOfFaces())
     {
       return MakePreflightErrorResult(-62104, fmt::format("Region Ids '{}' has {} tuples but the Triangle Geometry '{}' has {} faces. Select a face (triangle) array.",
@@ -177,7 +177,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -186,23 +186,23 @@ Result<> SliceTriangleGeometryFilter::executeImpl(DataStructure& dataStructure, 
 {
   SliceTriangleGeometryInputValues inputValues;
 
-  inputValues.SliceRange = filterArgs.value<ChoicesParameter::ValueType>(k_SliceRange_Key);
-  inputValues.Zstart = filterArgs.value<float32>(k_Zstart_Key);
-  inputValues.Zend = filterArgs.value<float32>(k_Zend_Key);
-  inputValues.SliceResolution = filterArgs.value<float32>(k_SliceResolution_Key);
-  inputValues.HaveRegionIds = filterArgs.value<bool>(k_HaveRegionIds_Key);
-  inputValues.CADDataContainerName = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
-  inputValues.RegionIdArrayPath = filterArgs.value<DataPath>(k_RegionIdArrayPath_Key);
-  inputValues.SliceDataContainerName = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputEdgeGeometryPath_Key);
-  inputValues.EdgeAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EdgeAttributeMatrixName_Key);
-  inputValues.SliceIdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceIdArrayName_Key);
-  inputValues.SliceAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceAttributeMatrixName_Key);
+  inputValues.slice_range = filterArgs.value<ChoicesParameter::ValueType>(k_SliceRange_Key);
+  inputValues.zstart = filterArgs.value<float32>(k_Zstart_Key);
+  inputValues.zend = filterArgs.value<float32>(k_Zend_Key);
+  inputValues.slice_resolution = filterArgs.value<float32>(k_SliceResolution_Key);
+  inputValues.have_region_ids = filterArgs.value<bool>(k_HaveRegionIds_Key);
+  inputValues.cad_data_container_name = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
+  inputValues.region_id_array_path = filterArgs.value<DataPath>(k_RegionIdArrayPath_Key);
+  inputValues.slice_data_container_name = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputEdgeGeometryPath_Key);
+  inputValues.edge_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_EdgeAttributeMatrixName_Key);
+  inputValues.slice_id_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceIdArrayName_Key);
+  inputValues.slice_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_SliceAttributeMatrixName_Key);
 
   auto result = SliceTriangleGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
-  if(result.valid() && dataStructure.getDataRefAs<TriangleGeom>(inputValues.CADDataContainerName).getNumberOfFaces() == 0)
+  if(result.valid() && dataStructure.getDataRefAs<TriangleGeom>(inputValues.cad_data_container_name).getNumberOfFaces() == 0)
   {
     result.warnings().push_back(
-        Warning{.code = -62105, .message = fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.CADDataContainerName.toString())});
+        Warning{.code = -62105, .message = fmt::format("The Triangle Geometry '{}' has no triangles, so there is nothing to slice.", inputValues.cad_data_container_name.toString())});
   }
   return result;
 }

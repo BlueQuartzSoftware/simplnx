@@ -19,11 +19,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumberInputValues
 {
-  int32 CoordinationNumber{};
-  bool Loop{};
-  DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-  DataPath InputImageGeometry;
+  int32 coordination_number{};
+  bool loop{};
+  DataPath feature_ids_array_path;
+  MultiArraySelectionParameter::ValueType ignored_data_array_paths;
+  DataPath input_image_geometry;
 };
 
 /**

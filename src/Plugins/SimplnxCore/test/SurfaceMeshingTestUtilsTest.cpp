@@ -16,15 +16,15 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
 {
   SECTION("CreateCylinderInBox inset builds the expected volume")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(false);
+    DataStructure dataStructure = surface_meshing_test::CreateCylinderInBox(false);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"})));
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"}));
-    REQUIRE(imageGeom.getDimensions() == SizeVec3{12, 12, 12});
+    REQUIRE(imageGeom.getDimensions() == SizeVec3Type{12, 12, 12});
 
     const DataPath featureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath).getDataStoreRef();
 
     // Every voxel in the z == 0 plane is background when inset.
     for(usize y = 0; y < 12; y++)
@@ -37,20 +37,20 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     // The cylinder axis voxel is Feature 1 at z == 4.
     REQUIRE(featureIdsRef[(4 * 12 * 12) + (6 * 12) + 6] == 1);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("CreateCylinderInBox flush touches the z == 0 plane")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateCylinderInBox(true);
+    DataStructure dataStructure = surface_meshing_test::CreateCylinderInBox(true);
     const DataPath featureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
-    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath).getDataStoreRef();
 
     REQUIRE(featureIdsRef[(0 * 12 * 12) + (6 * 12) + 6] == 1);
     // Still inset from the x/y walls.
     REQUIRE(featureIdsRef[(0 * 12 * 12) + (6 * 12) + 0] == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("IsWatertight rejects an open mesh and accepts a closed one")
@@ -58,7 +58,7 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     // A single triangle: 3 edges, each used once -> not watertight.
     DataStructure dataStructure;
     auto* openGeomPtr = TriangleGeom::Create(dataStructure, "OpenTri");
-    auto* openVertsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {3}, {3}, openGeomPtr->getId());
+    auto* openVertsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {3}, {3}, openGeomPtr->getId());
     openGeomPtr->setVertices(*openVertsPtr);
     auto* openFacesPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Faces", {1}, {3}, openGeomPtr->getId());
     openGeomPtr->setFaceList(*openFacesPtr);
@@ -74,11 +74,11 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     openFacesRef[1] = 1;
     openFacesRef[2] = 2;
 
-    REQUIRE_FALSE(SurfaceMeshingTest::IsWatertight(*openGeomPtr));
+    REQUIRE_FALSE(surface_meshing_test::IsWatertight(*openGeomPtr));
 
     // A tetrahedron: 4 triangles, 6 edges, each used twice -> watertight.
     auto* closedGeomPtr = TriangleGeom::Create(dataStructure, "ClosedTet");
-    auto* closedVertsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {4}, {3}, closedGeomPtr->getId());
+    auto* closedVertsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {4}, {3}, closedGeomPtr->getId());
     closedGeomPtr->setVertices(*closedVertsPtr);
     auto* closedFacesPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "Faces", {4}, {3}, closedGeomPtr->getId());
     closedGeomPtr->setFaceList(*closedFacesPtr);
@@ -96,27 +96,27 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
       closedFacesRef[i] = tetFaces[i];
     }
 
-    REQUIRE(SurfaceMeshingTest::IsWatertight(*closedGeomPtr));
+    REQUIRE(surface_meshing_test::IsWatertight(*closedGeomPtr));
 
-    const auto counts = SurfaceMeshingTest::CountEdgeUses(*closedGeomPtr);
-    REQUIRE(counts.TotalEdges == 6);
-    REQUIRE(counts.EdgesUsedTwice == 6);
-    REQUIRE(counts.EdgesUsedOnce == 0);
+    const auto counts = surface_meshing_test::CountEdgeUses(*closedGeomPtr);
+    REQUIRE(counts.total_edges == 6);
+    REQUIRE(counts.edges_used_twice == 6);
+    REQUIRE(counts.edges_used_once == 0);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("CreateFullyIndexedPolycrystal has no background and eight distinct Features")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
+    DataStructure dataStructure = surface_meshing_test::CreateFullyIndexedPolycrystal();
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"})));
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"}));
-    REQUIRE(imageGeom.getDimensions() == SizeVec3{12, 12, 12});
+    REQUIRE(imageGeom.getDimensions() == SizeVec3Type{12, 12, 12});
 
     const DataPath featureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath).getDataStoreRef();
 
     std::set<int32> distinctFeatures;
     for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
@@ -135,26 +135,26 @@ TEST_CASE("SimplnxCore::SurfaceMeshingTestUtils", "[SimplnxCore][SurfaceMeshingT
     REQUIRE(distinctFeatures.count(7) == 1);
     REQUIRE(distinctFeatures.count(8) == 1);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("CreateAllBackground is entirely Feature Id 0")
   {
-    DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
+    DataStructure dataStructure = surface_meshing_test::CreateAllBackground();
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"})));
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeom"}));
-    REQUIRE(imageGeom.getDimensions() == SizeVec3{12, 12, 12});
+    REQUIRE(imageGeom.getDimensions() == SizeVec3Type{12, 12, 12});
 
     const DataPath featureIdsPath({"ImageGeom", "CellData", "FeatureIds"});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+    const auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath).getDataStoreRef();
 
     for(usize i = 0; i < featureIdsRef.getNumberOfTuples(); i++)
     {
       REQUIRE(featureIdsRef[i] == 0);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }

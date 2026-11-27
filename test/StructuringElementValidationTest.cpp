@@ -236,7 +236,7 @@ TEST_CASE("simplnx::MorphologyLayout: Representation boundaries", "[simplnx][Str
   constexpr usize k_SignedMax = static_cast<usize>(std::numeric_limits<int64>::max());
   struct LayoutCase
   {
-    SizeVec3 dims;
+    SizeVec3Type dims;
     std::array<uint32, 3> radius;
     bool safe_border;
     usize bytes;
@@ -260,7 +260,7 @@ TEST_CASE("simplnx::MorphologyLayout: Representation boundaries", "[simplnx][Str
   }
   for(const usize axis : std::array<usize, 2>{0, 1})
   {
-    SizeVec3 dims = {1, 1, 1};
+    SizeVec3Type dims = {1, 1, 1};
     std::array<uint32, 3> radius = {0, 0, 0};
     dims[axis] = k_SignedMax - 3;
     radius[axis] = 2;
@@ -291,14 +291,14 @@ TEST_CASE("simplnx::MorphologyLayout: Packed word endpoint", "[simplnx][Structur
   REQUIRE(ImageProcessing::detail::MorphologyPackedWordEnd(0, 3) == 3);
   REQUIRE(ImageProcessing::detail::MorphologyPackedWordEnd(-10, 3) == 3);
   REQUIRE(ImageProcessing::detail::MorphologyPackedWordEnd(-70, 3) == -6);
-  const std::array<ImageProcessing::detail::BinaryMorphWord, 1> word = {5};
+  const std::array<ImageProcessing::detail::BinaryMorphWordType, 1> word = {5};
   ImageProcessing::detail::PackedBinaryPlanesView view;
   view.words = word.data();
-  view.zLo = 0;
+  view.z_lo = 0;
   view.depth = 1;
   view.capacity = 1;
-  view.layout.wordsPerRow = 1;
-  view.layout.planeWords = 1;
+  view.layout.words_per_row = 1;
+  view.layout.plane_words = 1;
   REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(view, {3, 1, 1}, 0, 0, 0, false) == 5);
   REQUIRE(ImageProcessing::detail::ExtractPackedBinaryWord(view, {3, 1, 1}, k_SignedMax - 8, 0, 0, false) == 0);
 }
@@ -307,13 +307,13 @@ TEST_CASE("simplnx::MorphologyLayout: Direct engine guards", "[simplnx][Structur
 {
   // Invalid metadata must return before dispatch, reading values, or allocating scratch.
   DataStructure dataStructure;
-  auto* inputPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Input", {1}, {1});
-  auto* outputPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Output", {1}, {1});
+  auto* inputPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Input", {1}, {1});
+  auto* outputPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Output", {1}, {1});
   REQUIRE(inputPtr != nullptr);
   REQUIRE(outputPtr != nullptr);
   const auto& in = inputPtr->getDataStoreRef();
   auto& out = outputPtr->getDataStoreRef();
-  const SizeVec3 dims = {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1};
+  const SizeVec3Type dims = {static_cast<usize>(std::numeric_limits<int64>::max()) - 2, 1, 1};
   const auto se = MakeStructuringElement(KernelType::Box, {2, 0, 0});
   const auto box = ImageProcessing::detail::MakeFullBoxNeighborOffsets();
   const std::atomic_bool cancel = false;

@@ -77,8 +77,8 @@ std::vector<uint8> WritePng(const fs::path& path)
   ImageMetadata metadata;
   metadata.width = k_Width;
   metadata.height = k_Height;
-  metadata.numComponents = k_NumComponents;
-  metadata.dataType = DataType::uint8;
+  metadata.num_components = k_NumComponents;
+  metadata.data_type = DataType::uint8;
 
   StbImageIO imageIO;
   const auto result = imageIO.writePixelData(path, pixels, metadata);

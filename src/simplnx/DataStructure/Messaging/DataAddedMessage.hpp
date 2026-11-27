@@ -20,7 +20,7 @@ namespace nx::core
 class SIMPLNX_EXPORT DataAddedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const MessageType MsgType = 1;
+  static const MessageType k_MsgType = 1;
 
   /**
    * @brief Creates a DataAddedMessage for the target DataStructure and DataObject ID.

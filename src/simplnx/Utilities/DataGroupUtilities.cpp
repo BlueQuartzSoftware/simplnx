@@ -77,28 +77,28 @@ void AppendCopyDataObjectAction(const DataStructure& dataStructure, OutputAction
 FeatureRenumbering ComputeFeatureRenumbering(const std::vector<bool>& activeObjects)
 {
   FeatureRenumbering result;
-  result.newNames.assign(activeObjects.size(), 0);
-  result.keepList.reserve(activeObjects.size());
+  result.new_names.assign(activeObjects.size(), 0);
+  result.keep_list.reserve(activeObjects.size());
 
   size_t goodCount = 1;
   for(size_t i = 1; i < activeObjects.size(); i++)
   {
     if(activeObjects[i])
     {
-      result.newNames[i] = goodCount;
+      result.new_names[i] = goodCount;
       goodCount++;
-      result.keepList.push_back(i);
+      result.keep_list.push_back(i);
     }
     else
     {
-      result.newNames[i] = 0;
-      result.anyRemoved = true;
+      result.new_names[i] = 0;
+      result.any_removed = true;
     }
   }
   return result;
 }
 
-Result<> RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
+Result<> RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStoreType& cellFeatureIds,
                                size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, bool cellFeatureIdsRenumbered)
 {
   const auto* featureLevelBaseGroupPtr = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
@@ -131,11 +131,11 @@ Result<> RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& fea
     // Use one mapping for the feature arrays and the optional cell-ID pass.
     // A fused caller can apply this mapping before it calls this function.
     const FeatureRenumbering renumbering = ComputeFeatureRenumbering(activeObjects);
-    const std::vector<size_t>& newNames = renumbering.newNames;
-    const std::vector<size_t>& keepList = renumbering.keepList;
+    const std::vector<size_t>& newNames = renumbering.new_names;
+    const std::vector<size_t>& keepList = renumbering.keep_list;
 
     std::vector<usize> newShape = {keepList.size() + 1};
-    if(renumbering.anyRemoved)
+    if(renumbering.any_removed)
     {
       for(const auto& dataArray : matchingDataArrayPtrs)
       {

@@ -168,13 +168,13 @@ ComputeSurfaceFeaturesScanline::ComputeSurfaceFeaturesScanline(DataStructure& da
 
 Result<> ComputeSurfaceFeaturesScanline::operator()()
 {
-  const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;
-  const auto pFeatureGeometryPathValue = m_InputValues->InputImageGeometryPath;
-  const auto pFeatureIdsArrayPathValue = m_InputValues->FeatureIdsPath;
-  const auto pFeaturesAttributeMatrixPathValue = m_InputValues->FeatureAttributeMatrixPath;
-  const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(m_InputValues->SurfaceFeaturesArrayName);
+  const auto pMarkFeature0NeighborsValue = m_InputValues->mark_feature0_neighbors;
+  const auto pFeatureGeometryPathValue = m_InputValues->input_image_geometry_path;
+  const auto pFeatureIdsArrayPathValue = m_InputValues->feature_ids_path;
+  const auto pFeaturesAttributeMatrixPathValue = m_InputValues->feature_attribute_matrix_path;
+  const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(m_InputValues->surface_features_array_name);
 
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
@@ -182,8 +182,8 @@ Result<> ComputeSurfaceFeaturesScanline::operator()()
   }
 
   const auto& featureGeometry = m_DataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
-  auto& surfaceFeatures = m_DataStructure.getDataAs<UInt8Array>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
+  auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue)->getDataStoreRef();
+  auto& surfaceFeatures = m_DataStructure.getDataAs<UInt8ArrayType>(pSurfaceFeaturesArrayPathValue)->getDataStoreRef();
 
   // The inner loop indexes labels by Feature Id, so a local cache prevents
   // repeated random output-store access.

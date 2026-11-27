@@ -20,7 +20,7 @@ namespace detail
 {
 inline constexpr StringLiteralType k_LessThan = "< [Less Than]";                             ///< Selects replacement below the threshold.
 inline constexpr StringLiteralType k_GreaterThan = "> [Greater Than]";                       ///< Selects replacement above the threshold.
-inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan}; ///< Defines the filter choice order.
+inline const ChoicesParameter::ChoicesType k_OperationChoices = {k_LessThan, k_GreaterThan}; ///< Defines the filter choice order.
 } // namespace detail
 
 /**
@@ -29,11 +29,11 @@ inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_Great
  */
 struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
 {
-  float32 MinConfidence{};
-  ChoicesParameter::ValueType SelectedComparison{};
-  bool Loop{};
-  DataPath InputArrayPath;
-  DataPath SelectedImageGeometryPath;
+  float32 min_confidence{};
+  ChoicesParameter::ValueType selected_comparison{};
+  bool loop{};
+  DataPath input_array_path;
+  DataPath selected_image_geometry_path;
 };
 
 /**

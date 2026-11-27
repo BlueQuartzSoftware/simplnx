@@ -101,7 +101,7 @@ struct RankAndFlagFunctor
     std::vector<usize> order(numFeatures);
     std::iota(order.begin(), order.end(), 0);
 
-    const bool descending = (inputValues->RankFrom == to_underlying(RankDirection::Largest));
+    const bool descending = (inputValues->rank_from == to_underlying(RankDirection::Largest));
     std::sort(order.begin(), order.end(), [&values, descending](usize lhs, usize rhs) {
       if(values[lhs] != values[rhs])
       {
@@ -111,13 +111,13 @@ struct RankAndFlagFunctor
     });
 
     usize selectedCount = 0;
-    if(inputValues->Criterion == to_underlying(RankCriterion::FeatureCount))
+    if(inputValues->criterion == to_underlying(RankCriterion::FeatureCount))
     {
-      selectedCount = std::min(static_cast<usize>(inputValues->NumFeatures), numFeatures);
+      selectedCount = std::min(static_cast<usize>(inputValues->num_features), numFeatures);
     }
-    else if(inputValues->Criterion == to_underlying(RankCriterion::PercentOfCount))
+    else if(inputValues->criterion == to_underlying(RankCriterion::PercentOfCount))
     {
-      selectedCount = static_cast<usize>(std::llround(inputValues->Percent / 100.0 * static_cast<float64>(numFeatures)));
+      selectedCount = static_cast<usize>(std::llround(inputValues->percent / 100.0 * static_cast<float64>(numFeatures)));
       // Never round down to selecting nothing; a small percentage still means "a few".
       selectedCount = std::max(static_cast<usize>(1), std::min(selectedCount, numFeatures));
     }
@@ -152,7 +152,7 @@ struct RankAndFlagFunctor
 
       // Accumulate in rank order and include the feature that crosses the target, so any percentage
       // above zero selects at least one feature and the selection always reaches the target.
-      const float64 target = inputValues->Percent / 100.0 * total;
+      const float64 target = inputValues->percent / 100.0 * total;
       float64 runningSum = 0.0;
       while(selectedCount < numFeatures && runningSum < target)
       {
@@ -176,7 +176,7 @@ struct RankAndFlagFunctor
     // 'true' means flagged for removal. Under Keep, the selected features survive and everything
     // else is flagged; under Remove it is the other way around. Both fall out of the polarity here,
     // so there is no per-combination branching.
-    const bool keep = (inputValues->Operation == to_underlying(RankOperation::Keep));
+    const bool keep = (inputValues->operation == to_underlying(RankOperation::Keep));
     flags.assign(numTuples, keep);
     for(usize i = 0; i < selectedCount; i++)
     {
@@ -220,7 +220,7 @@ const std::atomic_bool& KeepRemoveRankedFeatures::getCancel()
 // -----------------------------------------------------------------------------
 Result<> KeepRemoveRankedFeatures::operator()()
 {
-  const auto& rankingArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->RankingArrayPath);
+  const auto& rankingArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ranking_array_path);
 
   std::vector<bool> flags;
   std::string summary;
@@ -245,14 +245,14 @@ Result<> KeepRemoveRankedFeatures::operator()()
   // flagged true" is the kind that gets confirmed without actually being checked.
   m_MessageHandler.sendInfoMessage(summary);
 
-  FeatureRemovalUtilities::RemovalArgs removalArgs;
-  removalArgs.ImageGeometryPath = m_InputValues->ImageGeometryPath;
-  removalArgs.FeatureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
-  removalArgs.FeatureAttributeMatrixPath = m_InputValues->RankingArrayPath.getParent();
-  removalArgs.IgnoredDataArrayPaths = m_InputValues->IgnoredDataArrayPaths;
-  removalArgs.FillRemovedFeatures = m_InputValues->FillRemovedFeatures;
+  feature_removal_utilities::RemovalArgs removalArgs;
+  removalArgs.image_geometry_path = m_InputValues->image_geometry_path;
+  removalArgs.feature_ids_array_path = m_InputValues->feature_ids_array_path;
+  removalArgs.feature_attribute_matrix_path = m_InputValues->ranking_array_path.getParent();
+  removalArgs.ignored_data_array_paths = m_InputValues->ignored_data_array_paths;
+  removalArgs.fill_removed_features = m_InputValues->fill_removed_features;
 
-  Result<> result = FeatureRemovalUtilities::removeFlaggedFeatures(m_DataStructure, flags, removalArgs, m_MessageHandler, m_ShouldCancel);
+  Result<> result = feature_removal_utilities::RemoveFlaggedFeatures(m_DataStructure, flags, removalArgs, m_MessageHandler, m_ShouldCancel);
   result.warnings().insert(result.warnings().end(), warnings.cbegin(), warnings.cend());
   return result;
 }

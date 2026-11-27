@@ -103,7 +103,7 @@ IFilter::PreflightResult CreatePythonSkeletonFilter::preflightImpl(const DataStr
   auto namesResult = ParsePythonFilterNames(filterNames);
   if(namesResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(namesResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(namesResult))};
   }
   const auto& filterList = namesResult.value();
 
@@ -168,7 +168,7 @@ IFilter::PreflightResult CreatePythonSkeletonFilter::preflightImpl(const DataStr
   preflightUpdatedValues.push_back({"Generated Plugin File(s):", preflightUpdatedValue.str()});
   preflightUpdatedValues.push_back({"Warning:", "Any Existing Files Will Be Overwritten"});
 
-  return IFilter::PreflightResult{.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return IFilter::PreflightResult{.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -177,16 +177,16 @@ Result<> CreatePythonSkeletonFilter::executeImpl(DataStructure& dataStructure, c
 {
   CreatePythonSkeletonInputValues inputValues;
 
-  inputValues.useExistingPlugin = filterArgs.value<BoolParameter::ValueType>(k_UseExistingPlugin_Key);
-  inputValues.pluginOutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginOutputDirectory_Key);
-  inputValues.pluginHumanName = filterArgs.value<StringParameter::ValueType>(k_PluginHumanName_Key);
-  inputValues.filterNames = filterArgs.value<StringParameter::ValueType>(k_PluginFilterNames);
-  inputValues.pluginInputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginInputDirectory_Key);
-  inputValues.pluginName = filterArgs.value<StringParameter::ValueType>(k_PluginName_Key);
-  if(inputValues.useExistingPlugin)
+  inputValues.use_existing_plugin = filterArgs.value<BoolParameter::ValueType>(k_UseExistingPlugin_Key);
+  inputValues.plugin_output_dir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginOutputDirectory_Key);
+  inputValues.plugin_human_name = filterArgs.value<StringParameter::ValueType>(k_PluginHumanName_Key);
+  inputValues.filter_names = filterArgs.value<StringParameter::ValueType>(k_PluginFilterNames);
+  inputValues.plugin_input_dir = filterArgs.value<FileSystemPathParameter::ValueType>(k_PluginInputDirectory_Key);
+  inputValues.plugin_name = filterArgs.value<StringParameter::ValueType>(k_PluginName_Key);
+  if(inputValues.use_existing_plugin)
   {
-    inputValues.pluginName = inputValues.pluginInputDir.filename().string();
-    inputValues.pluginInputDir = inputValues.pluginInputDir.append("src").append(inputValues.pluginName);
+    inputValues.plugin_name = inputValues.plugin_input_dir.filename().string();
+    inputValues.plugin_input_dir = inputValues.plugin_input_dir.append("src").append(inputValues.plugin_name);
   }
 
   return CreatePythonSkeleton(dataStructure, messageHandler, shouldCancel, &inputValues)();

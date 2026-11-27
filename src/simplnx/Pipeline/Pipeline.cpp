@@ -187,7 +187,7 @@ bool Pipeline::preflight(DataStructure& dataStructure, const std::atomic_bool& s
 
 bool Pipeline::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflight(dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
@@ -197,7 +197,7 @@ bool Pipeline::execute(const std::atomic_bool& shouldCancel)
   return execute(dataStructure, shouldCancel);
 }
 
-bool Pipeline::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   m_MemoryRequired = 0;
   return preflightFrom(0, dataStructure, renamedPaths, shouldCancel, allowRenaming);
@@ -223,11 +223,11 @@ bool Pipeline::canPreflightFrom(index_type index) const
 
 bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflightFrom(index, dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
-bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   if(!canPreflightFrom(index))
   {
@@ -256,7 +256,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
       break;
     }
     startObservingNode(iter->get());
-    PipelineFilter::RenamedPaths renamedPathsRef;
+    PipelineFilter::RenamedPathsType renamedPathsRef;
     bool succeeded = nodePtr->preflight(dataStructure, renamedPathsRef, shouldCancel, allowRenaming);
     stopObservingNode();
     m_MemoryRequired = std::max(m_MemoryRequired, dataStructure.memoryUsage());
@@ -282,11 +282,11 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
 
 bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& /*shouldCancel*/)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflightFrom(index, renamedPaths);
 }
 
-bool Pipeline::preflightFrom(index_type index, RenamedPaths& /*renamedPaths*/, const std::atomic_bool& shouldCancel)
+bool Pipeline::preflightFrom(index_type index, RenamedPathsType& /*renamedPaths*/, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {
@@ -374,7 +374,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
   }
 
   // checkDataStructureSize(dataStructure);
-  ErrorCollection snapshotErrors;
+  ErrorCollectionType snapshotErrors;
   try
   {
     setDataStructure(dataStructure);

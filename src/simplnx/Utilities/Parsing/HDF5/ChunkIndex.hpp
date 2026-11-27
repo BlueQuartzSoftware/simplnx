@@ -20,7 +20,7 @@ namespace nx::core::hdf5
  * @return Position in row-major order, with the last dimension fastest.
  * @pre All dimensions are nonzero. For a nonempty shape, flatIndex is in range.
  */
-inline std::vector<uint64> flatToNd(uint64 flatIndex, const std::vector<uint64>& shape)
+inline std::vector<uint64> FlatToNd(uint64 flatIndex, const std::vector<uint64>& shape)
 {
   std::vector<uint64> position(shape.size());
   for(uint64 d = shape.size(); d > 0; --d)
@@ -39,7 +39,7 @@ inline std::vector<uint64> flatToNd(uint64 flatIndex, const std::vector<uint64>&
  * @return Flat index in row-major order, with the last dimension fastest.
  * @pre position and shape have equal size. Coordinates are in range and arithmetic fits uint64.
  */
-inline uint64 ndToFlat(const std::vector<uint64>& position, const std::vector<uint64>& shape)
+inline uint64 NdToFlat(const std::vector<uint64>& position, const std::vector<uint64>& shape)
 {
   uint64 flat = 0;
   uint64 stride = 1;
@@ -59,7 +59,7 @@ inline uint64 ndToFlat(const std::vector<uint64>& position, const std::vector<ui
  * @return Zero-based chunk coordinate.
  * @pre position and chunkShape have equal size, and all chunk dimensions are nonzero.
  */
-inline std::vector<uint64> positionToChunkNd(const std::vector<uint64>& position, const std::vector<uint64>& chunkShape)
+inline std::vector<uint64> PositionToChunkNd(const std::vector<uint64>& position, const std::vector<uint64>& chunkShape)
 {
   std::vector<uint64> chunkNd(position.size());
   for(uint64 d = 0; d < position.size(); ++d)
@@ -76,9 +76,9 @@ inline std::vector<uint64> positionToChunkNd(const std::vector<uint64>& position
  * @return Row-major flat chunk index.
  * @pre Inputs satisfy ndToFlat() preconditions.
  */
-inline uint64 chunkNdToFlat(const std::vector<uint64>& chunkNd, const std::vector<uint64>& chunksPerDim)
+inline uint64 ChunkNdToFlat(const std::vector<uint64>& chunkNd, const std::vector<uint64>& chunksPerDim)
 {
-  return ndToFlat(chunkNd, chunksPerDim);
+  return NdToFlat(chunkNd, chunksPerDim);
 }
 
 /**
@@ -88,7 +88,7 @@ inline uint64 chunkNdToFlat(const std::vector<uint64>& chunkNd, const std::vecto
  * @return Ceiling of tupleShape divided by chunkShape in each dimension.
  * @pre Inputs have equal size, chunk dimensions are nonzero, and additions fit uint64.
  */
-inline std::vector<uint64> getChunksPerDimension(const std::vector<uint64>& tupleShape, const std::vector<uint64>& chunkShape)
+inline std::vector<uint64> GetChunksPerDimension(const std::vector<uint64>& tupleShape, const std::vector<uint64>& chunkShape)
 {
   std::vector<uint64> chunksPerDim(tupleShape.size());
   for(uint64 d = 0; d < tupleShape.size(); ++d)
@@ -105,9 +105,9 @@ inline std::vector<uint64> getChunksPerDimension(const std::vector<uint64>& tupl
  * @return Product of per-dimension chunk counts. Empty shapes return one.
  * @pre Inputs satisfy getChunksPerDimension() preconditions, and the product fits uint64.
  */
-inline uint64 getNumberOfChunks(const std::vector<uint64>& tupleShape, const std::vector<uint64>& chunkShape)
+inline uint64 GetNumberOfChunks(const std::vector<uint64>& tupleShape, const std::vector<uint64>& chunkShape)
 {
-  auto chunksPerDim = getChunksPerDimension(tupleShape, chunkShape);
+  auto chunksPerDim = GetChunksPerDimension(tupleShape, chunkShape);
   uint64 total = 1;
   for(uint64 d : chunksPerDim)
   {
@@ -124,10 +124,10 @@ inline uint64 getNumberOfChunks(const std::vector<uint64>& tupleShape, const std
  * @return Inclusive extent clamped to array bounds for an edge chunk.
  * @pre Shapes have equal size and all nonempty dimensions are nonzero. The index is in range, and arithmetic fits uint64.
  */
-inline Extent getChunkBounds(uint64 flatChunkIndex, const std::vector<uint64>& tupleShape, const std::vector<uint64>& chunkShape)
+inline Extent GetChunkBounds(uint64 flatChunkIndex, const std::vector<uint64>& tupleShape, const std::vector<uint64>& chunkShape)
 {
-  auto chunksPerDim = getChunksPerDimension(tupleShape, chunkShape);
-  auto chunkNd = flatToNd(flatChunkIndex, chunksPerDim);
+  auto chunksPerDim = GetChunksPerDimension(tupleShape, chunkShape);
+  auto chunkNd = FlatToNd(flatChunkIndex, chunksPerDim);
 
   std::vector<uint64> minBounds(tupleShape.size());
   std::vector<uint64> maxBounds(tupleShape.size());

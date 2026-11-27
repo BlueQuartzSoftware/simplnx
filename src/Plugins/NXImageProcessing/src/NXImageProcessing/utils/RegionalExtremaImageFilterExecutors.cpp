@@ -34,7 +34,7 @@ struct ValuedRegionalExtremaExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   RegionalExtremaOp op;
   bool fully_connected;
   const std::atomic_bool& should_cancel;
@@ -62,7 +62,7 @@ struct RegionalExtremaExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   RegionalExtremaOp op;
   bool fully_connected;
   float64 foreground;
@@ -102,7 +102,7 @@ struct RegionalExtremaExecuteFn
 
     // Compute the valued regional extrema into an OOC-inheriting scratch (input type T), then threshold that into
     // the uint32 output: non-extrema (left at the marker value) -> background, extrema (kept value) -> foreground.
-    auto scratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto scratch = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
     if(Result<> r = ApplyValuedRegionalExtrema<T>(inStore, *scratch, dims, op, fully_connected, inArray, outArray, should_cancel, message_handler); r.invalid())
     {
       return r;
@@ -147,7 +147,7 @@ Result<> ExecuteValuedRegionalExtremaImageFilter(DataStructure& dataStructure, c
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   detail::ValuedRegionalExtremaExecuteFn executeFn{.data_structure = dataStructure,
                                                    .input_array_path = inputArrayPath,
                                                    .output_array_path = outputArrayPath,
@@ -156,7 +156,7 @@ Result<> ExecuteValuedRegionalExtremaImageFilter(DataStructure& dataStructure, c
                                                    .fully_connected = fullyConnected,
                                                    .should_cancel = shouldCancel,
                                                    .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -168,7 +168,7 @@ Result<> ExecuteRegionalExtremaImageFilter(DataStructure& dataStructure, const D
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   detail::RegionalExtremaExecuteFn executeFn{.data_structure = dataStructure,
                                              .input_array_path = inputArrayPath,
                                              .output_array_path = outputArrayPath,
@@ -180,7 +180,7 @@ Result<> ExecuteRegionalExtremaImageFilter(DataStructure& dataStructure, const D
                                              .flat_is_extremum = flatIsExtremum,
                                              .should_cancel = shouldCancel,
                                              .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

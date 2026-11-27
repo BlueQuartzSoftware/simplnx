@@ -103,7 +103,7 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
     resultOutputActions.value().appendAction(std::move(moveDataAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------

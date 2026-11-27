@@ -58,30 +58,30 @@ enum class RotationRepresentation : uint64
 template <typename EbsdReaderType, typename EbsdPhase>
 nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues, nx::core::DataStructure& mDataStructure, std::shared_ptr<EbsdReaderType>& reader)
 {
-  reader->setFileName(mInputValues->inputFilePath);
-  reader->setSliceStart(mInputValues->startSlice);
-  reader->setSliceEnd(mInputValues->endSlice);
+  reader->setFileName(mInputValues->input_file_path);
+  reader->setSliceStart(mInputValues->start_slice);
+  reader->setSliceEnd(mInputValues->end_slice);
 
   std::vector<typename EbsdPhase::Pointer> phases = reader->getPhases();
   if(phases.empty())
   {
-    return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
+    return {nx::core::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->input_file_path))};
   }
 
   // Reserve index zero for invalid phase data.
   ShapeType tDims = {phases.size() + 1};
 
-  nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
+  nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cell_ensemble_matrix_path;
 
   nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_CrystalStructures);
-  auto& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
+  auto& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32ArrayType>(xtalDataPath);
   if(nx::core::Result<> resizeResult = xtalData.getIDataStore()->resizeTuples(tDims); resizeResult.invalid())
   {
     return nx::core::ConvertResult(std::move(resizeResult));
   }
 
   nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_LatticeConstants);
-  auto& latticData = mDataStructure.getDataRefAs<nx::core::Float32Array>(latticeDataPath);
+  auto& latticData = mDataStructure.getDataRefAs<nx::core::Float32ArrayType>(latticeDataPath);
   if(nx::core::Result<> resizeResult = latticData.getIDataStore()->resizeTuples(tDims); resizeResult.invalid())
   {
     return nx::core::ConvertResult(std::move(resizeResult));
@@ -189,9 +189,9 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   std::shared_ptr<H5EbsdReaderType> ebsdReader = std::dynamic_pointer_cast<H5EbsdReaderType>(H5EbsdReaderType::New());
   if(nullptr == ebsdReader)
   {
-    return {nx::core::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader for file '{}'.", mInputValues->inputFilePath))};
+    return {nx::core::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader for file '{}'.", mInputValues->input_file_path))};
   }
-  ebsdReader->setFileName(mInputValues->inputFilePath);
+  ebsdReader->setFileName(mInputValues->input_file_path);
   nx::core::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(mInputValues, dataStructure, ebsdReader);
   if(result.invalid())
   {
@@ -211,11 +211,11 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
     selectedArrayNames.insert(eulerNames[3]);
   }
 
-  mMessageHandler.sendMessage(nx::core::IFilter::Message{.type = nx::core::IFilter::Message::Type::Info, .message = fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
+  mMessageHandler.sendMessage(nx::core::IFilter::Message{.type = nx::core::IFilter::Message::Type::Info, .message = fmt::format("Reading EBSD Data from file {}", mInputValues->input_file_path)});
   uint32 mRefFrameZDir = ebsdReader->getStackingOrder();
 
-  ebsdReader->setSliceStart(mInputValues->startSlice);
-  ebsdReader->setSliceEnd(mInputValues->endSlice);
+  ebsdReader->setSliceStart(mInputValues->start_slice);
+  ebsdReader->setSliceEnd(mInputValues->end_slice);
   ebsdReader->readAllArrays(false);
   auto arraysToRead = selectedArrayNames;
   if(manufacturer == ebsdlib::Ctf::Manufacturer && selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
@@ -227,24 +227,24 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], mRefFrameZDir);
   if(err < 0)
   {
-    return {nx::core::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'. Error from EbsdLib is {}", mInputValues->inputFilePath, err))};
+    return {nx::core::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'. Error from EbsdLib is {}", mInputValues->input_file_path, err))};
   }
 
-  nx::core::DataPath geometryPath = mInputValues->dataContainerPath;
-  nx::core::DataPath cellAttributeMatrixPath = mInputValues->cellAttributeMatrixPath;
+  nx::core::DataPath geometryPath = mInputValues->data_container_path;
+  nx::core::DataPath cellAttributeMatrixPath = mInputValues->cell_attribute_matrix_path;
 
   usize totalPoints = dcDims[0] * dcDims[1] * dcDims[2];
 
   // Oxford correction uses the ensemble crystal structure for each cell phase.
-  nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
+  nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cell_ensemble_matrix_path;
   nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_CrystalStructures);
-  auto& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
+  auto& xtalData = dataStructure.getDataRefAs<nx::core::UInt32ArrayType>(xtalDataPath);
 
   auto* phasePtr = reinterpret_cast<int32*>(ebsdReader->getPointerByName(eulerNames[3]));
   nx::core::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases);
   if(selectedArrayNames.find(eulerNames[3]) != selectedArrayNames.end())
   {
-    auto* phaseDataArrayPtr = dataStructure.getDataAs<nx::core::Int32Array>(phaseDataPath);
+    auto* phaseDataArrayPtr = dataStructure.getDataAs<nx::core::Int32ArrayType>(phaseDataPath);
     if(nx::core::Result<> ioResult = phaseDataArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalPoints)); ioResult.invalid())
     {
       return nx::core::ConvertResult(std::move(ioResult));
@@ -257,12 +257,12 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
     auto* euler1Ptr = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[1]));
     auto* euler2Ptr = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[2]));
     nx::core::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles);
-    auto& eulerData = dataStructure.getDataRefAs<nx::core::Float32Array>(eulerDataPath);
+    auto& eulerData = dataStructure.getDataRefAs<nx::core::Float32ArrayType>(eulerDataPath);
 
     float32 degToRad = 1.0f;
-    if(mInputValues->eulerRepresentation != ebsdlib::AngleRepresentation::Radians && mInputValues->useRecommendedTransform)
+    if(mInputValues->euler_representation != ebsdlib::AngleRepresentation::Radians && mInputValues->use_recommended_transform)
     {
-      degToRad = nx::core::numbers::pi_v<float32> / 180.0F;
+      degToRad = nx::core::numbers::k_PiV<float32> / 180.0F;
     }
     // Interleave the three Euler channels in bounded destination pages. Apply
     // Oxford correction in the same pass to avoid a second output scan.
@@ -332,11 +332,11 @@ Result<> ReadH5Ebsd::operator()()
 {
   // Read volume metadata before EbsdLib allocates selected array buffers.
   ebsdlib::H5EbsdVolumeInfo::Pointer volumeInfoReader = ebsdlib::H5EbsdVolumeInfo::New();
-  volumeInfoReader->setFileName(m_InputValues->inputFilePath);
+  volumeInfoReader->setFileName(m_InputValues->input_file_path);
   int err = volumeInfoReader->readVolumeInfo();
   if(err < 0)
   {
-    return MakeErrorResult(-50000, fmt::format("Could not read H5EbsdVolumeInfo from file '{}", m_InputValues->inputFilePath));
+    return MakeErrorResult(-50000, fmt::format("Could not read H5EbsdVolumeInfo from file '{}", m_InputValues->input_file_path));
   }
   std::array<int64, 3> dims = {0, 0, 0};
   std::array<float32, 3> res = {0.0f, 0.0f, 0.0f};
@@ -345,7 +345,7 @@ Result<> ReadH5Ebsd::operator()()
   std::array<usize, 3> dcDims = {static_cast<usize>(dims[0]), static_cast<usize>(dims[1]), static_cast<usize>(dims[2])};
 
   // Restrict Z to the inclusive slice range selected by the caller.
-  dcDims[2] = m_InputValues->endSlice - m_InputValues->startSlice + 1;
+  dcDims[2] = m_InputValues->end_slice - m_InputValues->start_slice + 1;
 
   std::string manufacturer = volumeInfoReader->getManufacturer();
 
@@ -359,7 +359,7 @@ Result<> ReadH5Ebsd::operator()()
   volumeInfoReader = ebsdlib::H5EbsdVolumeInfo::NullPointer();
 
   std::set<std::string> mSelectedArrayNames;
-  for(const auto& selectedArrayName : m_InputValues->hdf5DataPaths)
+  for(const auto& selectedArrayName : m_InputValues->hdf5_data_paths)
   {
     mSelectedArrayNames.insert(selectedArrayName);
   }
@@ -393,25 +393,25 @@ Result<> ReadH5Ebsd::operator()()
     return MakeErrorResult(-50001, fmt::format("Could not determine or match a supported manufacturer from the data file. Supported manufacturer codes are: '{}' and '{}'", ebsdlib::Ctf::Manufacturer,
                                                ebsdlib::Ang::Manufacturer));
   }
-  if(m_InputValues->useRecommendedTransform)
+  if(m_InputValues->use_recommended_transform)
   {
 
-    nx::core::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles);
+    nx::core::DataPath eulerDataPath = m_InputValues->cell_attribute_matrix_path.createChildPath(ebsdlib::CellData::EulerAngles);
 
     if(eulerTransAngle > 0 && m_DataStructure.containsData(eulerDataPath))
     {
       RotateEulerRefFrameFilter rotEuler;
       Arguments args;
       args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key,
-                          std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{eulerTransAxis[0], eulerTransAxis[1], eulerTransAxis[2], eulerTransAngle}));
+                          std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{eulerTransAxis[0], eulerTransAxis[1], eulerTransAxis[2], eulerTransAngle}));
 
       args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerDataPath));
       // Validate the stored Euler transform before it changes the imported array.
       auto preflightResult = rotEuler.preflight(m_DataStructure, args);
-      if(preflightResult.outputActions.invalid())
+      if(preflightResult.output_actions.invalid())
       {
         Result<> result;
-        for(const auto& error : preflightResult.outputActions.errors())
+        for(const auto& error : preflightResult.output_actions.errors())
         {
           result.errors().push_back(error);
         }
@@ -442,23 +442,23 @@ Result<> ReadH5Ebsd::operator()()
 
       // The imported geometry has no Feature Attribute Matrix; keep the old copy behavior.
       args.insertOrAssign(::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
-      args.insertOrAssign(::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
+      args.insertOrAssign(::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(m_InputValues->data_container_path));
       args.insertOrAssign(::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
       // Preflight already assigned the transformed origin via UpdateImageGeomAction.
       // Keep it here so the sample rotation does not transform the origin twice.
       args.insertOrAssign(::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(true));
 
       args.insertOrAssign(::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(::RotationRepresentation::AxisAngle)));
-      args.insertOrAssign(::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle}));
+      args.insertOrAssign(::k_RotationAxisAngle_Key, std::make_any<VectorFloat32ParameterType::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle}));
       args.insertOrAssign(::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Validate the plugin-provided sample transform before it changes geometry.
       m_MessageHandler.sendMessage(nx::core::IFilter::Message{.type = IFilter::Message::Type::Info, .message = fmt::format("Preflighting {}...", filter->humanName())});
       nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
-      if(preflightResult.outputActions.invalid())
+      if(preflightResult.output_actions.invalid())
       {
         Result<> result;
-        for(const auto& error : preflightResult.outputActions.errors())
+        for(const auto& error : preflightResult.output_actions.errors())
         {
           result.errors().push_back(error);
         }

@@ -477,26 +477,26 @@ public:
     Result<> diagnostic;
     if constexpr(std::is_same_v<T, bool>)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores.");
+      diagnostic = MakeWarningVoidResult(bounded_read::Unsupported, "Bounded numeric reads do not support bool stores.");
       return ConvertResultTo(std::move(diagnostic), false);
     }
     uint64 components = 1;
     for(const auto size : getComponentShape())
     {
-      if(size == 0 || !BoundedRead::Multiply(components, static_cast<uint64>(size), components))
+      if(size == 0 || !bounded_read::Multiply(components, static_cast<uint64>(size), components))
       {
-        return MakeErrorResult<bool>(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64.");
+        return MakeErrorResult<bool>(bounded_read::InvalidExtent, "Bounded read component shape is empty or overflows uint64.");
       }
     }
     uint64 selectedTuples = 0;
-    const auto status = BoundedRead::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
-    if(status != BoundedRead::Status::Complete)
+    const auto status = bounded_read::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
+    if(status != bounded_read::Status::Complete)
     {
       return ConvertResultTo(std::move(diagnostic), false);
     }
     if(m_Data == nullptr)
     {
-      return MakeErrorResult<bool>(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer.");
+      return MakeErrorResult<bool>(bounded_read::ReadFailure, "Bounded resident read has no allocated source buffer.");
     }
     const int exceptions = std::uncaught_exceptions();
     auto publish = MakeScopeGuard([&]() noexcept {
@@ -530,7 +530,7 @@ public:
     });
     // A prvalue constructs the actual return object before the publication guard runs.
 #if SIMPLNX_BUILD_TESTS
-    return Result<bool>{true, BoundedRead::MakeSuccessWarningsForTesting()};
+    return Result<bool>{true, bounded_read::MakeSuccessWarningsForTesting()};
 #else
     return Result<bool>{true};
 #endif
@@ -994,7 +994,7 @@ public:
   void byteSwap(usize index) override
   {
     T& element = m_Data.get()[index];
-    element = nx::core::byteswap(element);
+    element = nx::core::Byteswap(element);
   }
 
   /**
@@ -1122,55 +1122,55 @@ private:
 /**
  * @brief Names an in-memory uint8 data store.
  */
-using UInt8DataStore = DataStore<uint8>;
+using UInt8DataStoreType = DataStore<uint8>;
 
 /**
  * @brief Names an in-memory uint16 data store.
  */
-using UInt16DataStore = DataStore<uint16>;
+using UInt16DataStoreType = DataStore<uint16>;
 
 /**
  * @brief Names an in-memory uint32 data store.
  */
-using UInt32DataStore = DataStore<uint32>;
+using UInt32DataStoreType = DataStore<uint32>;
 
 /**
  * @brief Names an in-memory uint64 data store.
  */
-using UInt64DataStore = DataStore<uint64>;
+using UInt64DataStoreType = DataStore<uint64>;
 
 /**
  * @brief Names an in-memory int8 data store.
  */
-using Int8DataStore = DataStore<int8>;
+using Int8DataStoreType = DataStore<int8>;
 
 /**
  * @brief Names an in-memory int16 data store.
  */
-using Int16DataStore = DataStore<int16>;
+using Int16DataStoreType = DataStore<int16>;
 
 /**
  * @brief Names an in-memory int32 data store.
  */
-using Int32DataStore = DataStore<int32>;
+using Int32DataStoreType = DataStore<int32>;
 
 /**
  * @brief Names an in-memory int64 data store.
  */
-using Int64DataStore = DataStore<int64>;
+using Int64DataStoreType = DataStore<int64>;
 
 /**
  * @brief Names an in-memory bool data store.
  */
-using BoolDataStore = DataStore<bool>;
+using BoolDataStoreType = DataStore<bool>;
 
 /**
  * @brief Names an in-memory float32 data store.
  */
-using Float32DataStore = DataStore<float32>;
+using Float32DataStoreType = DataStore<float32>;
 
 /**
  * @brief Names an in-memory float64 data store.
  */
-using Float64DataStore = DataStore<float64>;
+using Float64DataStoreType = DataStore<float64>;
 } // namespace nx::core

@@ -41,7 +41,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -66,7 +66,7 @@ DataStructure CreateFeatureResampleFixture()
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 4, 4}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellDataPtr->getShape(), {1}, cellDataPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", cellDataPtr->getShape(), {1}, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   for(usize y = 0; y < 4; ++y)
   {
@@ -78,7 +78,7 @@ DataStructure CreateFeatureResampleFixture()
 
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Cell Feature Data", ShapeType{5}, imageGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
-  auto* numElementsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureDataPtr->getId());
+  auto* numElementsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumElements", {5}, {1}, featureDataPtr->getId());
   REQUIRE(numElementsPtr != nullptr);
   numElementsPtr->fill(4);
   (*numElementsPtr)[0] = 0;
@@ -89,7 +89,7 @@ DataStructure CreateFeatureResampleFixture()
 
   auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", ShapeType{2}, imageGeomPtr->getId());
   REQUIRE(ensembleDataPtr != nullptr);
-  auto* crystalStructuresPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleDataPtr->getId());
+  auto* crystalStructuresPtr = unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleDataPtr->getId());
   REQUIRE(crystalStructuresPtr != nullptr);
   (*crystalStructuresPtr)[0] = 999;
   (*crystalStructuresPtr)[1] = 1;
@@ -123,14 +123,14 @@ struct CompareDataArrayFunctor
   template <typename T>
   void operator()(const IDataArray& left, const IDataArray& right, usize start = 0)
   {
-    UnitTest::CompareDataArrays<T>(left, right, start);
+    unit_test::CompareDataArrays<T>(left, right, start);
   }
 };
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", "[SimplnxCore][ResampleImageGeom]")
 {
   auto app = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool removeOriginal = GENERATE(false, true);
   const auto units = GENERATE(IGeometry::LengthUnit::Millimeter, IGeometry::LengthUnit::Meter, IGeometry::LengthUnit::Unspecified);
   CAPTURE(removeOriginal, units);
@@ -139,7 +139,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", 
   const DataPath srcGeomPath({"Input Geometry"});
   const DataPath destGeomPath({"Resampled Geometry"});
   const DataPath inputDataPath = srcGeomPath.createChildPath("Cell Data").createChildPath("Values");
-  const FloatVec3 origin = {1.0F, -2.0F, 3.0F};
+  const FloatVec3Type origin = {1.0F, -2.0F, 3.0F};
   const CreateImageGeometryAction inputGeometryAction(srcGeomPath, {2, 2, 2}, {1.0F, -2.0F, 3.0F}, {1.0F, 1.0F, 1.0F}, "Cell Data", units);
   auto inputGeometryResult = inputGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(inputGeometryResult);
@@ -149,14 +149,14 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", 
   const auto inputGeomId = inputGeomPtr->getId();
   const auto* inputCellDataPtr = inputGeomPtr->getCellData();
   REQUIRE((inputCellDataPtr != nullptr));
-  auto* inputValuesPtr = Int32Array::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, inputDataPath, {2, 2, 2}, {1}), inputCellDataPtr->getId());
+  auto* inputValuesPtr = Int32ArrayType::Create(dataStructure, "Values", data_store_utilities::CreateDataStore<int32>(dataStructure, inputDataPath, {2, 2, 2}, {1}), inputCellDataPtr->getId());
   REQUIRE((inputValuesPtr != nullptr));
   inputValuesPtr->fill(7);
 
   const ResampleImageGeomFilter filter;
   Arguments args;
   args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
-  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.5F, 0.5F, 0.5F}));
+  args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.5F, 0.5F, 0.5F}));
   args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(removeOriginal));
@@ -164,9 +164,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", 
   args.insertOrAssign(ResampleImageGeomFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(destGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const CreateImageGeometryAction* plannedGeometryPtr = nullptr;
-  for(const auto& action : preflightResult.outputActions.value().actions)
+  for(const auto& action : preflightResult.output_actions.value().actions)
   {
     if(const auto* candidatePtr = dynamic_cast<const CreateImageGeometryAction*>(action.get()); candidatePtr != nullptr)
     {
@@ -183,10 +183,10 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", 
   const auto* outputGeomPtr = dataStructure.getDataAs<ImageGeom>(outputGeomPath);
   REQUIRE((outputGeomPtr != nullptr));
   CHECK((outputGeomPtr->getUnits() == units));
-  CHECK((outputGeomPtr->getDimensions() == SizeVec3{4, 4, 4}));
-  CHECK((outputGeomPtr->getSpacing() == FloatVec3{0.5F, 0.5F, 0.5F}));
+  CHECK((outputGeomPtr->getDimensions() == SizeVec3Type{4, 4, 4}));
+  CHECK((outputGeomPtr->getSpacing() == FloatVec3Type{0.5F, 0.5F, 0.5F}));
   CHECK((outputGeomPtr->getOrigin() == origin));
-  const auto* outputValuesPtr = dataStructure.getDataAs<Int32Array>(outputGeomPath.createChildPath("Cell Data").createChildPath("Values"));
+  const auto* outputValuesPtr = dataStructure.getDataAs<Int32ArrayType>(outputGeomPath.createChildPath("Cell Data").createChildPath("Values"));
   REQUIRE((outputValuesPtr != nullptr));
   REQUIRE((outputValuesPtr->getNumberOfTuples() == 64));
   REQUIRE((outputValuesPtr->getNumberOfComponents() == 1));
@@ -201,10 +201,10 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", 
     REQUIRE((retainedGeomPtr != nullptr));
     CHECK((retainedGeomPtr->getId() == inputGeomId));
     CHECK((retainedGeomPtr->getUnits() == units));
-    CHECK((retainedGeomPtr->getDimensions() == SizeVec3{2, 2, 2}));
-    CHECK((retainedGeomPtr->getSpacing() == FloatVec3{1.0F, 1.0F, 1.0F}));
+    CHECK((retainedGeomPtr->getDimensions() == SizeVec3Type{2, 2, 2}));
+    CHECK((retainedGeomPtr->getSpacing() == FloatVec3Type{1.0F, 1.0F, 1.0F}));
     CHECK((retainedGeomPtr->getOrigin() == origin));
-    const auto* retainedValuesPtr = dataStructure.getDataAs<Int32Array>(inputDataPath);
+    const auto* retainedValuesPtr = dataStructure.getDataAs<Int32ArrayType>(inputDataPath);
     REQUIRE((retainedValuesPtr != nullptr));
     REQUIRE((retainedValuesPtr->getNumberOfTuples() == 8));
     REQUIRE((retainedValuesPtr->getNumberOfComponents() == 1));
@@ -213,89 +213,89 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Output keeps the input length unit", 
       CHECK(((*retainedValuesPtr)[index] == 7));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber OFF preflight", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   REQUIRE(AttributeMatrix::Create(dataStructure, "Other Feature Data", {5}, dataStructure.getId(DataPath({"Image"}))) != nullptr);
   ResampleImageGeomFilter filter;
   auto result = filter.preflight(dataStructure, MakeFeatureResampleArgs(true, false));
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  const auto& unchangedWarning = result.outputActions.warnings().front();
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  const auto& unchangedWarning = result.output_actions.warnings().front();
   CHECK(unchangedWarning.code == -4041);
   CHECK(unchangedWarning.message == "These Attribute Matrices are copied to the resampled geometry unchanged:\n"
                                     "Image/Cell Ensemble Data\n"
                                     "Image/Other Feature Data\n"
                                     "If one holds Feature data, its values describe the original geometry. Recompute them. Ensemble arrays retain their stored values. "
                                     "Recompute any Ensemble statistics that depend on the geometry's cells or elements.");
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
-  const auto it = std::find_if(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
-  REQUIRE(it != result.outputValues.end());
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  const auto it = std::find_if(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
+  REQUIRE(it != result.output_values.end());
   CHECK(it->value.find("Image/Cell Feature Data/NumElements") != std::string::npos);
   CHECK(it->value.find("Image/Cell Feature Data/NeighborList") != std::string::npos);
   CHECK(it->value.find("Image/Cell Feature Data/Names") != std::string::npos);
   CHECK(it->value.find("Ensemble") == std::string::npos);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Invalidated NeighborLists" || v.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Invalidated NeighborLists" || v.name == "Feature Data Not Cleared"; }));
   CHECK(filter.parametersVersion() == 2);
-  auto applyResult = result.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  auto applyResult = result.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
   const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Resampled", "Cell Feature Data"}));
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{5});
   CHECK(amPtr->getSize() == 0);
-  const auto* ensemblePtr = dataStructure.getDataAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
+  const auto* ensemblePtr = dataStructure.getDataAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(ensemblePtr != nullptr);
   REQUIRE(ensemblePtr->getNumberOfTuples() == 2);
   CHECK((*ensemblePtr)[0] == 999);
   CHECK((*ensemblePtr)[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear OFF preflight", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   ResampleImageGeomFilter filter;
   auto result = filter.preflight(dataStructure, MakeFeatureResampleArgs(false, false));
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  const auto& warning = result.outputActions.warnings().front();
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  const auto& warning = result.output_actions.warnings().front();
   CHECK(warning.code == -4041);
   CHECK(warning.message.find("\nImage/Cell Feature Data\n") != std::string::npos);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
-  CHECK(std::any_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  CHECK(std::any_of(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Feature Data Not Cleared"; }));
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; }));
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear OFF ignores stored renumber", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   ResampleImageGeomFilter filter;
   Arguments args = MakeFeatureResampleArgs(false, true);
   args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "DoesNotExist"})));
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"DoesNotExist"})));
   auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Resampled", "Cell Feature Data"}));
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{5});
   CHECK(amPtr->getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  CHECK(result.outputActions.warnings().front().code == -4041);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  CHECK(result.output_actions.warnings().front().code == -4041);
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(), [](const auto& value) { return value.value.find("Ensemble") != std::string::npos; }));
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: StrictFeatureIds preflight", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(DataPath({"Image"}));
   REQUIRE(imageGeomPtr != nullptr);
@@ -303,7 +303,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: StrictFeatureIds preflight", "[
   REQUIRE(cellDataPtr != nullptr);
   auto* otherDataPtr = AttributeMatrix::Create(dataStructure, "Other Cell Data", cellDataPtr->getShape(), imageGeomPtr->getId());
   REQUIRE(otherDataPtr != nullptr);
-  auto* misplacedIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "MisplacedFeatureIds", otherDataPtr->getShape(), {1}, otherDataPtr->getId());
+  auto* misplacedIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "MisplacedFeatureIds", otherDataPtr->getShape(), {1}, otherDataPtr->getId());
   REQUIRE(misplacedIdsPtr != nullptr);
   misplacedIdsPtr->fill(1);
 
@@ -314,10 +314,10 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: StrictFeatureIds preflight", "[
   SECTION("Renumber ON rejects Feature Ids in another Attribute Matrix")
   {
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == -55505);
-    CHECK(result.outputActions.errors().front().message ==
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == -55505);
+    CHECK(result.output_actions.errors().front().message ==
           "**Cell Feature Ids** DataArray 'Image/Other Cell Data/MisplacedFeatureIds' must be in the Cell Attribute Matrix 'Image/Cell Data' of the selected Image Geometry 'Image'. "
           "Select the DataArray from that Attribute Matrix.");
   }
@@ -325,20 +325,20 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: StrictFeatureIds preflight", "[
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   SECTION("Renumber ON accepts Feature Ids in the Cell Attribute Matrix")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data", "FeatureIds"})));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON Feature AM errors", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   // An Attribute Matrix that is not a child of "Image".
   REQUIRE(AttributeMatrix::Create(dataStructure, "Elsewhere", std::vector<usize>{5}) != nullptr);
@@ -347,30 +347,30 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON Feature AM errors", "[
   Arguments args = MakeFeatureResampleArgs(true, false);
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Elsewhere"})));
   auto notChild = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(notChild.outputActions);
-  REQUIRE(notChild.outputActions.errors().size() == 1);
-  CHECK(notChild.outputActions.errors().front().code == -55503);
-  CHECK(notChild.outputActions.errors().front().message ==
+  SIMPLNX_RESULT_REQUIRE_INVALID(notChild.output_actions);
+  REQUIRE(notChild.output_actions.errors().size() == 1);
+  CHECK(notChild.output_actions.errors().front().code == -55503);
+  CHECK(notChild.output_actions.errors().front().message ==
         "The Attribute Matrix 'Elsewhere' selected for **Feature Attribute Matrix** must be a direct child of the selected geometry 'Image' and must not be its Cell Attribute Matrix 'Image/Cell "
         "Data'. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.");
 
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Cell Data"})));
   auto isCellAm = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.outputActions);
-  REQUIRE(isCellAm.outputActions.errors().size() == 1);
-  CHECK(isCellAm.outputActions.errors().front().code == -55503);
-  CHECK(isCellAm.outputActions.errors().front().message ==
+  SIMPLNX_RESULT_REQUIRE_INVALID(isCellAm.output_actions);
+  REQUIRE(isCellAm.output_actions.errors().size() == 1);
+  CHECK(isCellAm.output_actions.errors().front().code == -55503);
+  CHECK(isCellAm.output_actions.errors().front().message ==
         "The Attribute Matrix 'Image/Cell Data' selected for **Feature Attribute Matrix** must be a direct child of the selected geometry 'Image' and must not be its Cell Attribute Matrix "
         "'Image/Cell Data'. Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.");
 
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Image", "Missing"})));
   auto missing = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(missing.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(missing.output_actions);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber OFF execute", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   ResampleImageGeomFilter filter;
   auto result = filter.execute(dataStructure, MakeFeatureResampleArgs(true, false));
@@ -380,8 +380,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber OFF execute"
   CHECK(am.getShape() == std::vector<usize>{5});
   CHECK(am.getSize() == 0);
   // The cell FeatureIds keep their original values (1 and 3 for source x = 0 and 2).
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 8);
   const std::array<int32, 8> expectedIds = {1, 3, 1, 3, 1, 3, 1, 3};
   for(usize i = 0; i < expectedIds.size(); ++i)
@@ -389,26 +389,26 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber OFF execute"
     CHECK(ids[i] == expectedIds[i]);
   }
   // The Ensemble AM is copied unchanged.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
   // The source geometry is untouched (debugging route).
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})));
   CHECK(dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image", "Cell Feature Data"})).getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber ON execute", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   ResampleImageGeomFilter filter;
   auto preflight = filter.preflight(dataStructure, MakeFeatureResampleArgs(true, true));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto info = std::find_if(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
-  REQUIRE(info != preflight.outputValues.end());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  const auto info = std::find_if(preflight.output_values.begin(), preflight.output_values.end(), [](const auto& value) { return value.name == "Cleared Feature Data"; });
+  REQUIRE(info != preflight.output_values.end());
   CHECK(info->value.find("Recompute any of the following Data Arrays:\n") != std::string::npos);
   CHECK(info->value.find("\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.") != std::string::npos);
   auto result = filter.execute(dataStructure, MakeFeatureResampleArgs(true, true));
@@ -418,33 +418,33 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON, renumber ON execute",
   // Features 1 and 3 remain, plus row 0.
   CHECK(am.getShape() == std::vector<usize>{3});
   CHECK(am.getSize() == 0);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 8);
   const std::array<int32, 8> expectedIds = {1, 2, 1, 2, 1, 2, 1, 2};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear OFF execute copies Feature AM unchanged", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   ResampleImageGeomFilter filter;
   const bool renumber = GENERATE(false, true);
   CAPTURE(renumber);
   auto result = filter.execute(dataStructure, MakeFeatureResampleArgs(false, renumber));
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Feature Data", "NumElements"})));
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Feature Data", "NumElements"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Feature Data", "NumElements"})));
+  const auto& numElements = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Feature Data", "NumElements"}));
   REQUIRE(numElements.getNumberOfTuples() == 5);
   const std::array<int32, 5> expectedNumElements = {0, 4, 4, 4, 4};
   for(usize i = 0; i < expectedNumElements.size(); ++i)
@@ -472,25 +472,25 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear OFF execute copies Featur
     CHECK(names[i] == expectedNames[i]);
   }
   // The stored renumber=true is ignored.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 8);
   const std::array<int32, 8> expectedIds = {1, 3, 1, 3, 1, 3, 1, 3};
   for(usize i = 0; i < expectedIds.size(); ++i)
   {
     CHECK(ids[i] == expectedIds[i]);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Resampled", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON in place", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   ResampleImageGeomFilter filter;
   Arguments args = MakeFeatureResampleArgs(true, true);
@@ -503,9 +503,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON in place", "[SimplnxCo
   CHECK(am.getShape() == std::vector<usize>{3});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image"})));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"Image"}));
-  CHECK(imageGeom.getDimensions() == SizeVec3(2, 4, 1));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"})));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Image", "Cell Data", "FeatureIds"}));
+  CHECK(imageGeom.getDimensions() == SizeVec3Type(2, 4, 1));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"})));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Image", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 8);
   const std::array<int32, 8> expectedIds = {1, 2, 1, 2, 1, 2, 1, 2};
   for(usize i = 0; i < expectedIds.size(); ++i)
@@ -515,57 +515,57 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Clear ON in place", "[SimplnxCo
   CHECK(dataStructure.getData(DataPath({"Resampled"})) == nullptr);
   CHECK(dataStructure.getData(DataPath({".Image"})) == nullptr);
   CHECK(dataStructure.getData(DataPath({".resampled_image_geometry"})) == nullptr);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"})));
-  const auto& xtal = dataStructure.getDataRefAs<UInt32Array>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"})));
+  const auto& xtal = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"Image", "Cell Ensemble Data", "CrystalStructures"}));
   REQUIRE(xtal.getNumberOfTuples() == 2);
   CHECK(xtal[0] == 999);
   CHECK(xtal[1] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: Shared utility defaults preserve Feature data", "[SimplnxCore][ResampleImageGeom][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   // Image-stack readers leave both new fields at their defaults.
   ResampleImageGeomInputValues inputValues{};
-  CHECK_FALSE(inputValues.ClearFeatureAttributeMatrix);
-  CHECK_FALSE(inputValues.ReportUnclearedFeatureData);
-  inputValues.SelectedImageGeometryPath = DataPath({"Image"});
-  inputValues.CreatedImageGeometryPath = DataPath({"Resampled"});
-  inputValues.Spacing = {2.0F, 1.0F, 1.0F};
+  CHECK_FALSE(inputValues.clear_feature_attribute_matrix);
+  CHECK_FALSE(inputValues.report_uncleared_feature_data);
+  inputValues.selected_image_geometry_path = DataPath({"Image"});
+  inputValues.created_image_geometry_path = DataPath({"Resampled"});
+  inputValues.spacing = {2.0F, 1.0F, 1.0F};
   auto result = PreflightImageGeometryResample(dataStructure, inputValues);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  REQUIRE(result.outputActions.warnings().size() == 1);
-  CHECK(result.outputActions.warnings().front().code == -4041);
-  CHECK(std::none_of(result.outputValues.begin(), result.outputValues.end(),
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  REQUIRE(result.output_actions.warnings().size() == 1);
+  CHECK(result.output_actions.warnings().front().code == -4041);
+  CHECK(std::none_of(result.output_values.begin(), result.output_values.end(),
                      [](const auto& value) { return value.name == "Feature Data Not Cleared" || value.name == "Cleared Feature Data" || value.name == "Invalidated NeighborLists"; }));
-  auto applyResult = result.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  auto applyResult = result.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
   const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(DataPath({"Resampled", "Cell Feature Data"}));
   REQUIRE(amPtr != nullptr);
   CHECK(amPtr->getShape() == ShapeType{5});
   CHECK(amPtr->getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][ResampleImageGeom]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
-  DataPath srcGeomPath({Constants::k_SmallIN100});
-  DataPath cellDataPath = srcGeomPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath cellFeatureDataPath = srcGeomPath.createChildPath(Constants::k_FeatureGroupName);
-  DataPath featureIdsPath = cellDataPath.createChildPath(Constants::k_FeatureIds);
-  DataPath destGeomPath({Constants::k_SmallIN100});
-  DataPath destCellDataPath = destGeomPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath destCellFeatureDataPath = destGeomPath.createChildPath(Constants::k_FeatureGroupName);
+  DataPath srcGeomPath({constants::k_SmallIN100});
+  DataPath cellDataPath = srcGeomPath.createChildPath(constants::k_EbsdScanData);
+  DataPath cellFeatureDataPath = srcGeomPath.createChildPath(constants::k_FeatureGroupName);
+  DataPath featureIdsPath = cellDataPath.createChildPath(constants::k_FeatureIds);
+  DataPath destGeomPath({constants::k_SmallIN100});
+  DataPath destCellDataPath = destGeomPath.createChildPath(constants::k_EbsdScanData);
+  DataPath destCellFeatureDataPath = destGeomPath.createChildPath(constants::k_FeatureGroupName);
   DataPath destNewGrainDataPath = destGeomPath.createChildPath("NewGrain Data");
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
 
@@ -573,13 +573,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][R
   SECTION("Spacing")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
     errCode = -11502;
   }
   SECTION("Scaling")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{-1.0F, -1.0F, -1.0F}));
     errCode = -11500;
   }
 
@@ -596,30 +596,30 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][R
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  auto preflightErrors = preflightResult.outputActions.errors();
+  auto preflightErrors = preflightResult.output_actions.errors();
   REQUIRE(preflightErrors.size() == 1);
   REQUIRE(preflightErrors[0].code == errCode);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][ResampleImageGeom]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
-  DataPath srcGeomPath({Constants::k_SmallIN100});
-  DataPath cellDataPath = srcGeomPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath cellFeatureDataPath = srcGeomPath.createChildPath(Constants::k_FeatureGroupName);
-  DataPath featureIdsPath = cellDataPath.createChildPath(Constants::k_FeatureIds);
-  DataPath destGeomPath({Constants::k_SmallIN100});
-  DataPath destCellDataPath = destGeomPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath destCellFeatureDataPath = destGeomPath.createChildPath(Constants::k_FeatureGroupName);
+  DataPath srcGeomPath({constants::k_SmallIN100});
+  DataPath cellDataPath = srcGeomPath.createChildPath(constants::k_EbsdScanData);
+  DataPath cellFeatureDataPath = srcGeomPath.createChildPath(constants::k_FeatureGroupName);
+  DataPath featureIdsPath = cellDataPath.createChildPath(constants::k_FeatureIds);
+  DataPath destGeomPath({constants::k_SmallIN100});
+  DataPath destCellDataPath = destGeomPath.createChildPath(constants::k_EbsdScanData);
+  DataPath destCellFeatureDataPath = destGeomPath.createChildPath(constants::k_FeatureGroupName);
   DataPath destNewGrainDataPath = destGeomPath.createChildPath("NewGrain Data");
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
 
@@ -628,13 +628,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   SECTION("Spacing")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1}));
     exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
   }
   SECTION("Scaling")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{25, 25, 25}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{25, 25, 25}));
     exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
   }
   SECTION("Exact Dimensions")
@@ -653,14 +653,14 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
+  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(constants::k_EbsdScanData);
+  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(constants::k_FeatureGroupName);
 
   // check that the geometry(s) and the attribute matrix are all there
   auto* const srcGeoPtr = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
@@ -690,9 +690,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   const auto exemplarDims = exemplarGeoPtr->getDimensions();
   const auto exemplarCellDataDims = exemplarCellDataPtr->getShape();
   REQUIRE(exemplarGeoPtr->getOrigin() == destGeoPtr->getOrigin());
-  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < UnitTest::EPSILON);
+  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < unit_test::k_Epsilon);
   REQUIRE(destDims[0] == exemplarDims[0]);
   REQUIRE(destDims[1] == exemplarDims[1]);
   REQUIRE(destDims[2] == exemplarDims[2]);
@@ -736,26 +736,26 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][ResampleImageGeom]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
 
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/ResampleImageGeom_Exemplar/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir)));
-  DataPath srcGeomPath({Constants::k_SmallIN100});
-  DataPath cellDataPath = srcGeomPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath cellFeatureDataPath = srcGeomPath.createChildPath(Constants::k_FeatureGroupName);
-  DataPath featureIdsPath = cellDataPath.createChildPath(Constants::k_FeatureIds);
-  DataPath destGeomPath({Constants::k_SmallIN100.str() + "_RESAMPLED"});
-  DataPath destCellDataPath = destGeomPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath destCellFeatureDataPath = destGeomPath.createChildPath(Constants::k_FeatureGroupName);
+  DataPath srcGeomPath({constants::k_SmallIN100});
+  DataPath cellDataPath = srcGeomPath.createChildPath(constants::k_EbsdScanData);
+  DataPath cellFeatureDataPath = srcGeomPath.createChildPath(constants::k_FeatureGroupName);
+  DataPath featureIdsPath = cellDataPath.createChildPath(constants::k_FeatureIds);
+  DataPath destGeomPath({constants::k_SmallIN100.str() + "_RESAMPLED"});
+  DataPath destCellDataPath = destGeomPath.createChildPath(constants::k_EbsdScanData);
+  DataPath destCellFeatureDataPath = destGeomPath.createChildPath(constants::k_FeatureGroupName);
   DataPath destNewGrainDataPath = destGeomPath.createChildPath("NewGrain Data");
   DataPath destPhaseDataPath = destGeomPath.createChildPath("Phase Data");
 
@@ -764,13 +764,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   SECTION("Spacing")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1}));
     exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
   }
   SECTION("Scaling")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{25, 25, 25}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{25, 25, 25}));
     exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom"});
   }
   SECTION("Exact Dimensions")
@@ -789,14 +789,14 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(Constants::k_EbsdScanData);
-  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_FeatureGroupName);
+  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(constants::k_EbsdScanData);
+  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(constants::k_FeatureGroupName);
 
   // check that the geometry(s) and the attribute matrix are all there
   auto* const srcGeoPtr = dataStructure.getDataAs<ImageGeom>(srcGeomPath);
@@ -826,9 +826,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   const auto exemplarDims = exemplarGeoPtr->getDimensions();
   const auto exemplarCellDataDims = exemplarCellDataPtr->getShape();
   REQUIRE(exemplarGeoPtr->getOrigin() == destGeoPtr->getOrigin());
-  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < UnitTest::EPSILON);
+  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < unit_test::k_Epsilon);
   REQUIRE(destDims[0] == exemplarDims[0]);
   REQUIRE(destDims[1] == exemplarDims[1]);
   REQUIRE(destDims[2] == exemplarDims[2]);
@@ -872,14 +872,14 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][ResampleImageGeom]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -895,13 +895,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
   SECTION("Spacing")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1}));
     exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
   }
   SECTION("Scaling")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{150, 150, 50}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{150, 150, 50}));
     exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
   }
   SECTION("Exact Dimensions")
@@ -920,7 +920,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -947,9 +947,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
   const auto exemplarDims = exemplarGeoPtr->getDimensions();
   const auto exemplarCellDataDims = exemplarCellDataPtr->getShape();
   REQUIRE(exemplarGeoPtr->getOrigin() == destGeoPtr->getOrigin());
-  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < UnitTest::EPSILON);
+  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < unit_test::k_Epsilon);
   REQUIRE(destDims[0] == exemplarDims[0]);
   REQUIRE(destDims[1] == exemplarDims[1]);
   REQUIRE(destDims[2] == exemplarDims[2]);
@@ -968,14 +968,14 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][ResampleImageGeom]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -991,13 +991,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
   SECTION("Spacing")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1}));
     exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
   }
   SECTION("Scaling")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{150, 150, 50}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_Scaling_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{150, 150, 50}));
     exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom"});
   }
   SECTION("Exact Dimensions")
@@ -1016,7 +1016,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -1042,9 +1042,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
   const auto exemplarDims = exemplarGeoPtr->getDimensions();
   const auto exemplarCellDataDims = exemplarCellDataPtr->getShape();
   REQUIRE(exemplarGeoPtr->getOrigin() == destGeoPtr->getOrigin());
-  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < UnitTest::EPSILON);
+  REQUIRE(std::fabs(destSpacing[0] - exemplarSpacing[0]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[1] - exemplarSpacing[1]) < unit_test::k_Epsilon);
+  REQUIRE(std::fabs(destSpacing[2] - exemplarSpacing[2]) < unit_test::k_Epsilon);
   REQUIRE(destDims[0] == exemplarDims[0]);
   REQUIRE(destDims[1] == exemplarDims[1]);
   REQUIRE(destDims[2] == exemplarDims[2]);
@@ -1063,13 +1063,13 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ResampleImageGeomFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -1113,7 +1113,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL Backwards Compatibility",
 
 TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry name are kept", "[SimplnxCore][ResampleImageGeom]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath srcGeomPath({"Geom"});
   const DataPath destGeomPath({"Geom Out"});
@@ -1126,14 +1126,14 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);
   auto* dataPtr =
-      Int32Array::Create(dataStructure, "Data", DataStoreUtilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+      Int32ArrayType::Create(dataStructure, "Data", data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
                          elementAmPtr->getId());
   REQUIRE(dataPtr != nullptr);
   dataPtr->fill(7);
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32Array::Create(dataStructure, "Geom Values",
-                                       DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Geom Values",
+                                       data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(42);
   ResampleImageGeomFilter filter;
@@ -1144,7 +1144,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
   args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.5F, 0.5F, 0.5F}));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const DataPath copiedAmPath = destGeomPath.createChildPath("Geom Feature Data");
   const DataPath copiedValuesPath = copiedAmPath.createChildPath("Geom Values");
   const DataPath renamedAmPath = destGeomPath.createChildPath("Geom Out Feature Data");
@@ -1152,7 +1152,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
   SECTION("Declared recursive paths keep child names")
   {
     const CopyDataObjectAction* copyActionPtr = nullptr;
-    for(const auto& action : preflightResult.outputActions.value().actions)
+    for(const auto& action : preflightResult.output_actions.value().actions)
     {
       const auto* candidatePtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
       if(candidatePtr != nullptr && candidatePtr->path() == srcGeomPath.createChildPath("Geom Feature Data"))
@@ -1171,16 +1171,16 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Child names containing the geometry n
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     REQUIRE(dataStructure.getDataAs<AttributeMatrix>(copiedAmPath) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(copiedValuesPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(copiedValuesPath) != nullptr);
     REQUIRE_FALSE(dataStructure.containsData(renamedAmPath));
-    REQUIRE(dataStructure.getDataAs<Int32Array>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32ArrayType>(destGeomPath.createChildPath("Cell Data").createChildPath("Data")) != nullptr);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regression", "[SimplnxCore][ResampleImageGeomFilter][NestedFeatureAlias]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool clear = GENERATE(true, false);
   const bool renumber = GENERATE(false, true);
   auto ds = CreateFeatureResampleFixture();
@@ -1192,7 +1192,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regress
   const auto featureId = featuresPtr->getId();
   const auto shape = featuresPtr->getShape();
   const auto countsPath = featurePath.createChildPath("NumElements");
-  const auto& counts = ds.getDataRefAs<Int32Array>(countsPath);
+  const auto& counts = ds.getDataRefAs<Int32ArrayType>(countsPath);
   std::vector<int32> originalCounts(counts.getSize());
   for(usize i = 0; i < originalCounts.size(); ++i)
   {
@@ -1200,7 +1200,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regress
   }
   auto* nestedPtr = DataGroup::Create(ds, "Misc", ds.getData(sourcePath)->getId());
   REQUIRE(nestedPtr != nullptr);
-  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
+  auto* keepPtr = unit_test::CreateTestDataArray<int32>(ds, "Keep", {1}, {1}, nestedPtr->getId());
   REQUIRE(keepPtr != nullptr);
   (*keepPtr)[0] = 123;
   REQUIRE(ds.setAdditionalParent(featureId, nestedPtr->getId()));
@@ -1211,10 +1211,10 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regress
   auto args = MakeFeatureResampleArgs(clear, renumber);
   ResampleImageGeomFilter filter;
   auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool foundNestedCopy = false;
   const auto nestedOutputPath = outputPath.createChildPath("Misc").createChildPath("Cell Feature Data");
-  for(const auto& action : preflight.outputActions.value().actions)
+  for(const auto& action : preflight.output_actions.value().actions)
   {
     const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get());
     if(copyPtr != nullptr && copyPtr->path() == sourcePath.createChildPath("Misc"))
@@ -1238,7 +1238,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regress
   REQUIRE(outputFeaturesPtr != nullptr);
   CHECK(outputFeaturesPtr->getSize() == (clear ? 0 : 3));
   CHECK((ds.getData(nestedOutputPath) == nullptr) == clear);
-  CHECK(ds.getDataRefAs<Int32Array>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
+  CHECK(ds.getDataRefAs<Int32ArrayType>(outputPath.createChildPath("Misc").createChildPath("Keep"))[0] == 123);
   CHECK(ds.getData(featurePath)->getId() == featureId);
   CHECK(ds.getData(featurePath)->getParentIds() == parents);
   CHECK(ds.getDataRefAs<AttributeMatrix>(featurePath).getShape() == shape);
@@ -1246,17 +1246,17 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM nested alias regress
   CHECK(ds.getData(DataPath({"Outside", "Misc", "Cell Feature Data"}))->getId() == featureId);
   for(usize i = 0; i < originalCounts.size(); ++i)
   {
-    CHECK(ds.getDataRefAs<Int32Array>(countsPath)[i] == originalCounts[i]);
+    CHECK(ds.getDataRefAs<Int32ArrayType>(countsPath)[i] == originalCounts[i]);
     if(!clear)
     {
-      CHECK(ds.getDataRefAs<Int32Array>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
+      CHECK(ds.getDataRefAs<Int32ArrayType>(nestedOutputPath.createChildPath("NumElements"))[i] == originalCounts[i]);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM selected through second parent", "[SimplnxCore][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = CreateFeatureResampleFixture();
   const bool renumber = GENERATE(false, true);
   auto* parentPtr = DataGroup::Create(dataStructure, "Alias");
@@ -1267,20 +1267,20 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Feature AM selected through sec
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(DataPath({"Alias", "Cell Feature Data"})));
   ResampleImageGeomFilter filter;
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto& output = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Resampled", "Cell Feature Data"}));
   CHECK(output.getSize() == 0);
   CHECK(output.getShape() == ShapeType{renumber ? usize{3} : usize{5}});
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Resampled", "Cell Data", "FeatureIds"}));
   REQUIRE(ids.getNumberOfTuples() == 8);
   for(usize i = 0; i < 8; ++i)
   {
     CHECK(ids[i] == (renumber ? (i % 2 == 0 ? 1 : 2) : (i % 2 == 0 ? 1 : 3)));
   }
   CHECK(source.getSize() == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL conversion Feature options", "[SimplnxCore][ResampleImageGeomFilter][SIMPL]")
@@ -1321,7 +1321,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL conversion Feature option
     SIMPLNX_RESULT_REQUIRE_VALID(converted);
     const auto& args = converted.value();
     CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-    CHECK(args.value<VectorFloat32Parameter::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{1.0F, 2.0F, 3.0F});
+    CHECK(args.value<VectorFloat32ParameterType::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{1.0F, 2.0F, 3.0F});
     CHECK_FALSE(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key));
     CHECK_FALSE(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key));
     const auto defaults = ResampleImageGeomFilter().getDefaultArguments();
@@ -1378,7 +1378,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL conversion Feature option
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL converted preflight", "[SimplnxCore][ResampleImageGeomFilter][SIMPL]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto dataStructure = CreateFeatureResampleFixture();
   const fs::path fixturePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test/simpl_conversion/6_5/ResampleImageGeomFilter.json";
   std::ifstream stream(fixturePath);
@@ -1392,9 +1392,9 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL converted preflight", "[S
   auto converted = ResampleImageGeomFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(converted);
   auto preflight = ResampleImageGeomFilter().preflight(dataStructure, converted.value());
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto cleared = std::find_if(preflight.outputValues.begin(), preflight.outputValues.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
-  REQUIRE(cleared != preflight.outputValues.end());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  const auto cleared = std::find_if(preflight.output_values.begin(), preflight.output_values.end(), [](const auto& v) { return v.name == "Cleared Feature Data"; });
+  REQUIRE(cleared != preflight.output_values.end());
   CHECK(cleared->value.find("Image/Cell Feature Data/NumElements") != std::string::npos);
 }
 
@@ -1419,39 +1419,39 @@ TEST_CASE("SimplnxCore::ResampleImageGeomFilter: SIMPL 6.5 ChangeResolution keys
   CHECK(args.value<bool>(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key) == renumber);
   CHECK(args.value<bool>(ResampleImageGeomFilter::k_RenumberFeatures_Key) == renumber);
   CHECK(args.value<bool>(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key) == !saveAsNew);
-  CHECK(args.value<VectorFloat32Parameter::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{2.0F, 3.0F, 4.0F});
+  CHECK(args.value<VectorFloat32ParameterType::ValueType>(ResampleImageGeomFilter::k_Spacing_Key) == std::vector<float32>{2.0F, 3.0F, 4.0F});
   CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_SelectedImageGeometryPath_Key) == DataPath({"Image"}));
   CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_FeatureAttributeMatrix_Key) == DataPath({"Image", "Cell Feature Data"}));
   CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"Image", "Cell Data", "FeatureIds"}));
   CHECK(args.value<DataPath>(ResampleImageGeomFilter::k_CreatedImageGeometry_Key) == DataPath({"Resampled"}));
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto dataStructure = CreateFeatureResampleFixture();
   auto preflight = ResampleImageGeomFilter().preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
 }
 
 TEST_CASE("SimplnxCore::ResampleImageGeomFilter: Reject another geometry element Feature AM", "[SimplnxCore][ResampleImageGeomFilter][ClearFeatureAM]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto ds = CreateFeatureResampleFixture();
   const auto featurePath = DataPath({"Image", "Cell Feature Data"});
   const auto* featuresPtr = ds.getDataAs<AttributeMatrix>(featurePath);
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = VertexGeom::Create(ds, "OtherGeometry");
   REQUIRE(otherPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(ds, "Vertices", {featuresPtr->getNumberOfTuples()}, {3}, otherPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   otherPtr->setVertices(*verticesPtr);
   REQUIRE(ds.setAdditionalParent(featuresPtr->getId(), otherPtr->getId()));
   otherPtr->setVertexAttributeMatrix(*featuresPtr);
   ResampleImageGeomFilter filter;
   auto result = filter.preflight(ds, MakeFeatureResampleArgs(true, false));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().size() == 1);
-  CHECK(result.outputActions.errors()[0].code == -67460);
-  CHECK(result.outputActions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find("OtherGeometry") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().size() == 1);
+  CHECK(result.output_actions.errors()[0].code == -67460);
+  CHECK(result.output_actions.errors()[0].message.find(featurePath.toString()) != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find("OtherGeometry") != std::string::npos);
   CHECK(otherPtr->getVertexAttributeMatrix() == featuresPtr);
   CHECK(featuresPtr->getSize() > 0);
 }

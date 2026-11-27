@@ -49,7 +49,7 @@ public:
    * @param isInBoundsFunct Tests each geometry vertex.
    * @pre All arguments outlive the worker execution.
    */
-  ComputeMaskImpl(const GeomT& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
+  ComputeMaskImpl(const GeomT& geom, UInt8AbstractDataStoreType& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
   : m_Geom(geom)
   , m_Mask(mask)
   , m_Invert(shouldInvert)
@@ -76,7 +76,7 @@ public:
 
     if constexpr(std::is_same_v<VertexGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const IGeometry::SharedVertexListType::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
       for(usize i = start; i < end; i++)
       {
         float32 xVal = verts[(i * 3) + 0];
@@ -95,15 +95,15 @@ public:
     }
     if constexpr(std::is_same_v<EdgeGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
-      const IGeometry::SharedEdgeList::StoreType& edges = m_Geom.getEdgesRef().getDataStoreRef();
+      const IGeometry::SharedVertexListType::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const IGeometry::SharedEdgeListType::StoreType& edges = m_Geom.getEdgesRef().getDataStoreRef();
       usize numComp = edges.getNumberOfComponents();
       for(usize i = start; i < end; i++)
       {
         uint8 hits = 0;
         for(usize comp = 0; comp < numComp; comp++)
         {
-          const IGeometry::SharedFaceList::value_type activeVertIndex = edges.getValue((i * numComp) + comp);
+          const IGeometry::SharedFaceListType::value_type activeVertIndex = edges.getValue((i * numComp) + comp);
           float32 xVal = verts.getValue((activeVertIndex * 3) + 0);
           float32 yVal = verts.getValue((activeVertIndex * 3) + 1);
           float32 zVal = verts.getValue((activeVertIndex * 3) + 2);
@@ -122,15 +122,15 @@ public:
     }
     if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
-      const IGeometry::SharedFaceList::StoreType& faces = m_Geom.getFacesRef().getDataStoreRef();
+      const IGeometry::SharedVertexListType::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const IGeometry::SharedFaceListType::StoreType& faces = m_Geom.getFacesRef().getDataStoreRef();
       usize numComp = faces.getNumberOfComponents();
       for(usize i = start; i < end; i++)
       {
         uint8 hits = 0;
         for(usize comp = 0; comp < numComp; comp++)
         {
-          const IGeometry::SharedFaceList::value_type activeVertIndex = faces.getValue((i * numComp) + comp);
+          const IGeometry::SharedFaceListType::value_type activeVertIndex = faces.getValue((i * numComp) + comp);
           float32 xVal = verts.getValue((activeVertIndex * 3) + 0);
           float32 yVal = verts.getValue((activeVertIndex * 3) + 1);
           float32 zVal = verts.getValue((activeVertIndex * 3) + 2);
@@ -160,7 +160,7 @@ public:
 
 private:
   const GeomT& m_Geom;
-  UInt8AbstractDataStore& m_Mask;
+  UInt8AbstractDataStoreType& m_Mask;
   bool m_Invert;
   const std::function<uint8(float32, float32, float32)>& m_IsInBoundsFunct;
 };
@@ -176,7 +176,7 @@ private:
  * The execution remains serial because generic DataArray and DataStore access
  * has no concurrent-access guarantee.
  */
-Result<> ExecuteNodeMask(const IGeometry& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
+Result<> ExecuteNodeMask(const IGeometry& geom, UInt8AbstractDataStoreType& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
 {
   ParallelDataAlgorithm dataAlg;
   // Generic geometry and mask stores remain serial.
@@ -228,15 +228,15 @@ bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThreshold
 
   const auto& iNodeGeom = dynamic_cast<const INodeGeometry0D&>(geom);
 
-  BoundingBox3Df bounds = iNodeGeom.getBoundingBox();
+  BoundingBox3DfType bounds = iNodeGeom.getBoundingBox();
   std::array<float32, 3> minPoint = bounds.getMinPoint().toArray();
   std::array<float32, 3> maxPoint = bounds.getMaxPoint().toArray();
 
-  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(inputValues->ShapeType))
+  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(inputValues->shape_type))
   {
   case ComputeCoordinateThreshold::BoundsType::Rectangle: {
-    VectorFloat32Parameter::ValueType minBound = inputValues->MinCoord;
-    VectorFloat32Parameter::ValueType maxBound = inputValues->MaxCoord;
+    VectorFloat32ParameterType::ValueType minBound = inputValues->min_coord;
+    VectorFloat32ParameterType::ValueType maxBound = inputValues->max_coord;
 
     if(maxPoint[0] < minBound[0] || maxPoint[1] < minBound[1] || maxPoint[2] < minBound[2])
     {
@@ -251,7 +251,7 @@ bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThreshold
     return true;
   }
   case ComputeCoordinateThreshold::BoundsType::Sphere: {
-    VectorFloat32Parameter::ValueType sphereInfo = inputValues->SphereInfo;
+    VectorFloat32ParameterType::ValueType sphereInfo = inputValues->sphere_info;
     return intersection_utilities::SphereIntersectsRectangularPrism({sphereInfo[0], sphereInfo[1], sphereInfo[2]}, sphereInfo[3], minPoint, maxPoint);
   }
   }
@@ -271,13 +271,13 @@ ComputeCoordinateThreshold::ComputeCoordinateThreshold(DataStructure& dataStruct
 
 Result<> ComputeCoordinateThreshold::operator()()
 {
-  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
-  auto& maskArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath);
+  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->geometry_path);
+  auto& maskArray = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->mask_array_path);
   auto& mask = maskArray.getDataStoreRef();
 
   if(!PrecheckRuntimeGeom(geom, m_InputValues))
   {
-    if(m_InputValues->Invert)
+    if(m_InputValues->invert)
     {
       mask.fill(1);
     }
@@ -295,11 +295,11 @@ Result<> ComputeCoordinateThreshold::operator()()
   }
 
   std::function<uint8(float32, float32, float32)> isInBounds;
-  switch(static_cast<BoundsType>(m_InputValues->ShapeType))
+  switch(static_cast<BoundsType>(m_InputValues->shape_type))
   {
   case BoundsType::Rectangle: {
-    const VectorFloat32Parameter::ValueType minPoint = m_InputValues->MinCoord;
-    const VectorFloat32Parameter::ValueType maxPoint = m_InputValues->MaxCoord;
+    const VectorFloat32ParameterType::ValueType minPoint = m_InputValues->min_coord;
+    const VectorFloat32ParameterType::ValueType maxPoint = m_InputValues->max_coord;
     isInBounds = [minPoint, maxPoint](float32 x, float32 y, float32 z) -> uint8 {
       if(minPoint[0] > x || maxPoint[0] < x)
       {
@@ -321,7 +321,7 @@ Result<> ComputeCoordinateThreshold::operator()()
     break;
   }
   case BoundsType::Sphere: {
-    const VectorFloat32Parameter::ValueType sphereInfo = m_InputValues->SphereInfo;
+    const VectorFloat32ParameterType::ValueType sphereInfo = m_InputValues->sphere_info;
     isInBounds = [sphereInfo](float32 x, float32 y, float32 z) -> uint8 {
       const float32 xDiff = x - sphereInfo[0];
       const float32 yDiff = y - sphereInfo[1];
@@ -332,5 +332,5 @@ Result<> ComputeCoordinateThreshold::operator()()
   }
   }
 
-  return ExecuteNodeMask(geom, mask, m_InputValues->Invert, isInBounds);
+  return ExecuteNodeMask(geom, mask, m_InputValues->invert, isInBounds);
 }

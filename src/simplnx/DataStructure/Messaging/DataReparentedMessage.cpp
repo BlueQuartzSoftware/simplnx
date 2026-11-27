@@ -32,7 +32,7 @@ DataReparentedMessage::~DataReparentedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataReparentedMessage::getMsgType() const
 {
-  return MsgType;
+  return k_MsgType;
 }
 
 DataObject::IdType DataReparentedMessage::getTargetId() const

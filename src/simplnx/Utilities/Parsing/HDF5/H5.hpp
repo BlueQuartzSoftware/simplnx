@@ -41,7 +41,7 @@ enum class Type
  * @param typeEnum Specifies the HDF5 utility type.
  * @return Matching numeric type, or std::nullopt for string and unknown.
  */
-std::optional<DataType> SIMPLNX_EXPORT toCommonType(Type typeEnum);
+std::optional<DataType> SIMPLNX_EXPORT ToCommonType(Type typeEnum);
 
 // Reserved HighFive conversion overload.
 // std::optional<nx::core::DataType> SIMPLNX_EXPORT toCommonType(HighFive::DataType typeEnum);
@@ -55,7 +55,7 @@ std::optional<DataType> SIMPLNX_EXPORT toCommonType(Type typeEnum);
  * The function gets the non-recursive process-wide HDF5 API lock. It does not
  * classify HDF5 string types.
  */
-Type SIMPLNX_EXPORT getTypeFromId(IdType typeId);
+Type SIMPLNX_EXPORT GetTypeFromId(IdType typeId);
 
 /**
  * @brief Gets the native HDF5 identifier for a numeric utility type.
@@ -63,7 +63,7 @@ Type SIMPLNX_EXPORT getTypeFromId(IdType typeId);
  * @return Native HDF5 datatype identifier.
  * @throws std::runtime_error If type is string, unknown, or otherwise unsupported.
  */
-IdType SIMPLNX_EXPORT getIdForType(Type type);
+IdType SIMPLNX_EXPORT GetIdForType(Type type);
 
 /**
  * @brief Gets the final name segment from an HDF5 path buffer.

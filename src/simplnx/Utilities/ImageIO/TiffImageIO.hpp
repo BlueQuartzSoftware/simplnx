@@ -40,7 +40,7 @@ public:
    *
    * The bounded segments let callers crop or convert directly into destination pages.
    */
-  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex = 0) const override;
+  Result<> readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallbackType& callback, usize pageIndex = 0) const override;
   Result<> writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const override;
   std::set<DataType> supportedWriteDataTypes() const override;
   std::set<usize> supportedWriteComponentCounts() const override;

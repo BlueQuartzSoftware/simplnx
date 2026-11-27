@@ -85,7 +85,7 @@ struct WidenIntegerArrayToUInt32Fn
 Result<> WidenIntegerArrayToUInt32(const DataStructure& dataStructure, const DataPath& srcPath, AbstractDataStore<uint32>& dst, const std::atomic_bool& shouldCancel)
 {
   const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcPath);
-  return IntegerOnly::dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{.data_structure = dataStructure, .src_path = srcPath, .dst = dst, .should_cancel = shouldCancel});
+  return IntegerOnly::Dispatch(srcArray.getDataType(), WidenIntegerArrayToUInt32Fn{.data_structure = dataStructure, .src_path = srcPath, .dst = dst, .should_cancel = shouldCancel});
 }
 
 /**
@@ -140,7 +140,7 @@ struct NarrowUInt32StoreToIntegerArrayFn
 Result<> NarrowUInt32StoreToIntegerArray(const AbstractDataStore<uint32>& src, DataStructure& dataStructure, const DataPath& dstPath, const std::atomic_bool& shouldCancel)
 {
   const auto& dstArray = dataStructure.getDataRefAs<IDataArray>(dstPath);
-  return IntegerOnly::dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{.src = src, .data_structure = dataStructure, .dst_path = dstPath, .should_cancel = shouldCancel});
+  return IntegerOnly::Dispatch(dstArray.getDataType(), NarrowUInt32StoreToIntegerArrayFn{.src = src, .data_structure = dataStructure, .dst_path = dstPath, .should_cancel = shouldCancel});
 }
 
 /**
@@ -186,7 +186,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
   const DataPath& input_array_path;  // grayscale
   const DataPath& marker_array_path; // integer labels
   const DataPath& output_array_path; // marker-type labels
-  SizeVec3 dims;
+  SizeVec3Type dims;
   bool mark_watershed_line;
   bool fully_connected;
   const std::atomic_bool& should_cancel;
@@ -206,8 +206,8 @@ struct MorphologicalWatershedFromMarkersExecuteFn
       const auto& markerArray = data_structure.getDataRefAs<IDataArray>(marker_array_path);
       const std::string format = inArray.getDataFormat();
       const std::vector<usize> tupleShape = inArray.getTupleShape();
-      auto markerU32 = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-      auto outU32 = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto markerU32 = data_store_utilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto outU32 = data_store_utilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
       if(markerU32 == nullptr || outU32 == nullptr)
       {
         return MakeErrorResult(-79010, "MorphologicalWatershedFromMarkers: failed to allocate a uint32 scratch store.");
@@ -246,7 +246,7 @@ struct MorphologicalWatershedExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   float64 level;
   bool mark_watershed_line;
   bool fully_connected;
@@ -282,8 +282,8 @@ struct MorphologicalWatershedExecuteFn
       std::shared_ptr<AbstractDataStore<T>> hminStore;
       if(levelT != T{})
       {
-        auto markerScratch = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-        hminStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+        auto markerScratch = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+        hminStore = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
         if(markerScratch == nullptr || hminStore == nullptr)
         {
           return MakeErrorResult(-79020, "MorphologicalWatershed: failed to allocate an HMinima scratch store.");
@@ -304,7 +304,7 @@ struct MorphologicalWatershedExecuteFn
       // Replicates RegionalExtremaExecuteFn (Minima, flatIsExtremum=true): a completely flat image is all-minima (ITK's
       // GetFlat() branch with SetFlatIsMinima(true)); otherwise valued-extrema into a T scratch, then threshold (the
       // non-extrema were set to the type-max marker -> background 0, the extrema kept their value -> foreground).
-      auto rminBinary = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto rminBinary = data_store_utilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
       if(rminBinary == nullptr)
       {
         return MakeErrorResult(-79021, "MorphologicalWatershed: failed to allocate a regional-minima scratch store.");
@@ -330,7 +330,7 @@ struct MorphologicalWatershedExecuteFn
         }
         else
         {
-          auto rminValued = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+          auto rminValued = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
           if(rminValued == nullptr)
           {
             return MakeErrorResult(-79022, "MorphologicalWatershed: failed to allocate a valued regional-minima scratch store.");
@@ -370,7 +370,7 @@ struct MorphologicalWatershedExecuteFn
 
       // (3) label = ConnectedComponent(rmin, predicate v != 0) -> uint32 markers (one consecutive label per
       // regional-minima component, background 0), the seeds the flood floods from.
-      auto labelStore = DataStoreUtilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+      auto labelStore = data_store_utilities::CreateDataStoreWithFormat<uint32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
       if(labelStore == nullptr)
       {
         return MakeErrorResult(-79023, "MorphologicalWatershed: failed to allocate a connected-component label scratch store.");
@@ -413,7 +413,7 @@ Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& data
                                                                .fully_connected = fullyConnected,
                                                                .should_cancel = shouldCancel,
                                                                .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -433,7 +433,7 @@ Result<> ExecuteMorphologicalWatershedImageFilter(DataStructure& dataStructure, 
                                                     .fully_connected = fullyConnected,
                                                     .should_cancel = shouldCancel,
                                                     .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

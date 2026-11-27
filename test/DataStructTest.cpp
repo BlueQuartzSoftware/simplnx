@@ -80,7 +80,7 @@ enum class DynamicListMode : uint8
 
 TEST_CASE("SimplnxCore::DataObjectType Check")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static_assert(DataObject::Type::IGeometry == static_cast<DataObject::Type>(8));
   static_assert(DataObject::Type::IGridGeometry == static_cast<DataObject::Type>(9));
@@ -101,15 +101,15 @@ TEST_CASE("SimplnxCore::DataObjectType Check")
 // Verify that GraphViz export completes without a runtime exception.
 TEST_CASE("SimplnxCore::exportHierarchyAsGraphViz")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const DataStructure dataStructure = unit_test::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsGraphViz_test.dot", unit_test::k_BinaryTestOutputDir));
   std::cout << outputPath << '\n';
   std::ofstream output(outputPath, std::ios_base::trunc);
   dataStructure.exportHierarchyAsGraphViz(output);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataStructure::exportHierarchyAsGraphViz::UniqueEscapedNodes")
@@ -145,15 +145,15 @@ TEST_CASE("DataStructure::exportHierarchyAsGraphViz::UniqueEscapedNodes")
 // Verify that text export completes without a runtime exception.
 TEST_CASE("SimplnxCore::exportHierarchyAsText")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const DataStructure dataStructure = unit_test::CreateComplexMultiLevelDataGraph();
   auto outputPath = fs::path(fmt::format("{}/exportHierarchyAsText_test.txt", unit_test::k_BinaryTestOutputDir));
   std::cout << outputPath << '\n';
   std::ofstream output(outputPath, std::ios_base::trunc);
   dataStructure.exportHierarchyAsText(output);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataStructure::exportHierarchyAsText::EscapedControls")
@@ -187,16 +187,16 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
 
   // Image Geometry
   {
-    ImageGeom* imageGeomPtr = ImageGeom::Create(dataStruct, Constants::k_ImageGeometry);
+    ImageGeom* imageGeomPtr = ImageGeom::Create(dataStruct, constants::k_ImageGeometry);
     REQUIRE(imageGeomPtr->setSpacing({0.25f, 0.55f, 1.86}).valid());
     REQUIRE(imageGeomPtr->setOrigin({0.0f, 20.0f, 66.0f}).valid());
     std::vector<usize> imageGeomDims = {40, 60, 80};
     imageGeomPtr->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
 
-    const DataGroup* levelOneGroupPtr = DataGroup::Create(dataStruct, Constants::k_LevelOne, imageGeomPtr->getId());
+    const DataGroup* levelOneGroupPtr = DataGroup::Create(dataStruct, constants::k_LevelOne, imageGeomPtr->getId());
 
-    const DataGroup* levelTwoGroupPtr = DataGroup::Create(dataStruct, Constants::k_LevelTwo, levelOneGroupPtr->getId());
-    auto* neighborListPtr = NeighborList<int16>::Create(dataStruct, Constants::k_Int16DataSet, ShapeType{3}, levelOneGroupPtr->getId());
+    const DataGroup* levelTwoGroupPtr = DataGroup::Create(dataStruct, constants::k_LevelTwo, levelOneGroupPtr->getId());
+    auto* neighborListPtr = NeighborList<int16>::Create(dataStruct, constants::k_Int16DataSet, ShapeType{3}, levelOneGroupPtr->getId());
     std::vector<int16> list1 = {117, 875, 1035, 3905, 4214};
     std::vector<int16> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
     std::vector<int16> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};
@@ -204,7 +204,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     neighborListPtr->setList(1, std::make_shared<std::vector<int16>>(list2));
     neighborListPtr->setList(2, std::make_shared<std::vector<int16>>(list3));
 
-    Int32Array* testIntArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStruct, Constants::k_Int32DataSet, {5}, {1}, levelTwoGroupPtr->getId());
+    Int32ArrayType* testIntArrayPtr = unit_test::CreateTestDataArray<int32>(dataStruct, constants::k_Int32DataSet, {5}, {1}, levelTwoGroupPtr->getId());
     (*testIntArrayPtr)[0] = 1;
     (*testIntArrayPtr)[1] = 5;
     (*testIntArrayPtr)[2] = 10;
@@ -212,10 +212,10 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*testIntArrayPtr)[4] = 20;
 
     const std::vector<usize> reversedDims(imageGeomDims.rbegin(), imageGeomDims.rend());
-    AttributeMatrix* levelOneAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_CellData, reversedDims, imageGeomPtr->getId());
+    AttributeMatrix* levelOneAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_CellData, reversedDims, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*levelOneAttMatrixPtr);
 
-    BoolArray* testBoolArrayPtr = UnitTest::CreateTestDataArray<bool>(dataStruct, Constants::k_ConditionalArray, reversedDims, {1}, levelOneAttMatrixPtr->getId());
+    BoolArrayType* testBoolArrayPtr = unit_test::CreateTestDataArray<bool>(dataStruct, constants::k_ConditionalArray, reversedDims, {1}, levelOneAttMatrixPtr->getId());
     testBoolArrayPtr->fill(true);
     (*testBoolArrayPtr)[0] = false;
     (*testBoolArrayPtr)[5] = false;
@@ -230,7 +230,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     std::vector<usize> dims = {10, 10, 5};
     rectGeomPtr->setDimensions(dims);
 
-    Float32Array* xBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, k_XBounds, {14}, {1});
+    Float32ArrayType* xBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, k_XBounds, {14}, {1});
     (*xBoundsArrayPtr)[0] = 0;
     (*xBoundsArrayPtr)[1] = 1;
     (*xBoundsArrayPtr)[2] = 2;
@@ -245,7 +245,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*xBoundsArrayPtr)[11] = 11;
     (*xBoundsArrayPtr)[12] = 12;
     (*xBoundsArrayPtr)[13] = 14;
-    Float32Array* yBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, k_YBounds, {14}, {1});
+    Float32ArrayType* yBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, k_YBounds, {14}, {1});
     (*yBoundsArrayPtr)[0] = 0;
     (*yBoundsArrayPtr)[1] = 2;
     (*yBoundsArrayPtr)[2] = 4;
@@ -260,7 +260,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*yBoundsArrayPtr)[11] = 22;
     (*yBoundsArrayPtr)[12] = 24;
     (*yBoundsArrayPtr)[13] = 26;
-    Float32Array* zBoundsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, k_ZBounds, {14}, {1});
+    Float32ArrayType* zBoundsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, k_ZBounds, {14}, {1});
     (*zBoundsArrayPtr)[0] = 0;
     (*zBoundsArrayPtr)[1] = 5;
     (*zBoundsArrayPtr)[2] = 10;
@@ -282,14 +282,14 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
 
   // Vertex Geometry
   {
-    VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStruct, Constants::k_VertexGeometry);
+    VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStruct, constants::k_VertexGeometry);
 
     std::vector<usize> vertTupleShape = {4};
-    AttributeMatrix* vertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, vertexGeomPtr->getId());
+    AttributeMatrix* vertAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_VertexDataGroupName, vertTupleShape, vertexGeomPtr->getId());
     vertexGeomPtr->setVertexAttributeMatrix(*vertAttMatrixPtr);
     StringArray* testStringArrayPtr =
         StringArray::CreateWithValues(dataStruct, k_StringArray, vertAttMatrixPtr->getShape(), {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrixPtr->getId());
-    Float32Array* vertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeomPtr->getId());
+    Float32ArrayType* vertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeomPtr->getId());
     (*vertListArrayPtr)[0] = 0;
     (*vertListArrayPtr)[1] = 0;
     (*vertListArrayPtr)[2] = 0;
@@ -317,9 +317,9 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     edgeGeomPtr->setEdgeAttributeMatrix(*edgeAttMatrixPtr);
 
     std::vector<usize> edgeVertTupleShape = {5};
-    AttributeMatrix* edgeVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, edgeVertTupleShape, edgeGeomPtr->getId());
+    AttributeMatrix* edgeVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_VertexDataGroupName, edgeVertTupleShape, edgeGeomPtr->getId());
     edgeGeomPtr->setVertexAttributeMatrix(*edgeVertAttMatrixPtr);
-    Float32Array* edgeVertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, edgeVertTupleShape, {3}, edgeGeomPtr->getId());
+    Float32ArrayType* edgeVertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, constants::k_Float32DataSet, edgeVertTupleShape, {3}, edgeGeomPtr->getId());
     (*edgeVertListArrayPtr)[0] = 0;
     (*edgeVertListArrayPtr)[1] = 0;
     (*edgeVertListArrayPtr)[2] = 0;
@@ -336,7 +336,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*edgeVertListArrayPtr)[13] = 4;
     (*edgeVertListArrayPtr)[14] = 4;
     edgeGeomPtr->setVertices(*edgeVertListArrayPtr);
-    IGeometry::SharedEdgeList* edgesListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedEdges, edgeTupleShape, {2}, edgeGeomPtr->getId());
+    IGeometry::SharedEdgeListType* edgesListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedEdges, edgeTupleShape, {2}, edgeGeomPtr->getId());
     (*edgesListArrayPtr)[0] = 0;
     (*edgesListArrayPtr)[1] = 1;
     (*edgesListArrayPtr)[2] = 1;
@@ -354,16 +354,16 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
 
   // Triangle Geometry
   {
-    TriangleGeom* triangleGeomPtr = TriangleGeom::Create(dataStruct, Constants::k_TriangleGeometryName);
+    TriangleGeom* triangleGeomPtr = TriangleGeom::Create(dataStruct, constants::k_TriangleGeometryName);
 
     std::vector<usize> faceTupleShape = {5};
     AttributeMatrix* faceAttMatrixPtr = AttributeMatrix::Create(dataStruct, TriangleGeom::k_FaceAttributeMatrixName, faceTupleShape, triangleGeomPtr->getId());
     triangleGeomPtr->setFaceAttributeMatrix(*faceAttMatrixPtr);
 
     std::vector<usize> faceVertTupleShape = {6};
-    AttributeMatrix* faceVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, faceVertTupleShape, triangleGeomPtr->getId());
+    AttributeMatrix* faceVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_VertexDataGroupName, faceVertTupleShape, triangleGeomPtr->getId());
     triangleGeomPtr->setVertexAttributeMatrix(*faceVertAttMatrixPtr);
-    Float32Array* faceVertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, faceVertTupleShape, {3}, triangleGeomPtr->getId());
+    Float32ArrayType* faceVertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, constants::k_Float32DataSet, faceVertTupleShape, {3}, triangleGeomPtr->getId());
     (*faceVertListArrayPtr)[0] = 0;
     (*faceVertListArrayPtr)[1] = 0;
     (*faceVertListArrayPtr)[2] = 0;
@@ -383,7 +383,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*faceVertListArrayPtr)[16] = -0.5;
     (*faceVertListArrayPtr)[17] = -1;
     triangleGeomPtr->setVertices(*faceVertListArrayPtr);
-    IGeometry::SharedEdgeList* facesListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedFaces, faceTupleShape, {3}, triangleGeomPtr->getId());
+    IGeometry::SharedEdgeListType* facesListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedFaces, faceTupleShape, {3}, triangleGeomPtr->getId());
     (*facesListArrayPtr)[0] = 0;
     (*facesListArrayPtr)[1] = 1;
     (*facesListArrayPtr)[2] = 2;
@@ -416,9 +416,9 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     AttributeMatrix* faceAttMatrixPtr = AttributeMatrix::Create(dataStruct, QuadGeom::k_FaceAttributeMatrixName, faceTupleShape, quadGeomPtr->getId());
     quadGeomPtr->setFaceAttributeMatrix(*faceAttMatrixPtr);
     std::vector<usize> faceVertTupleShape = {6};
-    AttributeMatrix* faceVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, faceVertTupleShape, quadGeomPtr->getId());
+    AttributeMatrix* faceVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_VertexDataGroupName, faceVertTupleShape, quadGeomPtr->getId());
     quadGeomPtr->setVertexAttributeMatrix(*faceVertAttMatrixPtr);
-    Float32Array* faceVertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, faceVertTupleShape, {3}, quadGeomPtr->getId());
+    Float32ArrayType* faceVertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, constants::k_Float32DataSet, faceVertTupleShape, {3}, quadGeomPtr->getId());
     (*faceVertListArrayPtr)[0] = -1;
     (*faceVertListArrayPtr)[1] = 1;
     (*faceVertListArrayPtr)[2] = -1;
@@ -438,7 +438,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*faceVertListArrayPtr)[16] = -1;
     (*faceVertListArrayPtr)[17] = 1;
     quadGeomPtr->setVertices(*faceVertListArrayPtr);
-    IGeometry::SharedEdgeList* facesListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedFaces, faceTupleShape, {4}, quadGeomPtr->getId());
+    IGeometry::SharedEdgeListType* facesListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedFaces, faceTupleShape, {4}, quadGeomPtr->getId());
     (*facesListArrayPtr)[0] = 0;
     (*facesListArrayPtr)[1] = 3;
     (*facesListArrayPtr)[2] = 4;
@@ -464,9 +464,9 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     AttributeMatrix* polyAttMatrixPtr = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, cellTupleShape, tetGeomPtr->getId());
     tetGeomPtr->setPolyhedraAttributeMatrix(*polyAttMatrixPtr);
     std::vector<usize> vertTupleShape = {5};
-    AttributeMatrix* cellVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, tetGeomPtr->getId());
+    AttributeMatrix* cellVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_VertexDataGroupName, vertTupleShape, tetGeomPtr->getId());
     tetGeomPtr->setVertexAttributeMatrix(*cellVertAttMatrixPtr);
-    Float32Array* vertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, tetGeomPtr->getId());
+    Float32ArrayType* vertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, constants::k_Float32DataSet, vertTupleShape, {3}, tetGeomPtr->getId());
     (*vertListArrayPtr)[0] = -1;
     (*vertListArrayPtr)[1] = 0.5;
     (*vertListArrayPtr)[2] = 0;
@@ -483,7 +483,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*vertListArrayPtr)[13] = 0.5;
     (*vertListArrayPtr)[14] = 0;
     tetGeomPtr->setVertices(*vertListArrayPtr);
-    IGeometry::SharedEdgeList* polyListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {4}, tetGeomPtr->getId());
+    IGeometry::SharedEdgeListType* polyListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {4}, tetGeomPtr->getId());
     (*polyListArrayPtr)[0] = 0;
     (*polyListArrayPtr)[1] = 1;
     (*polyListArrayPtr)[2] = 2;
@@ -511,9 +511,9 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     AttributeMatrix* polyAttMatrixPtr = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, cellTupleShape, hexGeomPtr->getId());
     hexGeomPtr->setPolyhedraAttributeMatrix(*polyAttMatrixPtr);
     std::vector<usize> vertTupleShape = {12};
-    AttributeMatrix* cellVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, hexGeomPtr->getId());
+    AttributeMatrix* cellVertAttMatrixPtr = AttributeMatrix::Create(dataStruct, constants::k_VertexDataGroupName, vertTupleShape, hexGeomPtr->getId());
     hexGeomPtr->setVertexAttributeMatrix(*cellVertAttMatrixPtr);
-    Float32Array* vertListArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, hexGeomPtr->getId());
+    Float32ArrayType* vertListArrayPtr = unit_test::CreateTestDataArray<float32>(dataStruct, constants::k_Float32DataSet, vertTupleShape, {3}, hexGeomPtr->getId());
     (*vertListArrayPtr)[0] = -1;
     (*vertListArrayPtr)[1] = 1;
     (*vertListArrayPtr)[2] = 1;
@@ -551,7 +551,7 @@ DataStructure CreateTestDataStructure(DynamicListMode dynamicListMode = DynamicL
     (*vertListArrayPtr)[34] = -1;
     (*vertListArrayPtr)[35] = 1;
     hexGeomPtr->setVertices(*vertListArrayPtr);
-    IGeometry::SharedEdgeList* polyListArrayPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {8}, hexGeomPtr->getId());
+    IGeometry::SharedEdgeListType* polyListArrayPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {8}, hexGeomPtr->getId());
     (*polyListArrayPtr)[0] = 6;
     (*polyListArrayPtr)[1] = 7;
     (*polyListArrayPtr)[2] = 4;
@@ -616,9 +616,9 @@ const nlohmann::json& FindNode(const nlohmann::json& nodes, std::string_view nam
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::Fields")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const DataStructure dataStructure = UnitTest::CreateComplexMultiLevelDataGraph();
+  const DataStructure dataStructure = unit_test::CreateComplexMultiLevelDataGraph();
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
 
   REQUIRE(json.at("schema_version").get<int>() == 1);
@@ -627,18 +627,18 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::Fields")
   REQUIRE(json.at("objects").size() == dataStructure.getTopLevelData().size());
 
   // Top-level DataGroup "A" has two children: "H" and "C".
-  const auto& groupA = FindNode(json.at("objects"), Constants::k_GroupAName.view());
-  REQUIRE(groupA.at("path").get<std::string>() == Constants::k_GroupAName.view());
+  const auto& groupA = FindNode(json.at("objects"), constants::k_GroupAName.view());
+  REQUIRE(groupA.at("path").get<std::string>() == constants::k_GroupAName.view());
   REQUIRE(groupA.at("type").get<std::string>() == DataGroup::k_TypeName.view());
-  const auto groupAId = dataStructure.getId(DataPath({std::string(Constants::k_GroupAName.view())}));
+  const auto groupAId = dataStructure.getId(DataPath({std::string(constants::k_GroupAName.view())}));
   REQUIRE(groupAId == groupA.at("id").get<uint64>());
   REQUIRE(groupA.at("children").size() == 2);
   REQUIRE_FALSE(groupA.contains("tuple_shape"));
   REQUIRE_FALSE(groupA.contains("data_type"));
 
   // A/H/N is an int8 DataArray with tuple shape {1} and component shape {1}.
-  const auto& groupH = FindNode(groupA.at("children"), Constants::k_GroupHName.view());
-  const auto& arrayN = FindNode(groupH.at("children"), Constants::k_ArrayNName.view());
+  const auto& groupH = FindNode(groupA.at("children"), constants::k_GroupHName.view());
+  const auto& arrayN = FindNode(groupH.at("children"), constants::k_ArrayNName.view());
   REQUIRE(arrayN.at("path").get<std::string>() == "A/H/N");
   REQUIRE(arrayN.at("type").get<std::string>() == "DataArray<int8>");
   REQUIRE(arrayN.at("data_type").get<std::string>() == "int8");
@@ -704,35 +704,35 @@ TEST_CASE("DataStructure::HierarchyExportsHandleDeepTrees")
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::AttributeMatrixAndNeighborList")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const DataStructure dataStructure = CreateTestDataStructure();
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
 
-  const auto& imageGeom = FindNode(json.at("objects"), Constants::k_ImageGeometry.view());
+  const auto& imageGeom = FindNode(json.at("objects"), constants::k_ImageGeometry.view());
 
   // Image Geometry/CellData is an AttributeMatrix with shape {80, 60, 40} (X fastest).
-  const auto& cellData = FindNode(imageGeom.at("children"), Constants::k_CellData.view());
+  const auto& cellData = FindNode(imageGeom.at("children"), constants::k_CellData.view());
   REQUIRE(cellData.at("type").get<std::string>() == AttributeMatrix::k_TypeName.view());
   REQUIRE(cellData.at("tuple_shape") == nlohmann::json::array({80, 60, 40}));
   REQUIRE_FALSE(cellData.contains("data_type"));
 
   // Image Geometry/CellData/Conditional [bool] is a bool DataArray.
-  const auto& boolArray = FindNode(cellData.at("children"), Constants::k_ConditionalArray.view());
+  const auto& boolArray = FindNode(cellData.at("children"), constants::k_ConditionalArray.view());
   REQUIRE(boolArray.at("data_type").get<std::string>() == "boolean");
   REQUIRE(boolArray.at("tuple_shape") == nlohmann::json::array({80, 60, 40}));
   REQUIRE(boolArray.at("num_tuples").get<uint64>() == uint64{80} * 60 * 40);
 
   // Image Geometry/ONE/int16 DataSet is a NeighborList<int16> with 3 tuples.
-  const auto& levelOne = FindNode(imageGeom.at("children"), Constants::k_LevelOne.view());
-  const auto& neighborList = FindNode(levelOne.at("children"), Constants::k_Int16DataSet.view());
+  const auto& levelOne = FindNode(imageGeom.at("children"), constants::k_LevelOne.view());
+  const auto& neighborList = FindNode(levelOne.at("children"), constants::k_Int16DataSet.view());
   REQUIRE(neighborList.at("data_type").get<std::string>() == "int16");
   REQUIRE(neighborList.at("num_tuples").get<uint64>() == 3);
   REQUIRE_FALSE(neighborList.contains("component_shape"));
 
   // Vertex Geometry/Vertex Data/String Array is serialized explicitly as a string array.
-  const auto& vertexGeom = FindNode(json.at("objects"), Constants::k_VertexGeometry.view());
-  const auto& vertexData = FindNode(vertexGeom.at("children"), Constants::k_VertexDataGroupName.view());
+  const auto& vertexGeom = FindNode(json.at("objects"), constants::k_VertexGeometry.view());
+  const auto& vertexData = FindNode(vertexGeom.at("children"), constants::k_VertexDataGroupName.view());
   const auto& stringArray = FindNode(vertexData.at("children"), k_StringArray.view());
   REQUIRE(stringArray.at("type").get<std::string>() == StringArray::k_TypeName.view());
   REQUIRE(stringArray.at("data_type").get<std::string>() == "string");
@@ -742,12 +742,12 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::AttributeMatrixAndNeighborList"
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::Geometry")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const DataStructure dataStructure = CreateTestDataStructure();
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
 
-  const auto& imageGeom = FindNode(json.at("objects"), Constants::k_ImageGeometry.view());
+  const auto& imageGeom = FindNode(json.at("objects"), constants::k_ImageGeometry.view());
   REQUIRE(imageGeom.at("type").get<std::string>() == ImageGeom::k_TypeName.view());
   REQUIRE(imageGeom.contains("geometry"));
   const auto& geom = imageGeom.at("geometry");
@@ -781,13 +781,13 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::Geometry")
   REQUIRE_FALSE(rectGeomBlock.contains("spacing"));
 
   // A DataGroup must not carry a geometry block.
-  const auto& levelOne = FindNode(imageGeom.at("children"), Constants::k_LevelOne.view());
+  const auto& levelOne = FindNode(imageGeom.at("children"), constants::k_LevelOne.view());
   REQUIRE_FALSE(levelOne.contains("geometry"));
 }
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* rectGridGeomPtr = RectGridGeom::Create(dataStructure, "Rect Grid");
@@ -795,7 +795,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPreflightBounds")
   rectGridGeomPtr->setDimensions({2, 2, 2});
 
   const auto createBounds = [&dataStructure](const std::string& name) {
-    auto result = Float32Array::CreatePlanned(dataStructure, name, {3}, {1}, "");
+    auto result = Float32ArrayType::CreatePlanned(dataStructure, name, {3}, {1}, "");
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     return result.value();
   };
@@ -843,7 +843,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPlannedOutOfCoreBounds"
   SIMPLNX_RESULT_REQUIRE_VALID(registrationResult);
 
   const auto createBounds = [&dataStructure, &manager](const std::string& name) {
-    auto result = Float32Array::CreatePlanned(dataStructure, name, {3}, {1}, manager->formatName());
+    auto result = Float32ArrayType::CreatePlanned(dataStructure, name, {3}, {1}, manager->formatName());
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(result.value()->getIDataStoreRef().getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
     return result.value();
@@ -864,15 +864,15 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::RectGridPlannedOutOfCoreBounds"
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(triangleGeomPtr != nullptr);
 
   // The geometry has 4 vertices and 2 faces.
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, triangleGeomPtr->getId());
-  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "SharedTriList", {2}, {3}, triangleGeomPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "SharedVertexList", {4}, {3}, triangleGeomPtr->getId());
+  auto* facesPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "SharedTriList", {2}, {3}, triangleGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   triangleGeomPtr->setVertices(*verticesPtr);
@@ -902,7 +902,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometry")
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometryPaths")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const DataStructure dataStructure = CreateTestDataStructure();
   const nlohmann::json json = dataStructure.exportHierarchyAsJson();
@@ -935,7 +935,7 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::NodeGeometryPaths")
 TEST_CASE("DataStructure::exportHierarchyAsJson::PlannedScalarStore")
 {
   DataStructure dataStructure;
-  auto arrayResult = Int32Array::CreatePlanned(dataStructure, "Array", {}, {}, "");
+  auto arrayResult = Int32ArrayType::CreatePlanned(dataStructure, "Array", {}, {}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(arrayResult);
   auto* dataArrayPtr = arrayResult.value();
   REQUIRE(dataArrayPtr != nullptr);
@@ -999,7 +999,7 @@ void StripVolatileKeysFromDocument(nlohmann::json& root)
 
 TEST_CASE("DataStructure::exportHierarchyAsJson::PreflightRoundTrip")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "exportHierarchyAsJson_roundtrip.dream3d";
   if(fs::exists(filePath))
@@ -1019,9 +1019,9 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::PreflightRoundTrip")
   nlohmann::json readJson = readResult.value().exportHierarchyAsJson();
 
   // Preflight mode must create every array with an empty store and read no values.
-  const auto& imageGeom = FindNode(readJson.at("objects"), Constants::k_ImageGeometry.view());
-  const auto& cellData = FindNode(imageGeom.at("children"), Constants::k_CellData.view());
-  const auto& boolArray = FindNode(cellData.at("children"), Constants::k_ConditionalArray.view());
+  const auto& imageGeom = FindNode(readJson.at("objects"), constants::k_ImageGeometry.view());
+  const auto& cellData = FindNode(imageGeom.at("children"), constants::k_CellData.view());
+  const auto& boolArray = FindNode(cellData.at("children"), constants::k_ConditionalArray.view());
   REQUIRE(boolArray.at("store_type").get<std::string>() == "Empty");
   REQUIRE(boolArray.at("num_tuples").get<uint64>() == uint64{80} * 60 * 40);
 
@@ -1409,7 +1409,7 @@ TEST_CASE("DataStructureDuplicateNames")
   DataGroup* childGroup2Ptr = DataGroup::Create(dataStructure, k_Name, group1Ptr->getId());
   REQUIRE(group2Ptr == nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataStructureAddingObjectToNonBaseGroup")
@@ -1422,7 +1422,7 @@ TEST_CASE("DataStructureAddingObjectToNonBaseGroup")
   DataGroup* groupPtr = DataGroup::Create(dataStructure, "bar", dataArrayPtr->getId());
   REQUIRE(groupPtr == nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("DataObjectsDeepCopyTest")
@@ -1431,8 +1431,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
   SECTION("Image Geometry")
   {
-    const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
-    const DataPath destImageGeoPath({Constants::k_ImageGeometry.str() + "_COPY"});
+    const DataPath srcImageGeoPath({constants::k_ImageGeometry});
+    const DataPath destImageGeoPath({constants::k_ImageGeometry.str() + "_COPY"});
     auto* dataPtr = dataStruct.getData(srcImageGeoPath);
     std::shared_ptr<DataObject> imageGeoCopy = dataPtr->deepCopy(destImageGeoPath);
 
@@ -1449,37 +1449,37 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(srcImageGeoPtr->getSpacing() == destImageGeoPtr->getSpacing());
     REQUIRE(srcImageGeoPtr->getDimensions() == destImageGeoPtr->getDimensions());
 
-    const DataPath srcLevelOnePath = srcImageGeoPath.createChildPath(Constants::k_LevelOne);
-    const DataPath destLevelOnePath = destImageGeoPath.createChildPath(Constants::k_LevelOne);
+    const DataPath srcLevelOnePath = srcImageGeoPath.createChildPath(constants::k_LevelOne);
+    const DataPath destLevelOnePath = destImageGeoPath.createChildPath(constants::k_LevelOne);
     REQUIRE(dataStruct.getDataAs<DataGroup>(destLevelOnePath) != nullptr);
     REQUIRE(dataStruct.getDataAs<DataGroup>(destLevelOnePath) != dataStruct.getDataAs<DataGroup>(srcLevelOnePath));
 
-    const DataPath srcLevelTwoPath = srcLevelOnePath.createChildPath(Constants::k_LevelTwo);
-    const DataPath destLevelTwoPath = destLevelOnePath.createChildPath(Constants::k_LevelTwo);
+    const DataPath srcLevelTwoPath = srcLevelOnePath.createChildPath(constants::k_LevelTwo);
+    const DataPath destLevelTwoPath = destLevelOnePath.createChildPath(constants::k_LevelTwo);
     REQUIRE(dataStruct.getDataAs<DataGroup>(destLevelTwoPath) != nullptr);
     REQUIRE(dataStruct.getDataAs<DataGroup>(destLevelTwoPath) != dataStruct.getDataAs<DataGroup>(srcLevelTwoPath));
 
-    const DataPath srcNeighborListPath = srcLevelOnePath.createChildPath(Constants::k_Int16DataSet);
-    const DataPath destNeighborListPath = destLevelOnePath.createChildPath(Constants::k_Int16DataSet);
+    const DataPath srcNeighborListPath = srcLevelOnePath.createChildPath(constants::k_Int16DataSet);
+    const DataPath destNeighborListPath = destLevelOnePath.createChildPath(constants::k_Int16DataSet);
     REQUIRE(dataStruct.getDataAs<NeighborList<int16>>(srcNeighborListPath) != dataStruct.getDataAs<NeighborList<int16>>(destNeighborListPath));
-    UnitTest::CompareNeighborLists<int16>(dataStruct, srcNeighborListPath, destNeighborListPath);
+    unit_test::CompareNeighborLists<int16>(dataStruct, srcNeighborListPath, destNeighborListPath);
 
-    const DataPath srcDataArrayPath = srcLevelTwoPath.createChildPath(Constants::k_Int32DataSet);
-    const DataPath destDataArrayPath = destLevelTwoPath.createChildPath(Constants::k_Int32DataSet);
-    REQUIRE(dataStruct.getDataAs<Int32Array>(srcDataArrayPath) != dataStruct.getDataAs<Int32Array>(destDataArrayPath));
-    UnitTest::CompareArrays<int32>(dataStruct, srcDataArrayPath, destDataArrayPath);
+    const DataPath srcDataArrayPath = srcLevelTwoPath.createChildPath(constants::k_Int32DataSet);
+    const DataPath destDataArrayPath = destLevelTwoPath.createChildPath(constants::k_Int32DataSet);
+    REQUIRE(dataStruct.getDataAs<Int32ArrayType>(srcDataArrayPath) != dataStruct.getDataAs<Int32ArrayType>(destDataArrayPath));
+    unit_test::CompareArrays<int32>(dataStruct, srcDataArrayPath, destDataArrayPath);
 
-    const DataPath srcAttMatrixPath = srcImageGeoPath.createChildPath(Constants::k_CellData);
-    const DataPath destAttMatrixPath = destImageGeoPath.createChildPath(Constants::k_CellData);
+    const DataPath srcAttMatrixPath = srcImageGeoPath.createChildPath(constants::k_CellData);
+    const DataPath destAttMatrixPath = destImageGeoPath.createChildPath(constants::k_CellData);
     auto* const srcAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
     auto* const destAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
     REQUIRE(srcAttMatrixPtr != destAttMatrixPtr);
     REQUIRE(srcAttMatrixPtr->getShape() == destAttMatrixPtr->getShape());
 
-    const DataPath srcBoolArrayPath = srcAttMatrixPath.createChildPath(Constants::k_ConditionalArray);
-    const DataPath destBoolArrayPath = destAttMatrixPath.createChildPath(Constants::k_ConditionalArray);
-    REQUIRE(dataStruct.getDataAs<BoolArray>(srcBoolArrayPath) != dataStruct.getDataAs<BoolArray>(destBoolArrayPath));
-    UnitTest::CompareArrays<bool>(dataStruct, srcBoolArrayPath, destBoolArrayPath);
+    const DataPath srcBoolArrayPath = srcAttMatrixPath.createChildPath(constants::k_ConditionalArray);
+    const DataPath destBoolArrayPath = destAttMatrixPath.createChildPath(constants::k_ConditionalArray);
+    REQUIRE(dataStruct.getDataAs<BoolArrayType>(srcBoolArrayPath) != dataStruct.getDataAs<BoolArrayType>(destBoolArrayPath));
+    unit_test::CompareArrays<bool>(dataStruct, srcBoolArrayPath, destBoolArrayPath);
   }
 
   SECTION("Rectilinear Grid Geometry")
@@ -1502,29 +1502,29 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcXBoundsArrayPath({k_XBounds});
     const DataPath destXBoundsArrayPath = destRectGeoPath.createChildPath(k_XBounds);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcXBoundsArrayPath) != dataStruct.getDataAs<Float32Array>(destXBoundsArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcXBoundsArrayPath, destXBoundsArrayPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcXBoundsArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destXBoundsArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcXBoundsArrayPath, destXBoundsArrayPath);
 
     const DataPath srcYBoundsArrayPath({k_YBounds});
     const DataPath destYBoundsArrayPath = destRectGeoPath.createChildPath(k_YBounds);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcYBoundsArrayPath) != dataStruct.getDataAs<Float32Array>(destYBoundsArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcYBoundsArrayPath, destYBoundsArrayPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcYBoundsArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destYBoundsArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcYBoundsArrayPath, destYBoundsArrayPath);
 
     const DataPath srcZBoundsArrayPath({k_ZBounds});
     const DataPath destZBoundsArrayPath = destRectGeoPath.createChildPath(k_ZBounds);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcZBoundsArrayPath) != dataStruct.getDataAs<Float32Array>(destZBoundsArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcZBoundsArrayPath, destZBoundsArrayPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcZBoundsArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destZBoundsArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcZBoundsArrayPath, destZBoundsArrayPath);
 
     const DataPath srcVoxelSizesArrayPath = srcRectGeoPath.createChildPath(RectGridGeom::k_VoxelSizes);
     const DataPath destVoxelSizesArrayPath = destRectGeoPath.createChildPath(RectGridGeom::k_VoxelSizes);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32Array>(destVoxelSizesArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVoxelSizesArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
   }
 
   SECTION("Vertex Geometry")
   {
-    const DataPath srcGeoPath({Constants::k_VertexGeometry});
-    const DataPath destGeoPath({Constants::k_VertexGeometry.str() + "_COPY"});
+    const DataPath srcGeoPath({constants::k_VertexGeometry});
+    const DataPath destGeoPath({constants::k_VertexGeometry.str() + "_COPY"});
     auto* dataPtr = dataStruct.getData(srcGeoPath);
     std::shared_ptr<DataObject> geoCopy = dataPtr->deepCopy(destGeoPath);
 
@@ -1534,8 +1534,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    const DataPath srcAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    const DataPath destAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath srcAttMatrixPath = srcGeoPath.createChildPath(constants::k_VertexDataGroupName);
+    const DataPath destAttMatrixPath = destGeoPath.createChildPath(constants::k_VertexDataGroupName);
     auto* const srcAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
     auto* const destAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
     REQUIRE(srcAttMatrixPtr != destAttMatrixPtr);
@@ -1544,17 +1544,17 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcStringArrayPath = srcAttMatrixPath.createChildPath(k_StringArray);
     const DataPath destStringArrayPath = destAttMatrixPath.createChildPath(k_StringArray);
     REQUIRE(dataStruct.getDataAs<StringArray>(srcStringArrayPath) != dataStruct.getDataAs<StringArray>(destStringArrayPath));
-    UnitTest::CompareStringArrays(dataStruct, srcStringArrayPath, destStringArrayPath);
+    unit_test::CompareStringArrays(dataStruct, srcStringArrayPath, destStringArrayPath);
 
-    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
-    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVertArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVertArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
     const DataPath srcVoxelSizesArrayPath = srcGeoPath.createChildPath(VertexGeom::k_VoxelSizes);
     const DataPath destVoxelSizesArrayPath = destGeoPath.createChildPath(VertexGeom::k_VoxelSizes);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32Array>(destVoxelSizesArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVoxelSizesArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
   }
 
   SECTION("Edge Geometry")
@@ -1570,8 +1570,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(constants::k_VertexDataGroupName);
+    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(constants::k_VertexDataGroupName);
     auto* const srcVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
     auto* const destVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrixPtr != destVertAttMatrixPtr);
@@ -1591,43 +1591,43 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(srcScalarDataPtr != destScalarDataPtr);
     REQUIRE(srcScalarDataPtr->getValue() == destScalarDataPtr->getValue());
 
-    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
-    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVertArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVertArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
     const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedEdges);
     const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedEdges);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 
     const DataPath srcVoxelSizesArrayPath = srcGeoPath.createChildPath(EdgeGeom::k_VoxelSizes);
     const DataPath destVoxelSizesArrayPath = destGeoPath.createChildPath(EdgeGeom::k_VoxelSizes);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32Array>(destVoxelSizesArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVoxelSizesArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
 
     const DataPath srcEltsContVertPath = srcGeoPath.createChildPath(EdgeGeom::k_EltsContainingVert);
     const DataPath destEltsContVertPath = destGeoPath.createChildPath(EdgeGeom::k_EltsContainingVert);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltsContVertPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsContVertPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
 
     const DataPath srcEltNeighborsPath = srcGeoPath.createChildPath(EdgeGeom::k_EltNeighbors);
     const DataPath destEltsNeighborsPath = destGeoPath.createChildPath(EdgeGeom::k_EltNeighbors);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltNeighborsPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsNeighborsPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
 
     const DataPath srcEltCentroidsPath = srcGeoPath.createChildPath(EdgeGeom::k_EltCentroids);
     const DataPath destEltCentroidsPath = destGeoPath.createChildPath(EdgeGeom::k_EltCentroids);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32Array>(destEltCentroidsPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32ArrayType>(destEltCentroidsPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
   }
 
   SECTION("Triangle Geometry")
   {
-    const DataPath srcGeoPath({Constants::k_TriangleGeometryName});
-    const DataPath destGeoPath({Constants::k_TriangleGeometryName.str() + "_COPY"});
+    const DataPath srcGeoPath({constants::k_TriangleGeometryName});
+    const DataPath destGeoPath({constants::k_TriangleGeometryName.str() + "_COPY"});
     auto* dataPtr = dataStruct.getData(srcGeoPath);
     std::shared_ptr<DataObject> geoCopy = dataPtr->deepCopy(destGeoPath);
 
@@ -1637,8 +1637,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(constants::k_VertexDataGroupName);
+    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(constants::k_VertexDataGroupName);
     auto* const srcVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
     auto* const destVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrixPtr != destVertAttMatrixPtr);
@@ -1651,42 +1651,42 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(srcCellAttMatrixPtr != destCellAttMatrixPtr);
     REQUIRE(srcCellAttMatrixPtr->getShape() == destCellAttMatrixPtr->getShape());
 
-    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
-    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVertArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVertArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
     const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedFaces);
     const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedFaces);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 
     const DataPath srcEdgesArrayPath = srcGeoPath.createChildPath(TriangleGeom::k_SharedEdgeListName);
     const DataPath destEdgesArrayPath = destGeoPath.createChildPath(TriangleGeom::k_SharedEdgeListName);
-    REQUIRE(dataStruct.getDataAs<UInt64Array>(srcEdgesArrayPath) != dataStruct.getDataAs<UInt64Array>(destEdgesArrayPath));
-    UnitTest::CompareArrays<uint64>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
+    REQUIRE(dataStruct.getDataAs<UInt64ArrayType>(srcEdgesArrayPath) != dataStruct.getDataAs<UInt64ArrayType>(destEdgesArrayPath));
+    unit_test::CompareArrays<uint64>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
 
     const DataPath srcEltsContVertPath = srcGeoPath.createChildPath(TriangleGeom::k_EltsContainingVert);
     const DataPath destEltsContVertPath = destGeoPath.createChildPath(TriangleGeom::k_EltsContainingVert);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltsContVertPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsContVertPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
 
     const DataPath srcEltNeighborsPath = srcGeoPath.createChildPath(TriangleGeom::k_EltNeighbors);
     const DataPath destEltsNeighborsPath = destGeoPath.createChildPath(TriangleGeom::k_EltNeighbors);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltNeighborsPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsNeighborsPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
 
     const DataPath srcEltCentroidsPath = srcGeoPath.createChildPath(TriangleGeom::k_EltCentroids);
     const DataPath destEltCentroidsPath = destGeoPath.createChildPath(TriangleGeom::k_EltCentroids);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32Array>(destEltCentroidsPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32ArrayType>(destEltCentroidsPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
 
     const DataPath srcUnsharedEdgesArrayPath = srcGeoPath.createChildPath(TriangleGeom::k_UnsharedEdgesListName);
     const DataPath destUnsharedEdgesArrayPath = destGeoPath.createChildPath(TriangleGeom::k_UnsharedEdgesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
   }
 
   SECTION("Quad Geometry")
@@ -1702,8 +1702,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(constants::k_VertexDataGroupName);
+    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(constants::k_VertexDataGroupName);
     auto* const srcVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
     auto* const destVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrixPtr != destVertAttMatrixPtr);
@@ -1716,42 +1716,42 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(srcCellAttMatrixPtr != destCellAttMatrixPtr);
     REQUIRE(srcCellAttMatrixPtr->getShape() == destCellAttMatrixPtr->getShape());
 
-    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
-    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVertArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVertArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
     const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedFaces);
     const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedFaces);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 
     const DataPath srcEdgesArrayPath = srcGeoPath.createChildPath(QuadGeom::k_SharedEdgeListName);
     const DataPath destEdgesArrayPath = destGeoPath.createChildPath(QuadGeom::k_SharedEdgeListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
 
     const DataPath srcEltsContVertPath = srcGeoPath.createChildPath(QuadGeom::k_EltsContainingVert);
     const DataPath destEltsContVertPath = destGeoPath.createChildPath(QuadGeom::k_EltsContainingVert);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltsContVertPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsContVertPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
 
     const DataPath srcEltNeighborsPath = srcGeoPath.createChildPath(QuadGeom::k_EltNeighbors);
     const DataPath destEltsNeighborsPath = destGeoPath.createChildPath(QuadGeom::k_EltNeighbors);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltNeighborsPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsNeighborsPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
 
     const DataPath srcEltCentroidsPath = srcGeoPath.createChildPath(QuadGeom::k_EltCentroids);
     const DataPath destEltCentroidsPath = destGeoPath.createChildPath(QuadGeom::k_EltCentroids);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32Array>(destEltCentroidsPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32ArrayType>(destEltCentroidsPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
 
     const DataPath srcUnsharedEdgesArrayPath = srcGeoPath.createChildPath(QuadGeom::k_UnsharedEdgesListName);
     const DataPath destUnsharedEdgesArrayPath = destGeoPath.createChildPath(QuadGeom::k_UnsharedEdgesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
   }
 
   SECTION("Tetrahedral Geometry")
@@ -1767,8 +1767,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(constants::k_VertexDataGroupName);
+    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(constants::k_VertexDataGroupName);
     auto* const srcVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
     auto* const destVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrixPtr != destVertAttMatrixPtr);
@@ -1781,52 +1781,52 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(srcCellAttMatrixPtr != destCellAttMatrixPtr);
     REQUIRE(srcCellAttMatrixPtr->getShape() == destCellAttMatrixPtr->getShape());
 
-    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
-    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVertArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVertArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
     const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPolyhedrons);
     const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPolyhedrons);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 
     const DataPath srcEdgesArrayPath = srcGeoPath.createChildPath(TetrahedralGeom::k_SharedEdgeListName);
     const DataPath destEdgesArrayPath = destGeoPath.createChildPath(TetrahedralGeom::k_SharedEdgeListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
 
     const DataPath srcFaceArrayPath = srcGeoPath.createChildPath(TetrahedralGeom::k_SharedFacesListName);
     const DataPath destFacesArrayPath = destGeoPath.createChildPath(TetrahedralGeom::k_SharedFacesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcFaceArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destFacesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcFaceArrayPath, destFacesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcFaceArrayPath, destFacesArrayPath);
 
     const DataPath srcEltsContVertPath = srcGeoPath.createChildPath(TetrahedralGeom::k_EltsContainingVert);
     const DataPath destEltsContVertPath = destGeoPath.createChildPath(TetrahedralGeom::k_EltsContainingVert);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltsContVertPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsContVertPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
 
     const DataPath srcEltNeighborsPath = srcGeoPath.createChildPath(TetrahedralGeom::k_EltNeighbors);
     const DataPath destEltsNeighborsPath = destGeoPath.createChildPath(TetrahedralGeom::k_EltNeighbors);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltNeighborsPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsNeighborsPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
 
     const DataPath srcEltCentroidsPath = srcGeoPath.createChildPath(TetrahedralGeom::k_EltCentroids);
     const DataPath destEltCentroidsPath = destGeoPath.createChildPath(TetrahedralGeom::k_EltCentroids);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32Array>(destEltCentroidsPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32ArrayType>(destEltCentroidsPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
 
     const DataPath srcUnsharedEdgesArrayPath = srcGeoPath.createChildPath(TetrahedralGeom::k_UnsharedEdgesListName);
     const DataPath destUnsharedEdgesArrayPath = destGeoPath.createChildPath(TetrahedralGeom::k_UnsharedEdgesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
 
     const DataPath srcUnsharedFacesArrayPath = srcGeoPath.createChildPath(TetrahedralGeom::k_UnsharedFacesListName);
     const DataPath destUnsharedFacesArrayPath = destGeoPath.createChildPath(TetrahedralGeom::k_UnsharedFacesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedFacesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedFacesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
   }
 
   SECTION("Hexahedral Geometry")
@@ -1842,8 +1842,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const auto& allDestImageGeoDataPaths = destGeoResults.value();
     REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
 
-    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
-    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(constants::k_VertexDataGroupName);
+    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(constants::k_VertexDataGroupName);
     auto* const srcVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
     auto* const destVertAttMatrixPtr = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
     REQUIRE(srcVertAttMatrixPtr != destVertAttMatrixPtr);
@@ -1856,60 +1856,60 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(srcCellAttMatrixPtr != destCellAttMatrixPtr);
     REQUIRE(srcCellAttMatrixPtr->getShape() == destCellAttMatrixPtr->getShape());
 
-    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
-    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcVertArrayPath) != dataStruct.getDataAs<Float32ArrayType>(destVertArrayPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
     const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPolyhedrons);
     const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPolyhedrons);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 
     const DataPath srcEdgesArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_SharedEdgeListName);
     const DataPath destEdgesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_SharedEdgeListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
 
     const DataPath srcFaceArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_SharedFacesListName);
     const DataPath destFacesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_SharedFacesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcFaceArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destFacesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcFaceArrayPath, destFacesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcFaceArrayPath, destFacesArrayPath);
 
     const DataPath srcEltsContVertPath = srcGeoPath.createChildPath(HexahedralGeom::k_EltsContainingVert);
     const DataPath destEltsContVertPath = destGeoPath.createChildPath(HexahedralGeom::k_EltsContainingVert);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltsContVertPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsContVertPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
 
     const DataPath srcEltNeighborsPath = srcGeoPath.createChildPath(HexahedralGeom::k_EltNeighbors);
     const DataPath destEltsNeighborsPath = destGeoPath.createChildPath(HexahedralGeom::k_EltNeighbors);
     REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltNeighborsPath) !=
             dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsNeighborsPath));
-    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
+    unit_test::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
 
     const DataPath srcEltCentroidsPath = srcGeoPath.createChildPath(HexahedralGeom::k_EltCentroids);
     const DataPath destEltCentroidsPath = destGeoPath.createChildPath(HexahedralGeom::k_EltCentroids);
-    REQUIRE(dataStruct.getDataAs<Float32Array>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32Array>(destEltCentroidsPath));
-    UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
+    REQUIRE(dataStruct.getDataAs<Float32ArrayType>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32ArrayType>(destEltCentroidsPath));
+    unit_test::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
 
     const DataPath srcUnsharedEdgesArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_UnsharedEdgesListName);
     const DataPath destUnsharedEdgesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_UnsharedEdgesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedEdgesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
 
     const DataPath srcUnsharedFacesArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_UnsharedFacesListName);
     const DataPath destUnsharedFacesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_UnsharedFacesListName);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedFacesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedFacesArrayPath));
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
+    unit_test::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
   }
 
   SECTION("Invalid copies")
   {
     DataStructure badCopyDataStruct = CreateTestDataStructure();
-    const DataPath srcGeoPath({Constants::k_ImageGeometry});
-    const DataPath srcGroupPath = srcGeoPath.createChildPath(Constants::k_LevelOne);
-    const DataPath srcArrayPath = srcGroupPath.createChildPath(Constants::k_Int16DataSet);
+    const DataPath srcGeoPath({constants::k_ImageGeometry});
+    const DataPath srcGroupPath = srcGeoPath.createChildPath(constants::k_LevelOne);
+    const DataPath srcArrayPath = srcGroupPath.createChildPath(constants::k_Int16DataSet);
     auto* imageGeoPtr = dataStruct.getData(srcGeoPath);
     auto* dataGroupPtr = dataStruct.getData(srcGroupPath);
     auto* nlArrayPtr = dataStruct.getData(srcArrayPath);
@@ -1932,7 +1932,7 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
 
   SECTION("Image Geometry")
   {
-    const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
+    const DataPath srcImageGeoPath({constants::k_ImageGeometry});
     auto* geomPtr = dataStruct.getDataAs<ImageGeom>(srcImageGeoPath);
 
     Result<> status = geomPtr->findElementSizes(false);
@@ -1956,7 +1956,7 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
 
   SECTION("Vertex Geometry")
   {
-    const DataPath srcGeoPath({Constants::k_VertexGeometry});
+    const DataPath srcGeoPath({constants::k_VertexGeometry});
     auto* geomPtr = dataStruct.getDataAs<VertexGeom>(srcGeoPath);
 
     Result<> status = geomPtr->findElementSizes(false);
@@ -1993,7 +1993,7 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
 
   SECTION("Triangle Geometry")
   {
-    const DataPath srcGeoPath({Constants::k_TriangleGeometryName});
+    const DataPath srcGeoPath({constants::k_TriangleGeometryName});
     auto* geomPtr = dataStruct.getDataAs<TriangleGeom>(srcGeoPath);
 
     Result<> status = geomPtr->findElementSizes(false);
@@ -2165,7 +2165,7 @@ TEST_CASE("HexahedralGeom::findElementSizes rectangular boxes", "[DataStruct][Ge
   DataStructure dataStructure;
   auto* hexGeomPtr = HexahedralGeom::Create(dataStructure, "Boxes");
   REQUIRE(hexGeomPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {16}, {3}, hexGeomPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices", {16}, {3}, hexGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   const std::vector<float32> coordinates = {0,  0,  0,  2,  0,  0,  2,  3,  0,  0,  3,  0,  0,  0,  5,  2,  0,  5,  2,  3,  5,  0,  3,  5,
                                             10, 20, 30, 11, 20, 30, 11, 21, 30, 10, 21, 30, 10, 20, 31, 11, 20, 31, 11, 21, 31, 10, 21, 31};
@@ -2174,7 +2174,7 @@ TEST_CASE("HexahedralGeom::findElementSizes rectangular boxes", "[DataStruct][Ge
     (*verticesPtr)[index] = coordinates[index];
   }
   hexGeomPtr->setVertices(*verticesPtr);
-  auto* cellsPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Cells", {2}, {8}, hexGeomPtr->getId());
+  auto* cellsPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Cells", {2}, {8}, hexGeomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   for(usize index = 0; index < 16; index++)
   {
@@ -2191,28 +2191,28 @@ TEST_CASE("HexahedralGeom::findElementSizes rectangular boxes", "[DataStruct][Ge
   // The five tetrahedra contribute 5 + 5 + 10 + 5 + 5 = 30; translation preserves the unit cube's volume.
   REQUIRE((*volumesPtr)[0] == Approx(30.0f).margin(1.0e-5f));
   REQUIRE((*volumesPtr)[1] == Approx(1.0f).margin(1.0e-5f));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("CompareDataStructures")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure0 = CreateTestDataStructure();
   DataStructure dataStructure1 = CreateTestDataStructure();
 
-  UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
+  unit_test::CompareDataStructures(dataStructure0, dataStructure1);
 }
 
 TEST_CASE("CompareDataStructures-fail", "[SimplnxReview][!mayfail]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure0 = CreateTestDataStructure();
   DataStructure dataStructure1 = CreateTestDataStructure();
-  dataStructure1.removeData(DataPath({Constants::k_ImageGeometry}));
+  dataStructure1.removeData(DataPath({constants::k_ImageGeometry}));
 
-  UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
+  unit_test::CompareDataStructures(dataStructure0, dataStructure1);
 }
 
 namespace
@@ -2225,13 +2225,13 @@ namespace
  * @param values Supplies the independent expected values.
  * @return The exact inserted array owner.
  */
-std::shared_ptr<Int32Array> CreateImportPublicationArray(DataStructure& structure, const std::string& name, DataObject::IdType objectId, const std::array<int32, 2>& values)
+std::shared_ptr<Int32ArrayType> CreateImportPublicationArray(DataStructure& structure, const std::string& name, DataObject::IdType objectId, const std::array<int32, 2>& values)
 {
   auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
   (*store)[0] = values[0];
   (*store)[1] = values[1];
-  REQUIRE(Int32Array::Import(structure, name, objectId, store) != nullptr);
-  auto owner = std::dynamic_pointer_cast<Int32Array>(structure.getSharedData(objectId));
+  REQUIRE(Int32ArrayType::Import(structure, name, objectId, store) != nullptr);
+  auto owner = std::dynamic_pointer_cast<Int32ArrayType>(structure.getSharedData(objectId));
   REQUIRE(owner != nullptr);
   return owner;
 }
@@ -2272,7 +2272,7 @@ public:
 
 TEST_CASE("Import publication: group acceptance queries preserve state and virtual rules", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure destination;
   auto* parentPtr = DataGroup::Create(destination, "Parent");
   REQUIRE(parentPtr != nullptr);
@@ -2283,7 +2283,7 @@ TEST_CASE("Import publication: group acceptance queries preserve state and virtu
   DataStructure candidates;
   auto matching = CreateImportPublicationArray(candidates, "Matching", 10, std::array<int32, 2>{31, -7});
   auto mismatchStore = std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, 0);
-  auto* mismatchPtr = Int32Array::Create(candidates, "Mismatch", mismatchStore);
+  auto* mismatchPtr = Int32ArrayType::Create(candidates, "Mismatch", mismatchStore);
   REQUIRE(mismatchPtr != nullptr);
   auto* duplicateNamePtr = DataGroup::Create(candidates, "Child");
   REQUIRE(duplicateNamePtr != nullptr);
@@ -2313,13 +2313,13 @@ TEST_CASE("Import publication: group acceptance queries preserve state and virtu
   CHECK(candidates.getNextId() == candidateNextId);
   CHECK(matching->getParentIds().empty());
   CHECK(notifications == 0);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(candidates);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(candidates);
 }
 
 TEST_CASE("Import publication: occupied IDs include expired entries and hierarchy-only aliases", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure destination;
   auto* markerPtr = DataGroup::Create(destination, "Marker");
   REQUIRE(markerPtr != nullptr);
@@ -2332,7 +2332,7 @@ TEST_CASE("Import publication: occupied IDs include expired entries and hierarch
   DataStructure prepared;
   auto* sourcePtr = DataGroup::Import(prepared, "HierarchyOnly", 7);
   REQUIRE(sourcePtr != nullptr);
-  auto shell = DataStructure::makeImportPublicationCopy(*sourcePtr);
+  auto shell = DataStructure::MakeImportPublicationCopy(*sourcePtr);
   REQUIRE(shell != nullptr);
   // Raw hierarchy placement models the same unregistered stage as a partial import.
   REQUIRE(destination.getRootGroup().insert(shell));
@@ -2352,19 +2352,19 @@ TEST_CASE("Import publication: occupied IDs include expired entries and hierarch
   REQUIRE(markerPtr->getDataMap().remove(DataObject::IdType{7}));
   REQUIRE(destination.getRootGroup().remove(DataObject::IdType{7}));
   CHECK(shell->getDataStructure() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("Import publication: detached copies preserve the source and share only value storage", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure source;
   auto* parentPtr = DataGroup::Create(source, "Parent");
   REQUIRE(parentPtr != nullptr);
   auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
   (*store)[0] = 31;
   (*store)[1] = -7;
-  auto* arrayPtr = Int32Array::Create(source, "Values", store, parentPtr->getId());
+  auto* arrayPtr = Int32ArrayType::Create(source, "Values", store, parentPtr->getId());
   REQUIRE(arrayPtr != nullptr);
   const auto arrayId = arrayPtr->getId();
   const auto parentIds = arrayPtr->getParentIds();
@@ -2373,14 +2373,14 @@ TEST_CASE("Import publication: detached copies preserve the source and share onl
   usize notifications = 0;
   const nod::scoped_connection connection(source.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&) { ++notifications; }));
   {
-    const auto groupCopy = std::dynamic_pointer_cast<BaseGroup>(DataStructure::makeImportPublicationCopy(*parentPtr));
+    const auto groupCopy = std::dynamic_pointer_cast<BaseGroup>(DataStructure::MakeImportPublicationCopy(*parentPtr));
     REQUIRE(groupCopy != nullptr);
     CHECK(groupCopy.get() != parentPtr);
     CHECK(groupCopy->getId() == parentPtr->getId());
     CHECK(groupCopy->empty());
     CHECK(groupCopy->getDataStructure() == nullptr);
     CHECK(groupCopy->getParentIds().empty());
-    const auto arrayCopy = std::dynamic_pointer_cast<Int32Array>(DataStructure::makeImportPublicationCopy(*arrayPtr));
+    const auto arrayCopy = std::dynamic_pointer_cast<Int32ArrayType>(DataStructure::MakeImportPublicationCopy(*arrayPtr));
     REQUIRE(arrayCopy != nullptr);
     CHECK(arrayCopy.get() != arrayPtr);
     CHECK(arrayCopy->getId() == arrayId);
@@ -2404,20 +2404,20 @@ TEST_CASE("Import publication: detached copies preserve the source and share onl
   const auto failurePaths = source.getAllDataPaths();
   const auto failureNextId = source.getNextId();
   const auto beforeFailure = notifications;
-  REQUIRE_THROWS_AS(DataStructure::makeImportPublicationCopy(*failing), std::runtime_error);
+  REQUIRE_THROWS_AS(DataStructure::MakeImportPublicationCopy(*failing), std::runtime_error);
   CHECK(failing->getDataStructure() == &source);
   CHECK(source.getData(failureId) == failing.get());
   CHECK(source.getAllDataPaths() == failurePaths);
   CHECK(source.getNextId() == failureNextId);
   CHECK(notifications == beforeFailure);
-  UnitTest::CheckArraysInheritTupleDims(source);
+  unit_test::CheckArraysInheritTupleDims(source);
 }
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 
 TEST_CASE("Import publication: existing root names reject the complete selection before publication", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   CAPTURE(instrumented);
   DataStructure destination;
@@ -2488,7 +2488,7 @@ TEST_CASE("Import publication: existing root names reject the complete selection
   const auto retry = instrumented ? control.publish(destination, prepared, {DataPath({"Candidate"})}, fs::path("root-name-conflict.dream3d"), checkpoint) :
                                     destination.publishImportedObjects(prepared, {DataPath({"Candidate"})}, fs::path("root-name-conflict.dream3d"), checkpoint);
   SIMPLNX_RESULT_REQUIRE_VALID(retry);
-  auto published = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  auto published = std::dynamic_pointer_cast<Int32ArrayType>(destination.getSharedData(DataObject::IdType{2}));
   REQUIRE(published != nullptr);
   CHECK(published.get() != candidate.get());
   CHECK(published->getIDataStore() == candidateStorePtr);
@@ -2502,13 +2502,13 @@ TEST_CASE("Import publication: existing root names reject the complete selection
   CHECK(prepared.getData(DataObject::IdType{3}) == conflict.get());
   CHECK(prepared.getNextId() == 4);
   CHECK(notifications == 0);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: hierarchy-only IDs in another parent reject before publication", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   CAPTURE(instrumented);
   DataStructure destination;
@@ -2517,7 +2517,7 @@ TEST_CASE("Import publication: hierarchy-only IDs in another parent reject befor
   DataStructure source;
   auto* sourcePtr = DataGroup::Import(source, "HierarchyOnly", 7);
   REQUIRE(sourcePtr != nullptr);
-  auto occupied = DataStructure::makeImportPublicationCopy(*sourcePtr);
+  auto occupied = DataStructure::MakeImportPublicationCopy(*sourcePtr);
   REQUIRE(occupied != nullptr);
   // The child map owns ID 7, but the weak registry and the destination root do not.
   REQUIRE(parentPtr->getDataMap().insert(occupied));
@@ -2573,13 +2573,13 @@ TEST_CASE("Import publication: hierarchy-only IDs in another parent reject befor
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
   REQUIRE(parentPtr->getDataMap().remove(DataObject::IdType{7}));
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: duplicate selected paths reject before publication", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   CAPTURE(instrumented);
   DataStructure destination;
@@ -2621,13 +2621,13 @@ TEST_CASE("Import publication: duplicate selected paths reject before publicatio
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: distinct selected alias paths cannot publish the same ID twice", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   CAPTURE(instrumented);
   DataStructure destination;
@@ -2644,8 +2644,8 @@ TEST_CASE("Import publication: distinct selected alias paths cannot publish the 
   auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
   (*store)[0] = 31;
   (*store)[1] = -7;
-  REQUIRE(Int32Array::Import(prepared, "Candidate", 3, store, DataObject::IdType{1}) != nullptr);
-  auto candidate = std::dynamic_pointer_cast<Int32Array>(prepared.getSharedData(DataObject::IdType{3}));
+  REQUIRE(Int32ArrayType::Import(prepared, "Candidate", 3, store, DataObject::IdType{1}) != nullptr);
+  auto candidate = std::dynamic_pointer_cast<Int32ArrayType>(prepared.getSharedData(DataObject::IdType{3}));
   REQUIRE(candidate != nullptr);
   REQUIRE(prepared.setAdditionalParent(3, 2));
   const std::vector<DataPath> selected{DataPath({"Left", "Candidate"}), DataPath({"Right", "Candidate"})};
@@ -2689,13 +2689,13 @@ TEST_CASE("Import publication: distinct selected alias paths cannot publish the 
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: distinct parent aliases reject duplicate destination placements", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   CAPTURE(instrumented);
   DataStructure destination;
@@ -2725,8 +2725,8 @@ TEST_CASE("Import publication: distinct parent aliases reject duplicate destinat
   auto secondStore = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
   (*secondStore)[0] = 81;
   (*secondStore)[1] = 82;
-  auto* firstPtr = Int32Array::Import(prepared, "Candidate", 5, firstStore, DataObject::IdType{3});
-  auto* secondPtr = Int32Array::Import(prepared, "Candidate", 6, secondStore, DataObject::IdType{4});
+  auto* firstPtr = Int32ArrayType::Import(prepared, "Candidate", 5, firstStore, DataObject::IdType{3});
+  auto* secondPtr = Int32ArrayType::Import(prepared, "Candidate", 6, secondStore, DataObject::IdType{4});
   REQUIRE(firstPtr != nullptr);
   REQUIRE(secondPtr != nullptr);
   const std::vector<DataPath> selected{DataPath({"Left", "Shared", "Candidate"}), DataPath({"Right", "Shared", "Candidate"})};
@@ -2783,13 +2783,13 @@ TEST_CASE("Import publication: distinct parent aliases reject duplicate destinat
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: checkpoint errors precede conflicting selection admission", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool foreign = GENERATE(false, true);
   const bool instrumented = GENERATE(false, true);
   CAPTURE(foreign, instrumented);
@@ -2823,13 +2823,13 @@ TEST_CASE("Import publication: checkpoint errors precede conflicting selection a
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: empty and fully recovered selections preserve pending faults", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool empty = GENERATE(false, true);
   const bool instrumented = GENERATE(false, true);
   CAPTURE(empty, instrumented);
@@ -2859,13 +2859,13 @@ TEST_CASE("Import publication: empty and fully recovered selections preserve pen
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: missing recovered paths are skipped before admission", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   CAPTURE(instrumented);
   DataStructure destination;
@@ -2883,7 +2883,7 @@ TEST_CASE("Import publication: missing recovered paths are skipped before admiss
                                      destination.publishImportedObjects(prepared, selected, fs::path("recovered-paths.dream3d"), checkpoint);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(result.warnings().empty());
-  auto published = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  auto published = std::dynamic_pointer_cast<Int32ArrayType>(destination.getSharedData(DataObject::IdType{2}));
   REQUIRE(published != nullptr);
   CHECK(published.get() != candidate.get());
   CHECK(published->getIDataStore() == candidate->getIDataStore());
@@ -2903,13 +2903,13 @@ TEST_CASE("Import publication: missing recovered paths are skipped before admiss
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: foreign checkpoints reject before fault consumption", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool instrumented = GENERATE(false, true);
   DataStructure originalDestination;
   auto originalMarker = CreateImportPublicationArray(originalDestination, "OriginalMarker", 1, std::array<int32, 2>{41, 42});
@@ -2957,14 +2957,14 @@ TEST_CASE("Import publication: foreign checkpoints reject before fault consumpti
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(originalDestination);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(originalDestination);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: stale checkpoints preserve successful imports and ordinary insertions", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool previousPublication = GENERATE(false, true);
   const bool instrumented = GENERATE(false, true);
   CAPTURE(previousPublication, instrumented);
@@ -2986,9 +2986,9 @@ TEST_CASE("Import publication: stale checkpoints preserve successful imports and
     auto store = std::make_shared<DataStore<int32>>(ShapeType{2}, ShapeType{1}, 0);
     (*store)[0] = 61;
     (*store)[1] = 62;
-    REQUIRE(Int32Array::Create(destination, retainedName, store) != nullptr);
+    REQUIRE(Int32ArrayType::Create(destination, retainedName, store) != nullptr);
   }
-  auto retained = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
+  auto retained = std::dynamic_pointer_cast<Int32ArrayType>(destination.getSharedData(DataObject::IdType{2}));
   REQUIRE(retained != nullptr);
   const auto* retainedStorePtr = retained->getIDataStore();
   REQUIRE(destination.getNextId() == 3);
@@ -3034,13 +3034,13 @@ TEST_CASE("Import publication: stale checkpoints preserve successful imports and
   CHECK_FALSE(control.publicationFaultConsumed());
   CHECK_FALSE(control.cleanupFaultConsumed());
   CHECK(control.retainedOwner() == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 
 TEST_CASE("Import publication: complete rollback permits checkpoint reuse without stale-owner deletion", "[ImportPublication][DataStructure]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure destination;
   auto marker = CreateImportPublicationArray(destination, "Marker", 1, std::array<int32, 2>{51, 52});
   const DataStructure::ImportPublicationCheckpoint checkpoint(destination);
@@ -3051,11 +3051,11 @@ TEST_CASE("Import publication: complete rollback permits checkpoint reuse withou
   std::vector<DataObject::IdType> removals;
   usize additions = 0;
   const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
-    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    if(message->getMsgType() == DataRemovedMessage::k_MsgType)
     {
       removals.push_back(std::static_pointer_cast<DataRemovedMessage>(message)->getId());
     }
-    else if(message->getMsgType() == DataAddedMessage::MsgType)
+    else if(message->getMsgType() == DataAddedMessage::k_MsgType)
     {
       ++additions;
     }
@@ -3080,8 +3080,8 @@ TEST_CASE("Import publication: complete rollback permits checkpoint reuse withou
   SIMPLNX_RESULT_REQUIRE_VALID(retry);
   CHECK((destination.getAllDataObjectIds() == std::vector<DataObject::IdType>{1, 2, 3}));
   CHECK(destination.getNextId() == 4);
-  auto first = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{2}));
-  auto second = std::dynamic_pointer_cast<Int32Array>(destination.getSharedData(DataObject::IdType{3}));
+  auto first = std::dynamic_pointer_cast<Int32ArrayType>(destination.getSharedData(DataObject::IdType{2}));
+  auto second = std::dynamic_pointer_cast<Int32ArrayType>(destination.getSharedData(DataObject::IdType{3}));
   REQUIRE(first != nullptr);
   REQUIRE(second != nullptr);
   CHECK(first.get() != firstSource.get());
@@ -3097,8 +3097,8 @@ TEST_CASE("Import publication: complete rollback permits checkpoint reuse withou
   CHECK(destination.getData(DataObject::IdType{3}) == second.get());
   CHECK((removals == std::vector<DataObject::IdType>{3, 2}));
   CHECK(additions == 0);
-  UnitTest::CheckArraysInheritTupleDims(destination);
-  UnitTest::CheckArraysInheritTupleDims(prepared);
+  unit_test::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(prepared);
 }
 #endif
 
@@ -3112,12 +3112,12 @@ DataStructure CreateExcludedLinkStructure()
   DataStructure dataStructure;
   auto* geomPtr = DataGroup::Create(dataStructure, "Geom");
   auto* featurePtr = AttributeMatrix::Create(dataStructure, "Feature", {3}, geomPtr->getId());
-  auto* countsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Counts", {3}, {1}, featurePtr->getId());
+  auto* countsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Counts", {3}, {1}, featurePtr->getId());
   (*countsPtr)[0] = 5;
   (*countsPtr)[1] = 6;
   (*countsPtr)[2] = 7;
   auto* miscPtr = DataGroup::Create(dataStructure, "Misc", geomPtr->getId());
-  auto* keepPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Keep", {1}, {1}, miscPtr->getId());
+  auto* keepPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Keep", {1}, {1}, miscPtr->getId());
   (*keepPtr)[0] = 123;
   auto* subPtr = DataGroup::Create(dataStructure, "Sub", miscPtr->getId());
   auto* outsidePtr = DataGroup::Create(dataStructure, "Outside");
@@ -3153,7 +3153,7 @@ TEST_CASE("CopyDataObjectExcludingAction: excludes every link and restores the s
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
   // Copy: unrelated data copied, no link to the excluded object at any depth.
-  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
+  CHECK(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
   CHECK(dataStructure.getData(DataPath({"Copy", "Misc", "Sub"})) != nullptr);
   CHECK(dataStructure.getData(DataPath({"Copy", "Misc", "Feature"})) == nullptr);
   CHECK(dataStructure.getData(DataPath({"Copy", "Misc", "Sub", "Feature"})) == nullptr);
@@ -3169,7 +3169,7 @@ TEST_CASE("CopyDataObjectExcludingAction: excludes every link and restores the s
   }
   CHECK(dataStructure.getData(featurePath)->getParentIds() == parents);
   CHECK(dataStructure.getDataRefAs<BaseGroup>(DataPath({"Geom", "Misc"})).getSize() == 3);
-  const auto& counts = dataStructure.getDataRefAs<Int32Array>(featurePath.createChildPath("Counts"));
+  const auto& counts = dataStructure.getDataRefAs<Int32ArrayType>(featurePath.createChildPath("Counts"));
   CHECK(counts[0] == 5);
   CHECK(counts[1] == 6);
   CHECK(counts[2] == 7);
@@ -3187,7 +3187,7 @@ TEST_CASE("CopyDataObjectExcludingAction: helper with a missing excluded object 
   CHECK(copyPtr->getAllCreatedPaths().size() == 7);
   const Result<> applyResult = copyPtr->apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
-  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
+  CHECK(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
 }
 
 TEST_CASE("CopyDataObjectExcludingAction: cloned action excludes links below a root placement", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
@@ -3220,7 +3220,7 @@ TEST_CASE("CopyDataObjectExcludingAction: cloned action excludes links below a r
 
   std::vector<DataObject::IdType> prunedFeatureIds;
   const nod::scoped_connection connection(ds.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
-    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    if(message->getMsgType() == DataRemovedMessage::k_MsgType)
     {
       const auto removed = std::static_pointer_cast<DataRemovedMessage>(message);
       if(removed->getName() == "Feature")
@@ -3239,7 +3239,7 @@ TEST_CASE("CopyDataObjectExcludingAction: cloned action excludes links below a r
   }
   CHECK(ds.getData(copyPath.createChildPath("Feature")) == nullptr);
   CHECK(ds.getData(copyPath.createChildPath("Sub").createChildPath("Feature")) == nullptr);
-  const auto* countsPtr = ds.getDataAs<Int32Array>(featurePath.createChildPath("Counts"));
+  const auto* countsPtr = ds.getDataAs<Int32ArrayType>(featurePath.createChildPath("Counts"));
   REQUIRE(countsPtr != nullptr);
   CHECK((*countsPtr)[2] == 7);
   for(const auto& placement : placements)
@@ -3255,13 +3255,13 @@ TEST_CASE("CopyDataObjectExcludingAction: missing excluded object copies everyth
   const CopyDataObjectExcludingAction copy(DataPath({"Geom", "Misc"}), DataPath({"Copy", "Misc"}), {DataPath({"Copy", "Misc"})}, DataPath({"Geom", "Missing"}));
   const Result<> applyResult = copy.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
-  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
-  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
+  CHECK(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Copy", "Misc", "Keep"}))[0] == 123);
+  CHECK(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"Copy", "Misc", "Feature", "Counts"}))[2] == 7);
 }
 
 TEST_CASE("CopyDataObjectExcludingAction: preserves destination under an excluded parent", "[simplnx][DataStructure][CopyDataObjectExcludingAction]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   DataStructure dataStructure;
   auto* sourcePtr = DataGroup::Create(dataStructure, "Source");

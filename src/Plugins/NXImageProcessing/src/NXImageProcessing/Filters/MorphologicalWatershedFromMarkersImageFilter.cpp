@@ -93,17 +93,17 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   const DataType markerType = markerArray.getDataType();
   if(!nx::core::ImageProcessing::GetIntegerScalarTypes().contains(markerType))
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-8600, fmt::format("Marker array '{}' must be an integer scalar type, but is '{}'.", markerArrayPath.toString(), DataTypeToString(markerType)))};
   }
   if(markerArray.getNumberOfComponents() != 1)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -8601, fmt::format("Marker array '{}' must be single-component (scalar), but has {} components.", markerArrayPath.toString(), markerArray.getNumberOfComponents()))};
   }
   if(markerArray.getNumberOfTuples() != inputArray.getNumberOfTuples())
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 -8602, fmt::format("Marker array tuple count ({}) does not match input array tuple count ({}).", markerArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
   }
 
@@ -114,7 +114,7 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
       ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(grayscaleValidation.invalid())
   {
-    return {.outputActions = std::move(grayscaleValidation)};
+    return {.output_actions = std::move(grayscaleValidation)};
   }
 
   // Resident watershed retains the exact RAM flood and its available-memory guard. OOC watershed uses bounded
@@ -124,9 +124,9 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   Result<OutputActions> memoryCheck;
   if(inputIsOutOfCore)
   {
-    if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+    if(!data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -79047, fmt::format("Morphological watershed from markers input '{}' is planned out-of-core, but no temporary-record storage provider is registered for the external flood.",
                                       selectedInputArray.toString()))};
     }
@@ -138,7 +138,7 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   }
   if(memoryCheck.invalid())
   {
-    return {.outputActions = std::move(memoryCheck)};
+    return {.output_actions = std::move(memoryCheck)};
   }
 
   // Create the output of the MARKER's type, inheriting the grayscale input's tuple/component shape + data format
@@ -153,7 +153,7 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   {
     result.warnings().push_back(std::move(warning));
   }
-  return {.outputActions = std::move(result)};
+  return {.output_actions = std::move(result)};
 }
 Result<> MorphologicalWatershedFromMarkersImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
                                                                    const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

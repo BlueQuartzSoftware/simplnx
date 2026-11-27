@@ -65,16 +65,16 @@ void CompareResults() // compare hash of both file strings
 }
 
 const DataPath k_VertexGeom = DataPath({"LAMMPS Geometry"});
-const DataPath k_AtomLabelsGeom = k_VertexGeom.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("AtomFeature");
+const DataPath k_AtomLabelsGeom = k_VertexGeom.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("AtomFeature");
 } // namespace
 
 TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Valid Filter Execution", "[SimplnxCore][WriteLAMMPSFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_lammps_test.tar.gz", "write_lammps_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_lammps_test.tar.gz", "write_lammps_test");
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/write_lammps_test/testing/lammps_precursor.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/write_lammps_test/testing/lammps_precursor.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -88,7 +88,7 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Valid Filter Execution", "[Simpln
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -97,23 +97,23 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Valid Filter Execution", "[Simpln
 
   ::CompareResults();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Eight Vertices", "[SimplnxCore][WriteLAMMPSFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
-  CreateVertexGeometryAction createGeometry(k_VertexGeom, 8, Constants::k_VertexDataWithSpaces, VertexGeom::k_SharedVertexListName);
+  CreateVertexGeometryAction createGeometry(k_VertexGeom, 8, constants::k_VertexDataWithSpaces, VertexGeom::k_SharedVertexListName);
   auto geometryResult = createGeometry.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(geometryResult);
   CreateArrayAction createLabels(DataType::int32, {8}, {1}, k_AtomLabelsGeom);
   auto labelsResult = createLabels.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(labelsResult);
 
-  auto* verticesPtr = dataStructure.getDataAs<Float32Array>(k_VertexGeom.createChildPath(VertexGeom::k_SharedVertexListName));
-  auto* labelsPtr = dataStructure.getDataAs<Int32Array>(k_AtomLabelsGeom);
+  auto* verticesPtr = dataStructure.getDataAs<Float32ArrayType>(k_VertexGeom.createChildPath(VertexGeom::k_SharedVertexListName));
+  auto* labelsPtr = dataStructure.getDataAs<Int32ArrayType>(k_AtomLabelsGeom);
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(labelsPtr != nullptr);
   // Eight corners of a box, with distinct axis extents and two atom types.
@@ -137,7 +137,7 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Eight Vertices", "[SimplnxCore][W
   args.insertOrAssign(WriteLAMMPSFileFilter::k_AtomLabelsPath_Key, std::make_any<DataPath>(k_AtomLabelsGeom));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -167,13 +167,13 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Eight Vertices", "[SimplnxCore][W
   const std::vector<char> contents = ReadIn(outputPath);
   REQUIRE(std::string(contents.begin(), contents.end()) == expected);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteLAMMPSFileFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

@@ -91,8 +91,8 @@ DataStructure MeshData(const ShapeMesh& mesh, const PointType& centroid, const F
   DataStructure data;
   auto* geometryPtr = TriangleGeom::Create(data, "Triangles");
   REQUIRE(geometryPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(data, "Vertices", {mesh.vertices.size()}, {3}, geometryPtr->getId());
-  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(data, "Faces", {mesh.faces.size()}, {3}, geometryPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(data, "Vertices", {mesh.vertices.size()}, {3}, geometryPtr->getId());
+  auto* facesPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(data, "Faces", {mesh.faces.size()}, {3}, geometryPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   geometryPtr->setVertices(*verticesPtr);
@@ -113,8 +113,8 @@ DataStructure MeshData(const ShapeMesh& mesh, const PointType& centroid, const F
   REQUIRE(faceDataPtr != nullptr);
   REQUIRE(featureDataPtr != nullptr);
   geometryPtr->setFaceAttributeMatrix(*faceDataPtr);
-  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(data, "Face Labels", {mesh.faces.size()}, {2}, faceDataPtr->getId());
-  auto* centersPtr = UnitTest::CreateTestDataArray<float32>(data, "Centroids", {2}, {3}, featureDataPtr->getId());
+  auto* labelsPtr = unit_test::CreateTestDataArray<int32>(data, "Face Labels", {mesh.faces.size()}, {2}, faceDataPtr->getId());
+  auto* centersPtr = unit_test::CreateTestDataArray<float32>(data, "Centroids", {2}, {3}, featureDataPtr->getId());
   REQUIRE(labelsPtr != nullptr);
   REQUIRE(centersPtr != nullptr);
   centersPtr->fill(0.0F);
@@ -139,17 +139,17 @@ void ExecuteShapes(DataStructure& data)
   args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Feature Data"})));
   args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Feature Data", "Centroids"})));
   const auto preflight = filter.preflight(data, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto result = filter.execute(data, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  UnitTest::CheckArraysInheritTupleDims(data);
+  unit_test::CheckArraysInheritTupleDims(data);
 }
 
-const Float32Array& Output(const DataStructure& data, const std::string& name)
+const Float32ArrayType& Output(const DataStructure& data, const std::string& name)
 {
   const DataPath path({"Triangles", "Feature Data", name});
-  REQUIRE_NOTHROW(data.getDataRefAs<Float32Array>(path));
-  return data.getDataRefAs<Float32Array>(path);
+  REQUIRE_NOTHROW(data.getDataRefAs<Float32ArrayType>(path));
+  return data.getDataRefAs<Float32ArrayType>(path);
 }
 
 std::array<float32, 5> TetrahedronMeasurements(float64 degrees)
@@ -183,9 +183,9 @@ std::array<float64, 3> RayLengths(const DataStructure& data, const FrameType& fr
   std::vector<usize> faces(geometry.getNumberOfFaces());
   std::iota(faces.begin(), faces.end(), 0);
   const auto& centers = Output(data, "Centroids");
-  const auto lengths = ComputeShapesTriangleGeomDetail::FindIntersections(frame, faces, geometry.getFacesRef().getDataStoreRef(), geometry.getVerticesRef().getDataStoreRef(),
+  const auto lengths = compute_shapes_triangle_geom_detail::FindIntersections(frame, faces, geometry.getFacesRef().getDataStoreRef(), geometry.getVerticesRef().getDataStoreRef(),
                                                                           centers.getDataStoreRef(), 1, std::atomic_bool{false});
-  return {lengths.xLength, lengths.yLength, lengths.zLength};
+  return {lengths.x_length, lengths.y_length, lengths.z_length};
 }
 } // namespace
 
@@ -355,12 +355,12 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Face Feature Centroid
   DataStructure dataStructure;
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(triangleGeomPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeomPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeomPtr->getId());
   triangleGeomPtr->setVertices(*verticesPtr);
   triangleGeomPtr->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
   triangleGeomPtr->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
   triangleGeomPtr->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
-  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeomPtr->getId());
+  auto* facesPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeomPtr->getId());
   (*facesPtr)[0] = 0;
   (*facesPtr)[1] = 1;
   (*facesPtr)[2] = 2;
@@ -368,12 +368,12 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Face Feature Centroid
   auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeomPtr->getId());
   REQUIRE(faceDataPtr != nullptr);
   triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
-  auto* labelsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Face Labels", {1}, {2}, faceDataPtr->getId());
+  auto* labelsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Face Labels", {1}, {2}, faceDataPtr->getId());
   (*labelsPtr)[0] = 1;
   (*labelsPtr)[1] = 0;
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, "Feature Data", {2}, triangleGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {1}, featureDataPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "Centroids", {2}, {1}, featureDataPtr->getId());
 
   ComputeShapesTriangleGeomFilter filter;
   auto args = filter.getDefaultArguments();
@@ -383,7 +383,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Face Feature Centroid
   args.insertOrAssign(ComputeShapesTriangleGeomFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath({"Triangles", "Feature Data", "Centroids"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(std::any_of(preflightResult.output_actions.errors().begin(), preflightResult.output_actions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -20,7 +20,7 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
   }
 
   auto groupReader = parentGroup.openGroup(objectName);
-  IGeometry::OptionalId cellDataId = ReadDataId(groupReader, IOConstants::k_CellDataTag);
+  IGeometry::OptionalIdType cellDataId = ReadDataId(groupReader, io_constants::k_CellDataTag);
 
   geometry.setCellData(cellDataId);
 
@@ -47,7 +47,7 @@ Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructu
   }
 
   auto groupWriter = parentGroup.createGroup(geometry.getName());
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getCellDataId(), IOConstants::k_CellDataTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getCellDataId(), io_constants::k_CellDataTag));
   return result;
 }
 } // namespace nx::core::hdf5

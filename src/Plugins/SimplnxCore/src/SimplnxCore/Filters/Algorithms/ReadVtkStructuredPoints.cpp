@@ -269,7 +269,7 @@ Result<> ReadBinaryData(std::istream& in, AbstractDataStore<T>& dataStore, usize
 
     if constexpr(endian::native == endian::little && sizeof(T) > 1)
     {
-      std::transform(values.get(), values.get() + count, values.get(), [](T value) { return nx::core::byteswap(value); });
+      std::transform(values.get(), values.get() + count, values.get(), [](T value) { return nx::core::Byteswap(value); });
     }
 
     auto writeResult = WriteChunk(dataStore, offset, nonstd::span<const T>(values.get(), count));
@@ -301,7 +301,7 @@ Result<> ReadAsciiData(std::istream& in, AbstractDataStore<T>& dataStore, usize 
   usize bufferedValues = 0;
 
   return ReadAsciiTokens(in, totalValues, dataArrayPath, shouldCancel, [&](const std::string& token, usize tokenIndex) -> Result<> {
-    auto conversionResult = StringInterpretationUtilities::Convert<T>(token);
+    auto conversionResult = string_interpretation_utilities::Convert<T>(token);
     if(conversionResult.invalid())
     {
       return ConvertResult(std::move(conversionResult));
@@ -624,11 +624,11 @@ void ReadVtkStructuredPoints::setDatasetType(const std::string& dataSetType)
 
 Result<> ReadVtkStructuredPoints::readFile()
 {
-  std::ifstream in(m_InputValues->InputFile, std::ios_base::in | std::ios_base::binary);
+  std::ifstream in(m_InputValues->input_file, std::ios_base::in | std::ios_base::binary);
 
   if(!in.is_open())
   {
-    std::string msg = fmt::format("Error opening output file '%1'", m_InputValues->InputFile.string());
+    std::string msg = fmt::format("Error opening output file '%1'", m_InputValues->input_file.string());
     return MakeErrorResult(to_underlying(ErrorCodes::FileOpenErr), msg);
   }
 
@@ -656,11 +656,11 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   std::string fileType(buf.data());
-  if(StringUtilities::starts_with(fileType, "BINARY"))
+  if(string_utilities::StartsWith(fileType, "BINARY"))
   {
     setFileIsBinary(true);
   }
-  else if(StringUtilities::starts_with(fileType, "ASCII"))
+  else if(string_utilities::StartsWith(fileType, "ASCII"))
   {
     setFileIsBinary(false);
   }
@@ -678,7 +678,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
   line = std::string(buf.data());
 
-  auto words = StringUtilities::Split(line, ' ');
+  auto words = string_utilities::Split(line, ' ');
 
   if(words.size() != 2)
   {
@@ -691,7 +691,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return MakeErrorResult(to_underlying(ErrorCodes::DatasetKeywordErr), ss);
   }
   std::string dataset(words.at(1));
-  dataset = StringUtilities::trimmed(dataset);
+  dataset = string_utilities::Trimmed(dataset);
   if(dataset != k_StructuredPointsKeyword)
   {
     std::string ss = fmt::format("Invalid dataset type. The dataset type is '{}', but only dataset type '{}' is supported in this filter.", dataset, k_StructuredPointsKeyword);
@@ -707,7 +707,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
   // Read point dimensions before deriving cell dimensions.
   line = std::string(buf.data());
-  auto tokens = StringUtilities::Split(line, ' ');
+  auto tokens = string_utilities::Split(line, ' ');
   if(tokens.size() != 4)
   {
     std::string ss = fmt::format("Error reading the dataset dimensions. Was expecting 4 tokens but got '{}'.", std::string(buf.data()));
@@ -720,19 +720,19 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::DimensionType pointDims(3, 0);
-  auto convertResultSizeT = StringInterpretationUtilities::Convert<usize>(tokens[1]);
+  auto convertResultSizeT = string_interpretation_utilities::Convert<usize>(tokens[1]);
   if(convertResultSizeT.invalid())
   {
     return ConvertResult(std::move(convertResultSizeT));
   }
   pointDims[0] = convertResultSizeT.value();
-  convertResultSizeT = StringInterpretationUtilities::Convert<usize>(tokens[2]);
+  convertResultSizeT = string_interpretation_utilities::Convert<usize>(tokens[2]);
   if(convertResultSizeT.invalid())
   {
     return ConvertResult(std::move(convertResultSizeT));
   }
   pointDims[1] = convertResultSizeT.value();
-  convertResultSizeT = StringInterpretationUtilities::Convert<usize>(tokens[3]);
+  convertResultSizeT = string_interpretation_utilities::Convert<usize>(tokens[3]);
   if(convertResultSizeT.invalid())
   {
     return ConvertResult(std::move(convertResultSizeT));
@@ -758,7 +758,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   line = std::string(buf.data());
-  tokens = StringUtilities::Split(line, ' ');
+  tokens = string_utilities::Split(line, ' ');
   if(tokens.size() != 4)
   {
     std::string ss = fmt::format("Error reading the dataset spacing. Was expecting 4 tokens but got '{}'.", std::string(buf.data()));
@@ -771,16 +771,16 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::SpacingType spacing(3, 0.0f);
-  if(!m_InputValues->GeometryOverrides.Spacing.has_value())
+  if(!m_InputValues->geometry_overrides.Spacing.has_value())
   {
     for(usize axis = 0; axis < 3; ++axis)
     {
-      auto value = StringInterpretationUtilities::Convert<float32>(tokens[axis + 1]);
+      auto value = string_interpretation_utilities::Convert<float32>(tokens[axis + 1]);
       if(value.invalid())
       {
         const auto& error = value.errors().front();
-        return MakeErrorResult(error.code, ImageIO::FormatReaderValueError(m_InputValues->InputFile, fmt::format("{} spacing", k_AxisNames[axis]),
-                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), ImageIO::k_SetSpacingLabel));
+        return MakeErrorResult(error.code, image_io::FormatReaderValueError(m_InputValues->input_file, fmt::format("{} spacing", k_AxisNames[axis]),
+                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), image_io::k_SetSpacingLabel));
       }
       spacing[axis] = value.value();
     }
@@ -793,7 +793,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   line = std::string(buf.data());
-  tokens = StringUtilities::Split(line, ' ');
+  tokens = string_utilities::Split(line, ' ');
   if(tokens.size() != 4)
   {
     std::string ss = fmt::format("Error reading the dataset origin. Was expecting 4 tokens but got '{}'.", std::string(buf.data()));
@@ -806,21 +806,21 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   CreateImageGeometryAction::OriginType origin(3, 0.0f);
-  if(!m_InputValues->GeometryOverrides.Origin.has_value())
+  if(!m_InputValues->geometry_overrides.Origin.has_value())
   {
     for(usize axis = 0; axis < 3; ++axis)
     {
-      auto value = StringInterpretationUtilities::Convert<float32>(tokens[axis + 1]);
+      auto value = string_interpretation_utilities::Convert<float32>(tokens[axis + 1]);
       if(value.invalid())
       {
         const auto& error = value.errors().front();
-        return MakeErrorResult(error.code, ImageIO::FormatReaderValueError(m_InputValues->InputFile, fmt::format("{} origin", k_AxisNames[axis]),
-                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), ImageIO::k_SetOriginLabel));
+        return MakeErrorResult(error.code, image_io::FormatReaderValueError(m_InputValues->input_file, fmt::format("{} origin", k_AxisNames[axis]),
+                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), image_io::k_SetOriginLabel));
       }
       origin[axis] = value.value();
     }
   }
-  if(auto metadataResult = m_InputValues->GeometryOverrides.apply(m_InputValues->InputFile, origin, spacing); metadataResult.invalid())
+  if(auto metadataResult = m_InputValues->geometry_overrides.apply(m_InputValues->input_file, origin, spacing); metadataResult.invalid())
   {
     return metadataResult;
   }
@@ -834,14 +834,14 @@ Result<> ReadVtkStructuredPoints::readFile()
     }
   }
 
-  if(m_InputValues->ReadPointData && m_Preflight)
+  if(m_InputValues->read_point_data && m_Preflight)
   {
-    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->PointGeomPath, pointDims, origin, spacing, m_InputValues->PointAttributeMatrixName);
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->point_geom_path, pointDims, origin, spacing, m_InputValues->point_attribute_matrix_name);
     m_OutputActions.value().appendAction(std::move(createImageGeometryAction));
   }
-  if(m_InputValues->ReadCellData && m_Preflight)
+  if(m_InputValues->read_cell_data && m_Preflight)
   {
-    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->ImageGeomPath, cellDims, origin, spacing, m_InputValues->CellAttributeMatrixName);
+    auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(m_InputValues->image_geom_path, cellDims, origin, spacing, m_InputValues->cell_attribute_matrix_name);
     m_OutputActions.value().appendAction(std::move(createImageGeometryAction));
   }
 
@@ -852,7 +852,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   line = std::string(buf.data());
-  tokens = StringUtilities::Split(line, ' ');
+  tokens = string_utilities::Split(line, ' ');
   if(tokens.size() != 2)
   {
     std::string ss = fmt::format("Error reading the dataset type. Was expecting 2 tokens but got '{}'.", std::string(buf.data()));
@@ -865,7 +865,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
 
   std::string sectionType = std::string(tokens[0]);
-  auto convertResultI32 = StringInterpretationUtilities::Convert<int32>(tokens[1]);
+  auto convertResultI32 = string_interpretation_utilities::Convert<int32>(tokens[1]);
   if(convertResultI32.invalid())
   {
     return ConvertResult(std::move(convertResultI32));
@@ -880,9 +880,9 @@ Result<> ReadVtkStructuredPoints::readFile()
     }
 
     // Traverse an unselected first section when the other section is requested.
-    if(sectionType == k_CellDataKeyword && (m_InputValues->ReadCellData || (i == 0 && m_InputValues->ReadPointData)))
+    if(sectionType == k_CellDataKeyword && (m_InputValues->read_cell_data || (i == 0 && m_InputValues->read_point_data)))
     {
-      if(m_InputValues->ReadCellData && cellDims[0] * cellDims[1] * cellDims[2] != numValues)
+      if(m_InputValues->read_cell_data && cellDims[0] * cellDims[1] * cellDims[2] != numValues)
       {
         return MakeErrorResult(to_underlying(ErrorCodes::MismatchedCellsAndTuplesErr),
                                fmt::format("Number of cells ({}) does not match number of tuples ({}) in the Attribute Matrix.", cellDims[0] * cellDims[1] * cellDims[2], numValues));
@@ -897,9 +897,9 @@ Result<> ReadVtkStructuredPoints::readFile()
       numValues = dtResult.value();
       sectionType = numValues > 0 ? k_PointDataKeyword : "";
     }
-    else if(sectionType == k_PointDataKeyword && (m_InputValues->ReadPointData || (i == 0 && m_InputValues->ReadCellData)))
+    else if(sectionType == k_PointDataKeyword && (m_InputValues->read_point_data || (i == 0 && m_InputValues->read_cell_data)))
     {
-      if(m_InputValues->ReadPointData && pointDims[0] * pointDims[1] * pointDims[2] != numValues)
+      if(m_InputValues->read_point_data && pointDims[0] * pointDims[1] * pointDims[2] != numValues)
       {
         return MakeErrorResult(to_underlying(ErrorCodes::MismatchedPointsAndTuplesErr),
                                fmt::format("Number of points ({}) does not match number of tuples ({}) in the Attribute Matrix.", pointDims[0] * pointDims[1] * pointDims[2], numValues));
@@ -1036,11 +1036,11 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
     else if(strncmp(buf.data(), nextKeyWord.c_str(), 9) == 0)
     {
       std::string line(buf.data());
-      std::vector<std::string> tokens = StringUtilities::Split(line, ' ');
+      std::vector<std::string> tokens = string_utilities::Split(line, ' ');
       std::string sectionType = std::string(tokens[0]);
       std::fill(buf.begin(), buf.end(), '\0');
       ReadString(in, buf.data(), k_BufferSize);
-      auto convertResultI32 = StringInterpretationUtilities::Convert<int32>({buf.data()});
+      auto convertResultI32 = string_interpretation_utilities::Convert<int32>({buf.data()});
       return {convertResultI32.value()};
     }
     else
@@ -1110,9 +1110,9 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
   std::fill(line.begin(), line.end(), '\0');
   if(::ReadLine(in, line.data(), 256).invalid())
   {
-    return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read scalar header for file: {}", m_InputValues->InputFile.string()));
+    return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read scalar header for file: {}", m_InputValues->input_file.string()));
   }
-  std::vector<std::string> tokens = StringUtilities::Split({line.data()}, ' ');
+  std::vector<std::string> tokens = string_utilities::Split({line.data()}, ' ');
 
   if(tokens.size() < 2)
   {
@@ -1131,9 +1131,9 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
   std::fill(line.begin(), line.end(), '\0');
   if(::ReadLine(in, line.data(), 256).invalid())
   {
-    return MakeErrorResult(to_underlying(ErrorCodes::ReadLookupTableLineErr), fmt::format("Cannot read LOOKUP_TABLE line for file: {}", m_InputValues->InputFile.string()));
+    return MakeErrorResult(to_underlying(ErrorCodes::ReadLookupTableLineErr), fmt::format("Cannot read LOOKUP_TABLE line for file: {}", m_InputValues->input_file.string()));
   }
-  tokens = StringUtilities::Split({line.data()}, ' ');
+  tokens = string_utilities::Split({line.data()}, ' ');
   if(tokens.size() != 2)
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadLookupTableWordCountErr), "Error reading SCALARS LOOKUP_TABLE header section. Not enough tokens.");
@@ -1154,10 +1154,10 @@ Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32 numPts)
   std::vector<char> line(256, '\0');
   if(::ReadLine(in, line.data(), line.size()).invalid())
   {
-    return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read vector header for file '{}'.", m_InputValues->InputFile.string()));
+    return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read vector header for file '{}'.", m_InputValues->input_file.string()));
   }
 
-  const std::vector<std::string> tokens = StringUtilities::Split({line.data()}, ' ');
+  const std::vector<std::string> tokens = string_utilities::Split({line.data()}, ' ');
   if(tokens.size() < 2)
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderWordCountErr), "Error reading VECTORS header section. Not enough tokens.");
@@ -1168,13 +1168,13 @@ Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32 numPts)
 
 Result<> ReadVtkStructuredPoints::readDataArray(std::istream& in, int32 numPts, const std::string& name, const std::string& scalarType, usize numComp)
 {
-  DataPath arrayDataPath = m_InputValues->PointGeomPath.createChildPath(m_InputValues->PointAttributeMatrixName).createChildPath(name);
+  DataPath arrayDataPath = m_InputValues->point_geom_path.createChildPath(m_InputValues->point_attribute_matrix_name).createChildPath(name);
   if(m_CurrentSectionType == CurrentSectionType::Cell)
   {
-    arrayDataPath = m_InputValues->ImageGeomPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(name);
+    arrayDataPath = m_InputValues->image_geom_path.createChildPath(m_InputValues->cell_attribute_matrix_name).createChildPath(name);
   }
 
-  const bool skipArray = m_CurrentSectionType == CurrentSectionType::Cell ? !m_InputValues->ReadCellData : !m_InputValues->ReadPointData;
+  const bool skipArray = m_CurrentSectionType == CurrentSectionType::Cell ? !m_InputValues->read_cell_data : !m_InputValues->read_point_data;
   if(m_Preflight || skipArray)
   {
     Result<nx::core::DataType> nxDTypeResult = ConvertVtkDataType(scalarType);

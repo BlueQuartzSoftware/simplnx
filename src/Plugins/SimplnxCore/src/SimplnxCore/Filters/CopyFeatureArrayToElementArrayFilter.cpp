@@ -60,7 +60,7 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_CreatedArraySuffix_Key, "Created Array Suffix", "The suffix to add to the input attribute array name when creating the copied array", ""));
 
@@ -92,7 +92,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
 
   if(pSelectedFeatureArrayPathsValue.empty())
   {
-    return MakePreflightErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, "You must select at least one feature data array to copy to an element data array.");
+    return MakePreflightErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, "You must select at least one feature data array to copy to an element data array.");
   }
 
   if(pCreatedArraySuffixValue.find('/') != std::string::npos)
@@ -103,7 +103,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -120,7 +120,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -128,9 +128,9 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CopyFeatureArrayToElementArrayInputValues inputValues;
-  inputValues.SelectedFeatureArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CreatedArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
+  inputValues.selected_feature_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.created_array_suffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
   return CopyFeatureArrayToElementArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

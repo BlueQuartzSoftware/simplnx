@@ -50,7 +50,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -129,7 +129,7 @@ void ExecuteMhaWithSavedTransform(const ReadMhaFileFilter& filter, DataStructure
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 }
 
-void CheckMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScopePtr)
+void CheckMhaSavedTransformPath(unit_test::AlgorithmTestScope* algorithmTestScopePtr)
 {
   const fs::path inputPath = MhaOutputDir() / ("nested-saved-transform-" + Uuid::GenerateV4().str() + ".mha");
   const auto removeInput = MakeScopeGuard([&inputPath]() noexcept {
@@ -159,10 +159,10 @@ void CheckMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScope
   args.insertOrAssign(ReadMhaFileFilter::k_TransformationMatrixPath_Key, std::make_any<ArrayCreationParameter::ValueType>(matrixPath));
   const auto preflight = filter.preflight(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   // MHA preflight declares the saved input matrix; transform actions stay internal to execute.
   bool declaresMatrix = false;
-  for(const auto& action : preflight.outputActions.value().actions)
+  for(const auto& action : preflight.output_actions.value().actions)
   {
     const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get());
     if(creationActionPtr != nullptr && creationActionPtr->getCreatedPath() == matrixPath)
@@ -183,16 +183,16 @@ void CheckMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScope
   if(algorithmTestScopePtr == nullptr)
   {
     const auto after = GetAlgorithmPathExecutionCounts();
-    CHECK((after.OutOfCoreOnOutOfCoreStore > before.OutOfCoreOnOutOfCoreStore));
-    CHECK((after.InCore == before.InCore));
-    CHECK((after.OutOfCoreOnInMemoryStore == before.OutOfCoreOnInMemoryStore));
+    CHECK((after.out_of_core_on_out_of_core_store > before.out_of_core_on_out_of_core_store));
+    CHECK((after.in_core == before.in_core));
+    CHECK((after.out_of_core_on_in_memory_store == before.out_of_core_on_in_memory_store));
   }
 
-  const auto& geometry = UnitTest::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
-  CHECK((geometry.getDimensions() == SizeVec3{2, 2, 2}));
-  CHECK((geometry.getOrigin() == FloatVec3{0, 0, 0}));
-  CHECK((geometry.getSpacing() == FloatVec3{1, 1, 1}));
-  const auto& matrix = UnitTest::GetRequiredData<Float32Array>(dataStructure, matrixPath);
+  const auto& geometry = unit_test::GetRequiredData<ImageGeom>(dataStructure, geometryPath);
+  CHECK((geometry.getDimensions() == SizeVec3Type{2, 2, 2}));
+  CHECK((geometry.getOrigin() == FloatVec3Type{0, 0, 0}));
+  CHECK((geometry.getSpacing() == FloatVec3Type{1, 1, 1}));
+  const auto& matrix = unit_test::GetRequiredData<Float32ArrayType>(dataStructure, matrixPath);
   REQUIRE((matrix.getNumberOfTuples() == 1));
   REQUIRE((matrix.getNumberOfComponents() == 16));
   constexpr std::array<float32, 16> k_ExpectedMatrix = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
@@ -200,7 +200,7 @@ void CheckMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScope
   {
     CHECK((matrix[index] == k_ExpectedMatrix.at(index)));
   }
-  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(dataStructure, pixelsPath);
+  const auto& pixels = unit_test::GetRequiredData<UInt8ArrayType>(dataStructure, pixelsPath);
   REQUIRE((pixels.getTupleShape() == ShapeType{2, 2, 2}));
   REQUIRE((pixels.getNumberOfComponents() == 1));
   for(usize index = 0; index < expectedPixels.size(); ++index)
@@ -209,32 +209,32 @@ void CheckMhaSavedTransformPath(UnitTest::AlgorithmTestScope* algorithmTestScope
   }
   if(algorithmTestScopePtr == nullptr)
   {
-    UnitTest::RequireDiskBackedStore(pixels);
-    UnitTest::RequireDiskBackedStore(matrix);
+    unit_test::RequireDiskBackedStore(pixels);
+    unit_test::RequireDiskBackedStore(matrix);
   }
   CHECK((dataStructure.getTopLevelData().size() == 2));
-  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Image"})).getId() == decoyId));
-  CHECK((UnitTest::GetRequiredData<DataGroup>(dataStructure, DataPath({"Image", "Keep Me"})).getId() == decoyChildId));
+  CHECK((unit_test::GetRequiredData<DataGroup>(dataStructure, DataPath({"Image"})).getId() == decoyId));
+  CHECK((unit_test::GetRequiredData<DataGroup>(dataStructure, DataPath({"Image", "Keep Me"})).getId() == decoyChildId));
   CHECK_FALSE(dataStructure.containsData(DataPath({"Image Group", ".Image"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({".Image Group"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({".Image"})));
   CHECK_FALSE(dataStructure.containsData(DataPath({"Image Group", "Image", ".Image Transform"})));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved transform child path", "[NXImageProcessing][ReadMhaFileFilter][NestedPaths]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
   CheckMhaSavedTransformPath(&algorithmTestScope);
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: nested geometry preserves saved transform child path with real OOC stores", "[NXImageProcessing][ReadMhaFileFilter][NestedPaths][.OocStoreContract]")
 {
-  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  REQUIRE(data_store_utilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   REQUIRE_FALSE(ForceInCoreAlgorithm());
   REQUIRE_FALSE(ForceOocAlgorithm());
   CheckMhaSavedTransformPath(nullptr);
@@ -272,19 +272,19 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: parse scalar 2D header (compre
   const auto result = mhd::ReadMetaImageHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.nDims == 2);
-  REQUIRE(md.dataType == DataType::uint8);
-  REQUIRE(md.componentCount == 1);
+  REQUIRE(md.n_dims == 2);
+  REQUIRE(md.data_type == DataType::uint8);
+  REQUIRE(md.component_count == 1);
   REQUIRE(md.dimensions == std::array<usize, 3>{4, 3, 1}); // Z=1 for 2D
   REQUIRE(md.spacing[0] == Approx(0.5f));
   REQUIRE(md.spacing[1] == Approx(0.75f));
   REQUIRE(md.origin[0] == Approx(-1.0f));
   REQUIRE(md.origin[1] == Approx(2.0f));
   REQUIRE(md.encoding == mhd::Encoding::Compressed);
-  REQUIRE(md.byteSwapRequired == false); // little-endian on a little-endian host
+  REQUIRE(md.byte_swap_required == false); // little-endian on a little-endian host
   REQUIRE(md.detached == false);
-  REQUIRE(md.dataStartOffset > 0);
-  REQUIRE(md.transformMatrix == std::vector<float64>{1, 0, 0, 1});
+  REQUIRE(md.data_start_offset > 0);
+  REQUIRE(md.transform_matrix == std::vector<float64>{1, 0, 0, 1});
 }
 
 TEST_CASE("NXImageProcessing::MetaImageUtilities: parse 3D multi-component raw header", "[NXImageProcessing][ReadMhaFileFilter]")
@@ -297,10 +297,10 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: parse 3D multi-component raw h
   const auto result = mhd::ReadMetaImageHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.nDims == 3);
+  REQUIRE(md.n_dims == 3);
   REQUIRE(md.dimensions == std::array<usize, 3>{5, 4, 3});
-  REQUIRE(md.componentCount == 2);
-  REQUIRE(md.dataType == DataType::float32);
+  REQUIRE(md.component_count == 2);
+  REQUIRE(md.data_type == DataType::float32);
   REQUIRE(md.spacing[2] == Approx(3.0f));
   REQUIRE(md.encoding == mhd::Encoding::Raw);
 }
@@ -316,8 +316,8 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: big-endian flag sets byteSwapR
   REQUIRE(result.valid());
   const auto& md = result.value();
   // On the (little-endian) CI/dev host, a big-endian file requires a swap.
-  const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
-  REQUIRE(md.byteSwapRequired == hostIsLittle);
+  const bool hostIsLittle = (nx::core::CheckEndian() == nx::core::endian::little);
+  REQUIRE(md.byte_swap_required == hostIsLittle);
 }
 
 TEST_CASE("NXImageProcessing::MetaImageUtilities: detached .mhd resolves sibling .raw", "[NXImageProcessing][ReadMhaFileFilter]")
@@ -344,8 +344,8 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: detached .mhd resolves sibling
   REQUIRE(result.valid());
   const auto& md = result.value();
   REQUIRE(md.detached == true);
-  REQUIRE(md.dataStartOffset == 0);
-  REQUIRE(md.dataFilePath.filename() == fs::path("vol_detached.raw"));
+  REQUIRE(md.data_start_offset == 0);
+  REQUIRE(md.data_file_path.filename() == fs::path("vol_detached.raw"));
 }
 
 TEST_CASE("NXImageProcessing::MetaImageUtilities: rejects bad headers", "[NXImageProcessing][ReadMhaFileFilter]")
@@ -419,7 +419,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: rejects nonzero HeaderSize", "
 
 TEST_CASE("NXImageProcessing::MetaImageUtilities: numeric booleans and multi-alias precedence", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
+  const bool hostIsLittle = (nx::core::CheckEndian() == nx::core::endian::little);
 
   SECTION("CompressedData = 1 (numeric) is treated as compressed")
   {
@@ -437,7 +437,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: numeric booleans and multi-ali
     WriteMhaAttached(p, {"ObjectType = Image", "NDims = 2", "BinaryData = True", "BinaryDataByteOrderMSB = T", "DimSize = 2 2", "ElementType = MET_SHORT", "ElementDataFile = LOCAL"}, {});
     const auto result = mhd::ReadMetaImageHeader(p);
     REQUIRE(result.valid());
-    REQUIRE(result.value().byteSwapRequired == hostIsLittle); // big-endian file on a little-endian host
+    REQUIRE(result.value().byte_swap_required == hostIsLittle); // big-endian file on a little-endian host
   }
   SECTION("origin precedence: Origin wins over Offset and Position regardless of file order")
   {
@@ -470,7 +470,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: numeric booleans and multi-ali
         {});
     const auto result = mhd::ReadMetaImageHeader(p);
     REQUIRE(result.valid());
-    REQUIRE(result.value().byteSwapRequired == !hostIsLittle); // little-endian file wins
+    REQUIRE(result.value().byte_swap_required == !hostIsLittle); // little-endian file wins
   }
   SECTION("transform precedence: TransformMatrix wins over Rotation and Orientation")
   {
@@ -481,7 +481,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: numeric booleans and multi-ali
                      {});
     const auto result = mhd::ReadMetaImageHeader(p);
     REQUIRE(result.valid());
-    REQUIRE(result.value().transformMatrix == std::vector<float64>{2, 0, 0, 2});
+    REQUIRE(result.value().transform_matrix == std::vector<float64>{2, 0, 0, 2});
   }
 }
 
@@ -511,7 +511,7 @@ TEST_CASE("NXImageProcessing::MetaImageUtilities: ElementDataFile LIST vs single
     const auto result = mhd::ReadMetaImageHeader(p);
     REQUIRE(result.valid());
     REQUIRE(result.value().detached == true);
-    REQUIRE(result.value().dataFilePath.filename() == fs::path("my scan data.raw"));
+    REQUIRE(result.value().data_file_path.filename() == fs::path("my scan data.raw"));
   }
 }
 
@@ -605,11 +605,11 @@ DataStructure BuildMhaTarget(DataType dataType, const std::array<usize, 3>& dest
 Result<> RunReadMhaFile(DataStructure& dataStructure, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
 {
   ReadMhaFileInputValues inputValues;
-  inputValues.InputFilePath = inputFile;
-  inputValues.ImageGeometryPath = k_AlgoGeomPath;
-  inputValues.CellAttributeMatrixName = k_AlgoCellDataName;
-  inputValues.ImageDataArrayName = k_AlgoArrayName;
-  inputValues.CroppingOptions = crop;
+  inputValues.input_file_path = inputFile;
+  inputValues.image_geometry_path = k_AlgoGeomPath;
+  inputValues.cell_attribute_matrix_name = k_AlgoCellDataName;
+  inputValues.image_data_array_name = k_AlgoArrayName;
+  inputValues.cropping_options = crop;
   const IFilter::MessageHandler messageHandler{};
   const std::atomic_bool shouldCancel{false};
   ReadMhaFile algorithm(dataStructure, messageHandler, shouldCancel, &inputValues);
@@ -767,12 +767,12 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the r
       ToBytes(fileValues));
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  crop.cropX = true;
-  crop.xBoundVoxels = {1, 2};
-  crop.cropY = true;
-  crop.yBoundVoxels = {0, 1};
-  crop.cropZ = true;
-  crop.zBoundVoxels = {1, 1};
+  crop.crop_x = true;
+  crop.x_bound_voxels = {1, 2};
+  crop.crop_y = true;
+  crop.y_bound_voxels = {0, 1};
+  crop.crop_z = true;
+  crop.z_bound_voxels = {1, 1};
   DataStructure dataStructure = BuildMhaTarget(DataType::int16, {2, 2, 1}, 1);
   REQUIRE(RunReadMhaFile(dataStructure, p, crop).valid());
   const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(AlgoImageDataPath()).getDataStoreRef();
@@ -787,7 +787,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFile: voxel subvolume crop keeps only the r
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zlib)", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const usize x = 4;
   const usize y = 3;
@@ -814,7 +814,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
       ReadMhaFileFilter filter;
       const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
       const auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       const auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -825,14 +825,14 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: scalar 2D round trip (raw + zli
       REQUIRE(geom.getSpacing()[0] == Approx(0.5f));
       REQUIRE(geom.getOrigin()[1] == Approx(2.0f));
       RequireMhaArrayEquals<uint8>(dataStructure, arrPath, voxels);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round trip", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize x = 4;
   const usize y = 3;
   const usize comp = 2;
@@ -849,13 +849,13 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round t
   ReadMhaFileFilter filter;
   const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrPath);
   REQUIRE(arr.getNumberOfComponents() == 2);
   RequireMhaArrayEquals<float32>(dataStructure, arrPath, voxels);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Regression for the physical-crop preflight/execute divergence: an out-of-range physical
@@ -864,7 +864,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: multi-component float32 round t
 // an OOB coordinate). Execute now clamps identically, so preflight and execute agree.
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_X = 6;
   constexpr usize k_Y = 5;
   constexpr usize k_Z = 4;
@@ -882,10 +882,10 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps o
   // ends clamp to the full extent -> the whole 6x5x4 volume is read.
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = crop.cropY = crop.cropZ = true;
-  crop.xBoundPhysical = {-100.0f, 1000.0f};
-  crop.yBoundPhysical = {-100.0f, 1000.0f};
-  crop.zBoundPhysical = {-100.0f, 1000.0f};
+  crop.crop_x = crop.crop_y = crop.crop_z = true;
+  crop.x_bound_physical = {-100.0f, 1000.0f};
+  crop.y_bound_physical = {-100.0f, 1000.0f};
+  crop.z_bound_physical = {-100.0f, 1000.0f};
 
   const DataPath geomPath({"MHA PhysCropOOB"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
@@ -893,7 +893,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps o
   ReadMhaFileFilter filter;
   const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData", crop);
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -906,14 +906,14 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalSubvolume crop clamps o
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: rejects missing file and bad ObjectType", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   SECTION("missing file")
   {
     DataStructure dataStructure;
     ReadMhaFileFilter filter;
     const Arguments args = MakeMhaArgs(MhaOutputDir() / "does_not_exist_654.mha", DataPath({"X"}), "Cell Data", "ImageData");
     const auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
   }
   SECTION("not an image")
   {
@@ -923,13 +923,13 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: rejects missing file and bad Ob
     ReadMhaFileFilter filter;
     const Arguments args = MakeMhaArgs(p, DataPath({"X"}), "Cell Data", "ImageData");
     const auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.output_actions.invalid());
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply-transform preflights against staged geometry", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // A 2D 90-degree rotation ("0 -1 1 0", determinant 1). With apply_image_transformation = true the
   // filter must preflight ApplyTransformationToGeometry against the geometry it queues, not the
@@ -953,9 +953,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply-transform preflights agai
 
   const auto preflight = filter.preflight(dataStructure, args);
   // Post-fix: the downstream transform sees the staged geometry, so preflight is VALID.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   // Post-fix: the geometry is found, so the spurious "-5555 not an Image Geometry" warning is gone.
-  for(const auto& w : preflight.outputActions.warnings())
+  for(const auto& w : preflight.output_actions.warnings())
   {
     REQUIRE(w.code != -5555);
   }
@@ -1050,7 +1050,7 @@ void RequireMhaOocMatchesInCore(const fs::path& p, const std::vector<T>& expecte
     const DataPath geomPath({"MHA OOC"});
     const Arguments args = MakeMhaArgs(p, geomPath, "Cell Data", "ImageData");
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
     return geomPath.createChildPath("Cell Data").createChildPath("ImageData");
@@ -1059,12 +1059,12 @@ void RequireMhaOocMatchesInCore(const fs::path& p, const std::vector<T>& expecte
   DataStructure inCoreDs;
   DataPath arrPath;
   {
-    const UnitTest::PreferencesSentinel sentinel(nx::core::DataStorageMode::ForceInCore, 0);
+    const unit_test::PreferencesSentinel sentinel(nx::core::DataStorageMode::ForceInCore, 0);
     arrPath = readInto(inCoreDs);
   }
   DataStructure oocDs;
   {
-    const UnitTest::PreferencesSentinel sentinel(nx::core::DataStorageMode::ForceOutOfCore, 1024);
+    const unit_test::PreferencesSentinel sentinel(nx::core::DataStorageMode::ForceOutOfCore, 1024);
     readInto(oocDs);
   }
 
@@ -1082,7 +1082,7 @@ void RequireMhaOocMatchesInCore(const fs::path& p, const std::vector<T>& expecte
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: OOC output matches in-core (scalar + multi-component)", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   SECTION("float32 scalar (compressed)")
   {
@@ -1136,7 +1136,7 @@ std::vector<float32> ReadSavedTransform(const fs::path& p, bool transpose)
   args.insertOrAssign(ReadMhaFileFilter::k_TransposeTransformMatrix_Key, std::make_any<bool>(transpose));
   args.insertOrAssign(ReadMhaFileFilter::k_TransformationMatrixPath_Key, std::make_any<ArrayCreationParameter::ValueType>(tMatrixPath));
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   const auto& store = dataStructure.getDataRefAs<DataArray<float32>>(tMatrixPath).getDataStoreRef();
@@ -1151,7 +1151,7 @@ std::vector<float32> ReadSavedTransform(const fs::path& p, bool transpose)
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transform matrix 2D parse + save-as-array", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // 2D 90-degree rotation: [[0,-1],[1,0]] (row-major "0 -1 1 0"), determinant 1.
   std::vector<uint8_t> pixels(4 * 3, 0);
   const fs::path p = MhaOutputDir() / "xform_2d.mha";
@@ -1179,7 +1179,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transform matrix 2D parse + sav
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transform matrix 3D parse + save-as-array", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // 3D 90-degree rotation about z: row-major "0 -1 0 1 0 0 0 0 1".
   std::vector<uint8_t> pixels(2 * 2 * 2, 0);
   const fs::path p = MhaOutputDir() / "xform_3d.mha";
@@ -1198,7 +1198,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transform matrix 3D parse + sav
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transpose of a non-rotation matrix errors -35852", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // A 2D scale matrix (determinant 4) is not a pure rotation: transpose must error.
   std::vector<uint8_t> pixels(2 * 2, 0);
   const fs::path p = MhaOutputDir() / "xform_scale.mha";
@@ -1211,9 +1211,9 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transpose of a non-rotation mat
   Arguments args = MakeMhaArgs(p, DataPath({"MHA Bad"}), "Cell Data", "ImageData");
   args.insertOrAssign(ReadMhaFileFilter::k_TransposeTransformMatrix_Key, std::make_any<bool>(true));
   const auto preflight = filter.preflight(dataStructure, args);
-  REQUIRE(preflight.outputActions.invalid());
+  REQUIRE(preflight.output_actions.invalid());
   bool found = false;
-  for(const auto& e : preflight.outputActions.errors())
+  for(const auto& e : preflight.output_actions.errors())
   {
     if(e.code == -35852)
     {
@@ -1225,7 +1225,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: transpose of a non-rotation mat
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply transformation to geometry executes", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // 2D 90-degree rotation applied to a small image via ApplyTransformationToGeometry.
   std::vector<uint8_t> pixels(4 * 3);
   std::iota(pixels.begin(), pixels.end(), static_cast<uint8_t>(1));
@@ -1241,7 +1241,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply transformation to geometr
   args.insertOrAssign(ReadMhaFileFilter::k_ApplyImageTransformation_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadMhaFileFilter::k_InterpolationType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // nearest neighbor
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   // The geometry still exists after the transform resample.
@@ -1250,7 +1250,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: apply transformation to geometr
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadMhaFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const DataPath geomPath({"Physical Crop"});
   const fs::path filePath = ItkMhaInputDir() / "Input" / "2th_cthead1.mha";
   Arguments args = MakeMhaArgs(filePath, geomPath, "Cell Data", "ImageData");
@@ -1258,8 +1258,8 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[NXI
   ReadMhaFileFilter filter;
   DataStructure fullDataStructure;
   auto fullPreflight = filter.preflight(fullDataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(fullPreflight.outputActions);
-  auto fullActions = fullPreflight.outputActions.value().applyAll(fullDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullPreflight.output_actions);
+  auto fullActions = fullPreflight.output_actions.value().applyAll(fullDataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(fullActions);
   REQUIRE_NOTHROW(fullDataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& fullGeom = fullDataStructure.getDataRefAs<ImageGeom>(geomPath);
@@ -1269,22 +1269,22 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: PhysicalCrop_MaxAtBound", "[NXI
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = false;
-  crop.cropZ = false;
-  crop.xBoundPhysical = {origin[0], origin[0] + static_cast<float32>(dims[0]) * spacing[0]};
-  CAPTURE(origin[0], spacing[0], dims[0], crop.xBoundPhysical[1]);
+  crop.crop_x = true;
+  crop.crop_y = false;
+  crop.crop_z = false;
+  crop.x_bound_physical = {origin[0], origin[0] + static_cast<float32>(dims[0]) * spacing[0]};
+  CAPTURE(origin[0], spacing[0], dims[0], crop.x_bound_physical[1]);
   args.insertOrAssign(ReadMhaFileFilter::k_CroppingOptions_Key, crop);
   DataStructure croppedDataStructure;
   auto croppedPreflight = filter.preflight(croppedDataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(croppedPreflight.outputActions);
-  auto croppedActions = croppedPreflight.outputActions.value().applyAll(croppedDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(croppedPreflight.output_actions);
+  auto croppedActions = croppedPreflight.output_actions.value().applyAll(croppedDataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(croppedActions);
   REQUIRE_NOTHROW(croppedDataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& croppedGeom = croppedDataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(croppedGeom.getDimensions() == dims);
   REQUIRE(croppedGeom.getOrigin() == origin);
-  UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
+  unit_test::CheckArraysInheritTupleDims(croppedDataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadMhaFileFilter: override invalid stored image metadata", "[NXImageProcessing][ReadMhaFileFilter]")
@@ -1296,7 +1296,7 @@ TEST_CASE("NXImageProcessing::ReadMhaFileFilter: override invalid stored image m
   const DataPath geometry({"Override MHA"});
   auto args = MakeMhaArgs(path, geometry, "Cell Data", "Pixels");
   const ReadMhaFileFilter filter;
-  UnitTest::RequireBadReaderMetadata(filter, args, path, badSpacing);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, path, badSpacing);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
 }

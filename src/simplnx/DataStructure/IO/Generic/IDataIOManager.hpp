@@ -78,36 +78,36 @@ public:
    * The callback takes the numeric type, shapes, optional chunk-shape hint, and initialization policy.
    * The callback transfers store ownership to its caller.
    */
-  using DataStoreCreateFnc = std::function<std::unique_ptr<IDataStore>(DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode)>;
+  using DataStoreCreateFncType = std::function<std::unique_ptr<IDataStore>(DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode)>;
 
   /**
    * @brief Names a callback that creates a writable NeighborList store.
    *
    * The callback transfers ownership to its caller.
    */
-  using ListStoreCreateFnc = std::function<std::unique_ptr<IListStore>(DataType, const ShapeType&)>;
+  using ListStoreCreateFncType = std::function<std::unique_ptr<IListStore>(DataType, const ShapeType&)>;
 
   /**
    * @brief Names a callback that creates a StringArray backing store.
    *
    * The callback transfers ownership to its caller.
    */
-  using StringStoreCreateFnc = std::function<std::unique_ptr<AbstractStringStore>(const ShapeType& tupleShape)>;
+  using StringStoreCreateFncType = std::function<std::unique_ptr<AbstractStringStore>(const ShapeType& tupleShape)>;
 
   /**
    * @brief Maps format names to numeric-store factories.
    */
-  using DataStoreCreationMap = std::map<std::string, DataStoreCreateFnc>;
+  using DataStoreCreationMapType = std::map<std::string, DataStoreCreateFncType>;
 
   /**
    * @brief Maps format names to NeighborList-store factories.
    */
-  using ListStoreCreationMap = std::map<std::string, ListStoreCreateFnc>;
+  using ListStoreCreationMapType = std::map<std::string, ListStoreCreateFncType>;
 
   /**
    * @brief Maps format names to StringArray-store factories.
    */
-  using StringStoreCreationMap = std::map<std::string, StringStoreCreateFnc>;
+  using StringStoreCreationMapType = std::map<std::string, StringStoreCreateFncType>;
 
   /**
    * @brief Destroys the I/O manager.
@@ -165,7 +165,7 @@ public:
    * @brief Returns a snapshot of numeric-store factories.
    * @return Factory map that copies callback ownership.
    */
-  DataStoreCreationMap getDataStoreCreationFunctions();
+  DataStoreCreationMapType getDataStoreCreationFunctions();
 
   bool hasDataStoreCreationFnc(const std::string& type) const;
 
@@ -175,7 +175,7 @@ public:
    * @return Registered callback for type.
    * @throws std::out_of_range if type is not registered.
    */
-  DataStoreCreateFnc dataStoreCreationFnc(const std::string& type) const;
+  DataStoreCreateFncType dataStoreCreationFnc(const std::string& type) const;
 
   bool hasListStoreCreationFnc(const std::string& type) const;
 
@@ -185,7 +185,7 @@ public:
    * @return Registered callback for type.
    * @throws std::out_of_range if type is not registered.
    */
-  ListStoreCreateFnc listStoreCreationFnc(const std::string& type) const;
+  ListStoreCreateFncType listStoreCreationFnc(const std::string& type) const;
 
   bool hasStringStoreCreationFnc(const std::string& type) const;
 
@@ -194,7 +194,7 @@ public:
    * @param type Format identifier to look up.
    * @return Registered callback, or an empty callback when type is not registered.
    */
-  StringStoreCreateFnc stringStoreCreationFnc(const std::string& type) const;
+  StringStoreCreateFncType stringStoreCreationFnc(const std::string& type) const;
 
   /**
    * @brief Reports whether this manager finalizes deferred DREAM3D imports.
@@ -315,26 +315,26 @@ protected:
    * @param type Format identifier to register.
    * @param creationFnc Callback that replaces any existing callback for type.
    */
-  void addDataStoreCreationFnc(const std::string& type, DataStoreCreateFnc creationFnc);
+  void addDataStoreCreationFnc(const std::string& type, DataStoreCreateFncType creationFnc);
 
   /**
    * @brief Registers a NeighborList-store creation callback.
    * @param type Format identifier to register.
    * @param creationFnc Callback that replaces any existing callback for type.
    */
-  void addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc);
+  void addListStoreCreationFnc(const std::string& type, ListStoreCreateFncType creationFnc);
 
   /**
    * @brief Registers a StringArray-store creation callback.
    * @param type Format identifier to register.
    * @param creationFnc Callback that replaces any existing callback for type.
    */
-  void addStringStoreCreationFnc(const std::string& type, StringStoreCreateFnc creationFnc);
+  void addStringStoreCreationFnc(const std::string& type, StringStoreCreateFncType creationFnc);
 
 private:
   FactoryCollectionType m_FactoryCollection;
-  DataStoreCreationMap m_DataStoreCreationMap;
-  ListStoreCreationMap m_ListStoreCreationMap;
-  StringStoreCreationMap m_StringStoreCreationMap;
+  DataStoreCreationMapType m_DataStoreCreationMap;
+  ListStoreCreationMapType m_ListStoreCreationMap;
+  StringStoreCreationMapType m_StringStoreCreationMap;
 };
 } // namespace nx::core

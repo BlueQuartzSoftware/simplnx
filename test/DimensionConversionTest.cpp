@@ -27,7 +27,7 @@ TEST_CASE("simplnx::DimensionConversion: table scalar and product boundaries", "
     const std::vector<float64> values = {3, value};
     auto result = ConvertDimensions(values, "Tuple", ZeroDimensionPolicy::Reject);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
-    REQUIRE(result.errors()[0].code == DimensionConversion::k_InvalidValue);
+    REQUIRE(result.errors()[0].code == dimension_conversion::k_InvalidValue);
     CHECK(result.errors()[0].message.find("index 1") != std::string::npos);
     CHECK(result.errors()[0].message.find(phrase) != std::string::npos);
     CHECK(result.errors()[0].message.find("value ") != std::string::npos);
@@ -44,7 +44,7 @@ TEST_CASE("simplnx::DimensionConversion: table scalar and product boundaries", "
   const std::vector<float64> overflow = {4294967296.0, 4294967296.0};
   auto tooLarge = ConvertDimensions(overflow, "Tuple", ZeroDimensionPolicy::Reject);
   SIMPLNX_RESULT_REQUIRE_INVALID(tooLarge);
-  CHECK(tooLarge.errors()[0].code == DimensionConversion::k_ProductOverflow);
+  CHECK(tooLarge.errors()[0].code == dimension_conversion::k_ProductOverflow);
   CHECK(tooLarge.errors()[0].message.find("dimensions [Y=4294967296, X=4294967296] have a product") != std::string::npos);
   // Every scalar is checked before multiplication, even after a zero or an overflowing prefix.
   for(const auto& values : std::vector<std::vector<float64>>{{4294967296.0, 4294967296.0, 0}, {0, 4294967296.0, 4294967296.0}, {4294967296.0, 0, 4294967296.0}})
@@ -59,7 +59,7 @@ TEST_CASE("simplnx::DimensionConversion: table scalar and product boundaries", "
   {
     auto invalid = ConvertDimensions(values, "Tuple", ZeroDimensionPolicy::Allow);
     SIMPLNX_RESULT_REQUIRE_INVALID(invalid);
-    CHECK(invalid.errors()[0].code == DimensionConversion::k_InvalidValue);
+    CHECK(invalid.errors()[0].code == dimension_conversion::k_InvalidValue);
     CHECK(invalid.errors()[0].message.find("below the minimum") != std::string::npos);
   }
 }
@@ -80,7 +80,7 @@ TEST_CASE("simplnx::DimensionConversion: unsigned string grammar", "[simplnx][Di
       CAPTURE(policy, text);
       auto result = ConvertDimensions(text, "Tuple", policy);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
-      CHECK(result.errors()[0].code == DimensionConversion::k_InvalidToken);
+      CHECK(result.errors()[0].code == dimension_conversion::k_InvalidToken);
       CHECK(result.errors()[0].message.find("token '") != std::string::npos);
       CHECK(result.errors()[0].message.find(acceptedRange + std::to_string(std::numeric_limits<usize>::max()) + "]") != std::string::npos);
     }
@@ -93,11 +93,11 @@ TEST_CASE("simplnx::DimensionConversion: unsigned string grammar", "[simplnx][Di
   CHECK(zero.value() == ShapeType{0});
   auto rejected = ConvertDimensions(std::string("0"), "Component", ZeroDimensionPolicy::Reject);
   SIMPLNX_RESULT_REQUIRE_INVALID(rejected);
-  CHECK(rejected.errors()[0].code == DimensionConversion::k_ZeroDimension);
+  CHECK(rejected.errors()[0].code == dimension_conversion::k_ZeroDimension);
   CHECK(rejected.errors()[0].message.find("cannot be 0") != std::string::npos);
   auto overflow = ConvertDimensions(std::string("4294967296,4294967296"), "Tuple", ZeroDimensionPolicy::Allow);
   SIMPLNX_RESULT_REQUIRE_INVALID(overflow);
-  CHECK(overflow.errors()[0].code == DimensionConversion::k_ProductOverflow);
+  CHECK(overflow.errors()[0].code == dimension_conversion::k_ProductOverflow);
   CHECK(overflow.errors()[0].message.find("dimensions [Y=4294967296, X=4294967296] have a product") != std::string::npos);
   for(const std::string text : {"4294967296,4294967296,0", "0,4294967296,4294967296", "4294967296,0,4294967296"})
   {
@@ -109,15 +109,15 @@ TEST_CASE("simplnx::DimensionConversion: unsigned string grammar", "[simplnx][Di
   }
   auto scalarFirst = ConvertDimensions(std::string("4294967296,4294967296,-1"), "Tuple", ZeroDimensionPolicy::Allow);
   SIMPLNX_RESULT_REQUIRE_INVALID(scalarFirst);
-  CHECK(scalarFirst.errors()[0].code == DimensionConversion::k_InvalidToken);
+  CHECK(scalarFirst.errors()[0].code == dimension_conversion::k_InvalidToken);
 }
 
 TEST_CASE("simplnx::CreateStringArrayAction: checked counts in both modes", "[simplnx][CreateStringArrayAction]")
 {
   const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
   for(const auto& [shape, code, expectedShape] :
-      std::vector<std::tuple<ShapeType, int32, std::string>>{{{usize{1} << 32, usize{1} << 32}, DimensionConversion::k_StringTupleOverflow, "dimensions [Y=4294967296, X=4294967296]"},
-                                                             {{usize{1} << 63}, DimensionConversion::k_StringCapacity, "dimensions [X=9223372036854775808]"},
+      std::vector<std::tuple<ShapeType, int32, std::string>>{{{usize{1} << 32, usize{1} << 32}, dimension_conversion::k_StringTupleOverflow, "dimensions [Y=4294967296, X=4294967296]"},
+                                                             {{usize{1} << 63}, dimension_conversion::k_StringCapacity, "dimensions [X=9223372036854775808]"},
                                                              {{}, -6002, ""}})
   {
     CAPTURE(shape, code, mode);
@@ -148,7 +148,7 @@ TEST_CASE("simplnx::CreateStringArrayAction: checked counts in both modes", "[si
     {
       CHECK(array[0] == "value");
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -192,6 +192,6 @@ TEST_CASE("simplnx::DimensionConversion: legacy predicates and scalar precedence
   const std::vector<float64> values = {1.5, 0};
   auto first = ConvertDimensions(values, "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
   SIMPLNX_RESULT_REQUIRE_INVALID(first);
-  CHECK(first.errors()[0].code == DimensionConversion::k_InvalidValue);
+  CHECK(first.errors()[0].code == dimension_conversion::k_InvalidValue);
   CHECK(first.errors()[0].message.find("index 0") != std::string::npos);
 }

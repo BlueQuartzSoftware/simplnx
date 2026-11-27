@@ -117,10 +117,10 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     // Hand calculation: adjacent points define n-1 cells along an active axis.
     // A singleton axis contributes a factor of one, including a single vertex cell.
     // Thus 10x10x1 points have 9x9x1 = 81 cells, and 4x1x1 points have 3 cells.
-    const std::array<SizeVec3, 8> pointDimensions = {SizeVec3{10, 10, 1}, SizeVec3{3, 1, 4}, SizeVec3{1, 3, 4}, SizeVec3{4, 1, 1},
-                                                     SizeVec3{1, 4, 1},   SizeVec3{1, 1, 4}, SizeVec3{1, 1, 1}, SizeVec3{3, 3, 3}};
-    const std::array<SizeVec3, 8> cellDimensions = {SizeVec3{9, 9, 1}, SizeVec3{2, 1, 3}, SizeVec3{1, 2, 3}, SizeVec3{3, 1, 1},
-                                                    SizeVec3{1, 3, 1}, SizeVec3{1, 1, 3}, SizeVec3{1, 1, 1}, SizeVec3{2, 2, 2}};
+    const std::array<SizeVec3Type, 8> pointDimensions = {SizeVec3Type{10, 10, 1}, SizeVec3Type{3, 1, 4}, SizeVec3Type{1, 3, 4}, SizeVec3Type{4, 1, 1},
+                                                     SizeVec3Type{1, 4, 1},   SizeVec3Type{1, 1, 4}, SizeVec3Type{1, 1, 1}, SizeVec3Type{3, 3, 3}};
+    const std::array<SizeVec3Type, 8> cellDimensions = {SizeVec3Type{9, 9, 1}, SizeVec3Type{2, 1, 3}, SizeVec3Type{1, 2, 3}, SizeVec3Type{3, 1, 1},
+                                                    SizeVec3Type{1, 3, 1}, SizeVec3Type{1, 1, 3}, SizeVec3Type{1, 1, 1}, SizeVec3Type{2, 2, 2}};
     const auto& pointDims = pointDimensions[grid];
     const auto& cellDims = cellDimensions[grid];
     std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);
@@ -147,7 +147,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     }
 
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     for(const bool points : {false, true})
@@ -155,7 +155,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
       const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
       const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
-      const auto& values = dataStructure.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
+      const auto& values = dataStructure.getDataRefAs<Int32ArrayType>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
       REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));
       REQUIRE(values.getNumberOfComponents() == 1);
       for(usize index = 0; index < values.getNumberOfTuples(); index++)
@@ -163,14 +163,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
         REQUIRE(values[index] == static_cast<int32>(index) + (points ? 1 : 100));
       }
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Zero dimensions are rejected before creating geometry")
   {
     const usize axis = GENERATE(0, 1, 2);
     CAPTURE(axis);
-    SizeVec3 pointDims{1, 1, 1};
+    SizeVec3Type pointDims{1, 1, 1};
     pointDims[axis] = 0;
     // A structured-points dimension must be at least one. A zero axis is invalid,
     // even when CELL_DATA declares zero tuples; unsigned subtraction must not wrap.
@@ -185,11 +185,11 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<bool>(false));
     IFilter::PreflightResult preflightResult;
     REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -10354);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -10354);
     // The message names the axis as X, Y or Z, not as a zero-based index.
     const std::array<std::string, 3> axisNames = {"X axis", "Y axis", "Z axis"};
-    REQUIRE(preflightResult.outputActions.errors()[0].message.find(axisNames[axis]) != std::string::npos);
+    REQUIRE(preflightResult.output_actions.errors()[0].message.find(axisNames[axis]) != std::string::npos);
     IFilter::ExecuteResult executeResult;
     REQUIRE_NOTHROW(executeResult = filter.execute(dataStructure, args));
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -209,10 +209,10 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
   // The Z plane therefore has origin Z = 8 and center Z = 10. The next three
   // cases are X, Y and Z lines; the last is a 3D control with unchanged origin.
   // Active axes have n-1 cells and retain their original origin and spacing.
-  const std::array<SizeVec3, 5> pointDimensions = {SizeVec3{3, 3, 1}, SizeVec3{3, 1, 1}, SizeVec3{1, 3, 1}, SizeVec3{1, 1, 3}, SizeVec3{3, 3, 3}};
-  const std::array<SizeVec3, 5> cellDimensions = {SizeVec3{2, 2, 1}, SizeVec3{2, 1, 1}, SizeVec3{1, 2, 1}, SizeVec3{1, 1, 2}, SizeVec3{2, 2, 2}};
-  const std::array<FloatVec3, 5> expectedOrigins = {FloatVec3{2, 6, 8}, FloatVec3{2, 3, 8}, FloatVec3{1, 6, 8}, FloatVec3{1, 3, 10}, FloatVec3{2, 6, 10}};
-  const std::array<FloatVec3, 5> expectedCenters = {FloatVec3{3, 9, 10}, FloatVec3{3, 6, 10}, FloatVec3{2, 9, 10}, FloatVec3{2, 6, 12}, FloatVec3{3, 9, 12}};
+  const std::array<SizeVec3Type, 5> pointDimensions = {SizeVec3Type{3, 3, 1}, SizeVec3Type{3, 1, 1}, SizeVec3Type{1, 3, 1}, SizeVec3Type{1, 1, 3}, SizeVec3Type{3, 3, 3}};
+  const std::array<SizeVec3Type, 5> cellDimensions = {SizeVec3Type{2, 2, 1}, SizeVec3Type{2, 1, 1}, SizeVec3Type{1, 2, 1}, SizeVec3Type{1, 1, 2}, SizeVec3Type{2, 2, 2}};
+  const std::array<FloatVec3Type, 5> expectedOrigins = {FloatVec3Type{2, 6, 8}, FloatVec3Type{2, 3, 8}, FloatVec3Type{1, 6, 8}, FloatVec3Type{1, 3, 10}, FloatVec3Type{2, 6, 10}};
+  const std::array<FloatVec3Type, 5> expectedCenters = {FloatVec3Type{3, 9, 10}, FloatVec3Type{3, 6, 10}, FloatVec3Type{2, 9, 10}, FloatVec3Type{2, 6, 12}, FloatVec3Type{3, 9, 12}};
   const auto& pointDims = pointDimensions[grid];
   const auto& cellDims = cellDimensions[grid];
   std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);
@@ -253,8 +253,8 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
     if(preflight)
     {
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      const auto applyResult = preflightResult.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Preflight);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+      const auto applyResult = preflightResult.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Preflight);
       SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
     }
     else
@@ -268,7 +268,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
       const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
       const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
-      REQUIRE(geom.getSpacing() == FloatVec3{2, 6, 4});
+      REQUIRE(geom.getSpacing() == FloatVec3Type{2, 6, 4});
       const auto center = geom.getCoordsf(0, 0, 0);
       for(usize axis = 0; axis < 3; axis++)
       {
@@ -276,7 +276,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
         CHECK(geom.getOrigin()[axis] == expectedOrigins[grid][axis]);
         CHECK(center[axis] == expectedCenters[grid][axis]);
       }
-      const auto& values = dataStructure.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
+      const auto& values = dataStructure.getDataRefAs<Int32ArrayType>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
       REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));
       REQUIRE(values.getNumberOfComponents() == 1);
       if(!preflight)
@@ -288,13 +288,13 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
         }
       }
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const bool binary = GENERATE(false, true);
   const bool pointsFirst = GENERATE(false, true);
@@ -334,7 +334,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[Sim
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<bool>(readPoints));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadCellData_Key, std::make_any<bool>(readCells));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -348,10 +348,10 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[Sim
     }
     const auto* geomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
     REQUIRE(geomPtr != nullptr);
-    REQUIRE(geomPtr->getDimensions() == (pointSection ? SizeVec3{2, 2, 2} : SizeVec3{1, 1, 1}));
+    REQUIRE(geomPtr->getDimensions() == (pointSection ? SizeVec3Type{2, 2, 2} : SizeVec3Type{1, 1, 1}));
     const DataPath matrixPath = geomPath.createChildPath(pointSection ? "Vertex Data" : "Cell Data");
-    const auto* scalarsPtr = dataStructure.getDataAs<Int16Array>(matrixPath.createChildPath("Scalars"));
-    const auto* vectorsPtr = dataStructure.getDataAs<Int32Array>(matrixPath.createChildPath("Vectors"));
+    const auto* scalarsPtr = dataStructure.getDataAs<Int16ArrayType>(matrixPath.createChildPath("Scalars"));
+    const auto* vectorsPtr = dataStructure.getDataAs<Int32ArrayType>(matrixPath.createChildPath("Vectors"));
     REQUIRE(scalarsPtr != nullptr);
     REQUIRE(vectorsPtr != nullptr);
     const auto expectedScalars = pointSection ? nonstd::span<const int16>(pointScalars) : nonstd::span<const int16>(cellScalars);
@@ -369,14 +369,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[Sim
       REQUIRE((*vectorsPtr)[index] == expectedVectors[index]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   // Configure the filter arguments.
   ReadVtkStructuredPointsFilter filter;
@@ -384,7 +384,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkSt
   Arguments args = CreateArgs(k_InputDirPath / "exemplary.vtk");
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -407,14 +407,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkSt
   ValidateReadVtkStructuredPointsFilter<float32>(dataStructure, cellAttrMatrixPath.createChildPath("cell_float_data"), 3, pointAttrMatrixPath.createChildPath("point_float_data"), 8);
   ValidateReadVtkStructuredPointsFilter<float64>(dataStructure, cellAttrMatrixPath.createChildPath("cell_double_data"), 1, pointAttrMatrixPath.createChildPath("point_double_data"), 9);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dimensions Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   TestInvalidCase(k_InputDirPath / "dims_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsKeywordErr));
   TestInvalidCase(k_InputDirPath / "dims_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
@@ -426,9 +426,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dimensions Errors", "[Sim
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Origin Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   TestInvalidCase(k_InputDirPath / "origin_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginKeywordErr));
   TestInvalidCase(k_InputDirPath / "origin_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
@@ -441,9 +441,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Origin Errors", "[Simplnx
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Spacing Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   TestInvalidCase(k_InputDirPath / "spacing_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingKeywordErr));
   TestInvalidCase(k_InputDirPath / "spacing_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
@@ -456,9 +456,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Spacing Errors", "[Simpln
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Lookup Table Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   TestInvalidCase(k_InputDirPath / "read_lookup_table_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
   TestInvalidCase(k_InputDirPath / "read_lookup_table_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
@@ -468,9 +468,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Lookup Table Errors", "[S
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dataset Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   TestInvalidCase(k_InputDirPath / "dataset_data_type_number_conversion_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
   TestInvalidCase(k_InputDirPath / "dataset_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetKeywordErr));
@@ -482,9 +482,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dataset Errors", "[Simpln
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Other Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   TestInvalidCase(k_InputDirPath / "convert_vtk_data_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr));
   TestInvalidCase(k_InputDirPath / "file_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::FileTypeErr));
@@ -503,7 +503,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Other Errors", "[SimplnxC
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadVtkStructuredPointsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -556,14 +556,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: uses supplied values befo
   }
   const ReadVtkStructuredPointsFilter filter;
   auto args = CreateArgs(file);
-  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, file, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
   DataStructure dataStructure;
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   // The singleton Z coordinate is a point center, so the voxel starts two units below it.
-  UnitTest::RequireReaderGeometry(dataStructure, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
-  UnitTest::RequireReaderGeometry(dataStructure, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range stored fields", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
@@ -581,13 +581,13 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range st
   }
   const ReadVtkStructuredPointsFilter filter;
   auto args = CreateArgs(file);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  const auto key = badSpacing ? ImageIO::k_ChangeSpacing : ImageIO::k_ChangeOrigin;
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  const auto key = badSpacing ? image_io::k_ChangeSpacing : image_io::k_ChangeOrigin;
   args.insertOrAssign(key, false);
   DataStructure dataStructure;
   const auto strict = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-  const auto& diagnostic = strict.outputActions.errors().front();
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict.output_actions);
+  const auto& diagnostic = strict.output_actions.errors().front();
   INFO(diagnostic.message);
   CHECK(diagnostic.code == -10352);
   CHECK(diagnostic.message.find(file.string()) != std::string::npos);
@@ -596,9 +596,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range st
   CHECK(diagnostic.message.find(badSpacing ? "Enable 'Set Spacing' to use your own values." : "Enable 'Set Origin' to use your own values.") != std::string::npos);
 
   args.insertOrAssign(key, true);
-  args.insertOrAssign(badSpacing ? ImageIO::k_ChangeOrigin : ImageIO::k_ChangeSpacing, false);
+  args.insertOrAssign(badSpacing ? image_io::k_ChangeOrigin : image_io::k_ChangeSpacing, false);
   const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  UnitTest::RequireReaderGeometry(dataStructure, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
-  UnitTest::RequireReaderGeometry(dataStructure, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
 }

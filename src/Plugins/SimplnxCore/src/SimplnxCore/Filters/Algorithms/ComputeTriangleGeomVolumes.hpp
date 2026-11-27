@@ -11,10 +11,10 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeTriangleGeomVolumesInputValues
 {
-  DataPath TriangleGeometryPath;
-  DataPath FaceLabelsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath VolumesArrayPath;
+  DataPath triangle_geometry_path;
+  DataPath face_labels_array_path;
+  DataPath feature_attribute_matrix_path;
+  DataPath volumes_array_path;
 };
 
 /**

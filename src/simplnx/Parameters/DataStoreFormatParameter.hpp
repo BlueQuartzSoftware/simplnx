@@ -39,7 +39,7 @@ public:
 
   Uuid uuid() const override;
 
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   UniquePointerType clone() const override;
 
@@ -55,7 +55,7 @@ public:
    *
    * The result queries Application each call so plugin registrations are visible.
    */
-  static AvailableValuesType availableValues();
+  static AvailableValuesType AvailableValues();
 
   /**
    * @brief Returns registered format identifiers with display names.
@@ -63,7 +63,7 @@ public:
    * Application provides Automatic, In Memory, and registered plugin formats.
    * @return Format identifier and display-name pairs.
    */
-  static std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames();
+  static std::vector<std::pair<std::string, std::string>> AvailableFormatsWithDisplayNames();
 
   /**
    * @brief Validates a selected data-store format.

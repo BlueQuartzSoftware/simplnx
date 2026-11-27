@@ -121,23 +121,23 @@ BadDataNeighborOrientationCheckScanline::BadDataNeighborOrientationCheckScanline
 Result<> BadDataNeighborOrientationCheckScanline::operator()()
 {
   // Double-precision pi keeps the strict comparison aligned with boundary-exact analytical fixtures.
-  const float64 misorientationTolerance = static_cast<float64>(m_InputValues->MisorientationTolerance) * numbers::pi_v<float64> / 180.0;
+  const float64 misorientationTolerance = static_cast<float64>(m_InputValues->misorientation_tolerance) * numbers::k_PiV<float64> / 180.0;
 
-  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  SizeVec3 udims = imageGeomPtr->getDimensions();
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->image_geom_path);
+  SizeVec3Type udims = imageGeomPtr->getDimensions();
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& quats = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // Direct callers can bypass preflight, so mask type errors return a Result.
     return MakeErrorResult(-54900,
-                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->MaskArrayPath.toString(), exception.what()));
+                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->mask_array_path.toString(), exception.what()));
   }
 
   const int64 dimX = static_cast<int64>(udims[0]);
@@ -176,17 +176,17 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   const auto& phasesStore = cellPhases.getDataStoreRef();
 
   // The bool path converts one bulk-read scratch slice to uint8 values. This avoids per-element OOC access.
-  auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+  auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
   const DataType maskDataType = maskArray.getDataType();
   AbstractDataStore<uint8>* maskStorePtr = nullptr;
   AbstractDataStore<bool>* maskStoreBoolPtr = nullptr;
   if(maskDataType == DataType::uint8)
   {
-    maskStorePtr = &dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef();
+    maskStorePtr = &dynamic_cast<UInt8ArrayType&>(maskArray).getDataStoreRef();
   }
   else if(maskDataType == DataType::boolean)
   {
-    maskStoreBoolPtr = &dynamic_cast<BoolArray&>(maskArray).getDataStoreRef();
+    maskStoreBoolPtr = &dynamic_cast<BoolArrayType&>(maskArray).getDataStoreRef();
   }
   // A raw bool buffer supplies a span<bool>; std::vector<bool> cannot supply bool storage.
   std::unique_ptr<bool[]> boolSliceScratch;
@@ -248,10 +248,10 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
 
   // Recompute counts per pass to avoid a global random-write neighbor-count array.
   constexpr int32 k_StartLevel = 6;
-  const int32 totalLevels = k_StartLevel - m_InputValues->NumberOfNeighbors + 1;
+  const int32 totalLevels = k_StartLevel - m_InputValues->number_of_neighbors + 1;
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  for(int32 currentLevel = k_StartLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
+  for(int32 currentLevel = k_StartLevel; currentLevel >= m_InputValues->number_of_neighbors; currentLevel--)
   {
     bool changed = true;
     int32 passCount = 0;
@@ -307,7 +307,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
             {
               const int64 voxelIdx = zIdx * xyStride + sliceIndex;
               return MakeErrorResult(-54902, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                         m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, voxelIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                         m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                          numCrystalStructures, numCrystalStructures));
             }
             const uint32 currentLaueIndex = localCrystalStructures[currentPhaseIdx];

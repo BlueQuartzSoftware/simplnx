@@ -44,7 +44,7 @@ Result<> RemovePlacementRecursively(DataStructure& dataStructure, DataObject::Id
   auto* groupPtr = dynamic_cast<BaseGroup*>(node.get());
   if(groupPtr != nullptr)
   {
-    const auto childIds = groupPtr->GetChildrenIds();
+    const auto childIds = groupPtr->getChildrenIds();
     for(const auto childId : childIds)
     {
       const auto* childPtr = dataStructure.getData(childId);
@@ -154,7 +154,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
     auto* parentContainerPtr = dataStructure.getDataAs<BaseGroup>(m_Path.getParent());
     if(parentContainerPtr != nullptr)
     {
-      std::vector<std::string> siblingNames = parentContainerPtr->GetChildrenNames();
+      std::vector<std::string> siblingNames = parentContainerPtr->getChildrenNames();
       for(const auto& siblingName : siblingNames)
       {
         if(m_NewName == siblingName)

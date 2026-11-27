@@ -70,21 +70,21 @@ Parameters MergeTwinsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.",
                                                                  DataPath({"NeighborList2"}), NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"Phases"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation",
-                                                          DataPath({"Quats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          DataPath({"Quats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Element Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellParentIdsArrayName_Key, "Parent Ids", "The name of the array specifying to which parent each cell belongs", "ParentIds"));
@@ -146,12 +146,12 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   std::vector<DataPath> dataArrayPaths;
 
   // Cell Data
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   auto cellParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, featureIds.getIDataStore()->getTupleShape(), cDims, pCellParentIdsArrayNameValue);
   resultOutputActions.value().appendAction(std::move(cellParentIdsAction));
 
   // Feature Data
-  const auto& phases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  const auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(pFeaturePhasesArrayPathValue);
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
 
   auto featureParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, phases.getIDataStore()->getTupleShape(), cDims, pFeatureParentIdsArrayNameValue);
@@ -174,7 +174,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -188,24 +188,24 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   }
 
   // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+  dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
 
   MergeTwinsInputValues inputValues;
 
-  inputValues.ContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
-  inputValues.AxisTolerance = filterArgs.value<float32>(k_AxisTolerance_Key);
-  inputValues.AngleTolerance = filterArgs.value<float32>(k_AngleTolerance_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  DataPath cellFeatureDataPath = inputValues.FeaturePhasesArrayPath.getParent();
-  inputValues.CellParentIdsArrayPath = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
-  inputValues.NewCellFeatureAttributeMatrixPath = cellFeatureDataPath.replaceName(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
-  inputValues.FeatureParentIdsArrayPath = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
-  inputValues.ActiveArrayPath = inputValues.NewCellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
-  inputValues.Seed = seed;
-  inputValues.RandomizeParentIds = filterArgs.value<bool>(k_RandomizeParentIds_Key);
+  inputValues.contiguous_neighbor_list_array_path = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
+  inputValues.axis_tolerance = filterArgs.value<float32>(k_AxisTolerance_Key);
+  inputValues.angle_tolerance = filterArgs.value<float32>(k_AngleTolerance_Key);
+  inputValues.feature_phases_array_path = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.avg_quats_array_path = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  DataPath cellFeatureDataPath = inputValues.feature_phases_array_path.getParent();
+  inputValues.cell_parent_ids_array_path = inputValues.feature_ids_array_path.replaceName(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
+  inputValues.new_cell_feature_attribute_matrix_path = cellFeatureDataPath.replaceName(filterArgs.value<std::string>(k_CreatedFeatureAttributeMatrixName_Key));
+  inputValues.feature_parent_ids_array_path = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
+  inputValues.active_array_path = inputValues.new_cell_feature_attribute_matrix_path.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.seed = seed;
+  inputValues.randomize_parent_ids = filterArgs.value<bool>(k_RandomizeParentIds_Key);
 
   return MergeTwins(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

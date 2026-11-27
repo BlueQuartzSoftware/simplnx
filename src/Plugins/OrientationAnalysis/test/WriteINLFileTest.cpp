@@ -223,31 +223,31 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Complete file comparison", "
 
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[OrientationAnalysis][WriteINLFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
 
   WriteINLFileFilter filter;
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
   args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_WrittenFilePath));
-  args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100})));
-  args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
-  args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_Phases})));
-  args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
-  args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures})));
-  args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, ::k_MaterialName})));
-  args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, ::k_NumFeatures})));
+  args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100})));
+  args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_FeatureIds})));
+  args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_Phases})));
+  args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_EulerAngles})));
+  args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_PhaseData, constants::k_CrystalStructures})));
+  args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_PhaseData, ::k_MaterialName})));
+  args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_PhaseData, ::k_NumFeatures})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -256,14 +256,14 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[O
   INFO(difference);
   REQUIRE(difference.empty());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[OrientationAnalysis][WriteINLFileFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Independent oracle: the TSL Laue codes (AngConstants.h) are m-3m=43, m-3=23,
   // 4/mmm=42, 4/m=4, mmm=22, 2/m (c axis)=2, -1=1, 6/mmm=62, 6/m=6, -3m=32,
@@ -295,15 +295,15 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1, 1, numCells}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIdsPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "FeatureIds", {1, 1, numCells}, {1}, cellDataPtr->getId());
-  auto* phasesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Phases", {1, 1, numCells}, {1}, cellDataPtr->getId());
-  auto* eulersPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "EulerAngles", {1, 1, numCells}, {3}, cellDataPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "FeatureIds", {1, 1, numCells}, {1}, cellDataPtr->getId());
+  auto* phasesPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "Phases", {1, 1, numCells}, {1}, cellDataPtr->getId());
+  auto* eulersPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "EulerAngles", {1, 1, numCells}, {3}, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   REQUIRE(phasesPtr != nullptr);
   REQUIRE(eulersPtr != nullptr);
   eulersPtr->fill(0.0F);
-  auto* crystalStructuresPtr = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "CrystalStructures", {numCells}, {1});
-  auto* numFeaturesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "NumFeatures", {numCells}, {1});
+  auto* crystalStructuresPtr = UInt32ArrayType::CreateWithStore<UInt32DataStoreType>(dataStructure, "CrystalStructures", {numCells}, {1});
+  auto* numFeaturesPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, "NumFeatures", {numCells}, {1});
   REQUIRE(crystalStructuresPtr != nullptr);
   REQUIRE(numFeaturesPtr != nullptr);
   numFeaturesPtr->fill(1);
@@ -331,7 +331,7 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
   args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({"NumFeatures"})));
   args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"Materials"})));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -372,19 +372,19 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: All Laue symmetry codes", "[
   }
   CHECK(headerCount == numCells - 1);
   CHECK(rowCount == numCells);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: cancellation leaves the existing output untouched", "[OrientationAnalysis][WriteINLFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
 
   const fs::path outputPath = fs::temp_directory_path() / "nx_cancel_inl_writer.inl";
   auto outputFileGuard = MakeScopeGuard([&outputPath]() noexcept {
@@ -401,13 +401,13 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: cancellation leaves the exis
   WriteINLFileFilter filter;
   Arguments args;
   args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
-  args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100})));
-  args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
-  args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_Phases})));
-  args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
-  args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures})));
-  args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, ::k_MaterialName})));
-  args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, ::k_NumFeatures})));
+  args.insertOrAssign(WriteINLFileFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100})));
+  args.insertOrAssign(WriteINLFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_FeatureIds})));
+  args.insertOrAssign(WriteINLFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_Phases})));
+  args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_EulerAngles})));
+  args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_PhaseData, constants::k_CrystalStructures})));
+  args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_PhaseData, ::k_MaterialName})));
+  args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_PhaseData, ::k_NumFeatures})));
 
   std::atomic_bool shouldCancel = false;
   IFilter::MessageHandler cancelOnFirstMessage{[&shouldCancel](const IFilter::Message&) { shouldCancel.store(true); }};
@@ -424,7 +424,7 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: cancellation leaves the exis
 TEST_CASE("OrientationAnalysis::WriteINLFileFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WriteINLFileFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -498,10 +498,10 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Geometry cell tuple counts",
   REQUIRE(inputAM2Ptr != nullptr);
   REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "EulerAngles", {count2}, {3}, inputAM2Ptr->getId()) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"Input2", "EulerAngles"})));
-  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  REQUIRE(UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Materials", {2}, {"Unknown", "Phase1"}) != nullptr);
-  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "NumFeatures", {2}, {1}) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "NumFeatures", {2}, {1}) != nullptr);
   args.insertOrAssign(WriteINLFileFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"Materials"})));
   args.insertOrAssign(WriteINLFileFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({"NumFeatures"})));
   args.insertOrAssign(WriteINLFileFilter::k_OutputFile_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "tuple-count.inl"));
@@ -509,14 +509,14 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Geometry cell tuple counts",
   const auto result = filter.preflight(dataStructure, args);
   if(testCase == 2)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
     {
-      const auto& errorRef = result.outputActions.errors()[0];
+      const auto& errorRef = result.output_actions.errors()[0];
       CHECK(errorRef.code == -78431);
       const std::vector<DataPath> inputPaths = {DataPath({"Input0", "FeatureIds"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "EulerAngles"})};
       const usize inputIndex = testCase >= 3 ? static_cast<usize>(testCase - 3) : 0;

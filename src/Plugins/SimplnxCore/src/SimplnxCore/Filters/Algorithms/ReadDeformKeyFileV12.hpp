@@ -14,32 +14,32 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT DataArrayMetadata
 {
   DataPath path;
-  usize tupleCount;
-  usize componentCount;
+  usize tuple_count;
+  usize component_count;
 };
 
 struct SIMPLNXCORE_EXPORT FileCache
 {
-  fs::path inputFile;
-  std::vector<DataArrayMetadata> dataArrays;
-  usize vertexAttrMatTupleCount{};
-  usize cellAttrMatTupleCount{};
-  fs::file_time_type timeStamp;
+  fs::path input_file;
+  std::vector<DataArrayMetadata> data_arrays;
+  usize vertex_attr_mat_tuple_count{};
+  usize cell_attr_mat_tuple_count{};
+  fs::file_time_type time_stamp;
 
   void flush()
   {
-    inputFile.clear();
-    dataArrays.clear();
-    timeStamp = fs::file_time_type();
+    input_file.clear();
+    data_arrays.clear();
+    time_stamp = fs::file_time_type();
   }
 };
 
 struct SIMPLNXCORE_EXPORT ReadDeformKeyFileV12InputValues
 {
-  fs::path InputFilePath;
-  DataPath QuadGeomPath;
-  DataPath VertexAMPath;
-  DataPath CellAMPath;
+  fs::path input_file_path;
+  DataPath quad_geom_path;
+  DataPath vertex_am_path;
+  DataPath cell_am_path;
 };
 
 /**

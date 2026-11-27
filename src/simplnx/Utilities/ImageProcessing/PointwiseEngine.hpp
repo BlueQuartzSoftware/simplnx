@@ -31,9 +31,9 @@ inline constexpr usize k_PointwiseTargetScratchBytes = 64 * 1024 * 1024;
 
 struct PointwiseEndpointLayout
 {
-  IDataStore::StoreType storeType = IDataStore::StoreType::InMemory;
-  const ShapeType& tupleShape;
-  usize numComponents = 0;
+  IDataStore::StoreType store_type = IDataStore::StoreType::InMemory;
+  const ShapeType& tuple_shape;
+  usize num_components = 0;
   std::string_view name;
   enum class Access : uint8
   {
@@ -44,16 +44,16 @@ struct PointwiseEndpointLayout
 
 struct PointwiseBatchPlan
 {
-  usize batchValues = 0;
-  usize totalBatches = 0;
-  usize alignmentValues = 0;
-  bool usedMismatchedLayoutFallback = false;
+  usize batch_values = 0;
+  usize total_batches = 0;
+  usize alignment_values = 0;
+  bool used_mismatched_layout_fallback = false;
 };
 
 struct PointwiseExecutionOptions
 {
-  usize targetScratchBytes = k_PointwiseTargetScratchBytes;
-  bool forceBuffered = false;
+  usize target_scratch_bytes = k_PointwiseTargetScratchBytes;
+  bool force_buffered = false;
 };
 
 inline bool CheckedMultiply(usize left, usize right, usize& product) noexcept
@@ -88,24 +88,24 @@ inline Result<PointwiseBatchPlan> MakePointwiseBatchPlan(usize totalValues, usiz
   bool combinedAlignmentOverflow = false;
   for(const PointwiseEndpointLayout& endpoint : endpoints)
   {
-    if(endpoint.storeType != IDataStore::StoreType::OutOfCore)
+    if(endpoint.store_type != IDataStore::StoreType::OutOfCore)
     {
       continue;
     }
-    if(endpoint.numComponents == 0)
+    if(endpoint.num_components == 0)
     {
       return MakeErrorResult<PointwiseBatchPlan>(-8690, fmt::format("Pointwise operation {} out-of-core store has zero components for {} total values.", endpoint.name, totalValues));
     }
-    if(endpoint.tupleShape.empty())
+    if(endpoint.tuple_shape.empty())
     {
       return MakeErrorResult<PointwiseBatchPlan>(-8691, fmt::format("Pointwise operation {} out-of-core store has an empty tuple shape for {} total values.", endpoint.name, totalValues));
     }
 
     usize tupleValues = 1;
-    usize slabValues = endpoint.numComponents;
-    for(usize dimensionIndex = 0; dimensionIndex < endpoint.tupleShape.size(); ++dimensionIndex)
+    usize slabValues = endpoint.num_components;
+    for(usize dimensionIndex = 0; dimensionIndex < endpoint.tuple_shape.size(); ++dimensionIndex)
     {
-      const usize dimension = endpoint.tupleShape[dimensionIndex];
+      const usize dimension = endpoint.tuple_shape[dimensionIndex];
       if(dimension == 0)
       {
         return MakeErrorResult<PointwiseBatchPlan>(-8692,
@@ -132,10 +132,10 @@ inline Result<PointwiseBatchPlan> MakePointwiseBatchPlan(usize totalValues, usiz
     }
 
     usize layoutValues = 0;
-    if(!CheckedMultiply(tupleValues, endpoint.numComponents, layoutValues))
+    if(!CheckedMultiply(tupleValues, endpoint.num_components, layoutValues))
     {
       return MakeErrorResult<PointwiseBatchPlan>(
-          -8695, fmt::format("Pointwise operation {} out-of-core layout overflows for {} tuples and {} components.", endpoint.name, tupleValues, endpoint.numComponents));
+          -8695, fmt::format("Pointwise operation {} out-of-core layout overflows for {} tuples and {} components.", endpoint.name, tupleValues, endpoint.num_components));
     }
     if(layoutValues != totalValues)
     {
@@ -181,16 +181,16 @@ inline Result<PointwiseBatchPlan> MakePointwiseBatchPlan(usize totalValues, usiz
 
   const usize batchValues = std::min(totalValues, targetValues >= selectedAlignment ? (targetValues / selectedAlignment) * selectedAlignment : selectedAlignment);
   const usize totalBatches = totalValues / batchValues + static_cast<usize>((totalValues % batchValues) != 0);
-  return {PointwiseBatchPlan{.batchValues = batchValues, .totalBatches = totalBatches, .alignmentValues = selectedAlignment, .usedMismatchedLayoutFallback = useFallback}};
+  return {PointwiseBatchPlan{.batch_values = batchValues, .total_batches = totalBatches, .alignment_values = selectedAlignment, .used_mismatched_layout_fallback = useFallback}};
 }
 
 template <class T, class U, class MapOpT>
 struct PointwiseMapBody
 {
-  const T* inputBuffer;
-  U* outputBuffer;
-  const MapOpT& mapOp;
-  const std::atomic_bool& shouldCancel;
+  const T* input_buffer;
+  U* output_buffer;
+  const MapOpT& map_op;
+  const std::atomic_bool& should_cancel;
 
   void operator()(const Range& range) const
   {
@@ -198,14 +198,14 @@ struct PointwiseMapBody
     usize blockStart = range.min();
     while(blockStart < range.max())
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return;
       }
       const usize blockEnd = blockStart + std::min(k_CancelCheckValues, range.max() - blockStart);
       for(usize i = blockStart; i < blockEnd; ++i)
       {
-        outputBuffer[i] = mapOp(inputBuffer[i]);
+        output_buffer[i] = map_op(input_buffer[i]);
       }
       blockStart = blockEnd;
     }
@@ -224,7 +224,7 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
 
   const auto* inMemoryInputStorePtr = dynamic_cast<const DataStore<T>*>(&inputStore);
   auto* inMemoryOutputStorePtr = dynamic_cast<DataStore<U>*>(&outputStore);
-  if(!options.forceBuffered && inMemoryInputStorePtr != nullptr && inMemoryOutputStorePtr != nullptr)
+  if(!options.force_buffered && inMemoryInputStorePtr != nullptr && inMemoryOutputStorePtr != nullptr)
   {
     if(shouldCancel)
     {
@@ -270,7 +270,7 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
   }
 
   constexpr usize k_BytesPerValue = std::is_same_v<T, U> ? sizeof(T) : sizeof(T) + sizeof(U);
-  const usize targetValues = std::max<usize>(1, options.targetScratchBytes / k_BytesPerValue);
+  const usize targetValues = std::max<usize>(1, options.target_scratch_bytes / k_BytesPerValue);
   Result<PointwiseBatchPlan> planResult =
       MakePointwiseBatchPlan(totalValues, targetValues,
                              {{inputStore.getStoreType(), inputStore.getTupleShape(), inputStore.getNumberOfComponents(), "input"},
@@ -283,9 +283,9 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
 
   messageHandler.sendInfoMessage("Applying buffered pointwise operation");
   ThrottledMessageHandler progressThrottle(messageHandler);
-  progressThrottle.reset(plan.totalBatches, "Applying pointwise operation");
+  progressThrottle.reset(plan.total_batches, "Applying pointwise operation");
 
-  auto inputBuffer = std::make_unique_for_overwrite<T[]>(plan.batchValues);
+  auto inputBuffer = std::make_unique_for_overwrite<T[]>(plan.batch_values);
   std::unique_ptr<U[]> outputBuffer;
   U* mappedBufferPtr = nullptr;
   if constexpr(std::is_same_v<T, U>)
@@ -294,7 +294,7 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
   }
   else
   {
-    outputBuffer = std::make_unique_for_overwrite<U[]>(plan.batchValues);
+    outputBuffer = std::make_unique_for_overwrite<U[]>(plan.batch_values);
     mappedBufferPtr = outputBuffer.get();
   }
   for(usize start = 0; start < totalValues;)
@@ -303,7 +303,7 @@ Result<> ApplyPointwiseImpl(const AbstractDataStore<T>& inputStore, AbstractData
     {
       return {};
     }
-    const usize count = std::min(plan.batchValues, totalValues - start);
+    const usize count = std::min(plan.batch_values, totalValues - start);
     if(Result<> readResult = inputStore.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count)); readResult.invalid())
     {
       return readResult;

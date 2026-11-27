@@ -20,23 +20,23 @@ namespace
 ApplyTransformationToGeometryInputValues CreateInputValues(const Arguments& filterArgs)
 {
   ApplyTransformationToGeometryInputValues inputValues;
-  inputValues.TransformationSelection = filterArgs.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TransformationType_Key);
-  inputValues.InterpolationSelection = filterArgs.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_InterpolationType_Key);
-  inputValues.ComputedTransformationMatrix = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key);
-  inputValues.ManualMatrixTableData = filterArgs.value<DynamicTableParameter::ValueType>(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key);
-  inputValues.Rotation = filterArgs.value<VectorFloat32Parameter::ValueType>(ApplyTransformationToGeometryFilter::k_Rotation_Key);
-  inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(ApplyTransformationToGeometryFilter::k_Translation_Key);
-  inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(ApplyTransformationToGeometryFilter::k_Scale_Key);
-  inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key);
-  inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key);
-  inputValues.TranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key);
-  inputValues.ClearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key);
-  inputValues.RenumberFeatures = inputValues.ClearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_RenumberFeatures_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(ApplyTransformationToGeometryFilter::k_FeatureAttributeMatrixPath_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(ApplyTransformationToGeometryFilter::k_FeatureIdsPath_Key);
-  inputValues.RemoveOriginalGeometry = true;
-  inputValues.SaveTransformMatrix = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_SaveTransformMatrix_Key);
-  inputValues.TransformMatrixPath = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_TransformMatrixOutputPath_Key);
+  inputValues.transformation_selection = filterArgs.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TransformationType_Key);
+  inputValues.interpolation_selection = filterArgs.value<ChoicesParameter::ValueType>(ApplyTransformationToGeometryFilter::k_InterpolationType_Key);
+  inputValues.computed_transformation_matrix = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key);
+  inputValues.manual_matrix_table_data = filterArgs.value<DynamicTableParameter::ValueType>(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key);
+  inputValues.rotation = filterArgs.value<VectorFloat32ParameterType::ValueType>(ApplyTransformationToGeometryFilter::k_Rotation_Key);
+  inputValues.translation = filterArgs.value<VectorFloat32ParameterType::ValueType>(ApplyTransformationToGeometryFilter::k_Translation_Key);
+  inputValues.scale = filterArgs.value<VectorFloat32ParameterType::ValueType>(ApplyTransformationToGeometryFilter::k_Scale_Key);
+  inputValues.selected_geometry_path = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_SelectedImageGeometryPath_Key);
+  inputValues.cell_attribute_matrix_path = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key);
+  inputValues.translate_geometry_to_global_origin = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumber_features = inputValues.clear_feature_attribute_matrix && filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_RenumberFeatures_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(ApplyTransformationToGeometryFilter::k_FeatureAttributeMatrixPath_Key);
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(ApplyTransformationToGeometryFilter::k_FeatureIdsPath_Key);
+  inputValues.remove_original_geometry = true;
+  inputValues.save_transform_matrix = filterArgs.value<BoolParameter::ValueType>(ApplyTransformationToGeometryFilter::k_SaveTransformMatrix_Key);
+  inputValues.transform_matrix_path = filterArgs.value<DataPath>(ApplyTransformationToGeometryFilter::k_TransformMatrixOutputPath_Key);
   return inputValues;
 }
 } // namespace
@@ -91,11 +91,11 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   const DynamicTableInfo::TableDataType defaultTable{{{1.0F, 0.0F, 0.0F, 0.0F}, {0.0F, 1.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}}};
   params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "The 4x4 Transformation Matrix", defaultTable, tableInfo));
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Rotation_Key, "Rotation Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0F, 0.0F, 1.0F, 90.0F},
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Rotation_Key, "Rotation Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0F, 0.0F, 1.0F, 90.0F},
                                                          std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "A pure translation vector", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Scale_Key, "Scale", "0>= value < 1: Shrink, value = 1: No transform, value > 1.0 enlarge", std::vector<float32>{1.0F, 1.0F, 1.0F},
+      std::make_unique<VectorFloat32ParameterType>(k_Translation_Key, "Translation", "A pure translation vector", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Scale_Key, "Scale", "0>= value < 1: Shrink, value = 1: No transform, value > 1.0 enlarge", std::vector<float32>{1.0F, 1.0F, 1.0F},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Precomputed Transformation Matrix Path", "A precomputed 4x4 transformation matrix", DataPath{},
@@ -127,7 +127,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after transformation", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which feature each element belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Output Transform Matrix"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveTransformMatrix_Key, "Save Transformation Matrix", "Save the generated transform matrix as a Data Array", false));
@@ -209,9 +209,9 @@ Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohm
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InterpolationTypeKey, k_InterpolationType_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseDataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_ManualTransformationMatrixKey, k_ManualTransformationMatrix_Key));
-  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_Rotation_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_TranslationKey, k_Translation_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ScaleKey, k_Scale_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverterType>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_Rotation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_TranslationKey, k_Translation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_ScaleKey, k_Scale_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ComputedTransformationMatrixKey, k_ComputedTransformationMatrix_Key));
   results.push_back(

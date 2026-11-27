@@ -116,7 +116,7 @@ Parameters MultiThresholdObjectsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ArrayThresholdsParameter>(k_ArrayThresholdsObject_Key, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{},
-                                                           ArrayThresholdsParameter::AllowedComponentShapes{}));
+                                                           ArrayThresholdsParameter::AllowedComponentShapesType{}));
   params.insert(std::make_unique<DataTypeParameter>(k_CreatedMaskType_Key, "Mask Type", "DataType used for the created Mask Array", DataType::uint8));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCustomTrueValue, "Use Custom TRUE Value", "Specifies whether to output a custom TRUE value (the default value is 1)", false));
   params.insert(std::make_unique<NumberParameter<float64>>(k_CustomTrueValue, "Custom TRUE Value", "This is the custom TRUE value that will be output to the mask array", 1.0));
@@ -180,7 +180,7 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   Result<> componentIndicesResult = CheckComponentIndicesInThresholds(thresholdsObject, dataStructure);
   if(componentIndicesResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(componentIndicesResult))};
   }
 
   if(maskArrayType == DataType::boolean)
@@ -231,13 +231,13 @@ Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   MultiThresholdObjectsInputValues inputValues;
-  inputValues.ArrayThresholdsObject = filterArgs.value<ArrayThresholdsParameter::ValueType>(k_ArrayThresholdsObject_Key);
-  inputValues.CreatedMaskType = filterArgs.value<DataTypeParameter::ValueType>(k_CreatedMaskType_Key);
-  inputValues.CustomFalseValue = filterArgs.value<Float64ParameterType::ValueType>(k_CustomFalseValue);
-  inputValues.CustomTrueValue = filterArgs.value<Float64ParameterType::ValueType>(k_CustomTrueValue);
-  inputValues.OutputDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedDataName_Key);
-  inputValues.UseCustomFalseValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
-  inputValues.UseCustomTrueValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
+  inputValues.array_thresholds_object = filterArgs.value<ArrayThresholdsParameter::ValueType>(k_ArrayThresholdsObject_Key);
+  inputValues.created_mask_type = filterArgs.value<DataTypeParameter::ValueType>(k_CreatedMaskType_Key);
+  inputValues.custom_false_value = filterArgs.value<Float64ParameterType::ValueType>(k_CustomFalseValue);
+  inputValues.custom_true_value = filterArgs.value<Float64ParameterType::ValueType>(k_CustomTrueValue);
+  inputValues.output_data_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedDataName_Key);
+  inputValues.use_custom_false_value = filterArgs.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
+  inputValues.use_custom_true_value = filterArgs.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
 
   return MultiThresholdObjects(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

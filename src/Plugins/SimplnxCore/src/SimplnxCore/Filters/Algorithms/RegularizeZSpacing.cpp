@@ -22,7 +22,7 @@ class RegularizeZSpacingArrayImpl
 {
 public:
   RegularizeZSpacingArrayImpl(RegularizeZSpacing* algorithm, const IDataArray& srcArray, IDataArray& destArray, const std::vector<usize>& newToOldZPlane, usize sliceSize,
-                              const std::atomic_bool& shouldCancel, CopyFromArray::ParallelTaskResult& taskResult)
+                              const std::atomic_bool& shouldCancel, copy_from_array::ParallelTaskResult& taskResult)
   : m_AlgorithmPtr(algorithm)
   , m_SrcArray(srcArray)
   , m_DestArray(destArray)
@@ -70,7 +70,7 @@ private:
   const std::vector<usize>& m_NewToOldZPlane;
   usize m_SliceSize;
   const std::atomic_bool& m_ShouldCancel;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 } // namespace
 
@@ -135,17 +135,17 @@ const std::atomic_bool& RegularizeZSpacing::getCancel()
 Result<> RegularizeZSpacing::operator()()
 {
 
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
-  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->selected_image_geometry_path);
+  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->created_image_geometry_path);
 
-  const SizeVec3 srcDims = selectedImageGeom.getDimensions();
-  const SizeVec3 destDims = destImageGeom.getDimensions();
+  const SizeVec3Type srcDims = selectedImageGeom.getDimensions();
+  const SizeVec3Type destDims = destImageGeom.getDimensions();
   const usize origZDim = srcDims[2];
   const usize newZDim = destDims[2];
   const usize sliceSize = srcDims[0] * srcDims[1];
 
   // Read the Z boundary positions (ZPoints + 1 values).
-  Result<std::vector<float32>> zBoundsResult = ReadZBoundsFile(m_InputValues->InputFile, origZDim + 1);
+  Result<std::vector<float32>> zBoundsResult = ReadZBoundsFile(m_InputValues->input_file, origZDim + 1);
   if(zBoundsResult.invalid())
   {
     return ConvertResult(std::move(zBoundsResult));
@@ -159,7 +159,7 @@ Result<> RegularizeZSpacing::operator()()
   for(usize i = 0; i < newZDim; i++)
   {
     usize plane = 0;
-    const float32 newPlanePos = static_cast<float32>(i) * m_InputValues->NewZRes;
+    const float32 newPlanePos = static_cast<float32>(i) * m_InputValues->new_z_res;
     for(usize iter = 1; iter < origZDim; iter++)
     {
       if(newPlanePos > zBoundValues[iter])
@@ -177,7 +177,7 @@ Result<> RegularizeZSpacing::operator()()
 
   m_Throttle.reset(totalArrays * newZDim, "Copying Cell Data");
 
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
 
@@ -218,13 +218,13 @@ Result<> RegularizeZSpacing::operator()()
   }
 
   // Validate Feature Ids against the source AM before compacting the resampled data.
-  DataPath cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrix;
-  auto destImagePath = m_InputValues->CreatedImageGeometryPath;
-  DataPath featureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
+  DataPath cellFeatureAMPath = m_InputValues->cell_feature_attribute_matrix;
+  auto destImagePath = m_InputValues->created_image_geometry_path;
+  DataPath featureIdsArrayPath = m_InputValues->feature_ids_array_path;
 
-  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
+  if(m_InputValues->clear_feature_attribute_matrix && m_InputValues->renumber_features)
   {
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(featureIdsArrayPath);
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler, &m_ShouldCancel);
     if(validateNumFeatResult.invalid() || m_ShouldCancel)
     {
@@ -234,7 +234,7 @@ Result<> RegularizeZSpacing::operator()()
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
     // Renumber resampled Feature Ids and resize the empty destination Feature AM.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
-    return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+    return sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};

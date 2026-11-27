@@ -15,12 +15,12 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeInputValues
 {
-  DataPath FeatureIdsArrayPath;
-  DataPath NumCellsArrayPath;
-  DataPath SurfaceAreaVolumeRatioArrayName;
-  bool CalculateSphericity{};
-  DataPath SphericityArrayName;
-  DataPath InputImageGeometry;
+  DataPath feature_ids_array_path;
+  DataPath num_cells_array_path;
+  DataPath surface_area_volume_ratio_array_name;
+  bool calculate_sphericity{};
+  DataPath sphericity_array_name;
+  DataPath input_image_geometry;
 };
 
 /**

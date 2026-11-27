@@ -70,7 +70,7 @@ Parameters ErodeDilateMaskFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array Path", "Boolean array where true voxels are used. False voxels are ignored.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -97,7 +97,7 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pMaskArrayPathValue}, -14702);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   // The erode/dilate loop runs NumIterations times, so a value below 1 performs no passes and returns
@@ -105,7 +105,7 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   // this guard restores that behavior so a mistyped iteration count is reported to the user.
   if(pNumIterationsValue < 1)
   {
-    return {.outputActions = MakeErrorResult<OutputActions>(
+    return {.output_actions = MakeErrorResult<OutputActions>(
                 k_InvalidNumIterationsError, fmt::format("Number of Iterations ({}) must be at least 1. Erode/Dilate Mask performs one erode or dilate pass per iteration, so a value less than 1 "
                                                          "would leave the mask array '{}' unmodified.",
                                                          pNumIterationsValue, pMaskArrayPathValue.toString()))};
@@ -117,7 +117,7 @@ IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructur
   // Mask array is going to be modified
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pMaskArrayPathValue);
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -126,13 +126,13 @@ Result<> ErodeDilateMaskFilter::executeImpl(DataStructure& dataStructure, const 
 {
   ErodeDilateMaskInputValues inputValues;
 
-  inputValues.Operation = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
-  inputValues.NumIterations = filterArgs.value<int32>(k_NumIterations_Key);
-  inputValues.XDirOn = filterArgs.value<bool>(k_XDirOn_Key);
-  inputValues.YDirOn = filterArgs.value<bool>(k_YDirOn_Key);
-  inputValues.ZDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.operation = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
+  inputValues.num_iterations = filterArgs.value<int32>(k_NumIterations_Key);
+  inputValues.x_dir_on = filterArgs.value<bool>(k_XDirOn_Key);
+  inputValues.y_dir_on = filterArgs.value<bool>(k_YDirOn_Key);
+  inputValues.z_dir_on = filterArgs.value<bool>(k_ZDirOn_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ErodeDilateMask(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

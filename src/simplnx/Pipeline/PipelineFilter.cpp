@@ -155,11 +155,11 @@ void PipelineFilter::setComments(const std::string& comments)
 // -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflight(dataStructure, renamedPaths, shouldCancel, true);
 }
 
-bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
@@ -179,13 +179,13 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
   }
 
   IFilter::PreflightResult result = m_Filter->preflight(dataStructure, getArguments(), messageHandler, shouldCancel, getPipelineExecutionContext());
-  m_Warnings = std::move(result.outputActions.warnings());
+  m_Warnings = std::move(result.output_actions.warnings());
   setHasWarnings(!m_Warnings.empty());
-  m_PreflightValues = std::move(result.outputValues);
+  m_PreflightValues = std::move(result.output_values);
 
-  if(result.outputActions.invalid())
+  if(result.output_actions.invalid())
   {
-    m_Errors = std::move(result.outputActions.errors());
+    m_Errors = std::move(result.output_actions.errors());
     setHasErrors();
     setPreflightStructure(dataStructure, false);
     sendFilterFaultMessage(m_Index, getFaultState());
@@ -195,7 +195,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   m_Errors.clear();
 
-  Result<> actionsResult = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+  Result<> actionsResult = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
 
   for(auto&& warning : actionsResult.warnings())
   {
@@ -214,7 +214,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   std::vector<DataPath> newCreatedPaths;
   std::vector<DataPath> newModifiedPaths;
-  for(const auto& action : result.outputActions.value().actions)
+  for(const auto& action : result.output_actions.value().actions)
   {
     if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
@@ -223,7 +223,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
     }
   }
 
-  for(const auto& action : result.outputActions.value().deferredActions)
+  for(const auto& action : result.output_actions.value().deferred_actions)
   {
     if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
@@ -234,7 +234,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   // Do not clear the created paths unless the preflight succeeded
   m_CreatedPaths = newCreatedPaths;
-  m_DataModifiedActions = result.outputActions.value().modifiedActions;
+  m_DataModifiedActions = result.output_actions.value().modified_actions;
 
   setPreflightStructure(dataStructure);
   sendFilterFaultMessage(m_Index, getFaultState());
@@ -392,9 +392,9 @@ void RemoveOverlap(std::vector<DataPath>& group1, std::vector<DataPath>& group2)
  * @param newCreatedPaths
  * @return PipelineFilter::RenamedPaths
  */
-PipelineFilter::RenamedPaths FindAllRenamePaths(const std::vector<DataPath>& oldCreatedPaths, const std::vector<DataPath>& newCreatedPaths)
+PipelineFilter::RenamedPathsType FindAllRenamePaths(const std::vector<DataPath>& oldCreatedPaths, const std::vector<DataPath>& newCreatedPaths)
 {
-  PipelineFilter::RenamedPaths renamedPairs;
+  PipelineFilter::RenamedPathsType renamedPairs;
   std::vector<DataPath> remainingPaths = oldCreatedPaths;
   for(const auto& createdPath : newCreatedPaths)
   {
@@ -417,7 +417,7 @@ PipelineFilter::RenamedPaths FindAllRenamePaths(const std::vector<DataPath>& old
  * @param renamedPairs
  * @return PipelineFilter::RenamedPaths
  */
-PipelineFilter::RenamedPaths GetConfirmedRenamePaths(const PipelineFilter::RenamedPaths& renamedPairs)
+PipelineFilter::RenamedPathsType GetConfirmedRenamePaths(const PipelineFilter::RenamedPathsType& renamedPairs)
 {
   std::vector<DataPath> rejectedFirstPaths;
   std::vector<DataPath> rejectedSecondPaths;
@@ -444,7 +444,7 @@ PipelineFilter::RenamedPaths GetConfirmedRenamePaths(const PipelineFilter::Renam
     }
   }
 
-  PipelineFilter::RenamedPaths confirmed;
+  PipelineFilter::RenamedPathsType confirmed;
   for(const auto& renamedPair : renamedPairs)
   {
     if(std::find(rejectedFirstPaths.begin(), rejectedFirstPaths.end(), renamedPair.first) != rejectedFirstPaths.end())
@@ -462,7 +462,7 @@ PipelineFilter::RenamedPaths GetConfirmedRenamePaths(const PipelineFilter::Renam
 }
 } // namespace
 
-PipelineFilter::RenamedPaths PipelineFilter::checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const
+PipelineFilter::RenamedPathsType PipelineFilter::checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const
 {
   // If created path sizes do not match, the values cannot be compared
   if(oldCreatedPaths.size() != m_CreatedPaths.size())
@@ -527,7 +527,7 @@ void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
   }
 }
 
-void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
+void PipelineFilter::notifyRenamedPaths(const RenamedPathsType& renamedPathPairs)
 {
   for(const auto& renamedPath : renamedPathPairs)
   {
@@ -639,7 +639,7 @@ static bool IsDataPath(const std::any& value)
   return value.type() == typeid(DataPath);
 }
 
-static bool AttemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPaths& renamedPaths)
+static bool AttemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPathsType& renamedPaths)
 {
   bool pathChanged = false;
   for(const auto& renamedPath : renamedPaths)
@@ -653,7 +653,7 @@ static bool AttemptRenamePath(DataPath& path, const AbstractPipelineNode::Rename
   return pathChanged;
 }
 
-void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
+void PipelineFilter::renamePathArgs(const RenamedPathsType& renamedPaths)
 {
   for(const auto& arg : m_Arguments)
   {
@@ -669,7 +669,7 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
   }
 }
 
-static nx::core::WarningCollection ConvertErrors(const nx::core::ErrorCollection& errors, const std::string& filterName)
+static nx::core::WarningCollectionType ConvertErrors(const nx::core::ErrorCollectionType& errors, const std::string& filterName)
 {
   if(errors.empty())
   {
@@ -677,7 +677,7 @@ static nx::core::WarningCollection ConvertErrors(const nx::core::ErrorCollection
   }
 
   std::string prefix = fmt::format("Filter: '{}' ", filterName);
-  WarningCollection warnings;
+  WarningCollectionType warnings;
   for(const auto& error : errors)
   {
     warnings.emplace_back(Warning{.code = error.code, .message = prefix + error.message});
@@ -685,7 +685,7 @@ static nx::core::WarningCollection ConvertErrors(const nx::core::ErrorCollection
   return warnings;
 }
 
-std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollection& errors, const std::string& prefix)
+std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollectionType& errors, const std::string& prefix)
 {
   if(errors.empty())
   {
@@ -747,14 +747,14 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to find conversion data for filter '{}'", filterName));
   }
 
-  IFilter::UniquePointerType filter = filterList.createFilter(simplData->simplnxUuid);
+  IFilter::UniquePointerType filter = filterList.createFilter(simplData->simplnx_uuid);
 
-  if(!simplData->convertJson)
+  if(!simplData->convert_json)
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("Conversion function for filter '{}' is null", uuidString));
   }
 
-  Result<Arguments> argumentsResult = simplData->convertJson(json);
+  Result<Arguments> argumentsResult = simplData->convert_json(json);
 
   const auto filterName = filter->name();
   const auto defaultArguments = filter->getDefaultArguments();
@@ -765,7 +765,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     // This section validates that the mapping from SIMPL Parameter to the SIMPLNX Parameter
     for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
     {
-      IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+      IParameter::AcceptedTypesType acceptedTypes = parameter->acceptedTypes();
       auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
       if(iter == acceptedTypes.cend())
       {
@@ -786,7 +786,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     pipelineFilter->setArguments(defaultArguments);
   }
 
-  WarningCollection warnings;
+  WarningCollectionType warnings;
   if(argumentsResult.invalid())
   {
     warnings = ConvertErrors(argumentsResult.errors(), filterName);

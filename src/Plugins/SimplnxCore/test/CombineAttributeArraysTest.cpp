@@ -71,11 +71,11 @@ static DataStructure CreateTestDataStructure()
 
   DataStructure dataStructure;
 
-  DataArrayType* array1Ptr = nx::core::UnitTest::CreateTestDataArray<T>(dataStructure, k_Array1, {10ULL, 10ULL}, {1}, 0);
+  DataArrayType* array1Ptr = nx::core::unit_test::CreateTestDataArray<T>(dataStructure, k_Array1, {10ULL, 10ULL}, {1}, 0);
   array1Ptr->fill(static_cast<T>(1));
-  DataArrayType* array2Ptr = nx::core::UnitTest::CreateTestDataArray<T>(dataStructure, k_Array2, {10ULL, 10ULL}, {2}, 0);
+  DataArrayType* array2Ptr = nx::core::unit_test::CreateTestDataArray<T>(dataStructure, k_Array2, {10ULL, 10ULL}, {2}, 0);
   array2Ptr->fill(static_cast<T>(2));
-  DataArrayType* array3Ptr = nx::core::UnitTest::CreateTestDataArray<T>(dataStructure, k_Array3, {10ULL, 10ULL}, {3}, 0);
+  DataArrayType* array3Ptr = nx::core::unit_test::CreateTestDataArray<T>(dataStructure, k_Array3, {10ULL, 10ULL}, {3}, 0);
   array3Ptr->fill(static_cast<T>(3));
 
   return dataStructure;
@@ -83,7 +83,7 @@ static DataStructure CreateTestDataStructure()
 
 TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore][CombineAttributeArrays]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Configure the filter arguments.
 
@@ -99,36 +99,36 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Parameter Check", "[SimplnxCore]
   args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Invalid because no arrays are selected
   args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
   preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
   // Invalid because no output array is set
   args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
   args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(""));
   preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
   // Invalid because mismatch array types
-  Float32Array* array3Ptr = nx::core::UnitTest::CreateTestDataArray<float32>(dataStructure, k_InvalidArrayType, {10ULL, 10ULL}, {3}, 0);
+  Float32ArrayType* array3Ptr = nx::core::unit_test::CreateTestDataArray<float32>(dataStructure, k_InvalidArrayType, {10ULL, 10ULL}, {3}, 0);
   array3Ptr->fill(static_cast<float32>(3));
   inputArrays.push_back(DataPath({k_InvalidArrayType}));
   args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
   args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
   preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
   // Invalid because mismatch tuple shapes
   dataStructure = CreateTestDataStructure<uint8>();                                                                                 // Reset the DataStructure
-  UInt8Array* array4Ptr = nx::core::UnitTest::CreateTestDataArray<uint8>(dataStructure, k_InvalidArrayType, {5ULL, 55ULL}, {3}, 0); // Non-matching tuple shape
+  UInt8ArrayType* array4Ptr = nx::core::unit_test::CreateTestDataArray<uint8>(dataStructure, k_InvalidArrayType, {5ULL, 55ULL}, {3}, 0); // Non-matching tuple shape
   array4Ptr->fill(static_cast<uint8>(3));
   preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 template <typename T>
@@ -164,7 +164,7 @@ static Result<> ValidateFilterOutput(const DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[SimplnxCore][CombineAttributeArrays]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   MultiArraySelectionParameter::ValueType inputArrays = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
 
@@ -180,7 +180,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -188,7 +188,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<uint8_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT8")
@@ -203,7 +203,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -211,7 +211,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<int8_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("UINT16")
@@ -226,7 +226,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -234,7 +234,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<uint16_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT16")
@@ -249,7 +249,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -257,7 +257,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<int16_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("UINT32")
@@ -272,7 +272,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -280,7 +280,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<uint32_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT32")
@@ -295,7 +295,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -303,7 +303,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<int32_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("UINT64")
@@ -318,7 +318,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -326,7 +326,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<uint64_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("INT64")
@@ -341,7 +341,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -349,7 +349,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<int64_t>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("FLOAT32")
@@ -364,7 +364,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -372,7 +372,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<float32>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("DOUBLE")
@@ -387,7 +387,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -395,7 +395,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<float64>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("BOOL")
@@ -410,7 +410,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArrayPath.getTargetName()));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -418,17 +418,17 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Algorithm Validation", "[Simplnx
     Result<> validationResult = ValidateFilterOutput<bool>(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(validationResult)
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::CombineAttributeArrays: Normalization", "[SimplnxCore][CombineAttributeArrays]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
-  auto* array1Ptr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Array1, {3}, {1}, 0.0F);
-  auto* array2Ptr = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Array2, {3}, {2}, 0.0F);
+  auto* array1Ptr = unit_test::CreateTestDataArray<float32>(dataStructure, k_Array1, {3}, {1}, 0.0F);
+  auto* array2Ptr = unit_test::CreateTestDataArray<float32>(dataStructure, k_Array2, {3}, {2}, 0.0F);
 
   (*array1Ptr)[0] = -2.0F;
   (*array1Ptr)[1] = 0.0F;
@@ -449,13 +449,13 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Normalization", "[SimplnxCore][C
 
   CombineAttributeArraysFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  Float32Array* outputPtr = nullptr;
-  REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<Float32Array>(k_OutputArrayPath));
+  Float32ArrayType* outputPtr = nullptr;
+  REQUIRE_NOTHROW(outputPtr = &dataStructure.getDataRefAs<Float32ArrayType>(k_OutputArrayPath));
   const std::array<float32, 9> expected = {0.0F, 0.0F, 0.0F, 0.5F, 0.5F, 0.0F, 1.0F, 1.0F, 0.0F};
   REQUIRE(outputPtr->getSize() == expected.size());
   for(usize index = 0; index < expected.size(); index++)
@@ -466,7 +466,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Normalization", "[SimplnxCore][C
 
 TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure propagation", "[SimplnxCore][CombineAttributeArrays]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_TupleCount = 21847;
   const DataPath firstPath({"First"});
   const DataPath secondPath({"Second"});
@@ -475,8 +475,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
   SECTION("global extrema, constant component, and final partial page")
   {
     DataStructure dataStructure;
-    auto* firstPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
-    auto* secondPtr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
+    auto* firstPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
+    auto* secondPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
     REQUIRE(firstPtr != nullptr);
     REQUIRE(secondPtr != nullptr);
     for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
@@ -496,8 +496,8 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
 
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(outputPath));
-    const auto& output = dataStructure.getDataRefAs<Float32Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<Float32ArrayType>(outputPath);
     REQUIRE(output.getNumberOfTuples() == k_TupleCount);
     REQUIRE(output.getNumberOfComponents() == 3);
     for(usize tupleIdx : {usize{0}, usize{21844}, usize{21845}, k_TupleCount - 1})
@@ -506,14 +506,14 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
       REQUIRE(output[tupleIdx * 3 + 1] == Approx(static_cast<float32>(tupleIdx) / static_cast<float32>(k_TupleCount - 1)));
       REQUIRE(output[tupleIdx * 3 + 2] == 0.0F);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("bool values keep their component order without normalization")
   {
     DataStructure dataStructure;
-    auto* firstPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
-    auto* secondPtr = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
+    auto* firstPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, firstPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{1});
+    auto* secondPtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, secondPath.getTargetName(), ShapeType{k_TupleCount}, ShapeType{2});
     REQUIRE(firstPtr != nullptr);
     REQUIRE(secondPtr != nullptr);
     for(usize tupleIdx = 0; tupleIdx < k_TupleCount; tupleIdx++)
@@ -533,7 +533,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
 
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-    const auto& output = dataStructure.getDataRefAs<BoolArray>(outputPath);
+    const auto& output = dataStructure.getDataRefAs<BoolArrayType>(outputPath);
     for(usize tupleIdx : {usize{0}, usize{21844}, usize{21845}, k_TupleCount - 1})
     {
       REQUIRE(output[tupleIdx * 3] == (tupleIdx % 2 == 0));
@@ -549,10 +549,10 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
     constexpr usize k_PageTuples = 65536 / 3;
     constexpr int32 k_UntouchedValue = -77;
     DataStructure dataStructure;
-    auto* firstPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, firstPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{1});
-    auto* secondPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, secondPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{2});
+    auto* firstPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, firstPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{1});
+    auto* secondPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, secondPath.getTargetName(), ShapeType{k_FailureTupleCount}, ShapeType{2});
     auto outputStore = std::make_shared<CombineFailOnLaterWriteStore<int32>>(ShapeType{k_FailureTupleCount}, ShapeType{3}, k_UntouchedValue, k_WriteError);
-    auto* outputPtr = Int32Array::Create(dataStructure, outputPath.getTargetName(), outputStore);
+    auto* outputPtr = Int32ArrayType::Create(dataStructure, outputPath.getTargetName(), outputStore);
     REQUIRE(firstPtr != nullptr);
     REQUIRE(secondPtr != nullptr);
     REQUIRE(outputPtr != nullptr);
@@ -564,9 +564,9 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
     }
 
     CombineAttributeArraysInputValues inputValues;
-    inputValues.NormalizeData = false;
-    inputValues.SelectedDataArrayPaths = {firstPath, secondPath};
-    inputValues.StackedDataArrayPath = outputPath;
+    inputValues.normalize_data = false;
+    inputValues.selected_data_array_paths = {firstPath, secondPath};
+    inputValues.stacked_data_array_path = outputPath;
     const std::atomic_bool shouldCancel = false;
     const auto executeResult = CombineAttributeArrays(dataStructure, {}, shouldCancel, &inputValues)();
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult)
@@ -585,7 +585,7 @@ TEST_CASE("SimplnxCore::CombineAttributeArrays: Bulk boundary and write failure 
 TEST_CASE("SimplnxCore::CombineAttributeArraysFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CombineAttributeArraysFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

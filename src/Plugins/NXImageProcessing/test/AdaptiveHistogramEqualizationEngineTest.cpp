@@ -121,7 +121,7 @@ std::vector<T> RunBoundedAhe(const std::vector<T>& input, usize dimX, usize dimY
   }
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  Result<> applyResult = ApplyAdaptiveHistogramEqualization(inputStore, outputStore, SizeVec3{dimX, dimY, 1}, radius, alpha, beta, shouldCancel, messageHandler, targetBytes);
+  Result<> applyResult = ApplyAdaptiveHistogramEqualization(inputStore, outputStore, SizeVec3Type{dimX, dimY, 1}, radius, alpha, beta, shouldCancel, messageHandler, targetBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
   std::vector<T> output(input.size());
@@ -168,20 +168,20 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: resident stat
   constexpr usize k_DimY = 512;
   constexpr usize k_DimZ = 128;
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::array<usize, 3> radius = {10, 10, 10};
 
   auto requiredResult = ImageProcessing::detail::CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes<uint8>(dims, radius, /*useLinearUint8=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(requiredResult);
   REQUIRE(requiredResult.value() == 163 * k_MiB + 512ULL * 1024ULL);
   Result<usize> overflowDimsResult =
-      ImageProcessing::detail::CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes<uint8>(SizeVec3{std::numeric_limits<usize>::max(), 2, 2}, radius, /*useLinearUint8=*/true);
+      ImageProcessing::detail::CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes<uint8>(SizeVec3Type{std::numeric_limits<usize>::max(), 2, 2}, radius, /*useLinearUint8=*/true);
   SIMPLNX_RESULT_REQUIRE_INVALID(overflowDimsResult);
 
   REQUIRE(ImageProcessing::detail::ShouldUseAdaptiveHistogramEqualizationResidentState(dims));
-  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseAdaptiveHistogramEqualizationResidentState(SizeVec3{k_DimX, k_DimY, 1}));
+  REQUIRE_FALSE(ImageProcessing::detail::ShouldUseAdaptiveHistogramEqualizationResidentState(SizeVec3Type{k_DimX, k_DimY, 1}));
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(512 * k_MiB);
@@ -213,12 +213,12 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: real-OOC sele
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
   constexpr uint64 k_PartialBudgetBytes = 64 * k_MiB;
   constexpr uint64 k_CompleteBudgetBytes = 128 * k_MiB;
-  const SizeVec3 dims{k_DimX, k_DimY, k_DimZ};
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
   const std::array<usize, 3> radius = {1, 1, 1};
   const std::vector<uint8> input = MakeAhePattern<uint8>(k_DimX, k_DimY, k_DimZ);
   const std::vector<uint8> expected = RunApplyAhe<uint8>(input, k_DimX, k_DimY, k_DimZ, radius, 1.0f, 0.25f);
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
 
   auto run = [&](uint64 budgetBytes) {
@@ -293,10 +293,10 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
                                                                                                    /*useHorizontalSums=*/true);
         SIMPLNX_RESULT_REQUIRE_VALID(planResult);
         const auto& plan = planResult.value();
-        REQUIRE(plan.fullWidth == transferCase.full_width);
-        REQUIRE(plan.coreRows == transferCase.core_rows);
-        REQUIRE(plan.coreColumns == transferCase.core_columns);
-        REQUIRE(plan.residentBytes == targetBytes);
+        REQUIRE(plan.full_width == transferCase.full_width);
+        REQUIRE(plan.core_rows == transferCase.core_rows);
+        REQUIRE(plan.core_columns == transferCase.core_columns);
+        REQUIRE(plan.resident_bytes == targetBytes);
 
         const std::vector<uint8> actual =
             RunBoundedAhe(input, k_DimX, k_DimY, k_Radius, 1.0f, 0.25f, targetBytes, transferCase.maximum_read_values, transferCase.maximum_write_values, transferCase.write_count);
@@ -308,7 +308,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
                                                                                                     ImageProcessing::detail::k_AdaptiveHistogramEqualization2DTargetBytes, lutBytes,
                                                                                                     /*useHorizontalSums=*/true, /*preferFixedOutput=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(fixedPlanResult);
-    REQUIRE(fixedPlanResult.value().fixedOutput);
+    REQUIRE(fixedPlanResult.value().fixed_output);
     const std::vector<uint8> fixedOutputActual = RunBoundedAhe(input, k_DimX, k_DimY, k_Radius, 1.0f, 0.25f, ImageProcessing::detail::k_AdaptiveHistogramEqualization2DTargetBytes,
                                                                /*maximumReadValues=*/k_TotalValues, /*maximumWriteValues=*/k_TotalValues, /*expectedWriteCount=*/1);
     RequireAheClose<uint8>(fixedOutputActual, expected, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/0.005);
@@ -318,9 +318,9 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
                                                                                                       ImageProcessing::detail::k_AdaptiveHistogramEqualization2DTargetBytes, overwideFixedScratchBytes,
                                                                                                       /*useHorizontalSums=*/true, /*preferFixedOutput=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(overwideFixedPlan);
-    REQUIRE(overwideFixedPlan.value().fixedOutput);
-    REQUIRE_FALSE(overwideFixedPlan.value().fullWidth);
-    REQUIRE(overwideFixedPlan.value().coreColumns == 2);
+    REQUIRE(overwideFixedPlan.value().fixed_output);
+    REQUIRE_FALSE(overwideFixedPlan.value().full_width);
+    REQUIRE(overwideFixedPlan.value().core_columns == 2);
   }
 
   SECTION("float32 generic path")
@@ -349,10 +349,10 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
                                                                                                    /*fixedScratchBytes=*/0, /*useHorizontalSums=*/false);
         SIMPLNX_RESULT_REQUIRE_VALID(planResult);
         const auto& plan = planResult.value();
-        REQUIRE(plan.fullWidth == transferCase.full_width);
-        REQUIRE(plan.coreRows == transferCase.core_rows);
-        REQUIRE(plan.coreColumns == transferCase.core_columns);
-        REQUIRE(plan.residentBytes == transferCase.target_bytes);
+        REQUIRE(plan.full_width == transferCase.full_width);
+        REQUIRE(plan.core_rows == transferCase.core_rows);
+        REQUIRE(plan.core_columns == transferCase.core_columns);
+        REQUIRE(plan.resident_bytes == transferCase.target_bytes);
 
         const std::vector<float32> actual =
             RunBoundedAhe(input, k_DimX, k_DimY, k_Radius, 0.3f, 0.3f, transferCase.target_bytes, transferCase.maximum_read_values, transferCase.maximum_write_values, transferCase.write_count);
@@ -365,7 +365,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D fa
                                                                                                     /*fixedScratchBytes=*/0, /*useHorizontalSums=*/false,
                                                                                                     /*preferFixedOutput=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(fixedPlanResult);
-    REQUIRE(fixedPlanResult.value().fixedOutput);
+    REQUIRE(fixedPlanResult.value().fixed_output);
     const std::vector<float32> fixedOutputActual =
         RunBoundedAhe(input, k_DimX, k_DimY, k_Radius, 0.3f, 0.3f, ImageProcessing::detail::k_AdaptiveHistogramEqualization2DTargetBytes, /*maximumReadValues=*/k_TotalValues,
                       /*maximumWriteValues=*/k_TotalValues, /*expectedWriteCount=*/1);
@@ -409,7 +409,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: bounded 2D co
     const auto [minimum, maximum] = std::minmax_element(input.cbegin(), input.cend());
     const usize span = static_cast<usize>(*maximum - *minimum);
     const usize lutBytes = (2 * span + 1) * sizeof(float);
-    Result<> applyResult = ApplyAdaptiveHistogramEqualization(cancellingInputStore, outputStore, SizeVec3{k_DimX, k_DimY, 1}, k_Radius, 1.0f, 0.25f, shouldCancel, messageHandler,
+    Result<> applyResult = ApplyAdaptiveHistogramEqualization(cancellingInputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, k_Radius, 1.0f, 0.25f, shouldCancel, messageHandler,
                                                               /*target2DBytes=*/342 + lutBytes);
     SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
     REQUIRE(shouldCancel);
@@ -525,7 +525,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: validates dim
   {
     DataStore<uint8> inputStore(ShapeType{1}, ShapeType{1}, 0);
     DataStore<uint8> outputStore(ShapeType{1}, ShapeType{1}, 0);
-    const Result<> result = ApplyAdaptiveHistogramEqualization<uint8>(inputStore, outputStore, SizeVec3{0, 1, 1}, {1, 1, 1}, 0.3f, 0.3f, shouldCancel, messageHandler);
+    const Result<> result = ApplyAdaptiveHistogramEqualization<uint8>(inputStore, outputStore, SizeVec3Type{0, 1, 1}, {1, 1, 1}, 0.3f, 0.3f, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8541);
   }
@@ -534,11 +534,11 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationEngine: validates dim
   {
     DataStore<uint8> shortStore(ShapeType{63}, ShapeType{1}, 0);
     DataStore<uint8> fullStore(ShapeType{64}, ShapeType{1}, 0);
-    Result<> result = ApplyAdaptiveHistogramEqualization<uint8>(shortStore, fullStore, SizeVec3{4, 4, 4}, {1, 1, 1}, 0.3f, 0.3f, shouldCancel, messageHandler);
+    Result<> result = ApplyAdaptiveHistogramEqualization<uint8>(shortStore, fullStore, SizeVec3Type{4, 4, 4}, {1, 1, 1}, 0.3f, 0.3f, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8543);
 
-    result = ApplyAdaptiveHistogramEqualization<uint8>(fullStore, shortStore, SizeVec3{4, 4, 4}, {1, 1, 1}, 0.3f, 0.3f, shouldCancel, messageHandler);
+    result = ApplyAdaptiveHistogramEqualization<uint8>(fullStore, shortStore, SizeVec3Type{4, 4, 4}, {1, 1, 1}, 0.3f, 0.3f, shouldCancel, messageHandler);
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8544);
   }
@@ -592,7 +592,7 @@ void CheckPlaneTraversalIdentity()
         ImageProcessing::detail::AdaptiveHistogramEqualizationLutPlaneBody<T> body{
             slab.data(), actual.data(), k_DimX, k_DimY, k_DimZ, radius[0], radius[1], radius[2], zLo, z, minValue, iscale, 0.21f, lookupTable.data(), -static_cast<int64>(iscale), lookupTable.size()};
         auto referenceBody = body;
-        referenceBody.outPlane = expected.data();
+        referenceBody.out_plane = expected.data();
         ahe_test::unclipped::AdaptiveHistogramEqualizationLutPlaneBody(referenceBody, Range{0, k_SliceValues});
         body(Range{0, k_SliceValues});
       }
@@ -601,7 +601,7 @@ void CheckPlaneTraversalIdentity()
         ImageProcessing::detail::AdaptiveHistogramEqualizationPlaneBody<T> body{slab.data(), actual.data(), k_DimX, k_DimY,   k_DimZ, radius[0], radius[1],
                                                                                 radius[2],   zLo,           z,      minValue, iscale, 0.37f,     0.21f};
         auto referenceBody = body;
-        referenceBody.outPlane = expected.data();
+        referenceBody.out_plane = expected.data();
         ahe_test::unclipped::AdaptiveHistogramEqualizationPlaneBody(referenceBody, Range{0, k_SliceValues});
         body(Range{0, k_SliceValues});
       }

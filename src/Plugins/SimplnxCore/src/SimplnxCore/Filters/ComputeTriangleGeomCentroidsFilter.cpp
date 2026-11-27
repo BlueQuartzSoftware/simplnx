@@ -54,7 +54,7 @@ Parameters ComputeTriangleGeomCentroidsFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                                     "The DataPath to the AttributeMatrix that holds feature data for the faces",
@@ -110,7 +110,7 @@ IFilter::PreflightResult ComputeTriangleGeomCentroidsFilter::preflightImpl(const
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -118,13 +118,13 @@ Result<> ComputeTriangleGeomCentroidsFilter::executeImpl(DataStructure& dataStru
                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeTriangleGeomCentroidsInputValues inputValues;
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
-  inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
+  inputValues.face_labels_array_path = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.is_periodic = filterArgs.value<bool>(k_IsPeriodic_Key);
 
   auto volumesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
-  inputValues.CentroidsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(volumesArrayNameValue);
+  inputValues.centroids_array_path = inputValues.feature_attribute_matrix_path.createChildPath(volumesArrayNameValue);
 
   return ComputeTriangleGeomCentroids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

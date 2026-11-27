@@ -9,7 +9,7 @@ namespace nx::core
 {
 Result<std::unique_ptr<IEbsdPatternFileReader>> CreateEbsdPatternFileReader(const std::filesystem::path& filePath)
 {
-  const std::string extension = EbsdPatternFileUtilities::NormalizeExtension(filePath);
+  const std::string extension = ebsd_pattern_file_utilities::NormalizeExtension(filePath);
   if(extension == ".up1" || extension == ".up2")
   {
     return {std::make_unique<EdaxUpPatternFileReader>(filePath)};

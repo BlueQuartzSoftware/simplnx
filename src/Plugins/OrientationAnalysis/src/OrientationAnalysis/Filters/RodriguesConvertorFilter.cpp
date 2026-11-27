@@ -57,7 +57,7 @@ Parameters RodriguesConvertorFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_RodriguesDataArrayPath_Key, "Input Rodrigues Vectors", "Specifies the Rodrigues data to convert", DataPath({"Cell Data", "rodrigues"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Converted Rodrigues Data Array", "The DataArray name of the converted Rodrigues vectors", "rodrigues [Converted]"));
@@ -87,7 +87,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& quats = dataStructure.getDataRefAs<Float32Array>(pRodriguesDataArrayPathValue);
+  const auto& quats = dataStructure.getDataRefAs<Float32ArrayType>(pRodriguesDataArrayPathValue);
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);
@@ -102,7 +102,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -111,9 +111,9 @@ Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, con
 {
   RodriguesConvertorInputValues inputValues;
 
-  inputValues.RodriguesDataArrayPath = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.RodriguesDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
-  inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
+  inputValues.rodrigues_data_array_path = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
+  inputValues.output_data_array_path = inputValues.rodrigues_data_array_path.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.delete_original_data = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return RodriguesConvertor(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

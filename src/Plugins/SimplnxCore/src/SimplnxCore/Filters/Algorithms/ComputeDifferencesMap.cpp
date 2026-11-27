@@ -101,9 +101,9 @@ ComputeDifferencesMap::ComputeDifferencesMap(DataStructure& dataStructure, const
 
 Result<> ComputeDifferencesMap::operator()()
 {
-  const auto& firstInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FirstInputArrayPath);
-  const auto& secondInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SecondInputArrayPath);
-  auto& differenceMapArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->DifferenceMapArrayPath);
+  const auto& firstInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->first_input_array_path);
+  const auto& secondInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->second_input_array_path);
+  auto& differenceMapArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->difference_map_array_path);
 
   if(m_ShouldCancel)
   {

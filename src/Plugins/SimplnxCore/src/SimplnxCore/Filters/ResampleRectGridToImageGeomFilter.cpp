@@ -107,7 +107,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedDataArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {.outputActions =
+    return {.output_actions =
                 MakeErrorResult<OutputActions>(-7361, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
@@ -189,7 +189,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   }
 
   // Generate geometry info for preflight updated values
-  const SizeVec3 srcDims = rectGridGeom.getDimensions();
+  const SizeVec3Type srcDims = rectGridGeom.getDimensions();
   std::stringstream rectGridGeometryDesc;
   rectGridGeometryDesc << srcDims[0] << " Voxels\n" << srcDims[1] << " Voxels\n" << srcDims[2] << " Voxels\n";
   preflightUpdatedValues.push_back({"Rect Grid Geometry Info", rectGridGeometryDesc.str()});
@@ -197,7 +197,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   createdGeometryDesc << dims[0] << " Voxels\n" << dims[1] << " Voxels\n" << dims[2] << " Voxels\n";
   preflightUpdatedValues.push_back({"Created Image Geometry Info", createdGeometryDesc.str()});
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -206,11 +206,11 @@ Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStruc
 {
   ResampleRectGridToImageGeomInputValues inputValues;
 
-  inputValues.RectilinearGridPath = filterArgs.value<DataPath>(k_RectilinearGridPath_Key);
-  inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  inputValues.Dimensions = filterArgs.value<VectorInt32ParameterType::ValueType>(k_Dimensions_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.ImageGeomCellAttributeMatrixName = filterArgs.value<std::string>(k_ImageGeomCellAttributeMatrixName_Key);
+  inputValues.rectilinear_grid_path = filterArgs.value<DataPath>(k_RectilinearGridPath_Key);
+  inputValues.selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.dimensions = filterArgs.value<VectorInt32ParameterType::ValueType>(k_Dimensions_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.image_geom_cell_attribute_matrix_name = filterArgs.value<std::string>(k_ImageGeomCellAttributeMatrixName_Key);
 
   return ResampleRectGridToImageGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -236,7 +236,7 @@ Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohman
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
   // Rect Grid Geometry description parameter is not applicable in NX
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverterType>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
   // Created Geometry description is not applicable in NX
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
   results.push_back(

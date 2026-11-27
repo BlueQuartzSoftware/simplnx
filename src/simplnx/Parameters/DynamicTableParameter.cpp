@@ -22,7 +22,7 @@ DynamicTableParameter::DynamicTableParameter(const std::string& name, const std:
   {
     std::vector<std::string_view> errMsgs;
     std::transform(result.errors().cbegin(), result.errors().cend(), std::back_inserter(errMsgs), [](const Error& err) { return err.message; });
-    std::string errMsgsStr = StringUtilities::join(errMsgs, "\n\n");
+    std::string errMsgsStr = string_utilities::Join(errMsgs, "\n\n");
     throw std::runtime_error(fmt::format("DynamicTableParameter: The default value is invalid:\n\n{}", errMsgsStr));
   }
 }
@@ -37,7 +37,7 @@ Uuid DynamicTableParameter::uuid() const
   return ParameterTraits<DynamicTableParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DynamicTableParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DynamicTableParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }

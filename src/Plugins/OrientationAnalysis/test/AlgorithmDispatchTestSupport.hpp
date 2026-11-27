@@ -4,7 +4,7 @@
 
 #include "simplnx/Common/Types.hpp"
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @namespace nx::core::UnitTest

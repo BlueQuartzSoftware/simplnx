@@ -17,15 +17,15 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientationsInputValues
 {
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath QuatsArrayPath;
-  DataPath AvgCAxesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath FeatureReferenceCAxisMisorientationsArrayPath;
-  DataPath FeatureAvgCAxisMisorientationsArrayPath;
-  DataPath FeatureStdevCAxisMisorientationsArrayPath;
+  DataPath image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath cell_phases_array_path;
+  DataPath quats_array_path;
+  DataPath avg_c_axes_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath feature_reference_c_axis_misorientations_array_path;
+  DataPath feature_avg_c_axis_misorientations_array_path;
+  DataPath feature_stdev_c_axis_misorientations_array_path;
 };
 
 /**

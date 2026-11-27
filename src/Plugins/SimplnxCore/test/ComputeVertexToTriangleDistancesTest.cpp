@@ -14,7 +14,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -26,19 +26,19 @@ constexpr StringLiteralType k_ClosestTriangleIdsNameNX("Closest Triangle Ids");
 
 TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_vertex_to_triangle_distances.tar.gz", "6_6_vertex_to_triangle_distances.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_vertex_to_triangle_distances.tar.gz", "6_6_vertex_to_triangle_distances.dream3d");
 
   // Read the Small IN100 Data set
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_vertex_to_triangle_distances.dream3d", unit_test::k_TestFilesDir)));
-  DataPath triangleData({Constants::k_TriangleDataContainerName});
-  DataPath vertexData({Constants::k_VertexDataContainerName});
-  DataPath normalsPath({Constants::k_TriangleDataContainerName, Constants::k_FaceData, Constants::k_FaceNormals});
-  DataPath distancesPath({Constants::k_VertexDataContainerName, Constants::k_VertexData, k_DistancesName});
-  DataPath closestTrianglePath({Constants::k_VertexDataContainerName, Constants::k_VertexData, k_ClosestTriangleIdsName});
-  DataPath distancesNXPath({Constants::k_VertexDataContainerName, Constants::k_VertexData, k_DistancesNameNX});
-  DataPath closestTriangleNXPath({Constants::k_VertexDataContainerName, Constants::k_VertexData, k_ClosestTriangleIdsNameNX});
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/6_6_vertex_to_triangle_distances.dream3d", unit_test::k_TestFilesDir)));
+  DataPath triangleData({constants::k_TriangleDataContainerName});
+  DataPath vertexData({constants::k_VertexDataContainerName});
+  DataPath normalsPath({constants::k_TriangleDataContainerName, constants::k_FaceData, constants::k_FaceNormals});
+  DataPath distancesPath({constants::k_VertexDataContainerName, constants::k_VertexData, k_DistancesName});
+  DataPath closestTrianglePath({constants::k_VertexDataContainerName, constants::k_VertexData, k_ClosestTriangleIdsName});
+  DataPath distancesNXPath({constants::k_VertexDataContainerName, constants::k_VertexData, k_DistancesNameNX});
+  DataPath closestTriangleNXPath({constants::k_VertexDataContainerName, constants::k_VertexData, k_ClosestTriangleIdsNameNX});
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -54,7 +54,7 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -63,11 +63,11 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][
 
   // Compare Outputs
   {
-    UnitTest::CompareArrays<float32>(dataStructure, distancesPath, distancesNXPath);
+    unit_test::CompareArrays<float32>(dataStructure, distancesPath, distancesNXPath);
   }
 
   {
-    UnitTest::CompareArrays<int64>(dataStructure, closestTrianglePath, closestTriangleNXPath);
+    unit_test::CompareArrays<int64>(dataStructure, closestTrianglePath, closestTriangleNXPath);
   }
 
 // Write the DataStructure out to the file system
@@ -75,13 +75,13 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/vertex_to_triangle_distances.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeVertexToTriangleDistancesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
@@ -124,12 +124,12 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: Triangle Normals
   DataStructure dataStructure;
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Triangles");
   REQUIRE(triangleGeomPtr != nullptr);
-  auto* verticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeomPtr->getId());
+  auto* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices", {3}, {3}, triangleGeomPtr->getId());
   triangleGeomPtr->setVertices(*verticesPtr);
   triangleGeomPtr->setVertexCoordinate(0, {0.0F, 0.0F, 0.0F});
   triangleGeomPtr->setVertexCoordinate(1, {1.0F, 0.0F, 0.0F});
   triangleGeomPtr->setVertexCoordinate(2, {0.0F, 1.0F, 0.0F});
-  auto* facesPtr = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeomPtr->getId());
+  auto* facesPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Faces", {1}, {3}, triangleGeomPtr->getId());
   (*facesPtr)[0] = 0;
   (*facesPtr)[1] = 1;
   (*facesPtr)[2] = 2;
@@ -137,10 +137,10 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: Triangle Normals
   auto* faceDataPtr = AttributeMatrix::Create(dataStructure, "Face Data", {1}, triangleGeomPtr->getId());
   REQUIRE(faceDataPtr != nullptr);
   triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
-  UnitTest::CreateTestDataArray<float64>(dataStructure, "Normals", {1}, {1}, faceDataPtr->getId());
+  unit_test::CreateTestDataArray<float64>(dataStructure, "Normals", {1}, {1}, faceDataPtr->getId());
   auto* vertexGeomPtr = VertexGeom::Create(dataStructure, "Query Points");
   REQUIRE(vertexGeomPtr != nullptr);
-  auto* queryVerticesPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Vertices", {1}, {3}, vertexGeomPtr->getId());
+  auto* queryVerticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices", {1}, {3}, vertexGeomPtr->getId());
   vertexGeomPtr->setVertices(*queryVerticesPtr);
   vertexGeomPtr->setVertexCoordinate(0, {0.25F, 0.25F, 1.0F});
   auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {1}, vertexGeomPtr->getId());
@@ -156,7 +156,7 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter: Triangle Normals
   args.insertOrAssign(ComputeVertexToTriangleDistancesFilter::k_ClosestTriangleIdArrayName_Key, std::make_any<std::string>("Closest Triangle Ids"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(std::any_of(preflightResult.outputActions.errors().begin(), preflightResult.outputActions.errors().end(), [](const Error& error) { return error.code == -208; }));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(std::any_of(preflightResult.output_actions.errors().begin(), preflightResult.output_actions.errors().end(), [](const Error& error) { return error.code == -208; }));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

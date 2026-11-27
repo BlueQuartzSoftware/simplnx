@@ -90,7 +90,7 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 
 Result<> VertexGeom::findElementSizes(bool recalculate)
 {
-  auto* vertexSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
+  auto* vertexSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_ElementSizesId);
   if(vertexSizesPtr != nullptr && !recalculate)
   {
     return {};

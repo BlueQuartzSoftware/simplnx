@@ -17,14 +17,14 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeSlipTransmissionMetricsInputValues
 {
-  DataPath NeighborListArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath F1ListArrayName;
-  DataPath F1sptListArrayName;
-  DataPath F7ListArrayName;
-  DataPath mPrimeListArrayName;
+  DataPath neighbor_list_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath f1_list_array_name;
+  DataPath f1spt_list_array_name;
+  DataPath f7_list_array_name;
+  DataPath m_prime_list_array_name;
 };
 
 /**

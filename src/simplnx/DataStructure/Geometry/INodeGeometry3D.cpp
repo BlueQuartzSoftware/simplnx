@@ -19,12 +19,12 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedronList
   return m_PolyhedronListId;
 }
 
-void INodeGeometry3D::setPolyhedronListId(const OptionalId& polyListId)
+void INodeGeometry3D::setPolyhedronListId(const OptionalIdType& polyListId)
 {
   m_PolyhedronListId = polyListId;
 }
 
-INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra()
+INodeGeometry3D::SharedFaceListType* INodeGeometry3D::getPolyhedra()
 {
   if(!m_PolyhedronListId.has_value())
   {
@@ -35,10 +35,10 @@ INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra()
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedFaceList>(m_PolyhedronListId);
+  return dataStructurePtr->getDataAs<SharedFaceListType>(m_PolyhedronListId);
 }
 
-const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra() const
+const INodeGeometry3D::SharedFaceListType* INodeGeometry3D::getPolyhedra() const
 {
   if(!m_PolyhedronListId.has_value())
   {
@@ -49,10 +49,10 @@ const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra() const
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedFaceList>(m_PolyhedronListId);
+  return dataStructurePtr->getDataAs<SharedFaceListType>(m_PolyhedronListId);
 }
 
-INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef()
+INodeGeometry3D::SharedFaceListType& INodeGeometry3D::getPolyhedraRef()
 {
   if(!m_PolyhedronListId.has_value())
   {
@@ -65,10 +65,10 @@ INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry3D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
+  return dataStructurePtr->getDataRefAs<SharedFaceListType>(m_PolyhedronListId.value());
 }
 
-const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
+const INodeGeometry3D::SharedFaceListType& INodeGeometry3D::getPolyhedraRef() const
 {
   if(!m_PolyhedronListId.has_value())
   {
@@ -81,15 +81,15 @@ const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry3D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
+  return dataStructurePtr->getDataRefAs<SharedFaceListType>(m_PolyhedronListId.value());
 }
 
-INodeGeometry3D::OptionalId INodeGeometry3D::getPolyhedraDataId() const
+INodeGeometry3D::OptionalIdType INodeGeometry3D::getPolyhedraDataId() const
 {
   return m_PolyhedronAttributeMatrixId;
 }
 
-void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
+void INodeGeometry3D::setPolyhedraList(const SharedFaceListType& polyhedra)
 {
   m_PolyhedronListId = polyhedra.getId();
 }
@@ -140,7 +140,7 @@ void INodeGeometry3D::getCellPointIds(usize polyhedraId, nonstd::span<usize> ver
   }
 }
 
-void INodeGeometry3D::getCellCoordinates(usize hexId, nonstd::span<FloatVec3> coords) const
+void INodeGeometry3D::getCellCoordinates(usize hexId, nonstd::span<FloatVec3Type> coords) const
 {
   usize numVerts = getNumberOfVerticesPerCell();
   std::vector<usize> vertIds(numVerts, 0);
@@ -162,19 +162,19 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getUnsharedFacesI
   return m_UnsharedFaceListId;
 }
 
-void INodeGeometry3D::setUnsharedFacedId(const OptionalId& id)
+void INodeGeometry3D::setUnsharedFacedId(const OptionalIdType& id)
 {
   m_UnsharedFaceListId = id;
 }
 
-const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getUnsharedFaces() const
+const INodeGeometry3D::SharedFaceListType* INodeGeometry3D::getUnsharedFaces() const
 {
   const DataStructure* dataStructurePtr = getDataStructure();
   if(nullptr == dataStructurePtr)
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedFaceList>(m_UnsharedFaceListId);
+  return dataStructurePtr->getDataAs<SharedFaceListType>(m_UnsharedFaceListId);
 }
 
 void INodeGeometry3D::deleteUnsharedFaces()
@@ -188,7 +188,7 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraAttri
   return m_PolyhedronAttributeMatrixId;
 }
 
-void INodeGeometry3D::setPolyhedraDataId(const OptionalId& polyDataId)
+void INodeGeometry3D::setPolyhedraDataId(const OptionalIdType& polyDataId)
 {
   m_PolyhedronAttributeMatrixId = polyDataId;
 }
@@ -262,17 +262,17 @@ void INodeGeometry3D::setPolyhedraAttributeMatrix(const AttributeMatrix& attribu
 {
   m_PolyhedronAttributeMatrixId = attributeMatrix.getId();
 }
-INodeGeometry3D::SharedQuadList* INodeGeometry3D::createSharedQuadList(usize numQuads)
+INodeGeometry3D::SharedQuadListType* INodeGeometry3D::createSharedQuadList(usize numQuads)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4}, 0);
-  SharedQuadList* quadsPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
+  SharedQuadListType* quadsPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
   return quadsPtr;
 }
 
-INodeGeometry3D::SharedTriList* INodeGeometry3D::createSharedTriList(usize numTris)
+INodeGeometry3D::SharedTriListType* INodeGeometry3D::createSharedTriList(usize numTris)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3}, 0);
-  SharedTriList* trianglesPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
+  SharedTriListType* trianglesPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedFacesListName, std::move(dataStore), getId());
   return trianglesPtr;
 }
 

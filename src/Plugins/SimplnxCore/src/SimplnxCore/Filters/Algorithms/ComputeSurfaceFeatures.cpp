@@ -20,6 +20,6 @@ ComputeSurfaceFeatures::ComputeSurfaceFeatures(DataStructure& dataStructure, con
 Result<> ComputeSurfaceFeatures::operator()()
 {
   // Cell-scale face-neighbor reads determine whether the Scanline path is needed.
-  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path);
   return DispatchAlgorithm<ComputeSurfaceFeaturesDirect, ComputeSurfaceFeaturesScanline>({featureIdsArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

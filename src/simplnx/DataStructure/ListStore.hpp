@@ -363,16 +363,16 @@ private:
   std::vector<std::vector<T>> m_Array;
 };
 
-using UInt8ListStore = ListStore<uint8>;
-using UInt16ListStore = ListStore<uint16>;
-using UInt32ListStore = ListStore<uint32>;
-using UInt64ListStore = ListStore<uint64>;
+using UInt8ListStoreType = ListStore<uint8>;
+using UInt16ListStoreType = ListStore<uint16>;
+using UInt32ListStoreType = ListStore<uint32>;
+using UInt64ListStoreType = ListStore<uint64>;
 
-using Int8ListStore = ListStore<int8>;
-using Int16ListStore = ListStore<int16>;
-using Int32ListStore = ListStore<int32>;
-using Int64ListStore = ListStore<int64>;
+using Int8ListStoreType = ListStore<int8>;
+using Int16ListStoreType = ListStore<int16>;
+using Int32ListStoreType = ListStore<int32>;
+using Int64ListStoreType = ListStore<int64>;
 
-using Float32ListStore = ListStore<float32>;
-using Float64ListStore = ListStore<float64>;
+using Float32ListStoreType = ListStore<float32>;
+using Float64ListStoreType = ListStore<float64>;
 } // namespace nx::core

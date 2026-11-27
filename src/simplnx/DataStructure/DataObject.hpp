@@ -102,7 +102,7 @@ public:
   /**
    * @brief The OptionalId alias specifies that the target DataObject is not required.
    */
-  using OptionalId = std::optional<IdType>;
+  using OptionalIdType = std::optional<IdType>;
 
   /**
    * @brief The ParentCollectionType alias describes the format by which parent
@@ -337,7 +337,7 @@ protected:
    * @param parentId Optional parent ID; if provided, object is added as a child to that parent
    * @return True if the object was added successfully, false otherwise
    */
-  static bool AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalId& parentId);
+  static bool AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalIdType& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.

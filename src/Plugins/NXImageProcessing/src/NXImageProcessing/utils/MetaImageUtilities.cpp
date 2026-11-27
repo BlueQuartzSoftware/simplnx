@@ -217,7 +217,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
   }
 
   MetaImageMetadata md;
-  md.filePath = pathStr;
+  md.file_path = pathStr;
 
   std::string metType;
   std::string elementDataFile;
@@ -324,7 +324,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
       {
         return MakeErrorResult<MetaImageMetadata>(-35806, fmt::format("MetaImage '{}' has invalid ElementNumberOfChannels '{}'.", pathStr, value));
       }
-      md.componentCount = v.value();
+      md.component_count = v.value();
     }
     else if(keyLower == "elementspacing")
     {
@@ -431,7 +431,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
       }
       for(usize i = 0; i < 3 && i < v.value().size(); i++)
       {
-        md.centerOfRotation[i] = static_cast<float32>(v.value()[i]);
+        md.center_of_rotation[i] = static_cast<float32>(v.value()[i]);
       }
     }
     else if(keyLower == "elementdatafile")
@@ -448,7 +448,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
         return MakeErrorResult<MetaImageMetadata>(-35813,
                                                   fmt::format("MetaImage '{}': failed to determine the data start offset after the 'ElementDataFile' tag (stream position query failed).", pathStr));
       }
-      md.dataStartOffset = static_cast<usize>(dataPos);
+      md.data_start_offset = static_cast<usize>(dataPos);
       break;
     }
     // All other tags (CompressedDataSize, AnatomicalOrientation, Comment, ...) are ignored.
@@ -488,10 +488,10 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
     return MakeErrorResult<MetaImageMetadata>(-35804, fmt::format("MetaImage '{}' has unsupported ElementType '{}'.", pathStr, metType));
   }
 
-  md.nDims = nDims;
-  md.dataType = typeInfo->first;
-  md.elementSize = typeInfo->second;
-  md.typeString = metType;
+  md.n_dims = nDims;
+  md.data_type = typeInfo->first;
+  md.element_size = typeInfo->second;
+  md.type_string = metType;
   md.encoding = compressed ? Encoding::Compressed : Encoding::Raw;
 
   // ---- resolve multi-alias fields by MetaIO's fixed precedence (independent of the
@@ -518,15 +518,15 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
   // Transform: TransformMatrix > Rotation > Orientation.
   if(xformTransformMatrix.has_value())
   {
-    md.transformMatrix = std::move(*xformTransformMatrix);
+    md.transform_matrix = std::move(*xformTransformMatrix);
   }
   else if(xformRotation.has_value())
   {
-    md.transformMatrix = std::move(*xformRotation);
+    md.transform_matrix = std::move(*xformRotation);
   }
   else if(xformOrientation.has_value())
   {
-    md.transformMatrix = std::move(*xformOrientation);
+    md.transform_matrix = std::move(*xformOrientation);
   }
   // Byte order: BinaryDataByteOrderMSB > ElementByteOrderMSB.
   bool msbSpecified = false;
@@ -567,11 +567,11 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
   // ---- endian / byteswap (only meaningful for multi-byte types) ----
   // MetaImage defaults to the writing host's byte order when the MSB tag is
   // absent, so an absent tag means "no swap"; a present tag is honored.
-  if(md.elementSize > 1 && msbSpecified)
+  if(md.element_size > 1 && msbSpecified)
   {
     const bool fileIsLittle = !msb;
-    const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
-    md.byteSwapRequired = (fileIsLittle != hostIsLittle);
+    const bool hostIsLittle = (nx::core::CheckEndian() == nx::core::endian::little);
+    md.byte_swap_required = (fileIsLittle != hostIsLittle);
   }
 
   // ---- attached (LOCAL) vs detached data ----
@@ -582,7 +582,7 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
     // MetaIO accepts "Local"/"LOCAL"/"local" (metaImage.cxx ~1223); lower-casing then
     // comparing to "local" is a superset that also covers those three forms.
     md.detached = false;
-    md.dataFilePath = filePath;
+    md.data_file_path = filePath;
     // md.dataStartOffset was recorded at the ElementDataFile line above.
   }
   else if(edfTrim.starts_with("LIST") || edfTrim.find('%') != std::string::npos)
@@ -604,8 +604,8 @@ Result<MetaImageMetadata> ReadMetaImageHeader(const std::filesystem::path& fileP
       return MakeErrorResult<MetaImageMetadata>(-35808, fmt::format("MetaImage '{}': detached data file '{}' does not exist.", pathStr, df.string()));
     }
     md.detached = true;
-    md.dataFilePath = df;
-    md.dataStartOffset = 0;
+    md.data_file_path = df;
+    md.data_start_offset = 0;
   }
 
   return {md};
@@ -615,16 +615,16 @@ Result<std::unique_ptr<MetaImageDataReader>> MetaImageDataReader::Create(const M
 {
   auto reader = std::unique_ptr<MetaImageDataReader>(new MetaImageDataReader());
   reader->m_Encoding = md.encoding;
-  reader->m_FilePath = md.dataFilePath.string();
-  reader->m_Stream.open(md.dataFilePath, std::ios::binary);
+  reader->m_FilePath = md.data_file_path.string();
+  reader->m_Stream.open(md.data_file_path, std::ios::binary);
   if(!reader->m_Stream.is_open())
   {
     return MakeErrorResult<std::unique_ptr<MetaImageDataReader>>(-35830, fmt::format("Could not open MetaImage data file for reading: '{}'", reader->m_FilePath));
   }
-  reader->m_Stream.seekg(static_cast<std::streamoff>(md.dataStartOffset), std::ios::beg);
+  reader->m_Stream.seekg(static_cast<std::streamoff>(md.data_start_offset), std::ios::beg);
   if(!reader->m_Stream.good())
   {
-    return MakeErrorResult<std::unique_ptr<MetaImageDataReader>>(-35830, fmt::format("Failed to seek to MetaImage data offset {} in '{}'", md.dataStartOffset, reader->m_FilePath));
+    return MakeErrorResult<std::unique_ptr<MetaImageDataReader>>(-35830, fmt::format("Failed to seek to MetaImage data offset {} in '{}'", md.data_start_offset, reader->m_FilePath));
   }
   if(md.encoding == Encoding::Compressed)
   {

@@ -55,7 +55,7 @@ void BuildTriangleGeom(DataStructure& dataStructure, const std::vector<float32>&
   triangleGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
 
   auto vertexStore = std::make_unique<DataStore<float32>>(std::vector<usize>{verts.size() / 3}, std::vector<usize>{3}, 0.0f);
-  auto* vertexListPtr = IGeometry::SharedVertexList::Create(dataStructure, "Vertices", std::move(vertexStore), vertexDataPtr->getId());
+  auto* vertexListPtr = IGeometry::SharedVertexListType::Create(dataStructure, "Vertices", std::move(vertexStore), vertexDataPtr->getId());
   REQUIRE(vertexListPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < verts.size(); valueIdx++)
   {
@@ -64,7 +64,7 @@ void BuildTriangleGeom(DataStructure& dataStructure, const std::vector<float32>&
   triangleGeomPtr->setVertices(*vertexListPtr);
 
   auto faceStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{faces.size() / 3}, std::vector<usize>{3}, 0);
-  auto* faceListPtr = IGeometry::SharedFaceList::Create(dataStructure, "Faces", std::move(faceStore), faceDataPtr->getId());
+  auto* faceListPtr = IGeometry::SharedFaceListType::Create(dataStructure, "Faces", std::move(faceStore), faceDataPtr->getId());
   REQUIRE(faceListPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < faces.size(); valueIdx++)
   {
@@ -91,7 +91,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Adjacent triangles share one slice verte
   BuildTriangleGeom(dataStructure, {0.5f, 1.25f, 0.0f, 2.0f, 3.5f, 1.0f, 3.0f, 0.75f, 0.0f, -1.0f, 2.75f, 0.0f}, {0, 1, 2, 1, 0, 3});
   auto* faceDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_InputTriangleGeometryPath.createChildPath("FaceData"));
   REQUIRE(faceDataPtr != nullptr);
-  auto* regionIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_RegionIdsName, {2}, {1}, faceDataPtr->getId());
+  auto* regionIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_RegionIdsName, {2}, {1}, faceDataPtr->getId());
   REQUIRE(regionIdsPtr != nullptr);
   (*regionIdsPtr)[0] = 7;
   (*regionIdsPtr)[1] = 11;
@@ -129,17 +129,17 @@ TEST_CASE("SliceTriangleGeometryFilter: Adjacent triangles share one slice verte
   }
 
   const DataPath edgeDataPath = k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData);
-  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32Array>(edgeDataPath.createChildPath(k_SliceIds));
+  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32ArrayType>(edgeDataPath.createChildPath(k_SliceIds));
   REQUIRE(sliceIdsPtr != nullptr);
   REQUIRE(sliceIdsPtr->getNumberOfTuples() == 2);
   REQUIRE((*sliceIdsPtr)[0] == 0);
   REQUIRE((*sliceIdsPtr)[1] == 0);
-  const auto* edgeRegionIdsPtr = dataStructure.getDataAs<Int32Array>(edgeDataPath.createChildPath(k_RegionIdsName));
+  const auto* edgeRegionIdsPtr = dataStructure.getDataAs<Int32ArrayType>(edgeDataPath.createChildPath(k_RegionIdsName));
   REQUIRE(edgeRegionIdsPtr != nullptr);
   REQUIRE(edgeRegionIdsPtr->getNumberOfTuples() == 2);
   REQUIRE((*edgeRegionIdsPtr)[0] == 7);
   REQUIRE((*edgeRegionIdsPtr)[1] == 11);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice", "[SimplnxCore][SliceTriangleGeometryFilter]")
@@ -160,7 +160,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice", "[Si
   REQUIRE(edgeGeomPtr != nullptr);
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 10);
   REQUIRE(edgeGeomPtr->getNumberOfVertices() == 20);
-  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32Array>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
+  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32ArrayType>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
   REQUIRE(sliceIdsPtr != nullptr);
   REQUIRE(sliceIdsPtr->getNumberOfTuples() == 10);
   for(usize edgeIdx = 0; edgeIdx < 10; edgeIdx++)
@@ -200,7 +200,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice", "[Si
     REQUIRE(vertices[3 * edges[18] + compIdx] == expectedTopStart[compIdx]);
     REQUIRE(vertices[3 * edges[19] + compIdx] == expectedTopEnd[compIdx]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice for a large span", "[SimplnxCore][SliceTriangleGeometryFilter]")
@@ -227,7 +227,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice for a 
   REQUIRE(sliceDataPtr->getNumberOfTuples() == 10001);
 
   const usize lastEdgeIdx = edgeGeomPtr->getNumberOfEdges() - 1;
-  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32Array>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
+  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32ArrayType>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
   REQUIRE(sliceIdsPtr != nullptr);
   REQUIRE(sliceIdsPtr->getNumberOfTuples() == 10000);
   REQUIRE((*sliceIdsPtr)[lastEdgeIdx] == 10000);
@@ -246,7 +246,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Full Range includes the top slice for a 
     REQUIRE(vertices[3 * startVertex + compIdx] == expectedTopStart[compIdx]);
     REQUIRE(vertices[3 * endVertex + compIdx] == expectedTopEnd[compIdx]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SliceTriangleGeometryFilter: An empty geometry produces a warning", "[SimplnxCore][SliceTriangleGeometryFilter]")
@@ -261,7 +261,7 @@ TEST_CASE("SliceTriangleGeometryFilter: An empty geometry produces a warning", "
   args.insertOrAssign(SliceTriangleGeometryFilter::k_HaveRegionIds_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -275,15 +275,15 @@ TEST_CASE("SliceTriangleGeometryFilter: An empty geometry produces a warning", "
   const auto* sliceDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_ComputedEdgeGeometryPath.createChildPath(k_SliceData));
   REQUIRE(sliceDataPtr != nullptr);
   REQUIRE(sliceDataPtr->getNumberOfTuples() == 0);
-  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32Array>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
+  const auto* sliceIdsPtr = dataStructure.getDataAs<Int32ArrayType>(k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds));
   REQUIRE(sliceIdsPtr != nullptr);
   REQUIRE(sliceIdsPtr->getNumberOfTuples() == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SliceTriangleGeometryFilter: Slices a QuickSurfaceMesh output in a pipeline", "[SimplnxCore][SliceTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   const DataPath imageGeomPath({"Image Geometry"});
@@ -297,7 +297,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Slices a QuickSurfaceMesh output in a pi
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {4, 4, 4}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, featureIdsPath.getTargetName(), {4, 4, 4}, {1}, cellDataPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, featureIdsPath.getTargetName(), {4, 4, 4}, {1}, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   // Split the voxels along x into two features with a vertical interface.
   for(usize voxelIdx = 0; voxelIdx < featureIdsPtr->getNumberOfTuples(); voxelIdx++)
@@ -354,7 +354,7 @@ TEST_CASE("SliceTriangleGeometryFilter: Slices a QuickSurfaceMesh output in a pi
   const auto* sliceDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_ComputedEdgeGeometryPath.createChildPath(k_SliceData));
   REQUIRE(sliceDataPtr != nullptr);
   REQUIRE(sliceDataPtr->getNumberOfTuples() > 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SliceTriangleGeometryFilter: Non-positive Slice Spacing is rejected", "[SimplnxCore][SliceTriangleGeometryFilter]")
@@ -371,16 +371,16 @@ TEST_CASE("SliceTriangleGeometryFilter: Non-positive Slice Spacing is rejected",
   args.insertOrAssign(SliceTriangleGeometryFilter::k_HaveRegionIds_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -62103);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -62103);
 }
 
 TEST_CASE("SliceTriangleGeometryFilter: Region Ids must match the face count", "[SimplnxCore][SliceTriangleGeometryFilter]")
 {
   DataStructure dataStructure;
   BuildTriangleGeom(dataStructure, {0.5f, 1.25f, 0.0f, 2.0f, 3.5f, 1.0f, 3.0f, 0.75f, 0.0f, -1.0f, 2.75f, 0.0f}, {0, 1, 2, 1, 0, 3});
-  auto* regionIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Region Ids", {1}, {1});
+  auto* regionIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Region Ids", {1}, {1});
   REQUIRE(regionIdsPtr != nullptr);
   (*regionIdsPtr)[0] = 5;
 
@@ -394,9 +394,9 @@ TEST_CASE("SliceTriangleGeometryFilter: Region Ids must match the face count", "
   args.insertOrAssign(SliceTriangleGeometryFilter::k_RegionIdArrayPath_Key, std::make_any<DataPath>(DataPath({"Region Ids"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -62104);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -62104);
 }
 
 TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[SimplnxCore][SliceTriangleGeometryFilter]")
@@ -406,10 +406,10 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   /// this functionality and so we have nothing to compare against.
 
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files_v2.tar.gz", "7_0_SurfaceMesh_Test_Files");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_0_SurfaceMesh_Test_Files_v2.tar.gz", "7_0_SurfaceMesh_Test_Files");
   auto baseDataFilePath = fs::path(fmt::format("{}/7_0_SurfaceMesh_Test_Files/7_0_SurfaceMesh_Test_Files.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SliceTriangleGeometryFilter filter;
@@ -431,7 +431,7 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result)
@@ -447,18 +447,18 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
   {
     auto* exemplarGeomPtr = dataStructure.getDataAs<IGeometry>(k_ExemplarEdgeGeometryPath);
     auto* computedGeomPtr = dataStructure.getDataAs<IGeometry>(k_ComputedEdgeGeometryPath);
-    REQUIRE(UnitTest::CompareIGeometry(exemplarGeomPtr, computedGeomPtr));
+    REQUIRE(unit_test::CompareIGeometry(exemplarGeomPtr, computedGeomPtr));
   }
   {
     DataPath exemplarDataArray = k_ExemplarEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds);
     DataPath computedDataArray = k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_SliceIds);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
+    unit_test::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
 
   {
     DataPath exemplarDataArray = k_ExemplarEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
     DataPath computedDataArray = k_ComputedEdgeGeometryPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
+    unit_test::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
 
   // Check endpoint geometry beyond the edge count checked by CompareIGeometry.
@@ -501,13 +501,13 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
     REQUIRE(mismatches == 0);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][SliceTriangleGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

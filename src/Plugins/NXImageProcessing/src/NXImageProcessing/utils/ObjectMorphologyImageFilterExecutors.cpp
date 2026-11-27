@@ -21,7 +21,7 @@ struct ObjectMorphologyExecuteFn
   DataStructure& data_structure;
   const DataPath& input_array_path;
   const DataPath& output_array_path;
-  SizeVec3 dims;
+  SizeVec3Type dims;
   const StructuringElement& se;
   const std::vector<SEOffset>& box_offsets;
   ObjectMorphOp op;
@@ -55,7 +55,7 @@ Result<> ExecuteObjectMorphologyImageFilter(DataStructure& dataStructure, const 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
@@ -73,7 +73,7 @@ Result<> ExecuteObjectMorphologyImageFilter(DataStructure& dataStructure, const 
                                               .background_value = backgroundValue,
                                               .should_cancel = shouldCancel,
                                               .message_handler = messageHandler};
-  return TypeSetPolicyType::dispatch(inputType, executeFn);
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

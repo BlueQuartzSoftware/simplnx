@@ -9,8 +9,8 @@ using namespace nx::core;
 // static_cast<U>(std::sqrt(static_cast<double>(x))) -- ITK's equally-unguarded Sqrt functor -- so sqrt(-4) is NaN.
 TEST_CASE("NXImageProcessing::SqrtImageFilter: sqrt of a negative is NaN (domain edge)", "[NXImageProcessing][SqrtImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   DataStructure dataStructure;
   const DataPath input = ip_test::BuildScalarValuesImage<float32>(dataStructure, {-4.0f});
@@ -27,8 +27,8 @@ TEST_CASE("NXImageProcessing::SqrtImageFilter: sqrt of a negative is NaN (domain
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SqrtImageFilter: ITK real-image golden (defaults)", "[NXImageProcessing][ItkGolden][SqrtImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
@@ -44,7 +44,7 @@ TEST_CASE("NXImageProcessing::SqrtImageFilter: ITK real-image golden (defaults)"
   args.insertOrAssign(SqrtImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   SqrtImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -56,5 +56,5 @@ TEST_CASE("NXImageProcessing::SqrtImageFilter: ITK real-image golden (defaults)"
   const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

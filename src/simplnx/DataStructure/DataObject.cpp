@@ -125,7 +125,7 @@ void DataObject::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType
 {
 }
 
-bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalId& parentId)
+bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalIdType& parentId)
 {
   return dataStructure.finishAddingObject(data, parentId);
 }

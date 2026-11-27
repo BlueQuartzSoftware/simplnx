@@ -74,19 +74,19 @@ Parameters RequireMinNumNeighborsFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighborsPath_Key, "Number of Neighbors", "Number of contiguous neighboring Features for each Feature",
                                                           DataPath({"Data Container", "Feature Data", "NumNeighbors"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeaturePhasesPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs. Only required if Apply to Single Phase Only is checked",
-      DataPath({"Data Container", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      DataPath({"Data Container", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   // Attribute Arrays to Ignore
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredVoxelArrays_Key, "Cell Arrays to Ignore", "The arrays to ignore when applying the minimum neighbors algorithm",
                                                                std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
 
   params.linkParameters(k_ApplyToSinglePhase_Key, k_PhaseNumber_Key, std::make_any<bool>(true));
   params.linkParameters(k_ApplyToSinglePhase_Key, k_FeaturePhasesPath_Key, std::make_any<bool>(true));
@@ -118,7 +118,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeomPath, featureIdsPath, -55575, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -128,7 +128,7 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
   // Keep the local type checks until the parameter validates supported array kinds.
   // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
-  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
   if(featureIdsPtr == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featureIdsPath);
@@ -139,19 +139,19 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
   auto cellTupleResult = ValidateCellTupleCount(imageGeom, imageGeomPath, featureIdsPtr->getNumberOfTuples(), featureIdsPath, k_FeatureIdsTupleCountMismatch);
   if(cellTupleResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(cellTupleResult), {})};
   }
 
   auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeomPath, ignoredDataArrayPaths, -55573, "Cell Arrays to Ignore");
   if(ignoredArraysResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
   }
 
   auto featureAttributeMatrixResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeomPath, numNeighborsPath.getParent(), -55574, "Number of Neighbors", numNeighborsPath);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {.outputActions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -174,13 +174,13 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
-  if(dataStructure.getDataAs<Int32Array>(numNeighborsPath) == nullptr)
+  if(dataStructure.getDataAs<Int32ArrayType>(numNeighborsPath) == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(numNeighborsPath);
     return MakePreflightErrorResult(-59575, fmt::format("The selected Number of Neighbors object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
                                                         numNeighborsPath.toString(), selectedObject.getTypeName()));
   }
-  if(applyToSinglePhase && dataStructure.getDataAs<Int32Array>(featurePhasesPath) == nullptr)
+  if(applyToSinglePhase && dataStructure.getDataAs<Int32ArrayType>(featurePhasesPath) == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(featurePhasesPath);
     return MakePreflightErrorResult(-59576, fmt::format("The selected Feature Phases object '{}' has type '{}', but a scalar int32 DataArray is required. Select a scalar int32 DataArray.",
@@ -189,19 +189,19 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
   // Report arrays that the filter modifies in place.
   // Cell Data arrays are modified.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, cellDataPath, {});
   // Feature Data arrays are modified.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, numNeighborsPath.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, numNeighborsPath.getParent(), {});
 
   // Report removed NeighborList arrays.
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, numNeighborsPath, resultOutputActions);
-  if(result.outputActions.invalid())
+  if(result.output_actions.invalid())
   {
     return result;
   }
 
   // Return actions and updated preflight values.
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -209,19 +209,19 @@ Result<> RequireMinNumNeighborsFilter::executeImpl(DataStructure& dataStructure,
 {
   RequireMinNumNeighborsInputValues inputValues;
 
-  inputValues.ApplyToSinglePhase = filterArgs.value<bool>(k_ApplyToSinglePhase_Key);
-  inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
-  inputValues.PhaseNumber = filterArgs.value<uint64>(k_PhaseNumber_Key);
-  inputValues.MinNumNeighbors = filterArgs.value<uint64>(k_MinNumNeighbors_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
-  inputValues.NumNeighborsPath = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
-  inputValues.IgnoredVoxelArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
+  inputValues.apply_to_single_phase = filterArgs.value<bool>(k_ApplyToSinglePhase_Key);
+  inputValues.feature_phases_path = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  inputValues.phase_number = filterArgs.value<uint64>(k_PhaseNumber_Key);
+  inputValues.min_num_neighbors = filterArgs.value<uint64>(k_MinNumNeighbors_Key);
+  inputValues.image_geom_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.feature_ids_path = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  inputValues.num_neighbors_path = filterArgs.value<DataPath>(k_NumNeighborsPath_Key);
+  inputValues.ignored_voxel_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredVoxelArrays_Key);
 
   // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeomPath).getCellDataPath();
-  inputValues.FeatureIdsPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsPath);
-  inputValues.IgnoredVoxelArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredVoxelArrayPaths);
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.image_geom_path).getCellDataPath();
+  inputValues.feature_ids_path = MapToGeometryCellDataPath(cellDataPath, inputValues.feature_ids_path);
+  inputValues.ignored_voxel_array_paths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignored_voxel_array_paths);
 
   return RequireMinNumNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

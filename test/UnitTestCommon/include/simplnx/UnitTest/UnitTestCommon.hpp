@@ -58,13 +58,13 @@ using namespace nx::core;
 namespace nx::core
 {
 template <class>
-inline constexpr bool IsResult_v = false;
+inline constexpr bool k_IsResultV = false;
 
 template <class T>
-inline constexpr bool IsResult_v<Result<T>> = true;
+inline constexpr bool k_IsResultV<Result<T>> = true;
 
 template <class T>
-inline constexpr bool k_IsLvalueResult = IsResult_v<std::remove_cvref_t<T>> && std::is_lvalue_reference_v<T>;
+inline constexpr bool k_IsLvalueResult = k_IsResultV<std::remove_cvref_t<T>> && std::is_lvalue_reference_v<T>;
 } // namespace nx::core
 
 /**
@@ -123,7 +123,7 @@ namespace nx::core
  * @namespace nx::core::Constants
  * @brief Provides common names and paths for simplnx unit tests.
  */
-namespace Constants
+namespace constants
 {
 inline constexpr StringLiteralType k_DataContainer("DataContainer");
 inline constexpr StringLiteralType k_CellData("CellData");
@@ -144,7 +144,7 @@ inline constexpr StringLiteralType k_FaceFeatureData("FaceFeatureData");
 inline constexpr StringLiteralType k_VertexData("VertexData");
 inline constexpr StringLiteralType k_VertexDataWithSpaces("Vertex Data");
 inline constexpr StringLiteralType k_EdgeDataWithSpaces("Edge Data");
-inline constexpr StringLiteralType k_GBCD_Name("GBCD");
+inline constexpr StringLiteralType k_GbcdName("GBCD");
 
 inline constexpr StringLiteralType k_Centroids("Centroids");
 inline constexpr StringLiteralType k_EnsembleAttributeMatrix("CellEnsembleData");
@@ -186,7 +186,7 @@ inline constexpr StringLiteralType k_FeatureIds("FeatureIds");
 inline constexpr StringLiteralType k_ImageQualityWithSpaces("Image Quality");
 inline constexpr StringLiteralType k_ImageQuality("ImageQuality");
 inline constexpr StringLiteralType k_Phases("Phases");
-inline constexpr StringLiteralType k_Ipf_Colors("IPF Colors");
+inline constexpr StringLiteralType k_IpfColors("IPF Colors");
 inline constexpr StringLiteralType k_IPFColors("IPFColors");
 inline constexpr StringLiteralType k_PhaseData("Phase Data");
 inline constexpr StringLiteralType k_LaueClass("Laue Class");
@@ -275,7 +275,7 @@ inline const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
  * @namespace nx::core::UnitTest
  * @brief Provides common data builders and assertions for simplnx unit tests.
  */
-namespace UnitTest
+namespace unit_test
 {
 #ifdef _WIN32
 /** @brief Queries the POSIX unlink/rename capability of the volume containing an existing directory. */
@@ -329,7 +329,7 @@ void RequireAutomaticCreateArrayActions(const Result<OutputActions>& outputActio
 /**
  * @brief Default absolute tolerance for unit-test comparisons.
  */
-inline constexpr float32 EPSILON = 0.0001;
+inline constexpr float32 k_Epsilon = 0.0001;
 
 /**
  * @brief Computes an MD5 digest from a vector's object representation.
@@ -455,7 +455,7 @@ private:
  * @return True if `abs(a - b) < epsilon`.
  */
 template <typename K>
-bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
+bool CloseEnough(const K& a, const K& b, const K& epsilon = k_Epsilon)
 {
   return (epsilon > fabs(a - b));
 }
@@ -469,7 +469,7 @@ bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
  * @return True if `abs(abs(a) - abs(b)) < epsilon`.
  */
 template <typename K>
-bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
+bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = k_Epsilon)
 {
   return (epsilon > std::abs(std::abs(a) - std::abs(b)));
 }
@@ -576,7 +576,7 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
             continue;
           }
           float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-          if(diff <= EPSILON)
+          if(diff <= k_Epsilon)
           {
             continue;
           }
@@ -663,7 +663,7 @@ void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& righ
         if constexpr(std::is_floating_point_v<T>)
         {
           float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-          if(diff <= EPSILON)
+          if(diff <= k_Epsilon)
           {
             continue;
           }
@@ -728,7 +728,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
       if(oldBuf[i] != newBuf[i])
       {
         float32 diff = std::fabs(static_cast<float32>(oldBuf[i] - newBuf[i]));
-        if(diff >= EPSILON)
+        if(diff >= k_Epsilon)
         {
           failed = true;
           failIndex = offset + i;
@@ -751,7 +751,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
  * @namespace FloatArrayComparisonDetail
  * @brief Contains internal test comparison support.
  */
-namespace FloatArrayComparisonDetail
+namespace float_array_comparison_detail
 {
 /**
  * @struct FloatArrayComparison
@@ -764,11 +764,11 @@ struct FloatArrayComparison
   static_assert(std::is_floating_point_v<T>);
 
   bool matches = false;
-  T maximumDifference = 0;
-  usize maximumDifferenceIndex = 0;
-  std::optional<usize> firstNanMismatchIndex;
-  T exemplaryNanMismatchValue = {};
-  T generatedNanMismatchValue = {};
+  T maximum_difference = 0;
+  usize maximum_difference_index = 0;
+  std::optional<usize> first_nan_mismatch_index;
+  T exemplary_nan_mismatch_value = {};
+  T generated_nan_mismatch_value = {};
 };
 
 /**
@@ -838,11 +838,11 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
       const bool newIsNan = std::isnan(newVal);
       if(oldIsNan || newIsNan)
       {
-        if(checkNans && oldIsNan != newIsNan && !comparison.firstNanMismatchIndex.has_value())
+        if(checkNans && oldIsNan != newIsNan && !comparison.first_nan_mismatch_index.has_value())
         {
-          comparison.firstNanMismatchIndex = offset + valueIndex;
-          comparison.exemplaryNanMismatchValue = oldVal;
-          comparison.generatedNanMismatchValue = newVal;
+          comparison.first_nan_mismatch_index = offset + valueIndex;
+          comparison.exemplary_nan_mismatch_value = oldVal;
+          comparison.generated_nan_mismatch_value = newVal;
         }
         // Paired NaNs represent the same missing result. A one-sided NaN does not stop the full diagnostic scan.
         continue;
@@ -850,15 +850,15 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
       if(oldVal != newVal)
       {
         const T difference = std::fabs(static_cast<T>(oldVal - newVal));
-        if(difference > comparison.maximumDifference)
+        if(difference > comparison.maximum_difference)
         {
-          comparison.maximumDifference = difference;
-          comparison.maximumDifferenceIndex = offset + valueIndex;
+          comparison.maximum_difference = difference;
+          comparison.maximum_difference_index = offset + valueIndex;
         }
       }
     }
   }
-  comparison.matches = !comparison.firstNanMismatchIndex.has_value() && comparison.maximumDifference < epsilon;
+  comparison.matches = !comparison.first_nan_mismatch_index.has_value() && comparison.maximum_difference < epsilon;
   return result;
 }
 } // namespace FloatArrayComparisonDetail
@@ -873,7 +873,7 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
  * @param checkNans True to compare NaN positions; false to omit values where either array has NaN.
  */
 template <typename T>
-void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
+void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = k_Epsilon, bool checkNans = true)
 {
   static_assert(std::is_floating_point_v<T>);
   INFO(fmt::format("Input Data Array: '{}'  Output DataArray: '{}'", exemplaryDataPath.toString(), computedPath.toString()));
@@ -881,14 +881,14 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
   const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  auto evaluation = FloatArrayComparisonDetail::EvaluateFloatArraysWithNans(exemplaryDataArray, generatedDataArray, epsilon, checkNans);
+  auto evaluation = float_array_comparison_detail::EvaluateFloatArraysWithNans(exemplaryDataArray, generatedDataArray, epsilon, checkNans);
   SIMPLNX_RESULT_REQUIRE_VALID(evaluation);
   const auto& comparison = evaluation.value();
-  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", comparison.maximumDifference, comparison.maximumDifferenceIndex, epsilon));
-  if(comparison.firstNanMismatchIndex.has_value())
+  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", comparison.maximum_difference, comparison.maximum_difference_index, epsilon));
+  if(comparison.first_nan_mismatch_index.has_value())
   {
     UNSCOPED_INFO(
-        fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.firstNanMismatchIndex, comparison.exemplaryNanMismatchValue, comparison.generatedNanMismatchValue));
+        fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.first_nan_mismatch_index, comparison.exemplary_nan_mismatch_value, comparison.generated_nan_mismatch_value));
   }
   REQUIRE(comparison.matches);
 }
@@ -903,7 +903,7 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
  * @param checkNans True to compare NaN positions; false to omit values where either list has NaN.
  */
 template <typename T>
-void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
+void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = k_Epsilon, bool checkNans = true)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
@@ -992,7 +992,7 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
                              exemplary.size(), computedList.getDataPaths()[0].toString(), computed.size()));
             INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
 
-            REQUIRE(diff < EPSILON);
+            REQUIRE(diff < k_Epsilon);
             break;
           }
         }
@@ -1039,7 +1039,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
           float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
-          REQUIRE(diff < EPSILON);
+          REQUIRE(diff < k_Epsilon);
           break;
         }
       }
@@ -1107,12 +1107,12 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
   {
     auto oldEltList = exemplaryArray.getElementList(i);
     auto newEltList = generatedArray.getElementList(i);
-    T oldNumCells = oldEltList.numCells;
-    T newNumCells = newEltList.numCells;
+    T oldNumCells = oldEltList.num_cells;
+    T newNumCells = newEltList.num_cells;
     if(oldNumCells != newNumCells)
     {
       float32 diff = std::fabs(static_cast<float32>(oldNumCells - newNumCells));
-      REQUIRE(diff < EPSILON);
+      REQUIRE(diff < k_Epsilon);
     }
     for(T j = 0; j < oldNumCells; ++j)
     {
@@ -1121,7 +1121,7 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
       if(oldVal != newVal)
       {
         float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-        REQUIRE(diff < EPSILON);
+        REQUIRE(diff < k_Epsilon);
       }
     }
   }
@@ -1258,7 +1258,7 @@ DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape);
  * @param dataGroup Parent group for the ImageGeom.
  * @throws std::runtime_error If the ImageGeom cannot be created.
  */
-void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, const DataGroup& dataGroup);
+void AddImageGeometry(DataStructure& dataStructure, const SizeVec3Type& imageGeomDims, const FloatVec3Type& spacing, const FloatVec3Type& origin, const DataGroup& dataGroup);
 
 /**
  * @brief Compares arrays in corresponding exemplar and computed AttributeMatrix objects.
@@ -1325,7 +1325,7 @@ void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::
  * @namespace nx::core::UnitTest::Cropping
  * @brief Provides input generators and labels for crop-geometry tests.
  */
-namespace Cropping
+namespace cropping
 {
 /**
  * @brief Converts a Boolean value to the title-case text used in test labels.
@@ -1347,12 +1347,12 @@ std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum t);
  */
 struct AxisBoundsChoices
 {
-  std::vector<SizeVec2> voxelX;
-  std::vector<SizeVec2> voxelY;
-  std::vector<SizeVec2> voxelZ;
-  std::vector<FloatVec2Type> physX;
-  std::vector<FloatVec2Type> physY;
-  std::vector<FloatVec2Type> physZ;
+  std::vector<SizeVec2Type> voxel_x;
+  std::vector<SizeVec2Type> voxel_y;
+  std::vector<SizeVec2Type> voxel_z;
+  std::vector<FloatVec2Type> phys_x;
+  std::vector<FloatVec2Type> phys_y;
+  std::vector<FloatVec2Type> phys_z;
 };
 
 /**
@@ -1398,7 +1398,7 @@ inline const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId,
  * @namespace SmallIn100
  * @brief Provides compatibility helpers for the Small IN100 exemplar data.
  */
-namespace SmallIn100
+namespace small_in100
 {
 /**
  * @brief Paths omitted from tuple-shape checks for the legacy Small IN100 exemplar.

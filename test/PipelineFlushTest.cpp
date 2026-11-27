@@ -251,11 +251,11 @@ protected:
                                 [[maybe_unused]] const std::atomic_bool& shouldCancel, [[maybe_unused]] const ExecutionContext& executionContext) const override
   {
     PreflightResult result{};
-    result.outputValues.push_back({"Completion value", "preserved"});
+    result.output_values.push_back({"Completion value", "preserved"});
     if(m_Control->invalid_empty_preflight)
     {
-      result.outputActions.expected = nonstd::make_unexpected(ErrorCollection{});
-      result.outputActions.warnings().push_back({k_FilterWarning, "invalid-empty-original-warning"});
+      result.output_actions.expected = nonstd::make_unexpected(ErrorCollectionType{});
+      result.output_actions.warnings().push_back({k_FilterWarning, "invalid-empty-original-warning"});
     }
     return result;
   }
@@ -460,8 +460,8 @@ private:
 struct DetailRecord
 {
   int32 index = 0;
-  WarningCollection warnings;
-  ErrorCollection errors;
+  WarningCollectionType warnings;
+  ErrorCollectionType errors;
 };
 
 /**
@@ -480,13 +480,13 @@ struct CompletionTrace
     connections.emplace_back(pipeline.getPipelineRunStateSignal().connect([this](AbstractPipelineNode*, RunState state) { pipeline_states.push_back(state); }));
     connections.emplace_back(pipeline.getCancelledSignal().connect([this]() { ++cancelled_calls; }));
     connections.emplace_back(pipeline.getFilterFaultDetailSignal().connect(
-        [this](AbstractPipelineNode*, int32 index, const WarningCollection& warnings, const ErrorCollection& errors) { root_details.push_back({index, warnings, errors}); }));
+        [this](AbstractPipelineNode*, int32 index, const WarningCollectionType& warnings, const ErrorCollectionType& errors) { root_details.push_back({index, warnings, errors}); }));
     if(firstNode != nullptr)
     {
       connections.emplace_back(firstNode->getFilterRunStateSignal().connect([this](AbstractPipelineNode*, int32, RunState state) { node_states.push_back(state); }));
       connections.emplace_back(firstNode->getFilterUpdateSignal().connect([this](AbstractPipelineNode*, int32, const std::string& message) { updates.push_back(message); }));
       connections.emplace_back(firstNode->getFilterFaultDetailSignal().connect(
-          [this](AbstractPipelineNode*, int32 index, const WarningCollection& warnings, const ErrorCollection& errors) { node_details.push_back({index, warnings, errors}); }));
+          [this](AbstractPipelineNode*, int32 index, const WarningCollectionType& warnings, const ErrorCollectionType& errors) { node_details.push_back({index, warnings, errors}); }));
     }
   }
 
@@ -519,7 +519,7 @@ struct CompletionFixture
   explicit CompletionFixture(StoreKind kind, bool includeSecond = true)
   : store_kind(kind)
   {
-    UnitTest::LoadPlugins();
+    unit_test::LoadPlugins();
     const auto* groupPtr = DataGroup::Create(data_structure, "Group");
     REQUIRE(groupPtr != nullptr);
     if(kind == StoreKind::Numeric)
@@ -642,7 +642,7 @@ TEST_CASE("PipelineFlush retains execute diagnostics and fails before later filt
     fixture.first_control->result.warnings().push_back({k_FilterWarning, "execute-warning-sentinel"});
     if(originalError)
     {
-      fixture.first_control->result.expected = nonstd::make_unexpected(ErrorCollection{{.code = k_FilterError, .message = "execute-error-sentinel"}});
+      fixture.first_control->result.expected = nonstd::make_unexpected(ErrorCollectionType{{.code = k_FilterError, .message = "execute-error-sentinel"}});
     }
     fixture.flush_control->result = MakeErrorResult(k_FlushError, "backing.h5:/values: terminal-flush-sentinel");
     fixture.flush_control->result.warnings().push_back({k_FlushWarning, "flush-warning-sentinel"});
@@ -685,7 +685,7 @@ TEST_CASE("PipelineFlush retains execute diagnostics and fails before later filt
     CheckNodeCompletion(trace, *fixture.first_node);
     CheckSnapshot(fixture, fixture.first_node->getDataStructure());
     CheckSnapshot(fixture, fixture.pipeline.getDataStructure());
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
@@ -715,7 +715,7 @@ TEST_CASE("PipelineFlush retries the same stores and clears completion faults", 
     CHECK(retryTrace.root_details.empty());
     CheckNodeCompletion(retryTrace, *fixture.first_node);
     CheckSnapshot(fixture, fixture.first_node->getDataStructure());
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
@@ -738,7 +738,7 @@ TEST_CASE("PipelineFlush warning survives a later clean completion", "[simplnx][
   CHECK(trace.node_details[0].errors.empty());
   CHECK(trace.root_details.empty());
   CheckNodeCompletion(trace, *fixture.first_node);
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 TEST_CASE("PipelineFlush preserves allocation classification and earlier errors", "[simplnx][PipelineFlush]")
@@ -764,7 +764,7 @@ TEST_CASE("PipelineFlush preserves allocation classification and earlier errors"
     CHECK(errors[1].code == (allocationInExecute ? k_FlushError : -272));
     CheckNodeCompletion(trace, *fixture.first_node);
     CheckSnapshot(fixture, fixture.first_node->getDataStructure());
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
@@ -796,7 +796,7 @@ TEST_CASE("PipelineFlush cancellation at the flush boundary retains completion f
     }
     CheckNodeCompletion(trace, *fixture.first_node);
     fixture.flush_control->cancel_on_flush = nullptr;
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
@@ -825,7 +825,7 @@ TEST_CASE("PipelineFlush leaves execute-stage cancellation behavior unchanged", 
     REQUIRE(errors.size() == 1);
     CHECK(errors[0].code == (originalError ? k_FilterError : -1));
     CheckNodeCompletion(trace, *fixture.first_node);
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
@@ -864,7 +864,7 @@ TEST_CASE("PipelineFlush repeated snapshot exceptions retain diagnostics and set
     CHECK(fixture.numeric_store->getValue(0) == 11);
     CHECK(fixture.numeric_store->getValue(1) == 13);
     CHECK(fixture.first_node->getDataStructure().getData(DataPath({"CopyFault"})) == nullptr);
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
@@ -903,13 +903,13 @@ TEST_CASE("PipelineFlush root snapshot errors use a pipeline event and preserve 
     REQUIRE(fixture.first_node->getDataStructure().getData(DataPath({"NewGroup"})) != nullptr);
     CheckSnapshot(fixture, fixture.first_node->getDataStructure());
     CheckNodeCompletion(trace, *fixture.first_node);
-    UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+    unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
   }
 }
 
 TEST_CASE("PipelineFlush empty pipeline reports a root snapshot exception", "[simplnx][PipelineFlush]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   auto control = std::make_shared<SnapshotControl>();
   auto group = std::make_shared<SnapshotGroup>(dataStructure, control);
@@ -930,7 +930,7 @@ TEST_CASE("PipelineFlush empty pipeline reports a root snapshot exception", "[si
   CHECK(trace.pipeline_states.back() == RunState::Idle);
   CHECK(dataStructure.getData(group->getId()) == group.get());
   CHECK(group->getDataStructure() == &dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("PipelineFlush snapshot preserves multiply parented object identity", "[simplnx][PipelineFlush]")
@@ -956,7 +956,7 @@ TEST_CASE("PipelineFlush snapshot preserves multiply parented object identity", 
   CHECK(fixture.data_structure.getData(sourceId) == sourceArrayPtr);
   CheckSnapshot(fixture, snapshot);
   CheckNodeCompletion(trace, *fixture.first_node);
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 TEST_CASE("PipelineFlush nested cancellation preserves completion failure and clears it on retry", "[simplnx][PipelineFlush]")
@@ -996,7 +996,7 @@ TEST_CASE("PipelineFlush nested cancellation preserves completion failure and cl
   CHECK(fixture.flush_control->checked_calls == 3);
   CheckNodeCompletion(retryTrace, *fixture.first_node);
   CheckSnapshot(fixture, nestedPipeline->getDataStructure());
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 TEST_CASE("PipelineFlush failed node snapshot retains its prior complete topology", "[simplnx][PipelineFlush]")
@@ -1029,7 +1029,7 @@ TEST_CASE("PipelineFlush failed node snapshot retains its prior complete topolog
   CHECK(sourceArrayPtr->getDataStoreRef().getValue(1) == 13);
   REQUIRE(fixture.data_structure.getData(DataPath({"NewGroup"})) != nullptr);
   CheckNodeCompletion(trace, *fixture.first_node);
-  UnitTest::CheckArraysInheritTupleDims(fixture.data_structure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 TEST_CASE("PipelineFlush checked virtual preserves invalid-empty extension results and legacy completion", "[simplnx][PipelineFlush]")
@@ -1040,7 +1040,7 @@ TEST_CASE("PipelineFlush checked virtual preserves invalid-empty extension resul
   node->setIndex(0);
   REQUIRE(pipeline.push_back(node));
   node->override_completion = true;
-  node->completion_result.expected = nonstd::make_unexpected(ErrorCollection{});
+  node->completion_result.expected = nonstd::make_unexpected(ErrorCollectionType{});
   node->completion_result.warnings().push_back({k_FlushWarning, "empty-extension-warning"});
   CompletionTrace trace(pipeline, node.get());
   CHECK_FALSE(node->hasCompletionErrors());

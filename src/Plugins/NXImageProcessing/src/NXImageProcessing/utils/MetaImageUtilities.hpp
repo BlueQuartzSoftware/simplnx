@@ -56,8 +56,8 @@ enum class Encoding
  */
 struct NXIMAGEPROCESSING_EXPORT MetaImageMetadata
 {
-  std::string filePath; ///< Path the header was read from (diagnostics).
-  usize nDims{0};       ///< NDims header value (2 or 3).
+  std::string file_path; ///< Path the header was read from (diagnostics).
+  usize n_dims{0};       ///< NDims header value (2 or 3).
 
   // Canonicalized geometry (drives the ImageGeom + DataArray).
   std::array<usize, 3> dimensions{1, 1, 1};         ///< X, Y, Z voxel counts (Z=1 for 2D).
@@ -65,25 +65,25 @@ struct NXIMAGEPROCESSING_EXPORT MetaImageMetadata
   std::array<float32, 3> origin{0.0f, 0.0f, 0.0f};  ///< World-space origin (Offset / Position / Origin).
 
   // Datatype.
-  DataType dataType{DataType::uint8}; ///< simplnx element type (from ElementType).
-  usize componentCount{1};            ///< ElementNumberOfChannels (interleaved components).
-  usize elementSize{1};               ///< Bytes per component (for byteswap).
+  DataType data_type{DataType::uint8}; ///< simplnx element type (from ElementType).
+  usize component_count{1};            ///< ElementNumberOfChannels (interleaved components).
+  usize element_size{1};               ///< Bytes per component (for byteswap).
 
   // Data placement + decode.
   Encoding encoding{Encoding::Raw};   ///< raw or zlib-compressed.
-  bool byteSwapRequired{false};       ///< File endian differs from host (multi-byte only).
-  usize dataStartOffset{0};           ///< Byte offset of data within dataFilePath.
-  std::filesystem::path dataFilePath; ///< Header path (attached) or sibling (detached).
+  bool byte_swap_required{false};       ///< File endian differs from host (multi-byte only).
+  usize data_start_offset{0};           ///< Byte offset of data within dataFilePath.
+  std::filesystem::path data_file_path; ///< Header path (attached) or sibling (detached).
   bool detached{false};               ///< True for .mhd + external data file.
 
   // Transform (orthogonal to the axis-aligned base geometry; consumed by the
   // filter's transform feature). Row-major, exactly nDims*nDims values as they
   // appear in the header; empty => identity.
-  std::vector<float64> transformMatrix;
-  std::array<float32, 3> centerOfRotation{0.0f, 0.0f, 0.0f};
+  std::vector<float64> transform_matrix;
+  std::array<float32, 3> center_of_rotation{0.0f, 0.0f, 0.0f};
 
   // Diagnostics.
-  std::string typeString; ///< Original ElementType value (e.g. "MET_UCHAR").
+  std::string type_string; ///< Original ElementType value (e.g. "MET_UCHAR").
 };
 
 /**

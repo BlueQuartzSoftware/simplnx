@@ -21,10 +21,10 @@ const std::atomic_bool& WriteGBCDTriangleData::getCancel()
 
 Result<> WriteGBCDTriangleData::operator()()
 {
-  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  auto& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceNormalsArrayPath);
-  auto& faceAreas = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceAreasArrayPath);
-  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
+  auto& faceLabels = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_array_path);
+  auto& faceNormals = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_normals_array_path);
+  auto& faceAreas = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_areas_array_path);
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_euler_angles_array_path);
   usize numTriangles = faceAreas.getNumberOfTuples();
 
   // Cache all feature orientations because face labels can reference features
@@ -36,10 +36,10 @@ Result<> WriteGBCDTriangleData::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
-  std::ofstream outStream(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
+  std::ofstream outStream(m_InputValues->output_file, std::ios_base::out | std::ios_base::binary);
   if(!outStream.is_open())
   {
-    return MakeErrorResult(-87000, fmt::format("Error opening output file '{}'", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-87000, fmt::format("Error opening output file '{}'", m_InputValues->output_file.string()));
   }
 
   outStream << "# Column 1-3:    right hand average orientation (phi1, PHI, phi2 in RADIANS)\n"

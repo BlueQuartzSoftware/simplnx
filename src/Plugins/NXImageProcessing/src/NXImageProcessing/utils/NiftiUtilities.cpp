@@ -22,7 +22,7 @@ namespace
 template <class T>
 void SwapInPlace(T& value)
 {
-  value = nx::core::byteswap(value);
+  value = nx::core::Byteswap(value);
 }
 
 void ByteSwapHeader(nifti_1_header& hdr)
@@ -83,29 +83,29 @@ std::optional<NiftiTypeInfo> NiftiDatatypeToSimplnx(int16 niftiDatatype)
   switch(niftiDatatype)
   {
   case NIFTI_TYPE_UINT8:
-    return NiftiTypeInfo{.dataType = DataType::uint8, .componentCount = 1, .bitpix = 8};
+    return NiftiTypeInfo{.data_type = DataType::uint8, .component_count = 1, .bitpix = 8};
   case NIFTI_TYPE_INT8:
-    return NiftiTypeInfo{.dataType = DataType::int8, .componentCount = 1, .bitpix = 8};
+    return NiftiTypeInfo{.data_type = DataType::int8, .component_count = 1, .bitpix = 8};
   case NIFTI_TYPE_UINT16:
-    return NiftiTypeInfo{.dataType = DataType::uint16, .componentCount = 1, .bitpix = 16};
+    return NiftiTypeInfo{.data_type = DataType::uint16, .component_count = 1, .bitpix = 16};
   case NIFTI_TYPE_INT16:
-    return NiftiTypeInfo{.dataType = DataType::int16, .componentCount = 1, .bitpix = 16};
+    return NiftiTypeInfo{.data_type = DataType::int16, .component_count = 1, .bitpix = 16};
   case NIFTI_TYPE_UINT32:
-    return NiftiTypeInfo{.dataType = DataType::uint32, .componentCount = 1, .bitpix = 32};
+    return NiftiTypeInfo{.data_type = DataType::uint32, .component_count = 1, .bitpix = 32};
   case NIFTI_TYPE_INT32:
-    return NiftiTypeInfo{.dataType = DataType::int32, .componentCount = 1, .bitpix = 32};
+    return NiftiTypeInfo{.data_type = DataType::int32, .component_count = 1, .bitpix = 32};
   case NIFTI_TYPE_UINT64:
-    return NiftiTypeInfo{.dataType = DataType::uint64, .componentCount = 1, .bitpix = 64};
+    return NiftiTypeInfo{.data_type = DataType::uint64, .component_count = 1, .bitpix = 64};
   case NIFTI_TYPE_INT64:
-    return NiftiTypeInfo{.dataType = DataType::int64, .componentCount = 1, .bitpix = 64};
+    return NiftiTypeInfo{.data_type = DataType::int64, .component_count = 1, .bitpix = 64};
   case NIFTI_TYPE_FLOAT32:
-    return NiftiTypeInfo{.dataType = DataType::float32, .componentCount = 1, .bitpix = 32};
+    return NiftiTypeInfo{.data_type = DataType::float32, .component_count = 1, .bitpix = 32};
   case NIFTI_TYPE_FLOAT64:
-    return NiftiTypeInfo{.dataType = DataType::float64, .componentCount = 1, .bitpix = 64};
+    return NiftiTypeInfo{.data_type = DataType::float64, .component_count = 1, .bitpix = 64};
   case NIFTI_TYPE_RGB24:
-    return NiftiTypeInfo{.dataType = DataType::uint8, .componentCount = 3, .bitpix = 24};
+    return NiftiTypeInfo{.data_type = DataType::uint8, .component_count = 3, .bitpix = 24};
   case NIFTI_TYPE_RGBA32:
-    return NiftiTypeInfo{.dataType = DataType::uint8, .componentCount = 4, .bitpix = 32};
+    return NiftiTypeInfo{.data_type = DataType::uint8, .component_count = 4, .bitpix = 32};
   default:
     return std::nullopt;
   }
@@ -134,7 +134,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   bool byteSwap = false;
   if(hdr.sizeof_hdr != static_cast<int>(k_HeaderSize))
   {
-    int swapped = nx::core::byteswap(hdr.sizeof_hdr);
+    int swapped = nx::core::Byteswap(hdr.sizeof_hdr);
     if(swapped == static_cast<int>(k_HeaderSize))
     {
       byteSwap = true;
@@ -184,7 +184,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   }
 
   NiftiMetadata md;
-  md.filePath = pathStr;
+  md.file_path = pathStr;
   md.magic = std::string(hdr.magic, hdr.magic + 3);
   for(int i = 0; i < 8; i++)
   {
@@ -196,37 +196,37 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
   // Use the spacing magnitude. Keep the signed pixdim values for orientation diagnostics.
   md.spacing = {std::fabs(hdr.pixdim[1]), std::fabs(hdr.pixdim[2]), std::fabs(hdr.pixdim[3])};
 
-  md.niftiDatatype = hdr.datatype;
+  md.nifti_datatype = hdr.datatype;
   md.bitpix = typeInfo->bitpix;
-  md.dataType = typeInfo->dataType;
-  md.componentCount = typeInfo->componentCount;
+  md.data_type = typeInfo->data_type;
+  md.component_count = typeInfo->component_count;
 
   usize vo = (hdr.vox_offset <= 0.0f) ? k_MinVoxOffset : static_cast<usize>(hdr.vox_offset);
   vo = std::max(vo, k_MinVoxOffset);
-  md.voxOffset = vo;
-  md.byteSwapRequired = byteSwap;
+  md.vox_offset = vo;
+  md.byte_swap_required = byteSwap;
 
-  md.sclSlope = hdr.scl_slope;
-  md.sclInter = hdr.scl_inter;
-  md.hasNontrivialScaling = std::isfinite(md.sclSlope) && (md.sclSlope != 0.0f) && (md.sclSlope != 1.0f || (std::isfinite(md.sclInter) && md.sclInter != 0.0f));
-  if(md.niftiDatatype == NIFTI_TYPE_RGB24 || md.niftiDatatype == NIFTI_TYPE_RGBA32)
+  md.scl_slope = hdr.scl_slope;
+  md.scl_inter = hdr.scl_inter;
+  md.has_nontrivial_scaling = std::isfinite(md.scl_slope) && (md.scl_slope != 0.0f) && (md.scl_slope != 1.0f || (std::isfinite(md.scl_inter) && md.scl_inter != 0.0f));
+  if(md.nifti_datatype == NIFTI_TYPE_RGB24 || md.nifti_datatype == NIFTI_TYPE_RGBA32)
   {
-    md.hasNontrivialScaling = false;
+    md.has_nontrivial_scaling = false;
   }
 
-  md.qformCode = hdr.qform_code;
-  md.sformCode = hdr.sform_code;
+  md.qform_code = hdr.qform_code;
+  md.sform_code = hdr.sform_code;
   for(int k = 0; k < 4; k++)
   {
-    md.sformMatrix[0][k] = hdr.srow_x[k];
-    md.sformMatrix[1][k] = hdr.srow_y[k];
-    md.sformMatrix[2][k] = hdr.srow_z[k];
+    md.sform_matrix[0][k] = hdr.srow_x[k];
+    md.sform_matrix[1][k] = hdr.srow_y[k];
+    md.sform_matrix[2][k] = hdr.srow_z[k];
   }
 
   const float32 rotEps = 1.0e-5f;
   if(useAffineIfPresent && hdr.sform_code > 0)
   {
-    md.affineHasFlip = hdr.srow_x[0] < 0.0f || hdr.srow_y[1] < 0.0f || hdr.srow_z[2] < 0.0f;
+    md.affine_has_flip = hdr.srow_x[0] < 0.0f || hdr.srow_y[1] < 0.0f || hdr.srow_z[2] < 0.0f;
     md.origin = {hdr.srow_x[3], hdr.srow_y[3], hdr.srow_z[3]};
     for(int col = 0; col < 3; col++)
     {
@@ -244,19 +244,19 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
         const float64 comp = (row == 0) ? cx : (row == 1) ? cy : cz;
         if(std::fabs(comp) > rotEps * std::max(mag, 1.0e-6))
         {
-          md.affineHasRotation = true;
+          md.affine_has_rotation = true;
         }
       }
     }
   }
   else if(useAffineIfPresent && hdr.qform_code > 0)
   {
-    md.affineHasFlip = hdr.pixdim[0] < 0.0f;
+    md.affine_has_flip = hdr.pixdim[0] < 0.0f;
     md.origin = {hdr.qoffset_x, hdr.qoffset_y, hdr.qoffset_z};
     const float32 bcdSq = hdr.quatern_b * hdr.quatern_b + hdr.quatern_c * hdr.quatern_c + hdr.quatern_d * hdr.quatern_d;
     if(bcdSq > rotEps)
     {
-      md.affineHasRotation = true;
+      md.affine_has_rotation = true;
     }
   }
   else
@@ -266,10 +266,10 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
 
   if(useAffineIfPresent && hdr.sform_code <= 0)
   {
-    md.affineHasFlip = md.affineHasFlip || hdr.pixdim[1] < 0.0f || hdr.pixdim[2] < 0.0f || hdr.pixdim[3] < 0.0f;
+    md.affine_has_flip = md.affine_has_flip || hdr.pixdim[1] < 0.0f || hdr.pixdim[2] < 0.0f || hdr.pixdim[3] < 0.0f;
   }
 
-  md.intentCode = hdr.intent_code;
+  md.intent_code = hdr.intent_code;
   auto fixedCharsToString = [](const char* src, usize maxLen) {
     usize len = 0;
     while(len < maxLen && src[len] != '\0')
@@ -278,7 +278,7 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
     }
     return std::string(src, len);
   };
-  md.intentName = fixedCharsToString(hdr.intent_name, sizeof(hdr.intent_name));
+  md.intent_name = fixedCharsToString(hdr.intent_name, sizeof(hdr.intent_name));
   md.descrip = fixedCharsToString(hdr.descrip, sizeof(hdr.descrip));
 
   return {md};

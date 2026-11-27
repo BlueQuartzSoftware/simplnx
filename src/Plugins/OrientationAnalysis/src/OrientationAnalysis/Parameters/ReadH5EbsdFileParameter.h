@@ -20,12 +20,12 @@ public:
    */
   struct ValueType
   {
-    std::string inputFilePath;
-    int32 startSlice = 0;
-    int32 endSlice = 0;
-    int32 eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
-    std::vector<std::string> selectedArrayNames;
-    bool useRecommendedTransform = {true};
+    std::string input_file_path;
+    int32 start_slice = 0;
+    int32 end_slice = 0;
+    int32 euler_representation = ebsdlib::AngleRepresentation::Radians;
+    std::vector<std::string> selected_array_names;
+    bool use_recommended_transform = {true};
   };
 
   ReadH5EbsdFileParameter() = delete;
@@ -56,7 +56,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief

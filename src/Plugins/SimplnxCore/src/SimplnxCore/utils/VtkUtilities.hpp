@@ -181,7 +181,7 @@ struct WriteVtkDataArrayFunctor
     const usize totalElements = dataStore.getSize();
     const int numComps = static_cast<int>(dataStore.getNumberOfComponents());
     std::string dName = arrayPath.getTargetName();
-    dName = StringUtilities::replace(dName, " ", "_");
+    dName = string_utilities::Replace(dName, " ", "_");
 
     const std::string vtkTypeString = TypeForPrimitive<T>(messageHandler);
     bool useIntCast = false;
@@ -229,7 +229,7 @@ struct WriteVtkDataArrayFunctor
           {
             for(usize i = 0; i < count; i++)
             {
-              buf[i] = nx::core::byteswap(buf[i]);
+              buf[i] = nx::core::Byteswap(buf[i]);
             }
           }
           if(fwrite(buf.get(), sizeof(T), count, outputFile) != count)
@@ -371,7 +371,7 @@ struct WriteVtkDataFunctor
     auto& dataArrayRef = dynamic_cast<DataArrayType&>(iDataArray);
     const auto& dataStoreRef = dataArrayRef.getDataStoreRef();
 
-    std::string name = StringUtilities::replace(dataArrayRef.getName(), " ", "_");
+    std::string name = string_utilities::Replace(dataArrayRef.getName(), " ", "_");
 
     outStrm << "SCALARS " << name << " " << ConvertDataTypeToVtkDataType<T>() << " " << dataArrayRef.getNumberOfComponents() << "\n";
     outStrm << "LOOKUP_TABLE default\n";

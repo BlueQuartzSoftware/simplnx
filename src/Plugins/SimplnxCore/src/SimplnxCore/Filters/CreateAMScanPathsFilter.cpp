@@ -60,9 +60,9 @@ Parameters CreateAMScanPathsFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_CADSliceDataContainerPath_Key, "Slice Data Container", "The input edge geometry from which to create the scan paths", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CADSliceIdsArrayPath_Key, "Slice Ids", "Identifies the slice to which each edge belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CADRegionIdsArrayPath_Key, "Region Ids", "Identifies the region to which each edge belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Objects"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_HatchDataContainerPath_Key, "Scan Vector Geometry", "The created edge geometry representing the scan paths", DataPath({"ScanVectorGeometry"})));
@@ -106,7 +106,7 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
   std::vector<PreflightValue> preflightUpdatedValues;
 
   {
-    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pHatchDataContainerNameValue, 1, 2, pVertexAttributeMatrixNameValue, pHatchAttributeMatrixNameValue,
+    auto createGeometryAction = std::make_unique<CreateEdgeGeometryActionType>(pHatchDataContainerNameValue, 1, 2, pVertexAttributeMatrixNameValue, pHatchAttributeMatrixNameValue,
                                                                            EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
@@ -124,7 +124,7 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::move(createArray));
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -133,16 +133,16 @@ Result<> CreateAMScanPathsFilter::executeImpl(DataStructure& dataStructure, cons
 {
   CreateAMScanPathsInputValues inputValues;
 
-  inputValues.StripeWidth = filterArgs.value<float32>(k_StripeWidth_Key);
-  inputValues.HatchSpacing = filterArgs.value<float32>(k_HatchSpacing_Key);
-  inputValues.SliceHatchRotationAngle = filterArgs.value<float32>(k_RotationAngle) * nx::core::Constants::k_DegToRadF;
-  inputValues.CADSliceDataContainerName = filterArgs.value<DataPath>(k_CADSliceDataContainerPath_Key);
-  inputValues.CADSliceIdsArrayPath = filterArgs.value<DataPath>(k_CADSliceIdsArrayPath_Key);
-  inputValues.CADRegionIdsArrayPath = filterArgs.value<DataPath>(k_CADRegionIdsArrayPath_Key);
-  inputValues.HatchDataContainerName = filterArgs.value<DataPath>(k_HatchDataContainerPath_Key);
-  inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
-  inputValues.HatchAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_HatchAttributeMatrixName_Key);
-  inputValues.RegionIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegionIdsArrayName_Key);
+  inputValues.stripe_width = filterArgs.value<float32>(k_StripeWidth_Key);
+  inputValues.hatch_spacing = filterArgs.value<float32>(k_HatchSpacing_Key);
+  inputValues.slice_hatch_rotation_angle = filterArgs.value<float32>(k_RotationAngle) * nx::core::constants::k_DegToRadF;
+  inputValues.cad_slice_data_container_name = filterArgs.value<DataPath>(k_CADSliceDataContainerPath_Key);
+  inputValues.cad_slice_ids_array_path = filterArgs.value<DataPath>(k_CADSliceIdsArrayPath_Key);
+  inputValues.cad_region_ids_array_path = filterArgs.value<DataPath>(k_CADRegionIdsArrayPath_Key);
+  inputValues.hatch_data_container_name = filterArgs.value<DataPath>(k_HatchDataContainerPath_Key);
+  inputValues.vertex_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  inputValues.hatch_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_HatchAttributeMatrixName_Key);
+  inputValues.region_ids_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_RegionIdsArrayName_Key);
 
   return CreateAMScanPaths(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

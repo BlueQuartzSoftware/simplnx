@@ -94,7 +94,7 @@ struct SliceBufferedTransferFunctor
    * @return Buffer with size elements.
    */
   template <typename T>
-  static BufferType<T> makeBuf(usize size)
+  static BufferType<T> MakeBuf(usize size)
   {
     if constexpr(std::is_same_v<T, bool>)
     {
@@ -134,9 +134,9 @@ struct SliceBufferedTransferFunctor
     std::array<BufferType<T>, 3> srcSlices;
     for(auto& s : srcSlices)
     {
-      s = makeBuf<T>(sliceValues);
+      s = MakeBuf<T>(sliceValues);
     }
-    auto destSlice = makeBuf<T>(sliceValues);
+    auto destSlice = MakeBuf<T>(sliceValues);
 
     auto readSlice = [&](usize z, usize slot) { return store.copyIntoBuffer(z * sliceValues, nonstd::span<T>(BufPtr(srcSlices[slot]), sliceValues)); };
 
@@ -271,7 +271,7 @@ struct SliceTransferOneZFunctor
     const usize sliceValues = sliceSize * numComp;
 
     // Preserve destination tuples that have no source mark.
-    auto destBuf = SliceBufferedTransferFunctor::makeBuf<T>(sliceValues);
+    auto destBuf = SliceBufferedTransferFunctor::MakeBuf<T>(sliceValues);
     auto readResult = store.copyIntoBuffer(destZ * sliceValues, nonstd::span<T>(SliceBufferedTransferFunctor::BufPtr(destBuf), sliceValues));
     if(readResult.invalid())
     {
@@ -286,7 +286,7 @@ struct SliceTransferOneZFunctor
     auto ensureSrcLoaded = [&](usize slot, usize srcZ) -> Result<> {
       if(!srcLoaded[slot] && srcZ < dimZ)
       {
-        srcBufs[slot] = SliceBufferedTransferFunctor::makeBuf<T>(sliceValues);
+        srcBufs[slot] = SliceBufferedTransferFunctor::MakeBuf<T>(sliceValues);
         auto sourceReadResult = store.copyIntoBuffer(srcZ * sliceValues, nonstd::span<T>(SliceBufferedTransferFunctor::BufPtr(srcBufs[slot]), sliceValues));
         if(sourceReadResult.invalid())
         {

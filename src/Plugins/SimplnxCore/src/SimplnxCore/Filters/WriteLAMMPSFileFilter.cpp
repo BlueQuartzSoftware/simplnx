@@ -61,7 +61,7 @@ Parameters WriteLAMMPSFileFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath, "Input Vertex Geometry", "The vertex geometry holding the arrays to write", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AtomLabelsPath_Key, "Atom Feature Labels", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -111,9 +111,9 @@ Result<> WriteLAMMPSFileFilter::executeImpl(DataStructure& dataStructure, const 
 
   WriteLAMMPSFileInputValues inputValues;
 
-  inputValues.OutputFile = atomicFile.tempFilePath();
-  inputValues.VertexGeomPath = filterArgs.value<DataPath>(k_VertexGeomPath);
-  inputValues.AtomLabelsPath = filterArgs.value<DataPath>(k_AtomLabelsPath_Key);
+  inputValues.output_file = atomicFile.tempFilePath();
+  inputValues.vertex_geom_path = filterArgs.value<DataPath>(k_VertexGeomPath);
+  inputValues.atom_labels_path = filterArgs.value<DataPath>(k_AtomLabelsPath_Key);
 
   auto result = WriteLAMMPSFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
   if(result.valid())

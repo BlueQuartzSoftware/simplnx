@@ -24,12 +24,12 @@ namespace
 class RodriguesConvertorImpl
 {
 private:
-  const Float32Array* m_Input;
-  Float32Array* m_Output;
+  const Float32ArrayType* m_Input;
+  Float32ArrayType* m_Output;
   const std::atomic_bool* m_ShouldCancel;
 
 public:
-  RodriguesConvertorImpl(const Float32Array* inputQuat, Float32Array* outputQuat, const std::atomic_bool* shouldCancel)
+  RodriguesConvertorImpl(const Float32ArrayType* inputQuat, Float32ArrayType* outputQuat, const std::atomic_bool* shouldCancel)
   : m_Input(inputQuat)
   , m_Output(outputQuat)
   , m_ShouldCancel(shouldCancel)
@@ -76,7 +76,7 @@ public:
  * The mathematical operation and tuple order match the direct worker. Local
  * buffers hold at most 65,536 tuples.
  */
-Result<> ConvertRodriguesBulk(const Float32Array& input, Float32Array& output, const std::atomic_bool& shouldCancel)
+Result<> ConvertRodriguesBulk(const Float32ArrayType& input, Float32ArrayType& output, const std::atomic_bool& shouldCancel)
 {
   constexpr usize k_ChunkTuples = 65536;
   auto inputValues = std::make_unique<float32[]>(k_ChunkTuples * 3);
@@ -140,8 +140,8 @@ const std::atomic_bool& RodriguesConvertor::getCancel()
 
 Result<> RodriguesConvertor::operator()()
 {
-  const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RodriguesDataArrayPath);
-  auto& output = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
+  const auto& input = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->rodrigues_data_array_path);
+  auto& output = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->output_data_array_path);
 
   const bool usesOutOfCoreStore = IsOutOfCore(input) || IsOutOfCore(output);
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (ForceOocAlgorithm() || usesOutOfCoreStore);

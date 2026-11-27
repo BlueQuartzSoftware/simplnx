@@ -151,7 +151,7 @@ TEST_CASE("Application::loadPreferences from a specified path", "[Application]")
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
-    REQUIRE(result.errors()[0].code == Preferences::k_FileDoesNotExist_Code);
+    REQUIRE(result.errors()[0].code == Preferences::k_FileDoesNotExistCode);
   }
 }
 

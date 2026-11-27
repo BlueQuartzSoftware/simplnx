@@ -22,7 +22,7 @@ using namespace nx::core;
 
 namespace
 {
-using namespace IdentifySampleBenchmarkTest;
+using namespace identify_sample_benchmark_test;
 constexpr usize k_X = 19;
 constexpr usize k_Y = 11;
 constexpr usize k_Z = 13;
@@ -393,7 +393,7 @@ public:
    * @pre The manager collection is nonempty and no concurrent factory activity occurs.
    */
   explicit ScopedRecordManager(FailureState& state)
-  : m_Collection(DataStoreUtilities::GetIOCollection())
+  : m_Collection(data_store_utilities::GetIOCollection())
   , m_Entry(m_Collection.begin())
   , m_Original(m_Entry->second)
   , m_Replacement(std::make_shared<RecordManager>(state))
@@ -534,7 +534,7 @@ private:
  */
 bool FailureInput(usize x, usize y, usize z)
 {
-  return IdentifySampleBatchTest::ExpectedValue(y, z, x, false) || (y == 0 && z == 0);
+  return identify_sample_batch_test::ExpectedValue(y, z, x, false) || (y == 0 && z == 0);
 }
 
 /**
@@ -546,7 +546,7 @@ bool FailureInput(usize x, usize y, usize z)
 template <class T>
 DataStructure CreateFailureFixture(const std::shared_ptr<MaskStore<T>>& store)
 {
-  auto data = IdentifySampleBatchTest::CreateFixture<T>(2, k_X, store);
+  auto data = identify_sample_batch_test::CreateFixture<T>(2, k_X, store);
   std::array<T, k_X * k_Y> xy{};
   for(usize z = 0; z < k_Z; ++z)
   {
@@ -573,8 +573,8 @@ DataStructure CreateFailureFixture(const std::shared_ptr<MaskStore<T>>& store)
 template <class T>
 void RequirePrefix(const DataStructure& data, usize completedPlanes, usize successfulZ)
 {
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  const auto& store = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath).getDataStoreRef();
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  const auto& store = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath).getDataStoreRef();
   std::array<T, k_X * k_Y> xy{};
   for(usize z = 0; z < k_Z; ++z)
   {
@@ -584,13 +584,13 @@ void RequirePrefix(const DataStructure& data, usize completedPlanes, usize succe
     {
       for(usize x = 0; x < k_X; ++x)
       {
-        const bool expected = x < completedPlanes && z < successfulZ ? IdentifySampleBatchTest::ExpectedValue(y, z, x, false) : FailureInput(x, y, z);
+        const bool expected = x < completedPlanes && z < successfulZ ? identify_sample_batch_test::ExpectedValue(y, z, x, false) : FailureInput(x, y, z);
         INFO("xyz=" << x << ',' << y << ',' << z << " completed=" << completedPlanes << " successful Z=" << successfulZ);
         REQUIRE(xy[y * k_X + x] == static_cast<T>(expected));
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(data);
+  unit_test::CheckArraysInheritTupleDims(data);
 }
 
 /**
@@ -600,11 +600,11 @@ void RequirePrefix(const DataStructure& data, usize completedPlanes, usize succe
 IdentifySampleInputValues Inputs()
 {
   IdentifySampleInputValues inputs{};
-  inputs.FillHoles = false;
-  inputs.InputImageGeometryPath = IdentifySampleBatchTest::k_ImagePath;
-  inputs.MaskArrayPath = IdentifySampleBatchTest::k_MaskPath;
-  inputs.SliceBySlice = true;
-  inputs.SliceBySlicePlaneIndex = 2;
+  inputs.fill_holes = false;
+  inputs.input_image_geometry_path = identify_sample_batch_test::k_ImagePath;
+  inputs.mask_array_path = identify_sample_batch_test::k_MaskPath;
+  inputs.slice_by_slice = true;
+  inputs.slice_by_slice_plane_index = 2;
   return inputs;
 }
 
@@ -715,15 +715,15 @@ Outcome CaptureOutcome(Callable&& callable)
 void RequireReleased(const LogicalCounters& counts)
 {
   REQUIRE_FALSE(counts.invalid);
-  REQUIRE_FALSE(counts.invalidExtraAccounting);
+  REQUIRE_FALSE(counts.invalid_extra_accounting);
   REQUIRE(counts.active == 0);
-  REQUIRE(counts.planeLive == 0);
-  REQUIRE(counts.xyLive == 0);
-  REQUIRE(counts.extraLiveBytes == 0);
-  REQUIRE(counts.extraRetainedBytes == 0);
-  REQUIRE(counts.allocationEvents == counts.releaseEvents);
-  REQUIRE(counts.extraAllocationCount == counts.extraReleaseCount);
-  REQUIRE(counts.extraRetainCount == counts.extraReservationReleaseCount);
+  REQUIRE(counts.plane_live == 0);
+  REQUIRE(counts.xy_live == 0);
+  REQUIRE(counts.extra_live_bytes == 0);
+  REQUIRE(counts.extra_retained_bytes == 0);
+  REQUIRE(counts.allocation_events == counts.release_events);
+  REQUIRE(counts.extra_allocation_count == counts.extra_release_count);
+  REQUIRE(counts.extra_retain_count == counts.extra_reservation_release_count);
 }
 
 /**
@@ -738,25 +738,25 @@ void RequireReleased(const LogicalCounters& counts)
 template <class T>
 Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlanes, usize successfulZ)
 {
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   auto store = std::make_shared<MaskStore<T>>(state);
   DataStructure data = CreateFailureFixture<T>(store);
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
   state.selected = state.diagnostic_match ? &mask : nullptr;
   auto inputs = Inputs();
   auto messages = Messages(state, handler);
   IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
   LogicalCounters counts;
   counts.selected = &mask;
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   const BudgetRestore restoreBudget;
   REQUIRE_FALSE(budget.setBudgetBytes(4ULL * 1024 * 1024));
   const auto occupied = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes() - 7 * k_Y * k_Z * sizeof(T));
   REQUIRE(occupied.sizeBytes() == budget.maximumWorkingMemoryBytes() - 7 * k_Y * k_Z * sizeof(T));
-  auto& collection = DataStoreUtilities::GetIOCollection();
+  auto& collection = data_store_utilities::GetIOCollection();
   REQUIRE(collection.begin() != collection.end());
   const auto originalManager = collection.begin()->second;
   Outcome outcome;
@@ -764,9 +764,9 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
     const auto oldObserver = SetIdentifySampleSliceObserverForTesting({.context = &counts, .callback = &LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(oldObserver); });
     REQUIRE(oldObserver.callback == nullptr);
-    const auto oldDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context = &state, .beforeAggregate = &FailDiagnostic});
+    const auto oldDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context = &state, .before_aggregate = &FailDiagnostic});
     const auto restoreDiagnostic = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleDiagnosticControlForTesting(oldDiagnostic); });
-    REQUIRE(oldDiagnostic.beforeAggregate == nullptr);
+    REQUIRE(oldDiagnostic.before_aggregate == nullptr);
     const ScopedRecordManager overrideManager(state);
     REQUIRE(overrideManager.selected());
     state.armed = true;
@@ -787,17 +787,17 @@ Outcome RunFailure(FailureState& state, HandlerKind handler, usize completedPlan
   REQUIRE(state.successful_writes == successfulZ);
   if(state.cancel_at == CancelAt::Pre)
   {
-    REQUIRE(counts.allocationEvents == 0);
-    REQUIRE(counts.extraRequestCount == 0);
-    REQUIRE(counts.batchCount == 0);
+    REQUIRE(counts.allocation_events == 0);
+    REQUIRE(counts.extra_request_count == 0);
+    REQUIRE(counts.batch_count == 0);
     REQUIRE(state.reads == 0);
     REQUIRE(state.writes == 0);
   }
   else
   {
-    REQUIRE(counts.batchCount == 1);
-    REQUIRE(counts.maximumBatchWidth == 8);
-    REQUIRE(counts.extraPeakBytes == 7 * k_Y * k_Z * sizeof(T));
+    REQUIRE(counts.batch_count == 1);
+    REQUIRE(counts.maximum_batch_width == 8);
+    REQUIRE(counts.extra_peak_bytes == 7 * k_Y * k_Z * sizeof(T));
   }
   RequirePrefix<T>(data, completedPlanes, successfulZ);
   return outcome;
@@ -889,7 +889,7 @@ void RequireDual(const Outcome& outcome, const FailureState& state)
 
 TEST_CASE("IdentifySample batch retains both terminal failures in primary order", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto primary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const auto secondary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const auto phase = GENERATE(CopyPhase::CommitRead, CopyPhase::CommitWrite);
@@ -909,7 +909,7 @@ TEST_CASE("IdentifySample batch retains both terminal failures in primary order"
 
 TEST_CASE("IdentifySample batch captures a progress callback failure before publication", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto primary = GENERATE(FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const auto secondary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation);
   FailureState state;
@@ -923,7 +923,7 @@ TEST_CASE("IdentifySample batch captures a progress callback failure before publ
 
 TEST_CASE("IdentifySample batch preserves lone plane failures and skips an empty prefix", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto kind = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const usize plane = GENERATE(usize{0}, usize{1});
   const bool useBool = GENERATE(false, true);
@@ -958,7 +958,7 @@ TEST_CASE("IdentifySample batch preserves lone plane failures and skips an empty
 
 TEST_CASE("IdentifySample batch preserves lone gather and commit exceptions", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto phase = GENERATE(CopyPhase::GatherRead, CopyPhase::CommitRead, CopyPhase::CommitWrite);
   const auto kind = GENERATE(FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   FailureState state;
@@ -979,7 +979,7 @@ TEST_CASE("IdentifySample batch preserves lone gather and commit exceptions", "[
 
 TEST_CASE("IdentifySample batch preserves primary when diagnostic assembly fails", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto primary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const auto secondary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation);
   const auto handler = GENERATE(HandlerKind::Empty, HandlerKind::ErrorThrow);
@@ -1015,7 +1015,7 @@ TEST_CASE("IdentifySample batch preserves primary when diagnostic assembly fails
 
 TEST_CASE("IdentifySample batch cancellation publishes only completed planes", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto point = GENERATE(CancelAt::Pre, CancelAt::Gather, CancelAt::BeforePlane, CancelAt::RecordWrite, CancelAt::CommitRead);
   const bool useBool = GENERATE(false, true);
   const usize completed = point == CancelAt::CommitRead ? 8 : (point == CancelAt::BeforePlane || point == CancelAt::RecordWrite ? 1 : 0);
@@ -1044,7 +1044,7 @@ TEST_CASE("IdentifySample batch cancellation publishes only completed planes", "
 
 TEST_CASE("IdentifySample batch failures take precedence over cancellation", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto cancelAt = GENERATE(CancelAt::WithPrimary, CancelAt::WithSecondary);
   FailureState state;
   state.primary = FaultKind::Result;
@@ -1057,7 +1057,7 @@ TEST_CASE("IdentifySample batch failures take precedence over cancellation", "[.
 
 TEST_CASE("IdentifySample lone progress failure still publishes the completed prefix", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto kind = GENERATE(FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   const usize plane = GENERATE(usize{0}, usize{1});
   FailureState state;
@@ -1076,7 +1076,7 @@ TEST_CASE("IdentifySample lone progress failure still publishes the completed pr
 
 TEST_CASE("IdentifySample cancellation cannot hide a lone publication failure", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto kind = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
   FailureState state;
   state.secondary = kind;
@@ -1141,7 +1141,7 @@ struct AllocationControl
     }
     ++control.calls;
     control.last_values = values;
-    control.reservation_missing = control.reservation_missing || CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() != control.occupied + values;
+    control.reservation_missing = control.reservation_missing || CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() != control.occupied + values;
     if(control.calls == control.fail_on)
     {
       throw AllocationFailure(505);
@@ -1175,14 +1175,14 @@ struct OwnerObservations
     {
       return;
     }
-    const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+    const uint64 reserved = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
     if(event == IdentifySampleSliceEventForTesting::ExtraPlanesReleased)
     {
       observation.invalid_order = observation.invalid_order || reserved != observation.occupied + values * elementBytes;
     }
     if(event == IdentifySampleSliceEventForTesting::ExtraReservationReleased)
     {
-      observation.invalid_order = observation.invalid_order || reserved != observation.occupied || observation.counts.extraLiveBytes != 0;
+      observation.invalid_order = observation.invalid_order || reserved != observation.occupied || observation.counts.extra_live_bytes != 0;
     }
     LogicalCounters::Observe(&observation.counts, mask, event, values, elementBytes, success);
   }
@@ -1199,13 +1199,13 @@ template <class T>
 void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom = true)
 {
   static_assert(sizeof(T) == 1);
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   FailureState state;
   auto store = std::make_shared<MaskStore<T>>(state);
   DataStructure data = CreateFailureFixture<T>(store);
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
   auto inputs = Inputs();
   const IFilter::MessageHandler messages;
   IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
@@ -1214,7 +1214,7 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
   control.fail_on = failOn;
   OwnerObservations observations;
   observations.counts.selected = &mask;
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   const BudgetRestore restoreBudget;
   REQUIRE_FALSE(budget.setBudgetBytes(4ULL * 1024 * 1024));
@@ -1225,9 +1225,9 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
   control.occupied = occupied.sizeBytes();
   Outcome outcome;
   {
-    const auto old = SetIdentifySampleExtraAllocationControlForTesting({.context = &control, .beforeAllocate = &AllocationControl::Before});
+    const auto old = SetIdentifySampleExtraAllocationControlForTesting({.context = &control, .before_allocate = &AllocationControl::Before});
     const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleExtraAllocationControlForTesting(old); });
-    REQUIRE(old.beforeAllocate == nullptr);
+    REQUIRE(old.before_allocate == nullptr);
     const auto oldObserver = SetIdentifySampleSliceObserverForTesting({.context = &observations, .callback = &OwnerObservations::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(oldObserver); });
     REQUIRE(oldObserver.callback == nullptr);
@@ -1246,9 +1246,9 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
     REQUIRE(outcome.payload == 505);
     REQUIRE(control.calls == failOn);
     REQUIRE(control.last_values == 7 * k_Y * k_Z);
-    REQUIRE(observations.counts.extraRetainCount == failOn);
-    REQUIRE(observations.counts.extraAllocationCount == failOn - 1);
-    REQUIRE(observations.counts.batchCount == failOn - 1);
+    REQUIRE(observations.counts.extra_retain_count == failOn);
+    REQUIRE(observations.counts.extra_allocation_count == failOn - 1);
+    REQUIRE(observations.counts.batch_count == failOn - 1);
     REQUIRE(state.reads == (failOn - 1) * 2 * k_Z);
     REQUIRE(state.writes == (failOn - 1) * k_Z);
     RequirePrefix<T>(data, (failOn - 1) * 8, failOn == 1 ? 0 : k_Z);
@@ -1258,8 +1258,8 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
     REQUIRE(outcome.result.has_value());
     SIMPLNX_RESULT_REQUIRE_VALID(outcome.result.value());
     REQUIRE(control.calls == 0);
-    REQUIRE(observations.counts.extraAllocationCount == (hasHeadroom ? 3 : 0));
-    REQUIRE(observations.counts.batchCount == (hasHeadroom ? 3 : k_X));
+    REQUIRE(observations.counts.extra_allocation_count == (hasHeadroom ? 3 : 0));
+    REQUIRE(observations.counts.batch_count == (hasHeadroom ? 3 : k_X));
     RequirePrefix<T>(data, k_X, k_Z);
   }
 }
@@ -1267,7 +1267,7 @@ void CheckAllocationFailure(usize failOn, bool matchIdentity, bool hasHeadroom =
 
 TEST_CASE("IdentifySample extra allocation failure releases owners before reservations", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize failOn = GENERATE(usize{1}, usize{2});
   const bool useBool = GENERATE(false, true);
   const bool matchIdentity = GENERATE(false, true);
@@ -1287,29 +1287,29 @@ TEST_CASE("IdentifySample allocation and diagnostic controls restore nested and 
   AllocationControl inner;
   FailureState outerDiagnostic;
   FailureState innerDiagnostic;
-  const auto originalAllocation = SetIdentifySampleExtraAllocationControlForTesting({.context = &outer, .beforeAllocate = &AllocationControl::Before});
+  const auto originalAllocation = SetIdentifySampleExtraAllocationControlForTesting({.context = &outer, .before_allocate = &AllocationControl::Before});
   const auto restoreAllocation = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleExtraAllocationControlForTesting(originalAllocation); });
-  const auto originalDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context = &outerDiagnostic, .beforeAggregate = &FailDiagnostic});
+  const auto originalDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context = &outerDiagnostic, .before_aggregate = &FailDiagnostic});
   const auto restoreDiagnostic = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleDiagnosticControlForTesting(originalDiagnostic); });
   REQUIRE(originalAllocation.context == nullptr);
-  REQUIRE(originalAllocation.beforeAllocate == nullptr);
+  REQUIRE(originalAllocation.before_allocate == nullptr);
   REQUIRE(originalDiagnostic.context == nullptr);
-  REQUIRE(originalDiagnostic.beforeAggregate == nullptr);
+  REQUIRE(originalDiagnostic.before_aggregate == nullptr);
   {
-    const auto priorAllocation = SetIdentifySampleExtraAllocationControlForTesting({.context = &inner, .beforeAllocate = &AllocationControl::Before});
+    const auto priorAllocation = SetIdentifySampleExtraAllocationControlForTesting({.context = &inner, .before_allocate = &AllocationControl::Before});
     const auto restoreInnerAllocation = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleExtraAllocationControlForTesting(priorAllocation); });
-    const auto priorDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context = &innerDiagnostic, .beforeAggregate = &FailDiagnostic});
+    const auto priorDiagnostic = SetIdentifySampleDiagnosticControlForTesting({.context = &innerDiagnostic, .before_aggregate = &FailDiagnostic});
     const auto restoreInnerDiagnostic = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleDiagnosticControlForTesting(priorDiagnostic); });
     REQUIRE(priorAllocation.context == &outer);
-    REQUIRE(priorAllocation.beforeAllocate == &AllocationControl::Before);
+    REQUIRE(priorAllocation.before_allocate == &AllocationControl::Before);
     REQUIRE(priorDiagnostic.context == &outerDiagnostic);
-    REQUIRE(priorDiagnostic.beforeAggregate == &FailDiagnostic);
+    REQUIRE(priorDiagnostic.before_aggregate == &FailDiagnostic);
   }
   std::atomic_bool childWasNull = false;
   std::thread child([&] {
     const auto allocation = SetIdentifySampleExtraAllocationControlForTesting({});
     const auto diagnostic = SetIdentifySampleDiagnosticControlForTesting({});
-    childWasNull = allocation.context == nullptr && allocation.beforeAllocate == nullptr && diagnostic.context == nullptr && diagnostic.beforeAggregate == nullptr;
+    childWasNull = allocation.context == nullptr && allocation.before_allocate == nullptr && diagnostic.context == nullptr && diagnostic.before_aggregate == nullptr;
     (void)SetIdentifySampleExtraAllocationControlForTesting(allocation);
     (void)SetIdentifySampleDiagnosticControlForTesting(diagnostic);
   });
@@ -1318,16 +1318,16 @@ TEST_CASE("IdentifySample allocation and diagnostic controls restore nested and 
   const auto currentAllocation = SetIdentifySampleExtraAllocationControlForTesting({});
   const auto currentDiagnostic = SetIdentifySampleDiagnosticControlForTesting({});
   REQUIRE(currentAllocation.context == &outer);
-  REQUIRE(currentAllocation.beforeAllocate == &AllocationControl::Before);
+  REQUIRE(currentAllocation.before_allocate == &AllocationControl::Before);
   REQUIRE(currentDiagnostic.context == &outerDiagnostic);
-  REQUIRE(currentDiagnostic.beforeAggregate == &FailDiagnostic);
+  REQUIRE(currentDiagnostic.before_aggregate == &FailDiagnostic);
 }
 
 TEST_CASE("IdentifySample checked slice dimensions fail before owners and transfers", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  unit_test::LoadPlugins();
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   constexpr usize k_SignedMaximum = static_cast<usize>(std::numeric_limits<int64>::max());
   /**
    * @struct InvalidDimensions
@@ -1335,7 +1335,7 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
    */
   struct InvalidDimensions
   {
-    SizeVec3 dimensions;
+    SizeVec3Type dimensions;
     int32 code;
   };
   const usize labelByteBound = std::numeric_limits<usize>::max() / sizeof(int64);
@@ -1360,8 +1360,8 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
   FailureState state;
   auto store = std::make_shared<MaskStore<uint8>>(state);
   auto data = CreateFailureFixture<uint8>(store);
-  REQUIRE_NOTHROW(data.getDataRefAs<ImageGeom>(IdentifySampleBatchTest::k_ImagePath));
-  auto& image = data.getDataRefAs<ImageGeom>(IdentifySampleBatchTest::k_ImagePath);
+  REQUIRE_NOTHROW(data.getDataRefAs<ImageGeom>(identify_sample_batch_test::k_ImagePath));
+  auto& image = data.getDataRefAs<ImageGeom>(identify_sample_batch_test::k_ImagePath);
   const auto dimensions = image.getDimensions();
   const auto restoreDimensions = MakeScopeGuard([&]() noexcept { image.setDimensions(dimensions); });
   image.setDimensions(value.dimensions);
@@ -1369,9 +1369,9 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
   const IFilter::MessageHandler messages;
   IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
   LogicalCounters counts;
-  REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
-  counts.selected = &data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
-  const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+  REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath));
+  counts.selected = &data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath);
+  const uint64 reserved = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
   {
     const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counts, .callback = &LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
@@ -1385,11 +1385,11 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
     REQUIRE((result.errors()[0].message.find("bound") != std::string::npos || result.errors()[0].message.find("supported") != std::string::npos ||
              result.errors()[0].message.find("must fit") != std::string::npos));
   }
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == reserved);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == reserved);
   REQUIRE(state.reads == 0);
   REQUIRE(state.writes == 0);
-  REQUIRE(counts.allocationEvents == 0);
-  REQUIRE(counts.extraRequestCount == 0);
+  REQUIRE(counts.allocation_events == 0);
+  REQUIRE(counts.extra_request_count == 0);
   RequireReleased(counts);
   image.setDimensions(dimensions);
   RequirePrefix<uint8>(data, 0, 0);
@@ -1397,15 +1397,15 @@ TEST_CASE("IdentifySample checked slice dimensions fail before owners and transf
 
 TEST_CASE("IdentifySample safe zero dimensions retain valid empty work", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize zeroAxis = GENERATE(usize{0}, usize{1}, usize{2});
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   FailureState state;
   auto store = std::make_shared<MaskStore<uint8>>(state);
   auto data = CreateFailureFixture<uint8>(store);
-  REQUIRE_NOTHROW(data.getDataRefAs<ImageGeom>(IdentifySampleBatchTest::k_ImagePath));
-  auto& image = data.getDataRefAs<ImageGeom>(IdentifySampleBatchTest::k_ImagePath);
+  REQUIRE_NOTHROW(data.getDataRefAs<ImageGeom>(identify_sample_batch_test::k_ImagePath));
+  auto& image = data.getDataRefAs<ImageGeom>(identify_sample_batch_test::k_ImagePath);
   const auto original = image.getDimensions();
   auto dimensions = original;
   dimensions[zeroAxis] = 0;
@@ -1415,8 +1415,8 @@ TEST_CASE("IdentifySample safe zero dimensions retain valid empty work", "[.Iden
   const IFilter::MessageHandler messages;
   IdentifySampleCCL algorithm(data, messages, state.cancel, &inputs);
   LogicalCounters counts;
-  REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
-  counts.selected = &data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
+  REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath));
+  counts.selected = &data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath);
   {
     const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counts, .callback = &LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
@@ -1426,19 +1426,19 @@ TEST_CASE("IdentifySample safe zero dimensions retain valid empty work", "[.Iden
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
   RequireReleased(counts);
-  REQUIRE(counts.extraAllocationCount == 0);
+  REQUIRE(counts.extra_allocation_count == 0);
   if(zeroAxis == 0)
   {
-    REQUIRE(counts.allocationEvents == 0);
-    REQUIRE(counts.batchCount == 0);
+    REQUIRE(counts.allocation_events == 0);
+    REQUIRE(counts.batch_count == 0);
     REQUIRE(state.reads == 0);
     REQUIRE(state.writes == 0);
   }
   else
   {
-    REQUIRE(counts.batchCount == k_X);
-    REQUIRE(counts.minimumBatchWidth == 1);
-    REQUIRE(counts.maximumBatchWidth == 1);
+    REQUIRE(counts.batch_count == k_X);
+    REQUIRE(counts.minimum_batch_width == 1);
+    REQUIRE(counts.maximum_batch_width == 1);
   }
   image.setDimensions(original);
   RequirePrefix<uint8>(data, 0, 0);
@@ -1446,7 +1446,7 @@ TEST_CASE("IdentifySample safe zero dimensions retain valid empty work", "[.Iden
 
 TEST_CASE("IdentifySample diagnostic control ignores another mask identity", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   FailureState state;
   state.primary = FaultKind::Result;
   state.secondary = FaultKind::Standard;
@@ -1468,11 +1468,11 @@ namespace
  * @param dual True to also fail publication after one successful Z write.
  */
 template <class T>
-void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultKind primary, bool dual)
+void CheckCaller(unit_test::AlgorithmTestScenario scenario, bool pipeline, FaultKind primary, bool dual)
 {
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  UnitTest::AlgorithmTestScope scope(scenario);
-  const bool expectCcl = scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  unit_test::AlgorithmTestScope scope(scenario);
+  const bool expectCcl = scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore;
   FailureState state;
   state.primary = expectCcl ? primary : FaultKind::None;
   state.secondary = expectCcl && dual ? FaultKind::Standard : FaultKind::None;
@@ -1482,28 +1482,28 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
   }
   auto store = std::make_shared<MaskStore<T>>(state);
   DataStructure data = CreateFailureFixture<T>(store);
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
   scope.requireExpectedStore(mask);
   IdentifySampleFilter filter;
-  const auto args = IdentifySampleBatchTest::ArgumentsFor(2, false);
+  const auto args = identify_sample_batch_test::ArgumentsFor(2, false);
   Pipeline owningPipeline;
   auto node = std::make_shared<PipelineFilter>(std::make_unique<IdentifySampleFilter>(), args);
   REQUIRE(owningPipeline.push_back(node));
   REQUIRE(node->getParentPipeline() == &owningPipeline);
   LogicalCounters counts;
   counts.selected = &mask;
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   const BudgetRestore restoreBudget;
   REQUIRE_FALSE(budget.setBudgetBytes(4ULL * 1024 * 1024));
   auto occupied = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes() - 7 * k_Y * k_Z * sizeof(T));
   REQUIRE(occupied.sizeBytes() == budget.maximumWorkingMemoryBytes() - 7 * k_Y * k_Z * sizeof(T));
-  auto& collection = DataStoreUtilities::GetIOCollection();
+  auto& collection = data_store_utilities::GetIOCollection();
   REQUIRE(collection.begin() != collection.end());
   const auto originalManager = collection.begin()->second;
-  ErrorCollection errors;
-  WarningCollection warnings;
+  ErrorCollectionType errors;
+  WarningCollectionType warnings;
   {
     const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counts, .callback = &LogicalCounters::Observe});
     const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
@@ -1580,8 +1580,8 @@ void CheckCaller(UnitTest::AlgorithmTestScenario scenario, bool pipeline, FaultK
 
 TEST_CASE("IdentifySample filter and pipeline retain failure Results without Output callbacks", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool pipeline = GENERATE(false, true);
   const auto primary = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation);
   const bool dual = GENERATE(false, true);
@@ -1601,26 +1601,26 @@ TEST_CASE("IdentifySample filter and pipeline retain failure Results without Out
 
 TEST_CASE("IdentifySample zero extra grant does not call its allocation control", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   CheckAllocationFailure<uint8>(1, true, false);
 }
 
 TEST_CASE("IdentifySample orthogonal CCL owns only its used plane carrier", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const bool useBool = GENERATE(false, true);
   const bool fillHoles = GENERATE(false, true);
   const auto check = [&]<class T>() {
-    const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-    const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
-    DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(plane);
-    REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
+    const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+    const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+    DataStructure data = identify_sample_batch_test::CreateFixture<T>(plane);
+    REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath));
     LogicalCounters counts;
-    counts.selected = &data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
+    counts.selected = &data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath);
     auto inputs = Inputs();
-    inputs.SliceBySlicePlaneIndex = plane;
-    inputs.FillHoles = fillHoles;
+    inputs.slice_by_slice_plane_index = plane;
+    inputs.fill_holes = fillHoles;
     const IFilter::MessageHandler messages;
     const std::atomic_bool cancel = false;
     IdentifySampleCCL algorithm(data, messages, cancel, &inputs);
@@ -1631,15 +1631,15 @@ TEST_CASE("IdentifySample orthogonal CCL owns only its used plane carrier", "[.I
       SIMPLNX_RESULT_REQUIRE_VALID(result);
     }
     RequireReleased(counts);
-    REQUIRE(counts.allocationEvents == 1);
-    REQUIRE(counts.namedCarrierPeak == 11 * 13 * sizeof(T));
-    REQUIRE(counts.extraRequestCount == 0);
-    REQUIRE(counts.batchCount == 0);
+    REQUIRE(counts.allocation_events == 1);
+    REQUIRE(counts.named_carrier_peak == 11 * 13 * sizeof(T));
+    REQUIRE(counts.extra_request_count == 0);
+    REQUIRE(counts.batch_count == 0);
     REQUIRE(counts.reads == (plane == 0 ? 19 : 19 * 13));
     REQUIRE(counts.writes == counts.reads);
-    REQUIRE(counts.readSuccess == counts.reads);
-    REQUIRE(counts.writeSuccess == counts.writes);
-    IdentifySampleBatchTest::RequireOutput<T>(data, plane, fillHoles);
+    REQUIRE(counts.read_success == counts.reads);
+    REQUIRE(counts.write_success == counts.writes);
+    identify_sample_batch_test::RequireOutput<T>(data, plane, fillHoles);
   };
   if(useBool)
   {
@@ -1653,21 +1653,21 @@ TEST_CASE("IdentifySample orthogonal CCL owns only its used plane carrier", "[.I
 
 TEST_CASE("IdentifySample filter pre-cancellation stops before algorithm dispatch", "[SimplnxCore][IdentifySampleFilter][.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool useBool = GENERATE(false, true);
   const auto check = [&]<class T>() {
-    const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-    const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+    const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+    const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     FailureState state;
     auto store = std::make_shared<MaskStore<T>>(state);
     DataStructure data = CreateFailureFixture<T>(store);
-    REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath));
-    auto& mask = data.getDataRefAs<IDataArray>(IdentifySampleBatchTest::k_MaskPath);
+    REQUIRE_NOTHROW(data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath));
+    auto& mask = data.getDataRefAs<IDataArray>(identify_sample_batch_test::k_MaskPath);
     LogicalCounters counts;
     counts.selected = &mask;
     IdentifySampleFilter filter;
-    const auto args = IdentifySampleBatchTest::ArgumentsFor(2, false);
-    const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+    const auto args = identify_sample_batch_test::ArgumentsFor(2, false);
+    const uint64 reserved = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
     {
       const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counts, .callback = &LogicalCounters::Observe});
       const auto restoreObserver = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
@@ -1684,19 +1684,19 @@ TEST_CASE("IdentifySample filter pre-cancellation stops before algorithm dispatc
       REQUIRE(result.result.errors()[0].code == -1);
       REQUIRE(result.result.warnings().empty());
       const auto dispatch = GetAlgorithmPathExecutionCounts();
-      REQUIRE(dispatch.InCore == 0);
-      REQUIRE(dispatch.OutOfCore == 0);
-      REQUIRE(dispatch.InCoreOnInMemoryStore == 0);
-      REQUIRE(dispatch.InCoreOnOutOfCoreStore == 0);
-      REQUIRE(dispatch.OutOfCoreOnInMemoryStore == 0);
-      REQUIRE(dispatch.OutOfCoreOnOutOfCoreStore == 0);
+      REQUIRE(dispatch.in_core == 0);
+      REQUIRE(dispatch.out_of_core == 0);
+      REQUIRE(dispatch.in_core_on_in_memory_store == 0);
+      REQUIRE(dispatch.in_core_on_out_of_core_store == 0);
+      REQUIRE(dispatch.out_of_core_on_in_memory_store == 0);
+      REQUIRE(dispatch.out_of_core_on_out_of_core_store == 0);
     }
     REQUIRE(mask.getIDataStore() == store.get());
-    REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == reserved);
+    REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == reserved);
     REQUIRE(state.reads == 0);
     REQUIRE(state.writes == 0);
-    REQUIRE(counts.allocationEvents == 0);
-    REQUIRE(counts.extraRequestCount == 0);
+    REQUIRE(counts.allocation_events == 0);
+    REQUIRE(counts.extra_request_count == 0);
     RequireReleased(counts);
     RequirePrefix<T>(data, 0, 0);
   };
@@ -1879,9 +1879,9 @@ private:
 template <class T>
 void RequireOrthogonalPrefix(const DataStructure& data, ChoicesParameter::ValueType plane, usize completedPlanes, usize partialRows)
 {
-  const auto dimensions = IdentifySampleBatchTest::Dimensions(plane);
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  const auto& store = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath).getDataStoreRef();
+  const auto dimensions = identify_sample_batch_test::Dimensions(plane);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  const auto& store = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath).getDataStoreRef();
   const usize xyValues = dimensions[0] * dimensions[1];
   auto xy = std::make_unique<T[]>(xyValues);
   for(usize z = 0; z < dimensions[2]; ++z)
@@ -1892,19 +1892,19 @@ void RequireOrthogonalPrefix(const DataStructure& data, ChoicesParameter::ValueT
     {
       for(usize x = 0; x < dimensions[0]; ++x)
       {
-        const auto coordinates = IdentifySampleBatchTest::PlaneCoordinates(plane, x, y, z);
+        const auto coordinates = identify_sample_batch_test::PlaneCoordinates(plane, x, y, z);
         const usize u = coordinates[0];
         const usize v = coordinates[1];
         const usize fixed = coordinates[2];
         const bool processed = fixed < completedPlanes || (plane == 1 && fixed == completedPlanes && v < partialRows);
-        const bool initial = IdentifySampleBatchTest::InputValue(u, v, fixed) || (u == 0 && v == 0);
-        const bool expected = processed ? IdentifySampleBatchTest::ExpectedValue(u, v, fixed, false) : initial;
+        const bool initial = identify_sample_batch_test::InputValue(u, v, fixed) || (u == 0 && v == 0);
+        const bool expected = processed ? identify_sample_batch_test::ExpectedValue(u, v, fixed, false) : initial;
         INFO("plane=" << plane << " xyz=" << x << ',' << y << ',' << z << " complete=" << completedPlanes << " partial rows=" << partialRows);
         REQUIRE(xy[y * dimensions[0] + x] == static_cast<T>(expected));
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(data);
+  unit_test::CheckArraysInheritTupleDims(data);
 }
 
 /**
@@ -1918,29 +1918,29 @@ void RequireOrthogonalPrefix(const DataStructure& data, ChoicesParameter::ValueT
 template <class T>
 Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop stop, FaultKind fault)
 {
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
-  const auto dimensions = IdentifySampleBatchTest::Dimensions(plane);
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const auto dimensions = identify_sample_batch_test::Dimensions(plane);
   const usize copiesPerPlane = plane == 0 ? 1 : dimensions[2];
   OrthogonalTransferState state;
   state.stop = stop;
   state.fault = fault;
   state.trigger_copy = copiesPerPlane + (plane == 1 && stop != OrthogonalStop::WriteCancel ? 2 : 1);
   auto store = std::make_shared<OrthogonalMaskStore<T>>(ShapeType{dimensions[2], dimensions[1], dimensions[0]}, state);
-  DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(plane, 19, store);
+  DataStructure data = identify_sample_batch_test::CreateFixture<T>(plane, 19, store);
   // The early isolated cell makes a successful first-row write distinguishable from unchanged input.
   for(usize fixed = 0; fixed < 19; ++fixed)
   {
     const usize offset = plane == 0 ? fixed * dimensions[0] * dimensions[1] : fixed * dimensions[0];
     store->setValue(offset, static_cast<T>(true));
   }
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  const auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  const auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
   REQUIRE(mask.getIDataStore() == store.get());
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE_FALSE(store->getChunkShape().has_value());
   auto inputs = Inputs();
-  inputs.SliceBySlicePlaneIndex = plane;
+  inputs.slice_by_slice_plane_index = plane;
   const IFilter::MessageHandler messages{[&state](const IFilter::Message& message) {
     if(message.type == IFilter::Message::Type::Progress && message.message.starts_with("Identifying Sample Slices: "))
     {
@@ -1957,10 +1957,10 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   LogicalCounters counts;
   counts.selected = &mask;
   FailureState recordState;
-  auto& collection = DataStoreUtilities::GetIOCollection();
+  auto& collection = data_store_utilities::GetIOCollection();
   REQUIRE(collection.begin() != collection.end());
   const auto originalManager = collection.begin()->second;
-  const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
+  const uint64 reserved = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
   Outcome outcome;
   std::string exceptionMessage;
   {
@@ -1983,7 +1983,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   }
   REQUIRE_FALSE(state.armed);
   REQUIRE(collection.begin()->second == originalManager);
-  REQUIRE(CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes() == reserved);
+  REQUIRE(CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes() == reserved);
   REQUIRE(recordState.live_records == 0);
   REQUIRE(state.fired);
   REQUIRE(state.slice_order_matches);
@@ -2026,14 +2026,14 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
   }
   REQUIRE(transferIdx == state.transfer_count);
   RequireReleased(counts);
-  REQUIRE(counts.allocationEvents == 1);
-  REQUIRE(counts.namedCarrierPeak == 11 * 13 * sizeof(T));
-  REQUIRE(counts.extraRequestCount == 0);
-  REQUIRE(counts.batchCount == 0);
+  REQUIRE(counts.allocation_events == 1);
+  REQUIRE(counts.named_carrier_peak == 11 * 13 * sizeof(T));
+  REQUIRE(counts.extra_request_count == 0);
+  REQUIRE(counts.batch_count == 0);
   REQUIRE(counts.reads == state.reads);
   REQUIRE(counts.writes == state.writes);
-  REQUIRE(counts.readSuccess == state.reads - static_cast<usize>(readFailure));
-  REQUIRE(counts.writeSuccess == state.writes - static_cast<usize>(writeFailure));
+  REQUIRE(counts.read_success == state.reads - static_cast<usize>(readFailure));
+  REQUIRE(counts.write_success == state.writes - static_cast<usize>(writeFailure));
   // A failed XZ write retains the first row. Write cancellation lets every row of that plane finish.
   RequireOrthogonalPrefix<T>(data, plane, writeCancel ? 2 : 1, writeFailure && plane == 1 ? 1 : 0);
   return outcome;
@@ -2042,7 +2042,7 @@ Outcome RunOrthogonalTransfer(ChoicesParameter::ValueType plane, OrthogonalStop 
 
 TEST_CASE("IdentifySample orthogonal transfer failures preserve exact completed values", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const auto stop = GENERATE(OrthogonalStop::ReadFailure, OrthogonalStop::WriteFailure);
   const auto fault = GENERATE(FaultKind::Result, FaultKind::Standard, FaultKind::Allocation, FaultKind::Nonstandard);
@@ -2074,7 +2074,7 @@ TEST_CASE("IdentifySample orthogonal transfer failures preserve exact completed 
 
 TEST_CASE("IdentifySample orthogonal cancellation preserves per-plane publication", "[.IdentifySampleObservation][.IdentifySampleBatchFailures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto plane = GENERATE(ChoicesParameter::ValueType{0}, ChoicesParameter::ValueType{1});
   const auto stop = GENERATE(OrthogonalStop::ReadCancel, OrthogonalStop::MessageCancel, OrthogonalStop::WriteCancel);
   const bool useBool = GENERATE(false, true);

@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 
 /**
@@ -60,7 +60,7 @@ inline void BuildScalarTestData(DataStructure& dataStructure, const ShapeType& c
   const usize dimX = cellShape[2];
 
   const DataPath scalarPath = dataStructure.getDataPathsForId(amId)[0].createChildPath(arrayName);
-  auto scalarDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, scalarPath, cellShape, {1});
+  auto scalarDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, scalarPath, cellShape, {1});
   auto* scalarArrayPtr = DataArray<int32>::Create(dataStructure, arrayName, scalarDataStore, amId);
   auto& store = scalarArrayPtr->getDataStoreRef();
 
@@ -127,12 +127,12 @@ inline void BuildOrientationTestData(DataStructure& dataStructure, const ShapeTy
 
   const DataPath amPath = dataStructure.getDataPathsForId(amId)[0];
   const DataPath quatsPath = amPath.createChildPath("Quats");
-  auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, quatsPath, cellShape, {4});
+  auto quatsDataStore = data_store_utilities::CreateDataStore<float32>(dataStructure, quatsPath, cellShape, {4});
   auto* quatsArrayPtr = DataArray<float32>::Create(dataStructure, "Quats", quatsDataStore, amId);
   auto& quatsStore = quatsArrayPtr->getDataStoreRef();
 
   const DataPath phasesPath = amPath.createChildPath("Phases");
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, cellShape, {1});
+  auto phasesDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, phasesPath, cellShape, {1});
   auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, amId);
   auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
@@ -226,7 +226,7 @@ inline void BuildOrientationTestData(DataStructure& dataStructure, const ShapeTy
   const ShapeType ensembleTupleShape = {2};
   auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ensembleTupleShape, geomId);
   const DataPath crystalStructsPath = dataStructure.getDataPathsForId(geomId)[0].createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
-  auto crystalDataStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructsPath, ensembleTupleShape, {1});
+  auto crystalDataStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalStructsPath, ensembleTupleShape, {1});
   auto* crystalStructsArrayPtr = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystalDataStore, ensembleAmPtr->getId());
   auto& crystalStructsStore = crystalStructsArrayPtr->getDataStoreRef();
   crystalStructsStore[0] = 999; // Phase 0: Unknown
@@ -251,7 +251,7 @@ inline void BuildSphericalMask(DataStructure& dataStructure, const ShapeType& ce
   const usize dimX = cellShape[2];
 
   const DataPath maskPath = dataStructure.getDataPathsForId(amId)[0].createChildPath(maskName);
-  auto maskDataStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, cellShape, {1});
+  auto maskDataStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, maskPath, cellShape, {1});
   auto* maskArrayPtr = DataArray<uint8>::Create(dataStructure, maskName, maskDataStore, amId);
   auto& maskStore = maskArrayPtr->getDataStoreRef();
 
@@ -295,16 +295,16 @@ inline void BuildSphericalMask(DataStructure& dataStructure, const ShapeType& ce
  */
 inline void VerifyMaskedSegmentation(const DataStructure& dataStructure, const std::array<usize, 3>& dims, const DataPath& featureIdsPath, const DataPath& activePath, const DataPath& maskPath)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   const auto& featureStore = featureIds.getDataStoreRef();
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(maskPath));
-  const auto& mask = dataStructure.getDataRefAs<UInt8Array>(maskPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(maskPath));
+  const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(maskPath);
   const auto& maskStore = mask.getDataStoreRef();
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(activePath));
-  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(activePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(activePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(activePath);
   REQUIRE(actives.getNumberOfTuples() > 1); // At least one feature (index 0 + features)
 
   const usize totalVoxels = dims[0] * dims[1] * dims[2];
@@ -352,13 +352,13 @@ inline void VerifyBlockSegmentation(const DataStructure& dataStructure, const st
   const usize expectedFeatures = blocksPerX * blocksPerY * blocksPerZ;
 
   // The Active array includes reserved feature 0.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(activePath));
-  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(activePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(activePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(activePath);
   REQUIRE(actives.getNumberOfTuples() == expectedFeatures + 1);
 
   // Each block must use one positive feature identifier.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   const auto& featureStore = featureIds.getDataStoreRef();
 
   // The map records the first feature identifier found in each block.
@@ -422,13 +422,13 @@ inline void VerifyPeriodicBlockSegmentation(const DataStructure& dataStructure, 
   const usize expectedFeatures = periodicBlocksX * periodicBlocksY * periodicBlocksZ;
 
   // The Active array includes reserved feature 0.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(activePath));
-  const auto& actives = dataStructure.getDataRefAs<UInt8Array>(activePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(activePath));
+  const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(activePath);
   REQUIRE(actives.getNumberOfTuples() == expectedFeatures + 1);
 
   // Each periodic block group must use one positive feature identifier.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   const auto& featureStore = featureIds.getDataStoreRef();
 
   // The map records the first feature identifier found in each periodic group.
@@ -506,7 +506,7 @@ void RunNoValidVoxelsErrorTest(AlgorithmTestScope* algorithmTestScope, SetupArgs
   setupArgs(args, dataStructure, geomPath, cellDataPath, maskPath);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = algorithmTestScope == nullptr ? filter.execute(dataStructure, args) : algorithmTestScope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -580,10 +580,10 @@ void RunFaceEdgeVertexConnectivityTest(AlgorithmTestScope* algorithmTestScope, S
     Arguments args;
     setupFaceArgs(args, dataStructure, geomPath, cellDataPath);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = algorithmTestScope == nullptr ? filter.execute(dataStructure, args) : algorithmTestScope->executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    const auto& actives = dataStructure.getDataRefAs<UInt8Array>(activePath);
+    const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(activePath);
     REQUIRE(actives.getNumberOfTuples() == 6);
   }
 
@@ -595,15 +595,15 @@ void RunFaceEdgeVertexConnectivityTest(AlgorithmTestScope* algorithmTestScope, S
     Arguments args;
     setupFevArgs(args, ds, geomPath, cellDataPath);
     auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = algorithmTestScope == nullptr ? filter.execute(ds, args) : algorithmTestScope->executeFilter(filter, ds, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    const auto& actives = ds.getDataRefAs<UInt8Array>(activePath);
+    const auto& actives = ds.getDataRefAs<UInt8ArrayType>(activePath);
     REQUIRE(actives.getNumberOfTuples() == 4);
   }
 
   // Each connected pair must share one identifier, and the two pairs must differ.
-  const auto& fids = ds.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& fids = ds.getDataRefAs<Int32ArrayType>(featureIdsPath);
   const auto& fidsStore = fids.getDataStoreRef();
   REQUIRE(fidsStore.getValue(0 * 9 + 0 * 3 + 0) == fidsStore.getValue(1 * 9 + 1 * 3 + 1)); // A == B (vertex merge)
   REQUIRE(fidsStore.getValue(0 * 9 + 0 * 3 + 2) == fidsStore.getValue(1 * 9 + 1 * 3 + 2)); // C == D (edge merge)
@@ -677,15 +677,15 @@ void RunNeighborSchemeExemplarTest(AlgorithmTestScope* algorithmTestScope, DataS
 
   if(expectedFeatureCount > 0)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(activesPath));
-    const auto& actives = dataStructure.getDataRefAs<UInt8Array>(activesPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(activesPath));
+    const auto& actives = dataStructure.getDataRefAs<UInt8ArrayType>(activesPath);
     REQUIRE(actives.getNumberOfTuples() == expectedFeatureCount);
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(computedFeatureIdsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<Int32Array>(computedFeatureIdsPath);
-  const auto& exemplarArray = dataStructure.getDataRefAs<Int32Array>(exemplarFeatureIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(computedFeatureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(exemplarFeatureIdsPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<Int32ArrayType>(computedFeatureIdsPath);
+  const auto& exemplarArray = dataStructure.getDataRefAs<Int32ArrayType>(exemplarFeatureIdsPath);
   CompareDataArrays<int32>(generatedArray, exemplarArray);
 
   CheckArraysInheritTupleDims(dataStructure, tupleCheckIgnoredPaths);

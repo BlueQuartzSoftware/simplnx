@@ -119,7 +119,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   if(numComponents == 0)
   {
-    return MakePreflightErrorResult(DimensionConversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
+    return MakePreflightErrorResult(dimension_conversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
   }
 
   ShapeType compDims = std::vector<usize>{numComponents};
@@ -138,7 +138,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
     if(dimensions.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     tupleDims = std::move(dimensions.value());
   }
@@ -160,7 +160,7 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

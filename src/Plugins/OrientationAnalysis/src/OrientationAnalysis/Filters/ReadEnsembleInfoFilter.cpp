@@ -132,7 +132,7 @@ IFilter::PreflightResult ReadEnsembleInfoFilter::preflightImpl(const DataStructu
   auto phaseTypesAction = std::make_unique<CreateArrayAction>(DataType::uint32, tupleDims, std::vector<usize>{1}, phaseTypesPath);
   resultOutputActions.value().appendAction(std::move(phaseTypesAction));
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -141,11 +141,11 @@ Result<> ReadEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const
 {
   ReadEnsembleInfoInputValues inputValues;
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key).string();
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_ParentGroupPath_Key);
-  inputValues.CellEnsembleAttributeMatrixName = inputValues.DataContainerName.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
-  inputValues.CrystalStructuresArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_CrystalStructuresArrayName_Key));
-  inputValues.PhaseTypesArrayName = inputValues.CellEnsembleAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_PhaseTypesArrayName_Key));
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key).string();
+  inputValues.data_container_name = filterArgs.value<DataPath>(k_ParentGroupPath_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = inputValues.data_container_name.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
+  inputValues.crystal_structures_array_name = inputValues.cell_ensemble_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_CrystalStructuresArrayName_Key));
+  inputValues.phase_types_array_name = inputValues.cell_ensemble_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_PhaseTypesArrayName_Key));
 
   return ReadEnsembleInfo(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

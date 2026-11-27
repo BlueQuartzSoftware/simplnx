@@ -9,11 +9,11 @@ TEST_CASE("GeometryUtilities: Finite vector domains", "[simplnx][GeometryUtiliti
   const auto value = GENERATE(0.0f, -1.0f, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
   std::vector<float32> values = {1, 1, 1};
   values[axis] = value;
-  auto positive = GeometryUtilities::ValidatePositiveFiniteVector(values, "Spacing", -1);
+  auto positive = geometry_utilities::ValidatePositiveFiniteVector(values, "Spacing", -1);
   SIMPLNX_RESULT_REQUIRE_INVALID(positive);
   CHECK(positive.errors()[0].code == -1);
   CHECK(positive.errors()[0].message.find("XYZ"[axis]) != std::string::npos);
-  auto finite = GeometryUtilities::ValidateFiniteVector(values, "Origin", -2);
+  auto finite = geometry_utilities::ValidateFiniteVector(values, "Origin", -2);
   if(std::isfinite(value))
   {
     SIMPLNX_RESULT_REQUIRE_VALID(finite);
@@ -28,7 +28,7 @@ TEST_CASE("GeometryUtilities: Finite vector domains", "[simplnx][GeometryUtiliti
 TEST_CASE("GeometryUtilities: Checked padded dimensions", "[simplnx][GeometryUtilities]")
 {
   const auto row = GENERATE(0, 1, 2, 3, 4, 5);
-  SizeVec3 dims = {1, 1, 1};
+  SizeVec3Type dims = {1, 1, 1};
   std::array<std::array<int32, 2>, 3> padding = {{{0, 0}, {0, 0}, {0, 0}}};
   std::array<bool, 3> active = {true, true, true};
   const int32 max = std::numeric_limits<int32>::max();
@@ -56,7 +56,7 @@ TEST_CASE("GeometryUtilities: Checked padded dimensions", "[simplnx][GeometryUti
     padding[1] = {-1, -1};
     active = {true, false, true};
   }
-  auto result = GeometryUtilities::ComputePaddedDimensions(dims, padding, active);
+  auto result = geometry_utilities::ComputePaddedDimensions(dims, padding, active);
   if(row == 1 || row == 2)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
@@ -65,6 +65,6 @@ TEST_CASE("GeometryUtilities: Checked padded dimensions", "[simplnx][GeometryUti
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    CHECK(result.value() == (row == 0 ? SizeVec3{4294967295ULL, 1, 1} : row == 3 ? SizeVec3{5, 10, 15} : SizeVec3{1, 1, 1}));
+    CHECK(result.value() == (row == 0 ? SizeVec3Type{4294967295ULL, 1, 1} : row == 3 ? SizeVec3Type{5, 10, 15} : SizeVec3Type{1, 1, 1}));
   }
 }

@@ -22,8 +22,8 @@
 #include <vector>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -58,7 +58,7 @@ DataStructure BuildTestData()
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, cellTupleDims, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, cellTupleDims, {1}, cellAmPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, cellTupleDims, {1}, cellAmPtr->getId());
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   const std::vector<int32> ids = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3};
   for(usize i = 0; i < ids.size(); i++)
@@ -70,7 +70,7 @@ DataStructure BuildTestData()
   const std::vector<usize> featureTupleDims = {5};
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, featureTupleDims, imageGeomPtr->getId());
 
-  auto* numElementsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_NumElements, featureTupleDims, {1}, featureAmPtr->getId());
+  auto* numElementsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_NumElements, featureTupleDims, {1}, featureAmPtr->getId());
   auto& numElementsRef = numElementsPtr->getDataStoreRef();
   const std::vector<int32> sizes = {0, 4, 1, 2, 3};
   for(usize i = 0; i < sizes.size(); i++)
@@ -111,8 +111,8 @@ bool HasWarningCode(const std::vector<Warning>& warnings, int32 code)
 
 std::vector<int32> ReadFeatureIds(const DataStructure& dataStructure)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-  const auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+  const auto& featureIdsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath).getDataStoreRef();
   std::vector<int32> result(featureIdsRef.getNumberOfTuples());
   for(usize i = 0; i < result.size(); i++)
   {
@@ -148,7 +148,7 @@ DataStructure BuildFiveFeatureData()
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, cellTupleDims, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto* featureIdsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, cellTupleDims, {1}, cellAmPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, cellTupleDims, {1}, cellAmPtr->getId());
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   const std::vector<int32> ids = {1, 1, 1, 1, 1, 2, 3, 3, 4, 4, 4, 5};
   for(usize i = 0; i < ids.size(); i++)
@@ -159,7 +159,7 @@ DataStructure BuildFiveFeatureData()
   const std::vector<usize> featureTupleDims = {6};
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, featureTupleDims, imageGeomPtr->getId());
 
-  auto* numElementsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, k_NumElements, featureTupleDims, {1}, featureAmPtr->getId());
+  auto* numElementsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_NumElements, featureTupleDims, {1}, featureAmPtr->getId());
   auto& numElementsRef = numElementsPtr->getDataStoreRef();
   const std::vector<int32> sizes = {0, 5, 1, 2, 3, 1};
   for(usize i = 0; i < sizes.size(); i++)
@@ -191,7 +191,7 @@ std::set<int32> SurvivingIdSet(const DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Feature Count", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Original ids:            1 1 1 2 3 1 4 4 4 3
   // Sizes: 1->4, 2->1, 3->2, 4->3.  Ranked largest first: 1, 4, 3, 2.
@@ -216,7 +216,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Feature Count", "[Simpln
       Arguments args = MakeArgs(operation, rankFrom, numFeatures);
 
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -224,17 +224,17 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Feature Count", "[Simpln
       REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
       // Two features survived, so the compacted Feature Attribute Matrix holds 3 tuples: dummy + 2.
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
-      REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getNumberOfTuples() == 3);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath));
+      REQUIRE(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath).getNumberOfTuples() == 3);
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Feature Count", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   SECTION("50% of 4 Features keeps the 2 largest")
@@ -245,14 +245,14 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Feature Count
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_Percent_Key, std::make_any<float64>(50.0));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 2, 2, 2, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("30% of 4 Features rounds to 1")
@@ -269,7 +269,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Feature Count
     const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 0, 0, 0, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("1% of 4 Features clamps up to 1 and warns")
@@ -281,8 +281,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Feature Count
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_Percent_Key, std::make_any<float64>(1.0));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(HasWarningCode(preflightResult.outputActions.warnings(), -78121));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(HasWarningCode(preflightResult.output_actions.warnings(), -78121));
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -290,13 +290,13 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Feature Count
     const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 0, 0, 0, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Summed Value", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   // Sizes 4, 1, 2, 3 sum to 10, so a percentage maps onto a cumulative sum without rounding noise.
@@ -314,7 +314,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Summed Value"
     const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 2, 2, 2, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("The Feature straddling the cutoff is included")
@@ -332,7 +332,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Summed Value"
     const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 2, 2, 2, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("A small percentage still selects the single largest Feature")
@@ -349,14 +349,14 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Summed Value"
     const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 0, 0, 0, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Negative values are an error")
   {
     DataStructure dataStructure = BuildTestData();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
-    auto& numElementsRef = dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath));
+    auto& numElementsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath).getDataStoreRef();
     numElementsRef[2] = -5;
 
     Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
@@ -370,8 +370,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Summed Value"
   SECTION("A zero total sum is an error")
   {
     DataStructure dataStructure = BuildTestData();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
-    auto& numElementsRef = dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath));
+    auto& numElementsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath).getDataStoreRef();
     for(usize i = 0; i < numElementsRef.getNumberOfTuples(); i++)
     {
       numElementsRef[i] = 0;
@@ -388,7 +388,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Percent of Summed Value"
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite values and fill", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   SECTION("A tie straddling the cutoff warns and breaks by ascending feature id")
@@ -396,8 +396,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
     // Give Features 3 and 4 the same size of 3. Ranked largest first: 1 (4), then the tied pair
     // 3 and 4, then 2 (1). Keeping 2 must take Feature 1 and, of the tied pair, the lower id.
     DataStructure dataStructure = BuildTestData();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
-    auto& numElementsRef = dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getDataStoreRef();
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath));
+    auto& numElementsRef = dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath).getDataStoreRef();
     numElementsRef[3] = 3;
 
     Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
@@ -409,7 +409,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
     const std::vector<int32> expected = {1, 1, 1, 0, 2, 1, 0, 0, 0, 2};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("A non-finite ranking value is an error")
@@ -417,7 +417,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
     DataStructure dataStructure = BuildTestData();
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath));
     auto& featureAmRef = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath);
-    auto* ratiosPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "AspectRatios", {5}, {1}, featureAmRef.getId());
+    auto* ratiosPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "AspectRatios", {5}, {1}, featureAmRef.getId());
     auto& ratiosRef = ratiosPtr->getDataStoreRef();
     ratiosRef[0] = 0.0f;
     ratiosRef[1] = 1.0f;
@@ -438,8 +438,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
     // and the shared fill loop must still terminate. Before the shared utility skipped background
     // cells this section ran forever.
     DataStructure dataStructure = BuildTestData();
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef()[0] = 0;
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath).getDataStoreRef()[0] = 0;
     Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(true));
 
@@ -453,7 +453,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
       REQUIRE(featureIds[i] > 0);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Fill leaves no Cell at zero")
@@ -470,13 +470,13 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Ties and non-finite valu
       REQUIRE(featureId > 0);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Invariants", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   // Sizes on the five feature fixture: 1->5, 2->1, 3->2, 4->3, 5->1.
@@ -513,8 +513,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Invariants", "[SimplnxCo
     }
 
     // The compacted Attribute Matrix holds the dummy tuple plus one per survivor.
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
-    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getNumberOfTuples() == 4);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath));
+    REQUIRE(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath).getNumberOfTuples() == 4);
   }
 
   SECTION("Keeping k largest is a superset of keeping k-1 largest")
@@ -544,7 +544,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Invariants", "[SimplnxCo
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Remove with percent criteria", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   SECTION("Remove 40% of the Feature count, ranked smallest first")
@@ -562,7 +562,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Remove with percent crit
     const std::vector<int32> expected = {1, 1, 1, 1, 1, 0, 2, 2, 3, 3, 3, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Remove Features making up the smallest 20% of summed size")
@@ -580,20 +580,20 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Remove with percent crit
     const std::vector<int32> expected = {1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, 0};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Unsigned ranking array", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   // Exercises the is_signed_v == false branch, where the negative value check is compiled out.
   DataStructure dataStructure = BuildTestData();
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath));
   auto& featureAmRef = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath);
-  auto* sizesPtr = UnitTest::CreateTestDataArray<uint16>(dataStructure, "UnsignedSizes", {5}, {1}, featureAmRef.getId());
+  auto* sizesPtr = unit_test::CreateTestDataArray<uint16>(dataStructure, "UnsignedSizes", {5}, {1}, featureAmRef.getId());
   auto& sizesRef = sizesPtr->getDataStoreRef();
   const std::vector<uint16> sizes = {0, 4, 1, 2, 3};
   for(usize i = 0; i < sizes.size(); i++)
@@ -612,12 +612,12 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Unsigned ranking array",
   const std::vector<int32> expected = {1, 1, 1, 0, 0, 1, 2, 2, 2, 0};
   REQUIRE(ReadFeatureIds(dataStructure) == expected);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Strict Feature Ids", "[SimplnxCore][KeepRemoveRankedFeaturesFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Strict Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cells");
@@ -635,15 +635,15 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Strict Feature Ids", "[S
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Cells", shape, imageGeomPtr->getId());
   REQUIRE(otherPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
   auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
   REQUIRE(elsewherePtr != nullptr);
   auto* externalFeaturesPtr = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewherePtr->getId());
   REQUIRE(externalFeaturesPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
 
   KeepRemoveRankedFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -671,7 +671,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Strict Feature Ids", "[S
   }
   SECTION("Feature array under a plain DataGroup")
   {
-    REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
+    REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
     offendingPath = DataPath({"Elsewhere", "Ungrouped Features"});
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_RankingArrayPath_Key, std::make_any<DataPath>(offendingPath));
     expectedCode = -78127;
@@ -701,27 +701,27 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Strict Feature Ids", "[S
   const auto result = filter.preflight(dataStructure, args);
   if(expectedCode == 0)
   {
-    REQUIRE(result.outputActions.valid());
-    for(const auto& modification : result.outputActions.value().modifiedActions)
+    REQUIRE(result.output_actions.valid());
+    for(const auto& modification : result.output_actions.value().modified_actions)
     {
-      CHECK(modification.modifiedPath.getParent() != DataPath({"Elsewhere", "Cells"}));
+      CHECK(modification.modified_path.getParent() != DataPath({"Elsewhere", "Cells"}));
     }
   }
   else
   {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == expectedCode);
+    CHECK(result.output_actions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Shared Cell Paths and Selected Feature Matrix", "[SimplnxCore][KeepRemoveRankedFeaturesFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool useAliasForIds = GENERATE(false, true);
   CAPTURE(useAliasForIds);
   DataStructure dataStructure;
@@ -740,9 +740,9 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Shared Cell Paths and Se
   imageGeomPtr->setCellData(*cellsPtr);
   REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), earlierParentPtr->getId()));
   REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
-  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
-  auto* ignoredPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* valuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
+  auto* ignoredPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(ignoredPtr != nullptr);
@@ -755,14 +755,14 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Shared Cell Paths and Se
   }
 
   // The selected array has another parent; only the selected Feature Attribute Matrix is compacted.
-  auto* featureValuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
-  auto* externalMarkerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
+  auto* featureValuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
+  auto* externalMarkerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
   REQUIRE(featureValuesPtr != nullptr);
   REQUIRE(externalMarkerPtr != nullptr);
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3}, imageGeomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(featureValuesPtr->getId(), featuresPtr->getId()));
-  auto* markerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
+  auto* markerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
   REQUIRE(markerPtr != nullptr);
   for(usize index = 0; index < 3; index++)
   {
@@ -785,12 +785,12 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Shared Cell Paths and Se
   args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_IgnoredDataArrayPaths_Key,
                       std::make_any<std::vector<DataPath>>(std::vector<DataPath>{ignoreParent.createChildPath("Ignored"), ignoreParent.createChildPath("Ids")}));
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool reportsValues = false;
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  for(const auto& modification : preflight.output_actions.value().modified_actions)
   {
-    CHECK(modification.modifiedPath.getParent() != aliasCellPath);
-    reportsValues = reportsValues || modification.modifiedPath == cellPath.createChildPath("Values");
+    CHECK(modification.modified_path.getParent() != aliasCellPath);
+    reportsValues = reportsValues || modification.modified_path == cellPath.createChildPath("Values");
   }
   CHECK(reportsValues);
   const auto execute = filter.execute(dataStructure, args);
@@ -814,12 +814,12 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Shared Cell Paths and Se
   {
     CHECK((*externalMarkerPtr)[index] == static_cast<int32>(90 + index));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "[SimplnxCore][KeepRemoveRankedFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   KeepRemoveRankedFeaturesFilter filter;
 
   SECTION("Number of Features of 0 is an error")
@@ -827,7 +827,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     Arguments args = MakeArgs(0ULL, 0ULL, 0ULL);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
   SECTION("Number of Features above the feature count warns and clamps")
@@ -837,8 +837,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     Arguments args = MakeArgs(0ULL, 0ULL, 99ULL);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(HasWarningCode(preflightResult.outputActions.warnings(), -78120));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(HasWarningCode(preflightResult.output_actions.warnings(), -78120));
   }
 
   SECTION("Percent at or below 0 is an error")
@@ -848,7 +848,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_Criterion_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_Percent_Key, std::make_any<float64>(0.0));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
   SECTION("Percent above 100 is an error")
@@ -858,7 +858,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_Criterion_Key, std::make_any<ChoicesParameter::ValueType>(1ULL));
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_Percent_Key, std::make_any<float64>(100.1));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
   SECTION("A Feature Attribute Matrix holding only the dummy feature is an error")
@@ -871,7 +871,7 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
 
     Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
   SECTION("Keeping every feature flags nothing and warns")
@@ -879,8 +879,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     Arguments args = MakeArgs(0ULL, 0ULL, 4ULL);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(HasWarningCode(preflightResult.outputActions.warnings(), -78123));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(HasWarningCode(preflightResult.output_actions.warnings(), -78123));
   }
 
   SECTION("Removing every feature warns at preflight and fails at execute")
@@ -888,8 +888,8 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     Arguments args = MakeArgs(1ULL, 0ULL, 4ULL);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(HasWarningCode(preflightResult.outputActions.warnings(), -78124));
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(HasWarningCode(preflightResult.output_actions.warnings(), -78124));
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -900,14 +900,14 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     // Put a feature-shaped array under a plain DataGroup rather than an Attribute Matrix.
     auto* groupPtr = DataGroup::Create(dataStructure, "NotAnAttributeMatrix");
-    UnitTest::CreateTestDataArray<int32>(dataStructure, "Sizes", {5}, {1}, groupPtr->getId());
+    unit_test::CreateTestDataArray<int32>(dataStructure, "Sizes", {5}, {1}, groupPtr->getId());
 
     Arguments args = MakeArgs(0ULL, 0ULL, 2ULL);
     args.insertOrAssign(KeepRemoveRankedFeaturesFilter::k_RankingArrayPath_Key, std::make_any<DataPath>(DataPath({"NotAnAttributeMatrix", "Sizes"})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == -78127);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == -78127);
   }
 
   SECTION("A NeighborList in the Feature Attribute Matrix produces a warning")
@@ -915,14 +915,14 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     DataStructure dataStructure = BuildTestData();
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath));
     auto& featureAmRef = dataStructure.getDataRefAs<AttributeMatrix>(k_FeatureAmPath);
-    auto* neighborListPtr = Int32NeighborList::Create(dataStructure, "NeighborList", ShapeType{5}, featureAmRef.getId());
+    auto* neighborListPtr = Int32NeighborListType::Create(dataStructure, "NeighborList", ShapeType{5}, featureAmRef.getId());
     REQUIRE(neighborListPtr != nullptr);
 
     auto preflightResult = filter.preflight(dataStructure, MakeArgs(0ULL, 0ULL, 2ULL));
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Assert both the code and that the message names the list that will actually be removed.
-    const auto& warnings = preflightResult.outputActions.warnings();
+    const auto& warnings = preflightResult.output_actions.warnings();
     const auto neighborListWarning = std::find_if(warnings.cbegin(), warnings.cend(), [](const Warning& warning) { return warning.code == -5558; });
     REQUIRE(neighborListWarning != warnings.cend());
     REQUIRE(neighborListWarning->message.find("NeighborList") != std::string::npos);
@@ -940,27 +940,27 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight validation", "
     // Nothing removed, so FeatureIds are untouched and the Attribute Matrix keeps all 5 tuples.
     const std::vector<int32> expected = {1, 1, 1, 2, 3, 1, 4, 4, 4, 3};
     REQUIRE(ReadFeatureIds(dataStructure) == expected);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath));
-    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_RankingArrayPath).getNumberOfTuples() == 5);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath));
+    REQUIRE(dataStructure.getDataRefAs<Int32ArrayType>(k_RankingArrayPath).getNumberOfTuples() == 5);
   }
 }
 
 TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][KeepRemoveRankedFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure = BuildTestData();
   const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureAmPath);
   REQUIRE(featureAmPtr != nullptr);
   const DataPath neighborListPath = k_FeatureAmPath.createChildPath("NeighborList");
   const DataPath labelsPath = k_FeatureAmPath.createChildPath("Labels");
-  REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
+  REQUIRE(Int32NeighborListType::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
   REQUIRE(StringArray::CreateWithValues(dataStructure, "Labels", featureAmPtr->getShape(), {"Background", "One", "Two", "Three", "Four"}, featureAmPtr->getId()) != nullptr);
 
   KeepRemoveRankedFeaturesFilter filter;
   auto preflightResult = filter.preflight(dataStructure, MakeArgs(0, 0, 2));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   usize staleArrayCount = 0;
-  for(const auto& value : preflightResult.outputValues)
+  for(const auto& value : preflightResult.output_values)
   {
     if(value.name == "Stale Arrays")
     {
@@ -971,5 +971,5 @@ TEST_CASE("SimplnxCore::KeepRemoveRankedFeaturesFilter: Preflight Stale Arrays",
     }
   }
   CHECK(staleArrayCount == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

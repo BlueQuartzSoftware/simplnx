@@ -34,19 +34,19 @@ constexpr ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 
 void CalculateResampledSpacing(const DataStructure& dataStructure, ResampleImageGeomInputValues& inputValues)
 {
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath);
-  if(inputValues.ResamplingMode == k_ScalingModeIndex)
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.selected_image_geometry_path);
+  if(inputValues.resampling_mode == k_ScalingModeIndex)
   {
     const auto spacing = imageGeom.getSpacing();
-    std::transform(spacing.begin(), spacing.end(), inputValues.Scaling.begin(), inputValues.Spacing.begin(), [](float32 value, float32 scale) { return value / (scale / 100); });
+    std::transform(spacing.begin(), spacing.end(), inputValues.scaling.begin(), inputValues.spacing.begin(), [](float32 value, float32 scale) { return value / (scale / 100); });
   }
-  else if(inputValues.ResamplingMode == k_ExactDimensionsModeIndex)
+  else if(inputValues.resampling_mode == k_ExactDimensionsModeIndex)
   {
     const auto spacing = imageGeom.getSpacing();
     const auto dimensions = imageGeom.getDimensions();
-    inputValues.Spacing[0] = spacing[0] * static_cast<float32>(dimensions[0]) / static_cast<float32>(inputValues.ExactDimensions[0]);
-    inputValues.Spacing[1] = spacing[1] * static_cast<float32>(dimensions[1]) / static_cast<float32>(inputValues.ExactDimensions[1]);
-    inputValues.Spacing[2] = spacing[2] * static_cast<float32>(dimensions[2]) / static_cast<float32>(inputValues.ExactDimensions[2]);
+    inputValues.spacing[0] = spacing[0] * static_cast<float32>(dimensions[0]) / static_cast<float32>(inputValues.exact_dimensions[0]);
+    inputValues.spacing[1] = spacing[1] * static_cast<float32>(dimensions[1]) / static_cast<float32>(inputValues.exact_dimensions[1]);
+    inputValues.spacing[2] = spacing[2] * static_cast<float32>(dimensions[2]) / static_cast<float32>(inputValues.exact_dimensions[2]);
   }
 }
 
@@ -101,7 +101,7 @@ class ResampleImageGeomArrayImpl
 {
 public:
   ResampleImageGeomArrayImpl(ResampleImageGeom* algorithm, const IDataArray& srcArray, IDataArray& destArray, const ImageGeom& srcImageGeom, const ImageGeom& destImageGeom,
-                             const std::atomic_bool& shouldCancel, CopyFromArray::ParallelTaskResult& taskResult)
+                             const std::atomic_bool& shouldCancel, copy_from_array::ParallelTaskResult& taskResult)
   : m_AlgorithmPtr(algorithm)
   , m_SrcArray(srcArray)
   , m_DestArray(destArray)
@@ -117,12 +117,12 @@ public:
     const auto& srcDataStore = m_SrcArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destDataStore = m_DestArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    const SizeVec3 srcDims = m_SrcImageGeom.getDimensions();
-    const SizeVec3 destDims = m_DestImageGeom.getDimensions();
-    const FloatVec3 srcOrigin = m_SrcImageGeom.getOrigin();
-    const FloatVec3 srcSpacing = m_SrcImageGeom.getSpacing();
-    const FloatVec3 destOrigin = m_DestImageGeom.getOrigin();
-    const FloatVec3 destSpacing = m_DestImageGeom.getSpacing();
+    const SizeVec3Type srcDims = m_SrcImageGeom.getDimensions();
+    const SizeVec3Type destDims = m_DestImageGeom.getDimensions();
+    const FloatVec3Type srcOrigin = m_SrcImageGeom.getOrigin();
+    const FloatVec3Type srcSpacing = m_SrcImageGeom.getSpacing();
+    const FloatVec3Type destOrigin = m_DestImageGeom.getOrigin();
+    const FloatVec3Type destSpacing = m_DestImageGeom.getSpacing();
 
     // Precompute the independent source-cell mapping for each axis.
     const std::vector<usize> xIndices = ComputeAxisSrcIndices(destDims[0], destOrigin[0], destSpacing[0], srcDims[0], srcOrigin[0], srcSpacing[0]);
@@ -229,46 +229,46 @@ private:
   const ImageGeom& m_SrcImageGeom;
   const ImageGeom& m_DestImageGeom;
   const std::atomic_bool& m_ShouldCancel;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 } // namespace
 
 IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues)
 {
   ResampleImageGeomInputValues resolvedValues = inputValues;
-  DataPath destImagePath = inputValues.CreatedImageGeometryPath;
-  const DataPath& srcImagePath = inputValues.SelectedImageGeometryPath;
+  DataPath destImagePath = inputValues.created_image_geometry_path;
+  const DataPath& srcImagePath = inputValues.selected_image_geometry_path;
 
   Result<OutputActions> resultOutputActions;
   std::vector<IFilter::PreflightValue> preflightUpdatedValues;
 
-  if(inputValues.ResamplingMode == k_ScalingModeIndex)
+  if(inputValues.resampling_mode == k_ScalingModeIndex)
   {
-    if(std::any_of(inputValues.Scaling.begin(), inputValues.Scaling.end(), [](float value) { return value <= 0.0F; }))
+    if(std::any_of(inputValues.scaling.begin(), inputValues.scaling.end(), [](float value) { return value <= 0.0F; }))
     {
-      const std::string errorMessage = fmt::format("Scaling Factor has a non-positive value. {}, {}, {}", inputValues.Scaling[0], inputValues.Scaling[1], inputValues.Scaling[2]);
+      const std::string errorMessage = fmt::format("Scaling Factor has a non-positive value. {}, {}, {}", inputValues.scaling[0], inputValues.scaling[1], inputValues.scaling[2]);
       return IFilter::MakePreflightErrorResult(-11500, errorMessage);
     }
     CalculateResampledSpacing(dataStructure, resolvedValues);
   }
-  else if(inputValues.ResamplingMode == k_ExactDimensionsModeIndex)
+  else if(inputValues.resampling_mode == k_ExactDimensionsModeIndex)
   {
     CalculateResampledSpacing(dataStructure, resolvedValues);
   }
-  else if(inputValues.Spacing[0] < 0.0F || inputValues.Spacing[1] < 0.0F || inputValues.Spacing[2] < 0.0F)
+  else if(inputValues.spacing[0] < 0.0F || inputValues.spacing[1] < 0.0F || inputValues.spacing[2] < 0.0F)
   {
-    const std::string errorMessage = fmt::format("Input Spacing has a negative value. {}, {}, {}", inputValues.Spacing[0], inputValues.Spacing[1], inputValues.Spacing[2]);
+    const std::string errorMessage = fmt::format("Input Spacing has a negative value. {}, {}, {}", inputValues.spacing[0], inputValues.spacing[1], inputValues.spacing[2]);
     return IFilter::MakePreflightErrorResult(-11502, errorMessage);
   }
 
   const auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
-  const SizeVec3 srcDimensions = srcImageGeom.getDimensions();
-  const FloatVec3 srcSpacing = srcImageGeom.getSpacing();
+  const SizeVec3Type srcDimensions = srcImageGeom.getDimensions();
+  const FloatVec3Type srcSpacing = srcImageGeom.getSpacing();
   const auto srcOrigin = srcImageGeom.getOrigin().toContainer<std::vector<float>>();
 
-  auto xDimension = static_cast<size_t>((srcSpacing[0] * static_cast<float>(srcDimensions[0])) / resolvedValues.Spacing[0]);
-  auto yDimension = static_cast<size_t>((srcSpacing[1] * static_cast<float>(srcDimensions[1])) / resolvedValues.Spacing[1]);
-  auto zDimension = static_cast<size_t>((srcSpacing[2] * static_cast<float>(srcDimensions[2])) / resolvedValues.Spacing[2]);
+  auto xDimension = static_cast<size_t>((srcSpacing[0] * static_cast<float>(srcDimensions[0])) / resolvedValues.spacing[0]);
+  auto yDimension = static_cast<size_t>((srcSpacing[1] * static_cast<float>(srcDimensions[1])) / resolvedValues.spacing[1]);
+  auto zDimension = static_cast<size_t>((srcSpacing[2] * static_cast<float>(srcDimensions[2])) / resolvedValues.spacing[2]);
   if(xDimension == 0)
   {
     xDimension = 1;
@@ -286,7 +286,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   std::vector<usize> dataArrayShape = {geometryDimensions[2], geometryDimensions[1], geometryDimensions[0]};
   std::vector<DataPath> ignorePaths;
 
-  if(inputValues.RemoveOriginalImageGeom)
+  if(inputValues.remove_original_image_geom)
   {
     auto tempPathVector = srcImagePath.getPathVector();
     std::string tempName = "." + tempPathVector.back();
@@ -310,7 +310,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(
-      destImagePath, geometryDimensions, srcOrigin, CreateImageGeometryAction::OriginType{resolvedValues.Spacing[0], resolvedValues.Spacing[1], resolvedValues.Spacing[2]}, cellDataName,
+      destImagePath, geometryDimensions, srcOrigin, CreateImageGeometryAction::OriginType{resolvedValues.spacing[0], resolvedValues.spacing[1], resolvedValues.spacing[2]}, cellDataName,
       srcImageGeom.getUnits()));
 
   const DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
@@ -324,14 +324,14 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
   }
 
   preflightUpdatedValues.push_back(
-      {"Input Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(), srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
+      {"Input Geometry Info", geometry_helpers::description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(), srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
   preflightUpdatedValues.push_back(
-      {"Resampled Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(geometryDimensions, resolvedValues.Spacing, srcOrigin, srcImageGeom.getUnits())});
+      {"Resampled Image Geometry Info", geometry_helpers::description::GenerateGeometryInfo(geometryDimensions, resolvedValues.spacing, srcOrigin, srcImageGeom.getUnits())});
 
   // The cleared Feature AM keeps its source shape until optional renumbering.
-  if(inputValues.ClearFeatureAttributeMatrix)
+  if(inputValues.clear_feature_attribute_matrix)
   {
-    const DataPath& cellFeatureAttributeMatrixPath = inputValues.CellFeatureAttributeMatrix;
+    const DataPath& cellFeatureAttributeMatrixPath = inputValues.cell_feature_attribute_matrix;
     const auto* srcCellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
     if(srcCellFeatureDataPtr == nullptr)
     {
@@ -341,18 +341,18 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     if(featureAmResult.invalid())
     {
       featureAmResult.errors().front().message += " Select an Attribute Matrix that is a direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.";
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(featureAmResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(featureAmResult))};
     }
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, cellFeatureAttributeMatrixPath);
     if(elementDataResult.invalid())
     {
-      return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
-    if(inputValues.RenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, inputValues.FeatureIdsArrayPath, *selectedCellDataPtr))
+    if(inputValues.renumber_features && !IsChildOfAttributeMatrix(dataStructure, inputValues.feature_ids_array_path, *selectedCellDataPtr))
     {
       return IFilter::MakePreflightErrorResult(
           -55505, fmt::format("**Cell Feature Ids** DataArray '{}' must be in the Cell Attribute Matrix '{}' of the selected Image Geometry '{}'. Select the DataArray from that Attribute Matrix.",
-                              inputValues.FeatureIdsArrayPath.toString(), srcImagePath.createChildPath(cellDataName).toString(), srcImagePath.toString()));
+                              inputValues.feature_ids_array_path.toString(), srcImagePath.createChildPath(cellDataName).toString(), srcImagePath.toString()));
     }
 
     ignorePaths.push_back(cellFeatureAttributeMatrixPath);
@@ -369,13 +369,13 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     {
       message += fmt::format(" Its values describe the original geometry and are not copied. Recompute any of the following Data Arrays:\n{}", clearedList);
     }
-    if(inputValues.RenumberFeatures)
+    if(inputValues.renumber_features)
     {
       message += "\n\nFeature Ids are renumbered.\nThe Attribute Matrix is resized to the number of features remaining after the resample.";
     }
     preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
   }
-  else if(inputValues.ReportUnclearedFeatureData)
+  else if(inputValues.report_uncleared_feature_data)
   {
     preflightUpdatedValues.push_back({"Feature Data Not Cleared", "Attribute Matrices other than the Cell Attribute Matrix are copied to the resampled geometry unchanged. If one of them holds "
                                                                   "Feature data, its values describe the original geometry and are not valid for the resampled geometry."});
@@ -388,17 +388,17 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
-      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, inputValues.ClearFeatureAttributeMatrix ? inputValues.CellFeatureAttributeMatrix : DataPath{});
+      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, inputValues.clear_feature_attribute_matrix ? inputValues.cell_feature_attribute_matrix : DataPath{});
     }
   }
 
-  if(inputValues.RemoveOriginalImageGeom)
+  if(inputValues.remove_original_image_geom)
   {
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
-    AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, srcImageGeom.getCellDataPath(), {});
+    AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, srcImageGeom.getCellDataPath(), {});
   }
 
-  return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
@@ -423,18 +423,18 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ResampleImageGeom::operator()()
 {
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->selected_image_geometry_path);
 
-  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
+  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->created_image_geometry_path);
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
   usize totalArrays = srcCellDataAM.getSize();
-  const SizeVec3 destDims = destImageGeom.getDimensions();
+  const SizeVec3Type destDims = destImageGeom.getDimensions();
   m_Throttle.reset(totalArrays * destDims[1] * destDims[2], "Resampling cell arrays");
 
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
 
@@ -469,13 +469,13 @@ Result<> ResampleImageGeom::operator()()
   }
 
   // Validate Feature Ids against the source AM before compacting the resampled data.
-  DataPath cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrix;
-  auto destImagePath = m_InputValues->CreatedImageGeometryPath;
-  DataPath featureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
+  DataPath cellFeatureAMPath = m_InputValues->cell_feature_attribute_matrix;
+  auto destImagePath = m_InputValues->created_image_geometry_path;
+  DataPath featureIdsArrayPath = m_InputValues->feature_ids_array_path;
 
-  if(m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures)
+  if(m_InputValues->clear_feature_attribute_matrix && m_InputValues->renumber_features)
   {
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(featureIdsArrayPath);
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, cellFeatureAMPath, featureIds, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
@@ -485,7 +485,7 @@ Result<> ResampleImageGeom::operator()()
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
     // Renumber resampled Feature Ids and resize the empty destination Feature AM.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
-    return Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
+    return sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};
@@ -503,14 +503,14 @@ Result<> nx::core::ResampleImageGeometry(DataStructure& dataStructure, const Res
   ResampleImageGeomInputValues resolvedValues = inputValues;
   CalculateResampledSpacing(dataStructure, resolvedValues);
 
-  const auto* cellDataGroupPtr = dataStructure.getDataRefAs<ImageGeom>(resolvedValues.SelectedImageGeometryPath).getCellData();
-  resolvedValues.CellDataGroupPath = resolvedValues.SelectedImageGeometryPath.createChildPath(cellDataGroupPtr->getName());
+  const auto* cellDataGroupPtr = dataStructure.getDataRefAs<ImageGeom>(resolvedValues.selected_image_geometry_path).getCellData();
+  resolvedValues.cell_data_group_path = resolvedValues.selected_image_geometry_path.createChildPath(cellDataGroupPtr->getName());
 
-  if(resolvedValues.RemoveOriginalImageGeom)
+  if(resolvedValues.remove_original_image_geom)
   {
-    auto tempPathVector = resolvedValues.SelectedImageGeometryPath.getPathVector();
+    auto tempPathVector = resolvedValues.selected_image_geometry_path.getPathVector();
     tempPathVector.back() = k_TempGeometryName;
-    resolvedValues.CreatedImageGeometryPath = DataPath({tempPathVector});
+    resolvedValues.created_image_geometry_path = DataPath({tempPathVector});
   }
 
   return ResampleImageGeom(dataStructure, messageHandler, shouldCancel, &resolvedValues)();

@@ -21,8 +21,8 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-memory)", "[NXImageProcessing][MeanProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const uint32 projDim = GENERATE(uint32{0}, uint32{1}, uint32{2});
   const bool performInPlace = GENERATE(false, true);
@@ -42,7 +42,7 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
   args.insertOrAssign(MeanProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -106,7 +106,7 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
     UNSCOPED_INFO(fmt::format("slot={} got={} expected={}", badSlot, badGot, badExp));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

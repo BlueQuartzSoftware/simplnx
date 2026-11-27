@@ -161,13 +161,13 @@ void PrintVersion(std::ostream& outputStream)
  */
 int FinishStandardOutput(OutputStreams streams)
 {
-  streams.Output.get().flush();
-  if(streams.Output.get().good())
+  streams.output.get().flush();
+  if(streams.output.get().good())
   {
     return 0;
   }
 
-  streams.Error.get() << fmt::format("Error {}: Failed to write to standard output. Check that the receiving process or output destination is writable.\n", k_OutputFailure);
+  streams.error.get() << fmt::format("Error {}: Failed to write to standard output. Check that the receiving process or output destination is writable.\n", k_OutputFailure);
   return k_OutputFailure;
 }
 
@@ -222,7 +222,7 @@ void LoadApp(std::ostream& errorStream)
  */
 Result<OutputFormat> ParseFormat(const std::string& value)
 {
-  const std::string upper = StringUtilities::toUpper(value);
+  const std::string upper = string_utilities::ToUpper(value);
   if(upper == "JSON")
   {
     return {OutputFormat::Json};
@@ -424,16 +424,16 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
   {
     if(inputStatusError == std::errc::no_such_file_or_directory)
     {
-      streams.Error.get() << fmt::format("Error {}: Input file '{}' does not exist. Check the path and try again.\n", k_InputFileMissing, options.input_file.string());
+      streams.error.get() << fmt::format("Error {}: Input file '{}' does not exist. Check the path and try again.\n", k_InputFileMissing, options.input_file.string());
       return k_InputFileMissing;
     }
-    streams.Error.get() << fmt::format("Error {}: Could not inspect input file '{}': {}. Check the path and permissions.\n", k_InputFileMissing, options.input_file.string(),
+    streams.error.get() << fmt::format("Error {}: Could not inspect input file '{}': {}. Check the path and permissions.\n", k_InputFileMissing, options.input_file.string(),
                                        inputStatusError.message());
     return k_InputFileMissing;
   }
   if(!fs::is_regular_file(inputStatus))
   {
-    streams.Error.get() << fmt::format("Error {}: Input path '{}' is not a regular file. Select a DREAM3D file and try again.\n", k_InputFileMissing, options.input_file.string());
+    streams.error.get() << fmt::format("Error {}: Input path '{}' is not a regular file. Select a DREAM3D file and try again.\n", k_InputFileMissing, options.input_file.string());
     return k_InputFileMissing;
   }
   if(options.output_file.has_value())
@@ -445,7 +445,7 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
     if(outputDirectoryError || !outputDirectoryExists)
     {
       const std::string cause = outputDirectoryError ? fmt::format(": {}", outputDirectoryError.message()) : "";
-      streams.Error.get() << fmt::format("Error {}: Output file '{}' cannot be created because directory '{}' is not available{}. Create the directory or choose another output path.\n",
+      streams.error.get() << fmt::format("Error {}: Output file '{}' cannot be created because directory '{}' is not available{}. Create the directory or choose another output path.\n",
                                          k_OutputFailure, outputPath.string(), outputDirectory.string(), cause);
       return k_OutputFailure;
     }
@@ -454,13 +454,13 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
     const bool pathsIdentifySameFile = fs::equivalent(options.input_file, outputPath, sameFileError);
     if(!sameFileError && pathsIdentifySameFile)
     {
-      streams.Error.get() << fmt::format("Error {}: Input file '{}' and output file '{}' identify the same file. Choose a different output path.\n", k_OutputFailure, options.input_file.string(),
+      streams.error.get() << fmt::format("Error {}: Input file '{}' and output file '{}' identify the same file. Choose a different output path.\n", k_OutputFailure, options.input_file.string(),
                                          outputPath.string());
       return k_OutputFailure;
     }
   }
 
-  loadPluginsFunction(streams.Error.get());
+  loadPluginsFunction(streams.error.get());
 
   const Result<DataStructure> readResult = [&options] {
     const ScopedHdf5ErrorHandler scopedHdf5ErrorHandler;
@@ -473,8 +473,8 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
   }();
   if(readResult.invalid())
   {
-    streams.Error.get() << fmt::format("Error {}: Failed to read the DataStructure from '{}'. Confirm that it is a valid DREAM3D file.\n", k_FailedReadingDataStructure, options.input_file.string());
-    PrintErrors(readResult.errors(), streams.Error.get());
+    streams.error.get() << fmt::format("Error {}: Failed to read the DataStructure from '{}'. Confirm that it is a valid DREAM3D file.\n", k_FailedReadingDataStructure, options.input_file.string());
+    PrintErrors(readResult.errors(), streams.error.get());
     return k_FailedReadingDataStructure;
   }
 
@@ -484,8 +484,8 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
     auto atomicFileResult = AtomicFile::Create(outputPath);
     if(atomicFileResult.invalid())
     {
-      streams.Error.get() << fmt::format("Error {}: Could not prepare output file '{}'. Check the path and write permissions.\n", k_OutputFailure, outputPath.string());
-      PrintErrors(atomicFileResult.errors(), streams.Error.get());
+      streams.error.get() << fmt::format("Error {}: Could not prepare output file '{}'. Check the path and write permissions.\n", k_OutputFailure, outputPath.string());
+      PrintErrors(atomicFileResult.errors(), streams.error.get());
       return k_OutputFailure;
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
@@ -493,30 +493,30 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
     std::ofstream outputFileStream(atomicFile.tempFilePath(), std::ios_base::out | std::ios_base::trunc);
     if(!outputFileStream.is_open())
     {
-      streams.Error.get() << fmt::format("Error {}: Failed to open temporary output for '{}'. Check available disk space and write permissions.\n", k_OutputFailure, outputPath.string());
+      streams.error.get() << fmt::format("Error {}: Failed to open temporary output for '{}'. Check available disk space and write permissions.\n", k_OutputFailure, outputPath.string());
       return k_OutputFailure;
     }
     const bool writeSucceeded = WriteDump(readResult.value(), options.Format, outputFileStream);
     outputFileStream.close();
     if(!writeSucceeded || outputFileStream.fail())
     {
-      streams.Error.get() << fmt::format("Error {}: Failed to write output file '{}'. Check available disk space and permissions.\n", k_OutputFailure, outputPath.string());
+      streams.error.get() << fmt::format("Error {}: Failed to write output file '{}'. Check available disk space and permissions.\n", k_OutputFailure, outputPath.string());
       return k_OutputFailure;
     }
 
     Result<> commitResult = atomicFile.commit();
     if(commitResult.invalid())
     {
-      streams.Error.get() << fmt::format("Error {}: Failed to replace output file '{}'. The existing destination, if any, was preserved.\n", k_OutputFailure, outputPath.string());
-      PrintErrors(commitResult.errors(), streams.Error.get());
+      streams.error.get() << fmt::format("Error {}: Failed to replace output file '{}'. The existing destination, if any, was preserved.\n", k_OutputFailure, outputPath.string());
+      PrintErrors(commitResult.errors(), streams.error.get());
       return k_OutputFailure;
     }
     return 0;
   }
 
-  if(!WriteDump(readResult.value(), options.Format, streams.Output.get()))
+  if(!WriteDump(readResult.value(), options.Format, streams.output.get()))
   {
-    streams.Error.get() << fmt::format("Error {}: Failed to write the DataStructure hierarchy to standard output. Check that the receiving process or output destination is writable.\n",
+    streams.error.get() << fmt::format("Error {}: Failed to write the DataStructure hierarchy to standard output. Check that the receiving process or output destination is writable.\n",
                                        k_OutputFailure);
     return k_OutputFailure;
   }
@@ -529,25 +529,25 @@ int Run(const std::vector<std::string>& arguments, OutputStreams streams, const 
   const Result<CliOptions> parsed = ParseArguments(arguments);
   if(parsed.invalid())
   {
-    const int code = PrintErrors(parsed.errors(), streams.Error.get());
-    PrintUsage(streams.Error.get());
+    const int code = PrintErrors(parsed.errors(), streams.error.get());
+    PrintUsage(streams.error.get());
     return code;
   }
 
   const CliOptions& options = parsed.value();
   if(!options.selected_command.has_value())
   {
-    streams.Error.get() << fmt::format("Error {}: No command was selected. Use '--help' to list available commands.\n", k_FailedParsingArguments);
+    streams.error.get() << fmt::format("Error {}: No command was selected. Use '--help' to list available commands.\n", k_FailedParsingArguments);
     return k_FailedParsingArguments;
   }
   if(*options.selected_command == Command::Help)
   {
-    PrintUsage(streams.Output.get());
+    PrintUsage(streams.output.get());
     return FinishStandardOutput(streams);
   }
   if(*options.selected_command == Command::Version)
   {
-    PrintVersion(streams.Output.get());
+    PrintVersion(streams.output.get());
     return FinishStandardOutput(streams);
   }
   return RunDumpDataStructure(options, streams, loadPluginsFunction);

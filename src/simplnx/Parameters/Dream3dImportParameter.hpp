@@ -47,21 +47,21 @@ public:
      *                  If the path import policy is set to 'All', this parameter is ignored.
      */
     explicit ImportData(std::filesystem::path filePath, PathImportPolicy policy = PathImportPolicy::All, std::vector<nx::core::DataPath> dataPaths = {})
-    : FilePath(std::move(filePath))
-    , DataPaths(std::move(dataPaths))
-    , ImportPolicy(policy)
+    : file_path(std::move(filePath))
+    , data_paths(std::move(dataPaths))
+    , import_policy(policy)
     {
     }
 
     /**
      * @brief The path to the .dream3d file to import.
      */
-    std::filesystem::path FilePath;
+    std::filesystem::path file_path;
 
     /**
      * @brief Holds a vector of DataPaths that will be either imported or NOT imported, depending on the PathImportPolicy
      */
-    std::vector<nx::core::DataPath> DataPaths;
+    std::vector<nx::core::DataPath> data_paths;
 
     /**
      * @brief Determines the import policy, which governs how to use the DataPaths.
@@ -69,7 +69,7 @@ public:
      * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
      * All -> Imports all possible data and ignores the DataPaths list.
      */
-    PathImportPolicy ImportPolicy = PathImportPolicy::All;
+    PathImportPolicy import_policy = PathImportPolicy::All;
   };
 
   /** @brief Filter name used in the filter list and in strict-load diagnostics. */
@@ -105,7 +105,7 @@ public:
    * @brief Returns a vector of accepted value types.
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates and returns a copy of the parameter.
@@ -149,7 +149,7 @@ public:
    * @param importData
    * @return Result<>
    */
-  static Result<> validatePath(const ValueType& importData);
+  static Result<> ValidatePath(const ValueType& importData);
 
 protected:
   /**

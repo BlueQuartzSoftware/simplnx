@@ -61,14 +61,14 @@ Parameters AlignSectionsListFilter::parameters() const
                                                    "This selection determines how the input array was produced, Relative refers to the case where the shifts were calculated relative to "
                                                    "the previous slice's new position, Cumulative refers to the case where the shifts are the direct change in position",
                                                    static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::RelativeShifts)),
-                                                   ChoicesParameter::Choices{"Relative", "Cumulative"}));
+                                                   ChoicesParameter::ChoicesType{"Relative", "Cumulative"}));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
                                                              DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ShiftsArrayPath_Key, "Shifts Array", "The array containing the relative or cumulative shifts for each slice",
                                                           DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   return params;
 }
@@ -112,7 +112,7 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
   if(imageGeom.getNumXCells() <= 1 || imageGeom.getNumYCells() <= 1 || imageGeom.getNumZCells() <= 1)
   {
     return MakePreflightErrorResult(
-        -8941, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
+        -8941, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", string_utilities::FormatDimensions3D(imageGeom.getDimensions())));
   }
 
   if(pUseFileValue == 0u)
@@ -132,9 +132,9 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, imageGeom.getCellDataPath(), {});
 
-  return {.outputActions = std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -143,9 +143,9 @@ Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, cons
 {
   AlignSectionsListInputValues inputValues;
 
-  inputValues.AlignSectionsType = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.ShiftsArrayPath = filterArgs.value<DataPath>(k_ShiftsArrayPath_Key);
+  inputValues.align_sections_type = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.shifts_array_path = filterArgs.value<DataPath>(k_ShiftsArrayPath_Key);
 
   return AlignSectionsList(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

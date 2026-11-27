@@ -63,7 +63,7 @@ TEST_CASE("SimplnxCore::MoveDataFilter Successful", "[Simplnx::Core][MoveDataFil
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -85,7 +85,7 @@ TEST_CASE("SimplnxCore::MoveDataFilter Successful", "[Simplnx::Core][MoveDataFil
   const DataPath newGroup4Path = kGroup1Path.createChildPath(k_Group4Name);
   REQUIRE(dataStructure.getDataAs<DataGroup>(newGroup4Path) != nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataFilter]")
@@ -104,7 +104,7 @@ TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataF
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
   SECTION("Cannot reparent object to itself")
   {
@@ -113,7 +113,7 @@ TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataF
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
   SECTION("Cannot reparent object to a child object")
   {
@@ -122,10 +122,10 @@ TEST_CASE("SimplnxCore::MoveDataFilter Unsuccessful", "[Simplnx::Core][MoveDataF
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MoveDataFilter Tuple Size Mismatches Warning and Failure", "[Simplnx::Core][MoveDataFilter]")
@@ -143,10 +143,10 @@ TEST_CASE("SimplnxCore::MoveDataFilter Tuple Size Mismatches Warning and Failure
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
 
-  REQUIRE_FALSE(preflightResult.outputActions.warnings().empty());
+  REQUIRE_FALSE(preflightResult.output_actions.warnings().empty());
 
   bool found = false;
-  for(const auto& warning : preflightResult.outputActions.warnings())
+  for(const auto& warning : preflightResult.output_actions.warnings())
   {
     if(warning.code == ::k_TupleDimMismatchWarningCode)
     {
@@ -156,18 +156,18 @@ TEST_CASE("SimplnxCore::MoveDataFilter Tuple Size Mismatches Warning and Failure
 
   REQUIRE(found);
 
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::MoveDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MoveDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";

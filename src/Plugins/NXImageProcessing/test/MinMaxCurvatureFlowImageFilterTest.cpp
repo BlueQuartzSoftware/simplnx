@@ -36,7 +36,7 @@ void RunMinMaxCurvatureFlow(IFilter& filter, DataStructure& dataStructure, const
   args.insertOrAssign(MinMaxFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
   args.insertOrAssign(MinMaxFilterType::k_StencilRadius_Key, std::make_any<int32>(stencilRadius));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -68,8 +68,8 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("integer input rejected")
   {
@@ -89,14 +89,14 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards",
     args.insertOrAssign(MinMaxFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     args.insertOrAssign(MinMaxFilterType::k_StencilRadius_Key, std::make_any<int32>(2));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
   }
   SECTION("multi-component rejected")
   {
     DataStructure dataStructure;
     const DataPath scalarPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 0.0f));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    auto vecStore = data_store_utilities::CreateDataStore<float32>(dataStructure, vecPath, {1, 6, 6}, {3});
     const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
     DataArray<float32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
@@ -109,8 +109,8 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: preflight guards",
     args.insertOrAssign(MinMaxFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
     args.insertOrAssign(MinMaxFilterType::k_StencilRadius_Key, std::make_any<int32>(2));
     const auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar float input creates a SameAsInput output")
   {
@@ -153,8 +153,8 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: ITK real-image gol
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 clamps to 1", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 12;
   constexpr usize k_Dy = 12;
@@ -182,8 +182,8 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: StencilRadius 0 cl
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is identity", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;
@@ -203,8 +203,8 @@ TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: constant image is 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MinMaxCurvatureFlowImageFilter: zero iterations is a no-op", "[NXImageProcessing][MinMaxCurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr usize k_Dx = 8;
   constexpr usize k_Dy = 8;
