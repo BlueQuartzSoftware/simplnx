@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <set>
+#include <type_traits>
 
 namespace nx::core::ImageProcessing
 {
@@ -39,6 +40,13 @@ inline constexpr int32 k_RelabelComponentTooManyObjects = -8590;
  */
 template <class T>
 using SameAsInput = T;
+
+/**
+ * @brief Maps integer input to float32 and retains the type of floating input.
+ * @tparam T Input pixel type.
+ */
+template <class T>
+using IntegerToFloat32Type = std::conditional_t<std::is_integral_v<T>, float32, T>;
 
 template <class T>
 using AlwaysFloat64Type = float64;
