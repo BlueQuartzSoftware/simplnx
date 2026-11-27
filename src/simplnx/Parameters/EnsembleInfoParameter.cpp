@@ -13,12 +13,12 @@ namespace nx::core
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePath = "input_file_path";
-constexpr StringLiteral k_StartSlice = "start_slice";
-constexpr StringLiteral k_EndSlice = "end_slice";
-constexpr StringLiteral k_UseRecommendedTransform = "use_recommended_transform";
-constexpr StringLiteral k_EulerRepresentation = "euler_representation";
-constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
+constexpr StringLiteralType k_InputFilePath = "input_file_path";
+constexpr StringLiteralType k_StartSlice = "start_slice";
+constexpr StringLiteralType k_EndSlice = "end_slice";
+constexpr StringLiteralType k_UseRecommendedTransform = "use_recommended_transform";
+constexpr StringLiteralType k_EulerRepresentation = "euler_representation";
+constexpr StringLiteralType k_HDF5DataPaths = "hdf5_data_paths";
 
 } // namespace
 
@@ -67,7 +67,7 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 
   if(!json.is_array() && !json.is_null())
   {
@@ -115,7 +115,7 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer EnsembleInfoParameter::clone() const
+IParameter::UniquePointerType EnsembleInfoParameter::clone() const
 {
   return std::make_unique<EnsembleInfoParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -152,13 +152,13 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_CrystalStructureKey = "CrystalStructure";
-constexpr StringLiteral k_PhaseNameKey = "PhaseName";
-constexpr StringLiteral k_PhaseTypeKey = "PhaseType";
+constexpr StringLiteralType k_CrystalStructureKey = "CrystalStructure";
+constexpr StringLiteralType k_PhaseNameKey = "PhaseName";
+constexpr StringLiteralType k_PhaseTypeKey = "PhaseType";
 } // namespace
 
 Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParameterConverter::Convert(const nlohmann::json& json)
@@ -200,5 +200,5 @@ Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParame
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

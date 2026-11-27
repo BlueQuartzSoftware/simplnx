@@ -47,18 +47,18 @@ constexpr int32 k_InvalidArgumentError = -120;
 constexpr int32 k_LogFileError = -121;
 constexpr int32 k_NullLogFileError = -122;
 
-constexpr StringLiteral k_HelpParamLong = "--help";
-constexpr StringLiteral k_ExecuteParamLong = "--execute";
-constexpr StringLiteral k_PreflightParamLong = "--preflight";
-constexpr StringLiteral k_LogFileParamLong = "--logfile";
-constexpr StringLiteral k_ConvertParamLong = "--convert";
+constexpr StringLiteralType k_HelpParamLong = "--help";
+constexpr StringLiteralType k_ExecuteParamLong = "--execute";
+constexpr StringLiteralType k_PreflightParamLong = "--preflight";
+constexpr StringLiteralType k_LogFileParamLong = "--logfile";
+constexpr StringLiteralType k_ConvertParamLong = "--convert";
 
-constexpr StringLiteral k_HelpParamShort = "-h";
-constexpr StringLiteral k_ExecuteParamShort = "-e";
-constexpr StringLiteral k_PreflightParamShort = "-p";
-constexpr StringLiteral k_LogFileParamShort = "-l";
-constexpr StringLiteral k_ConvertParamShort = "-c";
-constexpr StringLiteral k_CacheMemoryBudgetParamLong = "--cache-memory-budget";
+constexpr StringLiteralType k_HelpParamShort = "-h";
+constexpr StringLiteralType k_ExecuteParamShort = "-e";
+constexpr StringLiteralType k_PreflightParamShort = "-p";
+constexpr StringLiteralType k_LogFileParamShort = "-l";
+constexpr StringLiteralType k_ConvertParamShort = "-c";
+constexpr StringLiteralType k_CacheMemoryBudgetParamLong = "--cache-memory-budget";
 
 /**
  * @brief Loads plugins from nxrunner build and application package locations.
@@ -354,7 +354,7 @@ int PrintResult(const Result<T>& result)
  */
 Result<> PreflightPipeline(Pipeline& pipeline)
 {
-  const CLI::PipelineObserver obs(&pipeline);
+  const cli::PipelineObserver obs(&pipeline);
   CliOut << "\n-------------------------";
   CliOut.endline();
 
@@ -376,7 +376,7 @@ Result<> PreflightPipeline(Pipeline& pipeline)
  */
 Result<> ExecutePipeline(Pipeline& pipeline)
 {
-  const CLI::PipelineObserver obs(&pipeline);
+  const cli::PipelineObserver obs(&pipeline);
   CliOut << "\n-------------------------";
   CliOut.endline();
 

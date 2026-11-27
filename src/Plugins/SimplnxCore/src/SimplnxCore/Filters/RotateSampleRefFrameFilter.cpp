@@ -154,7 +154,7 @@ Parameters RotateSampleRefFrameFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
@@ -181,7 +181,7 @@ IFilter::VersionType RotateSampleRefFrameFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RotateSampleRefFrameFilter::clone() const
+IFilter::UniquePointerType RotateSampleRefFrameFilter::clone() const
 {
   return std::make_unique<RotateSampleRefFrameFilter>();
 }
@@ -201,7 +201,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  ImageRotationUtilities::Matrix4fR rotationMatrix;
+  ImageRotationUtilities::Matrix4fRType rotationMatrix;
 
   auto rotationRepresentationIndex = filterArgs.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
   switch(rotationRepresentationIndex)
@@ -421,11 +421,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_RotationRepresentationChoiceKey = "RotationRepresentationChoice";
-constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
-constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
-constexpr StringLiteral k_RotationTableKey = "RotationTable";
-constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteralType k_RotationRepresentationChoiceKey = "RotationRepresentationChoice";
+constexpr StringLiteralType k_RotationAngleKey = "RotationAngle";
+constexpr StringLiteralType k_RotationAxisKey = "RotationAxis";
+constexpr StringLiteralType k_RotationTableKey = "RotationTable";
+constexpr StringLiteralType k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 } // namespace simpl
 } // namespace
 
@@ -437,22 +437,22 @@ Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  Result<> rotateResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key);
+  Result<> rotateResult = simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key);
   if(rotateResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(rotateResult));
   }
   results.push_back(
-      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
-  Result<> tableResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_RotationTableKey, k_RotationMatrix_Key);
+      simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
+  Result<> tableResult = simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_RotationTableKey, k_RotationMatrix_Key);
   if(tableResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(tableResult));
   }
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

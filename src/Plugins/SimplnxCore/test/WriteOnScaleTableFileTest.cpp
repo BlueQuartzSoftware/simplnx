@@ -126,12 +126,12 @@ DataStructure CreateRectGridDataStructure(const SizeVec3& dimensions, const std:
   return dataStructure;
 }
 
-Arguments CreateArguments(const fs::path& outputPath, const std::string& prefix, const VectorInt32Parameter::ValueType& numKeypoints = {2, 3, 4})
+Arguments CreateArguments(const fs::path& outputPath, const std::string& prefix, const VectorInt32ParameterType::ValueType& numKeypoints = {2, 3, 4})
 {
   Arguments args = WriteOnScaleTableFileFilter().getDefaultArguments();
   args.insertOrAssign(WriteOnScaleTableFileFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
   args.insertOrAssign(WriteOnScaleTableFileFilter::k_FilePrefix_Key, std::make_any<StringParameter::ValueType>(prefix));
-  args.insertOrAssign(WriteOnScaleTableFileFilter::k_NumKeypoints_Key, std::make_any<VectorInt32Parameter::ValueType>(numKeypoints));
+  args.insertOrAssign(WriteOnScaleTableFileFilter::k_NumKeypoints_Key, std::make_any<VectorInt32ParameterType::ValueType>(numKeypoints));
   args.insertOrAssign(WriteOnScaleTableFileFilter::k_InputGeometryPath_Key, std::make_any<DataPath>(k_GeometryPath));
   args.insertOrAssign(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(WriteOnScaleTableFileFilter::k_PhaseNamesArrayPath_Key, std::make_any<DataPath>(k_PhaseNamesPath));
@@ -854,7 +854,7 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: SIMPL Backwards Compatibili
       const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteOnScaleTableFileFilter::k_OutputPath_Key) == fs::path("/test/path"));
       CHECK(args.value<std::string>(WriteOnScaleTableFileFilter::k_FilePrefix_Key) == "TestPrefix");
-      CHECK(args.value<VectorInt32Parameter::ValueType>(WriteOnScaleTableFileFilter::k_NumKeypoints_Key) == VectorInt32Parameter::ValueType{3, 4, 5});
+      CHECK(args.value<VectorInt32ParameterType::ValueType>(WriteOnScaleTableFileFilter::k_NumKeypoints_Key) == VectorInt32ParameterType::ValueType{3, 4, 5});
       CHECK(args.value<DataPath>(WriteOnScaleTableFileFilter::k_InputGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(WriteOnScaleTableFileFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "FeatureIds"}));
       CHECK(args.value<DataPath>(WriteOnScaleTableFileFilter::k_PhaseNamesArrayPath_Key) == DataPath({"DataContainer", "CellEnsembleData", "PhaseName"}));

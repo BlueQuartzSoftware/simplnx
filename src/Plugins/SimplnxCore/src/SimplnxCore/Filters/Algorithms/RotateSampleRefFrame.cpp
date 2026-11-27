@@ -41,7 +41,7 @@ Result<> RotateSampleRefFrame::operator()()
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SourceGeometryPath);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DestGeometryPath);
 
-  ImageRotationUtilities::Matrix4fR rotationMatrix;
+  ImageRotationUtilities::Matrix4fRType rotationMatrix;
 
   switch(static_cast<RotationRepresentationType>(m_InputValues->RotationRepresentationIndex))
   {

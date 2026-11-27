@@ -19,21 +19,21 @@ template <typename T>
 class ListStore : public AbstractListStore<T>
 {
 public:
-  using parent_type = AbstractListStore<T>;
+  using ParentType = AbstractListStore<T>;
   using value_type = T;
-  using vector_type = typename parent_type::vector_type;
-  using shared_vector_type = typename parent_type::shared_vector_type;
-  using reference = typename parent_type::reference;
-  using const_reference = typename parent_type::const_reference;
-  using iterator = typename parent_type::iterator;
-  using const_iterator = typename parent_type::const_iterator;
+  using VectorType = typename ParentType::VectorType;
+  using SharedVectorType = typename ParentType::SharedVectorType;
+  using reference = typename ParentType::reference;
+  using const_reference = typename ParentType::const_reference;
+  using iterator = typename ParentType::iterator;
+  using const_iterator = typename ParentType::const_iterator;
 
   /**
    * @brief Constructs a ListStore with empty lists for the tuple shape.
    * @param tupleShape Initial tuple dimensions.
    */
   explicit ListStore(const ShapeType& tupleShape)
-  : parent_type()
+  : ParentType()
   , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_Array(m_NumTuples)
@@ -44,8 +44,8 @@ public:
    * @brief Creates a ListStore from a vector of vectors.
    * @param vectors
    */
-  explicit ListStore(const typename std::vector<shared_vector_type>& vectors)
-  : parent_type()
+  explicit ListStore(const typename std::vector<SharedVectorType>& vectors)
+  : ParentType()
   {
     setData(vectors);
   }
@@ -55,7 +55,7 @@ public:
    * @param other Source store.
    */
   ListStore(const ListStore& other)
-  : parent_type(other)
+  : ParentType(other)
   , m_Array(other.m_Array)
   , m_TupleShape(other.m_TupleShape)
   , m_NumTuples(other.m_NumTuples)
@@ -67,7 +67,7 @@ public:
    * @param copy Source store.
    */
   ListStore(ListStore&& copy) noexcept
-  : parent_type(std::move(copy))
+  : ParentType(std::move(copy))
   , m_Array(std::move(copy.m_Array))
   , m_TupleShape(std::move(copy.m_TupleShape))
   , m_NumTuples(copy.m_NumTuples)
@@ -89,16 +89,16 @@ public:
    * This store obeys destinationFormat and does not resolve storage policy itself.
    * Resolve the destination policy before this call. Use NeighborList::deepCopy for automatic policy selection.
    */
-  std::unique_ptr<parent_type> deepCopy(const std::string& destinationFormat) const override
+  std::unique_ptr<ParentType> deepCopy(const std::string& destinationFormat) const override
   {
     auto copy = CopyListStore(*this, GetDataType<T>(), destinationFormat);
-    auto* typedCopyPtr = dynamic_cast<parent_type*>(copy.get());
+    auto* typedCopyPtr = dynamic_cast<ParentType*>(copy.get());
     if(typedCopyPtr == nullptr)
     {
       throw std::runtime_error("List store copy returned an incompatible type for format '" + destinationFormat + "'");
     }
     copy.release();
-    return std::unique_ptr<parent_type>(typedCopyPtr);
+    return std::unique_ptr<ParentType>(typedCopyPtr);
   }
 
   /**
@@ -166,7 +166,7 @@ public:
    * @param grainId The grain/tuple index to set the list for
    * @param neighborList Shared pointer to the vector containing the list values
    */
-  void setList(int32 grainId, const shared_vector_type& neighborList) override
+  void setList(int32 grainId, const SharedVectorType& neighborList) override
   {
     setList(grainId, *neighborList);
   }
@@ -176,7 +176,7 @@ public:
    * @param grainId The grain/tuple index to set the list for
    * @param neighborList Vector containing the list values
    */
-  void setList(int32 grainId, const vector_type& neighborList) override
+  void setList(int32 grainId, const VectorType& neighborList) override
   {
     m_Array[grainId] = neighborList;
   }
@@ -186,7 +186,7 @@ public:
    * @param grainId The grain/tuple index to retrieve
    * @return vector_type A copy of the list vector
    */
-  vector_type getList(int32 grainId) const override
+  VectorType getList(int32 grainId) const override
   {
     return copyOfList(grainId);
   }
@@ -216,7 +216,7 @@ public:
    * @param grainId The grain/tuple index to copy
    * @return vector_type A deep copy of the list vector
    */
-  vector_type copyOfList(int32 grainId) const override
+  VectorType copyOfList(int32 grainId) const override
   {
     return at(grainId);
   }
@@ -268,7 +268,7 @@ public:
    * @param grainId The grain/tuple index to access
    * @return vector_type A copy of the list at the specified index
    */
-  vector_type operator[](int32 grainId) const override
+  VectorType operator[](int32 grainId) const override
   {
     return m_Array[grainId];
   }
@@ -278,7 +278,7 @@ public:
    * @param grainId The grain/tuple index to access
    * @return vector_type A copy of the list at the specified index
    */
-  vector_type operator[](usize grainId) const override
+  VectorType operator[](usize grainId) const override
   {
     return m_Array[grainId];
   }
@@ -288,7 +288,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type at(int32 grainId) const override
+  VectorType at(int32 grainId) const override
   {
     return this->operator[](grainId);
   }
@@ -298,7 +298,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type at(usize grainId) const override
+  VectorType at(usize grainId) const override
   {
     return this->operator[](grainId);
   }
@@ -315,7 +315,7 @@ public:
    * @brief Sets all lists from a vector of shared pointers to vectors.
    * @param lists Vector of shared pointers to vectors containing the list data
    */
-  void setData(const std::vector<shared_vector_type>& lists) override
+  void setData(const std::vector<SharedVectorType>& lists) override
   {
     m_NumTuples = lists.size();
     m_TupleShape = ShapeType{m_NumTuples};
@@ -330,7 +330,7 @@ public:
    * @brief Sets all lists from a vector of vectors.
    * @param lists Vector of vectors containing the list data
    */
-  void setData(const std::vector<vector_type>& lists) override
+  void setData(const std::vector<VectorType>& lists) override
   {
     m_Array = lists;
     m_NumTuples = m_Array.size();
@@ -342,7 +342,7 @@ public:
    * @param datasetReader The HDF5 DatasetIO (unused)
    * @throw std::runtime_error Always throws because HDF5 read is not implemented
    */
-  void readHdf5(const HDF5::DatasetIO& /*datasetReader*/) override
+  void readHdf5(const hdf5::DatasetIO& /*datasetReader*/) override
   {
     throw std::runtime_error("ListStore cannot read from HDF5");
   }
@@ -352,7 +352,7 @@ public:
    * @param datasetReader The HDF5 DatasetIO (unused)
    * @throw std::runtime_error Always throws because HDF5 write is not implemented
    */
-  void writeHdf5(HDF5::DatasetIO& /*datasetReader*/) override
+  void writeHdf5(hdf5::DatasetIO& /*datasetReader*/) override
   {
     throw std::runtime_error("ListStore cannot write to HDF5");
   }

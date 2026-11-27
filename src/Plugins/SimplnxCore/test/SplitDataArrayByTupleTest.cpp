@@ -471,7 +471,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
   {
     DataStructure dataStructure;
     auto* amPtr = AttributeMatrix::Create(dataStructure, k_AttributeMatrixName, {10});
-    auto strings = StringArray::collection_type();
+    auto strings = StringArray::CollectionType();
     strings.reserve(10);
     for(usize i = 0; i < 10; ++i)
     {

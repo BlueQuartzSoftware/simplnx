@@ -10,7 +10,7 @@
  * @namespace nx::core::HDF5
  * @brief Contains HDF5 parsing and I/O utilities.
  */
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -138,4 +138,4 @@ inline Extent getChunkBounds(uint64 flatChunkIndex, const std::vector<uint64>& t
   }
   return Extent{std::move(minBounds), std::move(maxBounds)};
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

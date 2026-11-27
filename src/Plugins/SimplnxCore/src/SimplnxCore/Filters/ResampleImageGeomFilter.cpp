@@ -77,14 +77,14 @@ Parameters ResampleImageGeomFilter::parameters() const
                                                "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension. Percentages must be larger than 0.",
                                                std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
 
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactDimensions_Key, "Exact Dimensions (pixels)", "The exact dimension size values (dx, dy, dz) to resample the geometry, in pixels.",
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_ExactDimensions_Key, "Exact Dimensions (pixels)", "The exact dimension size values (dx, dy, dz) to resample the geometry, in pixels.",
                                                         std::vector<uint64>{100, 100, 100}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
@@ -97,7 +97,7 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after resampling", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the resampled geometry", DataPath()));
@@ -121,7 +121,7 @@ IFilter::VersionType ResampleImageGeomFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ResampleImageGeomFilter::clone() const
+IFilter::UniquePointerType ResampleImageGeomFilter::clone() const
 {
   return std::make_unique<ResampleImageGeomFilter>();
 }
@@ -134,7 +134,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   inputValues.ResamplingMode = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.Scaling = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
-  inputValues.ExactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
+  inputValues.ExactDimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactDimensions_Key);
   inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
   inputValues.ClearFeatureAttributeMatrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
@@ -154,7 +154,7 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.ResamplingMode = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.Scaling = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
-  inputValues.ExactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
+  inputValues.ExactDimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactDimensions_Key);
   inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
   inputValues.ClearFeatureAttributeMatrix = filterArgs.value<bool>(k_ClearFeatureAttributeMatrix_Key);
@@ -171,15 +171,15 @@ namespace simpl
 {
 // DREAM.3D 6.4 and 6.5 ChangeResolution write "Resolution" and "NewDataContainerName".
 // The later "Spacing" and "NewDataContainerPath" keys are still accepted.
-constexpr StringLiteral k_ResolutionKey = "Resolution";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_RenumberFeaturesKey = "RenumberFeatures";
-constexpr StringLiteral k_SaveAsNewDataContainerKey = "SaveAsNewDataContainer";
-constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
-constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
-constexpr StringLiteral k_NewDataContainerPathKey = "NewDataContainerPath";
+constexpr StringLiteralType k_ResolutionKey = "Resolution";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_RenumberFeaturesKey = "RenumberFeatures";
+constexpr StringLiteralType k_SaveAsNewDataContainerKey = "SaveAsNewDataContainer";
+constexpr StringLiteralType k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CellFeatureAttributeMatrixPathKey = "CellFeatureAttributeMatrixPath";
+constexpr StringLiteralType k_NewDataContainerNameKey = "NewDataContainerName";
+constexpr StringLiteralType k_NewDataContainerPathKey = "NewDataContainerPath";
 } // namespace simpl
 } // namespace
 
@@ -189,32 +189,32 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(
       args, json, json.contains(simpl::k_ResolutionKey) ? simpl::k_ResolutionKey : simpl::k_SpacingKey, k_Spacing_Key));
   // Legacy renumbering also controls whether Feature data is cleared.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_ClearFeatureAttributeMatrix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InvertedBooleanFilterParameterConverter>(args, json, simpl::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_ClearFeatureAttributeMatrix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InvertedBooleanFilterParameterConverter>(args, json, simpl::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
 
   // Legacy ChangeResolution uses these Feature paths only when RenumberFeatures is on.
   bool renumberDisabled = false;
   if(json.contains(simpl::k_RenumberFeaturesKey))
   {
-    const auto renumber = SIMPLConversion::LinkedBooleanFilterParameterConverter::Convert(json[simpl::k_RenumberFeaturesKey]);
+    const auto renumber = simpl_conversion::LinkedBooleanFilterParameterConverter::Convert(json[simpl::k_RenumberFeaturesKey]);
     renumberDisabled = renumber.valid() && !renumber.value();
   }
   if(!renumberDisabled || json.contains(simpl::k_CellFeatureAttributeMatrixPathKey))
   {
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
+        simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixPathKey, k_FeatureAttributeMatrix_Key));
   }
   if(!renumberDisabled || json.contains(simpl::k_FeatureIdsArrayPathKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(
       args, json, json.contains(simpl::k_NewDataContainerNameKey) ? simpl::k_NewDataContainerNameKey : simpl::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

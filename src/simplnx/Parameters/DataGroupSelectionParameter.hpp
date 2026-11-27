@@ -16,10 +16,10 @@ class SIMPLNX_EXPORT DataGroupSelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
 
-  using AllowedTypes = std::set<BaseGroup::GroupType>;
+  using AllowedTypeSetType = std::set<BaseGroup::GroupType>;
 
   DataGroupSelectionParameter() = delete;
-  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes);
+  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes);
   ~DataGroupSelectionParameter() override = default;
 
   DataGroupSelectionParameter(const DataGroupSelectionParameter&) = delete;
@@ -44,7 +44,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -70,7 +70,7 @@ public:
    * @brief Returns the list of allowed DataObject types.
    * @return
    */
-  const AllowedTypes& allowedTypes() const;
+  const AllowedTypeSetType& allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -114,10 +114,10 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypes m_AllowedTypes;
+  AllowedTypeSetType m_AllowedTypes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataContainerSelectionFilterParameterConverter
 {
@@ -134,6 +134,6 @@ struct SIMPLNX_EXPORT DataContainerFromMultiSelectionFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataGroupSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074");

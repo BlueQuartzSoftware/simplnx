@@ -30,7 +30,7 @@ std::shared_ptr<DataObject> CopyDataObjectAction::CopyData(DataStructure& dataSt
 
 Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "CopyDataObjectAction: ";
+  static constexpr StringLiteralType k_Prefix = "CopyDataObjectAction: ";
 
   if(dataStructure.getData(path()) == nullptr)
   {
@@ -49,7 +49,7 @@ Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/
   return {};
 }
 
-IDataAction::UniquePointer CopyDataObjectAction::clone() const
+IDataAction::UniquePointerType CopyDataObjectAction::clone() const
 {
   return std::make_unique<CopyDataObjectAction>(path(), newPath(), getAllCreatedPaths());
 }

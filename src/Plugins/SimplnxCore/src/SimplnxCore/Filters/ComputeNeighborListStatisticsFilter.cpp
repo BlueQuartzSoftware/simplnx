@@ -159,7 +159,7 @@ IFilter::VersionType ComputeNeighborListStatisticsFilter::parametersVersion() co
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeNeighborListStatisticsFilter::clone() const
+IFilter::UniquePointerType ComputeNeighborListStatisticsFilter::clone() const
 {
   return std::make_unique<ComputeNeighborListStatisticsFilter>();
 }
@@ -254,22 +254,22 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FindLengthKey = "FindLength";
-constexpr StringLiteral k_FindMinKey = "FindMin";
-constexpr StringLiteral k_FindMaxKey = "FindMax";
-constexpr StringLiteral k_FindMeanKey = "FindMean";
-constexpr StringLiteral k_FindMedianKey = "FindMedian";
-constexpr StringLiteral k_FindStdDeviationKey = "FindStdDeviation";
-constexpr StringLiteral k_FindSummationKey = "FindSummation";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
-constexpr StringLiteral k_LengthArrayNameKey = "LengthArrayName";
-constexpr StringLiteral k_MinimumArrayNameKey = "MinimumArrayName";
-constexpr StringLiteral k_MaximumArrayNameKey = "MaximumArrayName";
-constexpr StringLiteral k_MeanArrayNameKey = "MeanArrayName";
-constexpr StringLiteral k_MedianArrayNameKey = "MedianArrayName";
-constexpr StringLiteral k_StdDeviationArrayNameKey = "StdDeviationArrayName";
-constexpr StringLiteral k_SummationArrayNameKey = "SummationArrayName";
+constexpr StringLiteralType k_FindLengthKey = "FindLength";
+constexpr StringLiteralType k_FindMinKey = "FindMin";
+constexpr StringLiteralType k_FindMaxKey = "FindMax";
+constexpr StringLiteralType k_FindMeanKey = "FindMean";
+constexpr StringLiteralType k_FindMedianKey = "FindMedian";
+constexpr StringLiteralType k_FindStdDeviationKey = "FindStdDeviation";
+constexpr StringLiteralType k_FindSummationKey = "FindSummation";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
+constexpr StringLiteralType k_LengthArrayNameKey = "LengthArrayName";
+constexpr StringLiteralType k_MinimumArrayNameKey = "MinimumArrayName";
+constexpr StringLiteralType k_MaximumArrayNameKey = "MaximumArrayName";
+constexpr StringLiteralType k_MeanArrayNameKey = "MeanArrayName";
+constexpr StringLiteralType k_MedianArrayNameKey = "MedianArrayName";
+constexpr StringLiteralType k_StdDeviationArrayNameKey = "StdDeviationArrayName";
+constexpr StringLiteralType k_SummationArrayNameKey = "SummationArrayName";
 } // namespace simpl
 } // namespace
 
@@ -279,22 +279,22 @@ Result<Arguments> ComputeNeighborListStatisticsFilter::FromSIMPLJson(const nlohm
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindLengthKey, k_FindLength_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMinKey, k_FindMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMaxKey, k_FindMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMeanKey, k_FindMean_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMedianKey, k_FindMedian_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindStdDeviationKey, k_FindStandardDeviation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindSummationKey, k_FindSummation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_InputNeighborListPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindLengthKey, k_FindLength_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMinKey, k_FindMinimum_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMaxKey, k_FindMaximum_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMeanKey, k_FindMean_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMedianKey, k_FindMedian_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindStdDeviationKey, k_FindStandardDeviation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindSummationKey, k_FindSummation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_InputNeighborListPath_Key));
   // No destination attribute matrix parameter in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LengthArrayNameKey, k_LengthName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MinimumArrayNameKey, k_MinimumName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaximumArrayNameKey, k_MaximumName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MeanArrayNameKey, k_MeanName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MedianArrayNameKey, k_MedianName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_StdDeviationArrayNameKey, k_StandardDeviationName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SummationArrayNameKey, k_SummationName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LengthArrayNameKey, k_LengthName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MinimumArrayNameKey, k_MinimumName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaximumArrayNameKey, k_MaximumName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MeanArrayNameKey, k_MeanName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MedianArrayNameKey, k_MedianName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_StdDeviationArrayNameKey, k_StandardDeviationName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SummationArrayNameKey, k_SummationName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

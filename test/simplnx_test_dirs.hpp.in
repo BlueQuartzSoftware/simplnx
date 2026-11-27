@@ -19,12 +19,12 @@ namespace fs = std::filesystem;
 
 namespace nx::core::unit_test
 {
-inline constexpr StringLiteral k_SourceDir = "@SIMPLNX_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_BinaryDir = "@SIMPLNX_BINARY_DIR_NORM@";
-inline constexpr StringLiteral k_BuildDir = "@SIMPLNX_BUILD_DIR@";
-inline constexpr StringLiteral k_BinaryTestOutputDir = "@SIMPLNX_TEST_OUTPUT_DIR@";
-inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
-inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
+inline constexpr StringLiteralType k_SourceDir = "@SIMPLNX_SOURCE_DIR_NORM@";
+inline constexpr StringLiteralType k_BinaryDir = "@SIMPLNX_BINARY_DIR_NORM@";
+inline constexpr StringLiteralType k_BuildDir = "@SIMPLNX_BUILD_DIR@";
+inline constexpr StringLiteralType k_BinaryTestOutputDir = "@SIMPLNX_TEST_OUTPUT_DIR@";
+inline constexpr StringLiteralType k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
+inline constexpr StringLiteralType k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
 
 // clang-format off
 @SIMPLNX_PLUGIN_SOURCE_DIRS@

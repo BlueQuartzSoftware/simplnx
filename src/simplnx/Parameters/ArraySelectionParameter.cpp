@@ -38,7 +38,7 @@ struct fmt::formatter<nx::core::DataType>
 
 namespace nx::core
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes,
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
                                                  AllowedComponentShapes requiredComps, DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
@@ -77,7 +77,7 @@ nlohmann::json ArraySelectionParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
@@ -95,7 +95,7 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer ArraySelectionParameter::clone() const
+IParameter::UniquePointerType ArraySelectionParameter::clone() const
 {
   return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_RequiredComponentShapes, m_Location);
 }
@@ -110,7 +110,7 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
   return m_DefaultValue;
 }
 
-ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() const
+ArraySelectionParameter::AllowedTypeSetType ArraySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
@@ -246,7 +246,7 @@ Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, 
   return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -272,5 +272,5 @@ Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelection
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

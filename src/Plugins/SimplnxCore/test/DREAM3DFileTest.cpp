@@ -99,42 +99,42 @@ const fs::path k_PipelineComboFilename = "write_dream3d_pipeline_combos.dream3d"
 const fs::path k_FileDataFilename = "write_dream3d_file_data.dream3d";
 const fs::path k_UnwritableTypeFilename = "write_dream3d_unwritable_type.dream3d";
 
-constexpr StringLiteral k_CellData = "Cell Data";
-constexpr StringLiteral k_DataContainer = "Data Container";
-constexpr StringLiteral k_EdgeGeom = "EdgeGeom";
-constexpr StringLiteral k_ImageGeom = "ImageGeom";
-constexpr StringLiteral k_RectGridGeom = "RectGrid";
-constexpr StringLiteral k_HexGeom = "HexahedralGeom";
-constexpr StringLiteral k_QuadGeom = "QuadGeom";
-constexpr StringLiteral k_TetrahedralGeom = "TetrahedralGeom";
-constexpr StringLiteral k_TriangleGeom = "TriangleGeom";
-constexpr StringLiteral k_VertexGeom = "VertexGeom";
-constexpr StringLiteral k_XBounds = "X Bounds";
-constexpr StringLiteral k_YBounds = "Y Bounds";
-constexpr StringLiteral k_ZBounds = "Z Bounds";
+constexpr StringLiteralType k_CellData = "Cell Data";
+constexpr StringLiteralType k_DataContainer = "Data Container";
+constexpr StringLiteralType k_EdgeGeom = "EdgeGeom";
+constexpr StringLiteralType k_ImageGeom = "ImageGeom";
+constexpr StringLiteralType k_RectGridGeom = "RectGrid";
+constexpr StringLiteralType k_HexGeom = "HexahedralGeom";
+constexpr StringLiteralType k_QuadGeom = "QuadGeom";
+constexpr StringLiteralType k_TetrahedralGeom = "TetrahedralGeom";
+constexpr StringLiteralType k_TriangleGeom = "TriangleGeom";
+constexpr StringLiteralType k_VertexGeom = "VertexGeom";
+constexpr StringLiteralType k_XBounds = "X Bounds";
+constexpr StringLiteralType k_YBounds = "Y Bounds";
+constexpr StringLiteralType k_ZBounds = "Z Bounds";
 
-constexpr StringLiteral k_DynamicListArray = "DynamicList";
-constexpr StringLiteral k_NeighborList = "NeighborList";
-constexpr StringLiteral k_StringArray = "String Array";
-constexpr StringLiteral k_VertexData = "Vertex Data";
-constexpr StringLiteral k_VertexValues = "Vertex Values";
-constexpr StringLiteral k_VertexList = "Vertices";
-constexpr StringLiteral k_Edges = "Edges";
-constexpr StringLiteral k_Faces = "Faces";
-constexpr StringLiteral k_Polyhedra = "Polyhedra";
-constexpr StringLiteral k_HexaArray = "Hexahedra Array";
-constexpr StringLiteral k_TetraArray = "Tetrahedra Array";
-constexpr StringLiteral k_QuadArray = "Quad Array";
-constexpr StringLiteral k_Int8 = "Int 8";
-constexpr StringLiteral k_Int16 = "Int 16";
-constexpr StringLiteral k_Int32 = "Int 32";
-constexpr StringLiteral k_Int64 = "Int 64";
-constexpr StringLiteral k_UInt8 = "UInt 8";
-constexpr StringLiteral k_UInt16 = "UInt 16";
-constexpr StringLiteral k_UInt32 = "UInt 32";
-constexpr StringLiteral k_UInt64 = "UInt 64";
-constexpr StringLiteral k_Float32 = "Float 32";
-constexpr StringLiteral k_Float64 = "Float 64";
+constexpr StringLiteralType k_DynamicListArray = "DynamicList";
+constexpr StringLiteralType k_NeighborList = "NeighborList";
+constexpr StringLiteralType k_StringArray = "String Array";
+constexpr StringLiteralType k_VertexData = "Vertex Data";
+constexpr StringLiteralType k_VertexValues = "Vertex Values";
+constexpr StringLiteralType k_VertexList = "Vertices";
+constexpr StringLiteralType k_Edges = "Edges";
+constexpr StringLiteralType k_Faces = "Faces";
+constexpr StringLiteralType k_Polyhedra = "Polyhedra";
+constexpr StringLiteralType k_HexaArray = "Hexahedra Array";
+constexpr StringLiteralType k_TetraArray = "Tetrahedra Array";
+constexpr StringLiteralType k_QuadArray = "Quad Array";
+constexpr StringLiteralType k_Int8 = "Int 8";
+constexpr StringLiteralType k_Int16 = "Int 16";
+constexpr StringLiteralType k_Int32 = "Int 32";
+constexpr StringLiteralType k_Int64 = "Int 64";
+constexpr StringLiteralType k_UInt8 = "UInt 8";
+constexpr StringLiteralType k_UInt16 = "UInt 16";
+constexpr StringLiteralType k_UInt32 = "UInt 32";
+constexpr StringLiteralType k_UInt64 = "UInt 64";
+constexpr StringLiteralType k_Float32 = "Float 32";
+constexpr StringLiteralType k_Float64 = "Float 64";
 constexpr int64 k_ScalarValue = 3;
 const ShapeType k_TupleShape{3, 2, 1};
 const SizeVec3 k_ImageShape{1, 2, 3};
@@ -153,16 +153,16 @@ std::mutex MDataMutex;
  */
 namespace data_names
 {
-constexpr StringLiteral k_Group1Name = "Top-Level";
-constexpr StringLiteral k_Group2Name = "Second-Level";
-constexpr StringLiteral k_Group3Name = "Third-Level";
-constexpr StringLiteral k_AttributeMatrixName = "AttributeMatrix";
-constexpr StringLiteral k_ArrayName = "Test-Array";
-constexpr StringLiteral k_Array2Name = "Test-Array2";
-constexpr StringLiteral k_GridMontageName = "GridMontage";
+constexpr StringLiteralType k_Group1Name = "Top-Level";
+constexpr StringLiteralType k_Group2Name = "Second-Level";
+constexpr StringLiteralType k_Group3Name = "Third-Level";
+constexpr StringLiteralType k_AttributeMatrixName = "AttributeMatrix";
+constexpr StringLiteralType k_ArrayName = "Test-Array";
+constexpr StringLiteralType k_Array2Name = "Test-Array2";
+constexpr StringLiteralType k_GridMontageName = "GridMontage";
 
-constexpr StringLiteral k_CreateDataFilterName = "Create Data Group";
-constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM3D-NX File";
+constexpr StringLiteralType k_CreateDataFilterName = "Create Data Group";
+constexpr StringLiteralType k_ExportD3DFilterName = "Write DREAM3D-NX File";
 } // namespace data_names
 
 const FilterHandle k_CreateDataGroupHandle(Uuid::FromString("e7d2f9b8-4131-4b28-a843-ea3c6950f101").value(), Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f").value());
@@ -625,7 +625,7 @@ DataStructure CreateTestDataStructure()
   auto* tetraArrayPtr = IGeometry::SharedTetList::Create(dataStructure, constants::k_TetraArray, tetraStore, dataGroupPtr->getId());
   FillDataStore<uint64>(*tetraStore);
 
-  StringArray::collection_type strings = {"1", "2", "3", "4", "5", "6"};
+  StringArray::CollectionType strings = {"1", "2", "3", "4", "5", "6"};
   auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, constants::k_StringArray, constants::k_TupleShape, strings, dataGroupPtr->getId());
   REQUIRE(stringArrayPtr != nullptr);
 
@@ -837,7 +837,7 @@ Pipeline CreateMultiImportPipeline()
  * @brief Creates matching pipeline and DataStructure content for direct writer tests.
  * @return File data with the standard export pipeline and test DataStructure.
  */
-DREAM3D::FileData CreateFileData()
+dream3d::FileData CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
 }
@@ -1148,7 +1148,7 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: real HDF5 chunk-tail raw-read oracle
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(fs::exists(outputFile));
-  auto file = HDF5::FileIO::ReadFile(outputFile);
+  auto file = hdf5::FileIO::ReadFile(outputFile);
   REQUIRE(file.isValid());
   auto group = file.openGroup("DataStructure");
   REQUIRE(group.isValid());
@@ -1191,8 +1191,8 @@ TEST_CASE("WriteDREAM3DFilter:Valid Parameters", "[ReadDREAM3DFilter][WriteDREAM
 
   // Check that the file can be read back in and that the imported DataStructure matches expected values.
   {
-    auto fileReader = HDF5::FileIO::ReadFile(exportFilePath);
-    auto fileResult = DREAM3D::ReadFile(fileReader);
+    auto fileReader = hdf5::FileIO::ReadFile(exportFilePath);
+    auto fileResult = dream3d::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
 
     auto [pipeline, dataStructureRead] = fileResult.value();
@@ -1268,7 +1268,7 @@ TEST_CASE("WriteDREAM3D:Pipeline / WriteXdmf combinations", "[ReadDREAM3DFilter]
 
   const fs::path exportFilePath = GetPipelineComboFilePath();
   DataStructure dataStructure = CreateTestDataStructure();
-  auto writeResult = DREAM3D::WriteFile(exportFilePath, dataStructure, exportPipeline, writeXdmf);
+  auto writeResult = dream3d::WriteFile(exportFilePath, dataStructure, exportPipeline, writeXdmf);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
   if(writeXdmf)
@@ -1288,14 +1288,14 @@ TEST_CASE("WriteDREAM3D:FileData Overload", "[ReadDREAM3DFilter][WriteDREAM3DFil
 
   // Write through the exported FileData overload so its pipeline/DataStructure ordering stays covered.
   {
-    auto fileWriter = HDF5::FileIO::WriteFile(exportFilePath);
+    auto fileWriter = hdf5::FileIO::WriteFile(exportFilePath);
     REQUIRE(fileWriter.isValid());
-    auto writeResult = DREAM3D::WriteFile(fileWriter, CreateFileData());
+    auto writeResult = dream3d::WriteFile(fileWriter, CreateFileData());
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
-  auto fileReader = HDF5::FileIO::ReadFile(exportFilePath);
-  auto fileResult = DREAM3D::ReadFile(fileReader);
+  auto fileReader = hdf5::FileIO::ReadFile(exportFilePath);
+  auto fileResult = dream3d::ReadFile(fileReader);
   SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
 
   auto [pipeline, dataStructure] = fileResult.value();
@@ -1315,7 +1315,7 @@ TEST_CASE("WriteDREAM3D:Invalid File", "[ReadDREAM3DFilter][WriteDREAM3DFilter]"
   // The write fails before any file (or .xdmf sidecar) can be produced; there is no
   // target path whose sidecar could be checked.
   DataStructure dataStructure = CreateTestDataStructure();
-  auto writeResult = DREAM3D::WriteFile(fs::path(), dataStructure, exportPipeline, writeXdmf);
+  auto writeResult = dream3d::WriteFile(fs::path(), dataStructure, exportPipeline, writeXdmf);
   SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1375,7 +1375,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
   bool writeXdmf = GENERATE(true, false);
   // Write .dream3d file
   {
-    auto writeResult = DREAM3D::WriteFile(GetIODataPath(), CreateTestDataStructure(), CreateExportPipeline(), writeXdmf);
+    auto writeResult = dream3d::WriteFile(GetIODataPath(), CreateTestDataStructure(), CreateExportPipeline(), writeXdmf);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
     if(writeXdmf)
@@ -1386,12 +1386,12 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
 
   // Read the same file and validate both stored sections.
   {
-    auto fileReader = HDF5::FileIO::ReadFile(GetIODataPath());
-    auto pipelineResult = DREAM3D::ImportPipelineFromFile(fileReader);
+    auto fileReader = hdf5::FileIO::ReadFile(GetIODataPath());
+    auto pipelineResult = dream3d::ImportPipelineFromFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
     auto pipeline = std::move(pipelineResult.value());
 
-    auto dsResult = DREAM3D::LoadDataStructure(GetIODataPath());
+    auto dsResult = dream3d::LoadDataStructure(GetIODataPath());
     SIMPLNX_RESULT_REQUIRE_VALID(dsResult);
     DataStructure dataStructure = std::move(dsResult.value());
 
@@ -1506,7 +1506,7 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
 
   // With useEmptyDataStores enabled, connectivity must remain metadata-only.
   {
-    auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/true);
+    auto readResult = dream3d::ImportDataStructureFromFile(inputFilePath, /*preflight=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     const DataStructure preflightStructure = std::move(readResult.value());
 
@@ -1526,7 +1526,7 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
 
   // With useEmptyDataStores disabled, each connectivity array must load its values.
   {
-    auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/false);
+    auto readResult = dream3d::ImportDataStructureFromFile(inputFilePath, /*preflight=*/false);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     const DataStructure executedStructure = std::move(readResult.value());
 
@@ -1545,7 +1545,7 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
   // The path overload must preserve useEmptyDataStores when it delegates to FileIO.
   // Thus, connectivity from this overload must also remain metadata-only.
   {
-    auto readResult = HDF5::DataStructureReader::ReadFile(inputFilePath, /*useEmptyDataStores=*/true);
+    auto readResult = hdf5::DataStructureReader::ReadFile(inputFilePath, /*useEmptyDataStores=*/true);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     const DataStructure preflightStructure = std::move(readResult.value());
 
@@ -1750,7 +1750,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: Include List warns for missing paths"
   REQUIRE(Int32Array::Create(writtenData, "Values", store, groupPtr->getId()) != nullptr);
   const fs::path filePath = GetTestFilePath("read_dream3d_missing_include_paths.dream3d");
   fs::remove(filePath);
-  auto writeResult = DREAM3D::WriteFile(filePath, writtenData, Pipeline{}, false);
+  auto writeResult = dream3d::WriteFile(filePath, writtenData, Pipeline{}, false);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
   const DataPath validPath({"Group", "Values"});
@@ -1908,9 +1908,9 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
     }
   }
 
-  HDF5::DataStructureWriter::WriteOptions options;
+  hdf5::DataStructureWriter::WriteOptions options;
   options.compressionLevel = 5;
-  auto writeResult = DREAM3D::WriteFile(outPath, dataStructure, Pipeline{}, false, options);
+  auto writeResult = dream3d::WriteFile(outPath, dataStructure, Pipeline{}, false, options);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/LargeArray";
@@ -2194,13 +2194,13 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   Float32Array::Create(writtenData, "CacheFloats", floatStore, groupPtr->getId());
   fs::path filePath = GetDataDir(*Application::Instance()) / "preflight_cache_integration.dream3d";
   fs::remove(filePath);
-  REQUIRE(DREAM3D::WriteFile(filePath, writtenData, Pipeline{}, false).valid());
+  REQUIRE(dream3d::WriteFile(filePath, writtenData, Pipeline{}, false).valid());
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
-  HDF5::FileIO::ResetReadOpenCount();
+  hdf5::FileIO::ResetReadOpenCount();
 
   // A one-filter pipeline matches the GUI and nxrunner preflight path.
   Pipeline pipeline;
@@ -2218,12 +2218,12 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
 
   // The second preflight represents an edit-triggered repeat.
   // The cache serves its metadata without another miss or traversal.
-  HDF5::FileIO::ResetReadOpenCount();
+  hdf5::FileIO::ResetReadOpenCount();
   REQUIRE(pipeline.preflight());
   REQUIRE(cache.missCount() == 1);
   // A fully cached preflight does not open the HDF5 file.
   // Parameter validation only reads file status, and the filter gets metadata from memory.
-  REQUIRE(HDF5::FileIO::GetReadOpenCount() == 0);
+  REQUIRE(hdf5::FileIO::GetReadOpenCount() == 0);
 
   // Execution must still read the complete array values from disk.
   REQUIRE(pipeline.execute());
@@ -2238,7 +2238,7 @@ TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "
   auto intStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, 9);
   Int32Array::Create(newData, "CacheInts", intStore, group2Ptr->getId());
   fs::remove(filePath);
-  REQUIRE(DREAM3D::WriteFile(filePath, newData, Pipeline{}, false).valid());
+  REQUIRE(dream3d::WriteFile(filePath, newData, Pipeline{}, false).valid());
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
   const uint64 missesBeforeRewritePreflight = cache.missCount();
@@ -2310,7 +2310,7 @@ void WriteC8FilterSelectionFile(const fs::path& path)
     listsPtr->setList(tupleIdx, listValues[static_cast<usize>(tupleIdx)]);
   }
   REQUIRE(StringArray::CreateWithValues(source, "Labels", ShapeType{2}, {"first", "second"}, imageGeomPtr->getId()) != nullptr);
-  auto write = DREAM3D::WriteFile(path, source);
+  auto write = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
   fs::last_write_time(path, fs::last_write_time(path) - std::chrono::seconds(10));
 }
@@ -2318,9 +2318,9 @@ void WriteC8FilterSelectionFile(const fs::path& path)
 void WriteC8FilterLegacyWarningFile(const fs::path& path)
 {
   {
-    auto file = HDF5::FileIO::WriteFile(path);
+    auto file = hdf5::FileIO::WriteFile(path);
     REQUIRE(file.isValid());
-    REQUIRE(file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    REQUIRE(file.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str()).valid());
     auto containers = file.createGroup("DataContainers");
     auto container = containers.createGroup("StatsContainer");
     auto attributeMatrix = container.createGroup("StatsAM");
@@ -2403,7 +2403,7 @@ TEST_CASE("C8 ReadDREAM3DFilter plans selected data in the destination context",
   const bool rejectDestination = GENERATE(false, true);
   CAPTURE(policy, warmCache, execute, rejectDestination);
   const auto path = GetTestFilePath("c8_filter_destination_context.dream3d");
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
   const auto cleanup = MakeScopeGuard([&cache, &path]() noexcept {
@@ -2521,7 +2521,7 @@ TEST_CASE("C8 ReadDREAM3DFilter retains metadata warnings on unsupported policy"
   const bool execute = GENERATE(false, true);
   CAPTURE(warmCache, execute);
   const auto path = GetTestFilePath("c8_filter_unsupported_policy.dream3d");
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   const auto cleanup = MakeScopeGuard([&cache, &path]() noexcept {
     cache.clear();
@@ -2614,9 +2614,9 @@ TEST_CASE("ReadDREAM3DFilter: uses default values for invalid current-format com
     auto* groupPtr = DataGroup::Create(original, "Image Group");
     REQUIRE(groupPtr != nullptr);
     REQUIRE(ImageGeom::Create(original, "Image", groupPtr->getId()) != nullptr);
-    const auto writeResult = DREAM3D::WriteFile(file, original);
+    const auto writeResult = dream3d::WriteFile(file, original);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-    auto hdf = HDF5::FileIO::AppendFile(file);
+    auto hdf = hdf5::FileIO::AppendFile(file);
     auto image = hdf.openGroup("DataStructure").openGroup("Image Group").openGroup("Image");
     REQUIRE(image.isValid());
     const auto removeSpacing = image.removeAttribute(IOConstants::k_H5_SPACING);
@@ -2660,9 +2660,9 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
     auto* const cellDataPtr = AttributeMatrix::Create(original, goodCellData.getTargetName(), ShapeType{1, 1, 1}, goodImagePtr->getId());
     REQUIRE(cellDataPtr != nullptr);
     goodImagePtr->setCellData(*cellDataPtr);
-    const auto writeResult = DREAM3D::WriteFile(file, original);
+    const auto writeResult = dream3d::WriteFile(file, original);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
-    auto hdf = HDF5::FileIO::AppendFile(file);
+    auto hdf = hdf5::FileIO::AppendFile(file);
     auto image = hdf.openGroup("DataStructure").openGroup(badGeometry.getTargetName());
     const auto removeSpacing = image.removeAttribute(IOConstants::k_H5_SPACING);
     SIMPLNX_RESULT_REQUIRE_VALID(removeSpacing);
@@ -2670,7 +2670,7 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
     SIMPLNX_RESULT_REQUIRE_VALID(writeSpacing);
   }
 
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.invalidate(file);
   cache.resetStats();
   fs::last_write_time(file, fs::file_time_type::clock::now() - 2 * cache.k_MtimeTrustWindow);
@@ -2695,7 +2695,7 @@ TEST_CASE("ReadDREAM3DFilter: only validates selected image geometries and share
   CHECK(cache.hitCount() == 3);
 
   // Direct tools still validate every image geometry, even when requesting one array.
-  auto strict = DREAM3D::LoadDataStructureArrays(file, {goodCellData});
+  auto strict = dream3d::LoadDataStructureArrays(file, {goodCellData});
   SIMPLNX_RESULT_REQUIRE_INVALID(strict);
   CHECK(strict.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(strict.errors().front().message == fmt::format("Cannot read image geometry 'Invalid Image' from '{}'. Spacing on the Y axis must be finite and greater than zero. Received 0.", file.string()));
@@ -2747,8 +2747,8 @@ void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCo
   }
   if(legacy)
   {
-    auto hdf = HDF5::FileIO::WriteFile(file);
-    REQUIRE(hdf.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    auto hdf = hdf5::FileIO::WriteFile(file);
+    REQUIRE(hdf.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str()).valid());
     auto containers = hdf.createGroup("DataContainers");
     REQUIRE(containers.createGroup("Selected").isValid());
     auto container = containers.createGroup("Malformed Grid");
@@ -2782,10 +2782,10 @@ void WriteMalformedRectGridFile(const fs::path& file, bool legacy, int32 errorCo
   }
   const auto setBounds = gridPtr->setBounds(xBoundsPtr, gridPtr->getYBounds(), gridPtr->getZBounds());
   SIMPLNX_RESULT_REQUIRE_VALID(setBounds);
-  const auto write = DREAM3D::WriteFile(file, source);
+  const auto write = dream3d::WriteFile(file, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
 
-  auto hdf = HDF5::FileIO::AppendFile(file);
+  auto hdf = hdf5::FileIO::AppendFile(file);
   auto rootGroup = hdf.openGroup("DataStructure");
   auto gridGroup = nested ? rootGroup.openGroup("Parent").openGroup("Malformed Grid") : rootGroup.openGroup("Malformed Grid");
   auto dataset = gridGroup.openDataset("Stored X Bounds");
@@ -2806,7 +2806,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: only validates selected rectilinear g
   const int32 errorCode = GENERATE(-4006, RectGridGeom::k_NonscalarBounds, -4007, -4008);
   CAPTURE(legacy, errorCode);
   WriteMalformedRectGridFile(file, legacy, errorCode);
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.invalidate(file);
 
   const DataPath goodPath({"Selected"});
@@ -2816,7 +2816,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: only validates selected rectilinear g
   CHECK(metadata.value().dataStructure.containsData(goodPath));
   CHECK(metadata.value().dataStructure.containsData(badPath));
 
-  auto strict = DREAM3D::LoadDataStructure(file);
+  auto strict = dream3d::LoadDataStructure(file);
   SIMPLNX_RESULT_REQUIRE_INVALID(strict);
   CHECK(strict.errors().front().code == errorCode);
   CHECK(strict.errors().front().message.find(badPath.toString()) != std::string::npos);
@@ -2857,7 +2857,7 @@ TEST_CASE("SimplnxCore::ImportH5ObjectPathsAction: validates imported grids with
   const DataPath importedPath({"Imported Grid"});
   DataStructure source;
   REQUIRE(CreateRectGridGeometry(source, importedPath.getTargetName(), {}) != nullptr);
-  const auto write = DREAM3D::WriteFile(file, source);
+  const auto write = dream3d::WriteFile(file, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
 
   DataStructure destination;
@@ -2880,7 +2880,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: strict full reads reject duplicate bo
   CAPTURE(legacy);
   const auto file = fs::temp_directory_path() / "StrictGroupedRectGridMetadata.dream3d";
   WriteMalformedRectGridFile(file, legacy, -4007, !legacy);
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.invalidate(file);
 
   // The legacy reader maps each DataContainers entry to a root DataObject.
@@ -2889,7 +2889,7 @@ TEST_CASE("SimplnxCore::ReadDREAM3DFilter: strict full reads reject duplicate bo
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
   CHECK(metadata.value().dataStructure.getDataAs<RectGridGeom>(gridPath) != nullptr);
 
-  const auto strict = DREAM3D::LoadDataStructure(file);
+  const auto strict = dream3d::LoadDataStructure(file);
   SIMPLNX_RESULT_REQUIRE_INVALID(strict);
   CHECK(strict.errors().front().code == -4007);
   CHECK(strict.errors().front().message.find("Malformed Grid") != std::string::npos);

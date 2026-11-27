@@ -21,26 +21,26 @@ using namespace nx::core::Constants;
 
 namespace
 {
-constexpr StringLiteral k_Length = "Length";
-constexpr StringLiteral k_Min = "Minimum";
-constexpr StringLiteral k_Max = "Maximum";
-constexpr StringLiteral k_Mean = "Mean";
-constexpr StringLiteral k_Median = "Median";
-constexpr StringLiteral k_Mode = "Mode";
-constexpr StringLiteral k_StdDev = "Standard Deviation";
-constexpr StringLiteral k_Sum = "Summation";
-constexpr StringLiteral k_NumUniqueValues = "NumUniqueValues";
-constexpr StringLiteral k_BoundsHasData = "BoundsHasData";
+constexpr StringLiteralType k_Length = "Length";
+constexpr StringLiteralType k_Min = "Minimum";
+constexpr StringLiteralType k_Max = "Maximum";
+constexpr StringLiteralType k_Mean = "Mean";
+constexpr StringLiteralType k_Median = "Median";
+constexpr StringLiteralType k_Mode = "Mode";
+constexpr StringLiteralType k_StdDev = "Standard Deviation";
+constexpr StringLiteralType k_Sum = "Summation";
+constexpr StringLiteralType k_NumUniqueValues = "NumUniqueValues";
+constexpr StringLiteralType k_BoundsHasData = "BoundsHasData";
 
-constexpr StringLiteral k_GeomName = "ImageGeom";
+constexpr StringLiteralType k_GeomName = "ImageGeom";
 const DataPath k_GeomPath({k_GeomName});
-constexpr StringLiteral k_CellAMName = "Cell Data";
+constexpr StringLiteralType k_CellAMName = "Cell Data";
 const DataPath k_CellAMPath = k_GeomPath.createChildPath(k_CellAMName);
-const StringLiteral k_InputArrayName = "Input Data";
+const StringLiteralType k_InputArrayName = "Input Data";
 const DataPath k_InputArrayPath = k_CellAMPath.createChildPath(k_InputArrayName);
-constexpr StringLiteral k_FeatureAMName = "Feature Data";
+constexpr StringLiteralType k_FeatureAMName = "Feature Data";
 const DataPath k_FeatureAMPath = k_GeomPath.createChildPath(k_FeatureAMName);
-constexpr StringLiteral k_UnifiedBoundsName = "Unified Bounds";
+constexpr StringLiteralType k_UnifiedBoundsName = "Unified Bounds";
 const DataPath k_UnifiedBoundsPath = k_FeatureAMPath.createChildPath(k_UnifiedBoundsName);
 
 DataStructure InitializeImageDataStructure()
@@ -1051,7 +1051,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
   UnitTest::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  constexpr StringLiteral k_NewAMName = "newAM";
+  constexpr StringLiteralType k_NewAMName = "newAM";
   {
     ComputeBoundingBoxStatsFilter filter;
 
@@ -1119,7 +1119,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
 {
   DataStructure dataStructure = ::InitializeImageDataStructure();
 
-  constexpr StringLiteral k_NewAmName = "newAM";
+  constexpr StringLiteralType k_NewAmName = "newAM";
 
   AttributeMatrix* cellAmPtr = AttributeMatrix::Create(dataStructure, k_NewAmName, ShapeType(1, 1));
 

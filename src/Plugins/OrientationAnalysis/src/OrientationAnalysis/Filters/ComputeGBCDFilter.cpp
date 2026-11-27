@@ -53,29 +53,29 @@ Parameters ComputeGBCDFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float32Parameter>(k_GBCDRes_Key, "GBCD Spacing (Degrees)", "The resolution in degrees for the GBCD calculation", 9.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_GBCDRes_Key, "GBCD Spacing (Degrees)", "The resolution in degrees for the GBCD calculation", 9.0f));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "Path to the triangle geometry for which to calculate the GBCD", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Array specifying the normal of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Array specifying the area of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles",
                                                           "Array specifying three angles defining the orientation of the Feature in Bunge convention (Z-X-Z)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which phase each Feature belongs", DataPath({"Cell Feature Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Ensemble Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceEnsembleAttributeMatrixName_Key, "Face Ensemble Attribute Matrix", "The name of the created face ensemble attribute matrix",
@@ -93,7 +93,7 @@ IFilter::VersionType ComputeGBCDFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeGBCDFilter::clone() const
+IFilter::UniquePointerType ComputeGBCDFilter::clone() const
 {
   return std::make_unique<ComputeGBCDFilter>();
 }
@@ -165,15 +165,15 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_GBCDResKey = "GBCDRes";
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
-constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPathKey = "SurfaceMeshFaceAreasArrayPath";
-constexpr StringLiteral k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesArrayPath";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_FaceEnsembleAttributeMatrixNameKey = "FaceEnsembleAttributeMatrixName";
-constexpr StringLiteral k_GBCDArrayNameKey = "GBCDArrayName";
+constexpr StringLiteralType k_GBCDResKey = "GBCDRes";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
+constexpr StringLiteralType k_SurfaceMeshFaceAreasArrayPathKey = "SurfaceMeshFaceAreasArrayPath";
+constexpr StringLiteralType k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesArrayPath";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_FaceEnsembleAttributeMatrixNameKey = "FaceEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_GBCDArrayNameKey = "GBCDArrayName";
 } // namespace simpl
 } // namespace
 
@@ -183,23 +183,23 @@ Result<Arguments> ComputeGBCDFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_GBCDResKey, k_GBCDRes_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_GBCDResKey, k_GBCDRes_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SelectedTriangleGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SelectedTriangleGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceNormalsArrayPathKey, k_SurfaceMeshFaceNormalsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceNormalsArrayPathKey, k_SurfaceMeshFaceNormalsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceAreasArrayPathKey, k_SurfaceMeshFaceAreasArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceAreasArrayPathKey, k_SurfaceMeshFaceAreasArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureEulerAnglesArrayPathKey, k_FeatureEulerAnglesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureEulerAnglesArrayPathKey, k_FeatureEulerAnglesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceEnsembleAttributeMatrixNameKey, k_FaceEnsembleAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_GBCDArrayNameKey, k_GBCDArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceEnsembleAttributeMatrixNameKey, k_FaceEnsembleAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_GBCDArrayNameKey, k_GBCDArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -43,7 +43,7 @@ Parameters RelabelComponentImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt64Parameter>(
+  params.insert(std::make_unique<UInt64ParameterType>(
       k_MinimumObjectSize_Key, "Minimum Object Size",
       "Set the minimum size in pixels for an object. All objects smaller than this size will be discarded and will not appear in the output label map. NumberOfObjects will count only the objects "
       "whose pixel counts are greater than or equal to the minimum size. Call GetOriginalNumberOfObjects to find out how many objects were present in the original label map.",
@@ -52,7 +52,7 @@ Parameters RelabelComponentImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetIntegerScalarTypes()));
 
@@ -66,7 +66,7 @@ IFilter::VersionType RelabelComponentImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer RelabelComponentImageFilter::clone() const
+IFilter::UniquePointerType RelabelComponentImageFilter::clone() const
 {
   return std::make_unique<RelabelComponentImageFilter>();
 }
@@ -104,10 +104,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_MinimumObjectSizeKey = "MinimumObjectSize";
-constexpr StringLiteral k_SortByObjectSizeKey = "SortByObjectSize";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_MinimumObjectSizeKey = "MinimumObjectSize";
+constexpr StringLiteralType k_SortByObjectSizeKey = "SortByObjectSize";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -117,11 +117,11 @@ Result<Arguments> RelabelComponentImageFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64FilterParameterConverter>(args, json, simpl::k_MinimumObjectSizeKey, k_MinimumObjectSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_SortByObjectSizeKey, k_SortByObjectSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt64FilterParameterConverter>(args, json, simpl::k_MinimumObjectSizeKey, k_MinimumObjectSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_SortByObjectSizeKey, k_SortByObjectSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -16,8 +16,8 @@ namespace nx::core
 namespace EbsdToH5EbsdInputConstants
 {
 const ChoicesParameter::Choices k_StackingChoices = {"Low to High", "High To Low"};
-const ChoicesParameter::ValueType k_LowToHigh = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::LowToHigh);
-const ChoicesParameter::ValueType k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::HighToLow);
+const ChoicesParameter::ValueType k_LowToHigh = static_cast<ChoicesParameter::ValueType>(nx::core::file_path_generator::Ordering::LowToHigh);
+const ChoicesParameter::ValueType k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::file_path_generator::Ordering::HighToLow);
 
 const ChoicesParameter::Choices k_TransformChoices = {"Edax - TSL", "Oxford - CTF", "No/Unknown Transformation", "HEDM - IceNine"};
 const ChoicesParameter::ValueType k_Edax = 0;
@@ -44,7 +44,7 @@ const std::vector<float32> k_HedmSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 struct ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdInputValues
 {
 
-  Float32Parameter::ValueType ZSpacing{};
+  Float32ParameterType::ValueType ZSpacing{};
   ChoicesParameter::ValueType StackingOrder{};
   ChoicesParameter::ValueType ReferenceFrame{};
   FileSystemPathParameter::ValueType OutputPath;

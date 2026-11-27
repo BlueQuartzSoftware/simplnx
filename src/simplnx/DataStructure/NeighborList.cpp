@@ -29,7 +29,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore, IdType importId)
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& dataStore, IdType importId)
 : INeighborList(dataStructure, name, importId)
 , m_Store(dataStore)
 , m_IsAllocated(true)
@@ -38,7 +38,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore)
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& dataStore)
 : INeighborList(dataStructure, name)
 , m_Store(dataStore)
 , m_IsAllocated(true)
@@ -58,7 +58,7 @@ NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& listStore, const std::optional<IdType>& parentId)
 {
   if(listStore == nullptr)
   {
@@ -85,7 +85,7 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& dataStore, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<StoreType>& dataStore, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, dataStore, importId));
   if(!AttemptToAddObject(dataStructure, data, parentId))
@@ -157,7 +157,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   const auto format = ArrayCreationUtilities::ResolveStorageFormat(dataStruct, copyPath, GetDataType<T>(), bytes, "");
   auto copiedStore = m_Store->deepCopy(format);
   // Insertion assigns the identifier for the copy.
-  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), std::shared_ptr<store_type>(std::move(copiedStore))));
+  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), std::shared_ptr<StoreType>(std::move(copiedStore))));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
@@ -472,13 +472,13 @@ Result<> NeighborList<T>::flushChecked() const
 }
 
 template <typename T>
-std::shared_ptr<typename NeighborList<T>::store_type> NeighborList<T>::getStore() const
+std::shared_ptr<typename NeighborList<T>::StoreType> NeighborList<T>::getStore() const
 {
   return m_Store;
 }
 
 template <typename T>
-void NeighborList<T>::setStore(const std::shared_ptr<store_type>& store)
+void NeighborList<T>::setStore(const std::shared_ptr<StoreType>& store)
 {
   m_Store = store;
 }

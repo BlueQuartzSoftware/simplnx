@@ -10,8 +10,8 @@ namespace nx::core
 class SIMPLNX_EXPORT IGridGeometry : public IGeometry
 {
 public:
-  static constexpr StringLiteral k_CellAttributeMatrixName = "Cell Data";
-  static constexpr StringLiteral k_TypeName = "IGridGeometry";
+  static constexpr StringLiteralType k_CellAttributeMatrixName = "Cell Data";
+  static constexpr StringLiteralType k_TypeName = "IGridGeometry";
 
   IGridGeometry() = delete;
   IGridGeometry(const IGridGeometry&) = default;

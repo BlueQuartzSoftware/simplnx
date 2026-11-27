@@ -38,7 +38,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static constexpr StringLiteral k_DataPath_Key = "removed_data_path";
+  static constexpr StringLiteralType k_DataPath_Key = "removed_data_path";
 
   /**
    * @brief
@@ -88,7 +88,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

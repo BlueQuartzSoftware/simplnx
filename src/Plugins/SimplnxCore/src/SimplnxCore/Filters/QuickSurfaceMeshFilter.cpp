@@ -74,17 +74,17 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                    bounding_box_skin_mode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Cell Attribute Arrays to Transfer", "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
-      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedFeatureDataArrayPaths_Key, "Feature Attribute Arrays to Transfer", "The paths to the Arrays specifying which feature Attribute Arrays to transfer to the created Triangle Geometry",
-      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Triangle Geometry"});
   params.insert(
@@ -123,7 +123,7 @@ IFilter::VersionType QuickSurfaceMeshFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
+IFilter::UniquePointerType QuickSurfaceMeshFilter::clone() const
 {
   return std::make_unique<QuickSurfaceMeshFilter>();
 }
@@ -273,15 +273,15 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FixProblemVoxelsKey = "FixProblemVoxels";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
-constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
-constexpr StringLiteral k_NodeTypesArrayNameKey = "NodeTypesArrayName";
-constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
-constexpr StringLiteral k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
-constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
+constexpr StringLiteralType k_FixProblemVoxelsKey = "FixProblemVoxels";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
+constexpr StringLiteralType k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_NodeTypesArrayNameKey = "NodeTypesArrayName";
+constexpr StringLiteralType k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteralType k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
+constexpr StringLiteralType k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -291,20 +291,20 @@ Result<Arguments> QuickSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  Result<> fixResult = SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_FixProblemVoxelsKey, k_FixProblemVoxels_Key);
+  Result<> fixResult = simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FixProblemVoxelsKey, k_FixProblemVoxels_Key);
   if(fixResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(fixResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GridGeometryDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GridGeometryDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

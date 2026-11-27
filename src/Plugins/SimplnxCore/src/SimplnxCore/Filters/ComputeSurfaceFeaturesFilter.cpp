@@ -59,9 +59,9 @@ Parameters ComputeSurfaceFeaturesFilter::parameters() const
                                                 true));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_FeatureGeometryPath_Key, "Feature Geometry", "The geometry in which to find surface features", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Cell Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
                                                                     "The path to the cell feature attribute matrix associated with the input feature ids array", DataPath{}));
@@ -79,7 +79,7 @@ IFilter::VersionType ComputeSurfaceFeaturesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeSurfaceFeaturesFilter::clone() const
+IFilter::UniquePointerType ComputeSurfaceFeaturesFilter::clone() const
 {
   return std::make_unique<ComputeSurfaceFeaturesFilter>();
 }
@@ -138,8 +138,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_SurfaceFeaturesArrayPathKey = "SurfaceFeaturesArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_SurfaceFeaturesArrayPathKey = "SurfaceFeaturesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -149,13 +149,13 @@ Result<Arguments> ComputeSurfaceFeaturesFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureGeometryPath_Key));
   results.push_back(
       // The legacy output path supplies the feature AttributeMatrix, not the Feature IDs parent.
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

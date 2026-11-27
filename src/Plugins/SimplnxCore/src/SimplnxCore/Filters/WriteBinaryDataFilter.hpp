@@ -31,10 +31,10 @@ public:
   };
 
   // Parameter Keys
-  static constexpr StringLiteral k_Endianess_Key = "endian_index";
-  static constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static constexpr StringLiteral k_FileExtension_Key = "file_extension";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_Endianess_Key = "endian_index";
+  static constexpr StringLiteralType k_OutputPath_Key = "output_path";
+  static constexpr StringLiteralType k_FileExtension_Key = "file_extension";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

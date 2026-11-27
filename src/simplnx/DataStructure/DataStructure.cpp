@@ -663,22 +663,22 @@ bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataOb
   return true;
 }
 
-DataStructure::Iterator DataStructure::begin()
+DataStructure::iterator DataStructure::begin()
 {
   return m_RootGroup.begin();
 }
 
-DataStructure::Iterator DataStructure::end()
+DataStructure::iterator DataStructure::end()
 {
   return m_RootGroup.end();
 }
 
-DataStructure::ConstIterator DataStructure::begin() const
+DataStructure::const_iterator DataStructure::begin() const
 {
   return m_RootGroup.begin();
 }
 
-DataStructure::ConstIterator DataStructure::end() const
+DataStructure::const_iterator DataStructure::end() const
 {
   return m_RootGroup.end();
 }
@@ -1523,7 +1523,7 @@ Result<> DataStructure::flushChecked() const
   Result<> result;
   if(!errors.empty())
   {
-    result.m_Expected = nonstd::make_unexpected(std::move(errors));
+    result.expected = nonstd::make_unexpected(std::move(errors));
   }
   result.warnings() = std::move(warnings);
   return result;

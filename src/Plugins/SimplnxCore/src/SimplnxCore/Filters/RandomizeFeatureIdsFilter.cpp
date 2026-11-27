@@ -58,7 +58,7 @@ Parameters RandomizeFeatureIdsFilter::parameters() const
   Parameters params;
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs Array", "Array storing the Feature IDs", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAMPath_Key, "Feature Attribute Matrix", "The path to the Feature Attribute Matrix, so it can be updated", DataPath{}));
 
   return params;
@@ -76,7 +76,7 @@ IFilter::VersionType RandomizeFeatureIdsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RandomizeFeatureIdsFilter::clone() const
+IFilter::UniquePointerType RandomizeFeatureIdsFilter::clone() const
 {
   return std::make_unique<RandomizeFeatureIdsFilter>();
 }

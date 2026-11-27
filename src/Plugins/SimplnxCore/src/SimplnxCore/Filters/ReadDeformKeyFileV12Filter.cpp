@@ -91,7 +91,7 @@ IFilter::VersionType ReadDeformKeyFileV12Filter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadDeformKeyFileV12Filter::clone() const
+IFilter::UniquePointerType ReadDeformKeyFileV12Filter::clone() const
 {
   return std::make_unique<ReadDeformKeyFileV12Filter>();
 }
@@ -192,10 +192,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_DEFORMInputFileKey = "DEFORMInputFile";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_DEFORMInputFileKey = "DEFORMInputFile";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -205,11 +205,11 @@ Result<Arguments> ReadDeformKeyFileV12Filter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_DEFORMInputFileKey, k_InputFilePath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_DEFORMInputFileKey, k_InputFilePath_Key));
   // Verbose Output parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_QuadGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAMName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_QuadGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAMName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

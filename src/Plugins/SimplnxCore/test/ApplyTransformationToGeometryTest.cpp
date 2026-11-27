@@ -461,9 +461,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
 
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -525,9 +525,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
 
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -578,9 +578,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
 
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -690,9 +690,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
 
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -745,9 +745,9 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));
 
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

@@ -54,14 +54,14 @@ Parameters ComputeShapesFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Feature Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath({"Centroids"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s",
@@ -84,7 +84,7 @@ IFilter::VersionType ComputeShapesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeShapesFilter::clone() const
+IFilter::UniquePointerType ComputeShapesFilter::clone() const
 {
   return std::make_unique<ComputeShapesFilter>();
 }
@@ -185,14 +185,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
-constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
-constexpr StringLiteral k_Omega3sArrayNameKey = "Omega3sArrayName";
-constexpr StringLiteral k_AxisLengthsArrayNameKey = "AxisLengthsArrayName";
-constexpr StringLiteral k_AxisEulerAnglesArrayNameKey = "AxisEulerAnglesArrayName";
-constexpr StringLiteral k_AspectRatiosArrayNameKey = "AspectRatiosArrayName";
-constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
+constexpr StringLiteralType k_CentroidsArrayPathKey = "CentroidsArrayPath";
+constexpr StringLiteralType k_Omega3sArrayNameKey = "Omega3sArrayName";
+constexpr StringLiteralType k_AxisLengthsArrayNameKey = "AxisLengthsArrayName";
+constexpr StringLiteralType k_AxisEulerAnglesArrayNameKey = "AxisEulerAnglesArrayName";
+constexpr StringLiteralType k_AspectRatiosArrayNameKey = "AspectRatiosArrayName";
+constexpr StringLiteralType k_VolumesArrayNameKey = "VolumesArrayName";
 } // namespace simpl
 } // namespace
 
@@ -203,15 +203,15 @@ Result<Arguments> ComputeShapesFilter::FromSIMPLJson(const nlohmann::json& json)
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   // Cell Feature Attribute Matrix parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_Omega3sArrayNameKey, k_Omega3sArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_AxisLengthsArrayNameKey, k_AxisLengthsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_AxisEulerAnglesArrayNameKey, k_AxisEulerAnglesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_AspectRatiosArrayNameKey, k_AspectRatiosArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VolumesArrayNameKey, k_VolumesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_Omega3sArrayNameKey, k_Omega3sArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_AxisLengthsArrayNameKey, k_AxisLengthsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_AxisEulerAnglesArrayNameKey, k_AxisEulerAnglesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_AspectRatiosArrayNameKey, k_AspectRatiosArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VolumesArrayNameKey, k_VolumesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

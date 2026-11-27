@@ -68,9 +68,9 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances",
@@ -95,7 +95,7 @@ IFilter::VersionType ComputeEuclideanDistMapFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeEuclideanDistMapFilter::clone() const
+IFilter::UniquePointerType ComputeEuclideanDistMapFilter::clone() const
 {
   return std::make_unique<ComputeEuclideanDistMapFilter>();
 }
@@ -196,14 +196,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CalcManhattanDistKey = "CalcManhattanDist";
-constexpr StringLiteral k_DoBoundariesKey = "DoBoundaries";
-constexpr StringLiteral k_DoTripleLinesKey = "DoTripleLines";
-constexpr StringLiteral k_DoQuadPointsKey = "DoQuadPoints";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_GBDistancesArrayNameKey = "GBDistancesArrayName";
-constexpr StringLiteral k_TJDistancesArrayNameKey = "TJDistancesArrayName";
-constexpr StringLiteral k_QPDistancesArrayNameKey = "QPDistancesArrayName";
+constexpr StringLiteralType k_CalcManhattanDistKey = "CalcManhattanDist";
+constexpr StringLiteralType k_DoBoundariesKey = "DoBoundaries";
+constexpr StringLiteralType k_DoTripleLinesKey = "DoTripleLines";
+constexpr StringLiteralType k_DoQuadPointsKey = "DoQuadPoints";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_GBDistancesArrayNameKey = "GBDistancesArrayName";
+constexpr StringLiteralType k_TJDistancesArrayNameKey = "TJDistancesArrayName";
+constexpr StringLiteralType k_QPDistancesArrayNameKey = "QPDistancesArrayName";
 } // namespace simpl
 } // namespace
 
@@ -213,16 +213,16 @@ Result<Arguments> ComputeEuclideanDistMapFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_CalcManhattanDistKey, k_CalcManhattanDist_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoBoundariesKey, k_DoBoundaries_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoTripleLinesKey, k_DoTripleLines_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoQuadPointsKey, k_DoQuadPoints_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_CalcManhattanDistKey, k_CalcManhattanDist_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoBoundariesKey, k_DoBoundaries_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoTripleLinesKey, k_DoTripleLines_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoQuadPointsKey, k_DoQuadPoints_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_GBDistancesArrayNameKey, k_GBDistancesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_TJDistancesArrayNameKey, k_TJDistancesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_QPDistancesArrayNameKey, k_QPDistancesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_GBDistancesArrayNameKey, k_GBDistancesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_TJDistancesArrayNameKey, k_TJDistancesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_QPDistancesArrayNameKey, k_QPDistancesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

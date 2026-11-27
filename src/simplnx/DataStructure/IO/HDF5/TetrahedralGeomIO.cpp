@@ -6,7 +6,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 TetrahedralGeomIO::TetrahedralGeomIO() = default;
 TetrahedralGeomIO::~TetrahedralGeomIO() noexcept = default;
@@ -21,14 +21,14 @@ std::string TetrahedralGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                      const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* geometryPtr = TetrahedralGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup) const
 {
   auto* geomPtr = dataStructure.getDataAs<TetrahedralGeom>(dataPath);
   if(geomPtr == nullptr)
@@ -38,13 +38,13 @@ Result<> TetrahedralGeomIO::finishImportingData(DataStructure& dataStructure, co
   return INodeGeom3dIO::FinishImportingNodeGeom3dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> TetrahedralGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TetrahedralGeom& geometry, group_writer_type& parentGroup, bool importable)
+Result<> TetrahedralGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TetrahedralGeom& geometry, GroupWriterType& parentGroup, bool importable)
 {
   return INodeGeom3dIO::WriteNodeGeom3dData(dataStructureWriter, geometry, parentGroup, importable);
 }
 
-Result<> TetrahedralGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> TetrahedralGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

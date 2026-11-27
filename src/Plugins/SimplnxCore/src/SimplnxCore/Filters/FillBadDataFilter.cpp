@@ -49,21 +49,21 @@ Parameters FillBadDataFilter::parameters() const
   Parameters params;
   // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_MinAllowedDefectSize_Key, "Minimum Allowed Defect Size", "The size at which a group of bad Cells are left unfilled as a 'defect'", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_MinAllowedDefectSize_Key, "Minimum Allowed Defect Size", "The size at which a group of bad Cells are left unfilled as a 'defect'", 1));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_StoreAsNewPhase_Key, "Store Defects as New Phase", "Whether to change the phase of 'defect' larger than the minimum allowed size above", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs.", DataPath({"Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllDataTypes()));
   // Link each parent parameter to the child parameters it controls.
   params.linkParameters(k_StoreAsNewPhase_Key, k_CellPhasesArrayPath_Key, true);
 
@@ -75,7 +75,7 @@ IFilter::VersionType FillBadDataFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer FillBadDataFilter::clone() const
+IFilter::UniquePointerType FillBadDataFilter::clone() const
 {
   return std::make_unique<FillBadDataFilter>();
 }
@@ -161,11 +161,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_MinAllowedDefectSizeKey = "MinAllowedDefectSize";
-constexpr StringLiteral k_StoreAsNewPhaseKey = "StoreAsNewPhase";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
+constexpr StringLiteralType k_MinAllowedDefectSizeKey = "MinAllowedDefectSize";
+constexpr StringLiteralType k_StoreAsNewPhaseKey = "StoreAsNewPhase";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
 } // namespace simpl
 } // namespace
 
@@ -175,16 +175,16 @@ Result<Arguments> FillBadDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MinAllowedDefectSizeKey, k_MinAllowedDefectSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StoreAsNewPhaseKey, k_StoreAsNewPhase_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedCellDataGroup_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MinAllowedDefectSizeKey, k_MinAllowedDefectSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StoreAsNewPhaseKey, k_StoreAsNewPhase_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedCellDataGroup_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   // IgnoredDataArrayPaths was added to the legacy filter after 6.5.49; older pipelines omit the key.
   if(json.contains(simpl::k_IgnoredDataArrayPathsKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

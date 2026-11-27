@@ -20,8 +20,8 @@ public:
   ConcatenateDataArraysFilter& operator=(ConcatenateDataArraysFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputArrays_Key = "input_arrays";
-  static constexpr StringLiteral k_OutputArray_Key = "output_array_path";
+  static constexpr StringLiteralType k_InputArrays_Key = "input_arrays";
+  static constexpr StringLiteralType k_OutputArray_Key = "output_array_path";
 
   /**
    * @brief Returns the filter's name.
@@ -71,7 +71,7 @@ public:
    * @brief Creates and returns a copy of the filter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

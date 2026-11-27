@@ -83,7 +83,7 @@ public:
    * @brief Inserts the given parameter.
    * @param parameter The parameter to insert
    */
-  void insert(IParameter::UniquePointer parameter);
+  void insert(IParameter::UniquePointerType parameter);
 
   /**
    * @brief Inserts a separator.
@@ -131,7 +131,7 @@ public:
    * @param parameter The parameter to insert
    * @param func Function to determine if the group is active
    */
-  void insertLinkableParameter(IParameter::UniquePointer parameter, IsActiveFunc func);
+  void insertLinkableParameter(IParameter::UniquePointerType parameter, IsActiveFunc func);
 
   /**
    * @brief Adds child parameter to an existing group with the value that indicates it's active.

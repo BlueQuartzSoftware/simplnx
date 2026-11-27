@@ -272,7 +272,7 @@ protected:
   /**
    * @brief JSON key that stores the node's disabled state.
    */
-  static constexpr StringLiteral k_IsDisabledKey = "isDisabled";
+  static constexpr StringLiteralType k_IsDisabledKey = "isDisabled";
 
   /**
    * @brief Attempts to read the disabled state from the provided node's json.

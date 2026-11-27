@@ -79,7 +79,7 @@ public:
 };
 } // namespace pybind11::detail
 
-namespace nx::core::NxPybind
+namespace nx::core::nx_pybind
 {
 namespace py = pybind11;
 
@@ -191,7 +191,7 @@ class PythonPlugin;
 class Internals
 {
 public:
-  static constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
+  static constexpr StringLiteralType k_Key = "SIMPLNX_INTERNAL";
 
   Internals()
   : m_App(Application::GetOrCreateInstance())
@@ -632,7 +632,7 @@ public:
     return m_ParametersVersion;
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     py::gil_scoped_acquire gil;
     return std::make_unique<PyFilter>(m_Object.attr("clone")());
@@ -718,7 +718,7 @@ public:
 
     for(py::handle filterTypeHandle : filters)
     {
-      FilterCreationFunc filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointer {
+      FilterCreationFuncType filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointerType {
         py::gil_scoped_acquire globalInterpreterLock;
         return std::make_unique<PyFilter>(filterType());
       };
@@ -800,4 +800,4 @@ void BindParameterConstructor(py::class_<T, Options...>& object)
 
   object.def(py::init<const std::string&, const std::string&, const std::string&, const typename T::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
 }
-} // namespace nx::core::NxPybind
+} // namespace nx::core::nx_pybind

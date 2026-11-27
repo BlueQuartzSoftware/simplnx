@@ -2376,7 +2376,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     std::vector<uint64> imageDims = {40, 60, 80};
     std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
     std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(imageDims));
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(imageDims));
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
     // RectilinearGrid Geometry parameters
@@ -2471,7 +2471,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2531,7 +2531,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2584,7 +2584,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2646,7 +2646,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2708,7 +2708,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2770,7 +2770,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2832,7 +2832,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2894,7 +2894,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_MoveArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -2957,7 +2957,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(true));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -3046,7 +3046,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(true));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
     // Image Geometry parameters
-    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
+    args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     // RectilinearGrid Geometry parameters
@@ -3181,7 +3181,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Numeric domain regression", "[Simp
   DataStructure dataStructure;
   CreateGeometryFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64ParameterType::ValueType{2, 2, 2});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
   args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{0});
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
@@ -3200,7 +3200,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Origin X domain regression", "[Sim
   DataStructure dataStructure;
   CreateGeometryFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64ParameterType::ValueType{2, 2, 2});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{0});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
   args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{std::numeric_limits<float32>::infinity(), 0, 0});
@@ -3219,7 +3219,7 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: Inactive image vectors", "[Simplnx
   verticesPtr->fill(1);
   CreateGeometryFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, VectorUInt64ParameterType::ValueType{2, 2, 2});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, ChoicesParameter::ValueType{2});
   args.insertOrAssign(CreateGeometryFilter::k_GeometryPath_Key, DataPath({"Created"}));
   args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, DataPath({"Vertices"}));

@@ -17,11 +17,11 @@ public:
   static constexpr usize k_NumEdgeVerts = 2;
   static constexpr usize k_NumFaceVerts = 4;
   static constexpr usize k_NumVerts = 4;
-  static constexpr StringLiteral k_VoxelSizes = "Quad Areas";
-  static constexpr StringLiteral k_EltsContainingVert = "Quads Containing Vert";
-  static constexpr StringLiteral k_EltNeighbors = "Quad Neighbors";
-  static constexpr StringLiteral k_EltCentroids = "Quad Centroids";
-  static constexpr StringLiteral k_TypeName = "QuadGeom";
+  static constexpr StringLiteralType k_VoxelSizes = "Quad Areas";
+  static constexpr StringLiteralType k_EltsContainingVert = "Quads Containing Vert";
+  static constexpr StringLiteralType k_EltNeighbors = "Quad Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Quad Centroids";
+  static constexpr StringLiteralType k_TypeName = "QuadGeom";
   /**
    * @brief Creates a new QuadGeom in the specified DataStructure.
    * @param dataStructure The DataStructure to create the QuadGeom in

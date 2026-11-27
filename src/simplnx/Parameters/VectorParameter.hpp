@@ -62,7 +62,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -143,22 +143,22 @@ extern template class VectorParameter<uint64>;
 extern template class VectorParameter<float32>;
 extern template class VectorParameter<float64>;
 
-using VectorInt8Parameter = VectorParameter<int8>;
-using VectorUInt8Parameter = VectorParameter<uint8>;
+using VectorInt8ParameterType = VectorParameter<int8>;
+using VectorUInt8ParameterType = VectorParameter<uint8>;
 
-using VectorInt16Parameter = VectorParameter<int16>;
-using VectorUInt16Parameter = VectorParameter<uint16>;
+using VectorInt16ParameterType = VectorParameter<int16>;
+using VectorUInt16ParameterType = VectorParameter<uint16>;
 
-using VectorInt32Parameter = VectorParameter<int32>;
-using VectorUInt32Parameter = VectorParameter<uint32>;
+using VectorInt32ParameterType = VectorParameter<int32>;
+using VectorUInt32ParameterType = VectorParameter<uint32>;
 
-using VectorInt64Parameter = VectorParameter<int64>;
-using VectorUInt64Parameter = VectorParameter<uint64>;
+using VectorInt64ParameterType = VectorParameter<int64>;
+using VectorUInt64ParameterType = VectorParameter<uint64>;
 
 using VectorFloat32Parameter = VectorParameter<float32>;
-using VectorFloat64Parameter = VectorParameter<float64>;
+using VectorFloat64ParameterType = VectorParameter<float64>;
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT RangeFilterParameterConverter
 {
@@ -331,25 +331,25 @@ extern template struct Vec3p1FilterParameterConverter<float32>;
 extern template struct Vec3p1FilterParameterConverter<float64>;
 
 using FloatVec3p1FilterParameterConverter = Vec3p1FilterParameterConverter<float32>;
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt8Parameter, "nx::core::VectorInt8Parameter", "9f5f9683-e492-4a79-8378-79d727b2356a");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt8ParameterType, "nx::core::VectorInt8Parameter", "9f5f9683-e492-4a79-8378-79d727b2356a");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt8Parameter, "nx::core::VectorUInt8Parameter", "bff78ff3-35ef-482a-b3b1-df8806e7f7ef");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt8ParameterType, "nx::core::VectorUInt8Parameter", "bff78ff3-35ef-482a-b3b1-df8806e7f7ef");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt16Parameter, "nx::core::VectorInt16Parameter", "43810a29-1a5f-4472-bec6-41de9ffe27f7");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt16ParameterType, "nx::core::VectorInt16Parameter", "43810a29-1a5f-4472-bec6-41de9ffe27f7");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt16Parameter, "nx::core::VectorUInt16Parameter", "2f1ba2f4-c5d5-403c-8b90-0bf60d2bde9b");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt16ParameterType, "nx::core::VectorUInt16Parameter", "2f1ba2f4-c5d5-403c-8b90-0bf60d2bde9b");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt32Parameter, "nx::core::VectorInt32Parameter", "d3188e18-e383-4727-ab32-88b5fda56ae8");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt32ParameterType, "nx::core::VectorInt32Parameter", "d3188e18-e383-4727-ab32-88b5fda56ae8");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt32Parameter, "nx::core::VectorUInt32Parameter", "37322aa6-1a2f-4ecb-9aa1-8922d7ac1e49");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt32ParameterType, "nx::core::VectorUInt32Parameter", "37322aa6-1a2f-4ecb-9aa1-8922d7ac1e49");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt64Parameter, "nx::core::VectorInt64Parameter", "4ceaffc1-7326-4f65-a33a-eae263dc22d1");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt64ParameterType, "nx::core::VectorInt64Parameter", "4ceaffc1-7326-4f65-a33a-eae263dc22d1");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt64Parameter, "nx::core::VectorUInt64Parameter", "17309744-c4e8-4d1e-807e-e7012387f1ec");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt64ParameterType, "nx::core::VectorUInt64Parameter", "17309744-c4e8-4d1e-807e-e7012387f1ec");
 
 SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat32Parameter, "nx::core::VectorFloat32Parameter", "88f231a1-7956-41f5-98b7-4471705d2805");
 
-SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat64Parameter, "nx::core::VectorFloat64Parameter", "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat64ParameterType, "nx::core::VectorFloat64Parameter", "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96");

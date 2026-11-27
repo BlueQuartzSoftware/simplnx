@@ -275,7 +275,7 @@ class Vec2 : public Array<T, 2>
   using ParentType = Array<T, 2>;
 
 public:
-  using tuple_type = std::tuple<T, T>;
+  using TupleType = std::tuple<T, T>;
 
   /**
    * @brief Copy constructor
@@ -348,7 +348,7 @@ public:
    * @brief Vec2 constructor copying X and Y values from the specified tuple.
    * @param data
    */
-  Vec2(const tuple_type& data)
+  Vec2(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -426,7 +426,7 @@ public:
    * @brief Converts the internal data structure to a tuple_type.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple(getX(), getY());
   }
@@ -567,7 +567,7 @@ class Vec3 : public Array<T, 3>
   using ParentType = Array<T, 3>;
 
 public:
-  using tuple_type = std::tuple<T, T, T>;
+  using TupleType = std::tuple<T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -642,7 +642,7 @@ public:
    * @brief Constructs a Vec3 by copying values from the std::tuple.
    * @param data
    */
-  Vec3(const tuple_type& data)
+  Vec3(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -741,7 +741,7 @@ public:
    * @brief Converts the internal data structure to a tuple.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple(getX(), getY(), getZ());
   }
@@ -978,7 +978,7 @@ class Vec4 : public Array<T, 4>
   using ParentType = Array<T, 4>;
 
 public:
-  using tuple_type = std::tuple<T, T, T, T>;
+  using TupleType = std::tuple<T, T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -1055,7 +1055,7 @@ public:
    * @brief Constructs a Vec4 by copying values from a std::tuple.
    * @param data
    */
-  Vec4(const tuple_type& data)
+  Vec4(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -1175,7 +1175,7 @@ public:
    * @brief Converts the internal data structure to a std::tuple.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple(getX(), getY(), getZ(), getW());
   }
@@ -1198,7 +1198,7 @@ class Vec6 : public Array<T, 6>
   using ParentType = Array<T, 6>;
 
 public:
-  using tuple_type = std::tuple<T, T, T, T, T, T>;
+  using TupleType = std::tuple<T, T, T, T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -1279,7 +1279,7 @@ public:
    * @brief Constructs a Vec6 by copying values from the provided std::tuple.
    * @param data
    */
-  Vec6(const tuple_type& data)
+  Vec6(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -1333,7 +1333,7 @@ public:
    * @brief Converts the internal data structure to a std::tuple.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple((*this)[0], (*this)[1], (*this)[2], (*this)[3], (*this)[4], (*this)[5]);
   }
@@ -1357,7 +1357,7 @@ class Vec7 : public Array<T, 7>
   using ParentType = Array<T, 7>;
 
 public:
-  using tuple_type = std::tuple<T, T, T, T, T, T, T>;
+  using TupleType = std::tuple<T, T, T, T, T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -1440,7 +1440,7 @@ public:
    * @brief Constructs a Vec7 by copying values from the specified tuple.
    * @param data
    */
-  Vec7(const tuple_type& data)
+  Vec7(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -1497,7 +1497,7 @@ public:
    * @brief Converts the internal data structure to a std::tuple
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple((*this)[0], (*this)[1], (*this)[2], (*this)[3], (*this)[4], (*this)[5], (*this)[6]);
   }

@@ -20,9 +20,9 @@ public:
   using value_type = T;
   using VectorType = std::vector<T>;
   using SharedVectorType = std::shared_ptr<VectorType>;
-  using store_type = AbstractListStore<T>;
-  using iterator = typename store_type::iterator;
-  using const_iterator = typename store_type::const_iterator;
+  using StoreType = AbstractListStore<T>;
+  using iterator = typename StoreType::iterator;
+  using const_iterator = typename StoreType::const_iterator;
 
   /**
    * @brief Identifies a partial erase without an available destination path.
@@ -53,7 +53,7 @@ public:
    * @param parentId Optional parent object ID to insert the NeighborList under
    * @return NeighborList<T>* Pointer to the created NeighborList, or nullptr if creation failed
    */
-  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId = {});
+  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& listStore, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Imports a NeighborList into the specified DataStructure from a vector of shared vector pointers.
@@ -75,7 +75,7 @@ public:
    * @param parentId Optional parent object ID to insert the NeighborList under
    * @return NeighborList<T>* Pointer to the imported NeighborList, or nullptr if import failed
    */
-  static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& storeData, const std::optional<IdType>& parentId = {});
+  static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<StoreType>& storeData, const std::optional<IdType>& parentId = {});
 
   ~NeighborList() override = default;
 
@@ -406,13 +406,13 @@ public:
    * @brief Returns a shared_ptr to the underlying list store.
    * @return std::shared_ptr<store_type>
    */
-  std::shared_ptr<store_type> getStore() const;
+  std::shared_ptr<StoreType> getStore() const;
 
   /**
    * @brief Replaces the AbstractListStore used to store values.
    * @param store
    */
-  void setStore(const std::shared_ptr<store_type>& store);
+  void setStore(const std::shared_ptr<StoreType>& store);
 
   /**
    * @brief Returns a vector of vectors containing the current values.
@@ -490,7 +490,7 @@ protected:
    * @param name The name for this NeighborList
    * @param dataStore Shared pointer to the AbstractListStore to use for storage
    */
-  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore);
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& dataStore);
 
   /**
    * @brief Constructs a NeighborList from a vector of shared vector pointers with an import ID.
@@ -508,10 +508,10 @@ protected:
    * @param listStore Shared pointer to the AbstractListStore to use for storage
    * @param importId The ID to use for this imported object
    */
-  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, IdType importId);
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& listStore, IdType importId);
 
 private:
-  std::shared_ptr<store_type> m_Store;
+  std::shared_ptr<StoreType> m_Store;
   bool m_IsAllocated{};
   value_type m_InitValue;
 };

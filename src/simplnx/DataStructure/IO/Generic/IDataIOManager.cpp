@@ -9,12 +9,12 @@ namespace nx::core
 IDataIOManager::IDataIOManager() = default;
 IDataIOManager::~IDataIOManager() noexcept = default;
 
-IDataIOManager::factory_collection IDataIOManager::getFactories() const
+IDataIOManager::FactoryCollectionType IDataIOManager::getFactories() const
 {
   return m_FactoryCollection;
 }
 
-IDataIOManager::factory_ptr IDataIOManager::getFactory(const factory_id_type& typeName) const
+IDataIOManager::FactoryPtrType IDataIOManager::getFactory(const FactoryIdType& typeName) const
 {
   if(m_FactoryCollection.find(typeName) == m_FactoryCollection.end())
   {

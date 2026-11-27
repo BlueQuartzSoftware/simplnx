@@ -16,9 +16,9 @@ namespace nx::core
 
 namespace
 {
-constexpr StringLiteral k_Equation = "equation";
-constexpr StringLiteral k_Units = "units";
-constexpr StringLiteral k_SelectedGroup = "selected_group";
+constexpr StringLiteralType k_Equation = "equation";
+constexpr StringLiteralType k_Units = "units";
+constexpr StringLiteralType k_SelectedGroup = "selected_group";
 } // namespace
 
 CalculatorParameter::CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
@@ -47,7 +47,7 @@ nlohmann::json CalculatorParameter::toJsonImpl(const std::any& value) const
 {
   const auto& structValue = GetAnyRef<ValueType>(value);
   nlohmann::json json;
-  json[k_Equation] = structValue.m_Equation;
+  json[k_Equation] = structValue.equation;
   json[k_Units] = structValue.m_Units;
   json[k_SelectedGroup] = structValue.m_SelectedGroup.toString();
   return json;
@@ -55,7 +55,7 @@ nlohmann::json CalculatorParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   if(!json.is_object())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a object", k_Prefix, name()));
@@ -81,7 +81,7 @@ Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, V
                                                  to_underlying(AngleUnits::Degrees)));
   }
   ValueType value;
-  value.m_Equation = json[k_Equation].get<std::string>();
+  value.equation = json[k_Equation].get<std::string>();
   value.m_Units = static_cast<AngleUnits>(units);
   auto selectedGroupString = json[k_SelectedGroup].get<std::string>();
   auto selectedGroupPath = DataPath::FromString(selectedGroupString);
@@ -94,7 +94,7 @@ Result<std::any> CalculatorParameter::fromJsonImpl(const nlohmann::json& json, V
   return {{std::move(value)}};
 }
 
-IParameter::UniquePointer CalculatorParameter::clone() const
+IParameter::UniquePointerType CalculatorParameter::clone() const
 {
   return std::make_unique<CalculatorParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -111,9 +111,9 @@ typename CalculatorParameter::ValueType CalculatorParameter::defaultString() con
 
 Result<> CalculatorParameter::validate(const std::any& value) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
-  if(StringUtilities::trimmed(structValue.m_Equation).empty())
+  if(StringUtilities::trimmed(structValue.equation).empty())
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", k_Prefix));
   }
@@ -125,13 +125,13 @@ Result<> CalculatorParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
-constexpr StringLiteral k_UnitsKey = "Units";
-constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
+constexpr StringLiteralType k_InfixEquationKey = "InfixEquation";
+constexpr StringLiteralType k_UnitsKey = "Units";
+constexpr StringLiteralType k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
 } // namespace
 
 Result<CalculatorFilterParameterConverter::ValueType> CalculatorFilterParameterConverter::Convert(const nlohmann::json& json)
@@ -178,11 +178,11 @@ Result<CalculatorFilterParameterConverter::ValueType> CalculatorFilterParameterC
   DataPath dataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
 
   ValueType value;
-  value.m_Equation = json[k_InfixEquationKey].get<std::string>();
+  value.equation = json[k_InfixEquationKey].get<std::string>();
   value.m_Units = static_cast<ParameterType::AngleUnits>(json[k_UnitsKey].get<int32>());
   value.m_SelectedGroup = dataPath;
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

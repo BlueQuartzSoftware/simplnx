@@ -60,7 +60,7 @@ enum class CSVType : uint8
   string
 };
 
-constexpr StringLiteral CSVTypeToHumanString(CSVType csvType)
+constexpr StringLiteralType CSVTypeToHumanString(CSVType csvType)
 {
   switch(csvType)
   {
@@ -262,7 +262,7 @@ constexpr CSVType GetCSVType() noexcept
  * @param dataType
  * @return
  */
-constexpr StringLiteral CSVTypeToString(CSVType dataType)
+constexpr StringLiteralType CSVTypeToString(CSVType dataType)
 {
   switch(dataType)
   {

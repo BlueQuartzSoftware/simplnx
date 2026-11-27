@@ -42,7 +42,7 @@ struct SweepOptions
 {
   usize targetVoxels = 256000000ULL;    ///< Lower bound on the tiled voxel count.
   usize minZSlices = 256;               ///< Lower bound on the tiled Z extent.
-  bool force2D = false;                 ///< When true, tile source slice zero into a Z=1 destination.
+  bool force_2d = false;                 ///< When true, tile source slice zero into a Z=1 destination.
   int warmup = 1;                       ///< Un-timed iterations before timing.
   int repeats = 3;                      ///< Timed iterations per (filter, config).
   bool oocRequested = false;            ///< True when the CLI requested --mode ooc.

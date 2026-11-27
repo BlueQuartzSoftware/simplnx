@@ -26,9 +26,9 @@ public:
   ComputeFeatureRectFilter& operator=(ComputeFeatureRectFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_FeatureRectArrayName_Key = "feature_rect_array_name";
-  static constexpr StringLiteral k_FeatureDataAttributeMatrixPath_Key = "feature_data_attribute_matrix_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_FeatureRectArrayName_Key = "feature_rect_array_name";
+  static constexpr StringLiteralType k_FeatureDataAttributeMatrixPath_Key = "feature_data_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

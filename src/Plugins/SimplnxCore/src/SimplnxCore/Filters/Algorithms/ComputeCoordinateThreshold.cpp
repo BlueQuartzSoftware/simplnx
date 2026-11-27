@@ -76,7 +76,7 @@ public:
 
     if constexpr(std::is_same_v<VertexGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const IGeometry::SharedVertexList::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
       for(usize i = start; i < end; i++)
       {
         float32 xVal = verts[(i * 3) + 0];
@@ -95,8 +95,8 @@ public:
     }
     if constexpr(std::is_same_v<EdgeGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-      const IGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
+      const IGeometry::SharedVertexList::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const IGeometry::SharedEdgeList::StoreType& edges = m_Geom.getEdgesRef().getDataStoreRef();
       usize numComp = edges.getNumberOfComponents();
       for(usize i = start; i < end; i++)
       {
@@ -122,8 +122,8 @@ public:
     }
     if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-      const IGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
+      const IGeometry::SharedVertexList::StoreType& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const IGeometry::SharedFaceList::StoreType& faces = m_Geom.getFacesRef().getDataStoreRef();
       usize numComp = faces.getNumberOfComponents();
       for(usize i = start; i < end; i++)
       {
@@ -252,7 +252,7 @@ bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThreshold
   }
   case ComputeCoordinateThreshold::BoundsType::Sphere: {
     VectorFloat32Parameter::ValueType sphereInfo = inputValues->SphereInfo;
-    return IntersectionUtilities::SphereIntersectsRectangularPrism({sphereInfo[0], sphereInfo[1], sphereInfo[2]}, sphereInfo[3], minPoint, maxPoint);
+    return intersection_utilities::SphereIntersectsRectangularPrism({sphereInfo[0], sphereInfo[1], sphereInfo[2]}, sphereInfo[3], minPoint, maxPoint);
   }
   }
 

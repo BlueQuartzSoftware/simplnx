@@ -24,11 +24,11 @@ public:
   WriteAvizoUniformCoordinateFilter& operator=(WriteAvizoUniformCoordinateFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
-  static constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_Units_Key = "units";
+  static constexpr StringLiteralType k_OutputFile_Key = "output_file";
+  static constexpr StringLiteralType k_WriteBinaryFile_Key = "write_binary_file";
+  static constexpr StringLiteralType k_GeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_Units_Key = "units";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

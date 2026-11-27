@@ -91,7 +91,7 @@ void BuildVerticalQuads(DataStructure& dataStructure, const std::vector<float32>
 Arguments MakeSmallGridArguments()
 {
   Arguments args;
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{5, 1, 1}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{5, 1, 1}));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0, 0, 0}));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(k_TriGeomPath));
@@ -213,7 +213,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
@@ -257,7 +257,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
@@ -301,7 +301,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
@@ -345,7 +345,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
@@ -678,7 +678,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Nested single label 
     }
   }
   auto args = MakeSmallGridArguments();
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{7, 3, 3}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{7, 3, 3}));
   RegularGridSampleSurfaceMeshFilter filter;
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -741,7 +741,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlap
     }
   }
   auto args = MakeSmallGridArguments();
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{static_cast<uint64>(expected.size()), 1, 1}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{static_cast<uint64>(expected.size()), 1, 1}));
   RegularGridSampleSurfaceMeshFilter filter;
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);

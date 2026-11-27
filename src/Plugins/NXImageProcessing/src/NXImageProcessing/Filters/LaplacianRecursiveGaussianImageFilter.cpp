@@ -43,12 +43,12 @@ Parameters LaplacianRecursiveGaussianImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_Sigma_Key, "Sigma", "The standard deviation of the Gaussian, in the units of image spacing.", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Sigma_Key, "Sigma", "The standard deviation of the Gaussian, in the units of image spacing.", 1.0));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "Normalize Across Scale", "Whether to normalize the Gaussian derivative over scale-space. Default is Off.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -62,7 +62,7 @@ IFilter::VersionType LaplacianRecursiveGaussianImageFilter::parametersVersion() 
 {
   return 1;
 }
-IFilter::UniquePointer LaplacianRecursiveGaussianImageFilter::clone() const
+IFilter::UniquePointerType LaplacianRecursiveGaussianImageFilter::clone() const
 {
   return std::make_unique<LaplacianRecursiveGaussianImageFilter>();
 }
@@ -123,10 +123,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SigmaKey = "Sigma";
-constexpr StringLiteral k_NormalizeAcrossScaleKey = "NormalizeAcrossScale";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_SigmaKey = "Sigma";
+constexpr StringLiteralType k_NormalizeAcrossScaleKey = "NormalizeAcrossScale";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -136,11 +136,11 @@ Result<Arguments> LaplacianRecursiveGaussianImageFilter::FromSIMPLJson(const nlo
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeAcrossScaleKey, k_NormalizeAcrossScale_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeAcrossScaleKey, k_NormalizeAcrossScale_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

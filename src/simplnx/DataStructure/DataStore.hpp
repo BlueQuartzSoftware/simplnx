@@ -47,7 +47,7 @@ public:
   /**
    * @brief Names the abstract data-store base type.
    */
-  using parent_type = AbstractDataStore<T>;
+  using ParentType = AbstractDataStore<T>;
 
   /**
    * @brief Names the stored value type.
@@ -91,7 +91,7 @@ public:
    * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
   DataStore(ShapeType tupleShape, ShapeType componentShape, std::optional<T> initValue)
-  : parent_type(initValue)
+  : ParentType(initValue)
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
@@ -116,7 +116,7 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    */
   DataStore(std::unique_ptr<value_type[]> buffer, ShapeType tupleShape, ShapeType componentShape)
-  : parent_type(GetMudflap<T>())
+  : ParentType(GetMudflap<T>())
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_Data(std::move(buffer))
@@ -130,7 +130,7 @@ public:
    * @param other Source data store.
    */
   DataStore(const DataStore& other)
-  : parent_type(other)
+  : ParentType(other)
   , m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
@@ -147,7 +147,7 @@ public:
    * @param other Source data store.
    */
   DataStore(DataStore&& other) noexcept
-  : parent_type(std::move(other))
+  : ParentType(std::move(other))
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
@@ -1093,7 +1093,7 @@ public:
    * @param dataset HDF5 dataset to read.
    * @return Error from the HDF5 read.
    */
-  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  Result<> readHdf5(const hdf5::DatasetIO& dataset) override
   {
     return dataset.readIntoSpan(createSpan());
   }
@@ -1103,9 +1103,9 @@ public:
    * @param dataset HDF5 dataset to write.
    * @return Error from the HDF5 write.
    */
-  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  Result<> writeHdf5(hdf5::DatasetIO& dataset) const override
   {
-    HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
+    hdf5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
     dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     nonstd::span<const T> span = createSpan();
     return dataset.writeSpan(dims, span);

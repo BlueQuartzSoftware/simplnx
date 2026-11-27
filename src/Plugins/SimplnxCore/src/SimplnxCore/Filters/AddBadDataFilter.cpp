@@ -93,14 +93,14 @@ Parameters AddBadDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PoissonNoise_Key, "Add Random Noise", "If true the user may set the poisson volume fraction", false));
-  params.insert(std::make_unique<Float32Parameter>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BoundaryNoise_Key, "Add Boundary Noise", "If true the user may set the boundary volume fraction", false));
   params.insert(
-      std::make_unique<Float32Parameter>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
+      std::make_unique<Float32ParameterType>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The selected image geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "This is the GB Manhattan Distances array", DataPath{},
                                                           std::set<DataType>{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -120,7 +120,7 @@ IFilter::VersionType AddBadDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AddBadDataFilter::clone() const
+IFilter::UniquePointerType AddBadDataFilter::clone() const
 {
   return std::make_unique<AddBadDataFilter>();
 }
@@ -225,13 +225,13 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_UseRandomSeedKey = "UseRandomSeed";
-constexpr StringLiteral k_RandomSeedValueKey = "RandomSeedValue";
-constexpr StringLiteral k_PoissonNoiseKey = "PoissonNoise";
-constexpr StringLiteral k_PoissonVolFractionKey = "PoissonVolFraction";
-constexpr StringLiteral k_BoundaryNoiseKey = "BoundaryNoise";
-constexpr StringLiteral k_BoundaryVolFractionKey = "BoundaryVolFraction";
-constexpr StringLiteral k_GBEuclideanDistancesArrayPathKey = "GBEuclideanDistancesArrayPath";
+constexpr StringLiteralType k_UseRandomSeedKey = "UseRandomSeed";
+constexpr StringLiteralType k_RandomSeedValueKey = "RandomSeedValue";
+constexpr StringLiteralType k_PoissonNoiseKey = "PoissonNoise";
+constexpr StringLiteralType k_PoissonVolFractionKey = "PoissonVolFraction";
+constexpr StringLiteralType k_BoundaryNoiseKey = "BoundaryNoise";
+constexpr StringLiteralType k_BoundaryVolFractionKey = "BoundaryVolFraction";
+constexpr StringLiteralType k_GBEuclideanDistancesArrayPathKey = "GBEuclideanDistancesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -241,15 +241,15 @@ Result<Arguments> AddBadDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_UseSeed_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_PoissonNoiseKey, k_PoissonNoise_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_PoissonVolFractionKey, k_PoissonVolFraction_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_BoundaryNoiseKey, k_BoundaryNoise_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_BoundaryVolFractionKey, k_BoundaryVolFraction_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_UseSeed_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_PoissonNoiseKey, k_PoissonNoise_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_PoissonVolFractionKey, k_PoissonVolFraction_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_BoundaryNoiseKey, k_BoundaryNoise_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_BoundaryVolFractionKey, k_BoundaryVolFraction_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_ImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_GBEuclideanDistancesArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_GBEuclideanDistancesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

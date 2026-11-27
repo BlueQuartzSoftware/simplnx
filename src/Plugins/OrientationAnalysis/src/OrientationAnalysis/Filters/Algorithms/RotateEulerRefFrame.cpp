@@ -48,7 +48,7 @@ Result<> RotateEulerRefFrame::operator()()
   const float32 angle = m_InputValues->rotationAxis[3];
 
   ebsdlib::OrientationMatrixDType omRot = ebsdlib::AxisAngleDType(axis[0], axis[1], axis[2], angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
-  OrientationUtilities::Matrix3dR rotMat = omRot.toEigenGMatrix();
+  orientation_utilities::Matrix3dRType rotMat = omRot.toEigenGMatrix();
 
   // Reuse one bounded page for the in-place read-modify-write traversal.
   constexpr usize k_ChunkTuples = 65536;
@@ -70,7 +70,7 @@ Result<> RotateEulerRefFrame::operator()()
     {
       ebsdlib::OrientationMatrixDType om = ebsdlib::EulerDType(buf[i * 3], buf[i * 3 + 1], buf[i * 3 + 2]).toOrientationMatrix();
       // Normalize columns to remove numerical drift before matrix-to-Euler conversion.
-      OrientationUtilities::Matrix3dR gNew = (om * rotMat).colwise().normalized();
+      orientation_utilities::Matrix3dRType gNew = (om * rotMat).colwise().normalized();
       ebsdlib::EulerDType eu = ebsdlib::OrientationMatrixDType(gNew.data()).toEuler();
       buf[i * 3] = eu[0];
       buf[i * 3 + 1] = eu[1];

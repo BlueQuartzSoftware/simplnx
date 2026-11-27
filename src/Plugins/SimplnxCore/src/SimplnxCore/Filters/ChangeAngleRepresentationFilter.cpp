@@ -51,7 +51,7 @@ Parameters ChangeAngleRepresentationFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "Tells the Filter which conversion is being made", 0,
                                                    ChoicesParameter::Choices{"Degrees to Radians", "Radians to Degrees"}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AnglesArrayPath_Key, "Angles", "The DataArray containing the angles to be converted.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
 
   return params;
 }
@@ -63,7 +63,7 @@ IFilter::VersionType ChangeAngleRepresentationFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ChangeAngleRepresentationFilter::clone() const
+IFilter::UniquePointerType ChangeAngleRepresentationFilter::clone() const
 {
   return std::make_unique<ChangeAngleRepresentationFilter>();
 }
@@ -97,8 +97,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ConversionTypeKey = "ConversionType";
-constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+constexpr StringLiteralType k_ConversionTypeKey = "ConversionType";
+constexpr StringLiteralType k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -108,8 +108,8 @@ Result<Arguments> ChangeAngleRepresentationFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ConversionTypeKey, k_ConversionType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_AnglesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ConversionTypeKey, k_ConversionType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_AnglesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -33,7 +33,7 @@ Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& d
   return FindParentGeometry(parentPath, dataStructure);
 }
 
-constexpr StringLiteral k_TempName = "__INTERNAL_!_TEMP_!_PATH__";
+constexpr StringLiteralType k_TempName = "__INTERNAL_!_TEMP_!_PATH__";
 } // namespace
 
 namespace nx::core
@@ -77,13 +77,13 @@ Parameters VerifyTriangleWindingFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_LabelsPath_Key, "Face labels or Region Ids Array",
                                                           "The path to the face labels or region ids array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Optional"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If enabled, the triangle normals will be recomputed if the triangle normals exist", true));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.linkParameters(k_RepairNormals_Key, k_TriangleNormalsPath_Key, true);
 
@@ -97,7 +97,7 @@ IFilter::VersionType VerifyTriangleWindingFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer VerifyTriangleWindingFilter::clone() const
+IFilter::UniquePointerType VerifyTriangleWindingFilter::clone() const
 {
   return std::make_unique<VerifyTriangleWindingFilter>();
 }
@@ -180,7 +180,7 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshFaceLabelsPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsPathKey = "SurfaceMeshFaceLabelsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -190,7 +190,7 @@ Result<Arguments> VerifyTriangleWindingFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

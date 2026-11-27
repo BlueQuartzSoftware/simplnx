@@ -57,19 +57,19 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_RectGridGeo = "Rect Grid Geom";
-constexpr StringLiteral k_XBounds = "X Bounds";
-constexpr StringLiteral k_YBounds = "Y Bounds";
-constexpr StringLiteral k_ZBounds = "Z Bounds";
-constexpr StringLiteral k_StringArray = "String Array";
-constexpr StringLiteral k_EdgeGeo = "Edge Geometry";
-constexpr StringLiteral k_ScalarData = "scalar";
-constexpr StringLiteral k_SharedEdges = "SharedEdges";
-constexpr StringLiteral k_SharedFaces = "SharedFaces";
-constexpr StringLiteral k_QuadGeo = "Quad Geometry";
-constexpr StringLiteral k_TetGeo = "Tet Geometry";
-constexpr StringLiteral k_SharedPolyhedrons = "SharedPolyhedronList";
-constexpr StringLiteral k_HexGeo = "Hex Geometry";
+constexpr StringLiteralType k_RectGridGeo = "Rect Grid Geom";
+constexpr StringLiteralType k_XBounds = "X Bounds";
+constexpr StringLiteralType k_YBounds = "Y Bounds";
+constexpr StringLiteralType k_ZBounds = "Z Bounds";
+constexpr StringLiteralType k_StringArray = "String Array";
+constexpr StringLiteralType k_EdgeGeo = "Edge Geometry";
+constexpr StringLiteralType k_ScalarData = "scalar";
+constexpr StringLiteralType k_SharedEdges = "SharedEdges";
+constexpr StringLiteralType k_SharedFaces = "SharedFaces";
+constexpr StringLiteralType k_QuadGeo = "Quad Geometry";
+constexpr StringLiteralType k_TetGeo = "Tet Geometry";
+constexpr StringLiteralType k_SharedPolyhedrons = "SharedPolyhedronList";
+constexpr StringLiteralType k_HexGeo = "Hex Geometry";
 
 enum class DynamicListMode : uint8
 {
@@ -1010,11 +1010,11 @@ TEST_CASE("DataStructure::exportHierarchyAsJson::PreflightRoundTrip")
   const DataStructure written = CreateRoundTripDataStructure();
   nlohmann::json writtenJson = written.exportHierarchyAsJson();
 
-  Result<> writeResult = DREAM3D::WriteFile(filePath, written);
+  Result<> writeResult = dream3d::WriteFile(filePath, written);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   REQUIRE(fs::exists(filePath));
 
-  const Result<DataStructure> readResult = DREAM3D::ImportDataStructureFromFile(filePath, true);
+  const Result<DataStructure> readResult = dream3d::ImportDataStructureFromFile(filePath, true);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   nlohmann::json readJson = readResult.value().exportHierarchyAsJson();
 
@@ -1389,7 +1389,7 @@ TEST_CASE("ScalarDataTest")
 
 TEST_CASE("DataStructureDuplicateNames")
 {
-  static constexpr StringLiteral k_Name = "foo";
+  static constexpr StringLiteralType k_Name = "foo";
 
   DataStructure dataStructure;
 

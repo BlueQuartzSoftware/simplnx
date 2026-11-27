@@ -135,7 +135,7 @@ Result<> GatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
 
 // Uses Hoare's method for speed
 IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end,
-                                        const INodeGeometry0D::SharedVertexList::store_type& vertices, IGeometry::MeshIndexType offset)
+                                        const INodeGeometry0D::SharedVertexList::StoreType& vertices, IGeometry::MeshIndexType offset)
 {
   const INodeGeometry0D::SharedVertexList::value_type threshold = vertices[(sorted[begin] * 3) + offset];
 
@@ -165,7 +165,7 @@ IGeometry::MeshIndexType ProcessSection(std::vector<IGeometry::MeshIndexType>& s
   }
 }
 
-void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry0D::SharedVertexList::store_type& vertices,
+void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry::MeshIndexType begin, IGeometry::MeshIndexType end, const INodeGeometry0D::SharedVertexList::StoreType& vertices,
                        IGeometry::MeshIndexType offset, const std::atomic_bool& shouldCancel)
 {
   if(begin >= end || shouldCancel)
@@ -211,12 +211,12 @@ MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const
   const AxialAlignment axis = static_cast<AxialAlignment>(std::distance(diff.begin(), std::max_element(diff.begin(), diff.end())));
 
   // Getting the verts list by ref here for the validation in the ref function
-  const INodeGeometry0D::SharedVertexList::store_type& vertexListStore = geom.getVerticesRef().getDataStoreRef();
+  const INodeGeometry0D::SharedVertexList::StoreType& vertexListStore = geom.getVerticesRef().getDataStoreRef();
 
   return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore, shouldCancel))};
 }
 
-std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
+std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::StoreType& vertexList,
                                                                                      const std::atomic_bool& shouldCancel)
 {
   std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
@@ -227,7 +227,7 @@ std::vector<IGeometry::MeshIndexType> MeshingUtilities::OrderSharedVerticesAlong
   return sorted;
 }
 
-bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
+bool MeshingUtilities::HasDuplicateVertices(const IGeometry::SharedVertexList::StoreType& verts, const nx::core::MeshingUtilities::SortedVerticesList& sortedVertices)
 {
   using VertTType = INodeGeometry0D::SharedVertexList::value_type;
 

@@ -19,10 +19,10 @@ class SIMPLNX_EXPORT GeometrySelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
   using AllowedType = IGeometry::Type;
-  using AllowedTypes = std::set<AllowedType>;
+  using AllowedTypeSetType = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
-  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes);
+  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes);
   ~GeometrySelectionParameter() override = default;
 
   GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;
@@ -47,7 +47,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -73,7 +73,7 @@ public:
    * @brief Returns the list of allowed DataObject types.
    * @return
    */
-  const AllowedTypes& allowedTypes() const;
+  const AllowedTypeSetType& allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -117,10 +117,10 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypes m_AllowedTypes;
+  AllowedTypeSetType m_AllowedTypes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArraySelectionToGeometrySelectionFilterParameterConverter
 {
@@ -129,7 +129,7 @@ struct SIMPLNX_EXPORT DataArraySelectionToGeometrySelectionFilterParameterConver
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2");

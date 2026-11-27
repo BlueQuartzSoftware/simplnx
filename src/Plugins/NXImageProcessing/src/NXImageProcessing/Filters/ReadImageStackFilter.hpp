@@ -24,24 +24,24 @@ public:
   ReadImageStackFilter& operator=(ReadImageStackFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
-  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
-  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
-  static constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_index";
-  static constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
-  static constexpr StringLiteral k_ColorWeights_Key = "color_weights";
-  static constexpr StringLiteral k_ResampleImagesChoice_Key = "resample_images_index";
-  static constexpr StringLiteral k_Scaling_Key = "scaling";
-  static constexpr StringLiteral k_ExactXYDimensions_Key = "exact_xy_dimensions";
-  static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
-  static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
+  static constexpr StringLiteralType k_InputFileListInfo_Key = "input_file_list_object";
+  static constexpr StringLiteralType k_CroppingOptions_Key = "cropping_options";
+  static constexpr StringLiteralType k_ChangeOrigin_Key = "change_origin";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_ChangeSpacing_Key = "change_spacing";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_ImageDataArrayPath_Key = "image_data_array_name";
+  static constexpr StringLiteralType k_CellDataName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_ImageTransformChoice_Key = "image_transform_index";
+  static constexpr StringLiteralType k_ConvertToGrayScale_Key = "convert_to_gray_scale";
+  static constexpr StringLiteralType k_ColorWeights_Key = "color_weights";
+  static constexpr StringLiteralType k_ResampleImagesChoice_Key = "resample_images_index";
+  static constexpr StringLiteralType k_Scaling_Key = "scaling";
+  static constexpr StringLiteralType k_ExactXYDimensions_Key = "exact_xy_dimensions";
+  static constexpr StringLiteralType k_ChangeDataType_Key = "change_image_data_type";
+  static constexpr StringLiteralType k_ImageDataType_Key = "image_data_type_index";
 
   /**
    * @brief Returns the name of the filter.
@@ -98,7 +98,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

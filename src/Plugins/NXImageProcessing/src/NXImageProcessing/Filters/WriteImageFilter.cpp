@@ -97,15 +97,15 @@ Parameters WriteImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign the masked color to 'bad' voxels", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the data array used to define voxels as good or bad.", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   std::vector<uint8> defaultMask(3, 0);
-  params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
+  params.insert(std::make_unique<VectorUInt8ParameterType>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
                                                        std::vector<std::string>{"Red", "Green", "Blue"}));
 
   params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
@@ -123,8 +123,8 @@ Parameters WriteImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output File Options"});
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
+  params.insert(std::make_unique<UInt64ParameterType>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
+  params.insert(std::make_unique<Int32ParameterType>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
   params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
 
   params.linkParameters(k_CreateColorTable_Key, k_SelectedPreset_Key, true);
@@ -148,7 +148,7 @@ IFilter::VersionType WriteImageFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteImageFilter::clone() const
+IFilter::UniquePointerType WriteImageFilter::clone() const
 {
   return std::make_unique<WriteImageFilter>();
 }
@@ -369,10 +369,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_PlaneKey = "Plane";
-constexpr StringLiteral k_FileNameKey = "FileName";
-constexpr StringLiteral k_IndexOffsetKey = "IndexOffset";
-constexpr StringLiteral k_ImageArrayPathKey = "ImageArrayPath";
+constexpr StringLiteralType k_PlaneKey = "Plane";
+constexpr StringLiteralType k_FileNameKey = "FileName";
+constexpr StringLiteralType k_IndexOffsetKey = "IndexOffset";
+constexpr StringLiteralType k_ImageArrayPathKey = "ImageArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -382,21 +382,21 @@ Result<Arguments> WriteImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  Result<> planeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_PlaneKey, k_Plane_Key);
+  Result<> planeResult = simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_PlaneKey, k_Plane_Key);
   if(planeResult.valid())
   {
     // Some 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(planeResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_FileNameKey, k_FileName_Key));
-  Result<> offsetResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_IndexOffsetKey, k_IndexOffset_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_FileNameKey, k_FileName_Key));
+  Result<> offsetResult = simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_IndexOffsetKey, k_IndexOffset_Key);
   if(offsetResult.valid())
   {
     // 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(offsetResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -61,7 +61,7 @@ Parameters TriangleDihedralAngleFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the dihedral angles", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key, "Created Dihedral Angles", "The name of the array storing the calculated dihedral angles",
                                                           "Dihedral Angles"));
@@ -76,7 +76,7 @@ IFilter::VersionType TriangleDihedralAngleFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer TriangleDihedralAngleFilter::clone() const
+IFilter::UniquePointerType TriangleDihedralAngleFilter::clone() const
 {
   return std::make_unique<TriangleDihedralAngleFilter>();
 }
@@ -126,7 +126,7 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPathKey = "SurfaceMeshTriangleDihedralAnglesArrayPath";
+constexpr StringLiteralType k_SurfaceMeshTriangleDihedralAnglesArrayPathKey = "SurfaceMeshTriangleDihedralAnglesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -136,9 +136,9 @@ Result<Arguments> TriangleDihedralAngleFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey,
                                                                                                                                   k_SurfaceMeshTriangleDihedralAnglesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(
       args, json, simpl::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey, k_TGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

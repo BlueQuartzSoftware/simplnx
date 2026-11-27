@@ -12,7 +12,7 @@ namespace nx::core
 class SIMPLNX_EXPORT GeneratedFileListParameter : public ValueParameter
 {
 public:
-  using Ordering = FilePathGenerator::Ordering;
+  using Ordering = file_path_generator::Ordering;
 
   /**
    * @brief This struct holds all of the data necessary to generate a list of file paths.
@@ -31,11 +31,11 @@ public:
 
     std::vector<std::string> generate() const
     {
-      return FilePathGenerator::GenerateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
+      return file_path_generator::GenerateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
     }
     std::pair<std::vector<std::string>, bool> generateAndValidate(bool failFast) const
     {
-      return FilePathGenerator::GenerateAndValidateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits, failFast);
+      return file_path_generator::GenerateAndValidateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits, failFast);
     }
   };
 
@@ -67,7 +67,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -117,7 +117,7 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT FileListInfoFilterParameterConverter
 {
@@ -126,7 +126,7 @@ struct SIMPLNX_EXPORT FileListInfoFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GeneratedFileListParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b");

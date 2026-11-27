@@ -169,12 +169,12 @@ IFilter::VersionType FlushFailureFilter::parametersVersion() const
 Parameters FlushFailureFilter::parameters() const
 {
   Parameters result;
-  result.insert(std::make_unique<UInt64Parameter>(
+  result.insert(std::make_unique<UInt64ParameterType>(
       k_Mode_Key, "Completion Test Mode", "0: unarmed; 1: flush error; 2: execute and flush errors; 3: flush allocation; 4: repeated snapshot; 5: root snapshot; 6: snapshot allocation.", uint64{0}));
   return result;
 }
 
-IFilter::UniquePointer FlushFailureFilter::clone() const
+IFilter::UniquePointerType FlushFailureFilter::clone() const
 {
   return std::make_unique<FlushFailureFilter>();
 }

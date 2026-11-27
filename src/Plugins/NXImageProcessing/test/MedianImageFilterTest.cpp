@@ -321,7 +321,7 @@ void RunMedianItkGolden(std::optional<std::vector<uint32>> radius, const std::st
   args.insertOrAssign(MedianImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   if(radius.has_value())
   {
-    args.insertOrAssign(MedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(*radius));
+    args.insertOrAssign(MedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(*radius));
   }
   MedianImageFilter filter;
   auto preflightResult = filter.preflight(dataStructure, args);

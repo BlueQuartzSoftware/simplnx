@@ -257,12 +257,12 @@ public:
     return {-1, "MockOocDataStore cannot write files"};
   }
 
-  Result<> readHdf5(const HDF5::DatasetIO& /*dataset*/) override
+  Result<> readHdf5(const hdf5::DatasetIO& /*dataset*/) override
   {
     return MakeErrorResult(-1, "MockOocDataStore cannot read HDF5");
   }
 
-  Result<> writeHdf5(HDF5::DatasetIO& /*dataset*/) const override
+  Result<> writeHdf5(hdf5::DatasetIO& /*dataset*/) const override
   {
     return MakeErrorResult(-1, "MockOocDataStore cannot write HDF5");
   }

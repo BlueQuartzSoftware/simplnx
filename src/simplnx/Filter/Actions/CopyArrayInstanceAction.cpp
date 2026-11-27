@@ -39,56 +39,56 @@ Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode)
 {
   auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(m_SelectedDataPath);
 
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<float32>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<float64>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<int8>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint8>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<int16>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint16>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<int32>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint32>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<int64>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
   {
     return ::DoCopy<uint64>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
-  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
   {
     return ::DoCopy<bool>(inputDataArrayPtr, dataStructure, getCreatedPath(), mode);
   }
 
-  static constexpr StringLiteral k_Prefix = "CopyArrayInstanceAction: ";
+  static constexpr StringLiteralType k_Prefix = "CopyArrayInstanceAction: ";
   return MakeErrorResult(k_UnsupportedTypeError, fmt::format("{}The input array at DataPath '{}' was of an unsupported type", k_Prefix, m_SelectedDataPath.toString()));
 }
 
-IDataAction::UniquePointer CopyArrayInstanceAction::clone() const
+IDataAction::UniquePointerType CopyArrayInstanceAction::clone() const
 {
   return std::make_unique<CopyArrayInstanceAction>(m_SelectedDataPath, createdDataPath());
 }

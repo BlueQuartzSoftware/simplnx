@@ -172,7 +172,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejec
   UnitTest::LoadPlugins();
   const auto application = Application::GetOrCreateInstance();
   auto& collection = application->getIOCollection();
-  const DataIOCollection::map_type originalManagers(collection.begin(), collection.end());
+  const DataIOCollection::MapType originalManagers(collection.begin(), collection.end());
   const bool originalTemporaryCapability = collection.hasTemporaryRecordStoreCapability();
   const bool originalSortCapability = collection.hasExternalSortCapability();
   const bool originalImportCapability = collection.anyManagerFinalizesImport();
@@ -246,7 +246,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight rejec
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
-  const DataIOCollection::map_type restoredManagers(collection.begin(), collection.end());
+  const DataIOCollection::MapType restoredManagers(collection.begin(), collection.end());
   REQUIRE(restoredManagers == originalManagers);
   REQUIRE(collection.hasTemporaryRecordStoreCapability() == originalTemporaryCapability);
   REQUIRE(collection.hasExternalSortCapability() == originalSortCapability);

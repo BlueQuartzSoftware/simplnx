@@ -371,7 +371,7 @@ void CheckStoreCopyContract()
   CHECK_FALSE(k_AcceptsNoFormat);
 }
 
-constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
+constexpr StringLiteralType k_BuildDir = SIMPLNX_BUILD_DIR;
 
 class FailingResizeDataStore final : public DataStore<int32>
 {

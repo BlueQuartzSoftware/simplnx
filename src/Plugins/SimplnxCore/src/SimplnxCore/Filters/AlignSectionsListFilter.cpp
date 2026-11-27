@@ -65,9 +65,9 @@ Parameters AlignSectionsListFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
-                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ShiftsArrayPath_Key, "Shifts Array", "The array containing the relative or cumulative shifts for each slice",
-                                                          DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), ArraySelectionParameter::AllowedTypes{DataType::int64},
+                                                          DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   return params;
@@ -88,7 +88,7 @@ IFilter::VersionType AlignSectionsListFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AlignSectionsListFilter::clone() const
+IFilter::UniquePointerType AlignSectionsListFilter::clone() const
 {
   return std::make_unique<AlignSectionsListFilter>();
 }
@@ -155,7 +155,7 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteralType k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 } // namespace simpl
 } // namespace
 
@@ -165,7 +165,7 @@ Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

@@ -203,7 +203,7 @@ bool operator>=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
   return lhs.view() >= rhs;
 }
 
-using StringLiteral = BasicStringLiteral<char>;
+using StringLiteralType = BasicStringLiteral<char>;
 using WStringLiteral = BasicStringLiteral<wchar_t>;
 using String16Literal = BasicStringLiteral<char16_t>;
 using String32Literal = BasicStringLiteral<char32_t>;

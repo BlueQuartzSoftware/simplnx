@@ -9,8 +9,8 @@ namespace nx::core
 {
 namespace
 {
-constexpr StringLiteral k_ValueKey = "value";
-constexpr StringLiteral k_VersionKey = "version";
+constexpr StringLiteralType k_ValueKey = "value";
+constexpr StringLiteralType k_VersionKey = "version";
 } // namespace
 
 std::any IParameter::construct(const Arguments& args, const ExecutionContext& /*executionContext*/) const

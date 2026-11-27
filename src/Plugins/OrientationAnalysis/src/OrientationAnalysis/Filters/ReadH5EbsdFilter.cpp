@@ -91,7 +91,7 @@ IFilter::VersionType ReadH5EbsdFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadH5EbsdFilter::clone() const
+IFilter::UniquePointerType ReadH5EbsdFilter::clone() const
 {
   return std::make_unique<ReadH5EbsdFilter>();
 }
@@ -262,7 +262,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
     {
       auto sampleTransAxis = reader->getSampleTransformationAxis();
       const std::vector<float32> rotAxisAngle = {sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle};
-      ImageRotationUtilities::Matrix4fR rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(rotAxisAngle);
+      ImageRotationUtilities::Matrix4fRType rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(rotAxisAngle);
       std::array<float32, 6> arr{
           origin[0], origin[1], origin[2], origin[0] + (imageGeomDims[0] * spacing[0]), origin[1] + (imageGeomDims[1] * spacing[1]), origin[2] + (imageGeomDims[2] * spacing[2])};
       BoundingBox3Df boundingBox = BoundingBox3Df(arr);
@@ -311,10 +311,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ReadH5EbsdKey = "ReadH5Ebsd";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_ReadH5EbsdKey = "ReadH5Ebsd";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
 } // namespace simpl
 
 namespace simpl_conversion_custom
@@ -324,16 +324,16 @@ struct ReadH5EbsdFilterParameterConverter
   using ParameterType = ReadH5EbsdFileParameter;
   using ValueType = ParameterType::ValueType;
 
-  static constexpr StringLiteral k_InputFileKey = "InputFile";
-  static constexpr StringLiteral k_SelectedArrayNamesKey = "SelectedArrayNames";
-  static constexpr StringLiteral k_ZStartIndexKey = "ZStartIndex";
-  static constexpr StringLiteral k_ZEndIndexKey = "ZEndIndex";
-  static constexpr StringLiteral k_RefFrameZDirKey = "RefFrameZDir";
-  static constexpr StringLiteral k_UseTransformationsKey = "UseTransformations";
+  static constexpr StringLiteralType k_InputFileKey = "InputFile";
+  static constexpr StringLiteralType k_SelectedArrayNamesKey = "SelectedArrayNames";
+  static constexpr StringLiteralType k_ZStartIndexKey = "ZStartIndex";
+  static constexpr StringLiteralType k_ZEndIndexKey = "ZEndIndex";
+  static constexpr StringLiteralType k_RefFrameZDirKey = "RefFrameZDir";
+  static constexpr StringLiteralType k_UseTransformationsKey = "UseTransformations";
 
   static Result<ValueType> Convert(const nlohmann::json& json)
   {
-    static constexpr std::array<StringLiteral, 6> k_RequiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
+    static constexpr std::array<StringLiteralType, 6> k_RequiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
     for(const auto& key : k_RequiredKeys)
     {
       if(!json.contains(key.view()))
@@ -395,11 +395,11 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<simpl_conversion_custom::ReadH5EbsdFilterParameterConverter>(args, json, simpl::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion_custom::ReadH5EbsdFilterParameterConverter>(args, json, simpl::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

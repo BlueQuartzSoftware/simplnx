@@ -17,11 +17,11 @@ class GridTileIndex;
 class SIMPLNX_EXPORT GridMontage : virtual public AbstractMontage
 {
 public:
-  using Iterator = void;
+  using iterator = void;
   using DimensionsType = SizeVec3;
   using TileIdType = GridTileIndex;
 
-  static constexpr StringLiteral k_TypeName = "GridMontage";
+  static constexpr StringLiteralType k_TypeName = "GridMontage";
 
   /**
    * @brief Attempts to create a new GridMontage and insert it into the

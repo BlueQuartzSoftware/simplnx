@@ -27,14 +27,14 @@ public:
   ComputeKernelAvgMisorientationsFilter& operator=(ComputeKernelAvgMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_KernelSize_Key = "kernel_size";
-  static constexpr StringLiteral k_UseFeatureIds_Key = "use_feature_ids";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_KernelAverageMisorientationsArrayName_Key = "kernel_average_misorientations_array_name";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_KernelSize_Key = "kernel_size";
+  static constexpr StringLiteralType k_UseFeatureIds_Key = "use_feature_ids";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_KernelAverageMisorientationsArrayName_Key = "kernel_average_misorientations_array_name";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -91,7 +91,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

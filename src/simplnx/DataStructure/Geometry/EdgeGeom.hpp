@@ -16,11 +16,11 @@ public:
 
   static constexpr usize k_NumVerts = 2;
   static constexpr usize k_NumEdgeVerts = 2;
-  static constexpr StringLiteral k_VoxelSizes = "Edge Lengths";
-  static constexpr StringLiteral k_EltsContainingVert = "Edges Containing Vert";
-  static constexpr StringLiteral k_EltNeighbors = "Edge Neighbors";
-  static constexpr StringLiteral k_EltCentroids = "Edge Centroids";
-  static constexpr StringLiteral k_TypeName = "EdgeGeom";
+  static constexpr StringLiteralType k_VoxelSizes = "Edge Lengths";
+  static constexpr StringLiteralType k_EltsContainingVert = "Edges Containing Vert";
+  static constexpr StringLiteralType k_EltNeighbors = "Edge Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Edge Centroids";
+  static constexpr StringLiteralType k_TypeName = "EdgeGeom";
 
   /**
    * @brief Creates a new EdgeGeom in the specified DataStructure.

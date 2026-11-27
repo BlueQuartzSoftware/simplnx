@@ -16,7 +16,7 @@ public:
 
   static constexpr usize k_NumVerts = 1;
 
-  static constexpr StringLiteral k_TypeName = "VertexGeom";
+  static constexpr StringLiteralType k_TypeName = "VertexGeom";
 
   /**
    * @brief Creates a new VertexGeom in the specified DataStructure.

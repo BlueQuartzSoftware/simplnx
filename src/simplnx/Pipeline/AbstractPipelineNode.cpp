@@ -157,7 +157,7 @@ Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
   {
     if(result.valid())
     {
-      result.m_Expected = nonstd::make_unexpected(std::move(snapshotErrors));
+      result.expected = nonstd::make_unexpected(std::move(snapshotErrors));
     }
     else
     {

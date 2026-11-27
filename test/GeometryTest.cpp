@@ -620,7 +620,7 @@ TEST_CASE("CreateVertexGeometryAction: units and cloning", "[simplnx][CreateVert
     }
   }
   CHECK(actionPtr->units() == units);
-  IDataAction::UniquePointer clonedActionPtr;
+  IDataAction::UniquePointerType clonedActionPtr;
   if(shouldCloneAction)
   {
     clonedActionPtr = actionPtr->clone();

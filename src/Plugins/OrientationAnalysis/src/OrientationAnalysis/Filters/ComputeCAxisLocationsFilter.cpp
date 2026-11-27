@@ -53,12 +53,12 @@ Parameters ComputeCAxisLocationsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "DataPath to input quaternion values", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CAxisLocationsArrayName_Key, "C-Axis Locations", "DataPath to calculated C-Axis locations", "CAxisLocation"));
 
@@ -72,7 +72,7 @@ IFilter::VersionType ComputeCAxisLocationsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeCAxisLocationsFilter::clone() const
+IFilter::UniquePointerType ComputeCAxisLocationsFilter::clone() const
 {
   return std::make_unique<ComputeCAxisLocationsFilter>();
 }
@@ -127,8 +127,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
-constexpr StringLiteral k_CAxisLocationsArrayNameKey = "CAxisLocationsArrayName";
+constexpr StringLiteralType k_QuatsArrayPathKey = "QuatsArrayPath";
+constexpr StringLiteralType k_CAxisLocationsArrayNameKey = "CAxisLocationsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -138,8 +138,8 @@ Result<Arguments> ComputeCAxisLocationsFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CAxisLocationsArrayNameKey, k_CAxisLocationsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CAxisLocationsArrayNameKey, k_CAxisLocationsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

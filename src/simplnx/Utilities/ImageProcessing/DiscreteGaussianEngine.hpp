@@ -28,9 +28,9 @@ struct DiscreteGaussianPassOptions
   static constexpr usize k_MaxStagingBytes = 16ULL * 1024ULL * 1024ULL;
   static constexpr usize k_Default2DResidentLimit = 64ULL * 1024ULL * 1024ULL;
   usize stagingByteBudget = k_MaxStagingBytes;
-  usize residentLimit2D = k_Default2DResidentLimit;
+  usize resident_limit_2d = k_Default2DResidentLimit;
   bool forceFusedPlanePass = false;
-  bool forceBounded2D = false;
+  bool force_bounded_2d = false;
 };
 
 namespace detail
@@ -832,9 +832,9 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
     const std::vector<double> xKernel = detail::GaussianKernelCoefficients(xVariance, maximumError[0], maximumKernelWidth);
     if(effDim == 2)
     {
-      if(storagePlan.useTemporaryRecordStore || options.forceBounded2D)
+      if(storagePlan.useTemporaryRecordStore || options.force_bounded_2d)
       {
-        return detail::DiscreteGaussian2DBounded<T>(in, out, dims, yKernel, xKernel, shouldCancel, options.residentLimit2D);
+        return detail::DiscreteGaussian2DBounded<T>(in, out, dims, yKernel, xKernel, shouldCancel, options.resident_limit_2d);
       }
       return detail::DiscreteGaussianYXPlanePass<T>(in, out, dims, yKernel, xKernel, shouldCancel);
     }

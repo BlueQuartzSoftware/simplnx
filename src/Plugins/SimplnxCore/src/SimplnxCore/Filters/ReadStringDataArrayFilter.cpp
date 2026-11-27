@@ -56,7 +56,7 @@ Parameters ReadStringDataArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "File path that points to the imported file", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0, nx::core::read_string_data_array::k_Delimiters));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
@@ -86,7 +86,7 @@ IFilter::VersionType ReadStringDataArrayFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ReadStringDataArrayFilter::clone() const
+IFilter::UniquePointerType ReadStringDataArrayFilter::clone() const
 {
   return std::make_unique<ReadStringDataArrayFilter>();
 }
@@ -146,7 +146,7 @@ Result<> ReadStringDataArrayFilter::executeImpl(DataStructure& dataStructure, co
   ReadStringDataArrayInputValues inputValues;
 
   inputValues.inputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.skipLineCount = filterArgs.value<UInt64Parameter::ValueType>(k_NSkipLines_Key);
+  inputValues.skipLineCount = filterArgs.value<UInt64ParameterType::ValueType>(k_NSkipLines_Key);
   inputValues.delimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
   inputValues.outputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_DataArrayPath_Key);
   inputValues.dataFormat = filterArgs.value<DataStoreFormatParameter::ValueType>(k_DataFormat_Key);

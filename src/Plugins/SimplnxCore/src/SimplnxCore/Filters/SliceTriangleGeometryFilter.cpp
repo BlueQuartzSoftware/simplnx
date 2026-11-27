@@ -66,20 +66,20 @@ Parameters SliceTriangleGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SliceRange_Key, "Slice Range", "Type of slice range to use, either Full Range or User Defined Range", 0,
                                                                     ChoicesParameter::Choices{"Full Range", "User Defined Range"}));
-  params.insert(std::make_unique<Float32Parameter>(k_Zstart_Key, "Slicing Start", "The z axis start value. Only needed for 'User Defined Range'", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_Zend_Key, "Slicing End", "The z axis stop value. Only needed for 'User Defined Range'", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_Zstart_Key, "Slicing Start", "The z axis start value. Only needed for 'User Defined Range'", 0.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_Zend_Key, "Slicing End", "The z axis stop value. Only needed for 'User Defined Range'", 0.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_SliceResolution_Key, "Slice Spacing", "The spacing between slices", 1.0f));
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The input triangle geometry to be sliced", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Optional Input Region Ids"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_HaveRegionIds_Key, "Have Region Ids", "Whether to supply an id array that propagates to the created edges", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_RegionIdArrayPath_Key, "Region Ids", "Optional identifier array, if Have Region Ids is selected", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Edge Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputEdgeGeometryPath_Key, "Created Edge Geometry", "The name of the created Edge Geometry", DataPath({"Edge Geometry"})));
@@ -103,7 +103,7 @@ IFilter::VersionType SliceTriangleGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SliceTriangleGeometryFilter::clone() const
+IFilter::UniquePointerType SliceTriangleGeometryFilter::clone() const
 {
   return std::make_unique<SliceTriangleGeometryFilter>();
 }
@@ -211,20 +211,20 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SliceRange_Key = "SliceRange";
-constexpr StringLiteral k_Zstart_Key = "Zstart";
-constexpr StringLiteral k_Zend_Key = "Zend";
-constexpr StringLiteral k_SliceResolution_Key = "SliceResolution";
-constexpr StringLiteral k_HaveRegionIds_Key = "HaveRegionIds";
-constexpr StringLiteral k_RegionIdArrayPath_Key = "RegionIdArrayPath";
+constexpr StringLiteralType k_SliceRange_Key = "SliceRange";
+constexpr StringLiteralType k_Zstart_Key = "Zstart";
+constexpr StringLiteralType k_Zend_Key = "Zend";
+constexpr StringLiteralType k_SliceResolution_Key = "SliceResolution";
+constexpr StringLiteralType k_HaveRegionIds_Key = "HaveRegionIds";
+constexpr StringLiteralType k_RegionIdArrayPath_Key = "RegionIdArrayPath";
 
-constexpr StringLiteral k_TriangleGeometryDataPath_Key = "CADDataContainerName";
+constexpr StringLiteralType k_TriangleGeometryDataPath_Key = "CADDataContainerName";
 
-constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "SliceDataContainerName";
-constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName";
+constexpr StringLiteralType k_OutputEdgeGeometryPath_Key = "SliceDataContainerName";
+constexpr StringLiteralType k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName";
 
-constexpr StringLiteral k_SliceAttributeMatrixName_Key = "SliceAttributeMatrixName";
-constexpr StringLiteral k_SliceIdArrayName_Key = "SliceIdArrayName";
+constexpr StringLiteralType k_SliceAttributeMatrixName_Key = "SliceAttributeMatrixName";
+constexpr StringLiteralType k_SliceIdArrayName_Key = "SliceIdArrayName";
 } // namespace simpl
 } // namespace
 
@@ -235,18 +235,18 @@ Result<Arguments> SliceTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_SliceRange_Key, k_SliceRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_Zstart_Key, k_Zstart_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_Zend_Key, k_Zend_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SliceResolution_Key, k_SliceResolution_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_HaveRegionIds_Key, k_HaveRegionIds_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_RegionIdArrayPath_Key, k_RegionIdArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_SliceRange_Key, k_SliceRange_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_Zstart_Key, k_Zstart_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_Zend_Key, k_Zend_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SliceResolution_Key, k_SliceResolution_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_HaveRegionIds_Key, k_HaveRegionIds_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_RegionIdArrayPath_Key, k_RegionIdArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryDataPath_Key, k_TriangleGeometryDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_OutputEdgeGeometryPath_Key, k_OutputEdgeGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixName_Key, k_EdgeAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceAttributeMatrixName_Key, k_SliceAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceIdArrayName_Key, k_SliceIdArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryDataPath_Key, k_TriangleGeometryDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_OutputEdgeGeometryPath_Key, k_OutputEdgeGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixName_Key, k_EdgeAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceAttributeMatrixName_Key, k_SliceAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceIdArrayName_Key, k_SliceIdArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

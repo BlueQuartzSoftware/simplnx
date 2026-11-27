@@ -73,7 +73,7 @@ public:
    * @param filter
    * @param args = {}
    */
-  PipelineFilter(IFilter::UniquePointer&& filter, Arguments args = {});
+  PipelineFilter(IFilter::UniquePointerType&& filter, Arguments args = {});
 
   ~PipelineFilter() noexcept override;
 
@@ -229,7 +229,7 @@ protected:
   RenamedPaths checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const;
 
 private:
-  IFilter::UniquePointer m_Filter;
+  IFilter::UniquePointerType m_Filter;
   Arguments m_Arguments;
   std::string m_Comments;
   std::vector<nx::core::Warning> m_Warnings;

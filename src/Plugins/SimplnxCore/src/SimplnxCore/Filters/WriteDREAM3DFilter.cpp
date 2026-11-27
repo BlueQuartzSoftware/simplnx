@@ -58,7 +58,7 @@ Parameters WriteDREAM3DFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Compression"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCompression, "Use HDF5 Compression", "Apply gzip compression to DataArray datasets when writing the .dream3d file.", true));
-  params.insert(std::make_unique<Int32Parameter>(k_CompressionLevel, "Compression Level (1-9)", "Gzip compression level: 1 = fastest / least compression, 9 = slowest / most compression.", 5));
+  params.insert(std::make_unique<Int32ParameterType>(k_CompressionLevel, "Compression Level (1-9)", "Gzip compression level: 1 = fastest / least compression, 9 = slowest / most compression.", 5));
   params.insert(std::make_unique<BoolParameter>(k_WriteXdmf, "Write Xdmf File", "Whether or not to write the companion XDMF file", true));
 
   params.linkParameters(k_UseCompression, k_CompressionLevel, std::make_any<bool>(true));
@@ -73,7 +73,7 @@ IFilter::VersionType WriteDREAM3DFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteDREAM3DFilter::clone() const
+IFilter::UniquePointerType WriteDREAM3DFilter::clone() const
 {
   return std::make_unique<WriteDREAM3DFilter>();
 }
@@ -89,7 +89,7 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
   }
 
   const auto useCompression = filterArgs.value<BoolParameter::ValueType>(k_UseCompression);
-  const auto compressionLevel = filterArgs.value<Int32Parameter::ValueType>(k_CompressionLevel);
+  const auto compressionLevel = filterArgs.value<Int32ParameterType::ValueType>(k_CompressionLevel);
   if(useCompression && (compressionLevel < 1 || compressionLevel > 9))
   {
     return MakePreflightErrorResult(k_InvalidCompressionLevelError, fmt::format("Compression level must be between 1 and 9 (got {}).", compressionLevel));
@@ -106,7 +106,7 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.ExportFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath);
   inputValues.WriteXdmfFile = filterArgs.value<BoolParameter::ValueType>(k_WriteXdmf);
   inputValues.UseCompression = filterArgs.value<BoolParameter::ValueType>(k_UseCompression);
-  inputValues.CompressionLevel = filterArgs.value<Int32Parameter::ValueType>(k_CompressionLevel);
+  inputValues.CompressionLevel = filterArgs.value<Int32ParameterType::ValueType>(k_CompressionLevel);
   inputValues.PipelineNode = pipelineNode;
 
   return WriteDREAM3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -116,8 +116,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_WriteXdmfFileKey = "WriteXdmfFile";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_WriteXdmfFileKey = "WriteXdmfFile";
 } // namespace simpl
 } // namespace
 
@@ -131,8 +131,8 @@ Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_ExportFilePath));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteXdmfFileKey, k_WriteXdmf));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_ExportFilePath));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteXdmfFileKey, k_WriteXdmf));
   // Write time series parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

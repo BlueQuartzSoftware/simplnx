@@ -42,7 +42,7 @@ const std::string& CheckGroupConstructionForTesting(const std::string& groupName
 } // namespace
 #endif
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 #if SIMPLNX_BUILD_TESTS
 void FailNextGroupConstructionForTesting(const std::string& groupName)
@@ -445,4 +445,4 @@ Result<> GroupIO::removeAttribute(const std::string& name)
   }
   return {};
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

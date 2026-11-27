@@ -85,17 +85,17 @@ Parameters WritePoleFigureFilter::parameters() const
   // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Title_Key, "Figure Title", "The title to place at the top of the Pole Figure", "Figure Title"));
-  params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
+  params.insert(std::make_unique<Int32ParameterType>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
 
   params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square", 0,
                                                    ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 0,
                                                                     ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
-  params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
-  params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
+  params.insert(std::make_unique<Int32ParameterType>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
   params.insert(
-      std::make_unique<Int32Parameter>(k_DiscreteMarkerRadius_Key, "Discrete Marker Radius (Pixels)", "Radius of each discrete pole marker. Only used for the Discrete pole figure type.", 3));
+      std::make_unique<Int32ParameterType>(k_DiscreteMarkerRadius_Key, "Discrete Marker Radius (Pixels)", "Radius of each discrete pole marker. Only used for the Discrete pole figure type.", 3));
   params.insert(std::make_unique<ChoicesParameter>(
       k_HexConvention_Key, "Hex/Trig Cartesian Basis Convention",
       "Cartesian basis used for hex/trigonal phases. Pole-figure positions and corner labels are rotated 30° about the c-axis between the two:\n"
@@ -106,16 +106,16 @@ Parameters WritePoleFigureFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Orientation Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Euler angle belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Should the algorithm use a mask array to remove non-indexed points", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the input Mask DataArray", DataPath({"Mask"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_MaterialNameArrayPath_Key, "Material Name", "DataPath to the input DataArray that holds the material names", DataPath{}));
 
@@ -166,7 +166,7 @@ IFilter::VersionType WritePoleFigureFilter::parametersVersion() const
   return 3;
 }
 
-IFilter::UniquePointer WritePoleFigureFilter::clone() const
+IFilter::UniquePointerType WritePoleFigureFilter::clone() const
 {
   return std::make_unique<WritePoleFigureFilter>();
 }
@@ -351,20 +351,20 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_TitleKey = "Title";
-constexpr StringLiteral k_GenerationAlgorithmKey = "GenerationAlgorithm";
-constexpr StringLiteral k_LambertSizeKey = "LambertSize";
-constexpr StringLiteral k_NumColorsKey = "NumColors";
-constexpr StringLiteral k_ImageLayoutKey = "ImageLayout";
-constexpr StringLiteral k_OutputPathKey = "OutputPath";
-constexpr StringLiteral k_ImagePrefixKey = "ImagePrefix";
-constexpr StringLiteral k_ImageSizeKey = "ImageSize";
-constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
-constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_MaterialNameArrayPathKey = "MaterialNameArrayPath";
+constexpr StringLiteralType k_TitleKey = "Title";
+constexpr StringLiteralType k_GenerationAlgorithmKey = "GenerationAlgorithm";
+constexpr StringLiteralType k_LambertSizeKey = "LambertSize";
+constexpr StringLiteralType k_NumColorsKey = "NumColors";
+constexpr StringLiteralType k_ImageLayoutKey = "ImageLayout";
+constexpr StringLiteralType k_OutputPathKey = "OutputPath";
+constexpr StringLiteralType k_ImagePrefixKey = "ImagePrefix";
+constexpr StringLiteralType k_ImageSizeKey = "ImageSize";
+constexpr StringLiteralType k_UseGoodVoxelsKey = "UseGoodVoxels";
+constexpr StringLiteralType k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_MaterialNameArrayPathKey = "MaterialNameArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -374,25 +374,25 @@ Result<Arguments> WritePoleFigureFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_TitleKey, k_Title_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_GenerationAlgorithmKey, k_GenerationAlgorithm_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_LambertSizeKey, k_LambertSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumColorsKey, k_NumColors_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_TitleKey, k_Title_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_GenerationAlgorithmKey, k_GenerationAlgorithm_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_LambertSizeKey, k_LambertSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumColorsKey, k_NumColors_Key));
   // SIMPLNX always writes PNG, so the legacy ImageFormat choice is not converted.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ImageLayoutKey, k_ImageLayout_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_ImagePrefixKey, k_ImagePrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ImageSizeKey, k_ImageSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ImageLayoutKey, k_ImageLayout_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_ImagePrefixKey, k_ImagePrefix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ImageSizeKey, k_ImageSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
   // Do not map the legacy crystal-structure container to the output geometry path.
   // The filter creates a new geometry, and reusing the input name can collide in preflight.
   // Keep the default output geometry name.
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaterialNameArrayPathKey, k_MaterialNameArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaterialNameArrayPathKey, k_MaterialNameArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

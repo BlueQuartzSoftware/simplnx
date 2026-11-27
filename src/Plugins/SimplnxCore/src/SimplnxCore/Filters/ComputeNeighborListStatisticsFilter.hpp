@@ -25,21 +25,21 @@ public:
   ComputeNeighborListStatisticsFilter& operator=(ComputeNeighborListStatisticsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FindLength_Key = "find_length";
-  static constexpr StringLiteral k_FindMinimum_Key = "find_minimum";
-  static constexpr StringLiteral k_FindMaximum_Key = "find_maximum";
-  static constexpr StringLiteral k_FindMean_Key = "find_mean";
-  static constexpr StringLiteral k_FindMedian_Key = "find_median";
-  static constexpr StringLiteral k_FindStandardDeviation_Key = "find_standard_deviation";
-  static constexpr StringLiteral k_FindSummation_Key = "find_summation";
-  static constexpr StringLiteral k_InputNeighborListPath_Key = "input_neighbor_list_path";
-  static constexpr StringLiteral k_LengthName_Key = "length_array_name";
-  static constexpr StringLiteral k_MinimumName_Key = "minimum_array_name";
-  static constexpr StringLiteral k_MaximumName_Key = "maximum_array_name";
-  static constexpr StringLiteral k_MeanName_Key = "mean_array_name";
-  static constexpr StringLiteral k_MedianName_Key = "median_array_name";
-  static constexpr StringLiteral k_StandardDeviationName_Key = "standard_deviation_array_name";
-  static constexpr StringLiteral k_SummationName_Key = "summation_array_name";
+  static constexpr StringLiteralType k_FindLength_Key = "find_length";
+  static constexpr StringLiteralType k_FindMinimum_Key = "find_minimum";
+  static constexpr StringLiteralType k_FindMaximum_Key = "find_maximum";
+  static constexpr StringLiteralType k_FindMean_Key = "find_mean";
+  static constexpr StringLiteralType k_FindMedian_Key = "find_median";
+  static constexpr StringLiteralType k_FindStandardDeviation_Key = "find_standard_deviation";
+  static constexpr StringLiteralType k_FindSummation_Key = "find_summation";
+  static constexpr StringLiteralType k_InputNeighborListPath_Key = "input_neighbor_list_path";
+  static constexpr StringLiteralType k_LengthName_Key = "length_array_name";
+  static constexpr StringLiteralType k_MinimumName_Key = "minimum_array_name";
+  static constexpr StringLiteralType k_MaximumName_Key = "maximum_array_name";
+  static constexpr StringLiteralType k_MeanName_Key = "mean_array_name";
+  static constexpr StringLiteralType k_MedianName_Key = "median_array_name";
+  static constexpr StringLiteralType k_StandardDeviationName_Key = "standard_deviation_array_name";
+  static constexpr StringLiteralType k_SummationName_Key = "summation_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -96,7 +96,7 @@ public:
    * @brief Creates a copy of the filter.
    * @return IFilter::UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

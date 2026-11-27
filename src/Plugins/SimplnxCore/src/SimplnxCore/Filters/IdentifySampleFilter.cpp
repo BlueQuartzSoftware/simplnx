@@ -65,9 +65,9 @@ Parameters IdentifySampleFilter::parameters() const
                                          ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the mask array defining what is sample and what is not", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::boolean, nx::core::DataType::uint8},
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::boolean, nx::core::DataType::uint8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.linkParameters(k_SliceBySlice_Key, k_SliceBySlicePlane_Key, true);
@@ -82,7 +82,7 @@ IFilter::VersionType IdentifySampleFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer IdentifySampleFilter::clone() const
+IFilter::UniquePointerType IdentifySampleFilter::clone() const
 {
   return std::make_unique<IdentifySampleFilter>();
 }
@@ -124,8 +124,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FillHolesKey = "FillHoles";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_FillHolesKey = "FillHoles";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -135,9 +135,9 @@ Result<Arguments> IdentifySampleFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_FillHolesKey, k_FillHoles_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FillHolesKey, k_FillHoles_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -27,9 +27,9 @@ class NeighborListIO : public IDataIO
 public:
   using data_type = NeighborList<T>;
 
-  using store_type = typename data_type::store_type;
+  using StoreType = typename data_type::StoreType;
 
-  using shared_vector_type = typename data_type::SharedVectorType;
+  using SharedVectorType = typename data_type::SharedVectorType;
 
   NeighborListIO() = default;
 
@@ -46,7 +46,7 @@ public:
    * The NumNeighbors companion array maps flat values to ragged tuple vectors.
    * Metadata import returns EmptyListStore until finishImportingData().
    */
-  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore, std::vector<Warning>& warnings)
+  static std::shared_ptr<StoreType> ReadHdf5Data(const nx::core::hdf5::GroupIO& parentGroup, const nx::core::hdf5::DatasetIO& dataReader, bool useEmptyDataStore, std::vector<Warning>& warnings)
   {
     try
     {
@@ -70,7 +70,7 @@ public:
         return std::make_shared<EmptyListStore<T>>(tupleDimsResult.value());
       }
 
-      auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
+      auto numNeighborsResult = data_store_io::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
       for(auto&& warning : numNeighborsResult.warnings())
       {
         warnings.push_back(std::move(warning));
@@ -130,7 +130,7 @@ public:
    * @param useEmptyDataStore True for metadata-only import.
    * @return Import warnings or errors.
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(objectName);
@@ -165,7 +165,7 @@ public:
    * The method reconstructs tuple vectors from packed values and companion
    * counts. A higher import layer selects an out-of-core store when applicable.
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& parentGroup) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -185,7 +185,7 @@ public:
 
     // The companion count array maps flat values to per-tuple list boundaries.
     auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-    auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
+    auto numNeighborsResult = data_store_io::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
 
     Result<> result;
     for(auto&& warning : numNeighborsResult.warnings())
@@ -244,7 +244,7 @@ public:
    * @return Write warnings or errors.
    * @pre Each list size fits int32 and the packed value count fits usize.
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const NeighborList<T>& neighborList, group_writer_type& parentGroupWriter, bool importable) const
+  Result<> writeData(DataStructureWriter& dataStructureWriter, const NeighborList<T>& neighborList, GroupWriterType& parentGroupWriter, bool importable) const
   {
     DataStructure tmp;
 
@@ -289,7 +289,7 @@ public:
     // the packed array as well as the companion counts.
     auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
     datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
-    result = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
+    result = data_store_io::WriteDataStore<T>(datasetWriter, flattenedData);
     if(result.invalid())
     {
       return result;
@@ -309,7 +309,7 @@ public:
    * @param parentWriter Destination HDF5 group.
    * @return Type-validation or write errors.
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override
   {
     return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
   }
@@ -343,4 +343,4 @@ using UInt64NeighborIO = NeighborListIO<uint64>;
 // using BoolNeighborIO = NeighborListIO<bool>;
 using Float32NeighborIO = NeighborListIO<float32>;
 using Float64NeighborIO = NeighborListIO<float64>;
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

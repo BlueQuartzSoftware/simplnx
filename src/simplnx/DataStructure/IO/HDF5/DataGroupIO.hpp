@@ -6,7 +6,7 @@ namespace nx::core
 {
 class DataGroup;
 
-namespace HDF5
+namespace hdf5
 {
 /**
  * @brief The DataGroupIO class serves as the basis for writing DataGroups to HDF5.
@@ -38,7 +38,7 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataGroupName, DataObject::IdType importId,
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& dataGroupName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
   /**
@@ -50,7 +50,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  static Result<> writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable);
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Attempts to write the target DataObject to HDF5.
@@ -60,7 +60,7 @@ public:
    * @param dataObject
    * @param parentWriter
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override;
 
   /**
    * @brief Returns the DataObject::Type for this IO class.
@@ -74,5 +74,5 @@ public:
    */
   std::string getTypeName() const override;
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

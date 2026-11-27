@@ -104,7 +104,7 @@ nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, 
     }
     totalBytes *= castD;
   }
-  if(totalBytes < nx::core::HDF5::k_SmallArrayThresholdBytes)
+  if(totalBytes < nx::core::hdf5::k_SmallArrayThresholdBytes)
   {
     return {H5P_DEFAULT};
   }
@@ -114,7 +114,7 @@ nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, 
   // component bytes are already folded into dims. BundleOuterSlabs reproduces the write-once
   // greedy outermost-first walk: ~1 MiB chunks, whole outer slabs bundled when they fit.
   const ShapeType chunk =
-      nx::core::HDF5::computeChunkShape(dims, /*numComponents=*/1, elementByteSize, {.targetBytes = nx::core::HDF5::k_TargetChunkBytes, .regime = nx::core::HDF5::ChunkShapeRegime::BundleOuterSlabs});
+      nx::core::hdf5::computeChunkShape(dims, /*numComponents=*/1, elementByteSize, {.targetBytes = nx::core::hdf5::k_TargetChunkBytes, .regime = nx::core::hdf5::ChunkShapeRegime::BundleOuterSlabs});
   std::vector<hsize_t> chunkDims(chunk.size());
   for(usize i = 0; i < chunk.size(); ++i)
   {
@@ -128,7 +128,7 @@ nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, 
   hid_t dcpl = H5I_INVALID_HID;
   int errorCode = 0;
   {
-    std::lock_guard<std::mutex> hdf5Lock(nx::core::HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(nx::core::hdf5::Support::ApiLock());
     dcpl = H5Pcreate(H5P_DATASET_CREATE);
     if(dcpl < 0)
     {
@@ -160,7 +160,7 @@ nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, 
 }
 } // namespace
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 constexpr int64 k_DimensionMismatchError = -5138;
 
@@ -392,7 +392,7 @@ size_t DatasetIO::getTypeSize() const
 }
 
 #if 0
-Result<nx::core::HDF5::Type> DatasetIO::getDataType() const
+Result<nx::core::hdf5::Type> DatasetIO::getDataType() const
 {
   auto datasetId = open();
   hid_t typeId = H5Dget_type(datasetId);
@@ -782,14 +782,14 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T> data) const
         }
       }
     }
-    HDF5::ParallelChunkCodec codec(codecFilePath, getNamePath(), tupleShape, chunkShape, /*componentShape=*/{}, sizeof(T), datasetId, dataType);
+    hdf5::ParallelChunkCodec codec(codecFilePath, getNamePath(), tupleShape, chunkShape, /*componentShape=*/{}, sizeof(T), datasetId, dataType);
     if(codec.isEligible())
     {
       // An exception falls back to serial H5Dread. Successful codec output matches
       // the serial row-major result.
       try
       {
-        const uint64 numChunks = HDF5::getNumberOfChunks(tupleShape, chunkShape);
+        const uint64 numChunks = hdf5::getNumberOfChunks(tupleShape, chunkShape);
         std::vector<uint64> allChunkIndices(numChunks);
         std::iota(allChunkIndices.begin(), allChunkIndices.end(), uint64{0});
 
@@ -812,7 +812,7 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T> data) const
   hid_t memSpaceId = H5I_INVALID_HID;
   herr_t readStatus = 0;
   {
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     fileSpaceId = H5Dget_space(datasetId);
     if(fileSpaceId >= 0)
     {
@@ -1242,10 +1242,10 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
           // Model the complete flat array as one-component tuple space.
           std::vector<uint64> tupleShape(dims.begin(), dims.end());
           std::vector<uint64> chunkShape(usizeChunkDims.begin(), usizeChunkDims.end());
-          HDF5::ParallelChunkCodec codec(getFilePath(), getNamePath(), tupleShape, chunkShape, /*componentShape=*/{}, sizeof(T), datasetId, dataType);
+          hdf5::ParallelChunkCodec codec(getFilePath(), getNamePath(), tupleShape, chunkShape, /*componentShape=*/{}, sizeof(T), datasetId, dataType);
           if(codec.isEligible())
           {
-            const uint64 numChunks = HDF5::getNumberOfChunks(tupleShape, chunkShape);
+            const uint64 numChunks = hdf5::getNumberOfChunks(tupleShape, chunkShape);
             std::vector<uint64> allChunkIndices(numChunks);
             std::iota(allChunkIndices.begin(), allChunkIndices.end(), uint64{0});
 
@@ -2274,4 +2274,4 @@ template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<float32>(nonstd::
 template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<float64>(nonstd::span<const float64>, const std::vector<uint64>&, const std::vector<uint64>&);
 template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<bool>(nonstd::span<const bool>, const std::vector<uint64>&, const std::vector<uint64>&);
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

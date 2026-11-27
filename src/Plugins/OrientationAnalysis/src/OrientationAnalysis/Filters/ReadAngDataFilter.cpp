@@ -91,7 +91,7 @@ IFilter::VersionType ReadAngDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadAngDataFilter::clone() const
+IFilter::UniquePointerType ReadAngDataFilter::clone() const
 {
   return std::make_unique<ReadAngDataFilter>();
 }
@@ -246,10 +246,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -259,11 +259,11 @@ Result<Arguments> ReadAngDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

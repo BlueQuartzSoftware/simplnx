@@ -67,22 +67,22 @@ std::vector<LinkedPath> AbstractMontage::getLinkedPaths()
   return linkedPaths;
 }
 
-AbstractMontage::Iterator AbstractMontage::begin()
+AbstractMontage::iterator AbstractMontage::begin()
 {
   return getCollection().begin();
 }
 
-AbstractMontage::Iterator AbstractMontage::end()
+AbstractMontage::iterator AbstractMontage::end()
 {
   return getCollection().end();
 }
 
-AbstractMontage::ConstIterator AbstractMontage::begin() const
+AbstractMontage::const_iterator AbstractMontage::begin() const
 {
   return getCollection().begin();
 }
 
-AbstractMontage::ConstIterator AbstractMontage::end() const
+AbstractMontage::const_iterator AbstractMontage::end() const
 {
   return getCollection().end();
 }

@@ -2164,7 +2164,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_RangeType_Key, std::make_any<ChoicesParameter::ValueType>(3ULL)); // Padded Custom Range
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FeatureIdsIndexingName_Key, std::make_any<std::string>(featureIdMapping));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FeatureHasDataArrayName_Key, std::make_any<std::string>(featureHasData));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<VectorInt32Parameter::ValueType>({1, 4}));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<VectorInt32ParameterType::ValueType>({1, 4}));
 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));
@@ -2397,7 +2397,7 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_RangeType_Key, std::make_any<ChoicesParameter::ValueType>(4ULL)); // Custom Range
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FeatureIdsIndexingName_Key, std::make_any<std::string>(featureIdMapping));
-    args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<VectorInt32Parameter::ValueType>({2, 4}));
+    args.insertOrAssign(ComputeArrayStatisticsFilter::k_Range_Key, std::make_any<VectorInt32ParameterType::ValueType>({2, 4}));
 
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(true));
     args.insertOrAssign(ComputeArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(true));

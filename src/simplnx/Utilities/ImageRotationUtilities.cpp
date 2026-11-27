@@ -6,7 +6,7 @@
 namespace nx::core::ImageRotationUtilities
 {
 //------------------------------------------------------------------------------
-FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fR& transformationMatrix)
+FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fRType& transformationMatrix)
 {
   auto min = imageGeomBoundingBox.getMinPoint();
   auto max = imageGeomBoundingBox.getMaxPoint();
@@ -43,7 +43,7 @@ FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, cons
 }
 
 //------------------------------------------------------------------------------
-FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix)
+FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fRType& transformationMatrix)
 {
   auto origImageGeomBox = imageGeometry.getBoundingBoxf();
   return DetermineMinMaxCoords(origImageGeomBox, transformationMatrix);
@@ -66,7 +66,7 @@ float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 }
 
 //------------------------------------------------------------------------------
-RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& transformationMatrix)
+RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fRType& transformationMatrix)
 {
   const SizeVec3 origDims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
@@ -174,7 +174,7 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateTransformationMatrixDescription(const Matrix4fR& transform)
+std::string GenerateTransformationMatrixDescription(const Matrix4fRType& transform)
 {
   std::stringstream out;
 
@@ -187,9 +187,9 @@ std::string GenerateTransformationMatrixDescription(const Matrix4fR& transform)
 }
 
 //------------------------------------------------------------------------------
-Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed)
+Matrix4fRType CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed)
 {
-  Matrix4fR transformationMatrix;
+  Matrix4fRType transformationMatrix;
   transformationMatrix.fill(0.0F);
 
   for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
@@ -203,9 +203,9 @@ Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>
 }
 
 //------------------------------------------------------------------------------
-Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData)
+Matrix4fRType GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData)
 {
-  Matrix4fR transformationMatrix;
+  Matrix4fRType transformationMatrix;
   transformationMatrix.fill(0.0F);
 
   for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
@@ -254,9 +254,9 @@ Result<> ValidateRotationAxisAngle(const VectorFloat32Parameter::ValueType& axis
 }
 
 //------------------------------------------------------------------------------
-Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
+Matrix4fRType GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
 {
-  Matrix4fR transformationMatrix;
+  Matrix4fRType transformationMatrix;
   if(ValidateRotationAxisAngle(pRotationValue, "Rotation").invalid())
   {
     transformationMatrix.fill(std::numeric_limits<float32>::quiet_NaN());
@@ -308,9 +308,9 @@ Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::Val
 }
 
 //------------------------------------------------------------------------------
-Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
+Matrix4fRType GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
 {
-  Matrix4fR transformationMatrix = Matrix4fR::Identity();
+  Matrix4fRType transformationMatrix = Matrix4fRType::Identity();
   transformationMatrix(0, 3) = pTranslationValue[0];
   transformationMatrix(1, 3) = pTranslationValue[1];
   transformationMatrix(2, 3) = pTranslationValue[2];
@@ -318,9 +318,9 @@ Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::
 }
 
 //------------------------------------------------------------------------------
-Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue)
+Matrix4fRType GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue)
 {
-  Matrix4fR transformationMatrix;
+  Matrix4fRType transformationMatrix;
   transformationMatrix.fill(0.0F);
   transformationMatrix(0, 0) = pScaleValue[0];
   transformationMatrix(1, 1) = pScaleValue[1];

@@ -21,8 +21,8 @@ public:
   class ConstReferenceList
   {
   public:
-    using vector_type = std::vector<T>;
-    using const_iterator = typename vector_type::const_iterator;
+    using VectorType = std::vector<T>;
+    using const_iterator = typename VectorType::const_iterator;
 
     ConstReferenceList(const AbstractListStore<T>& store, usize tupleIndex)
     : m_ListStore(store)
@@ -46,7 +46,7 @@ public:
       return m_List.size();
     }
 
-    const vector_type& vector() const
+    const VectorType& vector() const
     {
       return m_List;
     }
@@ -85,7 +85,7 @@ public:
     }
 
   private:
-    vector_type m_List;
+    VectorType m_List;
     usize m_Index = 0;
     const AbstractListStore<T>& m_ListStore;
   };
@@ -93,9 +93,9 @@ public:
   class ReferenceList
   {
   public:
-    using vector_type = std::vector<T>;
-    using iterator = typename vector_type::iterator;
-    using const_iterator = typename vector_type::const_iterator;
+    using VectorType = std::vector<T>;
+    using iterator = typename VectorType::iterator;
+    using const_iterator = typename VectorType::const_iterator;
 
     ReferenceList(AbstractListStore<T>& store, usize tupleIndex)
     : m_ListStore(store)
@@ -176,7 +176,7 @@ public:
       return m_List.size();
     }
 
-    const vector_type& vector() const
+    const VectorType& vector() const
     {
       return m_List;
     }
@@ -210,7 +210,7 @@ public:
 
   private:
     bool m_Edited = false;
-    vector_type m_List;
+    VectorType m_List;
     usize m_Index = 0;
     AbstractListStore<T>& m_ListStore;
   };
@@ -530,8 +530,8 @@ public:
   };
 
   using value_type = T;
-  using vector_type = std::vector<T>;
-  using shared_vector_type = typename std::shared_ptr<vector_type>;
+  using VectorType = std::vector<T>;
+  using SharedVectorType = typename std::shared_ptr<VectorType>;
   using reference = value_type&;
   using const_reference = const value_type&;
 
@@ -564,28 +564,28 @@ public:
    * @param grainId The grain/tuple index to set the list for
    * @param neighborList Shared pointer to the vector containing the list values
    */
-  virtual void setList(int32 grainId, const shared_vector_type& neighborList) = 0;
+  virtual void setList(int32 grainId, const SharedVectorType& neighborList) = 0;
 
   /**
    * @brief Sets the complete list for the specified grain/tuple index using a vector.
    * @param grainId The grain/tuple index to set the list for
    * @param neighborList Vector containing the list values
    */
-  virtual void setList(int32 grainId, const vector_type& neighborList) = 0;
+  virtual void setList(int32 grainId, const VectorType& neighborList) = 0;
 
   /**
    * @brief Returns a copy of the list for the specified grain/tuple.
    * @param grainId The grain/tuple index to retrieve
    * @return vector_type A copy of the list vector
    */
-  virtual vector_type getList(int32 grainId) const = 0;
+  virtual VectorType getList(int32 grainId) const = 0;
 
   /**
    * @brief Returns a deep copy of the list for the specified grain/tuple.
    * @param grainId The grain/tuple index to copy
    * @return vector_type A deep copy of the list vector
    */
-  virtual vector_type copyOfList(int32 grainId) const = 0;
+  virtual VectorType copyOfList(int32 grainId) const = 0;
 
   /**
    * @brief Retrieves a specific value from a grain's list.
@@ -609,28 +609,28 @@ public:
    * @param grainId The grain/tuple index to access
    * @return vector_type A copy of the list at the specified index
    */
-  virtual vector_type operator[](int32 grainId) const = 0;
+  virtual VectorType operator[](int32 grainId) const = 0;
 
   /**
    * @brief Array subscript operator to access the list at the specified grain/tuple index.
    * @param grainId The grain/tuple index to access
    * @return vector_type A copy of the list at the specified index
    */
-  virtual vector_type operator[](usize grainId) const = 0;
+  virtual VectorType operator[](usize grainId) const = 0;
 
   /**
    * @brief Returns a copy of the vector_type value found at the specified index.
    * @param grainId
    * @return vector_type
    */
-  virtual vector_type at(int32 grainId) const = 0;
+  virtual VectorType at(int32 grainId) const = 0;
 
   /**
    * @brief Returns a copy of the vector_type value found at the specified index.
    * @param grainId
    * @return vector_type
    */
-  virtual vector_type at(usize grainId) const = 0;
+  virtual VectorType at(usize grainId) const = 0;
 
   /**
    * @brief Returns an iterator to the beginning of the list store.
@@ -690,13 +690,13 @@ public:
    * @brief Sets all lists from a vector of shared pointers to vectors.
    * @param lists Vector of shared pointers to vectors containing the list data
    */
-  virtual void setData(const std::vector<shared_vector_type>& lists) = 0;
+  virtual void setData(const std::vector<SharedVectorType>& lists) = 0;
 
   /**
    * @brief Sets all lists from a vector of vectors.
    * @param lists Vector of vectors containing the list data
    */
-  virtual void setData(const std::vector<vector_type>& lists) = 0;
+  virtual void setData(const std::vector<VectorType>& lists) = 0;
 
 protected:
   /**

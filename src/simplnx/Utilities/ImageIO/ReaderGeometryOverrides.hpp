@@ -16,12 +16,12 @@
 
 namespace nx::core::ImageIO
 {
-inline constexpr StringLiteral k_ChangeOrigin = "change_origin";
-inline constexpr StringLiteral k_Origin = "origin";
-inline constexpr StringLiteral k_ChangeSpacing = "change_spacing";
-inline constexpr StringLiteral k_Spacing = "spacing";
-inline constexpr StringLiteral k_SetOriginLabel = "Set Origin";
-inline constexpr StringLiteral k_SetSpacingLabel = "Set Spacing";
+inline constexpr StringLiteralType k_ChangeOrigin = "change_origin";
+inline constexpr StringLiteralType k_Origin = "origin";
+inline constexpr StringLiteralType k_ChangeSpacing = "change_spacing";
+inline constexpr StringLiteralType k_Spacing = "spacing";
+inline constexpr StringLiteralType k_SetOriginLabel = "Set Origin";
+inline constexpr StringLiteralType k_SetSpacingLabel = "Set Spacing";
 
 /**
  * @brief Formats a stored geometry value error with the settings that replace it.

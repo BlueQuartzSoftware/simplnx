@@ -6,7 +6,7 @@ namespace nx::core
 {
 class QuadGeom;
 
-namespace HDF5
+namespace hdf5
 {
 class SIMPLNX_EXPORT QuadGeomIO : public INodeGeom2dIO
 {
@@ -30,7 +30,7 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, DataObject::IdType importId,
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& geomName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
   /**
@@ -40,7 +40,7 @@ public:
    * @param dataStructureGroup The HDF5 group containing the geometry data
    * @return Result<> Result with any errors or warnings
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override;
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup) const override;
 
   /**
    * @brief Attempts to write a QuadGeom to HDF5.
@@ -50,7 +50,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  static Result<> writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geometry, group_writer_type& parentGroup, bool importable);
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const QuadGeom& geometry, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Attempts to write the DataObject to HDF5.
@@ -61,7 +61,7 @@ public:
    * @param parentWriter
    * @return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override;
 
   /**
    * @brief Returns the DataObject::Type for this IO class.
@@ -80,5 +80,5 @@ public:
   QuadGeomIO& operator=(const QuadGeomIO& rhs) = delete;
   QuadGeomIO& operator=(QuadGeomIO&& rhs) = delete;
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

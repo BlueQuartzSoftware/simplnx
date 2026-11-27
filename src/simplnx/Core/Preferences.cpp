@@ -39,8 +39,8 @@ namespace nx::core
 namespace
 {
 constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
-constexpr StringLiteral k_Plugin_Key = "plugins";
-constexpr StringLiteral k_DefaultFileName = "preferences.json";
+constexpr StringLiteralType k_Plugin_Key = "plugins";
+constexpr StringLiteralType k_DefaultFileName = "preferences.json";
 constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 constexpr bool k_AutoRangeComputationDefault = false;
 
@@ -52,10 +52,10 @@ constexpr int32 k_RepairedOocSizeGBWarning = -592;
 // Correctly rounded division gives the double nearest to 17179869183.99, which is also the parsed JSON value.
 constexpr double k_MaxOocSizeGB = static_cast<double>(Preferences::k_MaxOocSizeHundredths) / 100.0;
 
-constexpr StringLiteral k_FailedToCreateDirectoryMessage = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
-constexpr StringLiteral k_FileDoesNotExistMessage = "Preferences file does not exist";
-constexpr StringLiteral k_FileCouldNotOpenMessage = "Could not open Preferences file";
-constexpr StringLiteral k_JsonParseErrorMessage = "Parsing the JSON Preferences file failed.";
+constexpr StringLiteralType k_FailedToCreateDirectoryMessage = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
+constexpr StringLiteralType k_FileDoesNotExistMessage = "Preferences file does not exist";
+constexpr StringLiteralType k_FileCouldNotOpenMessage = "Could not open Preferences file";
+constexpr StringLiteralType k_JsonParseErrorMessage = "Parsing the JSON Preferences file failed.";
 
 std::string_view OocSizeLabel(const std::string& name)
 {
@@ -673,7 +673,7 @@ void Preferences::updateMemoryDefaults()
 {
   // Reserve two single-array thresholds for the operating system and application.
   const uint64 minimumRemaining = 2 * defaultValueAs<uint64>(k_LargeDataSize_Key);
-  const uint64 totalMemory = Memory::GetTotalMemory();
+  const uint64 totalMemory = memory_utilities::GetTotalMemory();
   uint64 targetValue = totalMemory - minimumRemaining;
 
   // Low-memory systems use half of RAM when the reservation is too large.

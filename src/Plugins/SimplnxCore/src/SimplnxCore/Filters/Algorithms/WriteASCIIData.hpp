@@ -35,7 +35,7 @@ struct SIMPLNXCORE_EXPORT WriteASCIIDataInputValues
   StringParameter::ValueType FileExtension;
   ChoicesParameter::ValueType HeaderOptionIndex{};
   MultiArraySelectionParameter::ValueType InputDataArrayPaths;
-  Int32Parameter::ValueType MaxValPerLine{};
+  Int32ParameterType::ValueType MaxValPerLine{};
   FileSystemPathParameter::ValueType OutputDir;
   FileSystemPathParameter::ValueType OutputPath;
   ChoicesParameter::ValueType OutputStyleIndex{};

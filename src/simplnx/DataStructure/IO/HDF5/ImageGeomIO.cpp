@@ -25,28 +25,28 @@ constexpr int32 k_ReadingGroupErrorCode = -520;
 constexpr int32 k_ReadingDimensionsErrorCode = -521;
 constexpr int32 k_ReadingSpacingErrorCode = -522;
 constexpr int32 k_ReadingOriginErrorCode = -523;
-constexpr StringLiteral k_ReadingGroupErrorMessage = "Error opening HDF5 group while reading ImageGeom '{}'";
-constexpr StringLiteral k_ReadingDimensionsErrorMessage = "Error reading HDF5 dimensions attribute for ImageGeom '{}'";
-Result<DREAM3D::ImageGeometryMetadata> ReadImageGeometryMetadata(const HDF5::GroupIO& group, const ImageGeom& geometry)
+constexpr StringLiteralType k_ReadingGroupErrorMessage = "Error opening HDF5 group while reading ImageGeom '{}'";
+constexpr StringLiteralType k_ReadingDimensionsErrorMessage = "Error reading HDF5 dimensions attribute for ImageGeom '{}'";
+Result<dream3d::ImageGeometryMetadata> ReadImageGeometryMetadata(const hdf5::GroupIO& group, const ImageGeom& geometry)
 {
-  using MetadataType = DREAM3D::ImageGeometryMetadata;
+  using MetadataType = dream3d::ImageGeometryMetadata;
   const auto origin = group.readVectorAttribute<float32>(IOConstants::k_H5_ORIGIN);
   if(origin.invalid() || origin.value().size() != 3)
   {
     return MakeErrorResult<MetadataType>(k_ReadingOriginErrorCode, fmt::format("Cannot read image geometry '{}' from '{}'. Expected three origin values in the HDF5 attribute.",
-                                                                               DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
+                                                                               dream3d::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
   }
   const auto spacing = group.readVectorAttribute<float32>(IOConstants::k_H5_SPACING);
   if(spacing.invalid() || spacing.value().size() != 3)
   {
     return MakeErrorResult<MetadataType>(k_ReadingSpacingErrorCode, fmt::format("Cannot read image geometry '{}' from '{}'. Expected three spacing values in the HDF5 attribute.",
-                                                                                DREAM3D::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
+                                                                                dream3d::detail::ImageGeometryPath(geometry), group.getFilePath().string()));
   }
   return {MetadataType{FloatVec3(origin.value()), FloatVec3(spacing.value())}};
 }
 } // namespace
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 ImageGeomIO::ImageGeomIO() = default;
 ImageGeomIO::~ImageGeomIO() noexcept = default;
@@ -61,7 +61,7 @@ std::string ImageGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* imageGeomPtr = ImageGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
@@ -84,7 +84,7 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
   }
 
   imageGeomPtr->setDimensions(SizeVec3(dimensions.value()));
-  auto result = DREAM3D::detail::ImportImageMetadata(*imageGeomPtr, groupReader.getFilePath(), ReadImageGeometryMetadata(groupReader, *imageGeomPtr), dataStructureReader.deferredImageMetadata());
+  auto result = dream3d::detail::ImportImageMetadata(*imageGeomPtr, groupReader.getFilePath(), ReadImageGeometryMetadata(groupReader, *imageGeomPtr), dataStructureReader.deferredImageMetadata());
   if(result.invalid())
   {
     return result;
@@ -92,7 +92,7 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
   return MergeResults(std::move(result), IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *imageGeomPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore));
 }
 
-Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const ImageGeom& geometry, group_writer_type& parentGroupWriter, bool importable)
+Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const ImageGeom& geometry, GroupWriterType& parentGroupWriter, bool importable)
 {
   Result<> result = IGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroupWriter, importable);
   if(result.invalid())
@@ -135,8 +135,8 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
   return result;
 }
 
-Result<> ImageGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> ImageGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

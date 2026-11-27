@@ -137,7 +137,7 @@ IFilter::VersionType MultiThresholdObjectsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer MultiThresholdObjectsFilter::clone() const
+IFilter::UniquePointerType MultiThresholdObjectsFilter::clone() const
 {
   return std::make_unique<MultiThresholdObjectsFilter>();
 }
@@ -233,8 +233,8 @@ Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, 
   MultiThresholdObjectsInputValues inputValues;
   inputValues.ArrayThresholdsObject = filterArgs.value<ArrayThresholdsParameter::ValueType>(k_ArrayThresholdsObject_Key);
   inputValues.CreatedMaskType = filterArgs.value<DataTypeParameter::ValueType>(k_CreatedMaskType_Key);
-  inputValues.CustomFalseValue = filterArgs.value<Float64Parameter::ValueType>(k_CustomFalseValue);
-  inputValues.CustomTrueValue = filterArgs.value<Float64Parameter::ValueType>(k_CustomTrueValue);
+  inputValues.CustomFalseValue = filterArgs.value<Float64ParameterType::ValueType>(k_CustomFalseValue);
+  inputValues.CustomTrueValue = filterArgs.value<Float64ParameterType::ValueType>(k_CustomTrueValue);
   inputValues.OutputDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedDataName_Key);
   inputValues.UseCustomFalseValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
   inputValues.UseCustomTrueValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
@@ -246,19 +246,19 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SelectedThresholdsKey = "SelectedThresholds";
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_DestinationArrayNameKey = "DestinationArrayName";
+constexpr StringLiteralType k_SelectedThresholdsKey = "SelectedThresholds";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_DestinationArrayNameKey = "DestinationArrayName";
 } // namespace simpl
 } // namespace
 
 Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = MultiThresholdObjectsFilter().getDefaultArguments();
-  static constexpr StringLiteral k_FilterUuidKey = "Filter_Uuid";
-  static constexpr StringLiteral k_FilterClassNameKey = "Filter_Name";
-  static constexpr StringLiteral k_V1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
-  static constexpr StringLiteral k_V1ClassName = "MultiThresholdObjects";
+  static constexpr StringLiteralType k_FilterUuidKey = "Filter_Uuid";
+  static constexpr StringLiteralType k_FilterClassNameKey = "Filter_Name";
+  static constexpr StringLiteralType k_V1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
+  static constexpr StringLiteralType k_V1ClassName = "MultiThresholdObjects";
 
   std::vector<Result<>> results;
 
@@ -274,19 +274,19 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   }
   if(isAdvanced)
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, simpl::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, simpl::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionFilterParameterConverter>(args, json, simpl::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ComparisonSelectionFilterParameterConverter>(args, json, simpl::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
   }
-  Result<> scalarResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_CreatedMaskType_Key);
+  Result<> scalarResult = simpl_conversion::ConvertParameter<simpl_conversion::ScalarTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_CreatedMaskType_Key);
   if(scalarResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(scalarResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DestinationArrayNameKey, k_CreatedDataName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DestinationArrayNameKey, k_CreatedDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

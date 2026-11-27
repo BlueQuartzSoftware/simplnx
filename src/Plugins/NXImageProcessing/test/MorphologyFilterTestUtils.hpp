@@ -191,7 +191,7 @@ inline KernelParamSetter DefaultKernelParamSetter()
 {
   return [](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
   };
 }
 
@@ -205,7 +205,7 @@ inline KernelParamSetter CompositeKernelParamSetter(bool safeBorder)
 {
   return [safeBorder](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(NewFilterT::k_SafeBorder_Key, std::make_any<bool>(safeBorder));
   };
 }
@@ -221,7 +221,7 @@ inline KernelParamSetter BinaryKernelParamSetter(float64 foreground, float64 bac
 {
   return [foreground, background, boundaryToForeground](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(NewFilterT::k_ForegroundValue_Key, std::make_any<float64>(foreground));
     args.insertOrAssign(NewFilterT::k_BackgroundValue_Key, std::make_any<float64>(background));
     args.insertOrAssign(NewFilterT::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));

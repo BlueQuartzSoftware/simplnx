@@ -110,7 +110,7 @@ Result<> PadImageGeometry::operator()()
 
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
   const std::array<bool, 3> active = {m_InputValues->PadInX, m_InputValues->PadInY, m_InputValues->PadInZ};
-  const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(m_InputValues->XMinMax), std::cref(m_InputValues->YMinMax),
+  const std::array<std::reference_wrapper<const VectorInt32ParameterType::ValueType>, 3> vectors = {std::cref(m_InputValues->XMinMax), std::cref(m_InputValues->YMinMax),
                                                                                                 std::cref(m_InputValues->ZMinMax)};
   std::array<std::array<int32, 2>, 3> padding{};
   for(usize axis = 0; axis < 3; ++axis)

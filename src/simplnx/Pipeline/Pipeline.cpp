@@ -27,13 +27,13 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_PipelineNameKey = "name";
-constexpr StringLiteral k_PipelineItemsKey = "pipeline";
-constexpr StringLiteral k_PipelineVersionKey = "version";
+constexpr StringLiteralType k_PipelineNameKey = "name";
+constexpr StringLiteralType k_PipelineItemsKey = "pipeline";
+constexpr StringLiteralType k_PipelineVersionKey = "version";
 constexpr uint64 k_PipelineVersion = 1;
 
-constexpr StringLiteral k_SIMPLPipelineNameKey = "Name";
-constexpr StringLiteral k_SIMPLNumFilterseKey = "Number_Filters";
+constexpr StringLiteralType k_SIMPLPipelineNameKey = "Name";
+constexpr StringLiteralType k_SIMPLNumFilterseKey = "Number_Filters";
 
 std::string GenerateSIMPLPipelineStringIndex(int32 index, int32 maxIndex)
 {
@@ -486,7 +486,7 @@ bool Pipeline::insertAt(index_type index, std::shared_ptr<AbstractPipelineNode> 
   return insertAt(begin() + index, std::move(node));
 }
 
-bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const Arguments& args)
+bool Pipeline::insertAt(index_type index, IFilter::UniquePointerType&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {
@@ -499,7 +499,7 @@ bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const
 bool Pipeline::insertAt(index_type index, const FilterHandle& handle, const Arguments& args)
 {
   auto* filterListPtr = getActiveFilterList();
-  IFilter::UniquePointer filter = filterListPtr->createFilter(handle);
+  IFilter::UniquePointerType filter = filterListPtr->createFilter(handle);
   return insertAt(index, std::move(filter), args);
 }
 
@@ -697,7 +697,7 @@ bool Pipeline::push_front(const FilterHandle& handle, const Arguments& args)
   return push_front(PipelineFilter::Create(handle, args, getActiveFilterList()));
 }
 
-bool Pipeline::push_front(IFilter::UniquePointer&& filter, const Arguments& args)
+bool Pipeline::push_front(IFilter::UniquePointerType&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {
@@ -719,7 +719,7 @@ bool Pipeline::push_back(const FilterHandle& handle, const Arguments& args)
   return push_back(PipelineFilter::Create(handle, args, getActiveFilterList()));
 }
 
-bool Pipeline::push_back(IFilter::UniquePointer&& filter, const Arguments& args)
+bool Pipeline::push_back(IFilter::UniquePointerType&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {

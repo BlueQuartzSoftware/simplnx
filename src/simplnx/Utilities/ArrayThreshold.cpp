@@ -6,18 +6,18 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_TypeTag = "type";
-constexpr StringLiteral k_InvertedTag = "inverted";
-constexpr StringLiteral k_UnionTag = "union";
-constexpr StringLiteral k_ValueTag = "value";
-constexpr StringLiteral k_ArrayPathTag = "array_path";
-constexpr StringLiteral k_ComponentIndexTag = "component_index";
-constexpr StringLiteral k_ComparisonTag = "comparison";
-constexpr StringLiteral k_ThresholdsTag = "thresholds";
+constexpr StringLiteralType k_TypeTag = "type";
+constexpr StringLiteralType k_InvertedTag = "inverted";
+constexpr StringLiteralType k_UnionTag = "union";
+constexpr StringLiteralType k_ValueTag = "value";
+constexpr StringLiteralType k_ArrayPathTag = "array_path";
+constexpr StringLiteralType k_ComponentIndexTag = "component_index";
+constexpr StringLiteralType k_ComparisonTag = "comparison";
+constexpr StringLiteralType k_ThresholdsTag = "thresholds";
 
 // Types
-constexpr StringLiteral k_ArrayType = "array";
-constexpr StringLiteral k_CollectionType = "collection";
+constexpr StringLiteralType k_ArrayType = "array";
+constexpr StringLiteralType k_CollectionType = "collection";
 } // namespace
 
 IArrayThreshold::IArrayThreshold() = default;

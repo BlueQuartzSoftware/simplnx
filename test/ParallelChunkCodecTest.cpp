@@ -42,7 +42,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::HDF5;
+using namespace nx::core::hdf5;
 
 namespace
 {
@@ -1056,7 +1056,7 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
 
 TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the parallel codec", "[DatasetIO][ParallelChunkCodec]")
 {
-  using namespace nx::core::HDF5;
+  using namespace nx::core::hdf5;
 
   SECTION("eligible: DatasetIO write path (compression level > 0) round-trips through the codec branch")
   {
@@ -1227,7 +1227,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
 
 TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the parallel codec", "[DatasetIO][ParallelChunkCodec]")
 {
-  using namespace nx::core::HDF5;
+  using namespace nx::core::hdf5;
 
   // The writer regime the in-core write path uses to pick the on-disk chunk shape.
   const ChunkShapeOptions kWriterRegime{.targetBytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
@@ -1488,7 +1488,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
 // The leading-dot tag excludes the benchmark from normal CTest runs.
 TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][benchmark]")
 {
-  using namespace nx::core::HDF5;
+  using namespace nx::core::hdf5;
   using ClockType = std::chrono::steady_clock;
 
   // Match the regime the in-core write path uses to choose the on-disk chunk shape.

@@ -40,16 +40,16 @@ Parameters CurvatureAnisotropicDiffusionImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_TimeStep_Key, "Time Step", "The time step to be used for each iteration.", 0.0625));
-  params.insert(std::make_unique<Float64Parameter>(k_ConductanceParameter_Key, "Conductance Parameter",
+  params.insert(std::make_unique<Float64ParameterType>(k_TimeStep_Key, "Time Step", "The time step to be used for each iteration.", 0.0625));
+  params.insert(std::make_unique<Float64ParameterType>(k_ConductanceParameter_Key, "Conductance Parameter",
                                                    "The conductance parameter controls the sensitivity of the conductance term in the basic anisotropic diffusion equation", 3.0));
-  params.insert(std::make_unique<UInt32Parameter>(k_ConductanceScalingUpdateInterval_Key, "Conductance Scaling Update Interval", "The interval between conductance updates.", 1u));
-  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfIterations_Key, "Number Of Iterations",
+  params.insert(std::make_unique<UInt32ParameterType>(k_ConductanceScalingUpdateInterval_Key, "Conductance Scaling Update Interval", "The interval between conductance updates.", 1u));
+  params.insert(std::make_unique<UInt32ParameterType>(k_NumberOfIterations_Key, "Number Of Iterations",
                                                   "Specifies the number of iterations (time-step updates) that the solver will perform to produce a solution image", 5u));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetFloatingScalarTypes()));
 
@@ -63,7 +63,7 @@ IFilter::VersionType CurvatureAnisotropicDiffusionImageFilter::parametersVersion
 {
   return 1;
 }
-IFilter::UniquePointer CurvatureAnisotropicDiffusionImageFilter::clone() const
+IFilter::UniquePointerType CurvatureAnisotropicDiffusionImageFilter::clone() const
 {
   return std::make_unique<CurvatureAnisotropicDiffusionImageFilter>();
 }

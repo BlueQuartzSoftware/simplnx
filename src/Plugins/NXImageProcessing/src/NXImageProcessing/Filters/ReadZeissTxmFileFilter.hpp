@@ -25,11 +25,11 @@ public:
   ReadZeissTxmFileFilter& operator=(ReadZeissTxmFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_TxmInputFilePath_Key = "input_file_path";
-  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_CTDataArrayName_Key = "ct_data_array_name";
-  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options_index";
+  static constexpr StringLiteralType k_TxmInputFilePath_Key = "input_file_path";
+  static constexpr StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_CTDataArrayName_Key = "ct_data_array_name";
+  static constexpr StringLiteralType k_CroppingOptions_Key = "cropping_options_index";
 
   /**
    * @brief Returns the name of the filter.
@@ -79,7 +79,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

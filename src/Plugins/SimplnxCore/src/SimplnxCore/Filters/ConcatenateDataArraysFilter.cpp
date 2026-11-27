@@ -54,7 +54,7 @@ Parameters ConcatenateDataArraysFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Arrays To Concatenate",
                                                                "Select the arrays that will be concatenated together.  The arrays will be concatenated in the order they are listed here.",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::Any}, GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the concatenated arrays.", DataPath({"Concatenated Array"})));
@@ -69,7 +69,7 @@ IFilter::VersionType ConcatenateDataArraysFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConcatenateDataArraysFilter::clone() const
+IFilter::UniquePointerType ConcatenateDataArraysFilter::clone() const
 {
   return std::make_unique<ConcatenateDataArraysFilter>();
 }

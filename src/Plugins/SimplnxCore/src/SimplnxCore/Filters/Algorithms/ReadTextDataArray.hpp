@@ -42,12 +42,12 @@ struct SIMPLNXCORE_EXPORT ReadTextDataArrayInputValues
   DataStoreFormatParameter::ValueType DataFormat;
   ChoicesParameter::ValueType DelimiterIndex{};
   FileSystemPathParameter::ValueType InputFile;
-  UInt64Parameter::ValueType NumberComp{};
+  UInt64ParameterType::ValueType NumberComp{};
   DynamicTableParameter::ValueType NumberTuples;
   ArrayCreationParameter::ValueType OutputDataArrayPath;
   NumericTypeParameter::ValueType ScalarTypeIndex;
   BoolParameter::ValueType SetTupleDimensions{};
-  UInt64Parameter::ValueType SkipLineCount{};
+  UInt64ParameterType::ValueType SkipLineCount{};
 };
 
 /**

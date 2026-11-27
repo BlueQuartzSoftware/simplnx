@@ -32,7 +32,7 @@ std::optional<DatasetLayout> TranslateH5Layout(H5D_layout_t layout) noexcept
 
 std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& filePath, const std::string& datasetPath)
 {
-  std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
   const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   if(fileId < 0)
   {

@@ -66,7 +66,7 @@ IFilter::VersionType ExtractPipelineToFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
+IFilter::UniquePointerType ExtractPipelineToFileFilter::clone() const
 {
   return std::make_unique<ExtractPipelineToFileFilter>();
 }
@@ -78,7 +78,7 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
   const auto importFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
   auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
-  Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
+  Result<nlohmann::json> pipelineResult = dream3d::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
   {
     return {.outputActions = ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};

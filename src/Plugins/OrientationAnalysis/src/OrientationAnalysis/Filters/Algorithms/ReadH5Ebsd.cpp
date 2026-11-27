@@ -25,14 +25,14 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
-constexpr nx::core::StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
-constexpr nx::core::StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-constexpr nx::core::StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-constexpr nx::core::StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
-constexpr nx::core::StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+constexpr nx::core::StringLiteralType k_RotationRepresentation_Key = "rotation_representation_index";
+constexpr nx::core::StringLiteralType k_RotationAxisAngle_Key = "rotation_axis_angle";
+constexpr nx::core::StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+constexpr nx::core::StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+constexpr nx::core::StringLiteralType k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+constexpr nx::core::StringLiteralType k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+constexpr nx::core::StringLiteralType k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
+constexpr nx::core::StringLiteralType k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
 
 /**
  * @enum RotationRepresentation

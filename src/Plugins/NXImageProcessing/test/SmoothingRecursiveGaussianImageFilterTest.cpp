@@ -270,7 +270,7 @@ TEST_CASE("NXImageProcessing::SmoothingRecursiveGaussianImageFilter: FromSIMPLJs
   const Result<Arguments> result = SmoothingRecursiveGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(SmoothFilterType::k_Sigma_Key) == std::vector<float64>{2.0, 3.0, 4.0});
+  REQUIRE(args.value<VectorFloat64ParameterType::ValueType>(SmoothFilterType::k_Sigma_Key) == std::vector<float64>{2.0, 3.0, 4.0});
   REQUIRE(args.value<bool>(SmoothFilterType::k_NormalizeAcrossScale_Key) == true);
   REQUIRE(args.value<DataPath>(SmoothFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
   REQUIRE(args.value<DataPath>(SmoothFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));

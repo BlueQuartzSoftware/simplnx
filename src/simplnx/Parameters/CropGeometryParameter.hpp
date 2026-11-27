@@ -20,7 +20,7 @@ public:
       VoxelSubvolume,
       PhysicalSubvolume
     } type = TypeEnum::NoCropping;
-    bool is2D = false;
+    bool is_2d = false;
     bool cropX = true;
     bool cropY = true;
     bool cropZ = true;
@@ -60,7 +60,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief

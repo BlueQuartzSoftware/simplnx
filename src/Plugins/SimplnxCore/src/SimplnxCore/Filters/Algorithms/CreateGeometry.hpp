@@ -47,7 +47,7 @@ struct SIMPLNXCORE_EXPORT CreateGeometryInputValues
 {
   ChoicesParameter::ValueType ArrayHandlingIndex{};
   DataObjectNameParameter::ValueType CellAttributeMatrixName;
-  VectorUInt64Parameter::ValueType Dimensions;
+  VectorUInt64ParameterType::ValueType Dimensions;
   DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
   ArraySelectionParameter::ValueType EdgeListPath;
   DataObjectNameParameter::ValueType FaceAttributeMatrixName;

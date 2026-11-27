@@ -15,7 +15,7 @@
 #include <unistd.h>
 #endif
 
-namespace nx::core::Memory
+namespace nx::core::memory_utilities
 {
 constexpr double k_Gigabyte = 1024.0 * 1024.0 * 1024.0;
 constexpr double k_Megabyte = 1024.0 * 1024.0;
@@ -84,17 +84,17 @@ SystemMemoryInfo GetSystemMemoryInfo()
   memStatus.dwLength = sizeof(MEMORYSTATUSEX);
   if(GlobalMemoryStatusEx(&memStatus))
   {
-    info.totalGB = static_cast<double>(memStatus.ullTotalPhys) / k_Gigabyte;
+    info.total_gb = static_cast<double>(memStatus.ullTotalPhys) / k_Gigabyte;
     const double availableGB = static_cast<double>(memStatus.ullAvailPhys) / k_Gigabyte;
-    info.usedGB = info.totalGB - availableGB;
-    info.loadPercent = static_cast<double>(memStatus.dwMemoryLoad);
+    info.used_gb = info.total_gb - availableGB;
+    info.load_percent = static_cast<double>(memStatus.dwMemoryLoad);
   }
 
   PROCESS_MEMORY_COUNTERS_EX pmc;
   const HANDLE hProcess = GetCurrentProcess();
   if(GetProcessMemoryInfo(hProcess, reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc)))
   {
-    info.processGB = static_cast<double>(pmc.WorkingSetSize) / k_Gigabyte;
+    info.process_gb = static_cast<double>(pmc.WorkingSetSize) / k_Gigabyte;
   }
 
   return info;
@@ -122,7 +122,7 @@ SystemMemoryInfo GetSystemMemoryInfo()
   {
     return info;
   }
-  info.totalGB = static_cast<double>(tempInt64) / k_Gigabyte;
+  info.total_gb = static_cast<double>(tempInt64) / k_Gigabyte;
 
   vm_statistics64_data_t vmstat;
   mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
@@ -132,10 +132,10 @@ SystemMemoryInfo GetSystemMemoryInfo()
     {
       const int64_t availableBytes = (static_cast<int64_t>(vmstat.free_count) + static_cast<int64_t>(vmstat.inactive_count)) * tempInt64;
       const double availableGB = static_cast<double>(availableBytes) / k_Gigabyte;
-      info.usedGB = info.totalGB - availableGB;
-      if(info.totalGB > 0.0)
+      info.used_gb = info.total_gb - availableGB;
+      if(info.total_gb > 0.0)
       {
-        info.loadPercent = info.usedGB * 100.0 / info.totalGB;
+        info.load_percent = info.used_gb * 100.0 / info.total_gb;
       }
     }
   }
@@ -144,7 +144,7 @@ SystemMemoryInfo GetSystemMemoryInfo()
   mach_msg_type_number_t taskCount = TASK_VM_INFO_COUNT;
   if(task_info(mach_task_self(), TASK_VM_INFO, reinterpret_cast<task_info_t>(&taskInfo), &taskCount) == KERN_SUCCESS)
   {
-    info.processGB = static_cast<double>(taskInfo.phys_footprint) / k_Gigabyte;
+    info.process_gb = static_cast<double>(taskInfo.phys_footprint) / k_Gigabyte;
   }
 
   return info;
@@ -204,11 +204,11 @@ SystemMemoryInfo GetSystemMemoryInfo()
     // Match the 'used' calculation from the 'free' command:
     // used = total - (free + buffers + cached + SReclaimable)
     const uint64_t usedKB = memTotal - (memFree + buffers + cached + sReclaimable);
-    info.totalGB = static_cast<double>(memTotal) / k_Megabyte;
-    info.usedGB = static_cast<double>(usedKB) / k_Megabyte;
-    if(info.totalGB > 0.0)
+    info.total_gb = static_cast<double>(memTotal) / k_Megabyte;
+    info.used_gb = static_cast<double>(usedKB) / k_Megabyte;
+    if(info.total_gb > 0.0)
     {
-      info.loadPercent = info.usedGB * 100.0 / info.totalGB;
+      info.load_percent = info.used_gb * 100.0 / info.total_gb;
     }
   }
 
@@ -221,7 +221,7 @@ SystemMemoryInfo GetSystemMemoryInfo()
       unsigned long long residentPages = 0;
       statm >> totalPages >> residentPages;
       const long pageSizeBytes = sysconf(_SC_PAGESIZE);
-      info.processGB = static_cast<double>(residentPages) * static_cast<double>(pageSizeBytes) / k_Gigabyte;
+      info.process_gb = static_cast<double>(residentPages) * static_cast<double>(pageSizeBytes) / k_Gigabyte;
     }
   }
 
@@ -230,4 +230,4 @@ SystemMemoryInfo GetSystemMemoryInfo()
 
 #endif
 
-} // namespace nx::core::Memory
+} // namespace nx::core::memory_utilities

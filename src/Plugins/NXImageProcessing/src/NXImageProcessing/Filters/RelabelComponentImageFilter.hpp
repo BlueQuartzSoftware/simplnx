@@ -30,11 +30,11 @@ public:
   RelabelComponentImageFilter& operator=(RelabelComponentImageFilter&&) noexcept = delete;
 
   // Parameter Keys (reuse the legacy ITK filter's key strings so a shared param-setter drives both).
-  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static constexpr StringLiteral k_MinimumObjectSize_Key = "minimum_object_size";
-  static constexpr StringLiteral k_SortByObjectSize_Key = "sort_by_object_size";
+  static constexpr StringLiteralType k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteralType k_MinimumObjectSize_Key = "minimum_object_size";
+  static constexpr StringLiteralType k_SortByObjectSize_Key = "sort_by_object_size";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
@@ -45,7 +45,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

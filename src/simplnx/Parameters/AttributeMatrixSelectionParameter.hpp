@@ -15,7 +15,7 @@ class SIMPLNX_EXPORT AttributeMatrixSelectionParameter : public MutableDataParam
 public:
   using ValueType = DataPath;
 
-  using AllowedTypes = std::set<DataObject::Type>;
+  using AllowedTypeSetType = std::set<DataObject::Type>;
 
   AttributeMatrixSelectionParameter() = delete;
   AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
@@ -43,7 +43,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -109,7 +109,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArrayCreationToAMFilterParameterConverter
 {
@@ -126,6 +126,6 @@ struct SIMPLNX_EXPORT AttributeMatrixSelectionFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::AttributeMatrixSelectionParameter, "a3619d74-a1d9-4bc2-9e03-ca001d65b119");

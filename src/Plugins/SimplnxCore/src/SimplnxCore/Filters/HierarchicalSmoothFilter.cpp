@@ -49,22 +49,22 @@ Parameters HierarchicalSmoothFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_MaxIterations_Key, "Max Bisection Iterations",
+  params.insert(std::make_unique<Int32ParameterType>(k_MaxIterations_Key, "Max Bisection Iterations",
                                                  "Maximum number of bisection iterations for the smoothing parameter optimization. Higher values give more precise results.", 53));
-  params.insert(std::make_unique<Float64Parameter>(
+  params.insert(std::make_unique<Float64ParameterType>(
       k_ErrorThreshold_Key, "Error Threshold",
       "Displacement rejection threshold as a multiple of the minimum edge length. Nodes displaced beyond this threshold are reset to their original positions.", 2.0));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry",
                                                              "The complete path to the triangle geometry for which to apply hierarchical smoothing", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "The complete path to the array specifying the grain IDs on either side of each face",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   return params;
 }
@@ -76,7 +76,7 @@ IFilter::VersionType HierarchicalSmoothFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer HierarchicalSmoothFilter::clone() const
+IFilter::UniquePointerType HierarchicalSmoothFilter::clone() const
 {
   return std::make_unique<HierarchicalSmoothFilter>();
 }

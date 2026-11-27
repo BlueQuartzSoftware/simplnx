@@ -60,19 +60,19 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Image or RectilinearGrid Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The input Image/RectilinearGrid Geometry to convert", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array when extracting cell centers.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Cell Arrays to Move/Copy"});
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", to_underlying(ArrayHandlingType::Move),
                                                    ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays"}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
@@ -96,7 +96,7 @@ IFilter::VersionType ExtractVertexGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractVertexGeometryFilter::clone() const
+IFilter::UniquePointerType ExtractVertexGeometryFilter::clone() const
 {
   return std::make_unique<ExtractVertexGeometryFilter>();
 }
@@ -199,11 +199,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_IncludedDataArrayPathsKey = "IncludedDataArrayPaths";
-constexpr StringLiteral k_SelectedDataContainerNameKey = "SelectedDataContainerName";
-constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_UseMaskKey = "UseMask";
+constexpr StringLiteralType k_IncludedDataArrayPathsKey = "IncludedDataArrayPaths";
+constexpr StringLiteralType k_SelectedDataContainerNameKey = "SelectedDataContainerName";
+constexpr StringLiteralType k_VertexDataContainerNameKey = "VertexDataContainerName";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_UseMaskKey = "UseMask";
 } // namespace simpl
 } // namespace
 
@@ -213,16 +213,16 @@ Result<Arguments> ExtractVertexGeometryFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IncludedDataArrayPathsKey, k_IncludedDataArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedDataContainerNameKey, k_InputGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_VertexGeometryPath_Key));
-  Result<> useMaskResult = SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IncludedDataArrayPathsKey, k_IncludedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedDataContainerNameKey, k_InputGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_VertexGeometryPath_Key));
+  Result<> useMaskResult = simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key);
   if(useMaskResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(useMaskResult));
   }
-  Result<> maskResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key);
+  Result<> maskResult = simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key);
   if(maskResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid

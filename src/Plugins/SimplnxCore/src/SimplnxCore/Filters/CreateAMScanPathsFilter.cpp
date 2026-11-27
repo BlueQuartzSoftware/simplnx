@@ -54,15 +54,15 @@ Parameters CreateAMScanPathsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insert(std::make_unique<Float32Parameter>(k_HatchSpacing_Key, "Hatch Spacing", "The orthogonal distance between each generated vector.", 0.14f));
-  params.insert(std::make_unique<Float32Parameter>(k_StripeWidth_Key, "Hatch Length", "The length of each vector that is created.", 7.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_RotationAngle, "Hatch Rotation Angle (Degrees)", "The angle in degrees by which each slice's hatches are rotated", 67.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_HatchSpacing_Key, "Hatch Spacing", "The orthogonal distance between each generated vector.", 0.14f));
+  params.insert(std::make_unique<Float32ParameterType>(k_StripeWidth_Key, "Hatch Length", "The length of each vector that is created.", 7.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_RotationAngle, "Hatch Rotation Angle (Degrees)", "The angle in degrees by which each slice's hatches are rotated", 67.0f));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_CADSliceDataContainerPath_Key, "Slice Data Container", "The input edge geometry from which to create the scan paths", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CADSliceIdsArrayPath_Key, "Slice Ids", "Identifies the slice to which each edge belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CADRegionIdsArrayPath_Key, "Region Ids", "Identifies the region to which each edge belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Objects"});
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_HatchDataContainerPath_Key, "Scan Vector Geometry", "The created edge geometry representing the scan paths", DataPath({"ScanVectorGeometry"})));
@@ -84,7 +84,7 @@ IFilter::VersionType CreateAMScanPathsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateAMScanPathsFilter::clone() const
+IFilter::UniquePointerType CreateAMScanPathsFilter::clone() const
 {
   return std::make_unique<CreateAMScanPathsFilter>();
 }
@@ -151,15 +151,15 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_StripeWidth_Key = "StripeWidth";
-constexpr StringLiteral k_HatchSpacing_Key = "HatchSpacing";
-constexpr StringLiteral k_CADSliceDataContainerName_Key = "CADSliceDataContainerName";
-constexpr StringLiteral k_CADSliceIdsArrayPath_Key = "CADSliceIdsArrayPath";
-constexpr StringLiteral k_CADRegionIdsArrayPath_Key = "CADRegionIdsArrayPath";
-constexpr StringLiteral k_HatchDataContainerName_Key = "HatchDataContainerName";
-constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-constexpr StringLiteral k_HatchAttributeMatrixName_Key = "HatchAttributeMatrixName";
-constexpr StringLiteral k_RegionIdsArrayName_Key = "RegionIdsArrayName";
+constexpr StringLiteralType k_StripeWidth_Key = "StripeWidth";
+constexpr StringLiteralType k_HatchSpacing_Key = "HatchSpacing";
+constexpr StringLiteralType k_CADSliceDataContainerName_Key = "CADSliceDataContainerName";
+constexpr StringLiteralType k_CADSliceIdsArrayPath_Key = "CADSliceIdsArrayPath";
+constexpr StringLiteralType k_CADRegionIdsArrayPath_Key = "CADRegionIdsArrayPath";
+constexpr StringLiteralType k_HatchDataContainerName_Key = "HatchDataContainerName";
+constexpr StringLiteralType k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_HatchAttributeMatrixName_Key = "HatchAttributeMatrixName";
+constexpr StringLiteralType k_RegionIdsArrayName_Key = "RegionIdsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -170,17 +170,17 @@ Result<Arguments> CreateAMScanPathsFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_StripeWidth_Key, k_StripeWidth_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_HatchSpacing_Key, k_HatchSpacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_StripeWidth_Key, k_StripeWidth_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_HatchSpacing_Key, k_HatchSpacing_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CADSliceDataContainerName_Key, k_CADSliceDataContainerPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CADSliceIdsArrayPath_Key, k_CADSliceIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CADRegionIdsArrayPath_Key, k_CADRegionIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HatchDataContainerName_Key, k_HatchDataContainerPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CADSliceDataContainerName_Key, k_CADSliceDataContainerPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CADSliceIdsArrayPath_Key, k_CADSliceIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CADRegionIdsArrayPath_Key, k_CADRegionIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HatchDataContainerName_Key, k_HatchDataContainerPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName_Key, k_VertexAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RegionIdsArrayName_Key, k_RegionIdsArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName_Key, k_VertexAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RegionIdsArrayName_Key, k_RegionIdsArrayName_Key));
   Result<> conversionResult = MergeResults(std::move(results));
 
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

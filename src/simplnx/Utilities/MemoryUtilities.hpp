@@ -5,7 +5,7 @@
 
 #include <filesystem>
 
-namespace nx::core::Memory
+namespace nx::core::memory_utilities
 {
 
 /**
@@ -54,10 +54,10 @@ dataStorage SIMPLNX_EXPORT GetAvailableStorageOnDrive(const std::filesystem::pat
  */
 struct SIMPLNX_EXPORT SystemMemoryInfo
 {
-  double totalGB = 0.0;     ///< Total installed physical RAM in GB.
-  double usedGB = 0.0;      ///< Currently used physical RAM in GB (total - available).
-  double loadPercent = 0.0; ///< System memory load as a percentage in the range [0, 100].
-  double processGB = 0.0;   ///< Resident memory used by the current process in GB.
+  double total_gb = 0.0;     ///< Total installed physical RAM in GB.
+  double used_gb = 0.0;      ///< Currently used physical RAM in GB (total - available).
+  double load_percent = 0.0; ///< System memory load as a percentage in the range [0, 100].
+  double process_gb = 0.0;   ///< Resident memory used by the current process in GB.
 };
 
 /**
@@ -73,4 +73,4 @@ struct SIMPLNX_EXPORT SystemMemoryInfo
  */
 SIMPLNX_EXPORT SystemMemoryInfo GetSystemMemoryInfo();
 
-} // namespace nx::core::Memory
+} // namespace nx::core::memory_utilities

@@ -4,5 +4,5 @@
 
 namespace nx::core::@PLUGIN_NAME@
 {
-void BindFilters(pybind11::handle scope, const nx::core::NxPybind::Internals& internals);
+void BindFilters(pybind11::handle scope, const nx::core::nx_pybind::Internals& internals);
 } // namespace nx::core

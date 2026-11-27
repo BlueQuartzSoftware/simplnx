@@ -22,7 +22,7 @@ struct SIMPLNXCORE_EXPORT WriteOnScaleTableFileInputValues
   /** @brief Prefix for the table file name. */
   StringParameter::ValueType FilePrefix;
   /** @brief Number of keypoints along the X, Y, and Z axes. */
-  VectorInt32Parameter::ValueType NumKeypoints;
+  VectorInt32ParameterType::ValueType NumKeypoints;
   /** @brief Path to the Image or Rectilinear Grid Geometry. */
   DataPath InputGeometryPath;
   /** @brief Path to the scalar cell feature IDs. */

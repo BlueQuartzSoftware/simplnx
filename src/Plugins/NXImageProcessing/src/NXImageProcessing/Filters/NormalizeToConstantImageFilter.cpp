@@ -75,11 +75,11 @@ Parameters NormalizeToConstantImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_Constant_Key, "Constant", "Set/get the normalization constant.", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Constant_Key, "Constant", "Set/get the normalization constant.", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
@@ -91,7 +91,7 @@ IFilter::VersionType NormalizeToConstantImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer NormalizeToConstantImageFilter::clone() const
+IFilter::UniquePointerType NormalizeToConstantImageFilter::clone() const
 {
   return std::make_unique<NormalizeToConstantImageFilter>();
 }

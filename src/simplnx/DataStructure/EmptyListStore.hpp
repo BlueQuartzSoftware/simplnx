@@ -14,9 +14,9 @@ class EmptyListStore : public AbstractListStore<T>
 {
 public:
   using value_type = T;
-  using parent_type = AbstractListStore<T>;
-  using vector_type = typename parent_type::vector_type;
-  using shared_vector_type = typename parent_type::shared_vector_type;
+  using ParentType = AbstractListStore<T>;
+  using VectorType = typename ParentType::VectorType;
+  using SharedVectorType = typename ParentType::SharedVectorType;
 
   /**
    * @brief Default constructor.
@@ -78,16 +78,16 @@ public:
    * This store validates destinationFormat and does not resolve storage policy itself.
    * Resolve destination policy before this call. Use NeighborList::deepCopy for automatic policy selection.
    */
-  std::unique_ptr<parent_type> deepCopy(const std::string& destinationFormat) const override
+  std::unique_ptr<ParentType> deepCopy(const std::string& destinationFormat) const override
   {
     auto copy = CopyListStore(*this, GetDataType<T>(), destinationFormat);
-    auto* typedCopyPtr = dynamic_cast<parent_type*>(copy.get());
+    auto* typedCopyPtr = dynamic_cast<ParentType*>(copy.get());
     if(typedCopyPtr == nullptr)
     {
       throw std::runtime_error("List store copy returned an incompatible type for format '" + destinationFormat + "'");
     }
     copy.release();
-    return std::unique_ptr<parent_type>(typedCopyPtr);
+    return std::unique_ptr<ParentType>(typedCopyPtr);
   }
 
   /**
@@ -155,7 +155,7 @@ public:
    * @param grainId
    * @return shared_vector_type
    */
-  vector_type getList(int32 /*grainId*/) const override
+  VectorType getList(int32 /*grainId*/) const override
   {
     return {};
   }
@@ -165,7 +165,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type copyOfList(int32 /*grainId*/) const override
+  VectorType copyOfList(int32 /*grainId*/) const override
   {
     return {};
   }
@@ -175,7 +175,7 @@ public:
    * @param grainId
    * @param neighborList
    */
-  void setList(int32 /*grainId*/, const shared_vector_type& /*neighborList*/) override
+  void setList(int32 /*grainId*/, const SharedVectorType& /*neighborList*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set list values");
   }
@@ -185,7 +185,7 @@ public:
    * @param grainId
    * @param neighborList
    */
-  void setList(int32 /*grainId*/, const vector_type& /*neighborList*/) override
+  void setList(int32 /*grainId*/, const VectorType& /*neighborList*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set list values");
   }
@@ -229,7 +229,7 @@ public:
    * @param grainId
    * @return vector_type&
    */
-  vector_type operator[](int32 /*grainId*/) const override
+  VectorType operator[](int32 /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -239,7 +239,7 @@ public:
    * @param grainId
    * @return vector_type&
    */
-  vector_type operator[](usize /*grainId*/) const override
+  VectorType operator[](usize /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -249,7 +249,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type at(int32 /*grainId*/) const override
+  VectorType at(int32 /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -259,7 +259,7 @@ public:
    * @param grainId
    * @return vector_type
    */
-  vector_type at(usize /*grainId*/) const override
+  VectorType at(usize /*grainId*/) const override
   {
     throw std::runtime_error("EmptyListStore cannot get list");
   }
@@ -269,7 +269,7 @@ public:
    * @param lists Vector of shared pointers to vectors (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data
    */
-  void setData(const std::vector<shared_vector_type>& /*lists*/) override
+  void setData(const std::vector<SharedVectorType>& /*lists*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set lists");
   }
@@ -279,7 +279,7 @@ public:
    * @param lists Vector of vectors (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data
    */
-  void setData(const std::vector<vector_type>& /*lists*/) override
+  void setData(const std::vector<VectorType>& /*lists*/) override
   {
     throw std::runtime_error("EmptyListStore cannot set lists");
   }
@@ -288,7 +288,7 @@ public:
    * @brief Reads tuple dimensions from an HDF5 dataset and resizes the list store accordingly.
    * @param datasetReader The HDF5 DatasetIO to read from
    */
-  void readHdf5(const HDF5::DatasetIO& datasetReader) override
+  void readHdf5(const hdf5::DatasetIO& datasetReader) override
   {
     auto tupleDimsResult = datasetReader.readVectorAttribute<usize>("TupleDimensions");
     if(tupleDimsResult.invalid())
@@ -307,7 +307,7 @@ public:
    * @param datasetReader The HDF5 DatasetIO (unused)
    * @throw std::runtime_error Always throws because EmptyListStore has no data to write
    */
-  void writeHdf5(HDF5::DatasetIO& /*datasetReader*/) override
+  void writeHdf5(hdf5::DatasetIO& /*datasetReader*/) override
   {
     throw std::runtime_error("EmptyListStore cannot write to HDF5");
   }

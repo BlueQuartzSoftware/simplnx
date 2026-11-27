@@ -82,16 +82,16 @@ Parameters ComputeMisorientationsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath1_Key, "Euler Angles 1", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath2_Key, "Euler Angles 2", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_PhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data"});
@@ -111,7 +111,7 @@ IFilter::VersionType ComputeMisorientationsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeMisorientationsFilter::clone() const
+IFilter::UniquePointerType ComputeMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeMisorientationsFilter>();
 }

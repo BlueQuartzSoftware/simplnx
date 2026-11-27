@@ -24,16 +24,16 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteralType k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
-constexpr StringLiteral k_PoleFigureSigma3("GBCD Pole Figure [Sigma 3]");
-constexpr StringLiteral k_PoleFigureSigma9("GBCD Pole Figure [Sigma 9]");
-constexpr StringLiteral k_PoleFigureSigma11("GBCD Pole Figure [Sigma 11]");
-constexpr StringLiteral k_ExemplarCellData("Cell Data");
-constexpr StringLiteral k_Sigma3("Sigma 3");
-constexpr StringLiteral k_Sigma9("Sigma 9");
-constexpr StringLiteral k_Sigma11("Sigma 11");
-constexpr StringLiteral k_MRD("MRD");
+constexpr StringLiteralType k_PoleFigureSigma3("GBCD Pole Figure [Sigma 3]");
+constexpr StringLiteralType k_PoleFigureSigma9("GBCD Pole Figure [Sigma 9]");
+constexpr StringLiteralType k_PoleFigureSigma11("GBCD Pole Figure [Sigma 11]");
+constexpr StringLiteralType k_ExemplarCellData("Cell Data");
+constexpr StringLiteralType k_Sigma3("Sigma 3");
+constexpr StringLiteralType k_Sigma9("Sigma 9");
+constexpr StringLiteralType k_Sigma11("Sigma 11");
+constexpr StringLiteralType k_MRD("MRD");
 
 constexpr int32 k_Dimension = 300;
 
@@ -80,7 +80,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(k_Dimension));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
@@ -110,7 +110,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({39.0F, 1.0F, 1.0F, 0.0F}));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(k_Dimension));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
@@ -140,7 +140,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({50.5F, 1.0F, 1.0F, 0.0F}));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(k_Dimension));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));

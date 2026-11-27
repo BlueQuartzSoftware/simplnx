@@ -139,7 +139,7 @@ Result<> DeleteDataAction::apply(DataStructure& dataStructure, Mode mode) const
   return {};
 }
 
-IDataAction::UniquePointer DeleteDataAction::clone() const
+IDataAction::UniquePointerType DeleteDataAction::clone() const
 {
   return std::make_unique<DeleteDataAction>(m_Path);
 }

@@ -127,7 +127,7 @@ Parameters CropEdgeGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after cropping", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeFeatureIdsPath_Key, "Edge Feature Ids", "Specifies to which feature each edge belongs.", DataPath({"Edge Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Edge Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedEdgeGeometryPath_Key, "Created Edge Geometry", "The DataPath to store the created Edge Geometry", DataPath()));
@@ -148,7 +148,7 @@ IFilter::VersionType CropEdgeGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CropEdgeGeometryFilter::clone() const
+IFilter::UniquePointerType CropEdgeGeometryFilter::clone() const
 {
   return std::make_unique<CropEdgeGeometryFilter>();
 }

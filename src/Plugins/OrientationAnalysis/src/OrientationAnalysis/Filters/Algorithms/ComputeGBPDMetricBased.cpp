@@ -20,7 +20,7 @@
 #include <cmath>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 namespace fs = std::filesystem;
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
@@ -218,7 +218,7 @@ public:
 
         for(int32 j = 0; j < m_NSym; j++)
         {
-          const Matrix3dR sym = m_OrientationOps[m_Crystal]->getMatSymOpD(j).toEigenMatrix(); //    EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
+          const Matrix3dRType sym = m_OrientationOps[m_Crystal]->getMatSymOpD(j).toEigenMatrix(); //    EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
 
           Eigen::Vector3d symNormal1 = sym * normal1;
           Eigen::Vector3d symNormal2 = sym * normal2;
@@ -685,7 +685,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
     const Eigen::Vector3d point = {samplePtsX.at(ptIdx), samplePtsY.at(ptIdx), samplePtsZ.at(ptIdx)};
-    Matrix3dR sym;
+    Matrix3dRType sym;
     sym.fill(0.0);
 
     for(int32 j = 0; j < nSym; j++)

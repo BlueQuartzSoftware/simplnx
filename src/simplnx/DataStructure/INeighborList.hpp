@@ -8,7 +8,7 @@ namespace nx::core
 {
 namespace NeighborListConstants
 {
-inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
+inline constexpr StringLiteralType k_TypeName = "NeighborList<T>";
 }
 
 /**
@@ -17,7 +17,7 @@ inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
 class SIMPLNX_EXPORT INeighborList : public IArray
 {
 public:
-  static constexpr StringLiteral k_TypeName = "INeighborList";
+  static constexpr StringLiteralType k_TypeName = "INeighborList";
 
   ~INeighborList() noexcept override;
 

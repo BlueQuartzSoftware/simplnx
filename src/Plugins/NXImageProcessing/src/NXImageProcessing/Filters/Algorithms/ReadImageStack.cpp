@@ -232,7 +232,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
   const VectorFloat32Parameter::ValueType& luminosityValues = inputValues.colorWeights;
   const ChoicesParameter::ValueType resample = inputValues.resampleImagesChoice;
   const float32 scalingFactor = inputValues.scaling;
-  const VectorUInt64Parameter::ValueType& exactDims = inputValues.exactXYDimensions;
+  const VectorUInt64ParameterType::ValueType& exactDims = inputValues.exactXYDimensions;
   const bool changeDataType = inputValues.changeDataType;
   const DataType destType = inputValues.imageDataType;
   const CropGeometryParameter::ValueType& croppingOptions = inputValues.croppingOptions;

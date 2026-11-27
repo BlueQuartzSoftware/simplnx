@@ -73,7 +73,7 @@ bool DataMap::remove(IdType identifier)
   return found;
 }
 
-bool DataMap::erase(const Iterator& iter)
+bool DataMap::erase(const iterator& iter)
 {
   if(iter == end())
   {
@@ -231,17 +231,17 @@ const DataObject& DataMap::at(const std::string& name) const
   return *objectPtr;
 }
 
-DataMap::Iterator DataMap::find(IdType identifier)
+DataMap::iterator DataMap::find(IdType identifier)
 {
   return m_Map.find(identifier);
 }
 
-DataMap::ConstIterator DataMap::find(IdType identifier) const
+DataMap::const_iterator DataMap::find(IdType identifier) const
 {
   return m_Map.find(identifier);
 }
 
-DataMap::Iterator DataMap::find(const std::string& name)
+DataMap::iterator DataMap::find(const std::string& name)
 {
   for(auto iter = begin(); iter != end(); iter++)
   {
@@ -253,7 +253,7 @@ DataMap::Iterator DataMap::find(const std::string& name)
   return end();
 }
 
-DataMap::ConstIterator DataMap::find(const std::string& name) const
+DataMap::const_iterator DataMap::find(const std::string& name) const
 {
   for(auto iter = begin(); iter != end(); iter++)
   {
@@ -286,19 +286,19 @@ void DataMap::setDataStructure(DataStructure* dataStr)
   }
 }
 
-DataMap::Iterator DataMap::begin()
+DataMap::iterator DataMap::begin()
 {
   return m_Map.begin();
 }
-DataMap::Iterator DataMap::end()
+DataMap::iterator DataMap::end()
 {
   return m_Map.end();
 }
-DataMap::ConstIterator DataMap::begin() const
+DataMap::const_iterator DataMap::begin() const
 {
   return m_Map.begin();
 }
-DataMap::ConstIterator DataMap::end() const
+DataMap::const_iterator DataMap::end() const
 {
   return m_Map.end();
 }

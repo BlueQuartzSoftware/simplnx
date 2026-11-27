@@ -216,7 +216,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Computed-expecte
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(KernelType::Ball)));
-  args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{2, 2, 2}));
+  args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{2, 2, 2}));
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(static_cast<float64>(k_ObjectValue)));
   args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_BackgroundValue)));
 
@@ -278,7 +278,7 @@ TEST_CASE("NXImageProcessing::ErodeObjectMorphologyImageFilter: Preflight cast-g
     args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(KernelType::Ball)));
-    args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+    args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
     args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(objectValue));
     args.insertOrAssign(ErodeObjectMorphologyImageFilter::k_BackgroundValue_Key, std::make_any<float64>(backgroundValue));
     return args;

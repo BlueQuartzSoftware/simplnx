@@ -51,10 +51,10 @@ Parameters ComputeTriangleGeomCentroidsFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                                     "The DataPath to the AttributeMatrix that holds feature data for the faces",
@@ -74,7 +74,7 @@ IFilter::VersionType ComputeTriangleGeomCentroidsFilter::parametersVersion() con
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeTriangleGeomCentroidsFilter::clone() const
+IFilter::UniquePointerType ComputeTriangleGeomCentroidsFilter::clone() const
 {
   return std::make_unique<ComputeTriangleGeomCentroidsFilter>();
 }

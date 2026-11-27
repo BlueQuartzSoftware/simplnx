@@ -24,14 +24,14 @@ public:
   ComputeEuclideanDistMapFilter& operator=(ComputeEuclideanDistMapFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CalcManhattanDist_Key = "calc_manhattan_dist";
-  static constexpr StringLiteral k_DoBoundaries_Key = "do_boundaries";
-  static constexpr StringLiteral k_DoTripleLines_Key = "do_triple_lines";
-  static constexpr StringLiteral k_DoQuadPoints_Key = "do_quad_points";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_GBDistancesArrayName_Key = "g_bdistances_array_name";
-  static constexpr StringLiteral k_TJDistancesArrayName_Key = "t_jdistances_array_name";
-  static constexpr StringLiteral k_QPDistancesArrayName_Key = "q_pdistances_array_name";
+  static constexpr StringLiteralType k_CalcManhattanDist_Key = "calc_manhattan_dist";
+  static constexpr StringLiteralType k_DoBoundaries_Key = "do_boundaries";
+  static constexpr StringLiteralType k_DoTripleLines_Key = "do_triple_lines";
+  static constexpr StringLiteralType k_DoQuadPoints_Key = "do_quad_points";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_GBDistancesArrayName_Key = "g_bdistances_array_name";
+  static constexpr StringLiteralType k_TJDistancesArrayName_Key = "t_jdistances_array_name";
+  static constexpr StringLiteralType k_QPDistancesArrayName_Key = "q_pdistances_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -40,7 +40,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -90,7 +90,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

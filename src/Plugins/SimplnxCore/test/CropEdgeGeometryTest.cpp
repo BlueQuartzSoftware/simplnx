@@ -23,16 +23,16 @@ using namespace nx::core;
 
 namespace
 {
-inline constexpr StringLiteral k_EdgeGeometry("Edge Geometry");
-inline constexpr StringLiteral k_CroppedEdgeGeometry("Cropped Edge Geometry");
-inline constexpr StringLiteral k_VerticesName("Vertices");
-inline constexpr StringLiteral k_EdgesName("Edges");
-inline constexpr StringLiteral k_UInt32ArrayName("UInt32Array");
-inline constexpr StringLiteral k_Int32ArrayName("Int32Array");
-inline constexpr StringLiteral k_Int64ArrayName("Int64Array");
+inline constexpr StringLiteralType k_EdgeGeometry("Edge Geometry");
+inline constexpr StringLiteralType k_CroppedEdgeGeometry("Cropped Edge Geometry");
+inline constexpr StringLiteralType k_VerticesName("Vertices");
+inline constexpr StringLiteralType k_EdgesName("Edges");
+inline constexpr StringLiteralType k_UInt32ArrayName("UInt32Array");
+inline constexpr StringLiteralType k_Int32ArrayName("Int32Array");
+inline constexpr StringLiteralType k_Int64ArrayName("Int64Array");
 const DataPath k_UInt32ArrayPath = DataPath({k_EdgeGeometry}).createChildPath(Constants::k_VertexData).createChildPath(k_UInt32ArrayName);
-const DataPath k_Int32ArrayPath = DataPath({k_EdgeGeometry}).createChildPath(Constants::k_Edge_Data).createChildPath(k_Int32ArrayName);
-const DataPath k_Int64ArrayPath = DataPath({k_EdgeGeometry}).createChildPath(Constants::k_Edge_Data).createChildPath(k_Int64ArrayName);
+const DataPath k_Int32ArrayPath = DataPath({k_EdgeGeometry}).createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(k_Int32ArrayName);
+const DataPath k_Int64ArrayPath = DataPath({k_EdgeGeometry}).createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(k_Int64ArrayName);
 
 DataStructure CreateDataStructure()
 {
@@ -70,7 +70,7 @@ DataStructure CreateDataStructure()
   auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, {4}, edgeGeomPtr->getId());
   edgeGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
 
-  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Edge_Data, {4}, edgeGeomPtr->getId());
+  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_EdgeDataWithSpaces, {4}, edgeGeomPtr->getId());
   edgeGeomPtr->setEdgeAttributeMatrix(*edgeDataPtr);
 
   UInt32Array* uint32ArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, "UInt32Array", {4}, {1}, vertexDataPtr->getId());
@@ -121,7 +121,7 @@ DataStructure CreateSharedOutsideVertexData(bool cropCase = false)
   }
   geomPtr->setEdgeList(*edgesPtr);
   auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_VertexData, {3}, geomPtr->getId());
-  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Edge_Data, {2}, geomPtr->getId());
+  auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_EdgeDataWithSpaces, {2}, geomPtr->getId());
   REQUIRE(vertexDataPtr != nullptr);
   REQUIRE(edgeDataPtr != nullptr);
   geomPtr->setVertexAttributeMatrix(*vertexDataPtr);
@@ -130,7 +130,7 @@ DataStructure CreateSharedOutsideVertexData(bool cropCase = false)
       Int32Array::Create(dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_VertexData).createChildPath("Values"), {3}, {1}),
                          vertexDataPtr->getId());
   auto* edgeValuesPtr = Int32Array::Create(
-      dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_Edge_Data).createChildPath("Values"), {2}, {1}), edgeDataPtr->getId());
+      dataStructure, "Values", DataStoreUtilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath("Values"), {2}, {1}), edgeDataPtr->getId());
   REQUIRE(vertexValuesPtr != nullptr);
   REQUIRE(edgeValuesPtr != nullptr);
   (*vertexValuesPtr)[0] = 7;
@@ -674,7 +674,7 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: Shared outside vertex gets a clip poin
     REQUIRE(edges[i] == expectedEdges[i]);
   }
   const auto vertexPath = outputPath.createChildPath(Constants::k_VertexData).createChildPath("Values");
-  const auto edgePath = outputPath.createChildPath(Constants::k_Edge_Data).createChildPath("Values");
+  const auto edgePath = outputPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath("Values");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(vertexPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(edgePath));
   const auto& vertexValues = dataStructure.getDataRefAs<Int32Array>(vertexPath);
@@ -714,7 +714,7 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: String and NeighborList data are cropp
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const DataPath outputPath({k_CroppedEdgeGeometry});
   const auto stringsPath = outputPath.createChildPath(Constants::k_VertexData).createChildPath("Strings");
-  const auto neighborsPath = outputPath.createChildPath(Constants::k_Edge_Data).createChildPath("Neighbors");
+  const auto neighborsPath = outputPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath("Neighbors");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(stringsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(neighborsPath));
   const auto& outputStrings = dataStructure.getDataRefAs<StringArray>(stringsPath);

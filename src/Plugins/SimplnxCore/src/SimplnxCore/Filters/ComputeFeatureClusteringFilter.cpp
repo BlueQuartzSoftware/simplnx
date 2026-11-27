@@ -73,25 +73,25 @@ Parameters ComputeFeatureClusteringFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins for RDF", "Number of bins to split the RDF", 1));
-  params.insert(std::make_unique<Int32Parameter>(k_PhaseNumber_Key, "Phase Index", "Ensemble number for which to calculate the RDF and clustering list", 1));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumberOfBins_Key, "Number of Bins for RDF", "Number of bins to split the RDF", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_PhaseNumber_Key, "Phase Index", "Ensemble number for which to calculate the RDF and clustering list", 1));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveBiasedFeatures_Key, "Remove Biased Features", "Remove the biased features", false));
 
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_SetRandomSeed_Key, "Set Random Seed", "When checked, allows the user to set the seed value used to randomly generate the points in the RDF", true));
-  params.insert(std::make_unique<UInt64Parameter>(k_SeedValue_Key, "Seed Value", "The seed value used to randomly generate the points in the RDF", std::mt19937::default_seed));
+  params.insert(std::make_unique<UInt64ParameterType>(k_SeedValue_Key, "Seed Value", "The seed value used to randomly generate the points in the RDF", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "ComputeFeatureClustering SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "X, Y, Z coordinates of Feature center of mass", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_BiasedFeaturesArrayPath_Key, "Biased Features",
                                                           "Specifies which features are biased and therefore should be removed if the Remove Biased Features option is on; True values removed",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
                                                                     "The path to the cell ensemble attribute matrix where the RDF and RDF min and max distance arrays will be stored", DataPath{}));
@@ -115,7 +115,7 @@ IFilter::VersionType ComputeFeatureClusteringFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeatureClusteringFilter::clone() const
+IFilter::UniquePointerType ComputeFeatureClusteringFilter::clone() const
 {
   return std::make_unique<ComputeFeatureClusteringFilter>();
 }
@@ -219,19 +219,19 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_NumberOfBinsKey = "NumberOfBins";
-constexpr StringLiteral k_PhaseNumberKey = "PhaseNumber";
-constexpr StringLiteral k_RemoveBiasedFeaturesKey = "RemoveBiasedFeatures";
-constexpr StringLiteral k_UseRandomSeedKey = "UseRandomSeed";
-constexpr StringLiteral k_RandomSeedValueKey = "RandomSeedValue";
-constexpr StringLiteral k_EquivalentDiametersArrayPathKey = "EquivalentDiametersArrayPath";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
-constexpr StringLiteral k_BiasedFeaturesArrayPathKey = "BiasedFeaturesArrayPath";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-constexpr StringLiteral k_ClusteringListArrayNameKey = "ClusteringListArrayName";
-constexpr StringLiteral k_NewEnsembleArrayArrayNameKey = "NewEnsembleArrayArrayName";
-constexpr StringLiteral k_MaxMinArrayNameKey = "MaxMinArrayName";
+constexpr StringLiteralType k_NumberOfBinsKey = "NumberOfBins";
+constexpr StringLiteralType k_PhaseNumberKey = "PhaseNumber";
+constexpr StringLiteralType k_RemoveBiasedFeaturesKey = "RemoveBiasedFeatures";
+constexpr StringLiteralType k_UseRandomSeedKey = "UseRandomSeed";
+constexpr StringLiteralType k_RandomSeedValueKey = "RandomSeedValue";
+constexpr StringLiteralType k_EquivalentDiametersArrayPathKey = "EquivalentDiametersArrayPath";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_CentroidsArrayPathKey = "CentroidsArrayPath";
+constexpr StringLiteralType k_BiasedFeaturesArrayPathKey = "BiasedFeaturesArrayPath";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_ClusteringListArrayNameKey = "ClusteringListArrayName";
+constexpr StringLiteralType k_NewEnsembleArrayArrayNameKey = "NewEnsembleArrayArrayName";
+constexpr StringLiteralType k_MaxMinArrayNameKey = "MaxMinArrayName";
 } // namespace simpl
 } // namespace
 
@@ -241,31 +241,31 @@ Result<Arguments> ComputeFeatureClusteringFilter::FromSIMPLJson(const nlohmann::
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfBinsKey, k_NumberOfBins_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseNumberKey, k_PhaseNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RemoveBiasedFeaturesKey, k_RemoveBiasedFeatures_Key));
-  Result<> useSeedResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_SetRandomSeed_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfBinsKey, k_NumberOfBins_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseNumberKey, k_PhaseNumber_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RemoveBiasedFeaturesKey, k_RemoveBiasedFeatures_Key));
+  Result<> useSeedResult = simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_SetRandomSeed_Key);
   if(useSeedResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(useSeedResult));
   }
-  Result<> seedResult = SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key);
+  Result<> seedResult = simpl_conversion::ConvertParameter<simpl_conversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key);
   if(seedResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(seedResult));
   }
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_BiasedFeaturesArrayPathKey, k_BiasedFeaturesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey,
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_BiasedFeaturesArrayPathKey, k_BiasedFeaturesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey,
                                                                                                                          k_CellEnsembleAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ClusteringListArrayNameKey, k_ClusteringListArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewEnsembleArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaxMinArrayNameKey, k_MaxMinArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ClusteringListArrayNameKey, k_ClusteringListArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewEnsembleArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaxMinArrayNameKey, k_MaxMinArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

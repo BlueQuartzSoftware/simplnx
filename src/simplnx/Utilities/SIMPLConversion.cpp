@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 
-namespace nx::core::SIMPLConversion
+namespace nx::core::simpl_conversion
 {
 /*
 "Attribute Matrix Name": "AttributeMatrix",
@@ -12,10 +12,10 @@ namespace nx::core::SIMPLConversion
 
 namespace
 {
-constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
-constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
-constexpr StringLiteral k_DataArrayNameKey = "Data Array Name";
-constexpr StringLiteral k_LinkedDataArrayNameKey = "OutputArrayName";
+constexpr StringLiteralType k_DataContainerNameKey = "Data Container Name";
+constexpr StringLiteralType k_AttributeMatrixNameKey = "Attribute Matrix Name";
+constexpr StringLiteralType k_DataArrayNameKey = "Data Array Name";
+constexpr StringLiteralType k_LinkedDataArrayNameKey = "OutputArrayName";
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -147,4 +147,4 @@ Result<std::vector<std::string>> ConvertDataTypeStrings(const std::vector<std::s
   }
   return {dataTypeStrings};
 }
-} // namespace nx::core::SIMPLConversion
+} // namespace nx::core::simpl_conversion

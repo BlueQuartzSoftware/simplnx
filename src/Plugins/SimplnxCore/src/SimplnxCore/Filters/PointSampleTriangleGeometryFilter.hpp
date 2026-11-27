@@ -26,18 +26,18 @@ public:
   // Parameter Keys
   // static constexpr StringLiteral k_VertexParentGroup_Key = "vertex_geometry_parent_group";
   // static constexpr StringLiteral k_SamplesNumberType_Key = "samples_number_type";
-  static constexpr StringLiteral k_NumberOfSamples_Key = "number_of_samples";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_TriangleGeometry_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_NumberOfSamples_Key = "number_of_samples";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_TriangleGeometry_Key = "input_triangle_geometry_path";
   // static constexpr StringLiteral k_ParentGeometry_Key = "parent_geometry";
-  static constexpr StringLiteral k_TriangleAreasArrayPath_Key = "triangle_areas_array_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
-  static constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
-  static constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
-  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteralType k_TriangleAreasArrayPath_Key = "triangle_areas_array_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_VertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteralType k_VertexDataGroupName_Key = "vertex_data_group_name";
+  static constexpr StringLiteralType k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteralType k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteralType k_SeedArrayName_Key = "seed_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -94,7 +94,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

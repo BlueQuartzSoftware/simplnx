@@ -32,7 +32,7 @@ MoveDataAction::~MoveDataAction() noexcept = default;
 
 Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "MoveDataAction: ";
+  static constexpr StringLiteralType k_Prefix = "MoveDataAction: ";
   auto* dataObjectPtr = dataStructure.getData(m_Path);
   if(dataObjectPtr == nullptr)
   {
@@ -91,7 +91,7 @@ Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode /*mode*/) cons
   return {};
 }
 
-IDataAction::UniquePointer MoveDataAction::clone() const
+IDataAction::UniquePointerType MoveDataAction::clone() const
 {
   return std::make_unique<MoveDataAction>(m_Path, m_NewParentPath);
 }

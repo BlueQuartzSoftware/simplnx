@@ -54,7 +54,7 @@ Parameters CombineTransformationMatricesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -70,7 +70,7 @@ IFilter::VersionType CombineTransformationMatricesFilter::parametersVersion() co
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CombineTransformationMatricesFilter::clone() const
+IFilter::UniquePointerType CombineTransformationMatricesFilter::clone() const
 {
   return std::make_unique<CombineTransformationMatricesFilter>();
 }

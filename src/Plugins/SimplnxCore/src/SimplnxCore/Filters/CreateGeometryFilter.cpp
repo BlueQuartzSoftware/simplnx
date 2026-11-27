@@ -83,7 +83,7 @@ Parameters CreateGeometryFilter::parameters() const
                                                    "Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object.",
                                                    to_underlying(ArrayHandlingType::Move), ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays" /*, "Reference Array"*/}));
 
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
                                                         std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
@@ -91,24 +91,24 @@ Parameters CreateGeometryFilter::parameters() const
       std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_YBoundsPath_Key, "Y Bounds", "The spatial locations of the planes along the y direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ZBoundsPath_Key, "Z Bounds", "The spatial locations of the planes along the z direction", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexListPath_Key, "Shared Vertex List", "The complete path to the data array defining the point coordinates for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeListPath_Key, "Edge List", "The complete path to the data array defining the edges for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleListPath_Key, "Triangle List", "The complete path to the data array defining the (triangular) faces for the geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuadrilateralListPath_Key, "Quadrilateral List", "The complete path to the data array defining the (quad) faces for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TetrahedralListPath_Key, "Tetrahedral List", "The complete path to the data array defining the tetrahedral elements for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_HexahedralListPath_Key, "Hexahedral List", "The complete path to the data array defining the hexahedral elements for the geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{8}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{8}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
@@ -171,7 +171,7 @@ IFilter::VersionType CreateGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateGeometryFilter::clone() const
+IFilter::UniquePointerType CreateGeometryFilter::clone() const
 {
   return std::make_unique<CreateGeometryFilter>();
 }
@@ -210,7 +210,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   // create geometry actions & deferred delete data actions if move arrays option selected
   if(pGeometryType == k_ImageGeometry) // ImageGeom
   {
-    auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
+    auto pDimensionsValue = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
     auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
     auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
     auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
@@ -322,7 +322,7 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.OutputGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   inputValues.WarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   inputValues.ArrayHandlingIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
-  inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
+  inputValues.Dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
   inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.XBoundsPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
@@ -346,41 +346,41 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_GeometryTypeKey = "GeometryType";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_SharedVertexListArrayPath0Key = "SharedVertexListArrayPath0";
-constexpr StringLiteral k_SharedVertexListArrayPath1Key = "SharedVertexListArrayPath1";
-constexpr StringLiteral k_SharedVertexListArrayPath2Key = "SharedVertexListArrayPath2";
-constexpr StringLiteral k_SharedVertexListArrayPath3Key = "SharedVertexListArrayPath3";
-constexpr StringLiteral k_SharedVertexListArrayPath4Key = "SharedVertexListArrayPath4";
-constexpr StringLiteral k_SharedVertexListArrayPath5Key = "SharedVertexListArrayPath5";
-constexpr StringLiteral k_SharedEdgeListArrayPathKey = "SharedEdgeListArrayPath";
-constexpr StringLiteral k_SharedTriListArrayPathKey = "SharedTriListArrayPath";
-constexpr StringLiteral k_SharedQuadListArrayPathKey = "SharedQuadListArrayPath";
-constexpr StringLiteral k_SharedTetListArrayPathKey = "SharedTetListArrayPath";
-constexpr StringLiteral k_SharedHexListArrayPathKey = "SharedHexListArrayPath";
-constexpr StringLiteral k_XBoundsArrayPathKey = "XBoundsArrayPath";
-constexpr StringLiteral k_YBoundsArrayPathKey = "YBoundsArrayPath";
-constexpr StringLiteral k_ZBoundsArrayPathKey = "ZBoundsArrayPath";
-constexpr StringLiteral k_DimensionsKey = "Dimensions";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_ResolutionKey = "Resolution";
-constexpr StringLiteral k_ImageCellAttributeMatrixNameKey = "ImageCellAttributeMatrixName";
-constexpr StringLiteral k_RectGridCellAttributeMatrixNameKey = "RectGridCellAttributeMatrixName";
-constexpr StringLiteral k_VertexAttributeMatrixName0Key = "VertexAttributeMatrixName0";
-constexpr StringLiteral k_VertexAttributeMatrixName1Key = "VertexAttributeMatrixName1";
-constexpr StringLiteral k_VertexAttributeMatrixName2Key = "VertexAttributeMatrixName2";
-constexpr StringLiteral k_VertexAttributeMatrixName3Key = "VertexAttributeMatrixName3";
-constexpr StringLiteral k_VertexAttributeMatrixName4Key = "VertexAttributeMatrixName4";
-constexpr StringLiteral k_VertexAttributeMatrixName5Key = "VertexAttributeMatrixName5";
-constexpr StringLiteral k_EdgeAttributeMatrixNameKey = "EdgeAttributeMatrixName";
-constexpr StringLiteral k_FaceAttributeMatrixName0Key = "FaceAttributeMatrixName0";
-constexpr StringLiteral k_FaceAttributeMatrixName1Key = "FaceAttributeMatrixName1";
-constexpr StringLiteral k_TetCellAttributeMatrixNameKey = "TetCellAttributeMatrixName";
-constexpr StringLiteral k_HexCellAttributeMatrixNameKey = "HexCellAttributeMatrixName";
-constexpr StringLiteral k_TreatWarningsAsErrorsKey = "TreatWarningsAsErrors";
-constexpr StringLiteral k_ArrayHandlingKey = "ArrayHandling";
+constexpr StringLiteralType k_GeometryTypeKey = "GeometryType";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_SharedVertexListArrayPath0Key = "SharedVertexListArrayPath0";
+constexpr StringLiteralType k_SharedVertexListArrayPath1Key = "SharedVertexListArrayPath1";
+constexpr StringLiteralType k_SharedVertexListArrayPath2Key = "SharedVertexListArrayPath2";
+constexpr StringLiteralType k_SharedVertexListArrayPath3Key = "SharedVertexListArrayPath3";
+constexpr StringLiteralType k_SharedVertexListArrayPath4Key = "SharedVertexListArrayPath4";
+constexpr StringLiteralType k_SharedVertexListArrayPath5Key = "SharedVertexListArrayPath5";
+constexpr StringLiteralType k_SharedEdgeListArrayPathKey = "SharedEdgeListArrayPath";
+constexpr StringLiteralType k_SharedTriListArrayPathKey = "SharedTriListArrayPath";
+constexpr StringLiteralType k_SharedQuadListArrayPathKey = "SharedQuadListArrayPath";
+constexpr StringLiteralType k_SharedTetListArrayPathKey = "SharedTetListArrayPath";
+constexpr StringLiteralType k_SharedHexListArrayPathKey = "SharedHexListArrayPath";
+constexpr StringLiteralType k_XBoundsArrayPathKey = "XBoundsArrayPath";
+constexpr StringLiteralType k_YBoundsArrayPathKey = "YBoundsArrayPath";
+constexpr StringLiteralType k_ZBoundsArrayPathKey = "ZBoundsArrayPath";
+constexpr StringLiteralType k_DimensionsKey = "Dimensions";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_ResolutionKey = "Resolution";
+constexpr StringLiteralType k_ImageCellAttributeMatrixNameKey = "ImageCellAttributeMatrixName";
+constexpr StringLiteralType k_RectGridCellAttributeMatrixNameKey = "RectGridCellAttributeMatrixName";
+constexpr StringLiteralType k_VertexAttributeMatrixName0Key = "VertexAttributeMatrixName0";
+constexpr StringLiteralType k_VertexAttributeMatrixName1Key = "VertexAttributeMatrixName1";
+constexpr StringLiteralType k_VertexAttributeMatrixName2Key = "VertexAttributeMatrixName2";
+constexpr StringLiteralType k_VertexAttributeMatrixName3Key = "VertexAttributeMatrixName3";
+constexpr StringLiteralType k_VertexAttributeMatrixName4Key = "VertexAttributeMatrixName4";
+constexpr StringLiteralType k_VertexAttributeMatrixName5Key = "VertexAttributeMatrixName5";
+constexpr StringLiteralType k_EdgeAttributeMatrixNameKey = "EdgeAttributeMatrixName";
+constexpr StringLiteralType k_FaceAttributeMatrixName0Key = "FaceAttributeMatrixName0";
+constexpr StringLiteralType k_FaceAttributeMatrixName1Key = "FaceAttributeMatrixName1";
+constexpr StringLiteralType k_TetCellAttributeMatrixNameKey = "TetCellAttributeMatrixName";
+constexpr StringLiteralType k_HexCellAttributeMatrixNameKey = "HexCellAttributeMatrixName";
+constexpr StringLiteralType k_TreatWarningsAsErrorsKey = "TreatWarningsAsErrors";
+constexpr StringLiteralType k_ArrayHandlingKey = "ArrayHandling";
 } // namespace simpl
 } // namespace
 
@@ -391,7 +391,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
 
   // This section is done this way so that we can get access to the geometry
   // type and convert other parameters based on the geometry type
-  auto result = SIMPLConversion::ChoiceFilterParameterConverter::Convert(json[simpl::k_GeometryTypeKey]);
+  auto result = simpl_conversion::ChoiceFilterParameterConverter::Convert(json[simpl::k_GeometryTypeKey]);
   if(result.valid())
   {
     auto geometryType = static_cast<IGeometry::Type>(result.value());
@@ -399,59 +399,59 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
     {
     case IGeometry::Type::Vertex: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName0Key, k_VertexAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath0Key, k_VertexListPath_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName0Key, k_VertexAttributeMatrixName_Key));
+      results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath0Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Edge: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName1Key, k_VertexAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName1Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath1Key, k_VertexListPath_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath1Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Triangle: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName2Key, k_VertexAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName2Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixName0Key, k_FaceAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath2Key, k_VertexListPath_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixName0Key, k_FaceAttributeMatrixName_Key));
+      results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath2Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Quad: {
 
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName3Key, k_VertexAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName3Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixName1Key, k_FaceAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath3Key, k_VertexListPath_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixName1Key, k_FaceAttributeMatrixName_Key));
+      results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath3Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Tetrahedral: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName4Key, k_VertexAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName4Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_TetCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath4Key, k_VertexListPath_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_TetCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath4Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Hexahedral: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName5Key, k_VertexAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName5Key, k_VertexAttributeMatrixName_Key));
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_HexCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-      results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath5Key, k_VertexListPath_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_HexCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedVertexListArrayPath5Key, k_VertexListPath_Key));
       break;
     }
     case IGeometry::Type::Image: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_ImageCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_ImageCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
       break;
     }
     case IGeometry::Type::RectGrid: {
       results.push_back(
-          SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_RectGridCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+          simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_RectGridCellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
       break;
     }
     default: {
@@ -460,7 +460,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
     }
 
     // Insert the geometry type value into args
-    args.insertOrAssign(k_GeometryType_Key, std::make_any<typename SIMPLConversion::ChoiceFilterParameterConverter::ValueType>(result.value()));
+    args.insertOrAssign(k_GeometryType_Key, std::make_any<typename simpl_conversion::ChoiceFilterParameterConverter::ValueType>(result.value()));
   }
 
   // Push the geometry type conversion result
@@ -469,30 +469,30 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
   // Continue converting all the other parameters...
 
   // Length Unit parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_TreatWarningsAsErrorsKey, k_WarningsAsErrors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ArrayHandlingKey, k_ArrayHandling_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<uint64>>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, simpl::k_OriginKey, k_Origin_Key));
-  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_TreatWarningsAsErrorsKey, k_WarningsAsErrors_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ArrayHandlingKey, k_ArrayHandling_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::Vec3FilterParameterConverter<uint64>>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::Vec3FilterParameterConverter<float32>>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  Result<> spacingResult = simpl_conversion::ConvertParameter<simpl_conversion::Vec3FilterParameterConverter<float32>>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
   {
     // 6.5 key for spacing was named resolution
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {
     results.push_back(std::move(spacingResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_XBoundsArrayPathKey, k_XBoundsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_YBoundsArrayPathKey, k_YBoundsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ZBoundsArrayPathKey, k_ZBoundsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedEdgeListArrayPathKey, k_EdgeListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedTriListArrayPathKey, k_TriangleListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedQuadListArrayPathKey, k_QuadrilateralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedTetListArrayPathKey, k_TetrahedralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedHexListArrayPathKey, k_HexahedralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_GeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixNameKey, k_EdgeAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_XBoundsArrayPathKey, k_XBoundsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_YBoundsArrayPathKey, k_YBoundsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ZBoundsArrayPathKey, k_ZBoundsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedEdgeListArrayPathKey, k_EdgeListPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedTriListArrayPathKey, k_TriangleListPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedQuadListArrayPathKey, k_QuadrilateralListPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedTetListArrayPathKey, k_TetrahedralListPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SharedHexListArrayPathKey, k_HexahedralListPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_GeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixNameFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixNameKey, k_EdgeAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

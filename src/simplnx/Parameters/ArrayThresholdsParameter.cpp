@@ -42,7 +42,7 @@ nlohmann::json ArrayThresholdsParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
   auto thresholds = ArrayThresholdSet::FromJson(json);
   if(thresholds == nullptr)
   {
@@ -51,7 +51,7 @@ Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& js
   return {{std::move(*thresholds)}};
 }
 
-IParameter::UniquePointer ArrayThresholdsParameter::clone() const
+IParameter::UniquePointerType ArrayThresholdsParameter::clone() const
 {
   return std::make_unique<ArrayThresholdsParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -147,19 +147,19 @@ Result<std::any> ArrayThresholdsParameter::resolve(DataStructure& /*dataStructur
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_DataArrayNameKey = "Attribute Array Name";
-constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
-constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
-constexpr StringLiteral k_ComparisonValueKey = "Comparison Value";
-constexpr StringLiteral k_ComparisonOperatorKey = "Comparison Operator";
-constexpr StringLiteral k_ThresholdValuesKey = "Comparison Values";
-constexpr StringLiteral k_UnionOperatorKey = "Union Operator";
-constexpr StringLiteral k_ThresholdsKey = "Thresholds";
-constexpr StringLiteral k_InvertedKey = "Invert Comparison";
+constexpr StringLiteralType k_DataArrayNameKey = "Attribute Array Name";
+constexpr StringLiteralType k_AttributeMatrixNameKey = "Attribute Matrix Name";
+constexpr StringLiteralType k_DataContainerNameKey = "Data Container Name";
+constexpr StringLiteralType k_ComparisonValueKey = "Comparison Value";
+constexpr StringLiteralType k_ComparisonOperatorKey = "Comparison Operator";
+constexpr StringLiteralType k_ThresholdValuesKey = "Comparison Values";
+constexpr StringLiteralType k_UnionOperatorKey = "Union Operator";
+constexpr StringLiteralType k_ThresholdsKey = "Thresholds";
+constexpr StringLiteralType k_InvertedKey = "Invert Comparison";
 } // namespace
 
 Result<ComparisonSelectionFilterParameterConverter::ValueType> ComparisonSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
@@ -302,5 +302,5 @@ Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> Compariso
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

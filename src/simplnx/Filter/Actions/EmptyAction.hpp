@@ -36,7 +36,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<EmptyAction>();
   }

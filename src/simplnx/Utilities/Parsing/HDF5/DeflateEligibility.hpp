@@ -5,7 +5,7 @@
 
 #include <H5Ipublic.h>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -38,4 +38,4 @@ SIMPLNX_EXPORT bool hostIsLittleEndian();
  */
 SIMPLNX_EXPORT bool probeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t memoryTypeId, int32* deflateLevelOut);
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

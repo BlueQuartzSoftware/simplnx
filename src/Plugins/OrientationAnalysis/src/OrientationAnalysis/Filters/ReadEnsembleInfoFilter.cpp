@@ -58,7 +58,7 @@ Parameters ReadEnsembleInfoFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input Ensemble Info File", "The path to the ini formatted input file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".ini", ".txt"}, FileSystemPathParameter::PathType::InputFile));
-  DataGroupSelectionParameter::AllowedTypes allowedGroupTypes = BaseGroup::GetAllGeometryGroupTypes();
+  DataGroupSelectionParameter::AllowedTypeSetType allowedGroupTypes = BaseGroup::GetAllGeometryGroupTypes();
   allowedGroupTypes.insert(BaseGroup::GroupType::DataGroup);
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentGroupPath_Key, "Data Container", "The path to the data object in which the ensemble information will be stored", DataPath{},
                                                               allowedGroupTypes));
@@ -79,7 +79,7 @@ IFilter::VersionType ReadEnsembleInfoFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadEnsembleInfoFilter::clone() const
+IFilter::UniquePointerType ReadEnsembleInfoFilter::clone() const
 {
   return std::make_unique<ReadEnsembleInfoFilter>();
 }
@@ -154,11 +154,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-constexpr StringLiteral k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
-constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
+constexpr StringLiteralType k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
 } // namespace simpl
 } // namespace
 
@@ -168,13 +168,13 @@ Result<Arguments> ReadEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ParentGroupPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ParentGroupPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

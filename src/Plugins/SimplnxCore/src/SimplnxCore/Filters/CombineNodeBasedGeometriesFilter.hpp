@@ -27,8 +27,8 @@ public:
   CombineNodeBasedGeometriesFilter& operator=(CombineNodeBasedGeometriesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputGeometries_Key = "input_geometry_paths";
-  static constexpr StringLiteral k_OutputGeometryPath_Key = "output_geometry_path";
+  static constexpr StringLiteralType k_InputGeometries_Key = "input_geometry_paths";
+  static constexpr StringLiteralType k_OutputGeometryPath_Key = "output_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter as a std::unique_ptr.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

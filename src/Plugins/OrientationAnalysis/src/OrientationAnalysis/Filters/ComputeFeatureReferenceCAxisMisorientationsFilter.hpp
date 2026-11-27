@@ -24,15 +24,15 @@ public:
   ComputeFeatureReferenceCAxisMisorientationsFilter& operator=(ComputeFeatureReferenceCAxisMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static constexpr StringLiteral k_AvgCAxesArrayPath_Key = "avg_c_axes_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayName_Key = "feature_avg_c_axis_misorientations_array_name";
-  static constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayName_Key = "feature_stdev_c_axis_misorientations_array_name";
-  static constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayName_Key = "feature_reference_c_axis_misorientations_array_name";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteralType k_AvgCAxesArrayPath_Key = "avg_c_axes_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_FeatureAvgCAxisMisorientationsArrayName_Key = "feature_avg_c_axis_misorientations_array_name";
+  static constexpr StringLiteralType k_FeatureStdevCAxisMisorientationsArrayName_Key = "feature_stdev_c_axis_misorientations_array_name";
+  static constexpr StringLiteralType k_FeatureReferenceCAxisMisorientationsArrayName_Key = "feature_reference_c_axis_misorientations_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -89,7 +89,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

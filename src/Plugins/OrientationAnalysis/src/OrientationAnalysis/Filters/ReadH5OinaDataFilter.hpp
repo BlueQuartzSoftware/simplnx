@@ -24,15 +24,15 @@ public:
   ReadH5OinaDataFilter& operator=(ReadH5OinaDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
-  static constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_ReadPatternData_Key = "read_pattern_data";
-  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
-  static constexpr StringLiteral k_EdaxHexagonalAlignment_Key = "edax_hexagonal_alignment";
-  static constexpr StringLiteral k_ConvertPhaseToInt32_Key = "convert_phase_to_int32";
+  static constexpr StringLiteralType k_SelectedScanNames_Key = "selected_scan_names";
+  static constexpr StringLiteralType k_ZSpacing_Key = "z_spacing";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_ReadPatternData_Key = "read_pattern_data";
+  static constexpr StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static constexpr StringLiteralType k_EdaxHexagonalAlignment_Key = "edax_hexagonal_alignment";
+  static constexpr StringLiteralType k_ConvertPhaseToInt32_Key = "convert_phase_to_int32";
 
   /**
    * @brief Returns the name of the filter.
@@ -82,7 +82,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

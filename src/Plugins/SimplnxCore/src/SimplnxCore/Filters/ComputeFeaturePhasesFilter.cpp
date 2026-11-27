@@ -52,9 +52,9 @@ Parameters ComputeFeaturePhasesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Element belongs", DataPath({"Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeaturesAttributeMatrixPath_Key, "Feature Attribute Matrix",
                                                                     "The AttributeMatrix that stores the feature data for the input **Feature Ids**.", DataPath({"Cell Feature Data"})));
@@ -72,7 +72,7 @@ IFilter::VersionType ComputeFeaturePhasesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeaturePhasesFilter::clone() const
+IFilter::UniquePointerType ComputeFeaturePhasesFilter::clone() const
 {
   return std::make_unique<ComputeFeaturePhasesFilter>();
 }
@@ -122,9 +122,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -134,12 +134,12 @@ Result<Arguments> ComputeFeaturePhasesFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_CellFeaturesAttributeMatrixPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_CellFeaturesAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

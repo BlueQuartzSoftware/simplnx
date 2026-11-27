@@ -49,7 +49,7 @@ void CloseFaplId(hid_t faplId)
   }
 }
 } // namespace
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 FileIO FileIO::ReadFile(const std::filesystem::path& filepath)
 {
@@ -302,4 +302,4 @@ std::shared_ptr<GroupIO> FileIO::openGroupPtr(const std::string& name) const
   return std::make_shared<GroupIO>(const_cast<FileIO&>(*this), std::move(childGroup), name);
 }
 #endif
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

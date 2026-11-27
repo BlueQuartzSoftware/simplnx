@@ -57,12 +57,12 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Int32Parameter>(k_NumberOfSamples_Key, "Number of Sample Points", "The number of sample points to use", 1000));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumberOfSamples_Key, "Number of Sample Points", "The number of sample points to use", 1000));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
@@ -71,15 +71,15 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometry_Key, "Triangle Geometry to Sample", "The complete path to the triangle Geometry from which to sample", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleAreasArrayPath_Key, "Face Areas", "The complete path to the array specifying the area of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer",
                                                                "The paths to the Face Attribute Arrays to transfer to the created Vertex Geometry where the mask is false, if Use Mask is checked",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
@@ -103,7 +103,7 @@ IFilter::VersionType PointSampleTriangleGeometryFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer PointSampleTriangleGeometryFilter::clone() const
+IFilter::UniquePointerType PointSampleTriangleGeometryFilter::clone() const
 {
   return std::make_unique<PointSampleTriangleGeometryFilter>();
 }
@@ -217,14 +217,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_NumberOfSamplesKey = "NumberOfSamples";
-constexpr StringLiteral k_UseMaskKey = "UseMask";
-constexpr StringLiteral k_TriangleGeometryKey = "TriangleGeometry";
-constexpr StringLiteral k_TriangleAreasArrayPathKey = "TriangleAreasArrayPath";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-constexpr StringLiteral k_VertexGeometryKey = "VertexGeometry";
-constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_NumberOfSamplesKey = "NumberOfSamples";
+constexpr StringLiteralType k_UseMaskKey = "UseMask";
+constexpr StringLiteralType k_TriangleGeometryKey = "TriangleGeometry";
+constexpr StringLiteralType k_TriangleAreasArrayPathKey = "TriangleAreasArrayPath";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_VertexGeometryKey = "VertexGeometry";
+constexpr StringLiteralType k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -235,15 +235,15 @@ Result<Arguments> PointSampleTriangleGeometryFilter::FromSIMPLJson(const nlohman
   std::vector<Result<>> results;
 
   // Samples number type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfSamplesKey, k_NumberOfSamples_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryKey, k_TriangleGeometry_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfSamplesKey, k_NumberOfSamples_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryKey, k_TriangleGeometry_Key));
   // ParentGeometry parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_TriangleAreasArrayPathKey, k_TriangleAreasArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_VertexGeometryKey, k_VertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_TriangleAreasArrayPathKey, k_TriangleAreasArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_VertexGeometryKey, k_VertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

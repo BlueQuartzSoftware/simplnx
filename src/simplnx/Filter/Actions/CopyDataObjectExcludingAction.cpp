@@ -55,7 +55,7 @@ Result<> CopyDataObjectExcludingAction::apply(DataStructure& dataStructure, Mode
   return result;
 }
 
-IDataAction::UniquePointer CopyDataObjectExcludingAction::clone() const
+IDataAction::UniquePointerType CopyDataObjectExcludingAction::clone() const
 {
   return std::make_unique<CopyDataObjectExcludingAction>(path(), newPath(), getAllCreatedPaths(), m_ExcludedPath);
 }

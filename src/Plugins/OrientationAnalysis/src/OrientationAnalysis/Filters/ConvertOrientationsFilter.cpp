@@ -67,7 +67,7 @@ Parameters ConvertOrientationsFilter::parameters() const
                                                    "Specifies to which orientation representation to convert the incoming data. Specified as an enumeration index", 1,
                                                    OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "The name of the data array with the converted orientation representation", ""));
 
   return params;
@@ -80,7 +80,7 @@ IFilter::VersionType ConvertOrientationsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertOrientationsFilter::clone() const
+IFilter::UniquePointerType ConvertOrientationsFilter::clone() const
 {
   return std::make_unique<ConvertOrientationsFilter>();
 }
@@ -153,10 +153,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputTypeKey = "InputType";
-constexpr StringLiteral k_OutputTypeKey = "OutputType";
-constexpr StringLiteral k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
-constexpr StringLiteral k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
+constexpr StringLiteralType k_InputTypeKey = "InputType";
+constexpr StringLiteralType k_OutputTypeKey = "OutputType";
+constexpr StringLiteralType k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
+constexpr StringLiteralType k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
 } // namespace simpl
 } // namespace
 
@@ -166,11 +166,11 @@ Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InputTypeKey, k_InputType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_OutputTypeKey, k_OutputType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InputTypeKey, k_InputType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_OutputTypeKey, k_OutputType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

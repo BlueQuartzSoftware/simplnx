@@ -21,7 +21,7 @@ public:
   struct ValueType
   {
     DataPath m_SelectedGroup;
-    std::string m_Equation;
+    std::string equation;
     AngleUnits m_Units = Radians;
   };
 
@@ -51,7 +51,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -97,7 +97,7 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT CalculatorFilterParameterConverter
 {
@@ -106,7 +106,7 @@ struct SIMPLNX_EXPORT CalculatorFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::CalculatorParameter, "ba2d4937-dbec-5536-8c5c-c0a406e80f77");

@@ -76,7 +76,7 @@ IFilter::VersionType ReadDREAM3DFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadDREAM3DFilter::clone() const
+IFilter::UniquePointerType ReadDREAM3DFilter::clone() const
 {
   return std::make_unique<ReadDREAM3DFilter>();
 }
@@ -93,7 +93,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
   const bool useDefaultGeometryValues = filterArgs.value<bool>(k_UseDefaultGeometryValues_Key);
 
   // Neutral metadata avoids source-policy decisions before the destination action can plan selected arrays.
-  auto dataStructureResult = DREAM3D::Dream3dPreflightCache::Instance().fetchSelectableMetadata(importData.FilePath);
+  auto dataStructureResult = dream3d::Dream3dPreflightCache::Instance().fetchSelectableMetadata(importData.FilePath);
 
   Result<OutputActions> result;
 
@@ -116,8 +116,8 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
       }
     }
     auto allDataPaths = importedDataStructure.getAllDataPaths();
-    selectedPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
-    selectedPaths = DREAM3D::ExpandSelectedPathsToAncestors(selectedPaths);
+    selectedPaths = dream3d::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+    selectedPaths = dream3d::ExpandSelectedPathsToAncestors(selectedPaths);
 
     if(selectedPaths.empty())
     {
@@ -140,7 +140,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
       }
       else
       {
-        auto expandedDataPaths = DREAM3D::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
+        auto expandedDataPaths = dream3d::ExpandSelectedPathsToDescendants(importData.DataPaths, allDataPaths);
 
         // Erase the expandedDataPaths from allPaths to create finalDataPaths
         std::vector<nx::core::DataPath> finalDataPaths = allDataPaths;
@@ -183,7 +183,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& /
     return {.outputActions = std::move(failure)};
   }
 
-  auto boundsValidation = HDF5::RectGridGeomIO::ValidateImportedBounds(importedDataStructure, importData.FilePath, selectedPaths);
+  auto boundsValidation = hdf5::RectGridGeomIO::ValidateImportedBounds(importedDataStructure, importData.FilePath, selectedPaths);
   if(boundsValidation.invalid())
   {
     auto failure = ConvertInvalidResult<OutputActions>(std::move(boundsValidation));
@@ -236,7 +236,7 @@ Result<Arguments> ReadDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::DataContainerReaderFilterParameterConverter>(args, json, k_ImportFileData));
+  results.push_back(simpl_conversion::ConvertTopParameters<simpl_conversion::DataContainerReaderFilterParameterConverter>(args, json, k_ImportFileData));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

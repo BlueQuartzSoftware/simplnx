@@ -10,16 +10,16 @@
 
 #include <array>
 
-namespace nx::core::IntersectionUtilities
+namespace nx::core::intersection_utilities
 {
 inline constexpr float k_Epsilon = 1e-8;
-inline constexpr uint32_t width = 310;
-inline constexpr uint32_t height = 150;
+inline constexpr uint32_t k_Width = 310;
+inline constexpr uint32_t k_Height = 150;
 
 /**
  *@brief Bilinear Interpolator implements function to execute a 2D interpolation
  */
-using Vec3f = nx::core::Vec3<float>;
+using Vec3fType = nx::core::Vec3<float>;
 
 inline float deg2rad(float deg)
 {
@@ -65,13 +65,13 @@ inline std::array<float, 6> GetBoundingBoxAtTri(nx::core::TriangleGeom& tri, siz
  * @param v v part of Barycentric Coord
  * @return
  */
-inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirection, const Vec3f& v0, const Vec3f& v1, const Vec3f& v2, Vec3f& barycentricCoord)
+inline bool RayTriangleIntersect(const Vec3fType& rayOrigin, const Vec3fType& rayDirection, const Vec3fType& v0, const Vec3fType& v1, const Vec3fType& v2, Vec3fType& barycentricCoord)
 {
   // compute plane's normal
-  Vec3f v0v1 = v1 - v0;
-  Vec3f v0v2 = v2 - v0;
+  Vec3fType v0v1 = v1 - v0;
+  Vec3fType v0v2 = v2 - v0;
   // no need to normalize
-  Vec3f n = v0v1.cross(v0v2); // N
+  Vec3fType n = v0v1.cross(v0v2); // N
   float denom = n.dot(n);
 
   // Step 1: finding P
@@ -97,14 +97,14 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   } // the triangle is behind
 
   // compute the intersection point using equation 1
-  Vec3f p = rayOrigin + (rayDirection * barycentricCoord[2]);
+  Vec3fType p = rayOrigin + (rayDirection * barycentricCoord[2]);
 
   // Step 2: inside-outside test
-  Vec3f c; // vector perpendicular to triangle's plane
+  Vec3fType c; // vector perpendicular to triangle's plane
 
   // edge 0
-  Vec3f edge0 = v1 - v0;
-  Vec3f vp0 = p - v0;
+  Vec3fType edge0 = v1 - v0;
+  Vec3fType vp0 = p - v0;
   c = edge0.cross(vp0);
   if(n.dot(c) < 0)
   {
@@ -112,8 +112,8 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   } // P is on the right side
 
   // edge 1
-  Vec3f edge1 = v2 - v1;
-  Vec3f vp1 = p - v1;
+  Vec3fType edge1 = v2 - v1;
+  Vec3fType vp1 = p - v1;
   c = edge1.cross(vp1);
   if((barycentricCoord[0] = n.dot(c)) < 0)
   {
@@ -121,8 +121,8 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   } // P is on the right side
 
   // edge 2
-  Vec3f edge2 = v0 - v2;
-  Vec3f vp2 = p - v2;
+  Vec3fType edge2 = v0 - v2;
+  Vec3fType vp2 = p - v2;
   c = edge2.cross(vp2);
   if((barycentricCoord[1] = n.dot(c)) < 0)
   {
@@ -150,13 +150,13 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
  * @param v part of Barycentric Coord
  * @return If the point is within the triangle
  */
-inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec3f& vert0, const Vec3f& vert1, const Vec3f& vert2, Vec3f& bcoord)
+inline bool RayTriangleIntersect2(const Vec3fType& orig, const Vec3fType& dir, const Vec3fType& vert0, const Vec3fType& vert1, const Vec3fType& vert2, Vec3fType& bcoord)
 {
-  Vec3f edge1;
-  Vec3f edge2;
-  Vec3f tvec;
-  Vec3f pvec;
-  Vec3f qvec;
+  Vec3fType edge1;
+  Vec3fType edge2;
+  Vec3fType tvec;
+  Vec3fType pvec;
+  Vec3fType qvec;
   double det = NAN;
   double invDet = NAN;
 
@@ -230,27 +230,27 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
 template <typename T>
 struct MTPointsCache
 {
-  using PointT = Eigen::Vector3<T>;
+  using PointType = Eigen::Vector3<T>;
 
   // Ray origin
-  PointT origin;
+  PointType origin;
 
   // Triangle Vertices
-  PointT pointA;
-  PointT pointB;
-  PointT pointC;
+  PointType pointA;
+  PointType pointB;
+  PointType pointC;
 
   // Specific edges
   // edge1 = pointB - pointA;
-  PointT edge1;
+  PointType edge1;
   // edge2 = pointC - pointA;
-  PointT edge2;
+  PointType edge2;
 
   // Pre-calculations
   // sDist = origin - pointA;
-  PointT sDist;
+  PointType sDist;
   // sCrossE1 = sDist.cross(edge1);
-  PointT sCrossE1;
+  PointType sCrossE1;
 };
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance (Cached)
@@ -527,4 +527,4 @@ bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T ra
   return true;
 }
 
-} // namespace nx::core::IntersectionUtilities
+} // namespace nx::core::intersection_utilities

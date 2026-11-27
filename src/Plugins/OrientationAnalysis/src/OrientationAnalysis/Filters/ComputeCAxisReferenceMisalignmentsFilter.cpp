@@ -81,19 +81,19 @@ Parameters ComputeCAxisReferenceMisalignmentsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign NaN to tuples where the mask is false or zero", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Boolean or uint8 array. True or nonzero tuples are included.", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Input Quaternions (<x, y, z>, w)",
                                                           "Quaternions in (<x, y, z>, w) order. Select cell Quats, feature AvgQuats, or another quaternion array.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PhasesArrayPath_Key, "Phases", "Ensemble index for each quaternion tuple. Must have the same tuple count as Input Quaternions.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data"});
@@ -110,7 +110,7 @@ IFilter::VersionType ComputeCAxisReferenceMisalignmentsFilter::parametersVersion
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeCAxisReferenceMisalignmentsFilter::clone() const
+IFilter::UniquePointerType ComputeCAxisReferenceMisalignmentsFilter::clone() const
 {
   return std::make_unique<ComputeCAxisReferenceMisalignmentsFilter>();
 }

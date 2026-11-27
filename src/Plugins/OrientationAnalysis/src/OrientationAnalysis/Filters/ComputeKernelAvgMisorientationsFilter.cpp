@@ -50,7 +50,7 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
 
   // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorInt32Parameter>(k_KernelSize_Key, "Kernel Radius", "Size of the kernel in the X, Y and Z directions (in number of Cells)", std::vector<int32>{1, 1, 1},
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_KernelSize_Key, "Kernel Radius", "Size of the kernel in the X, Y and Z directions (in number of Cells)", std::vector<int32>{1, 1, 1},
                                                        std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(
       k_UseFeatureIds_Key, "Use Feature Ids",
@@ -59,17 +59,17 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
       true));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "Path to the target geometry", DataPath({"Data Container"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Cell Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation",
-                                                          DataPath({"Cell Data", "Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          DataPath({"Cell Data", "Quats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_KernelAverageMisorientationsArrayName_Key, "Kernel Average Misorientations",
@@ -88,7 +88,7 @@ IFilter::VersionType ComputeKernelAvgMisorientationsFilter::parametersVersion() 
   // original per-grain behavior; false enables per-voxel KAM per issue #1613)
 }
 
-IFilter::UniquePointer ComputeKernelAvgMisorientationsFilter::clone() const
+IFilter::UniquePointerType ComputeKernelAvgMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeKernelAvgMisorientationsFilter>();
 }
@@ -96,7 +96,7 @@ IFilter::UniquePointer ComputeKernelAvgMisorientationsFilter::clone() const
 IFilter::PreflightResult ComputeKernelAvgMisorientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
                                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
-  auto pKernelSizeValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_KernelSize_Key);
+  auto pKernelSizeValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_KernelSize_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
@@ -132,7 +132,7 @@ Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataS
 {
   ComputeKernelAvgMisorientationsInputValues inputValues;
 
-  inputValues.KernelSize = filterArgs.value<VectorInt32Parameter::ValueType>(k_KernelSize_Key);
+  inputValues.KernelSize = filterArgs.value<VectorInt32ParameterType::ValueType>(k_KernelSize_Key);
   inputValues.UseFeatureIds = filterArgs.value<bool>(k_UseFeatureIds_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -148,12 +148,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_KernelSizeKey = "KernelSize";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_KernelAverageMisorientationsArrayNameKey = "KernelAverageMisorientationsArrayName";
+constexpr StringLiteralType k_KernelSizeKey = "KernelSize";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_QuatsArrayPathKey = "QuatsArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_KernelAverageMisorientationsArrayNameKey = "KernelAverageMisorientationsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -163,15 +163,15 @@ Result<Arguments> ComputeKernelAvgMisorientationsFilter::FromSIMPLJson(const nlo
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_KernelSizeKey, k_KernelSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_KernelSizeKey, k_KernelSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_SelectedImageGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_KernelAverageMisorientationsArrayNameKey,
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_KernelAverageMisorientationsArrayNameKey,
                                                                                                                    k_KernelAverageMisorientationsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

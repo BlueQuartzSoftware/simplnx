@@ -40,7 +40,7 @@ nlohmann::json DataGroupCreationParameter::toJsonImpl(const std::any& value) con
 
 Result<std::any> DataGroupCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'DataGroupCreationParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'DataGroupCreationParameter' JSON Error: ";
 
   if(!json.is_string())
   {
@@ -56,7 +56,7 @@ Result<std::any> DataGroupCreationParameter::fromJsonImpl(const nlohmann::json& 
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer DataGroupCreationParameter::clone() const
+IParameter::UniquePointerType DataGroupCreationParameter::clone() const
 {
   return std::make_unique<DataGroupCreationParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -102,7 +102,7 @@ Result<std::any> DataGroupCreationParameter::resolve(DataStructure& dataStructur
   return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -276,5 +276,5 @@ Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatr
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

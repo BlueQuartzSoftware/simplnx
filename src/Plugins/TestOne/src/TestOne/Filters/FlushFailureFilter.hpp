@@ -13,7 +13,7 @@ namespace nx::core
 class TESTONE_EXPORT FlushFailureFilter : public IFilter
 {
 public:
-  static constexpr StringLiteral k_Mode_Key = "completion_test_mode";
+  static constexpr StringLiteralType k_Mode_Key = "completion_test_mode";
 
   /**
    * @brief Creates an unarmed test fixture filter.
@@ -43,7 +43,7 @@ public:
    * @brief Creates a fresh filter; arguments carry the selected fixture mode.
    * @return A new filter instance.
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

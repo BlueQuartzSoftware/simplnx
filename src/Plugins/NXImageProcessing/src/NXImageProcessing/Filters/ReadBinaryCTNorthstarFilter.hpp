@@ -30,14 +30,14 @@ public:
   ReadBinaryCTNorthstarFilter& operator=(ReadBinaryCTNorthstarFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputHeaderFile_Key = "input_header_file";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
-  static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
-  static constexpr StringLiteral k_ImportSubvolume_Key = "import_subvolume";
-  static constexpr StringLiteral k_StartVoxelCoord_Key = "start_voxel_coord";
-  static constexpr StringLiteral k_EndVoxelCoord_Key = "end_voxel_coord";
+  static constexpr StringLiteralType k_InputHeaderFile_Key = "input_header_file";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_DensityArrayName_Key = "density_array_name";
+  static constexpr StringLiteralType k_LengthUnit_Key = "length_unit_index";
+  static constexpr StringLiteralType k_ImportSubvolume_Key = "import_subvolume";
+  static constexpr StringLiteralType k_StartVoxelCoord_Key = "start_voxel_coord";
+  static constexpr StringLiteralType k_EndVoxelCoord_Key = "end_voxel_coord";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -101,7 +101,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

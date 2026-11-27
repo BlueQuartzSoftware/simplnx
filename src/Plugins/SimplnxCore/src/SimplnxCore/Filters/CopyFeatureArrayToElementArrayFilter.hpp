@@ -27,9 +27,9 @@ public:
   CopyFeatureArrayToElementArrayFilter& operator=(CopyFeatureArrayToElementArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedFeatureArrayPaths_Key = "selected_feature_array_paths";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CreatedArraySuffix_Key = "created_array_suffix";
+  static constexpr StringLiteralType k_SelectedFeatureArrayPaths_Key = "selected_feature_array_paths";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CreatedArraySuffix_Key = "created_array_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -86,7 +86,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

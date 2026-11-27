@@ -107,7 +107,7 @@ IFilter::VersionType CombineStlFilesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CombineStlFilesFilter::clone() const
+IFilter::UniquePointerType CombineStlFilesFilter::clone() const
 {
   return std::make_unique<CombineStlFilesFilter>();
 }
@@ -241,10 +241,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_StlFilesPathKey = "StlFilesPath";
-constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
-constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
-constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
+constexpr StringLiteralType k_StlFilesPathKey = "StlFilesPath";
+constexpr StringLiteralType k_TriangleDataContainerNameKey = "TriangleDataContainerName";
+constexpr StringLiteralType k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteralType k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -254,10 +254,10 @@ Result<Arguments> CombineStlFilesFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_StlFilesPathKey, k_StlFilesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerNameKey, k_TriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_FaceNormalsArrayNameKey, k_FaceNormalsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_StlFilesPathKey, k_StlFilesPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerNameKey, k_TriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FaceNormalsArrayNameKey, k_FaceNormalsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

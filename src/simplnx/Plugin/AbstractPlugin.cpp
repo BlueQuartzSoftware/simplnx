@@ -57,7 +57,7 @@ AbstractPlugin::FilterContainerType::size_type AbstractPlugin::getFilterCount() 
   return m_FilterHandles.size();
 }
 
-IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType identifier) const
+IFilter::UniquePointerType AbstractPlugin::createFilter(FilterHandle::FilterIdType identifier) const
 {
   if(!containsFilterId(identifier))
   {
@@ -67,9 +67,9 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
   return m_InitializerMap.at(identifier)();
 }
 
-void AbstractPlugin::addFilter(const FilterCreationFunc& filterFunc)
+void AbstractPlugin::addFilter(const FilterCreationFuncType& filterFunc)
 {
-  IFilter::UniquePointer filter = filterFunc();
+  IFilter::UniquePointerType filter = filterFunc();
   if(filter == nullptr)
   {
     throw std::runtime_error(fmt::format("Failed to instantiate filter in plugin '{}'", getName()));
@@ -79,7 +79,7 @@ void AbstractPlugin::addFilter(const FilterCreationFunc& filterFunc)
 
   if(m_InitializerMap.contains(uuid))
   {
-    IFilter::UniquePointer existingFilter = m_InitializerMap[uuid]();
+    IFilter::UniquePointerType existingFilter = m_InitializerMap[uuid]();
     throw std::runtime_error(
         fmt::format("Attempted to add filter '{}' with uuid '{}' in plugin '{}', but filter '{}' already exists with that uuid", filter->name(), uuid.str(), getName(), existingFilter->name()));
   }

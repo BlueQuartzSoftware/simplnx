@@ -70,13 +70,13 @@ Parameters ComputeSchmidsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies the Ensemble to which each Feature belongs", DataPath({"Cell Feature Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation",
-                                                          DataPath({"Cell Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32},
+                                                          DataPath({"Cell Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{nx::core::DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
@@ -108,7 +108,7 @@ IFilter::VersionType ComputeSchmidsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeSchmidsFilter::clone() const
+IFilter::UniquePointerType ComputeSchmidsFilter::clone() const
 {
   return std::make_unique<ComputeSchmidsFilter>();
 }
@@ -263,19 +263,19 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_LoadingDirectionKey = "LoadingDirection";
-constexpr StringLiteral k_StoreAngleComponentsKey = "StoreAngleComponents";
-constexpr StringLiteral k_OverrideSystemKey = "OverrideSystem";
-constexpr StringLiteral k_SlipPlaneKey = "SlipPlane";
-constexpr StringLiteral k_SlipDirectionKey = "SlipDirection";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_SchmidsArrayNameKey = "SchmidsArrayName";
-constexpr StringLiteral k_SlipSystemsArrayNameKey = "SlipSystemsArrayName";
-constexpr StringLiteral k_PolesArrayNameKey = "PolesArrayName";
-constexpr StringLiteral k_PhisArrayNameKey = "PhisArrayName";
-constexpr StringLiteral k_LambdasArrayNameKey = "LambdasArrayName";
+constexpr StringLiteralType k_LoadingDirectionKey = "LoadingDirection";
+constexpr StringLiteralType k_StoreAngleComponentsKey = "StoreAngleComponents";
+constexpr StringLiteralType k_OverrideSystemKey = "OverrideSystem";
+constexpr StringLiteralType k_SlipPlaneKey = "SlipPlane";
+constexpr StringLiteralType k_SlipDirectionKey = "SlipDirection";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_SchmidsArrayNameKey = "SchmidsArrayName";
+constexpr StringLiteralType k_SlipSystemsArrayNameKey = "SlipSystemsArrayName";
+constexpr StringLiteralType k_PolesArrayNameKey = "PolesArrayName";
+constexpr StringLiteralType k_PhisArrayNameKey = "PhisArrayName";
+constexpr StringLiteralType k_LambdasArrayNameKey = "LambdasArrayName";
 } // namespace simpl
 } // namespace
 
@@ -285,20 +285,20 @@ Result<Arguments> ComputeSchmidsFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_LoadingDirectionKey, k_LoadingDirection_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StoreAngleComponentsKey, k_StoreAngleComponents_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_OverrideSystemKey, k_OverrideSystem_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SlipPlaneKey, k_SlipPlane_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SlipDirectionKey, k_SlipDirection_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_LoadingDirectionKey, k_LoadingDirection_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StoreAngleComponentsKey, k_StoreAngleComponents_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_OverrideSystemKey, k_OverrideSystem_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SlipPlaneKey, k_SlipPlane_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SlipDirectionKey, k_SlipDirection_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SchmidsArrayNameKey, k_SchmidsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SlipSystemsArrayNameKey, k_SlipSystemsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PolesArrayNameKey, k_PolesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhisArrayNameKey, k_PhisArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LambdasArrayNameKey, k_LambdasArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SchmidsArrayNameKey, k_SchmidsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SlipSystemsArrayNameKey, k_SlipSystemsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PolesArrayNameKey, k_PolesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhisArrayNameKey, k_PhisArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LambdasArrayNameKey, k_LambdasArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

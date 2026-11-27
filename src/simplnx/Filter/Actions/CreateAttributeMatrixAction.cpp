@@ -20,7 +20,7 @@ CreateAttributeMatrixAction::~CreateAttributeMatrixAction() noexcept = default;
 
 Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "CreateAttributeMatrixAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateAttributeMatrixAction: ";
   DataPath createdAttributeMatrixPath = getCreatedPath();
   // Check for empty Geometry DataPath
   if(createdAttributeMatrixPath.empty())
@@ -65,7 +65,7 @@ Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode /
   return {};
 }
 
-IDataAction::UniquePointer CreateAttributeMatrixAction::clone() const
+IDataAction::UniquePointerType CreateAttributeMatrixAction::clone() const
 {
   return std::make_unique<CreateAttributeMatrixAction>(getCreatedPath(), m_TupleShape);
 }

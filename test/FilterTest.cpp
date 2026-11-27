@@ -18,15 +18,15 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_ThrowMessage = "boom";
+constexpr StringLiteralType k_ThrowMessage = "boom";
 constexpr int32 k_ExecuteErrorCode = -9975;
-constexpr StringLiteral k_ExecuteErrorMessage = "the store rejected the write";
+constexpr StringLiteralType k_ExecuteErrorMessage = "the store rejected the write";
 constexpr int32 k_PreflightErrorCode = -9976;
 constexpr int32 k_PreflightWarningCode = -9977;
 constexpr int32 k_DeferredErrorCode = -9978;
 constexpr int32 k_DeferredWarningCode = -9979;
-constexpr StringLiteral k_PreflightValueName = "Preflight detail";
-constexpr StringLiteral k_PreflightValueText = "preserved";
+constexpr StringLiteralType k_PreflightValueName = "Preflight detail";
+constexpr StringLiteralType k_PreflightValueText = "preserved";
 
 /**
  * @struct NonStandardException
@@ -117,7 +117,7 @@ public:
    * @brief Returns a copy of this filter.
    * @return An owning pointer to the copy.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<DerivedT>();
   }
@@ -145,8 +145,8 @@ protected:
 class ThrowingFilter : public BackstopFilterBase<ThrowingFilter>
 {
 public:
-  static constexpr StringLiteral k_FilterName = "ThrowingFilter";
-  static constexpr StringLiteral k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
+  static constexpr StringLiteralType k_FilterName = "ThrowingFilter";
+  static constexpr StringLiteralType k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
 
 protected:
   /**
@@ -170,8 +170,8 @@ protected:
 class NonStandardThrowingFilter : public BackstopFilterBase<NonStandardThrowingFilter>
 {
 public:
-  static constexpr StringLiteral k_FilterName = "NonStandardThrowingFilter";
-  static constexpr StringLiteral k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
+  static constexpr StringLiteralType k_FilterName = "NonStandardThrowingFilter";
+  static constexpr StringLiteralType k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
 
 protected:
   /**
@@ -196,8 +196,8 @@ protected:
 class CancelAfterErrorFilter : public BackstopFilterBase<CancelAfterErrorFilter>
 {
 public:
-  static constexpr StringLiteral k_FilterName = "CancelAfterErrorFilter";
-  static constexpr StringLiteral k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
+  static constexpr StringLiteralType k_FilterName = "CancelAfterErrorFilter";
+  static constexpr StringLiteralType k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
 
   /**
    * @brief Selects the flag executeImpl raises.
@@ -238,8 +238,8 @@ private:
 class CancellingPreflightFilter : public BackstopFilterBase<CancellingPreflightFilter>
 {
 public:
-  static constexpr StringLiteral k_FilterName = "CancellingPreflightFilter";
-  static constexpr StringLiteral k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
+  static constexpr StringLiteralType k_FilterName = "CancellingPreflightFilter";
+  static constexpr StringLiteralType k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
 
   /**
    * @brief Selects the cancellation flag and preflight validity for the test.
@@ -336,7 +336,7 @@ public:
    * @brief Copies the action while sharing the invocation counter.
    * @return A new action that reports through the same counter.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<FailingDeferredAction>(m_InvocationCount);
   }
@@ -377,7 +377,7 @@ public:
    * @brief Copies the action while sharing the invocation counter.
    * @return A new action that reports through the same counter.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<RecordingDeferredAction>(m_InvocationCount);
   }
@@ -393,8 +393,8 @@ private:
 class DeferredFailureFilter : public BackstopFilterBase<DeferredFailureFilter>
 {
 public:
-  static constexpr StringLiteral k_FilterName = "DeferredFailureFilter";
-  static constexpr StringLiteral k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
+  static constexpr StringLiteralType k_FilterName = "DeferredFailureFilter";
+  static constexpr StringLiteralType k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
 
   /**
    * @brief Constructs the filter with internal invocation counters.
@@ -419,7 +419,7 @@ public:
    * @brief Returns a copy that shares the deferred-action invocation counters.
    * @return An owning pointer to the copy.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<DeferredFailureFilter>(m_FailingInvocationCount, m_FollowingInvocationCount);
   }

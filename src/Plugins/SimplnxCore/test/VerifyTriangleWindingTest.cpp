@@ -1099,14 +1099,14 @@ void CheckSupportSave(DataStructure& dataStructure, const DataStructure& baselin
   const auto incidenceLists = ReadSupportLists(dataStructure, false);
   const auto neighborLists = ReadSupportLists(dataStructure, true);
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("VerifyTriangleWindingSupportSave-{}.dream3d", label);
-  const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  const auto save = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(save);
   RequireSupport(dataStructure, false, incidence);
   RequireSupport(dataStructure, true, neighbors);
   CHECK(ReadSupportLists(dataStructure, false) == incidenceLists);
   CHECK(ReadSupportLists(dataStructure, true) == neighborLists);
 
-  auto read = HDF5::DataStructureReader::ReadFile(filePath);
+  auto read = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(read);
   RequireSameMesh(read.value(), baseline);
   RequireSupport(read.value(), false, {});

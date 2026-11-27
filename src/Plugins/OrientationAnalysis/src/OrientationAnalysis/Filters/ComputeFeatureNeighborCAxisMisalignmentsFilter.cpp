@@ -59,14 +59,14 @@ Parameters ComputeFeatureNeighborCAxisMisalignmentsFilter::parameters() const
                                                                  "Whether the average of the C-axis misalignments with the neighboring Features should be stored for each Feature", false));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", DataPath{},
-                                                                 NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
+                                                                 NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Defines the average orientation of the Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each **Feature** belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CAxisMisalignmentListArrayName_Key, "Feature C-Axis Misalignment NeighborList",
                                                           "NeighborList of the C-axis misalignment angles (in degrees) with the contiguous neighboring Features for a given Feature",
@@ -87,7 +87,7 @@ IFilter::VersionType ComputeFeatureNeighborCAxisMisalignmentsFilter::parametersV
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeatureNeighborCAxisMisalignmentsFilter::clone() const
+IFilter::UniquePointerType ComputeFeatureNeighborCAxisMisalignmentsFilter::clone() const
 {
   return std::make_unique<ComputeFeatureNeighborCAxisMisalignmentsFilter>();
 }
@@ -154,13 +154,13 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FindAvgMisalsKey = "FindAvgMisals";
-constexpr StringLiteral k_NeighborListArrayPathKey = "NeighborListArrayPath";
-constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_CAxisMisalignmentListArrayNameKey = "CAxisMisalignmentListArrayName";
-constexpr StringLiteral k_AvgCAxisMisalignmentsArrayNameKey = "AvgCAxisMisalignmentsArrayName";
+constexpr StringLiteralType k_FindAvgMisalsKey = "FindAvgMisals";
+constexpr StringLiteralType k_NeighborListArrayPathKey = "NeighborListArrayPath";
+constexpr StringLiteralType k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_CAxisMisalignmentListArrayNameKey = "CAxisMisalignmentListArrayName";
+constexpr StringLiteralType k_AvgCAxisMisalignmentsArrayNameKey = "AvgCAxisMisalignmentsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -170,14 +170,14 @@ Result<Arguments> ComputeFeatureNeighborCAxisMisalignmentsFilter::FromSIMPLJson(
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindAvgMisalsKey, k_FindAvgMisals_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NeighborListArrayPathKey, k_NeighborListArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindAvgMisalsKey, k_FindAvgMisals_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NeighborListArrayPathKey, k_NeighborListArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_CAxisMisalignmentListArrayNameKey, k_CAxisMisalignmentListArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_AvgCAxisMisalignmentsArrayNameKey, k_AvgCAxisMisalignmentsArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_CAxisMisalignmentListArrayNameKey, k_CAxisMisalignmentListArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_AvgCAxisMisalignmentsArrayNameKey, k_AvgCAxisMisalignmentsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

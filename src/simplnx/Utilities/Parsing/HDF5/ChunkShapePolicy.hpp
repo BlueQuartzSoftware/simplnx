@@ -6,7 +6,7 @@
 
 #include <nonstd/span.hpp>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -95,4 +95,4 @@ SIMPLNX_EXPORT bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize 
  */
 SIMPLNX_EXPORT nx::core::ShapeType computeChunkShape(const nx::core::ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts);
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

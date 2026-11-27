@@ -55,7 +55,7 @@ Parameters LabelTriangleGeometryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Triangle Geometry", "The CAD Geometry to be labeled (TriangleGeom)", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType::Triangle}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedRegionIdsPath_Key, "Region Ids", "The triangle id array for indexing into triangle groupings", DataPath({"Region Ids"})));
@@ -76,7 +76,7 @@ IFilter::VersionType LabelTriangleGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer LabelTriangleGeometryFilter::clone() const
+IFilter::UniquePointerType LabelTriangleGeometryFilter::clone() const
 {
   return std::make_unique<LabelTriangleGeometryFilter>();
 }
@@ -138,11 +138,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CADDataContainerPathKey = "CADDataContainerPath";
-constexpr StringLiteral k_RegionIdArrayNameKey = "RegionIdArrayName";
-constexpr StringLiteral k_RegionIdArrayPathKey = "RegionIdArrayPath";
-constexpr StringLiteral k_TriangleAttributeMatrixNameKey = "TriangleAttributeMatrixName";
-constexpr StringLiteral k_NumTrianglesArrayNameKey = "NumTrianglesArrayName";
+constexpr StringLiteralType k_CADDataContainerPathKey = "CADDataContainerPath";
+constexpr StringLiteralType k_RegionIdArrayNameKey = "RegionIdArrayName";
+constexpr StringLiteralType k_RegionIdArrayPathKey = "RegionIdArrayPath";
+constexpr StringLiteralType k_TriangleAttributeMatrixNameKey = "TriangleAttributeMatrixName";
+constexpr StringLiteralType k_NumTrianglesArrayNameKey = "NumTrianglesArrayName";
 } // namespace simpl
 } // namespace
 
@@ -153,11 +153,11 @@ Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_RegionIdArrayPathKey, k_CreatedRegionIdsPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_RegionIdArrayPathKey, k_CreatedRegionIdsPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -60,14 +60,14 @@ Parameters PointSampleEdgeGeometryFilter::parameters() const
   params.insert(
       std::make_unique<NumberParameter<float32>>(k_ScanVectorSamplingRes_Key, "Sampling Spacing (mm)", "Distance (in millimeters) between successive sample points along each scan vector.", 0.1f));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ScanVectorGeometryPath_Key, "Input Edge Geometry", "Path to the Edge geometry along which sampling will occur.", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_CalculateCumulativeSampleDistance_Key, "Calculate Cumulative Sample Distance",
       "Determines whether or not to calculate the cumulative distance (the distance from the starting endpoint to the sample vertex's location) for each sample vertex on each edge.", true));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Edge Attribute Arrays to Transfer",
                                                                "The paths to the Edge Attribute Arrays to transfer to the created Vertex Geometry", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameter(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_SampledVertexGeometryPath_Key, "Output Vertex Geometry",
@@ -94,7 +94,7 @@ IFilter::VersionType PointSampleEdgeGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer PointSampleEdgeGeometryFilter::clone() const
+IFilter::UniquePointerType PointSampleEdgeGeometryFilter::clone() const
 {
   return std::make_unique<PointSampleEdgeGeometryFilter>();
 }

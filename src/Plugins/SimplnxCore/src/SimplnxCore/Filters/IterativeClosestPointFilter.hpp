@@ -21,11 +21,11 @@ public:
   IterativeClosestPointFilter& operator=(IterativeClosestPointFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_MovingVertexPath_Key = "input_moving_vertex_geometry_path";
-  static constexpr StringLiteral k_TargetVertexPath_Key = "input_target_vertex_geometry_path";
-  static constexpr StringLiteral k_NumIterations_Key = "num_iterations";
-  static constexpr StringLiteral k_ApplyTransformation_Key = "apply_transformation";
-  static constexpr StringLiteral k_TransformArrayPath_Key = "transform_array_path";
+  static constexpr StringLiteralType k_MovingVertexPath_Key = "input_moving_vertex_geometry_path";
+  static constexpr StringLiteralType k_TargetVertexPath_Key = "input_target_vertex_geometry_path";
+  static constexpr StringLiteralType k_NumIterations_Key = "num_iterations";
+  static constexpr StringLiteralType k_ApplyTransformation_Key = "apply_transformation";
+  static constexpr StringLiteralType k_TransformArrayPath_Key = "transform_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +82,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

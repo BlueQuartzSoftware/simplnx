@@ -24,17 +24,17 @@ public:
   ResampleImageGeomFilter& operator=(ResampleImageGeomFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ResamplingMode_Key = "resampling_mode_index";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_Scaling_Key = "scaling";
-  static constexpr StringLiteral k_ExactDimensions_Key = "exact_dimensions";
-  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
-  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
-  static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix_path";
-  static constexpr StringLiteral k_CreatedImageGeometry_Key = "new_data_container_path";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_ResamplingMode_Key = "resampling_mode_index";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_Scaling_Key = "scaling";
+  static constexpr StringLiteralType k_ExactDimensions_Key = "exact_dimensions";
+  static constexpr StringLiteralType k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteralType k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteralType k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_CreatedImageGeometry_Key = "new_data_container_path";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -91,7 +91,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

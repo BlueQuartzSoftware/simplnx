@@ -80,7 +80,7 @@ const DataPath k_FixtureArrayPath({"DataContainer", "CellData", "TestArray"});
 /**
  * @brief Gives the output array name that most restored fixtures set.
  */
-constexpr StringLiteral k_FixtureOutputName = "TestName";
+constexpr StringLiteralType k_FixtureOutputName = "TestName";
 
 /**
  * @brief Builds a FilterList that holds the NXImageProcessing plugin only.

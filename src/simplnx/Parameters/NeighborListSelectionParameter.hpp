@@ -15,10 +15,10 @@ class SIMPLNX_EXPORT NeighborListSelectionParameter : public MutableDataParamete
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypes = std::set<DataType>;
+  using AllowedTypeSetType = std::set<DataType>;
 
   NeighborListSelectionParameter() = delete;
-  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes);
+  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes);
   ~NeighborListSelectionParameter() override = default;
 
   NeighborListSelectionParameter(const NeighborListSelectionParameter&) = delete;
@@ -43,7 +43,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -69,7 +69,7 @@ public:
    * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
    * @return
    */
-  AllowedTypes allowedTypes() const;
+  AllowedTypeSetType allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -113,7 +113,7 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypes m_AllowedTypes;
+  AllowedTypeSetType m_AllowedTypes;
 };
 
 } // namespace nx::core

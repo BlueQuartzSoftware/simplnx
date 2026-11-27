@@ -41,7 +41,7 @@ public:
 
   AcceptedTypes acceptedTypes() const override;
 
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   std::any defaultValue() const override;
 

@@ -72,7 +72,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    static constexpr StringLiteral k_Prefix = "CreateGeometry1DAction: ";
+    static constexpr StringLiteralType k_Prefix = "CreateGeometry1DAction: ";
 
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedEdgeListType = IGeometry::SharedEdgeList;
@@ -220,7 +220,7 @@ public:
     return {};
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     auto action =
         std::unique_ptr<CreateGeometry1DAction>(new CreateGeometry1DAction(getCreatedPath(), m_NumEdges, m_NumVertices, m_VertexDataName, m_EdgeDataName, m_SharedVerticesName, m_SharedEdgesName));

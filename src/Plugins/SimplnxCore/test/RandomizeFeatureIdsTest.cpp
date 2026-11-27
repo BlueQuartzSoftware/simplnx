@@ -23,9 +23,9 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_FeatureIdsArrayName = "Feature Ids Array";
-constexpr StringLiteral k_FeatureAMName = "Feature AM";
-constexpr StringLiteral k_FeatureArrayName = "Feature Array";
+constexpr StringLiteralType k_FeatureIdsArrayName = "Feature Ids Array";
+constexpr StringLiteralType k_FeatureAMName = "Feature AM";
+constexpr StringLiteralType k_FeatureArrayName = "Feature Array";
 
 const DataPath k_FeatureIdsPath = DataPath{{k_FeatureIdsArrayName}};
 const DataPath k_FeatureAMPath = DataPath{{k_FeatureAMName}};

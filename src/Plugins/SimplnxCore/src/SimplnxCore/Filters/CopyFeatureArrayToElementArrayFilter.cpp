@@ -56,11 +56,11 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPaths_Key, "Feature Data to Copy to Cell Data",
                                                                "The DataPath to the feature data that should be copied to the cell level", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_CreatedArraySuffix_Key, "Created Array Suffix", "The suffix to add to the input attribute array name when creating the copied array", ""));
 
@@ -74,7 +74,7 @@ IFilter::VersionType CopyFeatureArrayToElementArrayFilter::parametersVersion() c
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CopyFeatureArrayToElementArrayFilter::clone() const
+IFilter::UniquePointerType CopyFeatureArrayToElementArrayFilter::clone() const
 {
   return std::make_unique<CopyFeatureArrayToElementArrayFilter>();
 }
@@ -139,9 +139,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SelectedFeatureArrayPathKey = "SelectedFeatureArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CreatedArrayNameKey = "CreatedArrayName";
+constexpr StringLiteralType k_SelectedFeatureArrayPathKey = "SelectedFeatureArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CreatedArrayNameKey = "CreatedArrayName";
 } // namespace simpl
 } // namespace
 
@@ -152,8 +152,8 @@ Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nloh
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   // Do not map legacy CreatedArrayName to the suffix.
   // SIMPLNX appends a suffix to the input name, which would produce an incorrect name.
   // Leave the suffix empty so the copied array keeps its input name.

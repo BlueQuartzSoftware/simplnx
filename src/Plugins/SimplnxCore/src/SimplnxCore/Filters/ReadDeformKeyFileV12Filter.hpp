@@ -28,11 +28,11 @@ public:
   ReadDeformKeyFileV12Filter& operator=(ReadDeformKeyFileV12Filter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
+  static constexpr StringLiteralType k_InputFilePath_Key = "input_file_path";
 
-  static constexpr StringLiteral k_QuadGeomPath_Key = "output_quad_geometry_path";
-  static constexpr StringLiteral k_VertexAMName_Key = "vertex_attribute_matrix_name";
-  static constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_QuadGeomPath_Key = "output_quad_geometry_path";
+  static constexpr StringLiteralType k_VertexAMName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteralType k_CellAMName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -89,7 +89,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

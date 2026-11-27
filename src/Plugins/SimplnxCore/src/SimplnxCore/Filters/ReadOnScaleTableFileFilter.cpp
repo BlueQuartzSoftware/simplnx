@@ -108,7 +108,7 @@ IFilter::VersionType ReadOnScaleTableFileFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ReadOnScaleTableFileFilter::clone() const
+IFilter::UniquePointerType ReadOnScaleTableFileFilter::clone() const
 {
   return std::make_unique<ReadOnScaleTableFileFilter>();
 }
@@ -216,14 +216,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_VolumeDataContainerNameKey = "VolumeDataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
-constexpr StringLiteral k_PhaseAttributeMatrixNameKey = "PhaseAttributeMatrixName";
-constexpr StringLiteral k_MaterialNameArrayNameKey = "MaterialNameArrayName";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_VolumeDataContainerNameKey = "VolumeDataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteralType k_PhaseAttributeMatrixNameKey = "PhaseAttributeMatrixName";
+constexpr StringLiteralType k_MaterialNameArrayNameKey = "MaterialNameArrayName";
 } // namespace simpl
 } // namespace
 
@@ -232,14 +232,14 @@ Result<Arguments> ReadOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::json
   Arguments args = ReadOnScaleTableFileFilter().getDefaultArguments();
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VolumeDataContainerNameKey, k_CreatedRectGridGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseAttributeMatrixNameKey, k_PhaseAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaterialNameArrayNameKey, k_MaterialNamesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VolumeDataContainerNameKey, k_CreatedRectGridGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseAttributeMatrixNameKey, k_PhaseAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaterialNameArrayNameKey, k_MaterialNamesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

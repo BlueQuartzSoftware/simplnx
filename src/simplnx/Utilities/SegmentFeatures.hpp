@@ -25,8 +25,8 @@ class AbstractDataStore;
  */
 namespace segment_features
 {
-inline constexpr StringLiteral k_6NeighborString = "Face Neighbors";
-inline constexpr StringLiteral k_26NeighborString = "All Connected Neighbors";
+inline constexpr StringLiteralType k_6NeighborString = "Face Neighbors";
+inline constexpr StringLiteralType k_26NeighborString = "All Connected Neighbors";
 
 inline const ChoicesParameter::Choices k_OperationChoices = {k_6NeighborString, k_26NeighborString};
 

@@ -67,7 +67,7 @@ public:
    * @param filterId Filter UUID to create.
    * @return Owning filter pointer, or nullptr when no factory matches or returns null.
    */
-  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType filterId) const;
+  IFilter::UniquePointerType createFilter(FilterHandle::FilterIdType filterId) const;
 
   FilterContainerType getFilterHandles() const;
 
@@ -102,7 +102,7 @@ protected:
    *
    * The method creates one filter to obtain and validate its UUID.
    */
-  void addFilter(const FilterCreationFunc& filterFunc);
+  void addFilter(const FilterCreationFuncType& filterFunc);
 
   void addDataIOManager(const IOManagerPointer& ioManager);
 
@@ -121,7 +121,7 @@ private:
   std::string m_Description;
   std::string m_Vendor;
   std::unordered_set<FilterHandle> m_FilterHandles;
-  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
+  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFuncType> m_InitializerMap;
   IOManagersContainerType m_IOManagers;
 };
 

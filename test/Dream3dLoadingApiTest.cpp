@@ -51,11 +51,11 @@ using namespace nx::core;
 namespace
 {
 // These constants define paths used by the loading API scenarios.
-constexpr StringLiteral k_GroupName = "TopGroup";
-constexpr StringLiteral k_SmallAttrMatName = "SmallAM";
-constexpr StringLiteral k_LargeAttrMatName = "LargeAM";
-constexpr StringLiteral k_SmallArrayName = "SmallArray";
-constexpr StringLiteral k_LargeArrayName = "LargeArray";
+constexpr StringLiteralType k_GroupName = "TopGroup";
+constexpr StringLiteralType k_SmallAttrMatName = "SmallAM";
+constexpr StringLiteralType k_LargeAttrMatName = "LargeAM";
+constexpr StringLiteralType k_SmallArrayName = "SmallArray";
+constexpr StringLiteralType k_LargeArrayName = "LargeArray";
 
 constexpr usize k_SmallArraySize = 10;
 constexpr usize k_LargeArraySize = 100;
@@ -68,14 +68,14 @@ const DataPath k_SmallArrayPath({k_GroupName, k_SmallAttrMatName, k_SmallArrayNa
 const DataPath k_LargeArrayPath({k_GroupName, k_LargeAttrMatName, k_LargeArrayName});
 
 // These paths select the multi-group prune fixture.
-constexpr StringLiteral k_GroupAName = "GroupA";
-constexpr StringLiteral k_GroupBName = "GroupB";
-constexpr StringLiteral k_AttrMatAName = "AttrMatA";
-constexpr StringLiteral k_AttrMatBName = "AttrMatB";
-constexpr StringLiteral k_ArrayA1Name = "ArrayA1";
-constexpr StringLiteral k_ArrayA2Name = "ArrayA2";
-constexpr StringLiteral k_ArrayB1Name = "ArrayB1";
-constexpr StringLiteral k_ArrayB2Name = "ArrayB2";
+constexpr StringLiteralType k_GroupAName = "GroupA";
+constexpr StringLiteralType k_GroupBName = "GroupB";
+constexpr StringLiteralType k_AttrMatAName = "AttrMatA";
+constexpr StringLiteralType k_AttrMatBName = "AttrMatB";
+constexpr StringLiteralType k_ArrayA1Name = "ArrayA1";
+constexpr StringLiteralType k_ArrayA2Name = "ArrayA2";
+constexpr StringLiteralType k_ArrayB1Name = "ArrayB1";
+constexpr StringLiteralType k_ArrayB2Name = "ArrayB2";
 constexpr usize k_PruneArraySize = 20;
 
 const DataPath k_GroupAPath({k_GroupAName});
@@ -88,12 +88,12 @@ const DataPath k_ArrayB1Path({k_GroupBName, k_AttrMatBName, k_ArrayB1Name});
 const DataPath k_ArrayB2Path({k_GroupBName, k_AttrMatBName, k_ArrayB2Name});
 
 // These paths select numeric and nonnumeric sibling arrays from one AttributeMatrix.
-constexpr StringLiteral k_NonnumericGroupName = "NonnumericGroup";
-constexpr StringLiteral k_NonnumericAttrMatName = "NonnumericAM";
-constexpr StringLiteral k_NonnumericNumericArrayName = "Numeric";
-constexpr StringLiteral k_NonnumericRecoverySiblingName = "RecoverySibling";
-constexpr StringLiteral k_NonnumericStringArrayName = "Strings";
-constexpr StringLiteral k_NonnumericNeighborListName = "Neighbors";
+constexpr StringLiteralType k_NonnumericGroupName = "NonnumericGroup";
+constexpr StringLiteralType k_NonnumericAttrMatName = "NonnumericAM";
+constexpr StringLiteralType k_NonnumericNumericArrayName = "Numeric";
+constexpr StringLiteralType k_NonnumericRecoverySiblingName = "RecoverySibling";
+constexpr StringLiteralType k_NonnumericStringArrayName = "Strings";
+constexpr StringLiteralType k_NonnumericNeighborListName = "Neighbors";
 constexpr usize k_NonnumericTupleCount = 3;
 
 const DataPath k_NonnumericGroupPath({k_NonnumericGroupName});
@@ -105,16 +105,16 @@ const DataPath k_NonnumericNeighborListPath({k_NonnumericGroupName, k_Nonnumeric
 
 std::atomic_size_t GExcludedMaterializations = 0;
 
-class ImportSelectionFloatArrayIO : public HDF5::Float32ArrayIO
+class ImportSelectionFloatArrayIO : public hdf5::Float32ArrayIO
 {
 public:
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& parentGroupReader) const override
   {
     if(dataPath == k_LargeArrayPath)
     {
       ++GExcludedMaterializations;
     }
-    return HDF5::Float32ArrayIO::finishImportingData(dataStructure, dataPath, parentGroupReader);
+    return hdf5::Float32ArrayIO::finishImportingData(dataStructure, dataPath, parentGroupReader);
   }
 };
 
@@ -128,7 +128,7 @@ struct ScopedImportSelectionManager
   , original(collection.getManager("HDF5"))
   {
     REQUIRE(original != nullptr);
-    auto replacement = std::make_shared<HDF5::DataIOManager>();
+    auto replacement = std::make_shared<hdf5::DataIOManager>();
     replacement->addFactory<ImportSelectionFloatArrayIO>();
     auto result = collection.addIOManager(replacement);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
@@ -222,7 +222,7 @@ struct ScopedCoreImportManagers
 /**
  * @brief Returns a distinct warning before core materializes deferred placeholders.
  */
-class WarningImportFinalizerManager : public HDF5::DataIOManager
+class WarningImportFinalizerManager : public hdf5::DataIOManager
 {
 public:
   bool finalizesImport() const override
@@ -230,7 +230,7 @@ public:
     return true;
   }
 
-  Result<> onImportFinalize(DataStructure& /*dataStructure*/, const std::vector<DataPath>& /*paths*/, const HDF5::FileIO& /*fileReader*/) override
+  Result<> onImportFinalize(DataStructure& /*dataStructure*/, const std::vector<DataPath>& /*paths*/, const hdf5::FileIO& /*fileReader*/) override
   {
     return MakeWarningVoidResult(-89201, "Synthetic import-finalizer warning");
   }
@@ -328,7 +328,7 @@ public:
     return m_Finalizes;
   }
 
-  Result<> onImportFinalize([[maybe_unused]] DataStructure& dataStructure, const std::vector<DataPath>& paths, [[maybe_unused]] const HDF5::FileIO& fileReader) override
+  Result<> onImportFinalize([[maybe_unused]] DataStructure& dataStructure, const std::vector<DataPath>& paths, [[maybe_unused]] const hdf5::FileIO& fileReader) override
   {
     calls.push_back(paths);
     return {};
@@ -468,7 +468,7 @@ DataStructure CreateSimpleTestDataStructure()
 fs::path WriteTestFile(const DataStructure& dataStructure, const std::string& fileName)
 {
   fs::path outputPath = GetTestOutputDir() / fileName;
-  Result<> writeResult = DREAM3D::WriteFile(outputPath, dataStructure);
+  Result<> writeResult = dream3d::WriteFile(outputPath, dataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   REQUIRE(fs::exists(outputPath));
   return outputPath;
@@ -477,9 +477,9 @@ fs::path WriteTestFile(const DataStructure& dataStructure, const std::string& fi
 fs::path CreateMalformedCurrentArrayFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  auto writeStringAttributeResult = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_CurrentFileVersion.str());
+  auto writeStringAttributeResult = fileWriter.writeStringAttribute("FileVersion", dream3d::k_CurrentFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult);
   auto dataStructureGroup = fileWriter.createGroup(Constants::k_DataStructureTag);
   REQUIRE(dataStructureGroup.isValid());
@@ -504,9 +504,9 @@ fs::path CreateMalformedCurrentArrayFile(const std::string& fileName)
 fs::path CreateCorruptCurrentArrayFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  auto writeStringAttributeResult3 = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_CurrentFileVersion.str());
+  auto writeStringAttributeResult3 = fileWriter.writeStringAttribute("FileVersion", dream3d::k_CurrentFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult3);
   auto dataStructureGroup = fileWriter.createGroup(Constants::k_DataStructureTag);
   REQUIRE(dataStructureGroup.isValid());
@@ -533,9 +533,9 @@ fs::path CreateCorruptCurrentArrayFile(const std::string& fileName)
 fs::path CreateMissingImportableCurrentArrayFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  REQUIRE(fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_CurrentFileVersion.str()).valid());
+  REQUIRE(fileWriter.writeStringAttribute("FileVersion", dream3d::k_CurrentFileVersion.str()).valid());
   auto dataStructureGroup = fileWriter.createGroup(Constants::k_DataStructureTag);
   REQUIRE(dataStructureGroup.isValid());
   REQUIRE(dataStructureGroup.writeScalarAttribute(Constants::k_NextIdTag, DataObject::IdType{2}).valid());
@@ -553,9 +553,9 @@ fs::path CreateMissingImportableCurrentArrayFile(const std::string& fileName)
 fs::path CreateOverflowCurrentArrayFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  auto writeStringAttributeResult6 = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_CurrentFileVersion.str());
+  auto writeStringAttributeResult6 = fileWriter.writeStringAttribute("FileVersion", dream3d::k_CurrentFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult6);
   auto dataStructureGroup = fileWriter.createGroup(Constants::k_DataStructureTag);
   REQUIRE(dataStructureGroup.isValid());
@@ -564,7 +564,7 @@ fs::path CreateOverflowCurrentArrayFile(const std::string& fileName)
 
   const hid_t groupId = dataStructureGroup.getId();
   {
-    std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
     const hsize_t zero = 0;
     const hid_t dataspaceId = H5Screate_simple(1, &zero, nullptr);
     REQUIRE(dataspaceId >= 0);
@@ -589,7 +589,7 @@ fs::path CreateOverflowCurrentArrayFile(const std::string& fileName)
 }
 
 template <typename T>
-void WriteLegacyArray(HDF5::GroupIO& group, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::vector<T>& values)
+void WriteLegacyArray(hdf5::GroupIO& group, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::vector<T>& values)
 {
   auto dataset = group.createDataset(name);
   ShapeType physicalShape = tupleShape;
@@ -604,7 +604,7 @@ void WriteLegacyArray(HDF5::GroupIO& group, const std::string& name, const Shape
   SIMPLNX_RESULT_REQUIRE_VALID(writeVectorAttributeResult6);
 }
 
-HDF5::GroupIO CreateLegacyGeometryGroup(HDF5::GroupIO& containers, const std::string& containerName, const std::string& geometryType)
+hdf5::GroupIO CreateLegacyGeometryGroup(hdf5::GroupIO& containers, const std::string& containerName, const std::string& geometryType)
 {
   auto container = containers.createGroup(containerName);
   auto geometry = container.createGroup("_SIMPL_GEOMETRY");
@@ -621,9 +621,9 @@ HDF5::GroupIO CreateLegacyGeometryGroup(HDF5::GroupIO& containers, const std::st
 fs::path CreateLegacyGeometryFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  auto writeStringAttributeResult10 = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str());
+  auto writeStringAttributeResult10 = fileWriter.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult10);
   auto containers = fileWriter.createGroup("DataContainers");
   const std::vector<float32> vertices = {0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F, 9.0F, 10.0F, 11.0F};
@@ -673,9 +673,9 @@ fs::path CreateLegacyGeometryFile(const std::string& fileName)
 fs::path CreateMalformedLegacyArrayFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  auto writeStringAttributeResult11 = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str());
+  auto writeStringAttributeResult11 = fileWriter.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult11);
   auto containers = fileWriter.createGroup("DataContainers");
   auto container = containers.createGroup("MalformedContainer");
@@ -698,9 +698,9 @@ fs::path CreateMalformedLegacyArrayFile(const std::string& fileName)
 fs::path CreateLegacyStatisticsFile(const std::string& fileName)
 {
   const fs::path outputPath = GetTestOutputDir() / fileName;
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
   REQUIRE(fileWriter.isValid());
-  auto writeStringAttributeResult13 = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str());
+  auto writeStringAttributeResult13 = fileWriter.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(writeStringAttributeResult13);
   auto containers = fileWriter.createGroup("DataContainers");
   auto container = containers.createGroup("StatsContainer");
@@ -826,7 +826,7 @@ DataStructure CreateNonnumericSelectionTestDataStructure()
  */
 void SetRecoveryPlaceholderComponentShape(const fs::path& filePath)
 {
-  auto fileWriter = HDF5::FileIO::AppendFile(filePath);
+  auto fileWriter = hdf5::FileIO::AppendFile(filePath);
   REQUIRE(fileWriter.isValid());
   auto dataStructureGroup = fileWriter.openGroup("DataStructure");
   REQUIRE(dataStructureGroup.isValid());
@@ -864,7 +864,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructure loads all arrays")
   DataStructure srcDs = CreateSimpleTestDataStructure();
   fs::path filePath = WriteTestFile(srcDs, "Dream3dLoadingApiTest_LoadAll.dream3d");
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructure(filePath);
+  Result<DataStructure> result = dream3d::LoadDataStructure(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataStructure& dataStructure = result.value();
@@ -904,7 +904,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays loads only requested array
   const auto& smallPath = k_SmallArrayPath;
   const auto& largePath = k_LargeArrayPath;
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructureArrays(filePath, {smallPath});
+  Result<DataStructure> result = dream3d::LoadDataStructureArrays(filePath, {smallPath});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataStructure& dataStructure = result.value();
@@ -937,7 +937,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArraysMetadata loads only request
   const auto& smallPath = k_SmallArrayPath;
   const auto& largePath = k_LargeArrayPath;
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructureArraysMetadata(filePath, {smallPath});
+  Result<DataStructure> result = dream3d::LoadDataStructureArraysMetadata(filePath, {smallPath});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataStructure& dataStructure = result.value();
@@ -963,7 +963,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureMetadata loads all metadata")
   DataStructure srcDs = CreateSimpleTestDataStructure();
   fs::path filePath = WriteTestFile(srcDs, "Dream3dLoadingApiTest_AllMeta.dream3d");
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructureMetadata(filePath);
+  Result<DataStructure> result = dream3d::LoadDataStructureMetadata(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataStructure& dataStructure = result.value();
@@ -995,7 +995,7 @@ TEST_CASE("StorageFormatPlan: current metadata preserves an empty component shap
   auto resolver = std::make_shared<RecordingResolver>();
   DataStructure::setDefaultFormatResolver(resolver);
 
-  auto metadataResult = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto metadataResult = dream3d::LoadDataStructureMetadata(fileGuard.path);
   DataStructure::setDefaultFormatResolver(std::make_shared<InMemoryFormatResolver>());
   SIMPLNX_RESULT_REQUIRE_VALID(metadataResult);
   const DataPath arrayPath({"ScalarComponents"});
@@ -1010,7 +1010,7 @@ TEST_CASE("StorageFormatPlan: current metadata preserves an empty component shap
   REQUIRE(resolver->types == std::vector<DataType>{DataType::int32});
   REQUIRE(resolver->bytes == std::vector<uint64>{3 * sizeof(int32)});
 
-  auto loadedResult = DREAM3D::LoadDataStructure(fileGuard.path);
+  auto loadedResult = dream3d::LoadDataStructure(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(loadedResult);
   const auto* loadedArrayPtr = loadedResult.value().getDataAs<Int32Array>(arrayPath);
   REQUIRE(loadedArrayPtr != nullptr);
@@ -1025,7 +1025,7 @@ TEST_CASE("StorageFormatPlan: current metadata preserves an empty component shap
 TEST_CASE("StorageFormatPlan: current metadata rejects a missing component-shape attribute", "[StorageFormatPlan][T29]")
 {
   ScopedTempFile fileGuard{CreateMalformedCurrentArrayFile("Dream3dLoadingApiTest_MissingComponentShape.dream3d")};
-  auto result = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto result = dream3d::LoadDataStructureMetadata(fileGuard.path);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   CHECK(result.errors().front().message.find("Component") != std::string::npos);
@@ -1035,7 +1035,7 @@ TEST_CASE("StorageFormatPlan: current metadata rejects a missing component-shape
 TEST_CASE("StorageFormatPlan: current metadata rejects a nonnumeric component-shape attribute", "[StorageFormatPlan][T29]")
 {
   ScopedTempFile fileGuard{CreateCorruptCurrentArrayFile("Dream3dLoadingApiTest_CorruptComponentShape.dream3d")};
-  auto result = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto result = dream3d::LoadDataStructureMetadata(fileGuard.path);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   CHECK(result.errors().front().message.find("ComponentDimensions") != std::string::npos);
@@ -1046,11 +1046,11 @@ TEST_CASE("StorageFormatPlan: current metadata rejects a nonnumeric component-sh
 TEST_CASE("StorageFormatPlan: current metadata propagates a missing importable attribute", "[StorageFormatPlan][T29]")
 {
   ScopedTempFile fileGuard{CreateMissingImportableCurrentArrayFile("Dream3dLoadingApiTest_MissingImportable.dream3d")};
-  auto fileReader = HDF5::FileIO::ReadFile(fileGuard.path);
+  auto fileReader = hdf5::FileIO::ReadFile(fileGuard.path);
   REQUIRE(fileReader.isValid());
   auto dataStructureGroup = fileReader.openGroup(Constants::k_DataStructureTag);
-  HDF5::DataStructureReader structureReader;
-  HDF5::DataArrayIO<int32> arrayIO;
+  hdf5::DataStructureReader structureReader;
+  hdf5::DataArrayIO<int32> arrayIO;
   auto result = arrayIO.readData(structureReader, dataStructureGroup, "MissingImportableArray", DataObject::IdType{1}, {}, true);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
@@ -1061,7 +1061,7 @@ TEST_CASE("StorageFormatPlan: current metadata propagates a missing importable a
 TEST_CASE("StorageFormatPlan: eager current reader rejects overflowing shape metadata", "[StorageFormatPlan][T22][T29]")
 {
   ScopedTempFile fileGuard{CreateOverflowCurrentArrayFile("Dream3dLoadingApiTest_OverflowShape.dream3d")};
-  auto result = HDF5::DataStructureReader::ReadFile(fileGuard.path, false);
+  auto result = hdf5::DataStructureReader::ReadFile(fileGuard.path, false);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   CHECK(result.errors().front().code == -89201);
@@ -1084,10 +1084,10 @@ TEST_CASE("StorageFormatPlan: memory materialization consumes the recorded plan"
   SIMPLNX_RESULT_REQUIRE_VALID(plannedResult);
   auto resolver = std::make_shared<ThrowingCountingResolver>();
   prepared.setFormatResolver(resolver);
-  auto fileReader = HDF5::FileIO::ReadFile(fileGuard.path);
+  auto fileReader = hdf5::FileIO::ReadFile(fileGuard.path);
   REQUIRE(fileReader.isValid());
 
-  auto materializeResult = DREAM3D::detail::MaterializeImportedPaths(prepared, fileReader, {DataPath({"Values"})});
+  auto materializeResult = dream3d::detail::MaterializeImportedPaths(prepared, fileReader, {DataPath({"Values"})});
   SIMPLNX_RESULT_REQUIRE_VALID(materializeResult);
   CHECK(resolver->calls == 0);
   REQUIRE_NOTHROW(prepared.getDataRefAs<Int32Array>(DataPath({"Values"})));
@@ -1116,7 +1116,7 @@ TEST_CASE("StorageFormatPlan: legacy geometry metadata plans and reloads connect
                                             DataPath({"LegacyRect", "yBounds"}),
                                             DataPath({"LegacyRect", "zBounds"})};
 
-  auto metadataResult = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto metadataResult = dream3d::LoadDataStructureMetadata(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadataResult);
   for(const auto& path : arrayPaths)
   {
@@ -1126,7 +1126,7 @@ TEST_CASE("StorageFormatPlan: legacy geometry metadata plans and reloads connect
     REQUIRE(arrayPtr->getStoreType() == IDataStore::StoreType::Empty);
   }
 
-  auto loadedResult = DREAM3D::LoadDataStructure(fileGuard.path);
+  auto loadedResult = dream3d::LoadDataStructure(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(loadedResult);
   for(const auto& path : arrayPaths)
   {
@@ -1183,20 +1183,20 @@ TEST_CASE("StorageFormatPlan: incremental import finalizes exact leaves only", "
 {
   DataStructure source = CreateMultiGroupTestDataStructure();
   ScopedTempFile fileGuard{WriteTestFile(source, "Dream3dLoadingApiTest_ExactIncrementalLeaves.dream3d")};
-  auto metadataResult = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto metadataResult = dream3d::LoadDataStructureMetadata(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadataResult);
-  auto fileReader = HDF5::FileIO::ReadFile(fileGuard.path);
+  auto fileReader = hdf5::FileIO::ReadFile(fileGuard.path);
   REQUIRE(fileReader.isValid());
 
   auto& collection = Application::GetOrCreateInstance()->getIOCollection();
   ScopedRecordingImportFinalizer finalizerGuard(collection);
   DataStructure destination;
 
-  REQUIRE(DREAM3D::FinishImportingObject(metadataResult.value(), destination, k_GroupAPath, fileReader, false).valid());
-  REQUIRE(DREAM3D::FinishImportingObject(metadataResult.value(), destination, k_AttrMatAPath, fileReader, false).valid());
+  REQUIRE(dream3d::FinishImportingObject(metadataResult.value(), destination, k_GroupAPath, fileReader, false).valid());
+  REQUIRE(dream3d::FinishImportingObject(metadataResult.value(), destination, k_AttrMatAPath, fileReader, false).valid());
   CHECK(finalizerGuard.recorder->calls.empty());
 
-  REQUIRE(DREAM3D::FinishImportingObject(metadataResult.value(), destination, k_ArrayA1Path, fileReader, false).valid());
+  REQUIRE(dream3d::FinishImportingObject(metadataResult.value(), destination, k_ArrayA1Path, fileReader, false).valid());
   REQUIRE(finalizerGuard.recorder->calls.size() == 1);
   CHECK(finalizerGuard.recorder->calls.front() == std::vector<DataPath>{k_ArrayA1Path});
   REQUIRE(destination.containsData(k_ArrayA1Path));
@@ -1249,7 +1249,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructure with invalid path returns error"
 
   // Suppress HDF5 error output temporarily
   H5Eset_auto(H5E_DEFAULT, nullptr, nullptr);
-  Result<DataStructure> result = DREAM3D::LoadDataStructure(bogusPath);
+  Result<DataStructure> result = dream3d::LoadDataStructure(bogusPath);
   // Restore default error handling
   H5Eset_auto(H5E_DEFAULT, (H5E_auto_t)H5Eprint, stderr);
 
@@ -1263,7 +1263,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructure with legacy file")
   const fs::path legacyPath = fs::path(unit_test::k_SourceDir.view()) / "test" / "Data" / "LegacyData.dream3d";
   REQUIRE(fs::exists(legacyPath));
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructure(legacyPath);
+  Result<DataStructure> result = dream3d::LoadDataStructure(legacyPath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   // Verify the DataStructure has content (legacy files should load successfully)
@@ -1278,7 +1278,7 @@ TEST_CASE("StorageFormatPlan: legacy dataset metadata receives a validated plan"
   auto resolver = std::make_shared<RecordingResolver>();
   DataStructure::setDefaultFormatResolver(resolver);
 
-  auto result = DREAM3D::LoadDataStructureMetadata(legacyPath);
+  auto result = dream3d::LoadDataStructureMetadata(legacyPath);
   DataStructure::setDefaultFormatResolver(std::make_shared<InMemoryFormatResolver>());
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
@@ -1298,7 +1298,7 @@ TEST_CASE("StorageFormatPlan: legacy dataset metadata receives a validated plan"
 TEST_CASE("StorageFormatPlan: malformed legacy shape metadata preserves its attribute error", "[StorageFormatPlan][T29]")
 {
   ScopedTempFile fileGuard{CreateMalformedLegacyArrayFile("Dream3dLoadingApiTest_MalformedLegacyShape.dream3d")};
-  auto result = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto result = dream3d::LoadDataStructureMetadata(fileGuard.path);
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
   CHECK(result.errors().front().message.find("ComponentDimensions") != std::string::npos);
@@ -1308,7 +1308,7 @@ TEST_CASE("StorageFormatPlan: malformed legacy shape metadata preserves its attr
 TEST_CASE("StorageFormatPlan: legacy Statistics attributes remain eagerly materialized", "[StorageFormatPlan][T17]")
 {
   ScopedTempFile fileGuard{CreateLegacyStatisticsFile("Dream3dLoadingApiTest_LegacyStatistics.dream3d")};
-  auto result = DREAM3D::LoadDataStructureMetadata(fileGuard.path);
+  auto result = dream3d::LoadDataStructureMetadata(fileGuard.path);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataPath attributePath({"StatsContainer", "Statistics", "Values_Mean"});
@@ -1325,7 +1325,7 @@ TEST_CASE("StorageFormatPlan: legacy Statistics attributes remain eagerly materi
 TEST_CASE("StorageFormatPlan: selected legacy Statistics values use an independent destination store", "[StorageFormatPlan][T17][T25][T26]")
 {
   ScopedTempFile fileGuard{CreateLegacyStatisticsFile("Dream3dLoadingApiTest_SelectedLegacyStatistics.dream3d")};
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
 
@@ -1370,7 +1370,7 @@ TEST_CASE("Dream3dLoadingApi: LoadDataStructureArrays prune verification")
   DataStructure srcDs = CreateMultiGroupTestDataStructure();
   fs::path filePath = WriteTestFile(srcDs, "Dream3dLoadingApiTest_Prune.dream3d");
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructureArrays(filePath, {k_ArrayA1Path});
+  Result<DataStructure> result = dream3d::LoadDataStructureArrays(filePath, {k_ArrayA1Path});
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataStructure& dataStructure = result.value();
@@ -1399,7 +1399,7 @@ TEST_CASE("Dream3dLoadingApi: selected StringArray preserves metadata and values
   const auto filePath = WriteTestFile(source, "Dream3dLoadingApiTest_SelectedStrings.dream3d");
   ScopedTempFile fileGuard(filePath);
 
-  auto metadataResult = DREAM3D::LoadDataStructureArraysMetadata(filePath, {k_NonnumericStringArrayPath});
+  auto metadataResult = dream3d::LoadDataStructureArraysMetadata(filePath, {k_NonnumericStringArrayPath});
   SIMPLNX_RESULT_REQUIRE_VALID(metadataResult);
   const DataStructure& metadata = metadataResult.value();
   const StringArray* metadataStringsPtr = nullptr;
@@ -1413,7 +1413,7 @@ TEST_CASE("Dream3dLoadingApi: selected StringArray preserves metadata and values
   CHECK_FALSE(metadata.containsData(k_NonnumericRecoverySiblingPath));
   CHECK_FALSE(metadata.containsData(k_NonnumericNeighborListPath));
 
-  auto loadResult = DREAM3D::LoadDataStructureArrays(filePath, {k_NonnumericStringArrayPath});
+  auto loadResult = dream3d::LoadDataStructureArrays(filePath, {k_NonnumericStringArrayPath});
   SIMPLNX_RESULT_REQUIRE_VALID(loadResult);
   DataStructure loaded = std::move(loadResult.value());
   StringArray* loadedStringsPtr = nullptr;
@@ -1466,7 +1466,7 @@ TEST_CASE("Dream3dLoadingApi: selected NeighborList preserves metadata and value
   const auto filePath = WriteTestFile(source, "Dream3dLoadingApiTest_SelectedNeighborLists.dream3d");
   ScopedTempFile fileGuard(filePath);
 
-  auto metadataResult = DREAM3D::LoadDataStructureArraysMetadata(filePath, {k_NonnumericNeighborListPath});
+  auto metadataResult = dream3d::LoadDataStructureArraysMetadata(filePath, {k_NonnumericNeighborListPath});
   SIMPLNX_RESULT_REQUIRE_VALID(metadataResult);
   const DataStructure& metadata = metadataResult.value();
   const NeighborList<int32>* metadataNeighborListPtr = nullptr;
@@ -1479,7 +1479,7 @@ TEST_CASE("Dream3dLoadingApi: selected NeighborList preserves metadata and value
   CHECK_FALSE(metadata.containsData(k_NonnumericRecoverySiblingPath));
   CHECK_FALSE(metadata.containsData(k_NonnumericStringArrayPath));
 
-  auto loadResult = DREAM3D::LoadDataStructureArrays(filePath, {k_NonnumericNeighborListPath});
+  auto loadResult = dream3d::LoadDataStructureArrays(filePath, {k_NonnumericNeighborListPath});
   SIMPLNX_RESULT_REQUIRE_VALID(loadResult);
   DataStructure loaded = std::move(loadResult.value());
   NeighborList<int32>* loadedNeighborListPtr = nullptr;
@@ -1549,7 +1549,7 @@ TEST_CASE("Dream3dLoadingApi: in-memory recovery placeholder warning skips only 
   ScopedTempFile fileGuard(filePath);
   SetRecoveryPlaceholderComponentShape(filePath);
 
-  auto fileReader = HDF5::FileIO::ReadFile(filePath);
+  auto fileReader = hdf5::FileIO::ReadFile(filePath);
   REQUIRE(fileReader.isValid());
   auto dataStructureGroup = fileReader.openGroup("DataStructure");
   REQUIRE(dataStructureGroup.isValid());
@@ -1558,7 +1558,7 @@ TEST_CASE("Dream3dLoadingApi: in-memory recovery placeholder warning skips only 
   auto attrMat = group.openGroup(k_NonnumericAttrMatName.str());
   REQUIRE(attrMat.isValid());
 
-  HDF5::DataStructureReader fullReader;
+  hdf5::DataStructureReader fullReader;
   const auto fullReaderResult = fullReader.readGroup(dataStructureGroup);
   REQUIRE(fullReaderResult.valid());
   REQUIRE(ContainsWarning(fullReaderResult, -89200));
@@ -1567,7 +1567,7 @@ TEST_CASE("Dream3dLoadingApi: in-memory recovery placeholder warning skips only 
 
   // The local manager bypasses global optional I/O registrations. This keeps
   // the test on the same core in-memory import path in both build variants.
-  HDF5::DataStructureReader coreReader(new HDF5::DataIOManager());
+  hdf5::DataStructureReader coreReader(new hdf5::DataIOManager());
   const auto malformedResult = coreReader.readObjectFromGroup(attrMat, k_NonnumericNumericArrayName.str());
   REQUIRE(malformedResult.valid());
   REQUIRE(ContainsWarning(malformedResult, -89200));
@@ -1596,7 +1596,7 @@ TEST_CASE("Dream3dLoadingApi: public full load preserves an in-memory recovery w
 
   auto& collection = application->getIOCollection();
   ScopedCoreImportManagers coreManagersGuard(collection);
-  auto loadResult = DREAM3D::LoadDataStructure(filePath);
+  auto loadResult = dream3d::LoadDataStructure(filePath);
   REQUIRE(loadResult.valid());
   REQUIRE(ContainsWarning(loadResult, -89200));
 
@@ -1624,7 +1624,7 @@ TEST_CASE("Dream3dLoadingApi: public selected load preserves an in-memory recove
 
   auto& collection = application->getIOCollection();
   ScopedCoreImportManagers coreManagersGuard(collection);
-  auto loadResult = DREAM3D::LoadDataStructureArrays(filePath, {k_NonnumericNumericArrayPath, k_NonnumericRecoverySiblingPath});
+  auto loadResult = dream3d::LoadDataStructureArrays(filePath, {k_NonnumericNumericArrayPath, k_NonnumericRecoverySiblingPath});
   REQUIRE(loadResult.valid());
   REQUIRE(ContainsWarning(loadResult, -89200));
   CHECK(loadResult.value().containsData(k_NonnumericGroupPath));
@@ -1655,7 +1655,7 @@ TEST_CASE("Dream3dLoadingApi: public load preserves finalizer and core recovery 
   auto& collection = application->getIOCollection();
   ScopedCoreImportManagers coreManagersGuard(collection);
   ScopedWarningImportFinalizerManager finalizerManagerGuard(collection);
-  auto loadResult = DREAM3D::LoadDataStructure(filePath);
+  auto loadResult = dream3d::LoadDataStructure(filePath);
   REQUIRE(loadResult.valid());
   REQUIRE(ContainsWarning(loadResult, -89201));
   REQUIRE(ContainsWarning(loadResult, -89200));
@@ -1725,7 +1725,7 @@ TEST_CASE("ImportH5ObjectPathsAction avoids excluded materialization", "[simplnx
   {
     ScopedImportSelectionManager managerGuard(collection);
     GExcludedMaterializations = 0;
-    auto fullLoad = DREAM3D::LoadDataStructure(filePath);
+    auto fullLoad = dream3d::LoadDataStructure(filePath);
     SIMPLNX_RESULT_REQUIRE_VALID(fullLoad);
     REQUIRE(GExcludedMaterializations.load() > 0);
     GExcludedMaterializations = 0;
@@ -1898,7 +1898,7 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with user data path redirect")
 
   // Write the minimal redirect variant — dataStructure/pipeline ignored.
   DataStructure emptyDs;
-  Result<> writeResult = DREAM3D::WriteRecoveryFile(filePath, emptyDs, {}, userDataPath);
+  Result<> writeResult = dream3d::WriteRecoveryFile(filePath, emptyDs, {}, userDataPath);
   REQUIRE(writeResult.valid());
 
   // File exists and is small (minimal variant is kilobytes, full variant is
@@ -1909,7 +1909,7 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with user data path redirect")
   REQUIRE(fs::file_size(filePath) < 64 * 1024);
 
   // Read back: attribute should contain the ABSOLUTE form of userDataPath.
-  auto readResult = DREAM3D::ReadUserDataFilePathAttribute(filePath);
+  auto readResult = dream3d::ReadUserDataFilePathAttribute(filePath);
   REQUIRE(readResult.valid());
   REQUIRE(readResult.value().has_value());
   REQUIRE(readResult.value().value() == fs::absolute(userDataPath));
@@ -1918,9 +1918,9 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with user data path redirect")
   ScopedTempFile standardFilePathGuard{GetTestOutputDir() / "Dream3dLoadingApiTest_RecoveryStandard.dream3d"};
   const fs::path& standardFilePath = standardFilePathGuard.path;
   DataStructure simpleDs = CreateSimpleTestDataStructure();
-  REQUIRE(DREAM3D::WriteRecoveryFile(standardFilePath, simpleDs).valid());
+  REQUIRE(dream3d::WriteRecoveryFile(standardFilePath, simpleDs).valid());
 
-  auto readStandard = DREAM3D::ReadUserDataFilePathAttribute(standardFilePath);
+  auto readStandard = dream3d::ReadUserDataFilePathAttribute(standardFilePath);
   REQUIRE(readStandard.valid());
   REQUIRE_FALSE(readStandard.value().has_value());
 }
@@ -1934,11 +1934,11 @@ TEST_CASE("Dream3dLoadingApi: Recovery file with all in-core data")
   // are written as lightweight placeholders pointing at their backing files).
   // This DataStructure is entirely in-core, so all array data is stored inline
   // in the recovery file.
-  Result<> writeResult = DREAM3D::WriteRecoveryFile(filePath, srcDs);
+  Result<> writeResult = dream3d::WriteRecoveryFile(filePath, srcDs);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   REQUIRE(fs::exists(filePath));
 
-  Result<DataStructure> result = DREAM3D::LoadDataStructure(filePath);
+  Result<DataStructure> result = dream3d::LoadDataStructure(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   const DataStructure& dataStructure = result.value();

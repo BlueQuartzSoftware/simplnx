@@ -58,8 +58,8 @@ Parameters WriteStatsGenOdfAngleFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "The output angles file path", fs::path("Data/Output/StatsGenODF.txt"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<Float32Parameter>(k_Weight_Key, "Default Weight", "This value will be used for the Weight column", 1.0f));
-  params.insert(std::make_unique<Int32Parameter>(k_Sigma_Key, "Default Sigma", "This value will be used for the Sigma column", 1));
+  params.insert(std::make_unique<Float32ParameterType>(k_Weight_Key, "Default Weight", "This value will be used for the Weight column", 1.0f));
+  params.insert(std::make_unique<Int32ParameterType>(k_Sigma_Key, "Default Sigma", "This value will be used for the Sigma column", 1));
   params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "The delimiter separating the data", k_SpaceDelimiter,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", " (space)", ": (colon)", "\\t {tab}"}));
   params.insert(std::make_unique<BoolParameter>(
@@ -70,13 +70,13 @@ Parameters WriteStatsGenOdfAngleFileFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMask_Key, "Only Write Good Elements", "Whether to only write the Euler angles for those elements denoted as true in the supplied mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Used to define Elements as good or bad. Only required if Only Write Good Elements is checked", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
@@ -90,7 +90,7 @@ IFilter::VersionType WriteStatsGenOdfAngleFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteStatsGenOdfAngleFileFilter::clone() const
+IFilter::UniquePointerType WriteStatsGenOdfAngleFileFilter::clone() const
 {
   return std::make_unique<WriteStatsGenOdfAngleFileFilter>();
 }
@@ -161,15 +161,15 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_WeightKey = "Weight";
-constexpr StringLiteral k_SigmaKey = "Sigma";
-constexpr StringLiteral k_DelimiterKey = "Delimiter";
-constexpr StringLiteral k_ConvertToDegreesKey = "ConvertToDegrees";
-constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
-constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_WeightKey = "Weight";
+constexpr StringLiteralType k_SigmaKey = "Sigma";
+constexpr StringLiteralType k_DelimiterKey = "Delimiter";
+constexpr StringLiteralType k_ConvertToDegreesKey = "ConvertToDegrees";
+constexpr StringLiteralType k_UseGoodVoxelsKey = "UseGoodVoxels";
+constexpr StringLiteralType k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -179,15 +179,15 @@ Result<Arguments> WriteStatsGenOdfAngleFileFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_WeightKey, k_Weight_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_Delimiter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_ConvertToDegreesKey, k_ConvertToDegrees_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_WeightKey, k_Weight_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_Delimiter_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ConvertToDegreesKey, k_ConvertToDegrees_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

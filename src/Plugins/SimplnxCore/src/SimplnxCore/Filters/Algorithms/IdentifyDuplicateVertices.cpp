@@ -30,7 +30,7 @@ const std::atomic_bool& IdentifyDuplicateVertices::getCancel()
 Result<> IdentifyDuplicateVertices::operator()()
 {
   const auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath);
-  const INodeGeometry2D::SharedVertexList::store_type& verts = geom.getVertices()->getDataStoreRef();
+  const INodeGeometry2D::SharedVertexList::StoreType& verts = geom.getVertices()->getDataStoreRef();
 
   // Sort Vertices
   MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath), m_ShouldCancel);

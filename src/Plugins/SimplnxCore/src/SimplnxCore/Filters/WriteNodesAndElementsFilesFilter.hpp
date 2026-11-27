@@ -27,15 +27,15 @@ public:
   WriteNodesAndElementsFilesFilter& operator=(WriteNodesAndElementsFilesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedGeometry = "selected_geometry_path";
-  static constexpr StringLiteral k_WriteNodeFile = "write_node_file";
-  static constexpr StringLiteral k_NumberNodes = "number_nodes";
-  static constexpr StringLiteral k_IncludeNodeFileHeader = "include_node_file_header";
-  static constexpr StringLiteral k_NodeFilePath = "node_file_path";
-  static constexpr StringLiteral k_WriteElementFile = "write_element_file";
-  static constexpr StringLiteral k_NumberElements = "number_elements";
-  static constexpr StringLiteral k_IncludeElementFileHeader = "include_element_file_header";
-  static constexpr StringLiteral k_ElementFilePath = "element_file_path";
+  static constexpr StringLiteralType k_SelectedGeometry = "selected_geometry_path";
+  static constexpr StringLiteralType k_WriteNodeFile = "write_node_file";
+  static constexpr StringLiteralType k_NumberNodes = "number_nodes";
+  static constexpr StringLiteralType k_IncludeNodeFileHeader = "include_node_file_header";
+  static constexpr StringLiteralType k_NodeFilePath = "node_file_path";
+  static constexpr StringLiteralType k_WriteElementFile = "write_element_file";
+  static constexpr StringLiteralType k_NumberElements = "number_elements";
+  static constexpr StringLiteralType k_IncludeElementFileHeader = "include_element_file_header";
+  static constexpr StringLiteralType k_ElementFilePath = "element_file_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -92,7 +92,7 @@ public:
    * @brief Returns a copy of the filter as a std::unique_ptr.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

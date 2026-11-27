@@ -57,7 +57,7 @@ Parameters TriangleCentroidFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayName_Key, "Created Face Centroids", "The complete path to the array storing the calculated centroids", "Centroids"));
 
@@ -71,7 +71,7 @@ IFilter::VersionType TriangleCentroidFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer TriangleCentroidFilter::clone() const
+IFilter::UniquePointerType TriangleCentroidFilter::clone() const
 {
   return std::make_unique<TriangleCentroidFilter>();
 }
@@ -121,7 +121,7 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPathKey = "SurfaceMeshTriangleCentroidsArrayPath";
+constexpr StringLiteralType k_SurfaceMeshTriangleCentroidsArrayPathKey = "SurfaceMeshTriangleCentroidsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -131,9 +131,9 @@ Result<Arguments> TriangleCentroidFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
                                                                                                                                   k_CentroidsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
                                                                                                                                       k_TriGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

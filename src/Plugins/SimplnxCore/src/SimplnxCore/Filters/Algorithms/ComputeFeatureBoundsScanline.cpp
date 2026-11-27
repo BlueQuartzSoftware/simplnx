@@ -134,7 +134,7 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
   }
   if constexpr(std::is_same_v<VertexGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedVertexList::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
 
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
     {
@@ -168,8 +168,8 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
   }
   if constexpr(std::is_same_v<EdgeGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
-    const IGeometry::SharedEdgeList::store_type& edges = geom.getEdgesRef().getDataStoreRef();
+    const IGeometry::SharedVertexList::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedEdgeList::StoreType& edges = geom.getEdgesRef().getDataStoreRef();
 
     const usize numComp = edges.getNumberOfComponents();
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)
@@ -208,8 +208,8 @@ Result<> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureI
   }
   if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
-    const IGeometry::SharedFaceList::store_type& faces = geom.getFacesRef().getDataStoreRef();
+    const IGeometry::SharedVertexList::StoreType& verts = geom.getVerticesRef().getDataStoreRef();
+    const IGeometry::SharedFaceList::StoreType& faces = geom.getFacesRef().getDataStoreRef();
 
     const usize numComp = faces.getNumberOfComponents();
     for(usize offset = 0; offset < numElements; offset += k_ChunkTuples)

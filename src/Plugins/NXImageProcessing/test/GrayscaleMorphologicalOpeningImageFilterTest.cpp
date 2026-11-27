@@ -89,7 +89,7 @@ TEST_CASE("NXImageProcessing::GrayscaleMorphologicalOpeningImageFilter: Ramp ope
   args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Box)));
   args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
   // Safe Border == false so the skip-OOB closed form below applies; this exercises the composite's OOC
   // streaming of the plain two-pass path on both algorithm iterations.
   args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_SafeBorder_Key, std::make_any<bool>(false));

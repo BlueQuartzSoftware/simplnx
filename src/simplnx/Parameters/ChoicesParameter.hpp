@@ -41,7 +41,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -109,7 +109,7 @@ private:
   Choices m_Choices;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT LinkedChoicesFilterParameterConverter
 {
@@ -126,7 +126,7 @@ struct SIMPLNX_EXPORT ChoiceFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ChoicesParameter, "ee4d5ce2-9582-48fa-b182-8a766ce0feff");

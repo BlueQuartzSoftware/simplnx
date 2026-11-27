@@ -22,7 +22,7 @@ class SIMPLNXCORE_EXPORT MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3]);
+  MMCellMap(TriangleGeom::SharedVertexList::StoreType& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3]);
 
   ~MMCellMap();
 
@@ -83,7 +83,7 @@ private:
   Cell* m_CellArray;
 
   std::vector<Vertex> m_VertexArray;
-  TriangleGeom::SharedVertexList::store_type& m_VerticesStoreRef;
+  TriangleGeom::SharedVertexList::StoreType& m_VerticesStoreRef;
   Int32Array* m_NxLabelsPtr = nullptr;
 
   /**

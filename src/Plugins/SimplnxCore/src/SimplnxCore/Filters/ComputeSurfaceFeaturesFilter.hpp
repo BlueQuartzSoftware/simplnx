@@ -39,11 +39,11 @@ public:
   ComputeSurfaceFeaturesFilter& operator=(ComputeSurfaceFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_MarkFeature0Neighbors = "mark_feature_0_neighbors";
-  static constexpr StringLiteral k_FeatureGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_SurfaceFeaturesArrayName_Key = "surface_features_array_name";
+  static constexpr StringLiteralType k_MarkFeature0Neighbors = "mark_feature_0_neighbors";
+  static constexpr StringLiteralType k_FeatureGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_SurfaceFeaturesArrayName_Key = "surface_features_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -100,7 +100,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

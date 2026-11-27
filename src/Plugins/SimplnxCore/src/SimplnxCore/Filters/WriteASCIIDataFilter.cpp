@@ -75,7 +75,7 @@ Parameters WriteASCIIDataFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Output Directory", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file(s)", ".csv"));
-  params.insert(std::make_unique<Int32Parameter>(k_MaxTuplePerLine_Key, "Maximum Tuples Per Line", "Number of tuples to print on each line. Does not apply to string arrays", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_MaxTuplePerLine_Key, "Maximum Tuples Per Line", "Number of tuples to print on each line. Does not apply to string arrays", 1));
   params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "The delimiter separating the data", to_underlying(OStreamUtilities::Delimiter::Comma),
                                                    ChoicesParameter::Choices{"Space", "Semicolon", "Comma", "Colon", "Tab"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<ChoicesParameter>(k_Includes_Key, "Header and Index Options", "Default Include is Headers only", to_underlying(Includes::Headers),
@@ -83,7 +83,7 @@ Parameters WriteASCIIDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk",
                                                                MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_OutputStyle_Key, k_MaxTuplePerLine_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));
@@ -103,7 +103,7 @@ IFilter::VersionType WriteASCIIDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteASCIIDataFilter::clone() const
+IFilter::UniquePointerType WriteASCIIDataFilter::clone() const
 {
   return std::make_unique<WriteASCIIDataFilter>();
 }
@@ -129,7 +129,7 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
   }
   else if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
   {
-    const auto maxTuplesPerLine = filterArgs.value<Int32Parameter::ValueType>(k_MaxTuplePerLine_Key);
+    const auto maxTuplesPerLine = filterArgs.value<Int32ParameterType::ValueType>(k_MaxTuplePerLine_Key);
     if(maxTuplesPerLine < 0)
     {
       return MakePreflightErrorResult(k_NegativeMaxTuplesPerLine, fmt::format("**Maximum Tuples Per Line** is {}. Enter a nonnegative value; 0 writes one tuple per line.", maxTuplesPerLine));
@@ -161,7 +161,7 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.OutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
   inputValues.FileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
-  inputValues.MaxValPerLine = filterArgs.value<Int32Parameter::ValueType>(k_MaxTuplePerLine_Key);
+  inputValues.MaxValPerLine = filterArgs.value<Int32ParameterType::ValueType>(k_MaxTuplePerLine_Key);
   inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
   inputValues.HeaderOptionIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key);
   inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
@@ -173,13 +173,13 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputStyleKey = "OutputStyle";
-constexpr StringLiteral k_OutputPathKey = "OutputPath";
-constexpr StringLiteral k_FileExtensionKey = "FileExtension";
-constexpr StringLiteral k_MaxValPerLineKey = "MaxValPerLine";
-constexpr StringLiteral k_OutputFilePathKey = "OutputFilePath";
-constexpr StringLiteral k_DelimiterKey = "Delimiter";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_OutputStyleKey = "OutputStyle";
+constexpr StringLiteralType k_OutputPathKey = "OutputPath";
+constexpr StringLiteralType k_FileExtensionKey = "FileExtension";
+constexpr StringLiteralType k_MaxValPerLineKey = "MaxValPerLine";
+constexpr StringLiteralType k_OutputFilePathKey = "OutputFilePath";
+constexpr StringLiteralType k_DelimiterKey = "Delimiter";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 } // namespace simpl
 } // namespace
 
@@ -189,13 +189,13 @@ Result<Arguments> WriteASCIIDataFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_OutputStyleKey, k_OutputStyle_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputDir_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_FileExtensionKey, k_FileExtension_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MaxValPerLineKey, k_MaxTuplePerLine_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFilePathKey, k_OutputPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_Delimiter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_OutputStyleKey, k_OutputStyle_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputDir_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FileExtensionKey, k_FileExtension_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MaxValPerLineKey, k_MaxTuplePerLine_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFilePathKey, k_OutputPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_Delimiter_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

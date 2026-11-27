@@ -122,12 +122,12 @@ void BaseGroup::setDataStructure(DataStructure* dataStructure)
   m_DataMap.setDataStructure(dataStructure);
 }
 
-BaseGroup::Iterator BaseGroup::find(const std::string& name)
+BaseGroup::iterator BaseGroup::find(const std::string& name)
 {
   return m_DataMap.find(name);
 }
 
-BaseGroup::ConstIterator BaseGroup::find(const std::string& name) const
+BaseGroup::const_iterator BaseGroup::find(const std::string& name) const
 {
   return m_DataMap.find(name);
 }
@@ -187,19 +187,19 @@ void BaseGroup::clear()
   m_DataMap.clear();
 }
 
-BaseGroup::Iterator BaseGroup::begin()
+BaseGroup::iterator BaseGroup::begin()
 {
   return m_DataMap.begin();
 }
-BaseGroup::Iterator BaseGroup::end()
+BaseGroup::iterator BaseGroup::end()
 {
   return m_DataMap.end();
 }
-BaseGroup::ConstIterator BaseGroup::begin() const
+BaseGroup::const_iterator BaseGroup::begin() const
 {
   return m_DataMap.begin();
 }
-BaseGroup::ConstIterator BaseGroup::end() const
+BaseGroup::const_iterator BaseGroup::end() const
 {
   return m_DataMap.end();
 }

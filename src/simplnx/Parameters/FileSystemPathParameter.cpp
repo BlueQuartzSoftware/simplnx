@@ -180,7 +180,7 @@ nlohmann::json FileSystemPathParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> FileSystemPathParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'FileSystemPathParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'FileSystemPathParameter' JSON Error: ";
 
   if(!json.is_string())
   {
@@ -192,7 +192,7 @@ Result<std::any> FileSystemPathParameter::fromJsonImpl(const nlohmann::json& jso
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer FileSystemPathParameter::clone() const
+IParameter::UniquePointerType FileSystemPathParameter::clone() const
 {
   return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType, m_AcceptAllExtensions);
 }
@@ -306,7 +306,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<InputFileFilterParameterConverter::ValueType> InputFileFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -329,5 +329,5 @@ Result<OutputFileFilterParameterConverter::ValueType> OutputFileFilterParameterC
 
   return {filePathReult.value()};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

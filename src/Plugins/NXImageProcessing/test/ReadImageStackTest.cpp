@@ -258,7 +258,7 @@ CropGeometryParameter::ValueType CreateCropOptions(CropGeometryParameter::CropVa
  * @brief Execute filter with standard parameters + custom overrides
  */
 Result<> ExecuteImportImageStack(DataStructure& dataStructure, const DataPath& outputGeomPath, const CropGeometryParameter::ValueType& cropOptions = {},
-                                 ChoicesParameter::ValueType resampleMode = k_NoResample, float32 scalingFactor = 100.0f, const VectorUInt64Parameter::ValueType& exactDims = {200, 200},
+                                 ChoicesParameter::ValueType resampleMode = k_NoResample, float32 scalingFactor = 100.0f, const VectorUInt64ParameterType::ValueType& exactDims = {200, 200},
                                  ChoicesParameter::ValueType flipMode = k_NoFlip, bool convertToGrayscale = false, bool changeOrigin = false, const std::vector<float32>& origin = {0.0, 0.0, 0.0},
                                  bool changeSpacing = false, const std::vector<float32>& spacing = {1.0, 1.0, 1.0}, ChoicesParameter::ValueType originSpacingTiming = k_Postprocessed)
 {
@@ -1341,7 +1341,7 @@ void CheckNestedImageStack(NestedImageStackResampling resampling, const SizeVec3
   args.insertOrAssign(ReadImageStackFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(imageArrayName));
   args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(resampleMode));
   args.insertOrAssign(ReadImageStackFilter::k_Scaling_Key, std::make_any<float32>(scaling));
-  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<nx::core::uint64>{3, 2}));
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<nx::core::uint64>{3, 2}));
   const auto preflightResult = filter.preflight(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1856,7 +1856,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_X_PreflightWar
   crop.xBoundPhysical = {-1.0f, 2.0f};
   args.insertOrAssign(ReadImageStackFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
   args.insertOrAssign(ReadImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(resampleMode));
-  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<nx::core::uint64>{3, 2}));
+  args.insertOrAssign(ReadImageStackFilter::k_ExactXYDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<nx::core::uint64>{3, 2}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);

@@ -93,15 +93,15 @@ struct SplitTypeOptions
   static constexpr bool AllowEmptyFinal = EmptyFinalV;
 };
 
-using SplitIgnoreEmpty = SplitTypeOptions<false, false, false>;
+using SplitIgnoreEmptyType = SplitTypeOptions<false, false, false>;
 using SplitAllowAll = SplitTypeOptions<true, true, true>;
 using SplitNoStripIgnoreConsecutive = SplitTypeOptions<false, true, true>;
 using SplitOnlyConsecutive = SplitTypeOptions<true, false, false>;
 using SplitAllowEmptyLeftAnalyze = SplitTypeOptions<true, true, false>;
 using SplitAllowEmptyRightAnalyze = SplitTypeOptions<true, false, true>;
 
-template <class SplitTypeOptionsV = SplitIgnoreEmpty>
-inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
+template <class SplitTypeOptionsV = SplitIgnoreEmptyType>
+inline std::vector<std::string> OptimizedSplit(std::string_view str, nonstd::span<const char> delimiters)
 {
   if(str.empty())
   {
@@ -165,7 +165,7 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
 }
 } // namespace detail
 
-inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
+inline constexpr StringLiteralType k_Whitespaces = " \t\f\v\n\r";
 
 /**
  * @brief Replace characters in a string. If 'from' is empty, the origin string is returned.
@@ -286,17 +286,17 @@ inline std::vector<std::string> specific_split(std::string_view str, nonstd::spa
   switch(splitType)
   {
   case IgnoreEmpty:
-    return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitIgnoreEmptyType>(str, delimiters);
   case AllowAll:
-    return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowAll>(str, delimiters);
   case NoStripIgnoreConsecutive:
-    return detail::optimized_split<detail::SplitNoStripIgnoreConsecutive>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitNoStripIgnoreConsecutive>(str, delimiters);
   case OnlyConsecutive:
-    return detail::optimized_split<detail::SplitOnlyConsecutive>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitOnlyConsecutive>(str, delimiters);
   case AllowEmptyLeftAnalyze:
-    return detail::optimized_split<detail::SplitAllowEmptyLeftAnalyze>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowEmptyLeftAnalyze>(str, delimiters);
   case AllowEmptyRightAnalyze:
-    return detail::optimized_split<detail::SplitAllowEmptyRightAnalyze>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowEmptyRightAnalyze>(str, delimiters);
   }
 
   return {};
@@ -307,16 +307,16 @@ inline std::vector<std::string> Split(std::string_view str, nonstd::span<const c
   if(keepEmptyTokens)
   {
     // Split Allow All was selected to match QString's base split functionality
-    return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowAll>(str, delimiters);
   }
 
-  return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
+  return detail::OptimizedSplit<detail::SplitIgnoreEmptyType>(str, delimiters);
 }
 
 inline std::vector<std::string> Split(std::string_view str, char delim)
 {
   std::array<char, 1> delimiters = {delim};
-  return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
+  return detail::OptimizedSplit<detail::SplitIgnoreEmptyType>(str, delimiters);
 }
 
 inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)

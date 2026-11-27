@@ -25,7 +25,7 @@ public:
                                                                       "Tetragonal-High 4/mmm", "Trigonal-Low -3", "Trigonal-High -3m"};
   static inline const std::vector<std::string> k_PhaseTypes = {"Primary", "Precipitate", "Transformation", "Matrix", "Boundary"};
 
-  static constexpr StringLiteral k_DefaultPhaseName = "_PHASE_NAME_";
+  static constexpr StringLiteralType k_DefaultPhaseName = "_PHASE_NAME_";
 
   EnsembleInfoParameter() = delete;
 
@@ -55,7 +55,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -95,7 +95,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT EnsembleInfoFilterParameterConverter
 {
@@ -104,7 +104,7 @@ struct SIMPLNX_EXPORT EnsembleInfoFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::EnsembleInfoParameter, "10d3924f-b4c9-4e06-9225-ce11ec8dff89");

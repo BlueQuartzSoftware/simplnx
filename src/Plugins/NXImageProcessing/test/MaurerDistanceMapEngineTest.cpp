@@ -292,12 +292,12 @@ public:
     return m_Store.memoryUsage();
   }
 
-  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  Result<> readHdf5(const hdf5::DatasetIO& dataset) override
   {
     return m_Store.readHdf5(dataset);
   }
 
-  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  Result<> writeHdf5(hdf5::DatasetIO& dataset) const override
   {
     return m_Store.writeHdf5(dataset);
   }

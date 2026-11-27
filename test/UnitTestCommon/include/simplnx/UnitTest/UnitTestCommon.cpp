@@ -63,7 +63,7 @@ DataStructure LoadDataStructure(const fs::path& filepath)
   LoadPlugins();
   REQUIRE(fs::exists(filepath));
 
-  auto result = DREAM3D::LoadDataStructure(filepath);
+  auto result = dream3d::LoadDataStructure(filepath);
   if(result.invalid())
   {
     for(const auto& error : result.errors())
@@ -445,7 +445,7 @@ void LoadPlugins()
 void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
 {
   Pipeline pipeline;
-  const Result<> result2 = DREAM3D::WriteFile(filepath, dataStructure, pipeline, true);
+  const Result<> result2 = dream3d::WriteFile(filepath, dataStructure, pipeline, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result2);
 }
 
@@ -1247,7 +1247,7 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
     cv.cropX = false;
     cv.cropY = false;
     cv.cropZ = false;
-    cv.is2D = is2D;
+    cv.is_2d = is2D;
     out.push_back(cv);
   }
 
@@ -1277,7 +1277,7 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
           cv.cropX = cx;
           cv.cropY = cy;
           cv.cropZ = false;
-          cv.is2D = is2D;
+          cv.is_2d = is2D;
 
           if(xb)
           {
@@ -1322,7 +1322,7 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
           cv.cropX = cx;
           cv.cropY = cy;
           cv.cropZ = false;
-          cv.is2D = is2D;
+          cv.is_2d = is2D;
 
           if(xb)
           {
@@ -1356,9 +1356,9 @@ namespace SmallIn100
 // -----------------------------------------------------------------------------
 void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList, bool useBoolOutputType)
 {
-  constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds_object";
-  constexpr StringLiteral k_CreatedDataPath_Key = "output_data_array_name";
-  constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
+  constexpr StringLiteralType k_ArrayThresholds_Key = "array_thresholds_object";
+  constexpr StringLiteralType k_CreatedDataPath_Key = "output_data_array_name";
+  constexpr StringLiteralType k_CreatedMaskType_Key = "created_mask_type";
 
   INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
 
@@ -1410,9 +1410,9 @@ void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filte
   REQUIRE(nullptr != filter);
 
   // These keys select the inputs used by the legacy Small IN100 workflow.
-  constexpr StringLiteral k_FillHoles_Key = "fill_holes";
-  constexpr StringLiteral k_ImageGeom_Key = "input_image_geometry_path";
-  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  constexpr StringLiteralType k_FillHoles_Key = "fill_holes";
+  constexpr StringLiteralType k_ImageGeom_Key = "input_image_geometry_path";
+  constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 
   Arguments args;
   args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));

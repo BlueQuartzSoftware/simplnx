@@ -728,9 +728,9 @@ void ComputeShapes::findAxisEulers()
 
     // Each row contains one principal axis, ordered by increasing inertia.
     const usize idx = featureId * 9;
-    OrientationUtilities::Matrix3dR frame;
+    orientation_utilities::Matrix3dRType frame;
     frame << m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6], m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7], m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8];
-    const auto eu = OrientationUtilities::PrincipalAxisFrameToEuler(frame);
+    const auto eu = orientation_utilities::PrincipalAxisFrameToEuler(frame);
 
     axisEulerAngles[3 * featureId] = eu[0];
     axisEulerAngles[3 * featureId + 1] = eu[1];

@@ -33,7 +33,7 @@ bool Parameters::empty() const
   return m_Params.empty();
 }
 
-void Parameters::insert(IParameter::UniquePointer parameter)
+void Parameters::insert(IParameter::UniquePointerType parameter)
 {
   if(parameter == nullptr)
   {
@@ -73,7 +73,7 @@ const AnyParameter& Parameters::at(std::string_view key) const
   return MapAt(m_Params, key, "Key '{}' does not exist in Parameters");
 }
 
-void Parameters::insertLinkableParameter(IParameter::UniquePointer parameter, IsActiveFunc func)
+void Parameters::insertLinkableParameter(IParameter::UniquePointerType parameter, IsActiveFunc func)
 {
   std::string name = parameter->name();
   insert(std::move(parameter));

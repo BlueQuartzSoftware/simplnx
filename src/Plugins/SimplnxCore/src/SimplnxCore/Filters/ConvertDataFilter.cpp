@@ -80,7 +80,7 @@ IFilter::VersionType ConvertDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertDataFilter::clone() const
+IFilter::UniquePointerType ConvertDataFilter::clone() const
 {
   return std::make_unique<ConvertDataFilter>();
 }
@@ -144,9 +144,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_OutputArrayNameKey = "OutputArrayName";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_OutputArrayNameKey = "OutputArrayName";
 } // namespace simpl
 namespace simpl_conversion_custom
 {
@@ -176,9 +176,9 @@ Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<simpl_conversion_custom::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion_custom::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

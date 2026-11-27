@@ -600,7 +600,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Extern
   BuildTerminationData(dataStructure, {0.2F, 0.3F, 0.4F, 0.45F});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath));
   const auto& cellDataRef = dataStructure.getDataRefAs<AttributeMatrix>(k_CellDataPath);
-  const StringArray::collection_type labels = {"donor", "target", "third", "fourth"};
+  const StringArray::CollectionType labels = {"donor", "target", "third", "fourth"};
   const auto* labelsPtr = StringArray::CreateWithValues(dataStructure, "Labels", cellDataRef.getShape(), labels, cellDataRef.getId());
   REQUIRE(labelsPtr != nullptr);
   const bool useRootArray = GENERATE(false, true);
@@ -687,7 +687,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Compar
     const auto* cellDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_CellDataPath);
     REQUIRE(cellDataPtr != nullptr);
     const DataPath labelsPath = k_CellDataPath.createChildPath("Labels");
-    const StringArray::collection_type labels = {"first", "second", "third", "fourth"};
+    const StringArray::CollectionType labels = {"first", "second", "third", "fourth"};
     REQUIRE(StringArray::CreateWithValues(dataStructure, labelsPath.getTargetName(), cellDataPtr->getShape(), labels, cellDataPtr->getId()) != nullptr);
     args.insertOrAssign(FilterType::k_ComparisonDataPath, std::make_any<DataPath>(AddCellArrayAlias(dataStructure, labelsPath)));
 

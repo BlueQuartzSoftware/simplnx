@@ -82,7 +82,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    static constexpr StringLiteral k_Prefix = "CreateVertexGeometryAction: ";
+    static constexpr StringLiteralType k_Prefix = "CreateVertexGeometryAction: ";
     if(getCreatedPath().empty())
     {
       return MakeErrorResult(-6101, fmt::format("{}Geometry Path cannot be empty", k_Prefix));
@@ -183,7 +183,7 @@ public:
     return {};
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     auto action = std::make_unique<CreateVertexGeometryAction>(getCreatedPath(), m_NumVertices, m_VertexDataName, m_SharedVertexListName, m_Units);
     action->m_InputVertices = m_InputVertices;

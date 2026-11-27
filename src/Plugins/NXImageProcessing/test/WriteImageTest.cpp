@@ -232,7 +232,7 @@ void RunColorRoundtripForType(UnitTest::AlgorithmTestScenario scenario)
     args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(inlineDir.path() / "slice.tif"));
     args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
     args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
     args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
     args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
@@ -316,7 +316,7 @@ IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, 
   args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(k_BinaryTestOutputDir / fileName));
   args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
   args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-  args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
   args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(false));
   args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
@@ -383,7 +383,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
     args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
     args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -411,7 +411,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
     args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
     args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XZPlane));
-    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -439,7 +439,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Write Stack", "[NXImageProcessin
     args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
     args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
     args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_YZPlane));
-    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
     args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -760,7 +760,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Color table preflight validation
   args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(k_BinaryTestOutputDir / "ct_pf.tif"));
   args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
   args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-  args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
   args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
@@ -889,7 +889,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table 3D multi-slic
       args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(planeDir.path() / "slice.tif"));
       args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
       args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(planeIndex));
-      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
       args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
       args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
       args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
@@ -1120,7 +1120,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
         args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(maskDir.path() / "slice.tif"));
         args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
         args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-        args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+        args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
         args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
         args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
         args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
@@ -1188,7 +1188,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Inline color table mask and cons
       args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(constDir.path() / "slice.tif"));
       args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
       args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
       args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
       args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
       args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
@@ -1261,7 +1261,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Flip output image about X or Y a
       args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.png"));
       args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
       args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
       args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
       args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(flipMode));
 
@@ -1368,7 +1368,7 @@ TEST_CASE("NXImageProcessing::WriteImageFilter: Output flip composes with the co
       args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.tif"));
       args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
       args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32ParameterType::ValueType>(3));
       args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
       args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
       args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));

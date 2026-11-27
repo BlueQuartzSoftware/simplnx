@@ -1048,7 +1048,7 @@ SurfaceMeshingTest::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool seria
 {
   const ScopedEnvVar wholeVolumeVar("M3C_WHOLE_VOLUME", wholeVolume ? "1" : nullptr);
   const ScopedEnvVar serialVar("M3C_SERIAL", serial ? "1" : nullptr);
-  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SweepPathTriGeomPath, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly,
+  return SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SweepPathTriGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
                                                                 [](Arguments&) {});
 }
 } // namespace
@@ -1153,7 +1153,7 @@ void RunM3CSharpEdges(DataStructure& dataStructure, bool sharpEdges)
   M3CSurfaceMeshingFilter filter;
   Arguments args;
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
-  args.insertOrAssign(M3CSurfaceMeshingFilter::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(BoundingBoxSkinMode::k_Off));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(bounding_box_skin_mode::k_Off));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_SharpBoundingBoxEdges_Key, std::make_any<bool>(sharpEdges));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(k_SharpEdgesImageGeomPath));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_SharpEdgesFeatureIdsPath));

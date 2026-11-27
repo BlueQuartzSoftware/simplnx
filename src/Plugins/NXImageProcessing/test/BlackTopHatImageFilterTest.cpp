@@ -88,7 +88,7 @@ TEST_CASE("NXImageProcessing::BlackTopHatImageFilter: Ramp computed-expected (bo
   args.insertOrAssign(BlackTopHatImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BlackTopHatImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Box)));
   args.insertOrAssign(BlackTopHatImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
   // Safe Border == false so the skip-OOB closed form below applies; this exercises the composite's OOC
   // streaming of the plain two-pass path (plus the subtract) on both algorithm iterations.
   args.insertOrAssign(BlackTopHatImageFilter::k_SafeBorder_Key, std::make_any<bool>(false));

@@ -77,17 +77,17 @@ float32 SmoothingLambda(int8 nodeType, const LaplacianSmoothingInputValues& inpu
 {
   switch(nodeType)
   {
-  case NodeType::Default:
+  case node_type::Default:
     return input.pLambda;
-  case NodeType::TriplePoint:
+  case node_type::TriplePoint:
     return input.pTripleLineLambda;
-  case NodeType::QuadPoint:
+  case node_type::QuadPoint:
     return input.pQuadPointLambda;
-  case NodeType::SurfaceDefault:
+  case node_type::SurfaceDefault:
     return input.pSurfacePointLambda;
-  case NodeType::SurfaceTriplePoint:
+  case node_type::SurfaceTriplePoint:
     return input.pSurfaceTripleLineLambda;
-  case NodeType::SurfaceQuadPoint:
+  case node_type::SurfaceQuadPoint:
     return input.pSurfaceQuadPointLambda;
   default:
     return 0.0F;
@@ -800,24 +800,24 @@ Result<> LaplacianSmoothing::generateLambdaArray(std::vector<float>& lambdas) co
   {
     switch(nodeTypes[i])
     {
-    case nx::core::NodeType::Unused:
+    case nx::core::node_type::Unused:
       break;
-    case nx::core::NodeType::Default:
+    case nx::core::node_type::Default:
       lambdas[i] = m_InputValues->pLambda;
       break;
-    case nx::core::NodeType::TriplePoint:
+    case nx::core::node_type::TriplePoint:
       lambdas[i] = m_InputValues->pTripleLineLambda;
       break;
-    case nx::core::NodeType::QuadPoint:
+    case nx::core::node_type::QuadPoint:
       lambdas[i] = m_InputValues->pQuadPointLambda;
       break;
-    case nx::core::NodeType::SurfaceDefault:
+    case nx::core::node_type::SurfaceDefault:
       lambdas[i] = m_InputValues->pSurfacePointLambda;
       break;
-    case nx::core::NodeType::SurfaceTriplePoint:
+    case nx::core::node_type::SurfaceTriplePoint:
       lambdas[i] = m_InputValues->pSurfaceTripleLineLambda;
       break;
-    case nx::core::NodeType::SurfaceQuadPoint:
+    case nx::core::node_type::SurfaceQuadPoint:
       lambdas[i] = m_InputValues->pSurfaceQuadPointLambda;
       break;
     default:

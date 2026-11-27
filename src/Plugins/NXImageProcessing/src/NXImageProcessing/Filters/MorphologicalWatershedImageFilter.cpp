@@ -45,7 +45,7 @@ Parameters MorphologicalWatershedImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_Level_Key, "Level", "Set the 'level' variable to the filter", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Level_Key, "Level", "Set the 'level' variable to the filter", 0.0));
   params.insert(std::make_unique<BoolParameter>(
       k_MarkWatershedLine_Key, "MarkWatershedLine",
       "Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity.", true));
@@ -56,7 +56,7 @@ Parameters MorphologicalWatershedImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -70,7 +70,7 @@ IFilter::VersionType MorphologicalWatershedImageFilter::parametersVersion() cons
 {
   return 1;
 }
-IFilter::UniquePointer MorphologicalWatershedImageFilter::clone() const
+IFilter::UniquePointerType MorphologicalWatershedImageFilter::clone() const
 {
   return std::make_unique<MorphologicalWatershedImageFilter>();
 }
@@ -147,11 +147,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_LevelKey = "Level";
-constexpr StringLiteral k_MarkWatershedLineKey = "MarkWatershedLine";
-constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_LevelKey = "Level";
+constexpr StringLiteralType k_MarkWatershedLineKey = "MarkWatershedLine";
+constexpr StringLiteralType k_FullyConnectedKey = "FullyConnected";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -161,12 +161,12 @@ Result<Arguments> MorphologicalWatershedImageFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_LevelKey, k_Level_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_MarkWatershedLineKey, k_MarkWatershedLine_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_LevelKey, k_Level_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_MarkWatershedLineKey, k_MarkWatershedLine_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

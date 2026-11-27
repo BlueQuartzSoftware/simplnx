@@ -24,11 +24,11 @@ public:
   ComputeFeatureCentroidsFilter& operator=(ComputeFeatureCentroidsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_IsPeriodic_Key = "is_periodic";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CentroidsArrayName_Key = "centroids_array_name";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_IsPeriodic_Key = "is_periodic";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

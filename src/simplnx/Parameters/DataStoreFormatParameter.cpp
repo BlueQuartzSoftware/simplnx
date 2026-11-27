@@ -49,7 +49,7 @@ Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& js
   return {{json.get<ValueType>()}};
 }
 
-IParameter::UniquePointer DataStoreFormatParameter::clone() const
+IParameter::UniquePointerType DataStoreFormatParameter::clone() const
 {
   return std::make_unique<DataStoreFormatParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }

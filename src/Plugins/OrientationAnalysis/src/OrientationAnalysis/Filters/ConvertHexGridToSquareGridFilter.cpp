@@ -110,7 +110,7 @@ IFilter::VersionType ConvertHexGridToSquareGridFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertHexGridToSquareGridFilter::clone() const
+IFilter::UniquePointerType ConvertHexGridToSquareGridFilter::clone() const
 {
   return std::make_unique<ConvertHexGridToSquareGridFilter>();
 }

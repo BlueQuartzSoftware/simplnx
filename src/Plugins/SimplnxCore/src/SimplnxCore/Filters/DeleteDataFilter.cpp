@@ -69,7 +69,7 @@ IFilter::VersionType DeleteDataFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer DeleteDataFilter::clone() const
+IFilter::UniquePointerType DeleteDataFilter::clone() const
 {
   return std::make_unique<DeleteDataFilter>();
 }
@@ -209,7 +209,7 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_DataArraysToRemoveKey = "DataArraysToRemove";
+constexpr StringLiteralType k_DataArraysToRemoveKey = "DataArraysToRemove";
 } // namespace simpl
 } // namespace
 
@@ -219,7 +219,7 @@ Result<Arguments> DeleteDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraysToRemoveConverter>(args, json, simpl::k_DataArraysToRemoveKey, k_DataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraysToRemoveConverter>(args, json, simpl::k_DataArraysToRemoveKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

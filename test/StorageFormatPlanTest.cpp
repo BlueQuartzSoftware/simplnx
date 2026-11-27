@@ -64,8 +64,8 @@ namespace fs = std::filesystem;
 namespace
 {
 constexpr uint64 k_LogicalBytes = 100'000'000'000ULL;
-constexpr StringLiteral k_LargeArrayName = "LargeMetadata";
-constexpr StringLiteral k_SelectedFormat = "storage-format-plan-test";
+constexpr StringLiteralType k_LargeArrayName = "LargeMetadata";
+constexpr StringLiteralType k_SelectedFormat = "storage-format-plan-test";
 const DataPath k_LargeArrayPath({k_LargeArrayName});
 
 template <class Store>
@@ -154,9 +154,9 @@ struct ScopedTempFile
 
 void CreateLargeMetadataFile(const fs::path& filePath)
 {
-  HDF5::FileIO fileWriter = HDF5::FileIO::WriteFile(filePath);
+  hdf5::FileIO fileWriter = hdf5::FileIO::WriteFile(filePath);
   REQUIRE(fileWriter.isValid());
-  auto fileWriterFileVersionWriteResult = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_CurrentFileVersion.str());
+  auto fileWriterFileVersionWriteResult = fileWriter.writeStringAttribute("FileVersion", dream3d::k_CurrentFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(fileWriterFileVersionWriteResult);
   auto dataStructureGroup = fileWriter.createGroup(Constants::k_DataStructureTag);
   REQUIRE(dataStructureGroup.isValid());
@@ -164,7 +164,7 @@ void CreateLargeMetadataFile(const fs::path& filePath)
   SIMPLNX_RESULT_REQUIRE_VALID(dataStructureGroupNextIdWriteResult);
 
   {
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     const std::array<hsize_t, 1> dimensions{static_cast<hsize_t>(k_LogicalBytes)};
     const std::array<hsize_t, 1> chunkDimensions{1024 * 1024};
     const hid_t dataspaceId = H5Screate_simple(static_cast<int>(dimensions.size()), dimensions.data(), nullptr);
@@ -491,7 +491,7 @@ TEST_CASE("StorageFormatPlan: import resolver receives 100 GB logical bytes from
   CreateLargeMetadataFile(filePath);
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
   auto inMemoryResolver = std::make_shared<InMemoryFormatResolver>();
@@ -563,10 +563,10 @@ Int32Array* CreateImportPolicyArray(DataStructure& dataStructure, const DataPath
  * @param expected Supplies literal values independent of import output.
  */
 template <usize Count>
-void CheckImportPolicyFileArray(const HDF5::FileIO& fileReader, const DataPath& path, const std::array<int32, Count>& expected)
+void CheckImportPolicyFileArray(const hdf5::FileIO& fileReader, const DataPath& path, const std::array<int32, Count>& expected)
 {
   const auto fileId = fileReader.getId();
-  const std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  const std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
   const std::string datasetPath = "/DataStructure/" + path.toString();
   const hid_t datasetId = H5Dopen2(fileId, datasetPath.c_str(), H5P_DEFAULT);
   REQUIRE(datasetId >= 0);
@@ -593,17 +593,17 @@ void WriteImportPolicyFile(const fs::path& path)
   CreateImportPolicyArray(source, k_ImportPolicyFirst, k_ImportPolicyFirstValues, groupPtr->getId());
   CreateImportPolicyArray(source, k_ImportPolicySecond, k_ImportPolicySecondValues, groupPtr->getId());
   CreateImportPolicyArray(source, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues, groupPtr->getId());
-  const auto writeResult = DREAM3D::WriteFile(path, source);
+  const auto writeResult = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   {
-    const auto fileReader = HDF5::FileIO::ReadFile(path);
+    const auto fileReader = hdf5::FileIO::ReadFile(path);
     REQUIRE(fileReader.isValid());
     CheckImportPolicyFileArray(fileReader, k_ImportPolicyFirst, k_ImportPolicyFirstValues);
     CheckImportPolicyFileArray(fileReader, k_ImportPolicySecond, k_ImportPolicySecondValues);
     CheckImportPolicyFileArray(fileReader, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues);
   }
   fs::last_write_time(path, fs::file_time_type::clock::now() - std::chrono::seconds(10));
-  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(path) >= dream3d::Dream3dPreflightCache::k_MtimeTrustWindow));
 }
 
 template <usize Count>
@@ -758,7 +758,7 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
     const bool warmCache = GENERATE(false, true);
     CAPTURE(static_cast<int>(mode), warmCache);
     const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_process_policy.dream3d");
-    auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+    auto& cache = dream3d::Dream3dPreflightCache::Instance();
     const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
     const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
     const auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
@@ -837,7 +837,7 @@ TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata befo
     const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
     CAPTURE(static_cast<int>(mode));
     const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_complete_context.dream3d");
-    auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+    auto& cache = dream3d::Dream3dPreflightCache::Instance();
     const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
     const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
     const auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
@@ -877,7 +877,7 @@ struct SelectedImportTestContext
   // The guard also restores the incoming owner if fixture construction throws.
   decltype(UnitTest::SetDefaultFormatResolverForScope(nullptr)) restore_resolver = UnitTest::SetDefaultFormatResolverForScope(memory_resolver);
   ScopedTempFile file;
-  DREAM3D::Dream3dPreflightCache& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  dream3d::Dream3dPreflightCache& cache = dream3d::Dream3dPreflightCache::Instance();
 
   explicit SelectedImportTestContext(const std::string& name)
   : file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / name)
@@ -1320,7 +1320,7 @@ public:
    * @param reader Supplies the closed-and-reopened source fixture.
    * @return Completed-read warning or the deliberate second-leaf or duplicate-call error.
    */
-  Result<> onImportFinalize(DataStructure& structure, const std::vector<DataPath>& paths, const HDF5::FileIO& reader) override
+  Result<> onImportFinalize(DataStructure& structure, const std::vector<DataPath>& paths, const hdf5::FileIO& reader) override
   {
     ++calls;
     if(calls != 1)
@@ -1356,7 +1356,7 @@ public:
     }
 
     Result<> result;
-    const std::string root = DREAM3D::GetFileVersion(reader) == DREAM3D::k_LegacyFileVersion ? "/DataContainers/" : "/DataStructure/";
+    const std::string root = dream3d::GetFileVersion(reader) == dream3d::k_LegacyFileVersion ? "/DataContainers/" : "/DataStructure/";
     for(const auto& path : expected_leaves)
     {
       ++leaf_attempts;
@@ -1372,7 +1372,7 @@ public:
       {
         const auto dataset = reader.openDataset(root + path.toString());
         ++numeric_reads;
-        auto read = HDF5::DataStoreIO::ReadDataStoreIntoMemory<int32>(dataset);
+        auto read = hdf5::data_store_io::ReadDataStoreIntoMemory<int32>(dataset);
         if(read.invalid())
         {
           return MergeResults(std::move(result), ConvertResult(std::move(read)));
@@ -1387,7 +1387,7 @@ public:
       }
       else
       {
-        step = HDF5::DataStructureReader::FinishImportingObject(structure, reader, path);
+        step = hdf5::DataStructureReader::FinishImportingObject(structure, reader, path);
       }
       result = MergeResults(std::move(result), std::move(step));
       if(result.invalid())
@@ -1423,10 +1423,10 @@ void WriteC8FinalizerFile(const fs::path& path)
   listsPtr->setList(1, std::vector<int32>{});
   listsPtr->setList(2, std::vector<int32>{9});
   REQUIRE(StringArray::CreateWithValues(source, "Strings", ShapeType{2}, {"first", "last"}, groupPtr->getId()) != nullptr);
-  auto write = DREAM3D::WriteFile(path, source);
+  auto write = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
   {
-    const auto reader = HDF5::FileIO::ReadFile(path);
+    const auto reader = hdf5::FileIO::ReadFile(path);
     REQUIRE(reader.isValid());
     CheckImportPolicyFileArray(reader, k_ImportPolicyFirst, k_ImportPolicyFirstValues);
     CheckImportPolicyFileArray(reader, k_ImportPolicySecond, k_ImportPolicySecondValues);
@@ -1443,9 +1443,9 @@ void WriteC8FinalizerFile(const fs::path& path)
 void WriteC8LegacyPlanWarningFile(const fs::path& path)
 {
   {
-    auto file = HDF5::FileIO::WriteFile(path);
+    auto file = hdf5::FileIO::WriteFile(path);
     REQUIRE(file.isValid());
-    REQUIRE(file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    REQUIRE(file.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str()).valid());
     auto containers = file.createGroup("DataContainers");
     auto container = containers.createGroup("PlanContainer");
     auto matrix = container.createGroup("CellData");
@@ -1464,10 +1464,10 @@ void WriteC8LegacyPlanWarningFile(const fs::path& path)
     REQUIRE(unsupported.writeStringAttribute(Constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
   }
   {
-    const auto reader = HDF5::FileIO::ReadFile(path);
+    const auto reader = hdf5::FileIO::ReadFile(path);
     REQUIRE(reader.isValid());
     const auto fileId = reader.getId();
-    const std::lock_guard lock(HDF5::Support::ApiLock());
+    const std::lock_guard lock(hdf5::Support::ApiLock());
     for(const std::string name : {"First", "Second"})
     {
       const std::string datasetPath = "/DataContainers/PlanContainer/CellData/" + name;
@@ -1576,7 +1576,7 @@ TEST_CASE("C8 single active finalizer observes complete plans and exact leaves o
   CHECK(stringsPtr->values() == std::vector<std::string>{"first", "last"});
   CHECK(destination.getAllDataPaths().size() == 6);
   const auto idsBeforeDuplicate = destination.getAllDataObjectIds();
-  const auto reader = HDF5::FileIO::ReadFile(context.file.path);
+  const auto reader = hdf5::FileIO::ReadFile(context.file.path);
   auto duplicate = manager->onImportFinalize(destination, manager->expected_leaves, reader);
   REQUIRE(duplicate.invalid());
   REQUIRE(duplicate.errors().size() == 1);

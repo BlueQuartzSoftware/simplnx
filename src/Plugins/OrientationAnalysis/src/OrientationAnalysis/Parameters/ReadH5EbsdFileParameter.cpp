@@ -21,12 +21,12 @@ namespace nx::core
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePath = "input_file_path";
-constexpr StringLiteral k_StartSlice = "start_slice";
-constexpr StringLiteral k_EndSlice = "end_slice";
-constexpr StringLiteral k_UseRecommendedTransform = "use_recommended_transform";
-constexpr StringLiteral k_EulerRepresentation = "euler_representation";
-constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
+constexpr StringLiteralType k_InputFilePath = "input_file_path";
+constexpr StringLiteralType k_StartSlice = "start_slice";
+constexpr StringLiteralType k_EndSlice = "end_slice";
+constexpr StringLiteralType k_UseRecommendedTransform = "use_recommended_transform";
+constexpr StringLiteralType k_EulerRepresentation = "euler_representation";
+constexpr StringLiteralType k_HDF5DataPaths = "hdf5_data_paths";
 
 } // namespace
 
@@ -87,7 +87,7 @@ nlohmann::json ReadH5EbsdFileParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ReadH5EbsdFileParameter' Error: ";
 
   if(!json.is_object())
   {
@@ -185,7 +185,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer ReadH5EbsdFileParameter::clone() const
+IParameter::UniquePointerType ReadH5EbsdFileParameter::clone() const
 {
   return std::make_unique<ReadH5EbsdFileParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }

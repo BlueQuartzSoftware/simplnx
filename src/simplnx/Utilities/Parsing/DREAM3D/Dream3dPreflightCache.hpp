@@ -13,7 +13,7 @@
 #include <optional>
 #include <string>
 
-namespace nx::core::DREAM3D
+namespace nx::core::dream3d
 {
 /**
  * @struct NeutralMetadataHandout
@@ -213,7 +213,7 @@ private:
     std::vector<Warning> diskWarnings;
     uint64 fileSize = 0;
     std::filesystem::file_time_type mtime;
-    uint64 lastUsedTick = 0;
+    uint64 last_used_tick = 0;
   };
 
   /**
@@ -230,4 +230,4 @@ private:
   std::atomic<uint64> m_Hits{0};
   std::atomic<uint64> m_Misses{0};
 };
-} // namespace nx::core::DREAM3D
+} // namespace nx::core::dream3d

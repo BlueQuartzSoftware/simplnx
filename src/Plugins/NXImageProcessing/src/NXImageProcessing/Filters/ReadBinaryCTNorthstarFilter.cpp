@@ -362,8 +362,8 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{".nsihdr"}, FileSystemPathParameter::PathType::InputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSubvolume_Key, "Import Subvolume", "Import a subvolume instead of the entire volume", false));
   params.insert(
-      std::make_unique<VectorInt32Parameter>(k_StartVoxelCoord_Key, "Starting XYZ Voxel for Subvolume", "The starting subvolume voxel", std::vector<int32>({0, 0, 0}), std::vector<std::string>(3)));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_EndVoxelCoord_Key, "Ending XYZ Voxel for Subvolume", "The ending subvolume voxel (inclusive)", std::vector<int32>({1, 1, 1}),
+      std::make_unique<VectorInt32ParameterType>(k_StartVoxelCoord_Key, "Starting XYZ Voxel for Subvolume", "The starting subvolume voxel", std::vector<int32>({0, 0, 0}), std::vector<std::string>(3)));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_EndVoxelCoord_Key, "Ending XYZ Voxel for Subvolume", "The ending subvolume voxel (inclusive)", std::vector<int32>({1, 1, 1}),
                                                        std::vector<std::string>(3)));
 
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
@@ -392,7 +392,7 @@ IFilter::VersionType ReadBinaryCTNorthstarFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadBinaryCTNorthstarFilter::clone() const
+IFilter::UniquePointerType ReadBinaryCTNorthstarFilter::clone() const
 {
   return std::make_unique<ReadBinaryCTNorthstarFilter>();
 }
@@ -407,8 +407,8 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
   auto pLengthUnitValue = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
   auto pImportSubvolumeValue = filterArgs.value<bool>(k_ImportSubvolume_Key);
-  auto pStartVoxelCoordValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_StartVoxelCoord_Key);
-  auto pEndVoxelCoordValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_EndVoxelCoord_Key);
+  auto pStartVoxelCoordValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_StartVoxelCoord_Key);
+  auto pEndVoxelCoordValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_EndVoxelCoord_Key);
 
   if(!fs::exists(pInputHeaderFileValue))
   {
@@ -558,17 +558,17 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputHeaderFileKey = "InputHeaderFile";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
-constexpr StringLiteral k_LengthUnitKey = "LengthUnit";
-constexpr StringLiteral k_VolumeDescriptionKey = "VolumeDescription";
-constexpr StringLiteral k_DataFileInfoKey = "DataFileInfo";
-constexpr StringLiteral k_ImportSubvolumeKey = "ImportSubvolume";
-constexpr StringLiteral k_StartVoxelCoordKey = "StartVoxelCoord";
-constexpr StringLiteral k_EndVoxelCoordKey = "EndVoxelCoord";
-constexpr StringLiteral k_ImportedVolumeDescriptionKey = "ImportedVolumeDescription";
+constexpr StringLiteralType k_InputHeaderFileKey = "InputHeaderFile";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_DensityArrayNameKey = "DensityArrayName";
+constexpr StringLiteralType k_LengthUnitKey = "LengthUnit";
+constexpr StringLiteralType k_VolumeDescriptionKey = "VolumeDescription";
+constexpr StringLiteralType k_DataFileInfoKey = "DataFileInfo";
+constexpr StringLiteralType k_ImportSubvolumeKey = "ImportSubvolume";
+constexpr StringLiteralType k_StartVoxelCoordKey = "StartVoxelCoord";
+constexpr StringLiteralType k_EndVoxelCoordKey = "EndVoxelCoord";
+constexpr StringLiteralType k_ImportedVolumeDescriptionKey = "ImportedVolumeDescription";
 } // namespace simpl
 } // namespace
 
@@ -578,16 +578,16 @@ Result<Arguments> ReadBinaryCTNorthstarFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputHeaderFileKey, k_InputHeaderFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DensityArrayNameKey, k_DensityArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_LengthUnitKey, k_LengthUnit_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputHeaderFileKey, k_InputHeaderFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DensityArrayNameKey, k_DensityArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_LengthUnitKey, k_LengthUnit_Key));
   // Volume description parameter is not applicable in NX
   // Data file info parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ImportSubvolumeKey, k_ImportSubvolume_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_StartVoxelCoordKey, k_StartVoxelCoord_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_EndVoxelCoordKey, k_EndVoxelCoord_Key));
   // Imported Volume Description parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

@@ -34,7 +34,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Anisotropic spacing places Z corr
   const DataPath kTriangleGeomPath({"SurfaceNets"});
 
   SurfaceMeshingTest::MeshResult meshResult = SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(
-      std::move(dataStructure), kTriangleGeomPath, BoundingBoxSkinMode::k_Off,
+      std::move(dataStructure), kTriangleGeomPath, bounding_box_skin_mode::k_Off,
       [](Arguments& args) {
         args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
         args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));

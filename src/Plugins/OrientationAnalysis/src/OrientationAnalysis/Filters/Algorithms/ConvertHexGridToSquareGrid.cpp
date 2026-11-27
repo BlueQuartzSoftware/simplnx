@@ -368,7 +368,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 
   // Now generate all the file names the user is asking for and populate the table
   std::vector<std::string> fileList =
-      FilePathGenerator::GenerateFileList(m_InputValues->InputFileListInfo.startIndex, m_InputValues->InputFileListInfo.endIndex, m_InputValues->InputFileListInfo.incrementIndex,
+      file_path_generator::GenerateFileList(m_InputValues->InputFileListInfo.startIndex, m_InputValues->InputFileListInfo.endIndex, m_InputValues->InputFileListInfo.incrementIndex,
                                           m_InputValues->InputFileListInfo.ordering, m_InputValues->InputPath.string(), m_InputValues->InputFileListInfo.filePrefix,
                                           m_InputValues->InputFileListInfo.fileSuffix, m_InputValues->InputFileListInfo.fileExtension, m_InputValues->InputFileListInfo.paddingDigits);
 

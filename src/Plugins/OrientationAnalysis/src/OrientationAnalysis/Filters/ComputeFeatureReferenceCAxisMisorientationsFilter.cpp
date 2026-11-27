@@ -53,20 +53,20 @@ Parameters ComputeFeatureReferenceCAxisMisorientationsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The path to the input image geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgCAxesArrayPath_Key, "Average C-Axes", "The direction of the Feature's C-axis in the sample reference frame", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureReferenceCAxisMisorientationsArrayName_Key, "Feature Reference C-Axis Misorientations",
                                                           "Misorientation angle (in degrees) between Cell's C-axis and the C-axis of the Feature that owns that Cell",
@@ -88,7 +88,7 @@ IFilter::VersionType ComputeFeatureReferenceCAxisMisorientationsFilter::paramete
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeatureReferenceCAxisMisorientationsFilter::clone() const
+IFilter::UniquePointerType ComputeFeatureReferenceCAxisMisorientationsFilter::clone() const
 {
   return std::make_unique<ComputeFeatureReferenceCAxisMisorientationsFilter>();
 }
@@ -171,13 +171,13 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_QuatsArrayPathKey = "QuatsArrayPath";
-constexpr StringLiteral k_AvgCAxesArrayPathKey = "AvgCAxesArrayPath";
-constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayNameKey = "FeatureAvgCAxisMisorientationsArrayName";
-constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayNameKey = "FeatureStdevCAxisMisorientationsArrayName";
-constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayNameKey = "FeatureReferenceCAxisMisorientationsArrayName";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_QuatsArrayPathKey = "QuatsArrayPath";
+constexpr StringLiteralType k_AvgCAxesArrayPathKey = "AvgCAxesArrayPath";
+constexpr StringLiteralType k_FeatureAvgCAxisMisorientationsArrayNameKey = "FeatureAvgCAxisMisorientationsArrayName";
+constexpr StringLiteralType k_FeatureStdevCAxisMisorientationsArrayNameKey = "FeatureStdevCAxisMisorientationsArrayName";
+constexpr StringLiteralType k_FeatureReferenceCAxisMisorientationsArrayNameKey = "FeatureReferenceCAxisMisorientationsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -187,16 +187,16 @@ Result<Arguments> ComputeFeatureReferenceCAxisMisorientationsFilter::FromSIMPLJs
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureAvgCAxisMisorientationsArrayNameKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureAvgCAxisMisorientationsArrayNameKey,
                                                                                                                    k_FeatureAvgCAxisMisorientationsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureStdevCAxisMisorientationsArrayNameKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureStdevCAxisMisorientationsArrayNameKey,
                                                                                                                    k_FeatureStdevCAxisMisorientationsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureReferenceCAxisMisorientationsArrayNameKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureReferenceCAxisMisorientationsArrayNameKey,
                                                                                                                    k_FeatureReferenceCAxisMisorientationsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

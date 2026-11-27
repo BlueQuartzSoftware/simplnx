@@ -78,7 +78,7 @@ Parameters CreateDataArrayFilter::parameters() const
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
 
   params.insertSeparator(Parameters::Separator{"Component Dimensions"});
-  params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Total Number of Components", "Total number of components. Do not set the component dimensions.", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NumComps_Key, "Total Number of Components", "Total number of components. Do not set the component dimensions.", 1));
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
   params.insert(std::make_unique<StringParameter>(k_InitializationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
@@ -95,7 +95,7 @@ IFilter::VersionType CreateDataArrayFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateDataArrayFilter::clone() const
+IFilter::UniquePointerType CreateDataArrayFilter::clone() const
 {
   return std::make_unique<CreateDataArrayFilter>();
 }
@@ -174,10 +174,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
-constexpr StringLiteral k_NewArrayKey = "NewArray";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_InitializationValueKey = "InitializationValue";
+constexpr StringLiteralType k_NewArrayKey = "NewArray";
 } // namespace simpl
 } // namespace
 
@@ -189,12 +189,12 @@ Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, simpl::k_ScalarTypeKey, k_NumericType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfComponentsKey, k_NumComps_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ScalarTypeParameterToNumericTypeConverter>(args, json, simpl::k_ScalarTypeKey, k_NumericType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfComponentsKey, k_NumComps_Key));
   // NX has no equivalent for the legacy initialization-type parameter.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_InitializationValueKey, k_InitializationValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_InitializationValueKey, k_InitializationValue_Key));
   // NX has no equivalent for the legacy initialization-range or starting-index parameters.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_NewArrayKey, k_DataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

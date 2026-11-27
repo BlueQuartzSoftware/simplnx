@@ -40,7 +40,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.

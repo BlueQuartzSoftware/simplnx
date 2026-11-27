@@ -24,7 +24,7 @@ CreateStringArrayAction::~CreateStringArrayAction() noexcept = default;
 
 Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "CreateStringArrayAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateStringArrayAction: ";
   auto parentPath = path().getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -81,7 +81,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mod
   return {};
 }
 
-IDataAction::UniquePointer CreateStringArrayAction::clone() const
+IDataAction::UniquePointerType CreateStringArrayAction::clone() const
 {
   return std::make_unique<CreateStringArrayAction>(m_Dims, getCreatedPath());
 }

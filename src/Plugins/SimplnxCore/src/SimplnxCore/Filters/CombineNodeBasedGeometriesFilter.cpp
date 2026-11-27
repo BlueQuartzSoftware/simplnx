@@ -496,7 +496,7 @@ IFilter::VersionType CombineNodeBasedGeometriesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CombineNodeBasedGeometriesFilter::clone() const
+IFilter::UniquePointerType CombineNodeBasedGeometriesFilter::clone() const
 {
   return std::make_unique<CombineNodeBasedGeometriesFilter>();
 }

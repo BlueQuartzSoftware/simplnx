@@ -34,7 +34,7 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
   std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
-  VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
+  VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
   DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
@@ -73,7 +73,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
   std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
-  VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
+  VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
   DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 

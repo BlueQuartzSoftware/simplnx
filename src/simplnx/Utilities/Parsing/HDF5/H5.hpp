@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 using IdType = int64;
 using ErrorType = int32;
@@ -102,4 +102,4 @@ std::string SIMPLNX_EXPORT GetNameFromId(IdType id);
  */
 std::string SIMPLNX_EXPORT GetParentPath(const std::string& objectPath);
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

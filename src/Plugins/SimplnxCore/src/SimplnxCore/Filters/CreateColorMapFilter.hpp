@@ -26,12 +26,12 @@ public:
   CreateColorMapFilter& operator=(CreateColorMapFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
-  static constexpr StringLiteral k_SelectedDataArrayPath_Key = "input_data_array_path";
-  static constexpr StringLiteral k_RgbArrayPath_Key = "output_rgb_array_name";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_InvalidColorValue_Key = "invalid_color_value";
+  static constexpr StringLiteralType k_SelectedPreset_Key = "selected_preset";
+  static constexpr StringLiteralType k_SelectedDataArrayPath_Key = "input_data_array_path";
+  static constexpr StringLiteralType k_RgbArrayPath_Key = "output_rgb_array_name";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_InvalidColorValue_Key = "invalid_color_value";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

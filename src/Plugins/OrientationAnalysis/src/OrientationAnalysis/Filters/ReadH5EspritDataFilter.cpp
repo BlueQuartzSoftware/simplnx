@@ -72,7 +72,7 @@ Parameters ReadH5EspritDataFilter::parameters() const
                                                                 /* OEMEbsdScanSelectionParameter::AllowedManufacturers{ebsdlib::OEM::Bruker, ebsdlib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the euler angles to radians", true));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data", "Whether or not to import the pattern data", false));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
@@ -94,7 +94,7 @@ IFilter::VersionType ReadH5EspritDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadH5EspritDataFilter::clone() const
+IFilter::UniquePointerType ReadH5EspritDataFilter::clone() const
 {
   return std::make_unique<ReadH5EspritDataFilter>();
 }
@@ -237,16 +237,16 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_SelectedScanNamesKey = "SelectedScanNames";
-constexpr StringLiteral k_ZSpacingKey = "ZSpacing";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_CombineEulerAnglesKey = "CombineEulerAngles";
-constexpr StringLiteral k_DegreesToRadiansKey = "DegreesToRadians";
-constexpr StringLiteral k_ReadPatternDataKey = "ReadPatternData";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_SelectedScanNamesKey = "SelectedScanNames";
+constexpr StringLiteralType k_ZSpacingKey = "ZSpacing";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_CombineEulerAnglesKey = "CombineEulerAngles";
+constexpr StringLiteralType k_DegreesToRadiansKey = "DegreesToRadians";
+constexpr StringLiteralType k_ReadPatternDataKey = "ReadPatternData";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -257,16 +257,16 @@ Result<Arguments> ReadH5EspritDataFilter::FromSIMPLJson(const nlohmann::json& js
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::Convert2Parameters<SIMPLConversion::OEMEbsdScanSelectionFilterParameterConverter>(args, json, simpl::k_InputFileKey, simpl::k_SelectedScanNamesKey, k_SelectedScanNames_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ZSpacingKey, k_ZSpacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+      simpl_conversion::Convert2Parameters<simpl_conversion::OEMEbsdScanSelectionFilterParameterConverter>(args, json, simpl::k_InputFileKey, simpl::k_SelectedScanNamesKey, k_SelectedScanNames_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ZSpacingKey, k_ZSpacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CombineEulerAnglesKey, ));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_DegreesToRadiansKey, k_DegreesToRadians_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_ReadPatternDataKey, k_ReadPatternData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DegreesToRadiansKey, k_DegreesToRadians_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ReadPatternDataKey, k_ReadPatternData_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -51,29 +51,29 @@ Parameters LaplacianSmoothingFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insert(std::make_unique<Int32Parameter>(
+  params.insert(std::make_unique<Int32ParameterType>(
       k_IterationSteps_Key, "Iteration Steps",
       "Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. Increasing this number too high may cause collapse of points!", 25));
-  params.insert(std::make_unique<Float32Parameter>(k_Lambda_Key, "Default Lambda",
+  params.insert(std::make_unique<Float32ParameterType>(k_Lambda_Key, "Default Lambda",
                                                    "Value of λ to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume", 0.2F));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "Use Taubin's Lambda-Mu algorithm.", false));
-  params.insert(std::make_unique<Float32Parameter>(k_MuFactor_Key, "Mu Factor",
+  params.insert(std::make_unique<Float32ParameterType>(k_MuFactor_Key, "Mu Factor",
                                                    "A value that is multiplied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value.", 0.2F));
-  params.insert(std::make_unique<Float32Parameter>(k_TripleLineLambda_Key, "Triple Line Lambda", "Value of λ to apply to nodes designated as triple line nodes.", 0.1f));
-  params.insert(std::make_unique<Float32Parameter>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "Value of λ to apply to nodes designated as quadruple points.", 0.1f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfacePointLambda_Key, "Outer Points Lambda", "The value of λ to apply to nodes that lie on the outer surface of the volume", 0.0f));
-  params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "Value of λ for triple lines that lie on the outer surface of the volume", 0.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_TripleLineLambda_Key, "Triple Line Lambda", "Value of λ to apply to nodes designated as triple line nodes.", 0.1f));
+  params.insert(std::make_unique<Float32ParameterType>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "Value of λ to apply to nodes designated as quadruple points.", 0.1f));
+  params.insert(std::make_unique<Float32ParameterType>(k_SurfacePointLambda_Key, "Outer Points Lambda", "The value of λ to apply to nodes that lie on the outer surface of the volume", 0.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "Value of λ for triple lines that lie on the outer surface of the volume", 0.0f));
   params.insert(
-      std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "Value of λ for the quadruple Points that lie on the outer surface of the volume.", 0.0f));
+      std::make_unique<Float32ParameterType>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "Value of λ for the quadruple Points that lie on the outer surface of the volume.", 0.0f));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(
       k_TriangleGeometryDataPath_Key, "Node Geometry", "The complete path to the surface mesh Geometry for which to apply Laplacian smoothing", DataPath{},
-      GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
+      GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
@@ -88,7 +88,7 @@ IFilter::VersionType LaplacianSmoothingFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
+IFilter::UniquePointerType LaplacianSmoothingFilter::clone() const
 {
   return std::make_unique<LaplacianSmoothingFilter>();
 }
@@ -133,17 +133,17 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_IterationStepsKey = "IterationSteps";
-constexpr StringLiteral k_LambdaKey = "Lambda";
-constexpr StringLiteral k_UseTaubinSmoothingKey = "UseTaubinSmoothing";
-constexpr StringLiteral k_MuFactorKey = "MuFactor";
-constexpr StringLiteral k_TripleLineLambdaKey = "TripleLineLambda";
-constexpr StringLiteral k_QuadPointLambdaKey = "QuadPointLambda";
-constexpr StringLiteral k_SurfacePointLambdaKey = "SurfacePointLambda";
-constexpr StringLiteral k_SurfaceTripleLineLambdaKey = "SurfaceTripleLineLambda";
-constexpr StringLiteral k_SurfaceQuadPointLambdaKey = "SurfaceQuadPointLambda";
-constexpr StringLiteral k_SurfaceMeshNodeTypeArrayPathKey = "SurfaceMeshNodeTypeArrayPath";
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_IterationStepsKey = "IterationSteps";
+constexpr StringLiteralType k_LambdaKey = "Lambda";
+constexpr StringLiteralType k_UseTaubinSmoothingKey = "UseTaubinSmoothing";
+constexpr StringLiteralType k_MuFactorKey = "MuFactor";
+constexpr StringLiteralType k_TripleLineLambdaKey = "TripleLineLambda";
+constexpr StringLiteralType k_QuadPointLambdaKey = "QuadPointLambda";
+constexpr StringLiteralType k_SurfacePointLambdaKey = "SurfacePointLambda";
+constexpr StringLiteralType k_SurfaceTripleLineLambdaKey = "SurfaceTripleLineLambda";
+constexpr StringLiteralType k_SurfaceQuadPointLambdaKey = "SurfaceQuadPointLambda";
+constexpr StringLiteralType k_SurfaceMeshNodeTypeArrayPathKey = "SurfaceMeshNodeTypeArrayPath";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -153,21 +153,21 @@ Result<Arguments> LaplacianSmoothingFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_IterationStepsKey, k_IterationSteps_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_LambdaKey, k_Lambda_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseTaubinSmoothingKey, k_UseTaubinSmoothing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_MuFactorKey, k_MuFactor_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_TripleLineLambdaKey, k_TripleLineLambda_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_QuadPointLambdaKey, k_QuadPointLambda_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfacePointLambdaKey, k_SurfacePointLambda_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfaceTripleLineLambdaKey, k_SurfaceTripleLineLambda_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfaceQuadPointLambdaKey, k_SurfaceQuadPointLambda_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_IterationStepsKey, k_IterationSteps_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_LambdaKey, k_Lambda_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseTaubinSmoothingKey, k_UseTaubinSmoothing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_MuFactorKey, k_MuFactor_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_TripleLineLambdaKey, k_TripleLineLambda_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_QuadPointLambdaKey, k_QuadPointLambda_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfacePointLambdaKey, k_SurfacePointLambda_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfaceTripleLineLambdaKey, k_SurfaceTripleLineLambda_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfaceQuadPointLambdaKey, k_SurfaceQuadPointLambda_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey,
                                                                                                                                       k_TriangleGeometryDataPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshNodeTypeArrayPathKey, k_SurfaceMeshNodeTypeArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshNodeTypeArrayPathKey, k_SurfaceMeshNodeTypeArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

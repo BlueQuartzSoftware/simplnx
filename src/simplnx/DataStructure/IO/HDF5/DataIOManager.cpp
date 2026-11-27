@@ -15,7 +15,7 @@
 #include "simplnx/DataStructure/IO/HDF5/TriangleGeomIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/VertexGeomIO.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 DataIOManager::DataIOManager()
 
@@ -79,4 +79,4 @@ void DataIOManager::addCoreFactories()
   addFactory<TriangleGeomIO>();
   addFactory<VertexGeomIO>();
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

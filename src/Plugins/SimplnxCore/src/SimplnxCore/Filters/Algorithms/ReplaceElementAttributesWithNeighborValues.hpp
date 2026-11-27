@@ -18,8 +18,8 @@ namespace nx::core
  */
 namespace detail
 {
-inline constexpr StringLiteral k_LessThan = "< [Less Than]";                             ///< Selects replacement below the threshold.
-inline constexpr StringLiteral k_GreaterThan = "> [Greater Than]";                       ///< Selects replacement above the threshold.
+inline constexpr StringLiteralType k_LessThan = "< [Less Than]";                             ///< Selects replacement below the threshold.
+inline constexpr StringLiteralType k_GreaterThan = "> [Greater Than]";                       ///< Selects replacement above the threshold.
 inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan}; ///< Defines the filter choice order.
 } // namespace detail
 

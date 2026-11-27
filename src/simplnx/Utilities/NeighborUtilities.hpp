@@ -75,18 +75,18 @@ using FaceNeighborType = usize;
 template <bool EmptyXV, bool EmptyYV, bool EmptyZV>
 struct ImageDimensionState
 {
-  static constexpr bool HasEmptyXDim = EmptyXV;
-  static constexpr bool HasEmptyYDim = EmptyYV;
+  static constexpr bool k_HasEmptyXDim = EmptyXV;
+  static constexpr bool k_HasEmptyYDim = EmptyYV;
   static constexpr bool HasEmptyZDim = EmptyZV;
 
   static constexpr bool Is1DImageDimsState()
   {
-    return (HasEmptyXDim && HasEmptyYDim && !HasEmptyZDim) || (HasEmptyXDim && !HasEmptyYDim && HasEmptyZDim) || (!HasEmptyXDim && HasEmptyYDim && HasEmptyZDim);
+    return (k_HasEmptyXDim && k_HasEmptyYDim && !HasEmptyZDim) || (k_HasEmptyXDim && !k_HasEmptyYDim && HasEmptyZDim) || (!k_HasEmptyXDim && k_HasEmptyYDim && HasEmptyZDim);
   }
 
   static constexpr bool Is2DImageDimsState()
   {
-    return (HasEmptyXDim && !HasEmptyYDim && !HasEmptyZDim) || (!HasEmptyXDim && HasEmptyYDim && !HasEmptyZDim) || (!HasEmptyXDim && !HasEmptyYDim && HasEmptyZDim);
+    return (k_HasEmptyXDim && !k_HasEmptyYDim && !HasEmptyZDim) || (!k_HasEmptyXDim && k_HasEmptyYDim && !HasEmptyZDim) || (!k_HasEmptyXDim && !k_HasEmptyYDim && HasEmptyZDim);
   }
 };
 

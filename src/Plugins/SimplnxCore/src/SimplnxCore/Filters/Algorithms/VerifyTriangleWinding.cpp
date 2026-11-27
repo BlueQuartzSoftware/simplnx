@@ -513,7 +513,7 @@ Result<> VerifyTriangleWinding::operator()()
     return MakeErrorResult(-56320, "Duplicate vertices found in mesh, please use cleanup filters to flag and remove these before rerunning.");
   }
 
-  TriangleGeom::SharedFaceList::store_type& triangles = triGeom.getFaces()->getDataStoreRef();
+  TriangleGeom::SharedFaceList::StoreType& triangles = triGeom.getFaces()->getDataStoreRef();
 
   // Load mesh grouping (face labels or regions)
   const Int32AbstractDataStore& idsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->LabelsPath)->getDataStoreRef();

@@ -56,19 +56,19 @@ Parameters ExtractFeatureBoundaries2DFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeometryPath_Key, "Input Image Geometry", "The input image geometry to create grain boundaries.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeatureIdsArrayPath_Key, "Feature Ids", "The feature ids that will be used to draw the boundary edge geometry.", DataPath{},
-      ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
+      ArraySelectionParameter::AllowedTypeSetType{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
       ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Z Value Options"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ZValueChoice_Key, "Z Value Source", "Select the source for the Z coordinate of the generated vertices",
                                                                     to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue),
                                                                     ChoicesParameter::Choices{"Use min z value from Image geometry", "Use max z value from Image geometry", "Use Custom z Offset"}));
-  params.insert(std::make_unique<Float32Parameter>(k_CustomZValue_Key, "Custom Z Value", "The custom Z offset value for the generated vertices", 0.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_CustomZValue_Key, "Custom Z Value", "The custom Z offset value for the generated vertices", 0.0f));
 
   // Link the custom Z value parameter to only show when "Use Custom z Offset" is selected
   params.linkParameters(k_ZValueChoice_Key, k_CustomZValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue)));
@@ -89,7 +89,7 @@ IFilter::VersionType ExtractFeatureBoundaries2DFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractFeatureBoundaries2DFilter::clone() const
+IFilter::UniquePointerType ExtractFeatureBoundaries2DFilter::clone() const
 {
   return std::make_unique<ExtractFeatureBoundaries2DFilter>();
 }

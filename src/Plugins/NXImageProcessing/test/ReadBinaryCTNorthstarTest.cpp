@@ -224,8 +224,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter executio
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{1, 2, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{1, 2, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 6}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -235,8 +235,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Valid filter executio
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath));
   const Float32Array& densityResult = dataStructure.getDataRefAs<Float32Array>(k_DensityArrayPath);
-  auto startVoxelCoord = args.value<VectorInt32Parameter::ValueType>(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key);
-  auto endVoxelCoord = args.value<VectorInt32Parameter::ValueType>(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key);
+  auto startVoxelCoord = args.value<VectorInt32ParameterType::ValueType>(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key);
+  auto endVoxelCoord = args.value<VectorInt32ParameterType::ValueType>(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key);
   usize subvolumeXDim = endVoxelCoord[0] - startVoxelCoord[0] + 1;
   usize subvolumeYDim = endVoxelCoord[1] - startVoxelCoord[1] + 1;
   usize subvolumeZDim = endVoxelCoord[2] - startVoxelCoord[2] + 1;
@@ -322,8 +322,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 2, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 3, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 2, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 3, 6}));
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -332,8 +332,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 3, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 2, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 3, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 2, 6}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -342,8 +342,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 2, 6}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 2, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 4}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -352,8 +352,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{-1, 2, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{-1, 2, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 6}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -362,8 +362,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, -1, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, -1, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 6}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -372,8 +372,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 2, -1}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 2, -1}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 6}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -382,8 +382,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 2, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{9, 3, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 2, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{9, 3, 6}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -392,8 +392,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 2, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 9, 6}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 2, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 9, 6}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -402,8 +402,8 @@ TEST_CASE("NXImageProcessing::ReadBinaryCTNorthStarFilter: Invalid filter execut
 
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_NsiHeaderPath));
   args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{3, 2, 4}));
-  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{4, 3, 9}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_StartVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{3, 2, 4}));
+  args.insertOrAssign(ReadBinaryCTNorthstarFilter::k_EndVoxelCoord_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{4, 3, 9}));
 
   executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);

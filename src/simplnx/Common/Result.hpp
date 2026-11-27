@@ -46,7 +46,7 @@ struct ResultBase
    */
   T& value()
   {
-    return m_Expected.value();
+    return expected.value();
   }
 
   /**
@@ -55,15 +55,15 @@ struct ResultBase
    */
   const T& value() const
   {
-    return m_Expected.value();
+    return expected.value();
   }
 
-  nonstd::expected<T, std::vector<Error>> m_Expected;
+  nonstd::expected<T, std::vector<Error>> expected;
 };
 
 struct SIMPLNX_EXPORT ResultVoid
 {
-  nonstd::expected<void, std::vector<Error>> m_Expected;
+  nonstd::expected<void, std::vector<Error>> expected;
 };
 
 template <class T>
@@ -84,7 +84,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   bool valid() const
   {
-    return detail::ResultBaseT<T>::m_Expected.has_value();
+    return detail::ResultBaseT<T>::expected.has_value();
   }
 
   /**
@@ -102,7 +102,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   std::vector<Error>& errors()
   {
-    return detail::ResultBaseT<T>::m_Expected.error();
+    return detail::ResultBaseT<T>::expected.error();
   }
 
   /**
@@ -111,7 +111,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   const std::vector<Error>& errors() const
   {
-    return detail::ResultBaseT<T>::m_Expected.error();
+    return detail::ResultBaseT<T>::expected.error();
   }
 
   /**
@@ -147,7 +147,7 @@ Result<> ConvertResult(Result<T>&& result)
   Result<> voidResult;
   if(!result.valid())
   {
-    voidResult.m_Expected = nonstd::make_unexpected(std::move(result.errors()));
+    voidResult.expected = nonstd::make_unexpected(std::move(result.errors()));
   }
   voidResult.warnings() = std::move(result.warnings());
   return voidResult;
@@ -164,7 +164,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
   else
   {
     // Place errors from 'result' into outputActions
-    convertedResult.m_Expected = nonstd::make_unexpected(std::move(fromResult.errors()));
+    convertedResult.expected = nonstd::make_unexpected(std::move(fromResult.errors()));
   }
   // Always move the warnings AFTER the other check above...
   convertedResult.warnings() = std::move(fromResult.warnings());

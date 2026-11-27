@@ -22,7 +22,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace GrainMapper3DUtilities;
+using namespace grain_mapper_3d_utilities;
 
 namespace
 {
@@ -103,7 +103,7 @@ Parameters ReadGrainMapper3DFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadGrainMapper3DFilter::clone() const
+IFilter::UniquePointerType ReadGrainMapper3DFilter::clone() const
 {
   return std::make_unique<ReadGrainMapper3DFilter>();
 }
@@ -177,12 +177,12 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     for(const auto& dataSetName : availableDataSets)
     {
       const auto dataTypeIter = nameToDataTypeMap.find(dataSetName);
-      if(pConvertPhaseData && dataSetName == GrainMapper3DUtilities::Constants::k_PhaseIdName)
+      if(pConvertPhaseData && dataSetName == grain_mapper_3d_utilities::constants::k_PhaseIdName)
       {
         resultOutputActions.value().appendAction(
             std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{nameToCompDimMap[dataSetName]}, cellAMPath.createChildPath(dataSetName)));
       }
-      else if(pConvertOrientationData && dataSetName == GrainMapper3DUtilities::Constants::k_RodriguesName)
+      else if(pConvertOrientationData && dataSetName == grain_mapper_3d_utilities::constants::k_RodriguesName)
       {
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(nameToDataTypeMap[dataSetName], tupleDims, std::vector<usize>{4}, cellAMPath.createChildPath(dataSetName)));
       }
@@ -213,19 +213,19 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
 
     // create the cell ensemble arrays
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(GM3DConstants::k_CrystalStructures));
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_CrystalStructures));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(GM3DConstants::k_LatticeConstants));
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_LatticeConstants));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     {
-      auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(GM3DConstants::k_MaterialName));
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_MaterialName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     {
-      auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(GM3DConstants::k_UniversalHermannMauguin));
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_UniversalHermannMauguin));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
@@ -250,7 +250,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
     // Create the 'Data' data array
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(
         DataType::uint16, tupleDims, std::vector<usize>{1ULL},
-        pAbsorptionCTImageGeometryPath.createChildPath(pAbsorptionCTCellAttributeMatrixNameValue).createChildPath(GrainMapper3DUtilities::Constants::k_DataGroupName)));
+        pAbsorptionCTImageGeometryPath.createChildPath(pAbsorptionCTCellAttributeMatrixNameValue).createChildPath(grain_mapper_3d_utilities::constants::k_DataGroupName)));
   }
 
   return {.outputActions = std::move(resultOutputActions), .outputValues = std::move(preflightUpdatedValues)};

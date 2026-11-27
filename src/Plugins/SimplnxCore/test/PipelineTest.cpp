@@ -98,7 +98,7 @@ public:
     return 1;
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<DeferredActionTestFilter>();
   }
@@ -438,7 +438,7 @@ TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[Simp
   REQUIRE_FALSE(fs::exists(missingInput));
   CHECK(dataStructure.getAllDataPaths().empty());
 
-  auto embeddedResult = DREAM3D::ImportPipelineJsonFromFile(writtenFile);
+  auto embeddedResult = dream3d::ImportPipelineJsonFromFile(writtenFile);
   SIMPLNX_RESULT_REQUIRE_VALID(embeddedResult);
   const auto& embeddedRef = embeddedResult.value();
   REQUIRE(embeddedRef.at("pipeline").size() == 2);

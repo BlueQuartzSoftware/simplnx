@@ -24,10 +24,10 @@ public:
   ConvertQuaternionFilter& operator=(ConvertQuaternionFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CellQuatsArrayPath_Key = "input_data_array_path";
-  static constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
-  static constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
-  static constexpr StringLiteral k_ConversionType_Key = "conversion_index";
+  static constexpr StringLiteralType k_CellQuatsArrayPath_Key = "input_data_array_path";
+  static constexpr StringLiteralType k_OutputDataArrayName_Key = "output_data_array_name";
+  static constexpr StringLiteralType k_DeleteOriginalData_Key = "delete_original_data";
+  static constexpr StringLiteralType k_ConversionType_Key = "conversion_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

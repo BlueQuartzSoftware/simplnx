@@ -66,17 +66,17 @@ Parameters WriteOnScaleTableFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The directory for the OnScale table file.", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix for the output file.", "SomeString"));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_NumKeypoints_Key, "Number of Keypoints", "The number of keypoints along the X, Y, and Z axes.", VectorInt32Parameter::ValueType{2, 2, 2},
-                                                       VectorInt32Parameter::NamesType{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_NumKeypoints_Key, "Number of Keypoints", "The number of keypoints along the X, Y, and Z axes.", VectorInt32ParameterType::ValueType{2, 2, 2},
+                                                       VectorInt32ParameterType::NamesType{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The Image or Rectilinear Grid Geometry to export.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "The feature ID for each cell.", DataPath{},
-      ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
+      ArraySelectionParameter::AllowedTypeSetType{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
       ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
@@ -90,7 +90,7 @@ IFilter::VersionType WriteOnScaleTableFileFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer WriteOnScaleTableFileFilter::clone() const
+IFilter::UniquePointerType WriteOnScaleTableFileFilter::clone() const
 {
   return std::make_unique<WriteOnScaleTableFileFilter>();
 }
@@ -153,7 +153,7 @@ Result<> WriteOnScaleTableFileFilter::executeImpl(DataStructure& dataStructure, 
   WriteOnScaleTableFileInputValues inputValues;
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.NumKeypoints = filterArgs.value<VectorInt32Parameter::ValueType>(k_NumKeypoints_Key);
+  inputValues.NumKeypoints = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumKeypoints_Key);
   inputValues.InputGeometryPath = filterArgs.value<DataPath>(k_InputGeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.PhaseNamesArrayPath = filterArgs.value<DataPath>(k_PhaseNamesArrayPath_Key);
@@ -165,11 +165,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputPathKey = "OutputPath";
-constexpr StringLiteral k_OutputFilePrefixKey = "OutputFilePrefix";
-constexpr StringLiteral k_NumKeypointsKey = "NumKeypoints";
-constexpr StringLiteral k_PzflexFeatureIdsArrayPathKey = "PzflexFeatureIdsArrayPath";
-constexpr StringLiteral k_PhaseNamesArrayPathKey = "PhaseNamesArrayPath";
+constexpr StringLiteralType k_OutputPathKey = "OutputPath";
+constexpr StringLiteralType k_OutputFilePrefixKey = "OutputFilePrefix";
+constexpr StringLiteralType k_NumKeypointsKey = "NumKeypoints";
+constexpr StringLiteralType k_PzflexFeatureIdsArrayPathKey = "PzflexFeatureIdsArrayPath";
+constexpr StringLiteralType k_PhaseNamesArrayPathKey = "PhaseNamesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -178,12 +178,12 @@ Result<Arguments> WriteOnScaleTableFileFilter::FromSIMPLJson(const nlohmann::jso
   Arguments args = WriteOnScaleTableFileFilter().getDefaultArguments();
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_OutputFilePrefixKey, k_FilePrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_NumKeypointsKey, k_NumKeypoints_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_OutputFilePrefixKey, k_FilePrefix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_NumKeypointsKey, k_NumKeypoints_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_InputGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PzflexFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayPathKey, k_PhaseNamesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

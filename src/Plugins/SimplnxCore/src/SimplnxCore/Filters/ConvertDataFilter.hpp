@@ -24,10 +24,10 @@ public:
   ConvertDataFilter& operator=(ConvertDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-  static constexpr StringLiteral k_ArrayToConvertPath_Key = "array_to_convert_path";
-  static constexpr StringLiteral k_ConvertedArrayName_Key = "converted_array_name";
-  static constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
+  static constexpr StringLiteralType k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteralType k_ArrayToConvertPath_Key = "array_to_convert_path";
+  static constexpr StringLiteralType k_ConvertedArrayName_Key = "converted_array_name";
+  static constexpr StringLiteralType k_DeleteOriginal_Key = "delete_original_array";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

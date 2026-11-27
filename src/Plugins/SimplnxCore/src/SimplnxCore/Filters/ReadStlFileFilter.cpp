@@ -63,7 +63,7 @@ Parameters ReadStlFileFilter::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));
-  params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
+  params.insert(std::make_unique<Float32ParameterType>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
   params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateFaceLabels_Key, "Generate Triangle Face Labels", "When true, the 'Face Labels' array will be created.", true));
 
@@ -93,7 +93,7 @@ IFilter::VersionType ReadStlFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadStlFileFilter::clone() const
+IFilter::UniquePointerType ReadStlFileFilter::clone() const
 {
   return std::make_unique<ReadStlFileFilter>();
 }
@@ -227,13 +227,13 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ScaleOutputKey = "ScaleOutput";
-constexpr StringLiteral k_ScaleFactorKey = "ScaleFactor";
-constexpr StringLiteral k_StlFilePathKey = "StlFilePath";
-constexpr StringLiteral k_SurfaceMeshDataContainerNameKey = "SurfaceMeshDataContainerName";
-constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
-constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
-constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
+constexpr StringLiteralType k_ScaleOutputKey = "ScaleOutput";
+constexpr StringLiteralType k_ScaleFactorKey = "ScaleFactor";
+constexpr StringLiteralType k_StlFilePathKey = "StlFilePath";
+constexpr StringLiteralType k_SurfaceMeshDataContainerNameKey = "SurfaceMeshDataContainerName";
+constexpr StringLiteralType k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteralType k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -243,29 +243,29 @@ Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  Result<> scaleResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ScaleOutputKey, k_ScaleOutput);
+  Result<> scaleResult = simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ScaleOutputKey, k_ScaleOutput);
   if(scaleResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(scaleResult));
   }
-  Result<> factorResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ScaleFactorKey, k_ScaleFactor);
+  Result<> factorResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ScaleFactorKey, k_ScaleFactor);
   if(factorResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(factorResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_StlFilePathKey, k_StlFilePath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_StlFilePathKey, k_StlFilePath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
   Result<> vertAMResult =
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
   if(vertAMResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(vertAMResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceNormalsArrayNameKey, k_FaceNormalsName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceNormalsArrayNameKey, k_FaceNormalsName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -72,26 +72,26 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
       "How the neighbor search radius is defined: (0) as a multiple of each feature's own Equivalent Sphere Diameter, or (1) as an absolute search radius in microns.", k_MultiplesOfAverageIndex,
       ChoicesParameter::Choices{"Multiples of Equivalent Diameter", "Search Radius (microns)"}));
 
-  params.insert(std::make_unique<Float32Parameter>(
+  params.insert(std::make_unique<Float32ParameterType>(
       k_MultiplesOfAverage_Key, "Multiples of Equivalent Diameter",
       "Each feature searches within a radius equal to its OWN Equivalent Sphere Diameter multiplied by this value (radius = equivalentDiameter[i] * multiples). Larger features therefore have larger "
       "neighborhoods, and the neighbor relationship can be asymmetric.",
       1.0F));
-  params.insert(std::make_unique<Float32Parameter>(k_SearchRadius_Key, "Search Radius (microns)",
+  params.insert(std::make_unique<Float32ParameterType>(k_SearchRadius_Key, "Search Radius (microns)",
                                                    "The absolute radius (in microns) within which to search for 'neighboring' Features. A Feature is a neighbor if its centroid lies within this "
                                                    "distance of the target Feature's centroid.",
                                                    1.0F));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters",
       "Path to the array specifying the diameter of a sphere with the same volume as the Feature. Only required when 'Search Radius Type' is 'Multiples of Equivalent Diameter'.",
-      DataPath({"Cell Feature Data", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      DataPath({"Cell Feature Data", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "Path to the array specifying the X, Y, Z coordinates of Feature center of mass",
-                                                          DataPath({"Cell Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          DataPath({"Cell Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
@@ -117,7 +117,7 @@ IFilter::VersionType ComputeNeighborhoodsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeNeighborhoodsFilter::clone() const
+IFilter::UniquePointerType ComputeNeighborhoodsFilter::clone() const
 {
   return std::make_unique<ComputeNeighborhoodsFilter>();
 }
@@ -240,11 +240,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_MultiplesOfAverageKey = "MultiplesOfAverage";
-constexpr StringLiteral k_EquivalentDiametersArrayPathKey = "EquivalentDiametersArrayPath";
-constexpr StringLiteral k_CentroidsArrayPathKey = "CentroidsArrayPath";
-constexpr StringLiteral k_NeighborhoodsArrayNameKey = "NeighborhoodsArrayName";
-constexpr StringLiteral k_NeighborhoodListArrayNameKey = "NeighborhoodListArrayName";
+constexpr StringLiteralType k_MultiplesOfAverageKey = "MultiplesOfAverage";
+constexpr StringLiteralType k_EquivalentDiametersArrayPathKey = "EquivalentDiametersArrayPath";
+constexpr StringLiteralType k_CentroidsArrayPathKey = "CentroidsArrayPath";
+constexpr StringLiteralType k_NeighborhoodsArrayNameKey = "NeighborhoodsArrayName";
+constexpr StringLiteralType k_NeighborhoodListArrayNameKey = "NeighborhoodListArrayName";
 } // namespace simpl
 } // namespace
 
@@ -254,14 +254,14 @@ Result<Arguments> ComputeNeighborhoodsFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_MultiplesOfAverageKey, k_MultiplesOfAverage_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_MultiplesOfAverageKey, k_MultiplesOfAverage_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey, k_EquivalentDiametersArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodsArrayNameKey, k_NeighborhoodsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodListArrayNameKey, k_NeighborhoodListArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey, k_EquivalentDiametersArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodsArrayNameKey, k_NeighborhoodsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodListArrayNameKey, k_NeighborhoodListArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

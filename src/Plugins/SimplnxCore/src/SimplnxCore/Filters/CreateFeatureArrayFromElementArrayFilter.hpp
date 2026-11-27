@@ -24,10 +24,10 @@ public:
   CreateFeatureArrayFromElementArrayFilter& operator=(CreateFeatureArrayFromElementArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CreatedArrayName_Key = "created_array_name";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CreatedArrayName_Key = "created_array_name";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

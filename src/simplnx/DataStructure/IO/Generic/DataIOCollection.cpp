@@ -16,10 +16,10 @@ namespace nx::core
 DataIOCollection::DataIOCollection()
 {
   // Only the built-in CoreDataIOManager can use the reserved in-memory format name.
-  auto coreManager = std::make_shared<nx::core::Generic::CoreDataIOManager>();
+  auto coreManager = std::make_shared<nx::core::generic::CoreDataIOManager>();
   m_ManagerMap[coreManager->formatName()] = coreManager;
 
-  (void)addIOManager(std::make_shared<nx::core::HDF5::DataIOManager>());
+  (void)addIOManager(std::make_shared<nx::core::hdf5::DataIOManager>());
 
   // Optional managers register through plugins so core remains storage-format neutral.
 }
@@ -192,7 +192,7 @@ bool DataIOCollection::anyManagerFinalizesImport() const
   return false;
 }
 
-std::optional<Result<>> DataIOCollection::onImportFinalize(DataStructure& dataStructure, const std::vector<DataPath>& paths, const nx::core::HDF5::FileIO& fileReader)
+std::optional<Result<>> DataIOCollection::onImportFinalize(DataStructure& dataStructure, const std::vector<DataPath>& paths, const nx::core::hdf5::FileIO& fileReader)
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {
@@ -204,7 +204,7 @@ std::optional<Result<>> DataIOCollection::onImportFinalize(DataStructure& dataSt
   return std::nullopt;
 }
 
-std::optional<Result<>> DataIOCollection::onRecoveryWrite(nx::core::HDF5::DataStructureWriter& writer, const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
+std::optional<Result<>> DataIOCollection::onRecoveryWrite(nx::core::hdf5::DataStructureWriter& writer, const DataObject* dataObject, nx::core::hdf5::GroupIO& parentGroup)
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {

@@ -55,7 +55,7 @@ Parameters MorphologicalWatershedFromMarkersImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The grayscale image data that will be flooded by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MarkerImageDataPath_Key, "Marker Cell Data",
@@ -72,7 +72,7 @@ IFilter::VersionType MorphologicalWatershedFromMarkersImageFilter::parametersVer
 {
   return 1;
 }
-IFilter::UniquePointer MorphologicalWatershedFromMarkersImageFilter::clone() const
+IFilter::UniquePointerType MorphologicalWatershedFromMarkersImageFilter::clone() const
 {
   return std::make_unique<MorphologicalWatershedFromMarkersImageFilter>();
 }

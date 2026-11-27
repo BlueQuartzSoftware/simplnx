@@ -62,7 +62,7 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
   return ExecuteDataFunction(::CreateArrayFunctor{}, m_Type, dataStructure, m_Dims, m_CDims, getCreatedPath(), mode, m_DataFormat, m_FillValue, m_ChunkShapeHint, m_InitializationMode);
 }
 
-IDataAction::UniquePointer CreateArrayAction::clone() const
+IDataAction::UniquePointerType CreateArrayAction::clone() const
 {
   return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath(), m_DataFormat, m_FillValue, m_ChunkShapeHint, m_InitializationMode);
 }

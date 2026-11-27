@@ -85,7 +85,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     // Assign the `Default Node Type` to all the values
     for(size_t i = 0; i < triangleGeom.getNumberOfVertices(); i++)
     {
-      (*nodeTypePtr)[i] = nx::core::NodeType::Default;
+      (*nodeTypePtr)[i] = nx::core::node_type::Default;
     }
 
     DataPath nodeTypeArrayPath = vertexDataGroupPath.createChildPath(nodeTypeArrayName);
@@ -206,7 +206,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: Smoothing preserves input edge
   const DataPath nodePath({"Mesh", "Vertex Data", "Node Types"});
   auto* nodesPtr = Int8Array::Create(dataStructure, "Node Types", DataStoreUtilities::CreateDataStore<int8>(dataStructure, nodePath, {3}, {1}), vertexDataPtr->getId());
   REQUIRE(nodesPtr != nullptr);
-  nodesPtr->fill(NodeType::Default);
+  nodesPtr->fill(node_type::Default);
   auto* edgeDataPtr = AttributeMatrix::Create(dataStructure, "CustomEdges", {3}, geometryPtr->getId());
   REQUIRE(edgeDataPtr != nullptr);
   geometryPtr->setEdgeDataId(edgeDataPtr->getId());

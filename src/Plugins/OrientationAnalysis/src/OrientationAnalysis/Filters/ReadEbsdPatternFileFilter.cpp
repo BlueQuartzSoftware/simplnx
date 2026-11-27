@@ -58,8 +58,8 @@ Parameters ReadEbsdPatternFileFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_SetScanDimensions_Key, "Set Version 1 Scan Dimensions",
                                       "Use explicit scan rows and columns for a version 1 file created outside an Attribute Matrix. Version 1 files do not store scan geometry.", false));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumberOfRows_Key, "Number of Rows", "Number of pattern rows for a version 1 file", 1));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumberOfColumns_Key, "Number of Columns", "Number of pattern columns for a version 1 file", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NumberOfRows_Key, "Number of Rows", "Number of pattern rows for a version 1 file", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NumberOfColumns_Key, "Number of Columns", "Number of pattern columns for a version 1 file", 1));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArrayPath_Key, "Output Pattern Data Array", "Path to the created EBSD pattern DataArray", DataPath({"Patterns"})));
@@ -74,7 +74,7 @@ IFilter::VersionType ReadEbsdPatternFileFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ReadEbsdPatternFileFilter::clone() const
+IFilter::UniquePointerType ReadEbsdPatternFileFilter::clone() const
 {
   return std::make_unique<ReadEbsdPatternFileFilter>();
 }

@@ -24,7 +24,7 @@ ImportObjectAction::~ImportObjectAction() noexcept = default;
 
 Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "ImportObjectAction: ";
+  static constexpr StringLiteralType k_Prefix = "ImportObjectAction: ";
   const auto importData = std::shared_ptr<DataObject>(getImportObject()->shallowCopy());
   // Clear all children before inserting into the DataStructure
   if(const auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
@@ -40,7 +40,7 @@ Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/) 
   return {};
 }
 
-IDataAction::UniquePointer ImportObjectAction::clone() const
+IDataAction::UniquePointerType ImportObjectAction::clone() const
 {
   return std::make_unique<ImportObjectAction>(m_ImportData, getCreatedPath());
 }

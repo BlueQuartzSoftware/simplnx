@@ -103,7 +103,7 @@ Result<> ExecuteBoundaryStrengths(DataStructure& dataStructure, bool requireOoc)
   }
   ComputeBoundaryStrengthsFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64Parameter::ValueType>(std::vector<float64>{0.0, 0.0, 1.0}));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64ParameterType::ValueType>(std::vector<float64>{0.0, 0.0, 1.0}));
   args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"FaceLabels"})));
   args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"AvgQuats"})));
   args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"FeaturePhases"})));
@@ -249,7 +249,7 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64Parameter::ValueType>(std::vector<float64>{0, 0, 1}));
+    args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64ParameterType::ValueType>(std::vector<float64>{0, 0, 1}));
     args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(FaceLabelsPath));
     args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(AvgQuatsPath));
     args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(FeaturePhasesPath));
@@ -363,7 +363,7 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Phase and Laue I
 
   ComputeBoundaryStrengthsFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64Parameter::ValueType>(std::vector<float64>{0.0, 0.0, 1.0}));
+  args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_Loading_Key, std::make_any<VectorFloat64ParameterType::ValueType>(std::vector<float64>{0.0, 0.0, 1.0}));
   args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"FaceLabels"})));
   args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"AvgQuats"})));
   args.insertOrAssign(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"FeaturePhases"})));

@@ -25,8 +25,8 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-constexpr StringLiteral k_TriangleGeomName = "TriangleGeom";
-constexpr StringLiteral k_ComputedTriangleGeomName = "Internal Surface";
+constexpr StringLiteralType k_TriangleGeomName = "TriangleGeom";
+constexpr StringLiteralType k_ComputedTriangleGeomName = "Internal Surface";
 
 const DataPath k_TriangleGeomPath({k_TriangleGeomName});
 const DataPath k_ComputedTrianglePath({k_ComputedTriangleGeomName});
@@ -221,7 +221,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 
   // Mesh the flush cylinder WITHOUT omitting the skin, then strip it with the Face Labels
   // criterion. The result must match what QuickSurfaceMesh produces with the option ON.
-  SurfaceMeshingTest::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
+  SurfaceMeshingTest::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(bounding_box_skin_mode::k_Off);
   DataStructure dataStructure = std::move(fullMeshResult.Structure);
   const DataPath faceLabelsPath = fullMeshResult.FaceLabelsPath;
 
@@ -255,7 +255,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 
   // Same face and vertex counts as meshing with QuickSurfaceMesh's own option turned on directly:
   // both code paths must agree on what "internal" means.
-  SurfaceMeshingTest::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+  SurfaceMeshingTest::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
   const auto& directGeom = directMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshPath);
 
   REQUIRE(extractedGeom.getNumberOfFaces() == directGeom.getNumberOfFaces());
@@ -275,7 +275,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
 {
   UnitTest::LoadPlugins();
 
-  SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
+  SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(bounding_box_skin_mode::k_Off);
   DataStructure dataStructure = std::move(meshResult.Structure);
 
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;

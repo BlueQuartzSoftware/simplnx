@@ -15,7 +15,7 @@ CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, Dimension
 
 Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "CreateGridMontageAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateGridMontageAction: ";
   // Check for empty Geometry DataPath
   if(getCreatedPath().empty())
   {
@@ -52,7 +52,7 @@ Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode /*mod
   return {};
 }
 
-IDataAction::UniquePointer CreateGridMontageAction::clone() const
+IDataAction::UniquePointerType CreateGridMontageAction::clone() const
 {
   return std::make_unique<CreateGridMontageAction>(getCreatedPath(), m_Dims, m_Origin, m_Spacing);
 }

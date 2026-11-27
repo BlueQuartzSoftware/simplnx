@@ -71,20 +71,20 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<StringParameter>(k_CreatedImageGeometryPrefix_Key, "Created Image Geometry Prefix",
                                                   "The prefix name for each of new cropped (extracted) geometry \n\nNOTE: a '-' will automatically be added between the prefix and number",
                                                   "Extracted_Feature"));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FlaggedFeaturesArrayPath_Key, "Flagged Features", "Specifies whether the Feature will remain in the structure or not", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing flagged features",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -107,7 +107,7 @@ IFilter::VersionType RemoveFlaggedFeaturesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RemoveFlaggedFeaturesFilter::clone() const
+IFilter::UniquePointerType RemoveFlaggedFeaturesFilter::clone() const
 {
   return std::make_unique<RemoveFlaggedFeaturesFilter>();
 }
@@ -212,10 +212,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FillRemovedFeaturesKey = "FillRemovedFeatures";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FlaggedFeaturesArrayPathKey = "FlaggedFeaturesArrayPath";
-constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
+constexpr StringLiteralType k_FillRemovedFeaturesKey = "FillRemovedFeatures";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FlaggedFeaturesArrayPathKey = "FlaggedFeaturesArrayPath";
+constexpr StringLiteralType k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
 } // namespace simpl
 } // namespace
 
@@ -227,12 +227,12 @@ Result<Arguments> RemoveFlaggedFeaturesFilter::FromSIMPLJson(const nlohmann::jso
 
   if(json.contains(simpl::k_FillRemovedFeaturesKey.str()))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_FillRemovedFeaturesKey, k_FillRemovedFeatures_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FillRemovedFeaturesKey, k_FillRemovedFeatures_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FlaggedFeaturesArrayPathKey, k_FlaggedFeaturesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FlaggedFeaturesArrayPathKey, k_FlaggedFeaturesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

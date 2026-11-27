@@ -67,7 +67,7 @@ IFilter::VersionType ArrayCalculatorFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ArrayCalculatorFilter::clone() const
+IFilter::UniquePointerType ArrayCalculatorFilter::clone() const
 {
   return std::make_unique<ArrayCalculatorFilter>();
 }
@@ -85,7 +85,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
 
   // Parse and validate the expression
   const std::atomic_bool mShouldCancel(false);
-  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, mShouldCancel);
+  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.equation, mShouldCancel);
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
   Result<> parseResult = parser.parseAndValidate(calculatedTupleShape, calculatedComponentShape);
@@ -121,7 +121,7 @@ Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const 
 {
   ArrayCalculatorInputValues inputValues;
   auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
-  inputValues.InfixEquation = pInfixEquationValue.m_Equation;
+  inputValues.InfixEquation = pInfixEquationValue.equation;
   inputValues.Units = pInfixEquationValue.m_Units;
   inputValues.SelectedGroup = pInfixEquationValue.m_SelectedGroup;
   inputValues.ScalarType = filterArgs.value<NumericTypeParameter::ValueType>(k_ScalarType_Key);
@@ -134,10 +134,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
-constexpr StringLiteral k_InfixEquationKey = "InfixEquation";
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_CalculatedArrayKey = "CalculatedArray";
+constexpr StringLiteralType k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
+constexpr StringLiteralType k_InfixEquationKey = "InfixEquation";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_CalculatedArrayKey = "CalculatedArray";
 } // namespace simpl
 } // namespace
 
@@ -149,14 +149,14 @@ Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& jso
 
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixKey,
   // "@SIMPLNX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::CalculatorFilterParameterConverter>(args, json, k_CalculatorParameter_Key));
-  Result<> result = SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key);
+  results.push_back(simpl_conversion::ConvertTopParameters<simpl_conversion::CalculatorFilterParameterConverter>(args, json, k_CalculatorParameter_Key));
+  Result<> result = simpl_conversion::ConvertParameter<simpl_conversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key);
   if(result.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(result));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CalculatedArrayKey, k_CalculatedArray_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CalculatedArrayKey, k_CalculatedArray_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -20,7 +20,7 @@ morph_test::KernelParamSetter OpeningKernelParamSetter(float64 foreground, float
 {
   return [foreground, background](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(foreground));
     args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(background));
   };
@@ -78,7 +78,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non
   args.insertOrAssign(OpeningFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(OpeningFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-  args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(1.0));
   args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
 
@@ -122,7 +122,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
   args.insertOrAssign(OpeningFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
   args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
   args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
   args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
 
@@ -195,7 +195,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight r
     args.insertOrAssign(OpeningFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(OpeningFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-    args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+    args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
     args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(fg));
     args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(bg));
     return args;

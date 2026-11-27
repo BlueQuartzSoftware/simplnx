@@ -24,15 +24,15 @@ public:
   ComputeBoundaryStrengthsFilter& operator=(ComputeBoundaryStrengthsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_Loading_Key = "loading";
-  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_SurfaceMeshF1sArrayName_Key = "surface_mesh_f1s_array_name";
-  static constexpr StringLiteral k_SurfaceMeshF1sptsArrayName_Key = "surface_mesh_f1spts_array_name";
-  static constexpr StringLiteral k_SurfaceMeshF7sArrayName_Key = "surface_mesh_f7s_array_name";
-  static constexpr StringLiteral k_SurfaceMeshmPrimesArrayName_Key = "surface_meshm_primes_array_name";
+  static constexpr StringLiteralType k_Loading_Key = "loading";
+  static constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteralType k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static constexpr StringLiteralType k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_SurfaceMeshF1sArrayName_Key = "surface_mesh_f1s_array_name";
+  static constexpr StringLiteralType k_SurfaceMeshF1sptsArrayName_Key = "surface_mesh_f1spts_array_name";
+  static constexpr StringLiteralType k_SurfaceMeshF7sArrayName_Key = "surface_mesh_f7s_array_name";
+  static constexpr StringLiteralType k_SurfaceMeshmPrimesArrayName_Key = "surface_meshm_primes_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -89,7 +89,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -61,18 +61,18 @@ Parameters BinaryContourImageFilter::parameters() const
                                                 "Whether the connected components are defined strictly by face connectivity (off) or by face+edge+vertex connectivity (on). Default is off. "
                                                 "For objects that are 1 pixel wide, use Fully Connected on.",
                                                 false));
-  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "Foreground Value",
+  params.insert(std::make_unique<Float64ParameterType>(k_ForegroundValue_Key, "Foreground Value",
                                                    "The value identifying the objects in the input and output images. Only voxels equal to this value are objects; every other value is passed "
                                                    "through unchanged. For an integer input image the value must be finite and within the image type's range.",
                                                    1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
+  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
                                                    "The value written to voxels that are not on the border of the objects. For an integer input image the value must be finite and within the "
                                                    "image type's range.",
                                                    0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetIntegerScalarTypes()));
 
@@ -85,7 +85,7 @@ IFilter::VersionType BinaryContourImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer BinaryContourImageFilter::clone() const
+IFilter::UniquePointerType BinaryContourImageFilter::clone() const
 {
   return std::make_unique<BinaryContourImageFilter>();
 }
@@ -151,11 +151,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
-constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
-constexpr StringLiteral k_ForegroundValueKey = "ForegroundValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_FullyConnectedKey = "FullyConnected";
+constexpr StringLiteralType k_BackgroundValueKey = "BackgroundValue";
+constexpr StringLiteralType k_ForegroundValueKey = "ForegroundValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -165,12 +165,12 @@ Result<Arguments> BinaryContourImageFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

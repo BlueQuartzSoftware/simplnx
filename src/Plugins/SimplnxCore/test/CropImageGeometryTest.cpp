@@ -46,7 +46,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-inline constexpr StringLiteral k_DataContainer("DataContainer2");
+inline constexpr StringLiteralType k_DataContainer("DataContainer2");
 inline constexpr usize k_CropScratchBytes = 1024 * 1024;
 
 /**
@@ -1135,8 +1135,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore]
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1218,8 +1218,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XY", "[Simplnx
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1303,8 +1303,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XZ", "[Simplnx
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1386,8 +1386,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - YZ", "[Simplnx
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1470,8 +1470,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - X", "[SimplnxC
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1554,8 +1554,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Y", "[SimplnxC
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
@@ -1638,8 +1638,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Z", "[SimplnxC
 
   {
     // Write out the DataStructure for later viewing/debugging
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 

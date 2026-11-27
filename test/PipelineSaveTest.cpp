@@ -63,7 +63,7 @@ public:
     return 1;
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<TestFilter>();
   }
@@ -210,7 +210,7 @@ TEST_CASE("Pipeline persistent state: filter deep copy", "[simplnx][PipelineCopy
   const bool hasFilter = GENERATE(false, true);
   CAPTURE(isDisabled, hasFilter);
 
-  IFilter::UniquePointer filterPtr;
+  IFilter::UniquePointerType filterPtr;
   if(hasFilter)
   {
     filterPtr = std::make_unique<TestFilter>();

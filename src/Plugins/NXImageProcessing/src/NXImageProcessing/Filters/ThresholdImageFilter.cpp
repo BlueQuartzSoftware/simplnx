@@ -68,13 +68,13 @@ Parameters ThresholdImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_Lower_Key, "Lower", "The lower threshold value.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_Upper_Key, "Upper", "The upper threshold value.", 1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "Outside Value", "Values outside the [Lower, Upper] range are set to this value.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Lower_Key, "Lower", "The lower threshold value.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Upper_Key, "Upper", "The upper threshold value.", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_OutsideValue_Key, "Outside Value", "Values outside the [Lower, Upper] range are set to this value.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -89,7 +89,7 @@ IFilter::VersionType ThresholdImageFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ThresholdImageFilter::clone() const
+IFilter::UniquePointerType ThresholdImageFilter::clone() const
 {
   return std::make_unique<ThresholdImageFilter>();
 }
@@ -127,11 +127,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_LowerKey = "Lower";
-constexpr StringLiteral k_UpperKey = "Upper";
-constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_LowerKey = "Lower";
+constexpr StringLiteralType k_UpperKey = "Upper";
+constexpr StringLiteralType k_OutsideValueKey = "OutsideValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -140,12 +140,12 @@ Result<Arguments> ThresholdImageFilter::FromSIMPLJson(const nlohmann::json& json
   Arguments args = ThresholdImageFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_LowerKey, k_Lower_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_UpperKey, k_Upper_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutsideValueKey, k_OutsideValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_LowerKey, k_Lower_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_UpperKey, k_Upper_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutsideValueKey, k_OutsideValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

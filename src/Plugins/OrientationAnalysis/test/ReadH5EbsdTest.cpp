@@ -111,16 +111,16 @@ constexpr ChoicesParameter::ValueType k_AxisAngleRepresentation = 0;
 
 // RotateSampleRefFrame lives in SimplnxCore, so the test addresses it through the filter list
 // with the same handle and argument keys that ReadH5Ebsd uses.
-constexpr StringLiteral k_SimplnxCorePluginId = "05cc618b-781f-4ac0-b9ac-43f26ce1854f";
-constexpr StringLiteral k_RotateSampleRefFrameFilterId = "d2451dc1-a5a1-4ac2-a64d-7991669dcffc";
-constexpr StringLiteral k_RotateSelectedImageGeometryPath_Key = "input_image_geometry_path";
-constexpr StringLiteral k_RotateCreatedImageGeometryPath_Key = "output_image_geometry_path";
-constexpr StringLiteral k_RotateRotationAxisAngle_Key = "rotation_axis_angle";
-constexpr StringLiteral k_RotateRotationRepresentation_Key = "rotation_representation_index";
-constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-constexpr StringLiteral k_RotateRemoveOriginalGeometry_Key = "remove_original_geometry";
-constexpr StringLiteral k_RotateKeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
-constexpr StringLiteral k_RotateClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+constexpr StringLiteralType k_SimplnxCorePluginId = "05cc618b-781f-4ac0-b9ac-43f26ce1854f";
+constexpr StringLiteralType k_RotateSampleRefFrameFilterId = "d2451dc1-a5a1-4ac2-a64d-7991669dcffc";
+constexpr StringLiteralType k_RotateSelectedImageGeometryPath_Key = "input_image_geometry_path";
+constexpr StringLiteralType k_RotateCreatedImageGeometryPath_Key = "output_image_geometry_path";
+constexpr StringLiteralType k_RotateRotationAxisAngle_Key = "rotation_axis_angle";
+constexpr StringLiteralType k_RotateRotationRepresentation_Key = "rotation_representation_index";
+constexpr StringLiteralType k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+constexpr StringLiteralType k_RotateRemoveOriginalGeometry_Key = "remove_original_geometry";
+constexpr StringLiteralType k_RotateKeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
+constexpr StringLiteralType k_RotateClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
 
 template <typename T>
 void CompareNumericValues(const IDataArray& generated, const IDataArray& expected, bool bitExact)

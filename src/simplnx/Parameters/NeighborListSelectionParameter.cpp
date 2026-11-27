@@ -34,7 +34,7 @@ constexpr int32 k_ValidateAllowedTypeError = -206;
 namespace nx::core
 {
 NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
-                                                               const AllowedTypes& allowedTypes)
+                                                               const AllowedTypeSetType& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(allowedTypes)
@@ -70,7 +70,7 @@ nlohmann::json NeighborListSelectionParameter::toJsonImpl(const std::any& value)
 
 Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
@@ -88,7 +88,7 @@ Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::js
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer NeighborListSelectionParameter::clone() const
+IParameter::UniquePointerType NeighborListSelectionParameter::clone() const
 {
   return std::make_unique<NeighborListSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
@@ -103,7 +103,7 @@ typename NeighborListSelectionParameter::ValueType NeighborListSelectionParamete
   return m_DefaultValue;
 }
 
-NeighborListSelectionParameter::AllowedTypes NeighborListSelectionParameter::allowedTypes() const
+NeighborListSelectionParameter::AllowedTypeSetType NeighborListSelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }

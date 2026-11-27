@@ -37,7 +37,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -91,7 +91,7 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT BooleanFilterParameterConverter
 {
@@ -116,7 +116,7 @@ struct SIMPLNX_EXPORT LinkedBooleanFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::BoolParameter, "b6936d18-7476-4855-9e13-e795d717c50f");

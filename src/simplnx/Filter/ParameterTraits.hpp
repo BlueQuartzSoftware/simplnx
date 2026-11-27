@@ -21,7 +21,7 @@ struct ParameterTraits
   template <>                                                                                                                                                                                          \
   struct nx::core::ParameterTraits<type>                                                                                                                                                               \
   {                                                                                                                                                                                                    \
-    static inline constexpr nx::core::StringLiteral name = nameString;                                                                                                                                 \
+    static inline constexpr nx::core::StringLiteralType name = nameString;                                                                                                                                 \
     static inline constexpr nx::core::Uuid uuid = *nx::core::Uuid::FromString(uuidString);                                                                                                             \
   }
 

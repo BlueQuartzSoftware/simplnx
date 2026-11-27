@@ -383,12 +383,12 @@ ImportH5ObjectPathsAction::~ImportH5ObjectPathsAction() noexcept = default;
 
 Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto metadata = DREAM3D::Dream3dPreflightCache::Instance().fetchSelectableMetadata(m_H5FilePath);
+  auto metadata = dream3d::Dream3dPreflightCache::Instance().fetchSelectableMetadata(m_H5FilePath);
   if(metadata.invalid())
   {
     return ConvertResult(std::move(metadata));
   }
-  const bool legacy = metadata.value().fileVersion == DREAM3D::k_LegacyFileVersion;
+  const bool legacy = metadata.value().fileVersion == dream3d::k_LegacyFileVersion;
   auto validation = metadata.value().applyImageMetadata(m_H5FilePath, m_Paths, m_UseDefaultGeometryValues);
   DataStructure sourceStructure = std::move(metadata.value().dataStructure);
   Result<> importResult = MergeResults(ConvertResult(std::move(metadata)), std::move(validation));
@@ -591,19 +591,19 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   }
   if(mode == Mode::Execute && !importedLeafPaths.empty())
   {
-    auto fileReader = HDF5::FileIO::ReadFile(m_H5FilePath);
+    auto fileReader = hdf5::FileIO::ReadFile(m_H5FilePath);
     if(!fileReader.isValid())
     {
       return MergeResults(std::move(importResult), MakeErrorResult(-6206, fmt::format("Cannot open '{}' to materialize the selected import.", m_H5FilePath.string())));
     }
-    importResult = MergeResults(std::move(importResult), DREAM3D::detail::MaterializeImportedPaths(preparedStructure, fileReader, importedLeafPaths));
+    importResult = MergeResults(std::move(importResult), dream3d::detail::MaterializeImportedPaths(preparedStructure, fileReader, importedLeafPaths));
     if(importResult.invalid())
     {
       return importResult;
     }
   }
 
-  importResult = MergeResults(std::move(importResult), HDF5::RectGridGeomIO::ValidateImportedBounds(preparedStructure, m_H5FilePath, preparedPaths));
+  importResult = MergeResults(std::move(importResult), hdf5::RectGridGeomIO::ValidateImportedBounds(preparedStructure, m_H5FilePath, preparedPaths));
   if(importResult.invalid())
   {
     return importResult;
@@ -653,7 +653,7 @@ Result<> ImportH5ObjectPathsAction::cleanupFailedImportForTesting(DataStructure&
 
 #endif
 
-IDataAction::UniquePointer ImportH5ObjectPathsAction::clone() const
+IDataAction::UniquePointerType ImportH5ObjectPathsAction::clone() const
 {
   return std::make_unique<ImportH5ObjectPathsAction>(m_H5FilePath, m_Paths, m_UseDefaultGeometryValues);
 }

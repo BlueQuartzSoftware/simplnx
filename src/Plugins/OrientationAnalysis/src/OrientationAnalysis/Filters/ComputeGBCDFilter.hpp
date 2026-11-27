@@ -24,16 +24,16 @@ public:
   ComputeGBCDFilter& operator=(ComputeGBCDFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_GBCDRes_Key = "gbcd_resolution";
-  static constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
-  static constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPath_Key = "surface_mesh_face_areas_array_path";
-  static constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
-  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_FaceEnsembleAttributeMatrixName_Key = "face_ensemble_attribute_matrix_name";
-  static constexpr StringLiteral k_GBCDArrayName_Key = "gbcd_array_name";
+  static constexpr StringLiteralType k_GBCDRes_Key = "gbcd_resolution";
+  static constexpr StringLiteralType k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteralType k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static constexpr StringLiteralType k_SurfaceMeshFaceAreasArrayPath_Key = "surface_mesh_face_areas_array_path";
+  static constexpr StringLiteralType k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static constexpr StringLiteralType k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_FaceEnsembleAttributeMatrixName_Key = "face_ensemble_attribute_matrix_name";
+  static constexpr StringLiteralType k_GBCDArrayName_Key = "gbcd_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -90,7 +90,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

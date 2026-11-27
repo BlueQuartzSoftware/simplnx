@@ -53,7 +53,7 @@ Parameters RobustAutomaticThresholdFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Input Array", "DataArray to Threshold", DataPath(), nx::core::GetAllNumericTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath_Key, "Gradient Magnitude Data", "The complete path to the Array specifying the gradient magnitude of the Input Array",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ArrayCreationName_Key, "Mask", "Created mask based on Input Array and Gradient Magnitude", "mask"));
 
   return params;
@@ -65,7 +65,7 @@ IFilter::VersionType RobustAutomaticThresholdFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer RobustAutomaticThresholdFilter::clone() const
+IFilter::UniquePointerType RobustAutomaticThresholdFilter::clone() const
 {
   return std::make_unique<RobustAutomaticThresholdFilter>();
 }
@@ -118,9 +118,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
-constexpr StringLiteral k_GradientMagnitudeArrayPathKey = "GradientMagnitudeArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_InputArrayPathKey = "InputArrayPath";
+constexpr StringLiteralType k_GradientMagnitudeArrayPathKey = "GradientMagnitudeArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -130,10 +130,10 @@ Result<Arguments> RobustAutomaticThresholdFilter::FromSIMPLJson(const nlohmann::
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputArrayPathKey, k_InputArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GradientMagnitudeArrayPathKey, k_GradientMagnitudePath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputArrayPathKey, k_InputArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GradientMagnitudeArrayPathKey, k_GradientMagnitudePath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ArrayCreationName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ArrayCreationName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

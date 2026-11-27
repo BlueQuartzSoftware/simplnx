@@ -124,23 +124,23 @@ Parameters InitializeImageGeomCellDataFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeImageGeomCellDataFilter SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Tells how to initialize the data", 0, ChoicesParameter::Choices{"Manual", "Random", "Random With Range"}));
-  params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "The initialization value if Manual Initialization Type is selected", 0.0f));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
-                                                         VectorFloat64Parameter::ValueType{0.0, 0.0}));
+  params.insert(std::make_unique<Float64ParameterType>(k_InitValue_Key, "Initialization Value", "The initialization value if Manual Initialization Type is selected", 0.0f));
+  params.insert(std::make_unique<VectorFloat64ParameterType>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
+                                                         VectorFloat64ParameterType::ValueType{0.0, 0.0}));
   params.linkParameters(k_InitType_Key, k_InitValue_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_InitType_Key, k_InitRange_Key, std::make_any<ChoicesParameter::ValueType>(2));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a sub-volume to zeros", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
@@ -155,7 +155,7 @@ IFilter::VersionType InitializeImageGeomCellDataFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
+IFilter::UniquePointerType InitializeImageGeomCellDataFilter::clone() const
 {
   return std::make_unique<InitializeImageGeomCellDataFilter>();
 }
@@ -262,12 +262,12 @@ Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStruc
   InitializeImageGeomCellDataInputValues inputValues;
   inputValues.CellArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_ImageGeometryPath_Key);
-  inputValues.MinPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MinPoint_Key);
-  inputValues.MaxPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MaxPoint_Key);
+  inputValues.MinPoint = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_MinPoint_Key);
+  inputValues.MaxPoint = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_MaxPoint_Key);
   inputValues.InitTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
-  inputValues.InitValue = filterArgs.value<Float64Parameter::ValueType>(k_InitValue_Key);
-  inputValues.InitRange = filterArgs.value<VectorFloat64Parameter::ValueType>(k_InitRange_Key);
-  inputValues.SeedValue = filterArgs.value<UInt64Parameter::ValueType>(k_SeedValue_Key);
+  inputValues.InitValue = filterArgs.value<Float64ParameterType::ValueType>(k_InitValue_Key);
+  inputValues.InitRange = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_InitRange_Key);
+  inputValues.SeedValue = filterArgs.value<UInt64ParameterType::ValueType>(k_SeedValue_Key);
   inputValues.UseSeed = filterArgs.value<BoolParameter::ValueType>(k_UseSeed_Key);
   inputValues.SeedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SeedArrayName_Key);
 
@@ -278,16 +278,16 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CellAttributeMatrixPathsKey = "CellAttributeMatrixPaths";
-constexpr StringLiteral k_XMinKey = "XMin";
-constexpr StringLiteral k_YMinKey = "YMin";
-constexpr StringLiteral k_ZMinKey = "ZMin";
-constexpr StringLiteral k_XMaxKey = "XMax";
-constexpr StringLiteral k_YMaxKey = "YMax";
-constexpr StringLiteral k_ZMaxKey = "ZMax";
-constexpr StringLiteral k_InitTypeKey = "InitType";
-constexpr StringLiteral k_InitValueKey = "InitValue";
-constexpr StringLiteral k_InitRangeKey = "InitRange";
+constexpr StringLiteralType k_CellAttributeMatrixPathsKey = "CellAttributeMatrixPaths";
+constexpr StringLiteralType k_XMinKey = "XMin";
+constexpr StringLiteralType k_YMinKey = "YMin";
+constexpr StringLiteralType k_ZMinKey = "ZMin";
+constexpr StringLiteralType k_XMaxKey = "XMax";
+constexpr StringLiteralType k_YMaxKey = "YMax";
+constexpr StringLiteralType k_ZMaxKey = "ZMax";
+constexpr StringLiteralType k_InitTypeKey = "InitType";
+constexpr StringLiteralType k_InitValueKey = "InitValue";
+constexpr StringLiteralType k_InitRangeKey = "InitRange";
 } // namespace simpl
 } // namespace
 
@@ -298,13 +298,13 @@ Result<Arguments> InitializeImageGeomCellDataFilter::FromSIMPLJson(const nlohman
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathsKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathsKey, k_CellArrayPaths_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPoint_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPoint_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_InitTypeKey, k_InitType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_InitValueKey, k_InitValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::RangeFilterParameterConverter>(args, json, simpl::k_InitRangeKey, k_InitRange_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathsKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathsKey, k_CellArrayPaths_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPoint_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPoint_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_InitTypeKey, k_InitType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_InitValueKey, k_InitValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::RangeFilterParameterConverter>(args, json, simpl::k_InitRangeKey, k_InitRange_Key));
   // Invert Data parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

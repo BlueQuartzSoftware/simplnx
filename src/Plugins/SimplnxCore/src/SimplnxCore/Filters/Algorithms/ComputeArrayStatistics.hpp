@@ -22,7 +22,7 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 {
   ChoicesParameter::ValueType RangeType{};
-  VectorInt32Parameter::ValueType Range;
+  VectorInt32ParameterType::ValueType Range;
   bool FindLength{};
   bool FindMin{};
   bool FindMax{};

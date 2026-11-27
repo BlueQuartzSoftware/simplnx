@@ -28,7 +28,7 @@ const DataPath k_QuickMeshTriangleGeomPath({"QuickMesh"});
 // per test file.
 SurfaceMeshingTest::MeshResult RunSurfaceNetsForNodeTypes()
 {
-  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SurfaceNetsTriangleGeomPath, BoundingBoxSkinMode::k_Off, [](Arguments& args) {
+  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SurfaceNetsTriangleGeomPath, bounding_box_skin_mode::k_Off, [](Arguments& args) {
     args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
@@ -60,7 +60,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType conven
   const std::set<int8> distinctValues = CollectNodeTypeValues(meshResult);
 
   // Only the shared convention values may appear: 2/3/4 interior, 12/13/14 on the box wall.
-  const std::set<int8> allowedValues = {NodeType::Default, NodeType::TriplePoint, NodeType::QuadPoint, NodeType::SurfaceDefault, NodeType::SurfaceTriplePoint, NodeType::SurfaceQuadPoint};
+  const std::set<int8> allowedValues = {node_type::Default, node_type::TriplePoint, node_type::QuadPoint, node_type::SurfaceDefault, node_type::SurfaceTriplePoint, node_type::SurfaceQuadPoint};
   for(const int8 value : distinctValues)
   {
     INFO("Unexpected Node Type value: " << static_cast<int32>(value));
@@ -68,8 +68,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType conven
   }
 
   // The flush cylinder guarantees both an interior node and a box-wall node exist.
-  REQUIRE(distinctValues.count(NodeType::Default) == 1);
-  REQUIRE(distinctValues.count(NodeType::SurfaceDefault) == 1);
+  REQUIRE(distinctValues.count(node_type::Default) == 1);
+  REQUIRE(distinctValues.count(node_type::SurfaceDefault) == 1);
 
   // 0 must never appear -- it means NodeType::Unused.
   REQUIRE(distinctValues.count(0) == 0);
@@ -87,7 +87,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMes
   // argument in the design spec rather than trusting it.
   SurfaceMeshingTest::MeshResult surfaceNetsResult = RunSurfaceNetsForNodeTypes();
   SurfaceMeshingTest::MeshResult quickMeshResult =
-      SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshTriangleGeomPath, BoundingBoxSkinMode::k_Off,
+      SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshTriangleGeomPath, bounding_box_skin_mode::k_Off,
                                                             [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 
   // Both meshers should produce the same number of nodes, since both emit one per grid

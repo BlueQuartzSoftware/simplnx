@@ -30,7 +30,7 @@ class JsonPipelineBuilder;
 class SIMPLNX_EXPORT Application
 {
 public:
-  using name_type_map = std::map<std::string, DataObject::Type>;
+  using NameTypeMapType = std::map<std::string, DataObject::Type>;
 
   /**
    * @brief Saves preferences and clears the global instance pointer.
@@ -234,7 +234,7 @@ private:
   std::vector<Uuid> m_SimplUuids;   // Legacy UUIDs are unique. Indices match m_Simplnx_Uuids.
   std::vector<Uuid> m_SimplnxUuids; // Values can repeat. Indices match m_Simpl_Uuids.
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
-  name_type_map m_NamedTypesMap;
+  NameTypeMapType m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;
   WarningCollection m_PendingPreferenceLoadWarnings;
 };

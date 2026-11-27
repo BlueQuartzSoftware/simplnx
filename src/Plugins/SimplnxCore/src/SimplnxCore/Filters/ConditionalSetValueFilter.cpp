@@ -61,7 +61,7 @@ Parameters ConditionalSetValueFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_InvertMask_Key, "Invert Mask", "This makes the filter replace values that are marked FALSE in the conditional array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_ConditionalArrayPath_Key, "Conditional Array", "The complete path to the conditional array that will determine which values/entries will be replaced if index is TRUE", DataPath{},
-      ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<StringParameter>(k_RemoveValue_Key, "Value To Replace", "The numerical value that will be replaced in the array", "0"));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
@@ -81,7 +81,7 @@ IFilter::VersionType ConditionalSetValueFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ConditionalSetValueFilter::clone() const
+IFilter::UniquePointerType ConditionalSetValueFilter::clone() const
 {
   return std::make_unique<ConditionalSetValueFilter>();
 }
@@ -159,11 +159,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_RemoveValueKey = "RemoveValue";
-constexpr StringLiteral k_ReplaceValueKey = "ReplaceValue";
-constexpr StringLiteral k_SelectedArrayKey = "SelectedArray";
-constexpr StringLiteral k_ConditionalArrayPathKey = "ConditionalArrayPath";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_RemoveValueKey = "RemoveValue";
+constexpr StringLiteralType k_ReplaceValueKey = "ReplaceValue";
+constexpr StringLiteralType k_SelectedArrayKey = "SelectedArray";
+constexpr StringLiteralType k_ConditionalArrayPathKey = "ConditionalArrayPath";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -175,15 +175,15 @@ Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json&
 
   if(json.contains(simpl::k_RemoveValueKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_RemoveValueKey, k_RemoveValue_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayKey, k_SelectedArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_RemoveValueKey, k_RemoveValue_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayKey, k_SelectedArrayPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_ReplaceValueKey, k_ReplaceValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleToStringFilterParameterConverter>(args, json, simpl::k_ReplaceValueKey, k_ReplaceValue_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

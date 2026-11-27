@@ -236,7 +236,7 @@ Parameters ReadImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Cropping Options"});
   auto croppingOptions = CropGeometryParameter::ValueType{};
-  croppingOptions.is2D = true;
+  croppingOptions.is_2d = true;
   params.insert(std::make_unique<CropGeometryParameter>(
       k_CroppingOptions_Key, "Cropping Options",
       "The cropping options used to crop images.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.", croppingOptions));
@@ -257,7 +257,7 @@ IFilter::VersionType ReadImageFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadImageFilter::clone() const
+IFilter::UniquePointerType ReadImageFilter::clone() const
 {
   auto filter = std::make_unique<ReadImageFilter>();
   filter->m_ReadSinglePageOnly = m_ReadSinglePageOnly;
@@ -446,10 +446,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FileNameKey = "FileName";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_ImageDataArrayNameKey = "ImageDataArrayName";
+constexpr StringLiteralType k_FileNameKey = "FileName";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_ImageDataArrayNameKey = "ImageDataArrayName";
 } // namespace simpl
 } // namespace
 
@@ -459,11 +459,11 @@ Result<Arguments> ReadImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_FileNameKey, k_FileName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_FileNameKey, k_FileName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellDataName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellDataName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

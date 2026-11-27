@@ -149,7 +149,7 @@ public:
     auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
     auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::MaterialName));
     auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
-    Float32Array::store_type* latticeConstantsPtr = latticeConstantsArray.getDataStore();
+    Float32Array::StoreType* latticeConstantsPtr = latticeConstantsArray.getDataStore();
 
     crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
     materialNames[0] = "Invalid Phase";

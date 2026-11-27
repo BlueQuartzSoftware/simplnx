@@ -61,10 +61,10 @@ Parameters ComputeLargestCrossSectionsFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane of Interest", "Specifies which plane to consider when determining the maximum cross-section for each Feature", 0,
                                                    ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The complete path to the input image geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "The path to the cell feature attribute matrix", DataPath{}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_LargestCrossSectionsArrayName_Key, "Largest Cross Sections",
@@ -80,7 +80,7 @@ IFilter::VersionType ComputeLargestCrossSectionsFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeLargestCrossSectionsFilter::clone() const
+IFilter::UniquePointerType ComputeLargestCrossSectionsFilter::clone() const
 {
   return std::make_unique<ComputeLargestCrossSectionsFilter>();
 }
@@ -143,9 +143,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_PlaneKey = "Plane";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_LargestCrossSectionsArrayPathKey = "LargestCrossSectionsArrayPath";
+constexpr StringLiteralType k_PlaneKey = "Plane";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_LargestCrossSectionsArrayPathKey = "LargestCrossSectionsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -155,12 +155,12 @@ Result<Arguments> ComputeLargestCrossSectionsFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_PlaneKey, k_Plane_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_LargestCrossSectionsArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_PlaneKey, k_Plane_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_LargestCrossSectionsArrayPathKey,
                                                                                                                          k_CellFeatureAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_LargestCrossSectionsArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_LargestCrossSectionsArrayPathKey,
                                                                                                                                   k_LargestCrossSectionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

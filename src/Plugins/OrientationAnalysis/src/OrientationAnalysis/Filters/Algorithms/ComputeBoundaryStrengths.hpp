@@ -14,7 +14,7 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeBoundaryStrengthsInputValues
 {
-  VectorFloat64Parameter::ValueType Loading;
+  VectorFloat64ParameterType::ValueType Loading;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath FeaturePhasesArrayPath;

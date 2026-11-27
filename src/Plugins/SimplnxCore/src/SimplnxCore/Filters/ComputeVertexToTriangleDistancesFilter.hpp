@@ -24,11 +24,11 @@ public:
   ComputeVertexToTriangleDistancesFilter& operator=(ComputeVertexToTriangleDistancesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_TriangleNormalsArrayPath_Key = "triangle_normals_array_path";
-  static constexpr StringLiteral k_DistancesArrayName_Key = "distances_array_name";
-  static constexpr StringLiteral k_ClosestTriangleIdArrayName_Key = "closest_triangle_id_array_name";
+  static constexpr StringLiteralType k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static constexpr StringLiteralType k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_TriangleNormalsArrayPath_Key = "triangle_normals_array_path";
+  static constexpr StringLiteralType k_DistancesArrayName_Key = "distances_array_name";
+  static constexpr StringLiteralType k_ClosestTriangleIdArrayName_Key = "closest_triangle_id_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

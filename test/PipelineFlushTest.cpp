@@ -232,7 +232,7 @@ public:
    * @brief Shares the same control with the cloned filter.
    * @return A new filter with the existing control.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<CompletionFilter>(m_Control);
   }
@@ -254,7 +254,7 @@ protected:
     result.outputValues.push_back({"Completion value", "preserved"});
     if(m_Control->invalid_empty_preflight)
     {
-      result.outputActions.m_Expected = nonstd::make_unexpected(ErrorCollection{});
+      result.outputActions.expected = nonstd::make_unexpected(ErrorCollection{});
       result.outputActions.warnings().push_back({k_FilterWarning, "invalid-empty-original-warning"});
     }
     return result;
@@ -642,7 +642,7 @@ TEST_CASE("PipelineFlush retains execute diagnostics and fails before later filt
     fixture.first_control->result.warnings().push_back({k_FilterWarning, "execute-warning-sentinel"});
     if(originalError)
     {
-      fixture.first_control->result.m_Expected = nonstd::make_unexpected(ErrorCollection{{.code = k_FilterError, .message = "execute-error-sentinel"}});
+      fixture.first_control->result.expected = nonstd::make_unexpected(ErrorCollection{{.code = k_FilterError, .message = "execute-error-sentinel"}});
     }
     fixture.flush_control->result = MakeErrorResult(k_FlushError, "backing.h5:/values: terminal-flush-sentinel");
     fixture.flush_control->result.warnings().push_back({k_FlushWarning, "flush-warning-sentinel"});
@@ -1040,7 +1040,7 @@ TEST_CASE("PipelineFlush checked virtual preserves invalid-empty extension resul
   node->setIndex(0);
   REQUIRE(pipeline.push_back(node));
   node->override_completion = true;
-  node->completion_result.m_Expected = nonstd::make_unexpected(ErrorCollection{});
+  node->completion_result.expected = nonstd::make_unexpected(ErrorCollection{});
   node->completion_result.warnings().push_back({k_FlushWarning, "empty-extension-warning"});
   CompletionTrace trace(pipeline, node.get());
   CHECK_FALSE(node->hasCompletionErrors());

@@ -44,7 +44,7 @@ Parameters OpeningByReconstructionImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorUInt32Parameter>(k_KernelRadius_Key, "Kernel Radius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
+  params.insert(std::make_unique<VectorUInt32ParameterType>(k_KernelRadius_Key, "Kernel Radius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
                                                         std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "Set the kernel or structuring element used for the morphology.",
                                                    static_cast<uint64>(ImageProcessing::KernelType::Ball), ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
@@ -56,7 +56,7 @@ Parameters OpeningByReconstructionImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -69,7 +69,7 @@ IFilter::VersionType OpeningByReconstructionImageFilter::parametersVersion() con
 {
   return 1;
 }
-IFilter::UniquePointer OpeningByReconstructionImageFilter::clone() const
+IFilter::UniquePointerType OpeningByReconstructionImageFilter::clone() const
 {
   return std::make_unique<OpeningByReconstructionImageFilter>();
 }
@@ -81,7 +81,7 @@ IFilter::PreflightResult OpeningByReconstructionImageFilter::preflightImpl(const
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
+  const auto kernelRadius = filterArgs.value<VectorUInt32ParameterType::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
@@ -107,7 +107,7 @@ Result<> OpeningByReconstructionImageFilter::executeImpl(DataStructure& dataStru
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
+  auto kernelRadius = filterArgs.value<VectorUInt32ParameterType::ValueType>(k_KernelRadius_Key);
   auto kernelType = filterArgs.value<ChoicesParameter::ValueType>(k_KernelType_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto preserveIntensities = filterArgs.value<bool>(k_PreserveIntensities_Key);
@@ -135,12 +135,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_KernelTypeKey = "KernelType";
-constexpr StringLiteral k_KernelRadiusKey = "KernelRadius";
-constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
-constexpr StringLiteral k_PreserveIntensitiesKey = "PreserveIntensities";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_KernelTypeKey = "KernelType";
+constexpr StringLiteralType k_KernelRadiusKey = "KernelRadius";
+constexpr StringLiteralType k_FullyConnectedKey = "FullyConnected";
+constexpr StringLiteralType k_PreserveIntensitiesKey = "PreserveIntensities";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -150,13 +150,13 @@ Result<Arguments> OpeningByReconstructionImageFilter::FromSIMPLJson(const nlohma
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_KernelTypeKey, k_KernelType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_KernelRadiusKey, k_KernelRadius_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_PreserveIntensitiesKey, k_PreserveIntensities_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_KernelTypeKey, k_KernelType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_KernelRadiusKey, k_KernelRadius_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_PreserveIntensitiesKey, k_PreserveIntensities_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -53,8 +53,8 @@ Parameters ReadTextDataArrayFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data Type to interpret and store data into.", NumericType::int8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NComp_Key, "Number of Components", "Number of columns", 1));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NComp_Key, "Number of Components", "Number of columns", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0,
                                                    ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
 
@@ -85,7 +85,7 @@ IFilter::VersionType ReadTextDataArrayFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
+IFilter::UniquePointerType ReadTextDataArrayFilter::clone() const
 {
   return std::make_unique<ReadTextDataArrayFilter>();
 }
@@ -162,12 +162,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_SkipHeaderLinesKey = "SkipHeaderLines";
-constexpr StringLiteral k_DelimiterKey = "Delimiter";
-constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_SkipHeaderLinesKey = "SkipHeaderLines";
+constexpr StringLiteralType k_DelimiterKey = "Delimiter";
+constexpr StringLiteralType k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -177,12 +177,12 @@ Result<Arguments> ReadTextDataArrayFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfComponentsKey, k_NComp_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_SkipHeaderLinesKey, k_NSkipLines_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_DelimiterChoice_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_DataArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfComponentsKey, k_NComp_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_SkipHeaderLinesKey, k_NSkipLines_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_DelimiterChoice_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_DataArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

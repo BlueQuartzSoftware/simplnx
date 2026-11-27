@@ -53,7 +53,7 @@ Parameters EbsdToH5EbsdFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing between each slice of data", 1.0F));
+  params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing between each slice of data", 1.0F));
   params.insert(std::make_unique<ChoicesParameter>(k_StackingOrder_Key, "Stacking Order", "The order the files should be placed into the ", EbsdToH5EbsdInputConstants::k_LowToHigh,
                                                    EbsdToH5EbsdInputConstants::k_StackingChoices));
   params.insert(std::make_unique<ChoicesParameter>(k_ReferenceFrame_Key, "Reference Frame Options",
@@ -79,7 +79,7 @@ IFilter::VersionType EbsdToH5EbsdFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer EbsdToH5EbsdFilter::clone() const
+IFilter::UniquePointerType EbsdToH5EbsdFilter::clone() const
 {
   return std::make_unique<EbsdToH5EbsdFilter>();
 }
@@ -104,7 +104,7 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
     return {MakePreflightErrorResult(-60800, fmt::format("Only .ang and .ctf files are supported. Got '{}'", generatedFileListInfo.fileExtension))};
   }
 
-  generatedFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
+  generatedFileListInfo.ordering = nx::core::file_path_generator::Ordering::LowToHigh;
   std::vector<std::string> fileList = generatedFileListInfo.generate();
   if(fileList.empty())
   {
@@ -153,7 +153,7 @@ Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arg
 {
   EbsdToH5EbsdInputValues inputValues;
 
-  inputValues.ZSpacing = filterArgs.value<Float32Parameter::ValueType>(k_ZSpacing_Key);
+  inputValues.ZSpacing = filterArgs.value<Float32ParameterType::ValueType>(k_ZSpacing_Key);
   inputValues.StackingOrder = filterArgs.value<ChoicesParameter::ValueType>(k_StackingOrder_Key);
   inputValues.ReferenceFrame = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceFrame_Key);
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -161,7 +161,7 @@ Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arg
   // ALWAYS use LowToHigh (no matter what the user happened to click in the UI). We need
   // the list ordered from low to high to be correct. The Stacking Order is a piece of
   // meta-data that is stored in the HDF5 file and used when reading the .h5ebsd file
-  inputValues.InputFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
+  inputValues.InputFileListInfo.ordering = nx::core::file_path_generator::Ordering::LowToHigh;
 
   return EbsdToH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

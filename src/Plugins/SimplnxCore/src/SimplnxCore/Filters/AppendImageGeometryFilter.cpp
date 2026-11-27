@@ -63,7 +63,7 @@ Parameters AppendImageGeometryFilter::parameters() const
                                                               "The incoming image geometries (cell data) that will be appended to the destination image geometry.", std::vector<DataPath>{}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_DestinationGeometry_Key, "Destination Image Geometry",
                                                              "The destination image geometry (cell data) that is the final location for the appended data.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ChoicesParameter>(k_Direction_Key, "Direction", "The direction that will be used to append the geometries.", to_underlying(CopyFromArray::Direction::Z),
                                                    std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(k_MirrorGeometry_Key, "Mirror Geometry In Direction", "Mirrors the resulting geometry in the chosen direction.", false));
@@ -96,7 +96,7 @@ IFilter::VersionType AppendImageGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AppendImageGeometryFilter::clone() const
+IFilter::UniquePointerType AppendImageGeometryFilter::clone() const
 {
   return std::make_unique<AppendImageGeometryFilter>();
 }
@@ -365,9 +365,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputAttributeMatrixKey = "InputAttributeMatrix";
-constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
-constexpr StringLiteral k_CheckResolutionKey = "CheckResolution";
+constexpr StringLiteralType k_InputAttributeMatrixKey = "InputAttributeMatrix";
+constexpr StringLiteralType k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
+constexpr StringLiteralType k_CheckResolutionKey = "CheckResolution";
 } // namespace simpl
 } // namespace
 
@@ -377,9 +377,9 @@ Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_InputAttributeMatrixKey, k_InputGeometries_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_CheckResolutionKey, k_CheckResolution_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_InputAttributeMatrixKey, k_InputGeometries_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_CheckResolutionKey, k_CheckResolution_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

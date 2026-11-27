@@ -62,18 +62,18 @@ Parameters ErodeObjectMorphologyImageFilter::parameters() const
                                                           std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "Set the kernel or structuring element used for the morphology.",
                                                    static_cast<uint64>(ImageProcessing::KernelType::Ball), ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
-  params.insert(std::make_unique<Float64Parameter>(k_ObjectValue_Key, "Object Value",
+  params.insert(std::make_unique<Float64ParameterType>(k_ObjectValue_Key, "Object Value",
                                                    "The pixel value of the 'Object' to be eroded. Voxels equal to this value are the object; every other value is background. For an integer input "
                                                    "image the value must be finite and within the image type's range.",
                                                    1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
+  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
                                                    "The value assigned to eroded pixels (painted over the border of the object). For an integer input image the value must be finite and within the "
                                                    "image type's range.",
                                                    0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -86,7 +86,7 @@ IFilter::VersionType ErodeObjectMorphologyImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer ErodeObjectMorphologyImageFilter::clone() const
+IFilter::UniquePointerType ErodeObjectMorphologyImageFilter::clone() const
 {
   return std::make_unique<ErodeObjectMorphologyImageFilter>();
 }
@@ -100,7 +100,7 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  const auto kernelRadius = filterArgs.value<VectorUInt32Parameter::ValueType>(k_KernelRadius_Key);
+  const auto kernelRadius = filterArgs.value<VectorUInt32ParameterType::ValueType>(k_KernelRadius_Key);
   if(auto radiusResult = ImageProcessing::ValidateKernelRadius(kernelRadius); radiusResult.invalid())
   {
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(radiusResult), OutputActions{})};
@@ -188,12 +188,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_KernelTypeKey = "KernelType";
-constexpr StringLiteral k_ObjectValueKey = "ObjectValue";
-constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
-constexpr StringLiteral k_KernelRadiusKey = "KernelRadius";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_KernelTypeKey = "KernelType";
+constexpr StringLiteralType k_ObjectValueKey = "ObjectValue";
+constexpr StringLiteralType k_BackgroundValueKey = "BackgroundValue";
+constexpr StringLiteralType k_KernelRadiusKey = "KernelRadius";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -203,13 +203,13 @@ Result<Arguments> ErodeObjectMorphologyImageFilter::FromSIMPLJson(const nlohmann
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_KernelTypeKey, k_KernelType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_ObjectValueKey, k_ObjectValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_KernelRadiusKey, k_KernelRadius_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_KernelTypeKey, k_KernelType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_ObjectValueKey, k_ObjectValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_KernelRadiusKey, k_KernelRadius_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

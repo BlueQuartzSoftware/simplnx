@@ -22,7 +22,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
 {
-  VectorUInt64Parameter::ValueType Dimensions;
+  VectorUInt64ParameterType::ValueType Dimensions;
   VectorFloat32Parameter::ValueType Spacing;
   VectorFloat32Parameter::ValueType Origin;
   DataPath TriangleGeometryPath;

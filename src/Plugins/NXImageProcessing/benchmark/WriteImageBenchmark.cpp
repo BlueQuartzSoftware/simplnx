@@ -378,7 +378,7 @@ Arguments CreateWriterArguments(IFilter& filter, usize plane, const fs::path& ou
   arguments.insertOrAssign("file_name", std::make_any<fs::path>(outputPath));
   arguments.insertOrAssign("index_offset", std::make_any<uint64>(0));
   arguments.insertOrAssign("plane_index", std::make_any<ChoicesParameter::ValueType>(plane));
-  arguments.insertOrAssign("total_index_digits", std::make_any<Int32Parameter::ValueType>(4));
+  arguments.insertOrAssign("total_index_digits", std::make_any<Int32ParameterType::ValueType>(4));
   arguments.insertOrAssign("leading_digit_character", std::make_any<StringParameter::ValueType>("0"));
   arguments.insertOrAssign("create_color_table", std::make_any<bool>(createColorTable));
   arguments.insertOrAssign("selected_preset", std::make_any<std::string>(ColorTableUtilities::GetDefaultRGBPresetName()));
@@ -391,7 +391,7 @@ template <typename T>
 Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, const std::string& extension,
                           bool createColorTable)
 {
-  IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(writerUuid);
+  IFilter::UniquePointerType filter = Application::Instance()->getFilterList()->createFilter(writerUuid);
   if(filter == nullptr)
   {
     return MakeErrorResult<TimingRow>(-9322, fmt::format("Could not create the '{}' writer with UUID '{}'.", writerName, writerUuid.str()));

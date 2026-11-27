@@ -19,16 +19,16 @@ namespace nx::core
 {
 namespace unit_test
 {
-inline constexpr StringLiteral k_SimplnxSourceDIr = "@SIMPLNX_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_SimplnxTestSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test";
-inline constexpr StringLiteral k_SimplnxTestDataSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test/Data";
-inline constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_DataDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
-inline constexpr StringLiteral k_TestDataSourceDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
-inline constexpr StringLiteral k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
-inline constexpr StringLiteral k_BinaryTestOutputDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@/test_output";
-inline constexpr StringLiteral k_BuildDir = SIMPLNX_BUILD_DIR;
-inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
-inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
+inline constexpr StringLiteralType k_SimplnxSourceDIr = "@SIMPLNX_SOURCE_DIR_NORM@";
+inline constexpr StringLiteralType k_SimplnxTestSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test";
+inline constexpr StringLiteralType k_SimplnxTestDataSourceDir = "@SIMPLNX_SOURCE_DIR_NORM@/test/Data";
+inline constexpr StringLiteralType k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
+inline constexpr StringLiteralType k_DataDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
+inline constexpr StringLiteralType k_TestDataSourceDir = "@PLUGIN_SOURCE_DIR_NORM@/data";
+inline constexpr StringLiteralType k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
+inline constexpr StringLiteralType k_BinaryTestOutputDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@/test_output";
+inline constexpr StringLiteralType k_BuildDir = SIMPLNX_BUILD_DIR;
+inline constexpr StringLiteralType k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
+inline constexpr StringLiteralType k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
 }
 } // namespace nx::core

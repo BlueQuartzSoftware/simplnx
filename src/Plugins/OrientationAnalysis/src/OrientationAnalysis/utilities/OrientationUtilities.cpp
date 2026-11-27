@@ -3,10 +3,10 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Euler.hpp>
 
-namespace nx::core::OrientationUtilities
+namespace nx::core::orientation_utilities
 {
 
-std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dR frame)
+std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dRType frame)
 {
   // A row sign change preserves each axis line and makes an improper frame right-handed.
   if(frame.determinant() < 0.0)
@@ -27,4 +27,4 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
   return allLaueNames[crystalStructureType];
 }
 
-} // namespace nx::core::OrientationUtilities
+} // namespace nx::core::orientation_utilities

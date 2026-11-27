@@ -27,17 +27,17 @@ public:
   ScalarSegmentFeaturesFilter& operator=(ScalarSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_GridGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_ScalarToleranceKey = "scalar_tolerance";
-  static constexpr StringLiteral k_InputArrayPathKey = "input_array_path";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_path";
-  static constexpr StringLiteral k_FeatureIdsName_Key = "feature_ids_name";
-  static constexpr StringLiteral k_CellFeatureName_Key = "cell_feature_group_name";
-  static constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
-  static constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
-  static constexpr StringLiteral k_IsPeriodic_Key = "is_periodic";
-  static constexpr StringLiteral k_NeighborScheme_Key = "neighbor_scheme_index";
+  static constexpr StringLiteralType k_GridGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_ScalarToleranceKey = "scalar_tolerance";
+  static constexpr StringLiteralType k_InputArrayPathKey = "input_array_path";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_path";
+  static constexpr StringLiteralType k_FeatureIdsName_Key = "feature_ids_name";
+  static constexpr StringLiteralType k_CellFeatureName_Key = "cell_feature_group_name";
+  static constexpr StringLiteralType k_ActiveArrayName_Key = "active_array_name";
+  static constexpr StringLiteralType k_RandomizeFeatures_Key = "randomize_features";
+  static constexpr StringLiteralType k_IsPeriodic_Key = "is_periodic";
+  static constexpr StringLiteralType k_NeighborScheme_Key = "neighbor_scheme_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -94,7 +94,7 @@ public:
    * @brief Creates a copy of the filter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

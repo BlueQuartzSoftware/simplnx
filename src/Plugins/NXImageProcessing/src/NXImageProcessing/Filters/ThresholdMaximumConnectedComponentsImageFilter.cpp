@@ -39,24 +39,24 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt32Parameter>(
+  params.insert(std::make_unique<UInt32ParameterType>(
       k_MinimumObjectSizeInPixels_Key, "Minimum Object Size In Pixels",
       "The pixel type must support comparison operators. Set the minimum pixel area used to count objects on the image. Thus, only objects that have a pixel area greater than the minimum pixel area "
       "will be counted as an object in the optimization portion of this filter. Essentially, it eliminates noise from being counted as an object. The default value is zero.",
       0u));
-  params.insert(std::make_unique<Float64Parameter>(
+  params.insert(std::make_unique<Float64ParameterType>(
       k_UpperBoundary_Key, "Upper Boundary",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
       "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
       65536.0));
-  params.insert(std::make_unique<UInt8Parameter>(
+  params.insert(std::make_unique<UInt8ParameterType>(
       k_InsideValue_Key, "Inside Value",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
       "value is the minimum pixel type intensity. Upper threshold boundary is the maximum pixel type intensity.",
       1u));
-  params.insert(std::make_unique<UInt8Parameter>(
+  params.insert(std::make_unique<UInt8ParameterType>(
       k_OutsideValue_Key, "Outside Value",
       "The following Set/Get methods are for the binary threshold function. This class automatically calculates the lower threshold boundary. The upper threshold boundary, inside value, and outside "
       "value can be defined by the user, however the standard values are used as default if not set by the user. The default value of the: Inside value is the maximum pixel type intensity. Outside "
@@ -65,7 +65,7 @@ Parameters ThresholdMaximumConnectedComponentsImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -79,7 +79,7 @@ IFilter::VersionType ThresholdMaximumConnectedComponentsImageFilter::parametersV
 {
   return 1;
 }
-IFilter::UniquePointer ThresholdMaximumConnectedComponentsImageFilter::clone() const
+IFilter::UniquePointerType ThresholdMaximumConnectedComponentsImageFilter::clone() const
 {
   return std::make_unique<ThresholdMaximumConnectedComponentsImageFilter>();
 }

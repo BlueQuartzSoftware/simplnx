@@ -22,7 +22,7 @@ UpdateImageGeomAction::~UpdateImageGeomAction() noexcept = default;
 
 Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "UpdateImageGeomAction: ";
+  static constexpr StringLiteralType k_Prefix = "UpdateImageGeomAction: ";
   auto* imagePtr = dataStructure.getDataAs<ImageGeom>(path());
   if(imagePtr == nullptr)
   {
@@ -80,7 +80,7 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode /*mode*
   return {};
 }
 
-IDataAction::UniquePointer UpdateImageGeomAction::clone() const
+IDataAction::UniquePointerType UpdateImageGeomAction::clone() const
 {
   return std::make_unique<UpdateImageGeomAction>(m_Origin, m_Spacing, m_Path, m_CenterOrigin);
 }

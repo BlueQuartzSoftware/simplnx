@@ -578,16 +578,16 @@ TEST_CASE("Resident bounded result construction failure preserves the whole call
   std::array<int32, 4> output{77, 77, 77, 77};
   const auto sentinel = output;
   uint64 attempts = 0;
-  const auto fault = [](void* context, const std::filesystem::path&, std::string_view, HDF5::BoundedFaultPointForTesting point) noexcept {
-    if(point != HDF5::BoundedFaultPointForTesting::SuccessResultConstruction)
+  const auto fault = [](void* context, const std::filesystem::path&, std::string_view, hdf5::BoundedFaultPointForTesting point) noexcept {
+    if(point != hdf5::BoundedFaultPointForTesting::SuccessResultConstruction)
     {
       return false;
     }
     ++*static_cast<uint64*>(context);
     return true;
   };
-  const auto previous = HDF5::SetCodecIoObserverForTesting({.context = &attempts, .callback = nullptr, .boundedFault = fault});
-  auto restore = MakeScopeGuard([&]() noexcept { (void)HDF5::SetCodecIoObserverForTesting(previous); });
+  const auto previous = hdf5::SetCodecIoObserverForTesting({.context = &attempts, .callback = nullptr, .boundedFault = fault});
+  auto restore = MakeScopeGuard([&]() noexcept { (void)hdf5::SetCodecIoObserverForTesting(previous); });
   REQUIRE_THROWS_AS(static_cast<void>(store.readExtentIntoBufferBounded(Extent({0}, {1}), nonstd::span<int32>(output.data(), 2), 0)), std::bad_alloc);
   REQUIRE(attempts == 1);
   REQUIRE(output == sentinel);

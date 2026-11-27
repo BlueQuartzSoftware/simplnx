@@ -39,16 +39,16 @@ constexpr int32 k_InputFileMissing = -102;
 constexpr int32 k_FailedReadingDataStructure = -103;
 constexpr int32 k_OutputFailure = -104;
 
-constexpr StringLiteral k_HelpParamLong = "--help";
-constexpr StringLiteral k_HelpParamShort = "-h";
-constexpr StringLiteral k_VersionParamLong = "--version";
-constexpr StringLiteral k_VersionParamShort = "-v";
-constexpr StringLiteral k_DumpParamLong = "--dump-data-structure";
-constexpr StringLiteral k_DumpParamShort = "-d";
-constexpr StringLiteral k_OutputParamLong = "--output-file";
-constexpr StringLiteral k_OutputParamShort = "-o";
-constexpr StringLiteral k_FormatParamLong = "--format";
-constexpr StringLiteral k_FormatParamShort = "-f";
+constexpr StringLiteralType k_HelpParamLong = "--help";
+constexpr StringLiteralType k_HelpParamShort = "-h";
+constexpr StringLiteralType k_VersionParamLong = "--version";
+constexpr StringLiteralType k_VersionParamShort = "-v";
+constexpr StringLiteralType k_DumpParamLong = "--dump-data-structure";
+constexpr StringLiteralType k_DumpParamShort = "-d";
+constexpr StringLiteralType k_OutputParamLong = "--output-file";
+constexpr StringLiteralType k_OutputParamShort = "-o";
+constexpr StringLiteralType k_FormatParamLong = "--format";
+constexpr StringLiteralType k_FormatParamShort = "-f";
 
 enum class OutputFormat : uint8
 {
@@ -464,7 +464,7 @@ int RunDumpDataStructure(const CliOptions& options, OutputStreams streams, const
 
   const Result<DataStructure> readResult = [&options] {
     const ScopedHdf5ErrorHandler scopedHdf5ErrorHandler;
-    auto result = DREAM3D::ImportDataStructureFromFile(options.input_file, /*preflight=*/true);
+    auto result = dream3d::ImportDataStructureFromFile(options.input_file, /*preflight=*/true);
     if(result.invalid())
     {
       Dream3dImportParameter::AddImageGeometryImportHint(result.errors());

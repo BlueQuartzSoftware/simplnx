@@ -54,14 +54,14 @@ Parameters CropVertexGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry to Crop", "DataPath to target VertexGeom", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "The complete path to all the vertex data arrays to crop", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   return params;
 }
 
@@ -72,7 +72,7 @@ IFilter::VersionType CropVertexGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CropVertexGeometryFilter::clone() const
+IFilter::UniquePointerType CropVertexGeometryFilter::clone() const
 {
   return std::make_unique<CropVertexGeometryFilter>();
 }
@@ -196,14 +196,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_XMinKey = "XMin";
-constexpr StringLiteral k_YMinKey = "YMin";
-constexpr StringLiteral k_ZMinKey = "ZMin";
-constexpr StringLiteral k_XMaxKey = "XMax";
-constexpr StringLiteral k_YMaxKey = "YMax";
-constexpr StringLiteral k_ZMaxKey = "ZMax";
-constexpr StringLiteral k_CroppedDataContainerNameKey = "CroppedDataContainerName";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_XMinKey = "XMin";
+constexpr StringLiteralType k_YMinKey = "YMin";
+constexpr StringLiteralType k_ZMinKey = "ZMin";
+constexpr StringLiteralType k_XMaxKey = "XMax";
+constexpr StringLiteralType k_YMaxKey = "YMax";
+constexpr StringLiteralType k_ZMaxKey = "ZMax";
+constexpr StringLiteralType k_CroppedDataContainerNameKey = "CroppedDataContainerName";
 } // namespace simpl
 } // namespace
 
@@ -214,10 +214,10 @@ Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   // Convert 3 numeric inputs into Vec3 inputs
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverter>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -75,7 +75,7 @@ IFilter::VersionType SplitDataArrayByComponentFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SplitDataArrayByComponentFilter::clone() const
+IFilter::UniquePointerType SplitDataArrayByComponentFilter::clone() const
 {
   return std::make_unique<SplitDataArrayByComponentFilter>();
 }
@@ -174,8 +174,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputArrayPathKey = "InputArrayPath";
-constexpr StringLiteral k_SplitArraysSuffixKey = "SplitArraysSuffix";
+constexpr StringLiteralType k_InputArrayPathKey = "InputArrayPath";
+constexpr StringLiteralType k_SplitArraysSuffixKey = "SplitArraysSuffix";
 } // namespace simpl
 } // namespace
 
@@ -185,8 +185,8 @@ Result<Arguments> SplitDataArrayByComponentFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_SplitArraysSuffixKey, k_Postfix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputArrayPathKey, k_MultiCompArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_SplitArraysSuffixKey, k_Postfix_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

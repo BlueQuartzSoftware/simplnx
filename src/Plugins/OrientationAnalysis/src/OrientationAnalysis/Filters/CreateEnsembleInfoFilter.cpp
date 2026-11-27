@@ -74,7 +74,7 @@ IFilter::VersionType CreateEnsembleInfoFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateEnsembleInfoFilter::clone() const
+IFilter::UniquePointerType CreateEnsembleInfoFilter::clone() const
 {
   return std::make_unique<CreateEnsembleInfoFilter>();
 }
@@ -128,12 +128,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_EnsembleKey = "Ensemble";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-constexpr StringLiteral k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
-constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
-constexpr StringLiteral k_PhaseNamesArrayNameKey = "PhaseNamesArrayName";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_EnsembleKey = "Ensemble";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
+constexpr StringLiteralType k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
+constexpr StringLiteralType k_PhaseNamesArrayNameKey = "PhaseNamesArrayName";
 } // namespace simpl
 } // namespace
 
@@ -145,13 +145,13 @@ Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& 
 
   // Data Container Name parameter is not applicable in NX
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::EnsembleInfoFilterParameterConverter>(args, json, simpl::k_EnsembleKey, k_Ensemble_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, simpl::k_CellEnsembleAttributeMatrixNameKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::EnsembleInfoFilterParameterConverter>(args, json, simpl::k_EnsembleKey, k_Ensemble_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, simpl::k_CellEnsembleAttributeMatrixNameKey,
                                                                                                                 k_CellEnsembleAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayNameKey, k_PhaseNamesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayNameKey, k_PhaseNamesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

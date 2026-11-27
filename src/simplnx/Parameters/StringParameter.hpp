@@ -39,7 +39,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -85,7 +85,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 template <typename T>
 struct NumberToStringFilterParameterConverter
@@ -127,7 +127,7 @@ struct SIMPLNX_EXPORT StringFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::StringParameter, "5d6d1868-05f8-11ec-9a03-0242ac130003");

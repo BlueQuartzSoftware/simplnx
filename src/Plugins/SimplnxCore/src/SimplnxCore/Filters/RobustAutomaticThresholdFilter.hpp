@@ -19,9 +19,9 @@ public:
   RobustAutomaticThresholdFilter& operator=(const RobustAutomaticThresholdFilter&) = delete;
   RobustAutomaticThresholdFilter& operator=(RobustAutomaticThresholdFilter&&) noexcept = delete;
 
-  static constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
-  static constexpr StringLiteral k_GradientMagnitudePath_Key = "gradient_array_path";
-  static constexpr StringLiteral k_ArrayCreationName_Key = "created_mask_name";
+  static constexpr StringLiteralType k_InputArrayPath_Key = "input_array_path";
+  static constexpr StringLiteralType k_GradientMagnitudePath_Key = "gradient_array_path";
+  static constexpr StringLiteralType k_ArrayCreationName_Key = "created_mask_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -78,7 +78,7 @@ public:
    * @brief Creates and returns a copy of the filter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

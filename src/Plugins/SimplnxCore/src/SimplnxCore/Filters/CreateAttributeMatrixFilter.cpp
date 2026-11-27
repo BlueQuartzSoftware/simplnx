@@ -57,7 +57,7 @@ IFilter::VersionType CreateAttributeMatrixFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer CreateAttributeMatrixFilter::clone() const
+IFilter::UniquePointerType CreateAttributeMatrixFilter::clone() const
 {
   return std::make_unique<CreateAttributeMatrixFilter>();
 }
@@ -93,8 +93,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_TupleDimensionsKey = "TupleDimensions";
-constexpr StringLiteral k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
+constexpr StringLiteralType k_TupleDimensionsKey = "TupleDimensions";
+constexpr StringLiteralType k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
 } // namespace simpl
 } // namespace
 
@@ -105,8 +105,8 @@ Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   // Attribute matrix type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_TupleDimensionsKey, k_TupleDims_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeMatrixKey, k_DataObjectPath));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_TupleDimensionsKey, k_TupleDims_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeMatrixKey, k_DataObjectPath));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

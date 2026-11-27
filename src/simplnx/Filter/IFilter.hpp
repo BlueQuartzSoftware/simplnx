@@ -28,7 +28,7 @@ class PipelineFilter;
 class SIMPLNX_EXPORT IFilter
 {
 public:
-  using UniquePointer = std::unique_ptr<IFilter>;
+  using UniquePointerType = std::unique_ptr<IFilter>;
   using VersionType = uint64;
 
   /**
@@ -274,7 +274,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return UniquePointer
    */
-  virtual UniquePointer clone() const = 0;
+  virtual UniquePointerType clone() const = 0;
 
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
@@ -354,5 +354,5 @@ protected:
                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const = 0;
 };
 
-using FilterCreationFunc = std::function<IFilter::UniquePointer()>;
+using FilterCreationFuncType = std::function<IFilter::UniquePointerType()>;
 } // namespace nx::core

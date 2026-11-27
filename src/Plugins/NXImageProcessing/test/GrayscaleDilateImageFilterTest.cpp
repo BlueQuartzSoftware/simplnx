@@ -85,7 +85,7 @@ TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected
   args.insertOrAssign(GrayscaleDilateImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(GrayscaleDilateImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Box)));
   args.insertOrAssign(GrayscaleDilateImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);

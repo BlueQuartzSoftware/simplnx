@@ -464,7 +464,7 @@ TEST_CASE("CheckedFlush forwarders preserve invalid results with no errors", "[s
     REQUIRE(arrayPtr != nullptr);
     REQUIRE(listPtr != nullptr);
     Result<> emptyFailure;
-    emptyFailure.m_Expected = nonstd::make_unexpected(ErrorCollection{});
+    emptyFailure.expected = nonstd::make_unexpected(ErrorCollection{});
     emptyFailure.warnings().push_back({19501, "backing.h5:/values: retained warning"});
     REQUIRE(emptyFailure.invalid());
     REQUIRE(emptyFailure.errors().empty());
@@ -491,7 +491,7 @@ TEST_CASE("CheckedFlush traversal preserves invalid custom objects with no error
 {
   DataStructure dataStructure;
   auto object = std::make_shared<ThrowingCheckedFlushGroup>(dataStructure, "EmptyFailure");
-  object->flush_result.m_Expected = nonstd::make_unexpected(ErrorCollection{});
+  object->flush_result.expected = nonstd::make_unexpected(ErrorCollection{});
   object->flush_result.warnings().push_back({19601, "empty failure warning"});
   REQUIRE(object->flush_result.invalid());
   REQUIRE(object->flush_result.errors().empty());

@@ -77,7 +77,7 @@ Parameters ReadH5OinaDataFilter::parameters() const
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
   params.insert(std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Convert Phase Data to Int32", "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data",
                                                 "Whether or not to import the diffraction pattern data. Pattern import is not yet supported for H5OINA files, so turning this on stops the filter "
                                                 "with an error.",
@@ -103,7 +103,7 @@ IFilter::VersionType ReadH5OinaDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadH5OinaDataFilter::clone() const
+IFilter::UniquePointerType ReadH5OinaDataFilter::clone() const
 {
   return std::make_unique<ReadH5OinaDataFilter>();
 }

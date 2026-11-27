@@ -28,17 +28,17 @@ public:
   ExtractTripleLinesFilter& operator=(ExtractTripleLinesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static constexpr StringLiteral k_CopyNodeTypes_Key = "copy_node_types";
-  static constexpr StringLiteral k_NodeTypesArrayPath_Key = "node_types_array_path";
-  static constexpr StringLiteral k_IncludeExteriorTripleLines_Key = "include_exterior_triple_lines";
+  static constexpr StringLiteralType k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static constexpr StringLiteralType k_CopyNodeTypes_Key = "copy_node_types";
+  static constexpr StringLiteralType k_NodeTypesArrayPath_Key = "node_types_array_path";
+  static constexpr StringLiteralType k_IncludeExteriorTripleLines_Key = "include_exterior_triple_lines";
 
-  static constexpr StringLiteral k_CreatedTripleLineGeometryPath_Key = "output_triple_line_geometry_path";
-  static constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
-  static constexpr StringLiteral k_EdgeDataGroupName_Key = "edge_data_group_name";
-  static constexpr StringLiteral k_NumFeaturesArrayName_Key = "num_features_array_name";
-  static constexpr StringLiteral k_NodeTypesArrayName_Key = "node_types_array_name";
+  static constexpr StringLiteralType k_CreatedTripleLineGeometryPath_Key = "output_triple_line_geometry_path";
+  static constexpr StringLiteralType k_VertexDataGroupName_Key = "vertex_data_group_name";
+  static constexpr StringLiteralType k_EdgeDataGroupName_Key = "edge_data_group_name";
+  static constexpr StringLiteralType k_NumFeaturesArrayName_Key = "num_features_array_name";
+  static constexpr StringLiteralType k_NodeTypesArrayName_Key = "node_types_array_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -64,7 +64,7 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
       std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "UncertainRegularGridSampleSurfaceMesh SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Number of Cells per Axis", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Number of Cells per Axis", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
                                                         std::vector<std::string>{"X Points", "Y Points", "Z Points"}));
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
@@ -75,7 +75,7 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType ::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType ::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
                                                           nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
@@ -108,7 +108,7 @@ IFilter::VersionType UncertainRegularGridSampleSurfaceMeshFilter::parametersVers
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer UncertainRegularGridSampleSurfaceMeshFilter::clone() const
+IFilter::UniquePointerType UncertainRegularGridSampleSurfaceMeshFilter::clone() const
 {
   return std::make_unique<UncertainRegularGridSampleSurfaceMeshFilter>();
 }
@@ -118,7 +118,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
                                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
+  auto pDimensionsValue = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pUncertaintyValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Uncertainty_Key);
@@ -169,7 +169,7 @@ Result<> UncertainRegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure&
   UncertainRegularGridSampleSurfaceMeshInputValues inputValues;
 
   inputValues.SeedValue = seed;
-  inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
+  inputValues.Dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.Uncertainty = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Uncertainty_Key);
@@ -185,16 +185,16 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-constexpr StringLiteral k_XPointsKey = "XPoints";
-constexpr StringLiteral k_YPointsKey = "YPoints";
-constexpr StringLiteral k_ZPointsKey = "ZPoints";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_UncertaintyKey = "Uncertainty";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_XPointsKey = "XPoints";
+constexpr StringLiteralType k_YPointsKey = "YPoints";
+constexpr StringLiteralType k_ZPointsKey = "ZPoints";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_UncertaintyKey = "Uncertainty";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -205,17 +205,17 @@ Result<Arguments> UncertainRegularGridSampleSurfaceMeshFilter::FromSIMPLJson(con
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XPointsKey, simpl::k_YPointsKey, simpl::k_ZPointsKey, k_Dimensions_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_UncertaintyKey, k_Uncertainty_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+      simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverter>(args, json, simpl::k_XPointsKey, simpl::k_YPointsKey, simpl::k_ZPointsKey, k_Dimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_UncertaintyKey, k_Uncertainty_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

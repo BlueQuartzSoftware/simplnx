@@ -22,8 +22,8 @@ struct SIMPLNXCORE_EXPORT MultiThresholdObjectsInputValues
 {
   ArrayThresholdsParameter::ValueType ArrayThresholdsObject;
   DataTypeParameter::ValueType CreatedMaskType;
-  Float64Parameter::ValueType CustomFalseValue = 0.0;
-  Float64Parameter::ValueType CustomTrueValue = 1.0;
+  Float64ParameterType::ValueType CustomFalseValue = 0.0;
+  Float64ParameterType::ValueType CustomTrueValue = 1.0;
   DataObjectNameParameter::ValueType OutputDataArrayName;
   BoolParameter::ValueType UseCustomFalseValue = false;
   BoolParameter::ValueType UseCustomTrueValue = false;

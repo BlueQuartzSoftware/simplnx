@@ -209,13 +209,13 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Feature/Ensemble Algorithm Options"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ChoicesParameter>(
       k_RangeType_Key, "Feature Range Type", "Set a range to manipulate output size in various ways. See detailed breakdown and tips in the documentation...",
       to_underlying(ComputeArrayStatistics::FeatureIdRangeControls::None),
@@ -313,7 +313,7 @@ IFilter::VersionType ComputeArrayStatisticsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeArrayStatisticsFilter::clone() const
+IFilter::UniquePointerType ComputeArrayStatisticsFilter::clone() const
 {
   return std::make_unique<ComputeArrayStatisticsFilter>();
 }
@@ -338,7 +338,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pDestinationAttributeMatrixValue = filterArgs.value<DataPath>(k_DestinationAttributeMatrixPath_Key);
   auto pRangeTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
-  auto pRangeValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
+  auto pRangeValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_Range_Key);
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -495,7 +495,7 @@ Result<> ComputeArrayStatisticsFilter::executeImpl(DataStructure& dataStructure,
   inputValues.NumUniqueValuesName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_NumUniqueValuesName_Key));
 
   inputValues.RangeType = filterArgs.value<ChoicesParameter::ValueType>(k_RangeType_Key);
-  inputValues.Range = filterArgs.value<VectorInt32Parameter::ValueType>(k_Range_Key);
+  inputValues.Range = filterArgs.value<VectorInt32ParameterType::ValueType>(k_Range_Key);
   inputValues.FeatureIdMapArrayPath = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_FeatureIdsIndexingName_Key));
 
   return ComputeArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -505,29 +505,29 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FindLengthKey = "FindLength";
-constexpr StringLiteral k_FindMinKey = "FindMin";
-constexpr StringLiteral k_FindMaxKey = "FindMax";
-constexpr StringLiteral k_FindMeanKey = "FindMean";
-constexpr StringLiteral k_FindMedianKey = "FindMedian";
-constexpr StringLiteral k_FindStdDeviationKey = "FindStdDeviation";
-constexpr StringLiteral k_FindSummationKey = "FindSummation";
-constexpr StringLiteral k_UseMaskKey = "UseMask";
-constexpr StringLiteral k_ComputeByIndexKey = "ComputeByIndex";
-constexpr StringLiteral k_StandardizeDataKey = "StandardizeData";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
-constexpr StringLiteral k_HistogramArrayNameKey = "HistogramArrayName";
-constexpr StringLiteral k_LengthArrayNameKey = "LengthArrayName";
-constexpr StringLiteral k_MinimumArrayNameKey = "MinimumArrayName";
-constexpr StringLiteral k_MaximumArrayNameKey = "MaximumArrayName";
-constexpr StringLiteral k_MeanArrayNameKey = "MeanArrayName";
-constexpr StringLiteral k_MedianArrayNameKey = "MedianArrayName";
-constexpr StringLiteral k_StdDeviationArrayNameKey = "StdDeviationArrayName";
-constexpr StringLiteral k_SummationArrayNameKey = "SummationArrayName";
-constexpr StringLiteral k_StandardizedArrayNameKey = "StandardizedArrayName";
+constexpr StringLiteralType k_FindLengthKey = "FindLength";
+constexpr StringLiteralType k_FindMinKey = "FindMin";
+constexpr StringLiteralType k_FindMaxKey = "FindMax";
+constexpr StringLiteralType k_FindMeanKey = "FindMean";
+constexpr StringLiteralType k_FindMedianKey = "FindMedian";
+constexpr StringLiteralType k_FindStdDeviationKey = "FindStdDeviation";
+constexpr StringLiteralType k_FindSummationKey = "FindSummation";
+constexpr StringLiteralType k_UseMaskKey = "UseMask";
+constexpr StringLiteralType k_ComputeByIndexKey = "ComputeByIndex";
+constexpr StringLiteralType k_StandardizeDataKey = "StandardizeData";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
+constexpr StringLiteralType k_HistogramArrayNameKey = "HistogramArrayName";
+constexpr StringLiteralType k_LengthArrayNameKey = "LengthArrayName";
+constexpr StringLiteralType k_MinimumArrayNameKey = "MinimumArrayName";
+constexpr StringLiteralType k_MaximumArrayNameKey = "MaximumArrayName";
+constexpr StringLiteralType k_MeanArrayNameKey = "MeanArrayName";
+constexpr StringLiteralType k_MedianArrayNameKey = "MedianArrayName";
+constexpr StringLiteralType k_StdDeviationArrayNameKey = "StdDeviationArrayName";
+constexpr StringLiteralType k_SummationArrayNameKey = "SummationArrayName";
+constexpr StringLiteralType k_StandardizedArrayNameKey = "StandardizedArrayName";
 } // namespace simpl
 } // namespace
 
@@ -537,29 +537,29 @@ Result<Arguments> ComputeArrayStatisticsFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindLengthKey, k_FindLength_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMinKey, k_FindMin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMaxKey, k_FindMax_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMeanKey, k_FindMean_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMedianKey, k_FindMedian_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindStdDeviationKey, k_FindStdDeviation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindSummationKey, k_FindSummation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ComputeByIndexKey, k_ComputeByIndex_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StandardizeDataKey, k_StandardizeData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindLengthKey, k_FindLength_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMinKey, k_FindMin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMaxKey, k_FindMax_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMeanKey, k_FindMean_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindMedianKey, k_FindMedian_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindStdDeviationKey, k_FindStdDeviation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindSummationKey, k_FindSummation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ComputeByIndexKey, k_ComputeByIndex_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_StandardizeDataKey, k_StandardizeData_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LengthArrayNameKey, k_LengthArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MinimumArrayNameKey, k_MinimumArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaximumArrayNameKey, k_MaximumArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MeanArrayNameKey, k_MeanArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MedianArrayNameKey, k_MedianArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_StdDeviationArrayNameKey, k_StdDeviationArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SummationArrayNameKey, k_SummationArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_StandardizedArrayNameKey, k_StandardizedArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_LengthArrayNameKey, k_LengthArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MinimumArrayNameKey, k_MinimumArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MaximumArrayNameKey, k_MaximumArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MeanArrayNameKey, k_MeanArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_MedianArrayNameKey, k_MedianArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_StdDeviationArrayNameKey, k_StdDeviationArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SummationArrayNameKey, k_SummationArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_StandardizedArrayNameKey, k_StandardizedArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -76,9 +76,9 @@ Parameters DBSCANFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "DBSCAN SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float32Parameter>(
+  params.insert(std::make_unique<Float32ParameterType>(
       k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried (i.e., the maximum acceptable distance between points to be considered `connected`)", 0.0001f));
-  params.insert(std::make_unique<Int32Parameter>(k_MinPoints_Key, "Minimum Points",
+  params.insert(std::make_unique<Int32ParameterType>(k_MinPoints_Key, "Minimum Points",
                                                  "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
   params.insert(std::make_unique<ChoicesParameter>(
       k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
@@ -88,7 +88,7 @@ Parameters DBSCANFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array",
                                                           "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The data array to cluster", DataPath{}, nx::core::GetAllNumericTypes(),
@@ -124,7 +124,7 @@ IFilter::VersionType DBSCANFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer DBSCANFilter::clone() const
+IFilter::UniquePointerType DBSCANFilter::clone() const
 {
   return std::make_unique<DBSCANFilter>();
 }
@@ -225,14 +225,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_EpsilonKey = "Epsilon";
-constexpr StringLiteral k_MinPointsKey = "MinPnts";
-constexpr StringLiteral k_DistanceMetricKey = "DistanceMetric";
-constexpr StringLiteral k_UseMaskKey = "UseMask";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
-constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
+constexpr StringLiteralType k_EpsilonKey = "Epsilon";
+constexpr StringLiteralType k_MinPointsKey = "MinPnts";
+constexpr StringLiteralType k_DistanceMetricKey = "DistanceMetric";
+constexpr StringLiteralType k_UseMaskKey = "UseMask";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteralType k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -242,14 +242,14 @@ Result<Arguments> DBSCANFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_EpsilonKey, k_Epsilon_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MinPointsKey, k_MinPoints_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DistanceMetricKey, k_DistanceMetric_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_EpsilonKey, k_Epsilon_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MinPointsKey, k_MinPoints_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DistanceMetricKey, k_DistanceMetric_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
                                                                                                                 k_FeatureAMPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

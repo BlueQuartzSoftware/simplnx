@@ -59,7 +59,7 @@ Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json,
   return {ConvertResultTo<std::any>(DynamicTableInfo::ReadData(json))};
 }
 
-IParameter::UniquePointer DynamicTableParameter::clone() const
+IParameter::UniquePointerType DynamicTableParameter::clone() const
 {
   return std::make_unique<DynamicTableParameter>(name(), humanName(), helpText(), m_DefaultValue, m_TableInfo);
 }
@@ -85,11 +85,11 @@ Result<> DynamicTableParameter::validate(const std::any& value) const
   return m_TableInfo.validate(table);
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_TableDataKey = "Table Data";
+constexpr StringLiteralType k_TableDataKey = "Table Data";
 } // namespace
 
 Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParameterConverter::Convert(const nlohmann::json& json)
@@ -166,5 +166,5 @@ Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTab
 
   return {std::move(table)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

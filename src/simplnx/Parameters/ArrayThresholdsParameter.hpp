@@ -42,7 +42,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -119,7 +119,7 @@ private:
   AllowedComponentShapes m_RequiredComponentShapes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT ComparisonSelectionFilterParameterConverter
 {
@@ -136,7 +136,7 @@ struct SIMPLNX_EXPORT ComparisonSelectionAdvancedFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArrayThresholdsParameter, "e93251bc-cdad-44c2-9332-58fe26aedfbe");

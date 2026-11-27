@@ -56,10 +56,10 @@ Parameters ComputeFeatureSizesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Input Grid Geometry", "DataPath to input Image or Rectilinear Grid Geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "Feature Attribute Matrix of the selected Feature Ids",
                                                                     DataPath({"Cell Feature Data"})));
@@ -86,7 +86,7 @@ IFilter::VersionType ComputeFeatureSizesFilter::parametersVersion() const
   // Solution - No change needed;
 }
 
-IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const
+IFilter::UniquePointerType ComputeFeatureSizesFilter::clone() const
 {
   return std::make_unique<ComputeFeatureSizesFilter>();
 }
@@ -174,12 +174,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SaveElementSizesKey = "SaveElementSizes";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
-constexpr StringLiteral k_EquivalentDiametersArrayNameKey = "EquivalentDiametersArrayName";
-constexpr StringLiteral k_NumElementsArrayNameKey = "NumElementsArrayName";
-constexpr StringLiteral k_VolumesArrayNameKey = "VolumesArrayName";
+constexpr StringLiteralType k_SaveElementSizesKey = "SaveElementSizes";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
+constexpr StringLiteralType k_EquivalentDiametersArrayNameKey = "EquivalentDiametersArrayName";
+constexpr StringLiteralType k_NumElementsArrayNameKey = "NumElementsArrayName";
+constexpr StringLiteralType k_VolumesArrayNameKey = "VolumesArrayName";
 } // namespace simpl
 } // namespace
 
@@ -189,15 +189,15 @@ Result<Arguments> ComputeFeatureSizesFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_SaveElementSizesKey, k_SaveElementSizes_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_SaveElementSizesKey, k_SaveElementSizes_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeatureAttributeMatrixNameKey, k_CellFeatureAttributeMatrixPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeatureAttributeMatrixNameKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayNameKey, k_EquivalentDiametersName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NumElementsArrayNameKey, k_NumElementsName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VolumesArrayNameKey, k_VolumesName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayNameKey, k_EquivalentDiametersName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NumElementsArrayNameKey, k_NumElementsName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VolumesArrayNameKey, k_VolumesName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

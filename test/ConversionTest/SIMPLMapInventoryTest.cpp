@@ -74,7 +74,7 @@ TEST_CASE("SIMPL Map Inventory: Print Complete Table", "[BackwardsCompatibility]
     {
       totalEntries++;
 
-      IFilter::UniquePointer filter = filterListPtr->createFilter(simplData.simplnxUuid);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(simplData.simplnxUuid);
       std::string filterClassName = filter ? filter->className() : "UNKNOWN";
       std::string nxUuid = simplData.simplnxUuid.str();
       std::string simplUuidStr = simplUuid.str();
@@ -146,7 +146,7 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
       }
       seenNxUuids.insert(simplData.simplnxUuid);
 
-      IFilter::UniquePointer filter = filterListPtr->createFilter(simplData.simplnxUuid);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(simplData.simplnxUuid);
       if(filter == nullptr)
       {
         continue;

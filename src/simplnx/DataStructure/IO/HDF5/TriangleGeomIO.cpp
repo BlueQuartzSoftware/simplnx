@@ -6,7 +6,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 TriangleGeomIO::TriangleGeomIO() = default;
 TriangleGeomIO::~TriangleGeomIO() noexcept = default;
@@ -21,14 +21,14 @@ std::string TriangleGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> TriangleGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> TriangleGeomIO::readData(DataStructureReader& structureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                   const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* geometryPtr = TriangleGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> TriangleGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> TriangleGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup) const
 {
   auto* geomPtr = dataStructure.getDataAs<TriangleGeom>(dataPath);
   if(geomPtr == nullptr)
@@ -38,13 +38,13 @@ Result<> TriangleGeomIO::finishImportingData(DataStructure& dataStructure, const
   return INodeGeom2dIO::FinishImportingNodeGeom2dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> TriangleGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TriangleGeom& geometry, group_writer_type& parentGroupWriter, bool importable)
+Result<> TriangleGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TriangleGeom& geometry, GroupWriterType& parentGroupWriter, bool importable)
 {
   return INodeGeom2dIO::WriteNodeGeom2dData(dataStructureWriter, geometry, parentGroupWriter, importable);
 }
 
-Result<> TriangleGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> TriangleGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

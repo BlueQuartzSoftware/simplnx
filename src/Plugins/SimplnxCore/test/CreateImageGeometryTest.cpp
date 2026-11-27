@@ -35,7 +35,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
   std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
-  VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
+  VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
   DataStructure dataStructure = nx::core::UnitTest::CreateAllPrimitiveTypes(imageDims);
   //  DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Complexk_LevelZero);
@@ -128,7 +128,7 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "
   DataStructure dataStructure;
   CreateImageGeometryFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64ParameterType::ValueType{2, 2, 2});
   args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
 
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();

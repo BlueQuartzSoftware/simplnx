@@ -24,10 +24,10 @@ public:
   ComputeBoundaryElementFractionsFilter& operator=(ComputeBoundaryElementFractionsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "boundary_cells_array_path";
-  static constexpr StringLiteral k_FeatureDataAMPath_Key = "feature_data_attribute_matrix_path";
-  static constexpr StringLiteral k_BoundaryCellFractionsArrayName_Key = "boundary_cell_fractions_array_name";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_BoundaryCellsArrayPath_Key = "boundary_cells_array_path";
+  static constexpr StringLiteralType k_FeatureDataAMPath_Key = "feature_data_attribute_matrix_path";
+  static constexpr StringLiteralType k_BoundaryCellFractionsArrayName_Key = "boundary_cell_fractions_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

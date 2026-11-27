@@ -304,7 +304,7 @@ inline void RunAheFilter(IFilter& filter, DataStructure& dataStructure, const Da
   args.insertOrAssign(NewFilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(NewFilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(NewFilterT::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+  args.insertOrAssign(NewFilterT::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
   args.insertOrAssign(NewFilterT::k_Alpha_Key, std::make_any<float32>(alpha));
   args.insertOrAssign(NewFilterT::k_Beta_Key, std::make_any<float32>(beta));
   auto preflightResult = filter.preflight(dataStructure, args);

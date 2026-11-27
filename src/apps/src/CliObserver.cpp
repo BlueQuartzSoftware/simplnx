@@ -10,7 +10,7 @@
 #include <string>
 
 using namespace nx::core;
-using namespace nx::core::CLI;
+using namespace nx::core::cli;
 
 PipelineObserver::PipelineObserver(Pipeline* pipeline)
 {

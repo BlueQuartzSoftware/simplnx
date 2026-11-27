@@ -88,20 +88,20 @@ struct NodeTypeCase
 // For K4, a uniform pass scales each displacement from the centroid by 1 - 4*lambda/3.
 // These explicit coordinates use that closed form, not the production edge traversal.
 constexpr std::array<NodeTypeCase, 7> k_NodeTypeCases{{
-    {.name = "Unused", .node_type = NodeType::Unused, .expected = k_InputCoordinates},
+    {.name = "Unused", .node_type = node_type::Unused, .expected = k_InputCoordinates},
     {.name = "Default",
-     .node_type = NodeType::Default,
+     .node_type = node_type::Default,
      .expected = {1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 3.0F / 2.0F}},
     {.name = "TriplePoint",
-     .node_type = NodeType::TriplePoint,
+     .node_type = node_type::TriplePoint,
      .expected = {1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F / 3.0F, 1.0F}},
-    {.name = "QuadPoint", .node_type = NodeType::QuadPoint, .expected = {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
+    {.name = "QuadPoint", .node_type = node_type::QuadPoint, .expected = {0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F}},
     {.name = "SurfaceDefault",
-     .node_type = NodeType::SurfaceDefault,
+     .node_type = node_type::SurfaceDefault,
      .expected = {1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F, 1.0F / 12.0F, 1.0F / 12.0F, 1.0F / 12.0F, 7.0F / 4.0F}},
-    {.name = "SurfaceTriplePoint", .node_type = NodeType::SurfaceTriplePoint, .expected = {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
+    {.name = "SurfaceTriplePoint", .node_type = node_type::SurfaceTriplePoint, .expected = {0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F, 0.25F, 0.25F, 0.25F, 1.25F}},
     {.name = "SurfaceQuadPoint",
-     .node_type = NodeType::SurfaceQuadPoint,
+     .node_type = node_type::SurfaceQuadPoint,
      .expected = {5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F, 5.0F / 12.0F, 5.0F / 12.0F, 5.0F / 12.0F, 0.75F}},
 }};
 
@@ -342,7 +342,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: iterations and Taubin match analytic
     // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    const NodeTypesType nodeTypes{NodeType::Default, NodeType::Default, NodeType::Default, NodeType::Default};
+    const NodeTypesType nodeTypes{node_type::Default, node_type::Default, node_type::Default, node_type::Default};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);
     ExecuteSmoothing(scope, dataStructure, testCase.iterations, testCase.use_taubin);
@@ -364,7 +364,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: mixed node classes use input-pass co
     // Keep the original one-byte large-data threshold and force resident storage.
     const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
     DataStructure dataStructure;
-    const NodeTypesType nodeTypes{NodeType::Unused, NodeType::Default, NodeType::TriplePoint, NodeType::Unused};
+    const NodeTypesType nodeTypes{node_type::Unused, node_type::Default, node_type::TriplePoint, node_type::Unused};
     const CoordinatesType expected{0.0F, 0.0F, 0.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 3.0F, 1.0F, 1.0F / 3.0F, 0.0F, 0.0F, 2.0F};
     BuildGraph(dataStructure, kind, nodeTypes);
     RequireResidentInputs(dataStructure);

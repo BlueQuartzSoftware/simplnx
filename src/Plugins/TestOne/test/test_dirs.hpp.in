@@ -6,7 +6,7 @@ namespace nx::core
 {
 namespace unit_test
 {
-inline constexpr StringLiteral k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
-inline constexpr StringLiteral k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
+inline constexpr StringLiteralType k_SourceDir = "@PLUGIN_SOURCE_DIR_NORM@";
+inline constexpr StringLiteralType k_BinaryDir = "@simplnx_BINARY_DIR@/Plugins/@PLUGIN_NAME@";
 }
 } // namespace nx::core

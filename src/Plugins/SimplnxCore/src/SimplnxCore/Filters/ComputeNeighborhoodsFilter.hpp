@@ -24,13 +24,13 @@ public:
   ComputeNeighborhoodsFilter& operator=(ComputeNeighborhoodsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SearchRadiusType_Key = "search_radius_type_index";
-  static constexpr StringLiteral k_MultiplesOfAverage_Key = "multiples_of_average";
-  static constexpr StringLiteral k_SearchRadius_Key = "search_radius";
-  static constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
-  static constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
-  static constexpr StringLiteral k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
-  static constexpr StringLiteral k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
+  static constexpr StringLiteralType k_SearchRadiusType_Key = "search_radius_type_index";
+  static constexpr StringLiteralType k_MultiplesOfAverage_Key = "multiples_of_average";
+  static constexpr StringLiteralType k_SearchRadius_Key = "search_radius";
+  static constexpr StringLiteralType k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
+  static constexpr StringLiteralType k_CentroidsArrayPath_Key = "centroids_array_path";
+  static constexpr StringLiteralType k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
+  static constexpr StringLiteralType k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -39,7 +39,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -89,7 +89,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

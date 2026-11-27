@@ -60,7 +60,7 @@ Parameters CombineAttributeArraysFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "The complete path to each of the Attribute Arrays to combine",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
@@ -77,7 +77,7 @@ IFilter::VersionType CombineAttributeArraysFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CombineAttributeArraysFilter::clone() const
+IFilter::UniquePointerType CombineAttributeArraysFilter::clone() const
 {
   return std::make_unique<CombineAttributeArraysFilter>();
 }
@@ -163,10 +163,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_NormalizeDataKey = "NormalizeData";
-constexpr StringLiteral k_MoveValuesKey = "MoveValues";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-constexpr StringLiteral k_StackedDataArrayNameKey = "StackedDataArrayName";
+constexpr StringLiteralType k_NormalizeDataKey = "NormalizeData";
+constexpr StringLiteralType k_MoveValuesKey = "MoveValues";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_StackedDataArrayNameKey = "StackedDataArrayName";
 } // namespace simpl
 } // namespace
 
@@ -176,15 +176,15 @@ Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeDataKey, k_NormalizeData_Key));
-  Result<> moveResult = SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_MoveValuesKey, k_MoveValues_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeDataKey, k_NormalizeData_Key));
+  Result<> moveResult = simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_MoveValuesKey, k_MoveValues_Key);
   if(moveResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(moveResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_StackedDataArrayNameKey, k_StackedDataArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_StackedDataArrayNameKey, k_StackedDataArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

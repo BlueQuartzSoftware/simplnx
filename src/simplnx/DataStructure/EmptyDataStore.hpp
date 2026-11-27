@@ -502,7 +502,7 @@ public:
    * @param dataset HDF5 dataset to read.
    * @return Error because this store has no values.
    */
-  Result<> readHdf5(const HDF5::DatasetIO& /*dataset*/) override
+  Result<> readHdf5(const hdf5::DatasetIO& /*dataset*/) override
   {
     return MakeErrorResult(-42350, "Cannot read data into an EmptyDataStore");
   }
@@ -512,7 +512,7 @@ public:
    * @param dataset HDF5 dataset to write.
    * @return Error because this store has no values.
    */
-  Result<> writeHdf5(HDF5::DatasetIO& /*dataset*/) const override
+  Result<> writeHdf5(hdf5::DatasetIO& /*dataset*/) const override
   {
     return MakeErrorResult(-42350, "Cannot write data from an EmptyDataStore");
   }

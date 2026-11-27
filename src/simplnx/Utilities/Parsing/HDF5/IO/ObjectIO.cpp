@@ -7,7 +7,7 @@
 #include <mutex>
 #include <utility>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 ObjectIO::ObjectIO() = default;
 
@@ -59,7 +59,7 @@ std::string ObjectIO::getName() const
     return {};
   }
   open();
-  return nx::core::HDF5::GetNameFromBuffer(m_ObjectName);
+  return nx::core::hdf5::GetNameFromBuffer(m_ObjectName);
 }
 
 std::string ObjectIO::getNamePath() const
@@ -397,4 +397,4 @@ usize ObjectIO::GetNumElementsInAttribute(hid_t attribId)
   hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
   return numElements;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

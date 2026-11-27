@@ -12,7 +12,7 @@
 
 #include <fmt/format.h>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 RectGridGeomIO::RectGridGeomIO() = default;
 RectGridGeomIO::~RectGridGeomIO() noexcept = default;
@@ -27,7 +27,7 @@ std::string RectGridGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                   const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* geometryPtr = RectGridGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
@@ -64,7 +64,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   return result;
 }
 
-Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup) const
 {
   auto* geomPtr = dataStructure.getDataAs<RectGridGeom>(dataPath);
   if(geomPtr == nullptr)
@@ -145,7 +145,7 @@ Result<> RectGridGeomIO::ValidateImportedBounds(const DataStructure& dataStructu
   return {};
 }
 
-Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, group_writer_type& parentGroup, bool importable)
+Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, GroupWriterType& parentGroup, bool importable)
 {
   auto validation = RectGridGeom::ValidateBounds(geometry.getXBounds(), geometry.getYBounds(), geometry.getZBounds());
   if(validation.invalid())
@@ -216,8 +216,8 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   return result;
 }
 
-Result<> RectGridGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> RectGridGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

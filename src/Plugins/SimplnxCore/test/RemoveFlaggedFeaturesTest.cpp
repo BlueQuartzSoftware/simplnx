@@ -55,8 +55,8 @@ namespace fs = std::filesystem;
  */
 namespace
 {
-constexpr StringLiteral k_CellValueName = "CellValue";
-constexpr StringLiteral k_IgnoredValueName = "IgnoredValue";
+constexpr StringLiteralType k_CellValueName = "CellValue";
+constexpr StringLiteralType k_IgnoredValueName = "IgnoredValue";
 const std::string k_NewImgGeomPrefix = "NewImgGeom";
 
 const DataPath k_ImageGeomPath({k_DataContainer});

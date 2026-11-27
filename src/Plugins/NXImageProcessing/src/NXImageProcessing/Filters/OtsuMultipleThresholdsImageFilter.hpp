@@ -18,14 +18,14 @@ public:
   OtsuMultipleThresholdsImageFilter& operator=(const OtsuMultipleThresholdsImageFilter&) = delete;
   OtsuMultipleThresholdsImageFilter& operator=(OtsuMultipleThresholdsImageFilter&&) noexcept = delete;
 
-  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static constexpr StringLiteral k_NumberOfThresholds_Key = "number_of_thresholds";
-  static constexpr StringLiteral k_LabelOffset_Key = "label_offset";
-  static constexpr StringLiteral k_NumberOfHistogramBins_Key = "number_of_histogram_bins";
-  static constexpr StringLiteral k_ValleyEmphasis_Key = "valley_emphasis";
-  static constexpr StringLiteral k_ReturnBinMidpoint_Key = "return_bin_midpoint";
+  static constexpr StringLiteralType k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteralType k_NumberOfThresholds_Key = "number_of_thresholds";
+  static constexpr StringLiteralType k_LabelOffset_Key = "label_offset";
+  static constexpr StringLiteralType k_NumberOfHistogramBins_Key = "number_of_histogram_bins";
+  static constexpr StringLiteralType k_ValleyEmphasis_Key = "valley_emphasis";
+  static constexpr StringLiteralType k_ReturnBinMidpoint_Key = "return_bin_midpoint";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
@@ -36,7 +36,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

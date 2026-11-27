@@ -62,12 +62,12 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Determines if a mask array is used for segmenting", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Path to the DataArray Mask", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, std::make_any<bool>(true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeomPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPathKey, "Scalar Array to Segment", "Path to the DataArray to segment", DataPath(), nx::core::GetIntegerDataTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -89,7 +89,7 @@ IFilter::VersionType ScalarSegmentFeaturesFilter::parametersVersion() const
   return 2;
 }
 
-IFilter::UniquePointer ScalarSegmentFeaturesFilter::clone() const
+IFilter::UniquePointerType ScalarSegmentFeaturesFilter::clone() const
 {
   return std::make_unique<ScalarSegmentFeaturesFilter>();
 }
@@ -159,14 +159,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ScalarToleranceKey = "ScalarTolerance";
-constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
-constexpr StringLiteral k_RandomizeFeatureIdsKey = "RandomizeFeatureIds";
-constexpr StringLiteral k_ScalarArrayPathKey = "ScalarArrayPath";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
-constexpr StringLiteral k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
-constexpr StringLiteral k_ActiveArrayNameKey = "ActiveArrayName";
+constexpr StringLiteralType k_ScalarToleranceKey = "ScalarTolerance";
+constexpr StringLiteralType k_UseGoodVoxelsKey = "UseGoodVoxels";
+constexpr StringLiteralType k_RandomizeFeatureIdsKey = "RandomizeFeatureIds";
+constexpr StringLiteralType k_ScalarArrayPathKey = "ScalarArrayPath";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteralType k_CellFeatureAttributeMatrixNameKey = "CellFeatureAttributeMatrixName";
+constexpr StringLiteralType k_ActiveArrayNameKey = "ActiveArrayName";
 } // namespace simpl
 } // namespace
 
@@ -176,21 +176,21 @@ Result<Arguments> ScalarSegmentFeaturesFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ScalarToleranceKey, k_ScalarToleranceKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
-  Result<> randomizeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_RandomizeFeatureIdsKey, k_RandomizeFeatures_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ScalarToleranceKey, k_ScalarToleranceKey));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
+  Result<> randomizeResult = simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_RandomizeFeatureIdsKey, k_RandomizeFeatures_Key);
   if(randomizeResult.valid())
   {
     // DREAM3D 6.5 pipelines omit this setting. The importer retains the setting
     // when the input contains it.
     results.push_back(std::move(randomizeResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ScalarArrayPathKey, k_InputArrayPathKey));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixNameKey, k_CellFeatureName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ScalarArrayPathKey, k_GridGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ActiveArrayNameKey, k_ActiveArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ScalarArrayPathKey, k_InputArrayPathKey));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixNameKey, k_CellFeatureName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ScalarArrayPathKey, k_GridGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ActiveArrayNameKey, k_ActiveArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

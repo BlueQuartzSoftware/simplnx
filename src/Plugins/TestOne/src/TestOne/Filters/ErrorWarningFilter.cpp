@@ -85,7 +85,7 @@ IFilter::VersionType ErrorWarningFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ErrorWarningFilter::clone() const
+IFilter::UniquePointerType ErrorWarningFilter::clone() const
 {
   return std::make_unique<ErrorWarningFilter>();
 }

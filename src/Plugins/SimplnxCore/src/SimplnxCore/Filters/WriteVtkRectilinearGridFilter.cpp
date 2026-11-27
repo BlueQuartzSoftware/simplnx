@@ -59,9 +59,9 @@ Parameters WriteVtkRectilinearGridFilter::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{".vtk"}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_WriteBinaryFile_Key, "Write Binary File", "Whether or not to write the vtk file in binary", false));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The path to the image geometry in which to write out to the vtk file", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Cell Data Arrays to Write", "The paths to the cell data arrays to write out with the geometry",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   return params;
 }
@@ -73,7 +73,7 @@ IFilter::VersionType WriteVtkRectilinearGridFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteVtkRectilinearGridFilter::clone() const
+IFilter::UniquePointerType WriteVtkRectilinearGridFilter::clone() const
 {
   return std::make_unique<WriteVtkRectilinearGridFilter>();
 }
@@ -159,9 +159,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_WriteBinaryFileKey = "WriteBinaryFile";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_WriteBinaryFileKey = "WriteBinaryFile";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
 } // namespace simpl
 } // namespace
 
@@ -171,11 +171,11 @@ Result<Arguments> WriteVtkRectilinearGridFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteBinaryFileKey, k_WriteBinaryFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteBinaryFileKey, k_WriteBinaryFile_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

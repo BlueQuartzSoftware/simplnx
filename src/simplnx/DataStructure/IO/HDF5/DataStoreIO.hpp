@@ -13,7 +13,7 @@
 #include <numeric>
 #include <stdexcept>
 
-namespace nx::core::HDF5::DataStoreIO
+namespace nx::core::hdf5::data_store_io
 {
 
 /**
@@ -24,7 +24,7 @@ namespace nx::core::HDF5::DataStoreIO
  * @return Store or shape-attribute write errors.
  */
 template <typename T>
-inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& dataStore)
+inline Result<> WriteDataStore(nx::core::hdf5::DatasetIO& datasetWriter, const AbstractDataStore<T>& dataStore)
 {
   // if(!datasetWriter.isValid())
   //{
@@ -81,15 +81,15 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
  * usize.
  */
 template <typename T>
-inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(const nx::core::HDF5::DatasetIO& datasetReader)
+inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(const nx::core::hdf5::DatasetIO& datasetReader)
 {
-  auto tupleShapeResult = IDataStoreIO::ReadTupleShape(datasetReader);
+  auto tupleShapeResult = i_data_store_io::ReadTupleShape(datasetReader);
   if(tupleShapeResult.invalid())
   {
     return ConvertInvalidResult<std::shared_ptr<AbstractDataStore<T>>>(std::move(tupleShapeResult));
   }
   auto warnings = std::move(tupleShapeResult.warnings());
-  auto componentShapeResult = IDataStoreIO::ReadComponentShape(datasetReader);
+  auto componentShapeResult = i_data_store_io::ReadComponentShape(datasetReader);
   if(componentShapeResult.invalid())
   {
     auto result = ConvertInvalidResult<std::shared_ptr<AbstractDataStore<T>>>(std::move(componentShapeResult));
@@ -150,4 +150,4 @@ inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(con
   return result;
 }
 
-} // namespace nx::core::HDF5::DataStoreIO
+} // namespace nx::core::hdf5::data_store_io

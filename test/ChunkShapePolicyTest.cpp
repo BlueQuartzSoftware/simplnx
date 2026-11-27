@@ -5,7 +5,7 @@
 #include <array>
 
 using namespace nx::core;
-using namespace nx::core::HDF5;
+using namespace nx::core::hdf5;
 
 TEST_CASE("ChunkShapePolicy: caller storage matches independent shapes", "[ChunkShapePolicy]")
 {

@@ -20,12 +20,12 @@
 #include <utility>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class DataStructureWriter;
 class FileIO;
 class GroupIO;
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 namespace nx::core
 {
@@ -60,17 +60,17 @@ public:
   /**
    * @brief Names a DataObject factory identifier.
    */
-  using factory_id_type = std::string;
+  using FactoryIdType = std::string;
 
   /**
    * @brief Shares ownership of a registered DataObject factory.
    */
-  using factory_ptr = std::shared_ptr<IDataFactory>;
+  using FactoryPtrType = std::shared_ptr<IDataFactory>;
 
   /**
    * @brief Maps factory identifiers to shared factories.
    */
-  using factory_collection = std::map<factory_id_type, factory_ptr>;
+  using FactoryCollectionType = std::map<FactoryIdType, FactoryPtrType>;
 
   /**
    * @brief Names a callback that creates a writable numeric store.
@@ -126,14 +126,14 @@ public:
    * @brief Returns a snapshot of registered DataObject factories.
    * @return Factory map that shares ownership with this manager.
    */
-  factory_collection getFactories() const;
+  FactoryCollectionType getFactories() const;
 
   /**
    * @brief Returns a factory for one DataObject type.
    * @param typeName DataObject factory identifier.
    * @return Shared factory, or null when typeName is not registered.
    */
-  factory_ptr getFactory(const factory_id_type& typeName) const;
+  FactoryPtrType getFactory(const FactoryIdType& typeName) const;
 
   /**
    * @brief Returns a registered factory cast to a selected type.
@@ -142,7 +142,7 @@ public:
    * @return Shared factory cast to T, or null when the factory is absent or incompatible.
    */
   template <typename T>
-  std::shared_ptr<T> getFactoryAs(factory_id_type typeName) const
+  std::shared_ptr<T> getFactoryAs(FactoryIdType typeName) const
   {
     return std::dynamic_pointer_cast<T>(getFactory(typeName));
   }
@@ -219,7 +219,7 @@ public:
    * sweep eagerly loads those remaining placeholders in memory. The manager must
    * not retain fileReader after this call.
    */
-  virtual Result<> onImportFinalize([[maybe_unused]] DataStructure& dataStructure, [[maybe_unused]] const std::vector<DataPath>& paths, [[maybe_unused]] const HDF5::FileIO& fileReader)
+  virtual Result<> onImportFinalize([[maybe_unused]] DataStructure& dataStructure, [[maybe_unused]] const std::vector<DataPath>& paths, [[maybe_unused]] const hdf5::FileIO& fileReader)
   {
     return {};
   }
@@ -231,7 +231,7 @@ public:
    * @param parentGroup Destination group borrowed for this call.
    * @return Write result when handled, or std::nullopt to use normal serialization.
    */
-  virtual std::optional<Result<>> onRecoveryWrite([[maybe_unused]] HDF5::DataStructureWriter& writer, [[maybe_unused]] const DataObject* dataObject, [[maybe_unused]] HDF5::GroupIO& parentGroup)
+  virtual std::optional<Result<>> onRecoveryWrite([[maybe_unused]] hdf5::DataStructureWriter& writer, [[maybe_unused]] const DataObject* dataObject, [[maybe_unused]] hdf5::GroupIO& parentGroup)
   {
     return std::nullopt;
   }
@@ -332,7 +332,7 @@ protected:
   void addStringStoreCreationFnc(const std::string& type, StringStoreCreateFnc creationFnc);
 
 private:
-  factory_collection m_FactoryCollection;
+  FactoryCollectionType m_FactoryCollection;
   DataStoreCreationMap m_DataStoreCreationMap;
   ListStoreCreationMap m_ListStoreCreationMap;
   StringStoreCreationMap m_StringStoreCreationMap;

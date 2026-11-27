@@ -7,10 +7,10 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_Param1 = "param1";
-constexpr StringLiteral k_Param2 = "param2";
-constexpr StringLiteral k_Param3 = "param3";
-constexpr StringLiteral k_Param4 = "param4";
+constexpr StringLiteralType k_Param1 = "param1";
+constexpr StringLiteralType k_Param2 = "param2";
+constexpr StringLiteralType k_Param3 = "param3";
+constexpr StringLiteralType k_Param4 = "param4";
 } // namespace
 
 namespace nx::core
@@ -94,7 +94,7 @@ IFilter::VersionType DynamicTableExampleFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer DynamicTableExampleFilter::clone() const
+IFilter::UniquePointerType DynamicTableExampleFilter::clone() const
 {
   return std::make_unique<DynamicTableExampleFilter>();
 }

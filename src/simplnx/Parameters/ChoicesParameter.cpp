@@ -56,7 +56,7 @@ nlohmann::json ChoicesParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
   if(!json.is_number())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
@@ -65,7 +65,7 @@ Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, Vers
   return {{index}};
 }
 
-IParameter::UniquePointer ChoicesParameter::clone() const
+IParameter::UniquePointerType ChoicesParameter::clone() const
 {
   return std::make_unique<ChoicesParameter>(name(), humanName(), helpText(), m_DefaultValue, m_Choices);
 }
@@ -117,7 +117,7 @@ bool ChoicesParameter::checkActive(const std::any& parameterValue, const std::an
   return value == index;
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<LinkedChoicesFilterParameterConverter::ValueType> LinkedChoicesFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -128,5 +128,5 @@ Result<ChoiceFilterParameterConverter::ValueType> ChoiceFilterParameterConverter
 {
   return ConvertChoicesParameter(json, "ChoiceFilterParameter");
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

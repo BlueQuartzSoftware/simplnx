@@ -380,7 +380,7 @@ SIMPLNX_EXPORT bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArr
 template <class T>
 Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "")
 {
-  static constexpr StringLiteral k_Prefix = "CreateNeighborListAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;

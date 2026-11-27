@@ -71,7 +71,7 @@ public:
     return readAction.apply(dataStructure, mode);
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<CreateMontageGrayscaleArrayAction>(dims(), m_FileComponentCount, path());
   }
@@ -171,7 +171,7 @@ IFilter::VersionType ImportFijiMontageFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ImportFijiMontageFilter::clone() const
+IFilter::UniquePointerType ImportFijiMontageFilter::clone() const
 {
   return std::make_unique<ImportFijiMontageFilter>();
 }

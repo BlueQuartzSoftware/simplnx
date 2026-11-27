@@ -68,9 +68,9 @@ Parameters CreateColorMapFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign a black color to 'bad' Elements", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the data array used to define Elements as good or bad.", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   std::vector<uint8> defaultMask(3, 0);
-  params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
+  params.insert(std::make_unique<VectorUInt8ParameterType>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
                                                        std::vector<std::string>{"Red", "Green", "Blue"}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
@@ -90,7 +90,7 @@ IFilter::VersionType CreateColorMapFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateColorMapFilter::clone() const
+IFilter::UniquePointerType CreateColorMapFilter::clone() const
 {
   return std::make_unique<CreateColorMapFilter>();
 }
@@ -151,9 +151,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SelectedPresetNameKey = "SelectedPresetName";
-constexpr StringLiteral k_SelectedDataArrayPathKey = "SelectedDataArrayPath";
-constexpr StringLiteral k_RgbArrayNameKey = "RgbArrayName";
+constexpr StringLiteralType k_SelectedPresetNameKey = "SelectedPresetName";
+constexpr StringLiteralType k_SelectedDataArrayPathKey = "SelectedDataArrayPath";
+constexpr StringLiteralType k_RgbArrayNameKey = "RgbArrayName";
 } // namespace simpl
 } // namespace
 
@@ -163,9 +163,9 @@ Result<Arguments> CreateColorMapFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_SelectedPresetNameKey, k_SelectedPreset_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RgbArrayNameKey, k_RgbArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_SelectedPresetNameKey, k_SelectedPreset_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathKey, k_SelectedDataArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RgbArrayNameKey, k_RgbArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

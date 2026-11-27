@@ -52,11 +52,11 @@ Parameters ApproximatePointCloudHullFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_GridResolution_Key, "Grid Resolution", "Geometry resolution", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<UInt64Parameter>(k_MinEmptyNeighbors_Key, "Minimum Number of Empty Neighbors", "Minimum number of empty neighbors", 0));
+  params.insert(std::make_unique<UInt64ParameterType>(k_MinEmptyNeighbors_Key, "Minimum Number of Empty Neighbors", "Minimum number of empty neighbors", 0));
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_HullVertexGeomPath_Key, "Hull Vertex Geometry", "Path to create the hull Vertex geometry", DataPath{}));
@@ -70,7 +70,7 @@ IFilter::VersionType ApproximatePointCloudHullFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ApproximatePointCloudHullFilter::clone() const
+IFilter::UniquePointerType ApproximatePointCloudHullFilter::clone() const
 {
   return std::make_unique<ApproximatePointCloudHullFilter>();
 }
@@ -107,7 +107,7 @@ Result<> ApproximatePointCloudHullFilter::executeImpl(DataStructure& dataStructu
   ApproximatePointCloudHullInputValues inputValues;
   inputValues.GridResolution = filterArgs.value<VectorFloat32Parameter::ValueType>(k_GridResolution_Key);
   inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_VertexGeomPath_Key);
-  inputValues.MinEmptyNeighbors = filterArgs.value<UInt64Parameter::ValueType>(k_MinEmptyNeighbors_Key);
+  inputValues.MinEmptyNeighbors = filterArgs.value<UInt64ParameterType::ValueType>(k_MinEmptyNeighbors_Key);
   inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_HullVertexGeomPath_Key);
 
   return ApproximatePointCloudHull(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -117,10 +117,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_GridResolutionKey = "GridResolution";
-constexpr StringLiteral k_NumberOfEmptyNeighborsKey = "NumberOfEmptyNeighbors";
-constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
-constexpr StringLiteral k_HullDataContainerNameKey = "HullDataContainerName";
+constexpr StringLiteralType k_GridResolutionKey = "GridResolution";
+constexpr StringLiteralType k_NumberOfEmptyNeighborsKey = "NumberOfEmptyNeighbors";
+constexpr StringLiteralType k_VertexDataContainerNameKey = "VertexDataContainerName";
+constexpr StringLiteralType k_HullDataContainerNameKey = "HullDataContainerName";
 } // namespace simpl
 } // namespace
 
@@ -130,10 +130,10 @@ Result<Arguments> ApproximatePointCloudHullFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_GridResolutionKey, k_GridResolution_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfEmptyNeighborsKey, k_MinEmptyNeighbors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_VertexGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HullDataContainerNameKey, k_HullVertexGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_GridResolutionKey, k_GridResolution_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfEmptyNeighborsKey, k_MinEmptyNeighbors_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_VertexGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HullDataContainerNameKey, k_HullVertexGeomPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

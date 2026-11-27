@@ -35,7 +35,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Rejects non-binary input a
   args.insertOrAssign(BinaryErodeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(BinaryErodeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-  args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1.0));
   args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0.0));
   args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(true));
@@ -75,7 +75,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Reports the first non-bina
   args.insertOrAssign(BinaryErodeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(BinaryErodeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-  args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
   args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
   args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(false));
@@ -137,7 +137,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Computed-expected (both al
   args.insertOrAssign(BinaryErodeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
   args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
   args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
   args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
   args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(k_B2f));
@@ -212,7 +212,7 @@ TEST_CASE("NXImageProcessing::BinaryErodeImageFilter: Preflight rejects non-fini
     args.insertOrAssign(BinaryErodeImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(BinaryErodeImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(BinaryErodeImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-    args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+    args.insertOrAssign(BinaryErodeImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
     args.insertOrAssign(BinaryErodeImageFilter::k_ForegroundValue_Key, std::make_any<float64>(fg));
     args.insertOrAssign(BinaryErodeImageFilter::k_BackgroundValue_Key, std::make_any<float64>(bg));
     args.insertOrAssign(BinaryErodeImageFilter::k_BoundaryToForeground_Key, std::make_any<bool>(true));

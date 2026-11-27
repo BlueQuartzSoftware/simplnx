@@ -55,11 +55,11 @@ Parameters ComputeVectorColorsFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMask_Key, "Apply to Good Voxels Only (Bad Voxels Will Be Black)", "Whether or not to assign colors to bad voxels or leave them black", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Used to define Elements as good or bad ", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_VectorsArrayPath_Key, "Vector Attribute Array", "Vectors the colors will represent", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Element Data Object"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellVectorColorsArrayName_Key, "Vector Colors", "RGB colors", "Vector Colors Array"));
@@ -76,7 +76,7 @@ IFilter::VersionType ComputeVectorColorsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeVectorColorsFilter::clone() const
+IFilter::UniquePointerType ComputeVectorColorsFilter::clone() const
 {
   return std::make_unique<ComputeVectorColorsFilter>();
 }
@@ -119,10 +119,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_UseGoodVoxelsKey = "UseGoodVoxels";
-constexpr StringLiteral k_VectorsArrayPathKey = "VectorsArrayPath";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-constexpr StringLiteral k_CellVectorColorsArrayNameKey = "CellVectorColorsArrayName";
+constexpr StringLiteralType k_UseGoodVoxelsKey = "UseGoodVoxels";
+constexpr StringLiteralType k_VectorsArrayPathKey = "VectorsArrayPath";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_CellVectorColorsArrayNameKey = "CellVectorColorsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -132,10 +132,10 @@ Result<Arguments> ComputeVectorColorsFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VectorsArrayPathKey, k_VectorsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellVectorColorsArrayNameKey, k_CellVectorColorsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VectorsArrayPathKey, k_VectorsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellVectorColorsArrayNameKey, k_CellVectorColorsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -24,8 +24,8 @@ public:
   ChangeAngleRepresentationFilter& operator=(ChangeAngleRepresentationFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ConversionType_Key = "conversion_type_index";
-  static constexpr StringLiteral k_AnglesArrayPath_Key = "angles_array_path";
+  static constexpr StringLiteralType k_ConversionType_Key = "conversion_type_index";
+  static constexpr StringLiteralType k_AnglesArrayPath_Key = "angles_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +82,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

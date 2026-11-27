@@ -24,37 +24,37 @@ public:
   CreateGeometryFilter& operator=(CreateGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_GeometryType_Key = "geometry_type_index";
-  static constexpr StringLiteral k_LengthUnitType_Key = "length_unit_index";
-  static constexpr StringLiteral k_GeometryPath_Key = "output_geometry_path";
-  static constexpr StringLiteral k_WarningsAsErrors_Key = "warnings_as_errors";
-  static constexpr StringLiteral k_ArrayHandling_Key = "array_handling_index";
+  static constexpr StringLiteralType k_GeometryType_Key = "geometry_type_index";
+  static constexpr StringLiteralType k_LengthUnitType_Key = "length_unit_index";
+  static constexpr StringLiteralType k_GeometryPath_Key = "output_geometry_path";
+  static constexpr StringLiteralType k_WarningsAsErrors_Key = "warnings_as_errors";
+  static constexpr StringLiteralType k_ArrayHandling_Key = "array_handling_index";
   // Image Geometry
-  static constexpr StringLiteral k_Dimensions_Key = "dimensions";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_Dimensions_Key = "dimensions";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
   // RectilinearGrid Geometry
-  static constexpr StringLiteral k_XBoundsPath_Key = "x_bounds_path";
-  static constexpr StringLiteral k_YBoundsPath_Key = "y_bounds_path";
-  static constexpr StringLiteral k_ZBoundsPath_Key = "z_bounds_path";
+  static constexpr StringLiteralType k_XBoundsPath_Key = "x_bounds_path";
+  static constexpr StringLiteralType k_YBoundsPath_Key = "y_bounds_path";
+  static constexpr StringLiteralType k_ZBoundsPath_Key = "z_bounds_path";
   // Vertex, Edge, Triangle, Quadrilateral, Tetrahedral, & Hexahedral Geometry
-  static constexpr StringLiteral k_VertexListPath_Key = "vertex_list_path";
-  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteralType k_VertexListPath_Key = "vertex_list_path";
+  static constexpr StringLiteralType k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
   // Edge Geometry
-  static constexpr StringLiteral k_EdgeListPath_Key = "edge_list_path";
-  static constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
+  static constexpr StringLiteralType k_EdgeListPath_Key = "edge_list_path";
+  static constexpr StringLiteralType k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
   // Triangle Geometry
-  static constexpr StringLiteral k_TriangleListPath_Key = "triangle_list_path";
+  static constexpr StringLiteralType k_TriangleListPath_Key = "triangle_list_path";
   // Quadrilateral Geometry
-  static constexpr StringLiteral k_QuadrilateralListPath_Key = "quadrilateral_list_path";
+  static constexpr StringLiteralType k_QuadrilateralListPath_Key = "quadrilateral_list_path";
   // Triangle & Quadrilateral Geometry
-  static constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
+  static constexpr StringLiteralType k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
   // Tetrahedral Geometry
-  static constexpr StringLiteral k_TetrahedralListPath_Key = "tetrahedral_list_path";
+  static constexpr StringLiteralType k_TetrahedralListPath_Key = "tetrahedral_list_path";
   // Hexahedral Geometry
-  static constexpr StringLiteral k_HexahedralListPath_Key = "hexahedral_list_path";
+  static constexpr StringLiteralType k_HexahedralListPath_Key = "hexahedral_list_path";
   // Image, RectilinearGrid, Tetrahedral, & Hexahedral Geometry
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 
   // GeometryType values
   static constexpr uint64 k_ImageGeometry = 0;
@@ -125,7 +125,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -40,7 +40,7 @@ nlohmann::json ArrayCreationParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
 
   if(!json.is_string())
   {
@@ -55,7 +55,7 @@ Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer ArrayCreationParameter::clone() const
+IParameter::UniquePointerType ArrayCreationParameter::clone() const
 {
   return std::make_unique<ArrayCreationParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -101,7 +101,7 @@ Result<std::any> ArrayCreationParameter::resolve(DataStructure& dataStructure, c
   return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -127,5 +127,5 @@ Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFi
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

@@ -29,20 +29,20 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteralType k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
-constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
-constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-constexpr StringLiteral k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
-constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
+constexpr StringLiteralType k_ReadCSVData_Key = "read_csv_data_object";
+constexpr StringLiteralType k_TupleDims_Key = "tuple_dimensions";
+constexpr StringLiteralType k_UseExistingGroup_Key = "use_existing_group";
+constexpr StringLiteralType k_SelectedDataGroup_Key = "selected_attribute_matrix_path";
+constexpr StringLiteralType k_CreatedDataGroup_Key = "created_data_group_path";
 
-constexpr StringLiteral k_ExemplarGMT1("ExemplarGMT1");
-constexpr StringLiteral k_ExemplarGMT2("ExemplarGMT2");
-constexpr StringLiteral k_ExemplarGMT3("ExemplarGMT3");
-constexpr StringLiteral k_GMT1("GMT1");
-constexpr StringLiteral k_GMT2("GMT2");
-constexpr StringLiteral k_GMT3("GMT3");
+constexpr StringLiteralType k_ExemplarGMT1("ExemplarGMT1");
+constexpr StringLiteralType k_ExemplarGMT2("ExemplarGMT2");
+constexpr StringLiteralType k_ExemplarGMT3("ExemplarGMT3");
+constexpr StringLiteralType k_GMT1("GMT1");
+constexpr StringLiteralType k_GMT2("GMT2");
+constexpr StringLiteralType k_GMT3("GMT3");
 
 template <typename T>
 class CancelAfterReadDataStore : public DataStore<T>
@@ -110,7 +110,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       const WriteGBCDGMTFileFilter gmtFilter;
       Arguments args;
 
-      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputFile));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
@@ -196,7 +196,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       const WriteGBCDGMTFileFilter filter;
       Arguments args;
 
-      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({39.0F, 1.0F, 1.0F, 0.0F}));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputFile));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
@@ -282,7 +282,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
       const WriteGBCDGMTFileFilter filter;
       Arguments args;
 
-      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({50.5F, 1.0F, 1.0F, 0.0F}));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputFile));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
@@ -407,7 +407,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Cancellation before publ
 
       WriteGBCDGMTFileFilter filter;
       Arguments args;
-      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
+      args.insertOrAssign(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
       args.insertOrAssign(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));

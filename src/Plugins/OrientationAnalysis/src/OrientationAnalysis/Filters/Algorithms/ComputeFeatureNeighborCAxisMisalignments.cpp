@@ -11,7 +11,7 @@
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 
 ComputeFeatureNeighborCAxisMisalignments::ComputeFeatureNeighborCAxisMisalignments(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                                    ComputeFeatureNeighborCAxisMisalignmentsInputValues* inputValues)

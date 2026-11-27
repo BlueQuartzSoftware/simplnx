@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 
-namespace nx::core::DREAM3D
+namespace nx::core::dream3d
 {
 /** @brief Origin and spacing read from an image geometry before validation. */
 struct ImageGeometryMetadata
@@ -25,9 +25,9 @@ struct ImageGeometryMetadata
  * Selective discovery records these results so callers can validate only the geometries they import.
  */
 using DeferredImageMetadata = std::map<DataObject::IdType, Result<ImageGeometryMetadata>>;
-} // namespace nx::core::DREAM3D
+} // namespace nx::core::dream3d
 
-namespace nx::core::DREAM3D::detail
+namespace nx::core::dream3d::detail
 {
 inline constexpr int32 k_DefaultImageGeometryValuesWarning = 502693;
 
@@ -115,4 +115,4 @@ inline std::string ImageGeometryPath(const ImageGeom& geometry)
   }
   return ApplyImportedImageMetadata(geometry, filePath, metadata, false);
 }
-} // namespace nx::core::DREAM3D::detail
+} // namespace nx::core::dream3d::detail

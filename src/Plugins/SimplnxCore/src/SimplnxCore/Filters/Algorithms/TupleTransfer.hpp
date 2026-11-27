@@ -19,7 +19,7 @@ namespace detail
 {
 // Bounded transfers use four 65,536-value pages and 4,096-face destination runs.
 constexpr usize kTransferPageValues = 65536;
-constexpr usize kTransferPageCount = 4;
+constexpr usize k_TransferPageCount = 4;
 constexpr usize kTransferFaceRun = 4096;
 
 /**
@@ -152,10 +152,10 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
     return {};
   }
 
-  std::array<std::unique_ptr<T[]>, kTransferPageCount> pages;
-  std::array<usize, kTransferPageCount> pageStarts{};
+  std::array<std::unique_ptr<T[]>, k_TransferPageCount> pages;
+  std::array<usize, k_TransferPageCount> pageStarts{};
   pageStarts.fill(std::numeric_limits<usize>::max());
-  std::array<usize, kTransferPageCount> pageUse{};
+  std::array<usize, k_TransferPageCount> pageUse{};
   usize useCounter = 0;
   try
   {
@@ -182,11 +182,11 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
       return MakeErrorResult<const T*>(-62064, "Tuple transfer source-page offset overflows usize.");
     }
     usize pageIndex = 0;
-    while(pageIndex < kTransferPageCount && pageStarts[pageIndex] != pageStart)
+    while(pageIndex < k_TransferPageCount && pageStarts[pageIndex] != pageStart)
     {
       pageIndex++;
     }
-    if(pageIndex == kTransferPageCount)
+    if(pageIndex == k_TransferPageCount)
     {
       pageIndex = static_cast<usize>(std::min_element(pageUse.begin(), pageUse.end()) - pageUse.begin());
       const usize pageTuples = std::min(tuplesPerPage, sourceTuples - pageStart);
@@ -420,19 +420,19 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
 
   const usize tuplesPerFeaturePage = kTransferPageValues / numComps;
   const usize facesPerRun = std::min(kTransferFaceRun, std::max(usize{1}, kTransferPageValues / valuesPerFace));
-  std::array<std::unique_ptr<K[]>, kTransferPageCount> idPages;
-  std::array<std::unique_ptr<T[]>, kTransferPageCount> valuePages;
-  std::array<usize, kTransferPageCount> idStarts{};
-  std::array<usize, kTransferPageCount> valueStarts{};
-  std::array<usize, kTransferPageCount> idUse{};
-  std::array<usize, kTransferPageCount> valueUse{};
+  std::array<std::unique_ptr<K[]>, k_TransferPageCount> idPages;
+  std::array<std::unique_ptr<T[]>, k_TransferPageCount> valuePages;
+  std::array<usize, k_TransferPageCount> idStarts{};
+  std::array<usize, k_TransferPageCount> valueStarts{};
+  std::array<usize, k_TransferPageCount> idUse{};
+  std::array<usize, k_TransferPageCount> valueUse{};
   usize idUseCounter = 0;
   usize valueUseCounter = 0;
   idStarts.fill(k_Invalid);
   valueStarts.fill(k_Invalid);
   try
   {
-    for(usize i = 0; i < kTransferPageCount; i++)
+    for(usize i = 0; i < k_TransferPageCount; i++)
     {
       idPages[i] = std::make_unique<K[]>(kTransferPageValues);
       valuePages[i] = std::make_unique<T[]>(kTransferPageValues);
@@ -451,11 +451,11 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     }
     const usize start = (cell / kTransferPageValues) * kTransferPageValues;
     usize p = 0;
-    while(p < kTransferPageCount && idStarts[p] != start)
+    while(p < k_TransferPageCount && idStarts[p] != start)
     {
       p++;
     }
-    if(p == kTransferPageCount)
+    if(p == k_TransferPageCount)
     {
       p = static_cast<usize>(std::min_element(idUse.begin(), idUse.end()) - idUse.begin());
       auto r = featureIds.copyIntoBuffer(start, nonstd::span<K>(idPages[p].get(), std::min(kTransferPageValues, featureIds.getNumberOfTuples() - start)));
@@ -475,11 +475,11 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     }
     const usize start = (feature / tuplesPerFeaturePage) * tuplesPerFeaturePage;
     usize p = 0;
-    while(p < kTransferPageCount && valueStarts[p] != start)
+    while(p < k_TransferPageCount && valueStarts[p] != start)
     {
       p++;
     }
-    if(p == kTransferPageCount)
+    if(p == k_TransferPageCount)
     {
       p = static_cast<usize>(std::min_element(valueUse.begin(), valueUse.end()) - valueUse.begin());
       const usize count = std::min(tuplesPerFeaturePage, featureData.getNumberOfTuples() - start);

@@ -17,11 +17,11 @@ public:
   static constexpr usize k_NumEdgeVerts = 2;
   static constexpr usize k_NumFaceVerts = 4;
   static constexpr usize k_NumVerts = 8;
-  static constexpr StringLiteral k_VoxelSizes = "Hex Volumes";
-  static constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
-  static constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
-  static constexpr StringLiteral k_EltCentroids = "Hex Centroids";
-  static constexpr StringLiteral k_TypeName = "HexahedralGeom";
+  static constexpr StringLiteralType k_VoxelSizes = "Hex Volumes";
+  static constexpr StringLiteralType k_EltsContainingVert = "Hex Containing Vertices";
+  static constexpr StringLiteralType k_EltNeighbors = "Hex Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Hex Centroids";
+  static constexpr StringLiteralType k_TypeName = "HexahedralGeom";
 
   /**
    * @brief Creates a new HexahedralGeom in the specified DataStructure.

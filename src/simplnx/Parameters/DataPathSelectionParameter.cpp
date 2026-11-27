@@ -40,7 +40,7 @@ nlohmann::json DataPathSelectionParameter::toJsonImpl(const std::any& value) con
 
 Result<std::any> DataPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix("FilterParameter 'DataPathSelectionParameter' JSON Error: ");
+  static constexpr StringLiteralType k_Prefix("FilterParameter 'DataPathSelectionParameter' JSON Error: ");
   if(!json.is_string())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
@@ -55,7 +55,7 @@ Result<std::any> DataPathSelectionParameter::fromJsonImpl(const nlohmann::json& 
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer DataPathSelectionParameter::clone() const
+IParameter::UniquePointerType DataPathSelectionParameter::clone() const
 {
   return std::make_unique<DataPathSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }

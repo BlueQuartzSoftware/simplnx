@@ -185,7 +185,7 @@ int TraverseFile(const std::string& fileName)
 
 const std::string k_ExemplarFilePath = fmt::format("{}/6_5_h5ebsd_exemplar/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_TestFilesDir);
 
-const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::HighToLow);
+const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::file_path_generator::Ordering::HighToLow);
 const int32 k_StartIndex = 1;
 const int32 k_EndIndex = 2;
 const int32 k_IncrementIndex = 1;
@@ -227,7 +227,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
 
   // Create default Parameters for the filter.
   // Create default Parameters for the filter.
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32ParameterType::ValueType>(0.25F));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(SOutputFilePath)));
@@ -271,7 +271,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
       EbsdToH5EbsdFilter filter;
       DataStructure dataStructure;
       Arguments args;
-      args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32ParameterType::ValueType>(0.25F));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));

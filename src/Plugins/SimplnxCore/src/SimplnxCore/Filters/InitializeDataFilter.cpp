@@ -123,7 +123,7 @@ IFilter::VersionType InitializeDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InitializeDataFilter::clone() const
+IFilter::UniquePointerType InitializeDataFilter::clone() const
 {
   return std::make_unique<InitializeDataFilter>();
 }

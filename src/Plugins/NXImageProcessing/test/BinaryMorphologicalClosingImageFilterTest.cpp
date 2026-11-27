@@ -21,7 +21,7 @@ morph_test::KernelParamSetter ClosingKernelParamSetter(float64 foreground, bool 
 {
   return [foreground, safeBorder](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(foreground));
     args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(safeBorder));
   };
@@ -81,7 +81,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Rejects non
   args.insertOrAssign(ClosingFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(ClosingFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-  args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(1.0));
   args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(true));
 
@@ -126,7 +126,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Computed-ex
   args.insertOrAssign(ClosingFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
   args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
   args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
   args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(false));
 
@@ -199,7 +199,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalClosingImageFilter: Preflight r
     args.insertOrAssign(ClosingFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(ClosingFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
     args.insertOrAssign(ClosingFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-    args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+    args.insertOrAssign(ClosingFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
     args.insertOrAssign(ClosingFilterType::k_ForegroundValue_Key, std::make_any<float64>(fg));
     args.insertOrAssign(ClosingFilterType::k_SafeBorder_Key, std::make_any<bool>(true));
     return args;

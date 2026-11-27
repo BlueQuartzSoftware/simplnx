@@ -65,11 +65,11 @@ Parameters MedianImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorUInt32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<uint32>(3, 1), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorUInt32ParameterType>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<uint32>(3, 1), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
@@ -81,7 +81,7 @@ IFilter::VersionType MedianImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer MedianImageFilter::clone() const
+IFilter::UniquePointerType MedianImageFilter::clone() const
 {
   return std::make_unique<MedianImageFilter>();
 }
@@ -110,7 +110,7 @@ Result<> MedianImageFilter::executeImpl(DataStructure& dataStructure, const Argu
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  auto radiusVec = filterArgs.value<VectorUInt32Parameter::ValueType>(k_Radius_Key);
+  auto radiusVec = filterArgs.value<VectorUInt32ParameterType::ValueType>(k_Radius_Key);
   const std::array<usize, 3> radius = {static_cast<usize>(radiusVec[0]), static_cast<usize>(radiusVec[1]), static_cast<usize>(radiusVec[2])};
 
   const MedianReduce operation{};
@@ -121,9 +121,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_RadiusKey = "Radius";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_RadiusKey = "Radius";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -133,10 +133,10 @@ Result<Arguments> MedianImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_RadiusKey, k_Radius_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt32Vec3FilterParameterConverter>(args, json, simpl::k_RadiusKey, k_Radius_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

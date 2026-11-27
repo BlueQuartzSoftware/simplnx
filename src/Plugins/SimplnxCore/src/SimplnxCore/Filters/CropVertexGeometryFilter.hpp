@@ -21,12 +21,12 @@ public:
   CropVertexGeometryFilter& operator=(CropVertexGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
-  static constexpr StringLiteral k_MinPos_Key = "min_pos";
-  static constexpr StringLiteral k_MaxPos_Key = "max_pos";
-  static constexpr StringLiteral k_TargetArrayPaths_Key = "target_array_paths";
-  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteralType k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static constexpr StringLiteralType k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteralType k_MinPos_Key = "min_pos";
+  static constexpr StringLiteralType k_MaxPos_Key = "max_pos";
+  static constexpr StringLiteralType k_TargetArrayPaths_Key = "target_array_paths";
+  static constexpr StringLiteralType k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -83,7 +83,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

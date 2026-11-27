@@ -11,7 +11,7 @@
  * @namespace nx::core::Generic
  * @brief Contains core generic data I/O implementations.
  */
-namespace nx::core::Generic
+namespace nx::core::generic
 {
 
 /**
@@ -58,6 +58,6 @@ private:
    */
   void addListStoreFnc();
 
-  factory_collection m_FactoryCollection;
+  FactoryCollectionType m_FactoryCollection;
 };
-} // namespace nx::core::Generic
+} // namespace nx::core::generic

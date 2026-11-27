@@ -25,12 +25,12 @@ public:
   SetImageGeomOriginScalingFilter& operator=(SetImageGeomOriginScalingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
-  static constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
-  static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_ChangeOrigin_Key = "change_origin";
+  static constexpr StringLiteralType k_CenterOrigin_Key = "center_origin";
+  static constexpr StringLiteralType k_ChangeSpacing_Key = "change_spacing";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -87,7 +87,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

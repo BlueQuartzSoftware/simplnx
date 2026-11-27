@@ -83,7 +83,7 @@ IFilter::VersionType SetImageGeomOriginScalingFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SetImageGeomOriginScalingFilter::clone() const
+IFilter::UniquePointerType SetImageGeomOriginScalingFilter::clone() const
 {
   return std::make_unique<SetImageGeomOriginScalingFilter>();
 }
@@ -179,12 +179,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_ChangeOriginKey = "ChangeOrigin";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_ChangeResolutionKey = "ChangeResolution";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_ResolutionKey = "Resolution";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_ChangeOriginKey = "ChangeOrigin";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_ChangeResolutionKey = "ChangeResolution";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_ResolutionKey = "Resolution";
 } // namespace simpl
 } // namespace
 
@@ -194,15 +194,15 @@ Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ChangeOriginKey, k_ChangeOrigin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ChangeResolutionKey, k_ChangeSpacing_Key));
-  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ChangeOriginKey, k_ChangeOrigin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ChangeResolutionKey, k_ChangeSpacing_Key));
+  Result<> spacingResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
   {
     // 6.5 key for spacing was named resolution
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {

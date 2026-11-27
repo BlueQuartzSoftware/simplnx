@@ -24,8 +24,8 @@ public:
   TriangleDihedralAngleFilter& operator=(TriangleDihedralAngleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayName_Key = "surface_mesh_triangle_dihedral_angles_array_name";
-  static constexpr StringLiteral k_TGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_SurfaceMeshTriangleDihedralAnglesArrayName_Key = "surface_mesh_triangle_dihedral_angles_array_name";
+  static constexpr StringLiteralType k_TGeometryDataPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +82,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

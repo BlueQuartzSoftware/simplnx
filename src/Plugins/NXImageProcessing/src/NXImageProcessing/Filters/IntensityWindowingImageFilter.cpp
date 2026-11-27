@@ -74,14 +74,14 @@ Parameters IntensityWindowingImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_WindowMinimum_Key, "Window Minimum", "Set/Get the values of the maximum and minimum intensities of the input intensity window.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_WindowMaximum_Key, "Window Maximum", "Set/Get the values of the maximum and minimum intensities of the input intensity window.", 255.0));
-  params.insert(std::make_unique<Float64Parameter>(k_OutputMinimum_Key, "Output Minimum", "Set/Get the values of the maximum and minimum intensities of the output image.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_OutputMaximum_Key, "Output Maximum", "Set/Get the values of the maximum and minimum intensities of the output image.", 255.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_WindowMinimum_Key, "Window Minimum", "Set/Get the values of the maximum and minimum intensities of the input intensity window.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_WindowMaximum_Key, "Window Maximum", "Set/Get the values of the maximum and minimum intensities of the input intensity window.", 255.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_OutputMinimum_Key, "Output Minimum", "Set/Get the values of the maximum and minimum intensities of the output image.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_OutputMaximum_Key, "Output Maximum", "Set/Get the values of the maximum and minimum intensities of the output image.", 255.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
@@ -93,7 +93,7 @@ IFilter::VersionType IntensityWindowingImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer IntensityWindowingImageFilter::clone() const
+IFilter::UniquePointerType IntensityWindowingImageFilter::clone() const
 {
   return std::make_unique<IntensityWindowingImageFilter>();
 }
@@ -128,12 +128,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_WindowMinimumKey = "WindowMinimum";
-constexpr StringLiteral k_WindowMaximumKey = "WindowMaximum";
-constexpr StringLiteral k_OutputMinimumKey = "OutputMinimum";
-constexpr StringLiteral k_OutputMaximumKey = "OutputMaximum";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_WindowMinimumKey = "WindowMinimum";
+constexpr StringLiteralType k_WindowMaximumKey = "WindowMaximum";
+constexpr StringLiteralType k_OutputMinimumKey = "OutputMinimum";
+constexpr StringLiteralType k_OutputMaximumKey = "OutputMaximum";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -143,13 +143,13 @@ Result<Arguments> IntensityWindowingImageFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_WindowMinimumKey, k_WindowMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_WindowMaximumKey, k_WindowMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMinimumKey, k_OutputMinimum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMaximumKey, k_OutputMaximum_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_WindowMinimumKey, k_WindowMinimum_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_WindowMaximumKey, k_WindowMaximum_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMinimumKey, k_OutputMinimum_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_OutputMaximumKey, k_OutputMaximum_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

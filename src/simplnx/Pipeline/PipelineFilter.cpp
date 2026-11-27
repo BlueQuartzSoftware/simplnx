@@ -18,16 +18,16 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_ArgsKey = "args";
-constexpr StringLiteral k_FilterKey = "filter";
-constexpr StringLiteral k_FilterNameKey = "name";
-constexpr StringLiteral k_FilterUuidKey = "uuid";
-constexpr StringLiteral k_FilterCommentsKey = "comments";
-constexpr StringLiteral k_UnknownFilterValue = "UnknownFilter";
+constexpr StringLiteralType k_ArgsKey = "args";
+constexpr StringLiteralType k_FilterKey = "filter";
+constexpr StringLiteralType k_FilterNameKey = "name";
+constexpr StringLiteralType k_FilterUuidKey = "uuid";
+constexpr StringLiteralType k_FilterCommentsKey = "comments";
+constexpr StringLiteralType k_UnknownFilterValue = "UnknownFilter";
 
-constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
-constexpr StringLiteral k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
-constexpr StringLiteral k_SIMPLFilterClassNameKey = "Filter_Name";
+constexpr StringLiteralType k_SIMPLFilterUuidKey = "Filter_Uuid";
+constexpr StringLiteralType k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
+constexpr StringLiteralType k_SIMPLFilterClassNameKey = "Filter_Name";
 
 nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
 {
@@ -94,7 +94,7 @@ std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handl
   return std::make_unique<PipelineFilter>(std::move(filter), args);
 }
 
-PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, Arguments args)
+PipelineFilter::PipelineFilter(IFilter::UniquePointerType&& filter, Arguments args)
 : m_Filter(std::move(filter))
 , m_Arguments(std::move(args))
 {
@@ -598,7 +598,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("'{}' is not a valid UUID", uuidString));
   }
-  IFilter::UniquePointer filter = filterList.createFilter(*uuid);
+  IFilter::UniquePointerType filter = filterList.createFilter(*uuid);
   if(filter == nullptr)
   {
     if(std::optional<Uuid> replacement = FindFilterReplacement(*uuid, filterList); replacement.has_value())
@@ -747,7 +747,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to find conversion data for filter '{}'", filterName));
   }
 
-  IFilter::UniquePointer filter = filterList.createFilter(simplData->simplnxUuid);
+  IFilter::UniquePointerType filter = filterList.createFilter(simplData->simplnxUuid);
 
   if(!simplData->convertJson)
   {

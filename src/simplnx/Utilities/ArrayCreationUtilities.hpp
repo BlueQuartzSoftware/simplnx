@@ -151,7 +151,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     if(isInCore && !CheckMemoryRequirement(dataStructure, requiredMemory))
     {
       uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
-      uint64 availableMemory = Memory::GetTotalMemory();
+      uint64 availableMemory = memory_utilities::GetTotalMemory();
       return returnFailure(MakeErrorResult(-264, fmt::format("Cannot create array '{}': the DataStructure would require {} bytes total, "
                                                              "but only {} bytes of RAM are available. Consider enabling out-of-core "
                                                              "storage or lowering the size thresholds in Preferences so that large "
@@ -166,8 +166,8 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     constexpr double k_BytesPerGiB = 1024.0 * 1024.0 * 1024.0;
     // One memory snapshot drives both the condition and its diagnostic values.
     // Clamp availability because operating-system reporting can briefly show used memory above total memory.
-    const Memory::SystemMemoryInfo info = Memory::GetSystemMemoryInfo();
-    const double availableGiB = std::max(0.0, info.totalGB - info.usedGB);
+    const memory_utilities::SystemMemoryInfo info = memory_utilities::GetSystemMemoryInfo();
+    const double availableGiB = std::max(0.0, info.total_gb - info.used_gb);
     const uint64 availableBytes = static_cast<uint64>(availableGiB * k_BytesPerGiB);
     if(isInCore && WouldExceedAvailableMemory(dataStructure.memoryUsage(), requiredMemory, availableBytes))
     {

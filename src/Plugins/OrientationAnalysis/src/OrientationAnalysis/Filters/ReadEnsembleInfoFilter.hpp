@@ -24,11 +24,11 @@ public:
   ReadEnsembleInfoFilter& operator=(ReadEnsembleInfoFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_ParentGroupPath_Key = "parent_group_path";
-  static constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
-  static constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
-  static constexpr StringLiteral k_PhaseTypesArrayName_Key = "phase_types_array_name";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_ParentGroupPath_Key = "parent_group_path";
+  static constexpr StringLiteralType k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static constexpr StringLiteralType k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
+  static constexpr StringLiteralType k_PhaseTypesArrayName_Key = "phase_types_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

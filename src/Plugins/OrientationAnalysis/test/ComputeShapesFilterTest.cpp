@@ -110,7 +110,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
       CAPTURE(feature);
       const usize offset = 3 * feature;
       const auto orientation = ebsdlib::EulerDType(calculated[offset], calculated[offset + 1], calculated[offset + 2]).toOrientationMatrix();
-      OrientationUtilities::Matrix3dR frame = Eigen::Map<const OrientationUtilities::Matrix3dR>(orientation.data());
+      orientation_utilities::Matrix3dRType frame = Eigen::Map<const orientation_utilities::Matrix3dRType>(orientation.data());
       CHECK(frame.determinant() == Approx(1.0).margin(1.0e-6));
       bool equalsExemplar = true;
       for(usize component = 0; component < 3; component++)
@@ -292,10 +292,10 @@ Arguments ShapeArguments()
   return args;
 }
 
-void CheckOrderedAxisLines(const std::array<float64, 3>& euler, const OrientationUtilities::Matrix3dR& expected)
+void CheckOrderedAxisLines(const std::array<float64, 3>& euler, const orientation_utilities::Matrix3dRType& expected)
 {
   const auto orientation = ebsdlib::EulerDType(euler[0], euler[1], euler[2]).toOrientationMatrix();
-  const Eigen::Map<const OrientationUtilities::Matrix3dR> actual(orientation.data());
+  const Eigen::Map<const orientation_utilities::Matrix3dRType> actual(orientation.data());
   CHECK(actual.determinant() == Approx(1.0).margin(1.0e-6));
   for(usize row = 0; row < 3; row++)
   {
@@ -365,7 +365,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Planar rectangle uses activ
 
 TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Principal Euler frame preserves ordered axes", "[OrientationAnalysis][ComputeShapesFilter]")
 {
-  OrientationUtilities::Matrix3dR frame;
+  orientation_utilities::Matrix3dRType frame;
   SECTION("Symmetric improper H frame")
   {
     // H=I-(2/3)*ones: H*H^T=I, det(H)=-1. Its rows are ordered axis lines.
@@ -385,7 +385,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Principal Euler frame prese
     frame << 29, -20, 28, -28, -35, 4, -20, 20, 35;
     frame /= 45.0;
   }
-  const auto euler = OrientationUtilities::PrincipalAxisFrameToEuler(frame);
+  const auto euler = orientation_utilities::PrincipalAxisFrameToEuler(frame);
   CheckOrderedAxisLines(euler, frame);
 }
 
@@ -449,7 +449,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter: Discrete grain preserves or
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const Float32Array* eulersPtr = nullptr;
   REQUIRE_NOTHROW(eulersPtr = &dataStructure.getDataRefAs<Float32Array>(DataPath({"Grid", "Features", "Eulers"})));
-  OrientationUtilities::Matrix3dR expected;
+  orientation_utilities::Matrix3dRType expected;
   if(transform == 0)
   {
     expected << 0, 0, 1, 0, 1, 0, 1, 0, 0;

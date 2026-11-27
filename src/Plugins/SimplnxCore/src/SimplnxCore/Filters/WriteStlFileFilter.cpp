@@ -69,15 +69,15 @@ Parameters WriteStlFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Face Phases", "The face phases array (the phase on each side of each triangle) to further order/index files by",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PartNumberPath_Key, "Part Numbers", "The Part Numbers to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // link params -- GroupingType enum is stored in the algorithm header [WriteStlFile.hpp]
   //------------ Group by Features -------------
@@ -109,7 +109,7 @@ IFilter::VersionType WriteStlFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteStlFileFilter::clone() const
+IFilter::UniquePointerType WriteStlFileFilter::clone() const
 {
   return std::make_unique<WriteStlFileFilter>();
 }
@@ -218,9 +218,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputStlDirectoryKey = "OutputStlDirectory";
-constexpr StringLiteral k_OutputStlPrefixKey = "OutputStlPrefix";
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_OutputStlDirectoryKey = "OutputStlDirectory";
+constexpr StringLiteralType k_OutputStlPrefixKey = "OutputStlPrefix";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -230,10 +230,10 @@ Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

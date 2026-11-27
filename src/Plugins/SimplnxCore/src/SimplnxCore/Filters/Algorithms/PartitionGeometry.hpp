@@ -22,7 +22,7 @@ struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
   ChoicesParameter::ValueType PartitioningMode{};
   int32 StartingFeatureID{};
   int32 OutOfBoundsFeatureID{};
-  VectorInt32Parameter::ValueType NumberOfCellsPerAxis;
+  VectorInt32ParameterType::ValueType NumberOfCellsPerAxis;
   VectorFloat32Parameter::ValueType PartitionGridOrigin;
   VectorFloat32Parameter::ValueType CellLength;
   VectorFloat32Parameter::ValueType MinGridCoord;

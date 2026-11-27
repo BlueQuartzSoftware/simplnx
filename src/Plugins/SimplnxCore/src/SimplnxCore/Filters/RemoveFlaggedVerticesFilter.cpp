@@ -61,10 +61,10 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Flagged Vertex Array (Mask)",
                                                           "The DataArrayPath to the mask array that marks each face as either true (remove) or false(keep).", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ClearFeatureAttributeMatrix_Key, "Clear Feature Attribute Matrix",
                                                                  "Recreates the selected Feature Attribute Matrix in the reduced geometry with no arrays. Removing vertices changes which vertices "
@@ -76,7 +76,7 @@ Parameters RemoveFlaggedVerticesFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after removing vertices", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexFeatureIdsPath_Key, "Vertex Feature Ids", "Specifies to which feature each vertex belongs.", DataPath({"Vertex Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
@@ -95,7 +95,7 @@ IFilter::VersionType RemoveFlaggedVerticesFilter::parametersVersion() const
   return 2;
 }
 
-IFilter::UniquePointer RemoveFlaggedVerticesFilter::clone() const
+IFilter::UniquePointerType RemoveFlaggedVerticesFilter::clone() const
 {
   return std::make_unique<RemoveFlaggedVerticesFilter>();
 }
@@ -273,9 +273,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_VertexGeometryKey = "VertexGeometry";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_ReducedVertexGeometryKey = "ReducedVertexGeometry";
+constexpr StringLiteralType k_VertexGeometryKey = "VertexGeometry";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_ReducedVertexGeometryKey = "ReducedVertexGeometry";
 } // namespace simpl
 } // namespace
 
@@ -287,9 +287,9 @@ Result<Arguments> RemoveFlaggedVerticesFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexGeometryKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_InputMaskPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_ReducedVertexGeometryKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexGeometryKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_InputMaskPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_ReducedVertexGeometryKey, k_CreatedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

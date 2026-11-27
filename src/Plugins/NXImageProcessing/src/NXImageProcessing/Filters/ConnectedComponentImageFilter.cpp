@@ -46,7 +46,7 @@ Parameters ConnectedComponentImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetIntegerScalarTypes()));
 
@@ -60,7 +60,7 @@ IFilter::VersionType ConnectedComponentImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer ConnectedComponentImageFilter::clone() const
+IFilter::UniquePointerType ConnectedComponentImageFilter::clone() const
 {
   return std::make_unique<ConnectedComponentImageFilter>();
 }

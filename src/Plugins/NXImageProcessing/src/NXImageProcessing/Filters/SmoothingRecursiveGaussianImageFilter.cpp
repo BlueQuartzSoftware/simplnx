@@ -43,14 +43,14 @@ Parameters SmoothingRecursiveGaussianImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Sigma_Key, "Sigma", "The standard deviation of the Gaussian along each axis, in the units of image spacing.",
+  params.insert(std::make_unique<VectorFloat64ParameterType>(k_Sigma_Key, "Sigma", "The standard deviation of the Gaussian along each axis, in the units of image spacing.",
                                                          std::vector<float64>{1.0, 1.0, 1.0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "Normalize Across Scale",
                                                 "Whether to normalize the Gaussian over scale-space (affects derivative magnitude; does not change 0th-order smoothing). Default is Off.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetSignedScalarTypes()));
 
@@ -64,7 +64,7 @@ IFilter::VersionType SmoothingRecursiveGaussianImageFilter::parametersVersion() 
 {
   return 1;
 }
-IFilter::UniquePointer SmoothingRecursiveGaussianImageFilter::clone() const
+IFilter::UniquePointerType SmoothingRecursiveGaussianImageFilter::clone() const
 {
   return std::make_unique<SmoothingRecursiveGaussianImageFilter>();
 }
@@ -93,7 +93,7 @@ IFilter::PreflightResult SmoothingRecursiveGaussianImageFilter::preflightImpl(co
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(dimCheck), OutputActions{})};
   }
 
-  auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
+  auto sigma = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_Sigma_Key);
   if(Result<> sigmaCheck = ImageProcessing::ValidatePositiveSigma(sigma, imageGeom.getDimensions(), ImageProcessing::k_RecursiveGaussianNonPositiveSigma); sigmaCheck.invalid())
   {
     return {.outputActions = ConvertResultTo<OutputActions>(std::move(sigmaCheck), OutputActions{})};
@@ -115,7 +115,7 @@ Result<> SmoothingRecursiveGaussianImageFilter::executeImpl(DataStructure& dataS
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
-  auto sigma = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Sigma_Key);
+  auto sigma = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_Sigma_Key);
   auto normalizeAcrossScale = filterArgs.value<bool>(k_NormalizeAcrossScale_Key);
 
   return ImageProcessing::ExecuteSmoothingRecursiveGaussianImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, sigma, normalizeAcrossScale, shouldCancel, messageHandler);
@@ -125,10 +125,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SigmaKey = "Sigma";
-constexpr StringLiteral k_NormalizeAcrossScaleKey = "NormalizeAcrossScale";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_SigmaKey = "Sigma";
+constexpr StringLiteralType k_NormalizeAcrossScaleKey = "NormalizeAcrossScale";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -140,11 +140,11 @@ Result<Arguments> SmoothingRecursiveGaussianImageFilter::FromSIMPLJson(const nlo
 
   // Legacy ITK Sigma is a per-axis FloatVec3 (SIMPL object {"x","y","z"}). DoubleVec3FilterParameterConverter maps it to
   // the VectorFloat64Parameter ValueType (std::vector<float64>).
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeAcrossScaleKey, k_NormalizeAcrossScale_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleVec3FilterParameterConverter>(args, json, simpl::k_SigmaKey, k_Sigma_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeAcrossScaleKey, k_NormalizeAcrossScale_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -57,7 +57,7 @@ Parameters CreateOutOfCoreArray::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Output Numeric Type", "Numeric Type of data to create", NumericType::int32));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NumComps_Key, "Number of Components", "Number of components", 1));
   DynamicTableParameter::ValueType dynamicTable(1, 1, {"DIM"}, {""});
   dynamicTable.setMinCols(1);
   dynamicTable.setDynamicCols(true);
@@ -68,7 +68,7 @@ Parameters CreateOutOfCoreArray::parameters() const
   return params;
 }
 
-IFilter::UniquePointer CreateOutOfCoreArray::clone() const
+IFilter::UniquePointerType CreateOutOfCoreArray::clone() const
 {
   return std::make_unique<CreateOutOfCoreArray>();
 }

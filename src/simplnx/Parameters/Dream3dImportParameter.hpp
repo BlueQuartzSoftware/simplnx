@@ -73,9 +73,9 @@ public:
   };
 
   /** @brief Filter name used in the filter list and in strict-load diagnostics. */
-  static constexpr StringLiteral k_ReadFilterHumanName = "Read DREAM3D-NX File";
+  static constexpr StringLiteralType k_ReadFilterHumanName = "Read DREAM3D-NX File";
   /** @brief Label of the option that supplies defaults for invalid image metadata. */
-  static constexpr StringLiteral k_UseDefaultGeometryValuesLabel = "Use Default Origin/Spacing for Invalid Values";
+  static constexpr StringLiteralType k_UseDefaultGeometryValuesLabel = "Use Default Origin/Spacing for Invalid Values";
 
   /**
    * @brief Appends Read DREAM3D-NX File recovery instructions to invalid image metadata errors for direct file-loading tools.
@@ -111,7 +111,7 @@ public:
    * @brief Creates and returns a copy of the parameter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -168,7 +168,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataContainerReaderFilterParameterConverter
 {
@@ -177,7 +177,7 @@ struct SIMPLNX_EXPORT DataContainerReaderFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5");

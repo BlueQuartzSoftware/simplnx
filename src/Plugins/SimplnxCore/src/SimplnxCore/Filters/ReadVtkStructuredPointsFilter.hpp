@@ -24,13 +24,13 @@ public:
   ReadVtkStructuredPointsFilter& operator=(ReadVtkStructuredPointsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_ReadPointData_Key = "read_point_data";
-  static constexpr StringLiteral k_ReadCellData_Key = "read_cell_data";
-  static constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
-  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_ReadPointData_Key = "read_point_data";
+  static constexpr StringLiteralType k_ReadCellData_Key = "read_cell_data";
+  static constexpr StringLiteralType k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -87,7 +87,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

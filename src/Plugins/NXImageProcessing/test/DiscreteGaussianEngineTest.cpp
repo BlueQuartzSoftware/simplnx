@@ -144,8 +144,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: bounded true 2D blocks and
     }
     const std::vector<float32> expected = RunDG<float32>(field, k_DimX, k_DimY, 1, {2.0, 2.0, 1.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f});
     DiscreteGaussianPassOptions options;
-    options.forceBounded2D = true;
-    options.residentLimit2D = 2048;
+    options.force_bounded_2d = true;
+    options.resident_limit_2d = 2048;
     const std::vector<float32> actual = RunDG<float32>(field, k_DimX, k_DimY, 1, {2.0, 2.0, 1.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, options);
     REQUIRE(actual == expected);
   }
@@ -161,8 +161,8 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianEngine: bounded true 2D blocks and
     }
     const std::vector<int16> expected = RunDG<int16>(field, k_DimX, k_DimY, 1, {2.0, 2.0, 1.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f});
     DiscreteGaussianPassOptions options;
-    options.forceBounded2D = true;
-    options.residentLimit2D = 1024;
+    options.force_bounded_2d = true;
+    options.resident_limit_2d = 1024;
     const std::vector<int16> actual = RunDG<int16>(field, k_DimX, k_DimY, 1, {2.0, 2.0, 1.0}, 32, {0.01, 0.01, 0.01}, false, {1.0f, 1.0f, 1.0f}, options);
     REQUIRE(actual == expected);
   }

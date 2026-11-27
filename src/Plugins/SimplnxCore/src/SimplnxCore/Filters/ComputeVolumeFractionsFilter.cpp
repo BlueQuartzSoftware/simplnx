@@ -53,7 +53,7 @@ Parameters ComputeVolumeFractionsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Array specifying which Ensemble each Cell belong",
-                                                          DataPath({"DataContainer", "Cell Data", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          DataPath({"DataContainer", "Cell Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellEnsembleAttributeMatrixPath_Key, "Cell Ensemble Attribute Matrix",
@@ -72,7 +72,7 @@ IFilter::VersionType ComputeVolumeFractionsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeVolumeFractionsFilter::clone() const
+IFilter::UniquePointerType ComputeVolumeFractionsFilter::clone() const
 {
   return std::make_unique<ComputeVolumeFractionsFilter>();
 }
@@ -162,8 +162,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-constexpr StringLiteral k_VolFractionsArrayPathKey = "VolFractionsArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+constexpr StringLiteralType k_VolFractionsArrayPathKey = "VolFractionsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -175,11 +175,11 @@ Result<Arguments> ComputeVolumeFractionsFilter::FromSIMPLJson(const nlohmann::js
 
   // Cell Ensemble attribute matrix parameter is not applicable in NX
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_VolFractionsArrayPathKey, k_CellEnsembleAttributeMatrixPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_VolFractionsArrayPathKey, k_CellEnsembleAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_VolFractionsArrayPathKey, k_VolFractionsArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_VolFractionsArrayPathKey, k_VolFractionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

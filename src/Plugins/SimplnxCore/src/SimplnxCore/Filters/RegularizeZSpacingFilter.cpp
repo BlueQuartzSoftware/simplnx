@@ -88,14 +88,14 @@ Parameters RegularizeZSpacingFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Current Z Positions File",
                                                           "Path to a whitespace-delimited text file that contains the current Z position of each slice boundary (ZPoints + 1 float values).",
                                                           fs::path(""), FileSystemPathParameter::ExtensionsType{".txt", ".dat", ".csv"}, FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<Float32Parameter>(k_NewZRes_Key, "New Z Spacing", "The new, regular spacing to use along the Z axis. Must be greater than 0.", 1.0F));
+  params.insert(std::make_unique<Float32ParameterType>(k_NewZRes_Key, "New Z Spacing", "The new, regular spacing to use along the Z axis. Must be greater than 0.", 1.0F));
 
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after the filter is complete and renames the result to its name.", true));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The Image Geometry to resample along the Z axis.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Feature Attribute Matrix Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
@@ -108,7 +108,7 @@ Parameters RegularizeZSpacingFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after resampling", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The path to the resampled Image Geometry.", DataPath()));
@@ -128,7 +128,7 @@ IFilter::VersionType RegularizeZSpacingFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RegularizeZSpacingFilter::clone() const
+IFilter::UniquePointerType RegularizeZSpacingFilter::clone() const
 {
   return std::make_unique<RegularizeZSpacingFilter>();
 }
@@ -364,9 +364,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_NewZResKey = "NewZRes";
+constexpr StringLiteralType k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_NewZResKey = "NewZRes";
 } // namespace simpl
 } // namespace
 
@@ -378,10 +378,10 @@ Result<Arguments> RegularizeZSpacingFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
                                                                                                                                       k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_NewZResKey, k_NewZRes_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_NewZResKey, k_NewZRes_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

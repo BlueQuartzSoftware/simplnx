@@ -87,17 +87,17 @@ Parameters KeepRemoveRankedFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_RankingArrayPath_Key, "Feature Ranking Array", "The scalar Feature level array used to rank the Features", DataPath{},
                                                           nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing Features",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -115,7 +115,7 @@ IFilter::VersionType KeepRemoveRankedFeaturesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer KeepRemoveRankedFeaturesFilter::clone() const
+IFilter::UniquePointerType KeepRemoveRankedFeaturesFilter::clone() const
 {
   return std::make_unique<KeepRemoveRankedFeaturesFilter>();
 }

@@ -64,9 +64,9 @@ const ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
  *        When @p transpose is requested, the matrix must be a pure rotation
  *        (|1 - det| <= 1e-4) or -35852 is returned (mirrors ITK -5002).
  */
-Result<ImageRotationUtilities::Matrix4fR> BuildTransformMatrix(const mhd::MetaImageMetadata& md, bool transpose)
+Result<ImageRotationUtilities::Matrix4fRType> BuildTransformMatrix(const mhd::MetaImageMetadata& md, bool transpose)
 {
-  ImageRotationUtilities::Matrix4fR mat;
+  ImageRotationUtilities::Matrix4fRType mat;
   mat.fill(0.0f);
   mat(3, 3) = 1.0f;
 
@@ -112,7 +112,7 @@ Result<ImageRotationUtilities::Matrix4fR> BuildTransformMatrix(const mhd::MetaIm
   {
     if(std::abs(1.0f - det) > 0.0001f)
     {
-      return MakeErrorResult<ImageRotationUtilities::Matrix4fR>(
+      return MakeErrorResult<ImageRotationUtilities::Matrix4fRType>(
           -35852, fmt::format("Transformation Matrix is NOT a pure rotation transform (determinant = {}). A pure transpose will not work; de-select 'Transpose Stored Transformation Matrix'.", det));
     }
     mat.transposeInPlace();
@@ -121,13 +121,13 @@ Result<ImageRotationUtilities::Matrix4fR> BuildTransformMatrix(const mhd::MetaIm
 }
 
 // Convert a 4x4 Matrix4fR to the DynamicTable value ApplyTransformationToGeometry expects.
-DynamicTableParameter::ValueType MatrixToTable(const ImageRotationUtilities::Matrix4fR& m)
+DynamicTableParameter::ValueType MatrixToTable(const ImageRotationUtilities::Matrix4fRType& m)
 {
   return DynamicTableInfo::TableDataType{{m(0, 0), m(0, 1), m(0, 2), m(0, 3)}, {m(1, 0), m(1, 1), m(1, 2), m(1, 3)}, {m(2, 0), m(2, 1), m(2, 2), m(2, 3)}, {m(3, 0), m(3, 1), m(3, 2), m(3, 3)}};
 }
 
 // Create transformation input values for the manual-matrix path.
-ApplyTransformationToGeometryInputValues MakeTransformationInputValues(const DataPath& imageGeomPath, const std::string& cellDataName, const ImageRotationUtilities::Matrix4fR& mat,
+ApplyTransformationToGeometryInputValues MakeTransformationInputValues(const DataPath& imageGeomPath, const std::string& cellDataName, const ImageRotationUtilities::Matrix4fRType& mat,
                                                                        const std::array<float32, 3>& centerOfRotation, ChoicesParameter::ValueType interpolationType)
 {
   ApplyTransformationToGeometryInputValues inputValues;
@@ -255,7 +255,7 @@ IFilter::VersionType ReadMhaFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadMhaFileFilter::clone() const
+IFilter::UniquePointerType ReadMhaFileFilter::clone() const
 {
   return std::make_unique<ReadMhaFileFilter>();
 }
@@ -359,7 +359,7 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
     {
       return {.outputActions = ConvertResultTo<OutputActions>(ConvertResult(std::move(matrixResult)), {}), .outputValues = std::move(preflightUpdatedValues)};
     }
-    const ImageRotationUtilities::Matrix4fR mat = matrixResult.value();
+    const ImageRotationUtilities::Matrix4fRType mat = matrixResult.value();
     preflightUpdatedValues.push_back({"Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(mat)});
 
     if(pSaveTransformation)
@@ -464,7 +464,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   {
     return ConvertResult(std::move(matrixResult));
   }
-  const ImageRotationUtilities::Matrix4fR mat = matrixResult.value();
+  const ImageRotationUtilities::Matrix4fRType mat = matrixResult.value();
 
   if(pSaveTransformation)
   {

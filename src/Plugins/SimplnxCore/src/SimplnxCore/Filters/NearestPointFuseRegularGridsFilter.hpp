@@ -24,12 +24,12 @@ public:
   NearestPointFuseRegularGridsFilter& operator=(NearestPointFuseRegularGridsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ReferenceGeometryPath_Key = "input_reference_image_geometry__path";
-  static constexpr StringLiteral k_SamplingGeometryPath_Key = "input_sampling_image_geometry_path";
-  static constexpr StringLiteral k_ReferenceCellAttributeMatrixPath_Key = "reference_cell_attribute_matrix_path";
-  static constexpr StringLiteral k_SamplingCellAttributeMatrixPath_Key = "sampling_cell_attribute_matrix_path";
-  static constexpr StringLiteral k_UseFill_Key = "use_fill";
-  static constexpr StringLiteral k_FillValue_Key = "fill_value";
+  static constexpr StringLiteralType k_ReferenceGeometryPath_Key = "input_reference_image_geometry__path";
+  static constexpr StringLiteralType k_SamplingGeometryPath_Key = "input_sampling_image_geometry_path";
+  static constexpr StringLiteralType k_ReferenceCellAttributeMatrixPath_Key = "reference_cell_attribute_matrix_path";
+  static constexpr StringLiteralType k_SamplingCellAttributeMatrixPath_Key = "sampling_cell_attribute_matrix_path";
+  static constexpr StringLiteralType k_UseFill_Key = "use_fill";
+  static constexpr StringLiteralType k_FillValue_Key = "fill_value";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -86,7 +86,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

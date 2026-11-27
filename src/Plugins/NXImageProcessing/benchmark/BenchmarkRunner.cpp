@@ -69,7 +69,7 @@ Result<DataPath> PrepareBenchmarkInput(DataStructure& dataStructure, const ip_be
   context.inputArrayName = inputArrayName;
   context.targetVoxels = targetVoxels;
   context.minZSlices = minZSlices;
-  context.force2D = force2D;
+  context.force_2d = force2D;
   context.storeMode = storeMode;
 
   if(spec.prepareInput)
@@ -91,7 +91,7 @@ std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataSt
                                 const ip_bench::BenchmarkFilterSpec& spec, const DataPath& geom, const DataPath& input, const std::string& outName, int warmup, int repeats,
                                 const std::optional<uint32>& projectionAxis, std::string& note)
 {
-  IFilter::UniquePointer filter = filterList->createFilter(uuid);
+  IFilter::UniquePointerType filter = filterList->createFilter(uuid);
   if(filter == nullptr)
   {
     note = fmt::format("could not create filter {}", uuid.str());
@@ -367,7 +367,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   DataPath inputPath;
   {
     const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceInCore);
-    Result<DataPath> r = PrepareBenchmarkInput(dsInCore, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force2D, DataStorageMode::ForceInCore);
+    Result<DataPath> r = PrepareBenchmarkInput(dsInCore, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force_2d, DataStorageMode::ForceInCore);
     if(r.invalid())
     {
       addNote("in-core input build failed: " + FirstErrorMessage(r.errors()));
@@ -405,7 +405,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
     bool built = false;
     {
       const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.oocThreshold);
-      Result<DataPath> r = PrepareBenchmarkInput(dsOoc, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force2D, DataStorageMode::ForceOutOfCore);
+      Result<DataPath> r = PrepareBenchmarkInput(dsOoc, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force_2d, DataStorageMode::ForceOutOfCore);
       if(r.invalid())
       {
         addNote("ooc input build failed: " + FirstErrorMessage(r.errors()));

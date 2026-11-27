@@ -535,16 +535,16 @@ inline Result<OutputActions> ValidateWatershedFitsInMemory(DataType inputType, u
   // "available" figures a user sees share a basis (and available bytes are not under-counted by the ~7% GiB<->GB gap).
   constexpr double k_BytesPerGiB = 1024.0 * 1024.0 * 1024.0;
   const double workingSetGB = static_cast<double>(workingSetBytes) / k_BytesPerGiB;
-  const nx::core::Memory::SystemMemoryInfo mem = nx::core::Memory::GetSystemMemoryInfo();
+  const nx::core::memory_utilities::SystemMemoryInfo mem = nx::core::memory_utilities::GetSystemMemoryInfo();
   // Only apply the hard ERROR when the OS memory query succeeded. If it failed (GetSystemMemoryInfo returns a
   // zero-initialized struct), treat available RAM as UNKNOWN and do NOT block -- rejecting on a "~0.0 GB available"
   // reading would hard-fail every run (even a 2x2x2) on a container where /proc/meminfo isn't readable or
   // GlobalMemoryStatusEx fails. The Task-1 engine's std::bad_alloc backstop still catches a genuine over-allocation at
   // execute time. Crucially, do NOT early-return here on query-failure: the OOC warning below is a pure numeric
   // estimate that needs no query, and must still be emitted.
-  if(mem.totalGB > 0.0)
+  if(mem.total_gb > 0.0)
   {
-    const double availableGB = std::max(0.0, mem.totalGB - mem.usedGB);
+    const double availableGB = std::max(0.0, mem.total_gb - mem.used_gb);
     const auto availableBytes = static_cast<uint64>(availableGB * k_BytesPerGiB);
     // Require the working set to fit with headroom (the FAH front + allocator overhead + other pipeline arrays).
     const uint64 budget = static_cast<uint64>(static_cast<double>(availableBytes) * 0.80);

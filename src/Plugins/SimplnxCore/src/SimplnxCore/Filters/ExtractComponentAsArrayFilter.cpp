@@ -54,7 +54,7 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_CompNumber_Key, "Component Index to Extract", "The index of the component in each tuple to be removed", 0));
+  params.insert(std::make_unique<Int32ParameterType>(k_CompNumber_Key, "Component Index to Extract", "The index of the component in each tuple to be removed", 0));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_MoveComponentsToNewArray_Key, "Move Extracted Components to New Array", "If true the extracted components will be placed in a new array", false));
   params.insert(std::make_unique<BoolParameter>(k_RemoveComponentsFromArray_Key, "Remove Extracted Components from Old Array", "If true the extracted components will be deleted", false));
@@ -79,7 +79,7 @@ IFilter::VersionType ExtractComponentAsArrayFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractComponentAsArrayFilter::clone() const
+IFilter::UniquePointerType ExtractComponentAsArrayFilter::clone() const
 {
   return std::make_unique<ExtractComponentAsArrayFilter>();
 }
@@ -167,11 +167,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CompNumberKey = "CompNumber";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_NewArrayArrayNameKey = "NewArrayArrayName";
-constexpr StringLiteral k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
-constexpr StringLiteral k_SaveRemovedComponentKey = "SaveRemovedComponent";
+constexpr StringLiteralType k_CompNumberKey = "CompNumber";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_NewArrayArrayNameKey = "NewArrayArrayName";
+constexpr StringLiteralType k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
+constexpr StringLiteralType k_SaveRemovedComponentKey = "SaveRemovedComponent";
 } // namespace simpl
 } // namespace
 
@@ -181,14 +181,14 @@ Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_CompNumberKey, k_CompNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewArrayArrayNameKey, k_NewArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_CompNumberKey, k_CompNumber_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewArrayArrayNameKey, k_NewArrayName_Key));
 
   if(json.contains(simpl::k_ReducedArrayArrayNameKey.str()))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ReducedArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_SaveRemovedComponentKey, "@SIMPLNX_PARAMETER_KEY@"));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ReducedArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_SaveRemovedComponentKey, "@SIMPLNX_PARAMETER_KEY@"));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

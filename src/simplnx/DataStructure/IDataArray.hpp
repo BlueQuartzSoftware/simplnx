@@ -12,7 +12,7 @@ namespace nx::core
 class SIMPLNX_EXPORT IDataArray : public IArray
 {
 public:
-  static constexpr StringLiteral k_TypeName = "IDataArray";
+  static constexpr StringLiteralType k_TypeName = "IDataArray";
 
   ~IDataArray() override = default;
 

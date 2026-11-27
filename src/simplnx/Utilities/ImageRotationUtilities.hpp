@@ -52,7 +52,7 @@ using Matrix3fR = Eigen::Matrix<float32, 3, 3, Eigen::RowMajor>;
  * @typedef Matrix4fR
  * @brief Defines a row-major 4 by 4 float matrix.
  */
-using Matrix4fR = Eigen::Matrix<float32, 4, 4, Eigen::RowMajor>;
+using Matrix4fRType = Eigen::Matrix<float32, 4, 4, Eigen::RowMajor>;
 
 /**
  * @typedef Vector3i64
@@ -96,21 +96,21 @@ struct RotateArgs
  * @param transform Specifies the matrix.
  * @return Four signed fixed-point rows.
  */
-SIMPLNX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transform);
+SIMPLNX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fRType& transform);
 
 /**
  * @brief Copies 16 stored values to a row-major transformation matrix.
  * @param precomputed Provides at least 16 float values.
  * @return Copied matrix.
  */
-SIMPLNX_EXPORT Matrix4fR CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed);
+SIMPLNX_EXPORT Matrix4fRType CopyPrecomputedToTransformationMatrix(const AbstractDataStore<float32>& precomputed);
 
 /**
  * @brief Copies a four-by-four dynamic table to a transformation matrix.
  * @param tableData Provides four rows with four values each.
  * @return Copied matrix.
  */
-SIMPLNX_EXPORT Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData);
+SIMPLNX_EXPORT Matrix4fRType GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData);
 
 /**
  * @brief Creates an axis-angle rotation matrix.
@@ -118,21 +118,21 @@ SIMPLNX_EXPORT Matrix4fR GenerateManualTransformationMatrix(const DynamicTablePa
  * @pre ValidateRotationAxisAngle(pRotationValue, ...).valid().
  * @return Homogeneous rotation matrix, or sixteen quiet NaNs when the precondition fails.
  */
-SIMPLNX_EXPORT Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue);
+SIMPLNX_EXPORT Matrix4fRType GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue);
 
 /**
  * @brief Creates a translation matrix.
  * @param pTranslationValue Provides XYZ translation.
  * @return Homogeneous translation matrix.
  */
-SIMPLNX_EXPORT Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue);
+SIMPLNX_EXPORT Matrix4fRType GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue);
 
 /**
  * @brief Creates an axis-aligned scale matrix.
  * @param pScaleValue Provides XYZ scale factors.
  * @return Homogeneous scale matrix.
  */
-SIMPLNX_EXPORT Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue);
+SIMPLNX_EXPORT Matrix4fRType GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue);
 
 /**
  * @brief Transforms a bounding box and calculates axis bounds.
@@ -140,7 +140,7 @@ SIMPLNX_EXPORT Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Pa
  * @param transformationMatrix Specifies the transformation.
  * @return X, Y, and Z minimum and maximum coordinates.
  */
-SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fR& transformationMatrix);
+SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, const Matrix4fRType& transformationMatrix);
 
 /**
  * @brief Transforms ImageGeom bounds and calculates axis bounds.
@@ -148,7 +148,7 @@ SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBo
  * @param transformationMatrix Specifies the transformation.
  * @return X, Y, and Z minimum and maximum coordinates.
  */
-SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix);
+SIMPLNX_EXPORT FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fRType& transformationMatrix);
 
 /**
  * @brief Calculates the cosine between two vectors.
@@ -185,7 +185,7 @@ SIMPLNX_EXPORT float32 DetermineSpacing(const FloatVec3& spacing, const Eigen::V
  * @param transformationMatrix Specifies rotation, scale, and translation.
  * @return Rotation arguments for source and output geometry.
  */
-SIMPLNX_EXPORT ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& transformationMatrix);
+SIMPLNX_EXPORT ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fRType& transformationMatrix);
 
 /**
  * @brief Reads one source component after clamping XYZ indexes.
@@ -668,7 +668,7 @@ public:
    * @param transformationMatrix Maps source coordinates to output coordinates.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs rotateArgs, Matrix4fR transformationMatrix, FilterProgressCallback* filterCallback)
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs rotateArgs, Matrix4fRType transformationMatrix, FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(std::move(rotateArgs))
@@ -798,7 +798,7 @@ public:
     const bool usesOutOfCoreStore = IsOutOfCore(*m_SourceArray) || IsOutOfCore(*m_TargetArray);
     const bool useBoundedPageCache = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
 
-    Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
+    Matrix4fRType inverseTransform = m_TransformationMatrix.inverse();
 
     // Keep one output Z slice in local memory.
     auto outSliceBuf = std::make_unique<T[]>(outSliceSize * numComps);
@@ -1003,7 +1003,7 @@ private:
   const IDataArray* m_SourceArray;
   IDataArray* m_TargetArray;
   ImageRotationUtilities::RotateArgs m_Params;
-  Matrix4fR m_TransformationMatrix;
+  Matrix4fRType m_TransformationMatrix;
   FilterProgressCallback* m_FilterCallback = nullptr;
 };
 
@@ -1028,7 +1028,7 @@ public:
    * @param sliceBySlice Preserves the destination Z index when true.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs args, const Matrix4fRType& transformationMatrix, bool sliceBySlice,
                                          FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
@@ -1098,7 +1098,7 @@ public:
     const bool usesOutOfCoreStore = IsOutOfCore(*m_SourceArray) || IsOutOfCore(*m_TargetArray);
     const bool useBoundedPageCache = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
 
-    Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
+    Matrix4fRType inverseTransform = m_TransformationMatrix.inverse();
 
     // Keep one output Z slice in local memory.
     auto outSliceBuf = std::make_unique<T[]>(outSliceSize * numComps);
@@ -1279,7 +1279,7 @@ private:
   const IDataArray* m_SourceArray;
   IDataArray* m_TargetArray;
   ImageRotationUtilities::RotateArgs m_Params;
-  const Matrix4fR& m_TransformationMatrix;
+  const Matrix4fRType& m_TransformationMatrix;
   bool m_SliceBySlice = false;
   FilterProgressCallback* m_FilterCallback = nullptr;
 };
@@ -1300,7 +1300,7 @@ public:
    * @param transformationMatrix Specifies the homogeneous transformation.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
+  ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fRType& transformationMatrix, FilterProgressCallback* filterCallback)
   : m_TransformationMatrix(transformationMatrix)
   , m_Vertices(verticesPtr)
   , m_FilterCallback(filterCallback)
@@ -1366,7 +1366,7 @@ public:
   }
 
 private:
-  const Matrix4fR& m_TransformationMatrix;
+  const Matrix4fRType& m_TransformationMatrix;
   IGeometry::SharedVertexList& m_Vertices;
   FilterProgressCallback* m_FilterCallback = nullptr;
 };

@@ -54,8 +54,8 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Triangle Geometry", "The input Triangle Geometry to compute the curvature values", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insert(std::make_unique<Int32Parameter>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "The number of ring neighbors to use", 1));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
+  params.insert(std::make_unique<Int32ParameterType>(k_NeighborhoodRing_Key, "Neighborhood Ring Count", "The number of ring neighbors to use", 1));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputePrincipalDirection_Key, "Compute Principal Direction Vectors", "Compute the Principal Direction Vectors", true));
 
@@ -70,13 +70,13 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FaceAttribMatrixPath_Key, "Face Attribute Matrix", "The AttributeMatrix that holds the triangle face data.", DataPath()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIdsPath_Key, "Feature Face Ids", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroidsPath_Key, "Face Centroids", "The DataPath to the 'Face Centroids' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1Path_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values",
@@ -112,7 +112,7 @@ IFilter::VersionType FeatureFaceCurvatureFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FeatureFaceCurvatureFilter::clone() const
+IFilter::UniquePointerType FeatureFaceCurvatureFilter::clone() const
 {
   return std::make_unique<FeatureFaceCurvatureFilter>();
 }

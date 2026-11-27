@@ -14,12 +14,12 @@ class SIMPLNX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
-  using AllowedTypes = std::set<IArray::ArrayType>;
+  using AllowedTypeSetType = std::set<IArray::ArrayType>;
   using AllowedDataTypes = nx::core::DataTypeSetType;
   using AllowedComponentShapes = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes, AllowedDataTypes allowedDataTypes,
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes, AllowedDataTypes allowedDataTypes,
                                AllowedComponentShapes requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
@@ -45,7 +45,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -71,7 +71,7 @@ public:
    * @brief Returns the set of allowed IArray types. An empty set means all are allowed.
    * @return
    */
-  AllowedTypes allowedTypes() const;
+  AllowedTypeSetType allowedTypes() const;
 
   /**
    * @brief Returns the set of allowed DataTypes. An empty set means all are allowed.
@@ -127,12 +127,12 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypes m_AllowedTypes;
+  AllowedTypeSetType m_AllowedTypes;
   AllowedDataTypes m_AllowedDataTypes;
   AllowedComponentShapes m_RequiredComponentShapes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT MultiDataArraySelectionFilterParameterConverter
 {
@@ -141,7 +141,7 @@ struct SIMPLNX_EXPORT MultiDataArraySelectionFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::MultiArraySelectionParameter, "d11e0bd8-f227-4fd1-b618-b6f16b259fc8");

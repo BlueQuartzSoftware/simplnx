@@ -59,9 +59,9 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
-static_assert(std::is_same_v<hid_t, nx::core::HDF5::IdType>, "H5::IdType must be the same type as hid_t");
-static_assert(std::is_same_v<herr_t, nx::core::HDF5::ErrorType>, "H5::ErrorType must be the same type as herr_t");
-static_assert(std::is_same_v<hsize_t, nx::core::HDF5::SizeType>, "H5::SizeType must be the same type as hsize_t");
+static_assert(std::is_same_v<hid_t, nx::core::hdf5::IdType>, "H5::IdType must be the same type as hid_t");
+static_assert(std::is_same_v<herr_t, nx::core::hdf5::ErrorType>, "H5::ErrorType must be the same type as herr_t");
+static_assert(std::is_same_v<hsize_t, nx::core::hdf5::SizeType>, "H5::SizeType must be the same type as hsize_t");
 
 namespace
 {
@@ -121,7 +121,7 @@ public:
    */
   herr_t close()
   {
-    std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
     const herr_t status = H5Tclose(m_Id);
     if(status >= 0)
     {
@@ -140,7 +140,7 @@ private:
  */
 int64 CountHdf5DatatypeIds()
 {
-  std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
   return static_cast<int64>(H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_DATATYPE));
 }
 
@@ -150,7 +150,7 @@ int64 CountHdf5DatatypeIds()
  */
 int64 CountHdf5DatasetIds()
 {
-  std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
   return static_cast<int64>(H5Fget_obj_count(H5F_OBJ_ALL, H5F_OBJ_DATASET));
 }
 
@@ -161,14 +161,14 @@ int64 CountHdf5DatasetIds()
  */
 bool IsHdf5IdValid(hid_t id)
 {
-  std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
   return H5Iis_valid(id) > 0;
 }
 
 namespace constants
 {
 const fs::path k_DataDir = "test/data";
-const StringLiteral k_LegacyFilepath = "LegacyData.dream3d";
+const StringLiteralType k_LegacyFilepath = "LegacyData.dream3d";
 const fs::path k_ComplexH5File = "new.h5";
 } // namespace constants
 
@@ -700,9 +700,9 @@ void CheckNodeGeomData(const DataStructure& dataStructure, const NodeBasedGeomDa
 template <class H5ClassT>
 H5ClassT CreateTempObject()
 {
-  if constexpr(std::is_same_v<H5ClassT, HDF5::FileIO>)
+  if constexpr(std::is_same_v<H5ClassT, hdf5::FileIO>)
   {
-    return HDF5::FileIO();
+    return hdf5::FileIO();
   }
   else
   {
@@ -745,7 +745,7 @@ TEST_CASE("Read Legacy DREAM3D-NX Data")
   fs::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   {
-    Result<DataStructure> result = DREAM3D::LoadDataStructureMetadata(filepath);
+    Result<DataStructure> result = dream3d::LoadDataStructureMetadata(filepath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     DataStructure dataStructure = result.value();
 
@@ -811,16 +811,16 @@ TEST_CASE("ImageGeometryIO")
   std::string filePathString = filePath.string();
 
   {
-    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
+    auto fileWriter = nx::core::hdf5::FileIO::WriteFile(filePath);
     REQUIRE(fileWriter.isValid());
 
-    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(originalDataStructure, fileWriter);
+    Result<> writeResult = hdf5::DataStructureWriter::WriteFile(originalDataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   {
-    auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
-    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    auto fileReader = nx::core::hdf5::FileIO::ReadFile(filePath);
+    auto readResult = hdf5::DataStructureReader::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure newDataStructure = std::move(readResult.value());
 
@@ -851,7 +851,7 @@ TEST_CASE("HDF5 ObjectIO: Invalid object reads recover gracefully")
 {
   auto app = Application::GetOrCreateInstance();
 
-  nx::core::HDF5::GroupIO invalidGroup;
+  nx::core::hdf5::GroupIO invalidGroup;
   REQUIRE_FALSE(invalidGroup.isValid());
 
   // getName() must not throw on an empty/invalid object.
@@ -891,19 +891,19 @@ TEST_CASE("Node Based Geometry IO")
   {
     DataStructure dataStructure = CreateNodeBasedGeometries();
     nodeData = GetNodeGeomData(dataStructure);
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(filePath);
     REQUIRE(fileWriter.isValid());
 
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 
   // Read HDF5 file
   {
-    auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
+    auto fileReader = nx::core::hdf5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
 
-    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    auto readResult = hdf5::DataStructureReader::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
@@ -932,20 +932,20 @@ TEST_CASE("NeighborList IO")
   {
     DataStructure dataStructure;
     CreateNeighborList(dataStructure);
-    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
+    auto fileWriter = nx::core::hdf5::FileIO::WriteFile(filePath);
     REQUIRE(fileWriter.isValid());
 
-    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    Result<> writeResult = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   // Read HDF5 file
   {
-    auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
+    auto fileReader = nx::core::hdf5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
 
     herr_t err = 0;
-    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    auto readResult = hdf5::DataStructureReader::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
@@ -976,19 +976,19 @@ TEST_CASE("DataArray<bool> IO")
   {
     DataStructure dataStructure;
     CreateArrayTypes(dataStructure);
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(filePath);
     REQUIRE(fileWriter.isValid());
 
-    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    Result<> writeResult = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   // Read HDF5 file
   {
-    auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
+    auto fileReader = nx::core::hdf5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
 
-    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    auto readResult = hdf5::DataStructureReader::ReadFile(fileReader);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
@@ -1017,10 +1017,10 @@ TEST_CASE("DataArray<bool> IO")
 
   // Read HDF5 file in preflight mode to make sure StringArrays import correctly
   {
-    auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
+    auto fileReader = nx::core::hdf5::FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
 
-    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader, true);
+    auto readResult = hdf5::DataStructureReader::ReadFile(fileReader, true);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     DataStructure dataStructure = std::move(readResult.value());
 
@@ -1057,7 +1057,7 @@ TEST_CASE("xdmf")
     item = intDistribution(generator);
   }
   auto* dataPtr = DataArray<int32>::Create(dataStructure, "Data", std::move(vertexAssociatedData), vertexDataPtr->getId());
-  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
+  Result<> result = dream3d::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -1065,64 +1065,64 @@ TEST_CASE("xdmf")
 
 TEST_CASE("H5 Utilities")
 {
-  REQUIRE_THROWS(nx::core::HDF5::GetNameFromBuffer(""));
-  REQUIRE_THROWS(nx::core::HDF5::GetNameFromBuffer("/Group/"));
-  std::string objectName = nx::core::HDF5::GetNameFromBuffer("/");
+  REQUIRE_THROWS(nx::core::hdf5::GetNameFromBuffer(""));
+  REQUIRE_THROWS(nx::core::hdf5::GetNameFromBuffer("/Group/"));
+  std::string objectName = nx::core::hdf5::GetNameFromBuffer("/");
   REQUIRE(objectName == "/");
-  objectName = nx::core::HDF5::GetNameFromBuffer("/Group/Geometry/Data");
+  objectName = nx::core::hdf5::GetNameFromBuffer("/Group/Geometry/Data");
   REQUIRE(objectName == "Data");
-  objectName = nx::core::HDF5::GetNameFromBuffer("Data");
+  objectName = nx::core::hdf5::GetNameFromBuffer("Data");
   REQUIRE(objectName == "Data");
-  objectName = nx::core::HDF5::GetNameFromBuffer("/Data");
+  objectName = nx::core::hdf5::GetNameFromBuffer("/Data");
   REQUIRE(objectName == "Data");
 }
 
 TEST_CASE("HDF5ImplicitCopyReaderTest")
 {
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::GroupIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::DatasetIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::FileIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::GroupIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::DatasetIO>);
   fs::path filePath = GetDataDir() / "HDF5ImplicitCopyReaderTest.dream3d";
   {
     DataStructure dataStructure = GetTestDataStructure();
 
-    Result<> writeFileResult = DREAM3D::WriteFile(filePath, dataStructure);
+    Result<> writeFileResult = dream3d::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
-  auto fileReader = HDF5::FileIO::ReadFile(filePath);
-  HDF5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileReader), "HDF5::FileIO");
+  auto fileReader = hdf5::FileIO::ReadFile(filePath);
+  hdf5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileReader), "HDF5::FileIO");
 
-  HDF5::GroupIO groupReader = newFileIO.openGroup("DataStructure");
-  HDF5::GroupIO newGroupIO = TestH5ImplicitCopy(std::move(groupReader), "HDF5::GroupIO");
+  hdf5::GroupIO groupReader = newFileIO.openGroup("DataStructure");
+  hdf5::GroupIO newGroupIO = TestH5ImplicitCopy(std::move(groupReader), "HDF5::GroupIO");
 
-  HDF5::GroupIO groupReaderIntermediate = newGroupIO.openGroup("Geometry");
+  hdf5::GroupIO groupReaderIntermediate = newGroupIO.openGroup("Geometry");
   REQUIRE(groupReaderIntermediate.isValid());
 
-  HDF5::DatasetIO datasetReader = groupReaderIntermediate.openDataset("DataArray");
+  hdf5::DatasetIO datasetReader = groupReaderIntermediate.openDataset("DataArray");
   REQUIRE(datasetReader.getId() > 0);
   TestH5ImplicitCopy(std::move(datasetReader), "HDF5::DatasetIO");
 }
 
 TEST_CASE("HDF5ImplicitCopyWriterTest")
 {
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::GroupIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::DatasetIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::FileIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::GroupIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::DatasetIO>);
 
   fs::path outputPath = GetDataDir() / "HDF5ImplicitCopyWriterTest.h5";
   fs::remove(outputPath);
 
-  auto fileWriter = HDF5::FileIO::WriteFile(outputPath);
-  HDF5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileWriter), "HDF5::FileIO");
+  auto fileWriter = hdf5::FileIO::WriteFile(outputPath);
+  hdf5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileWriter), "HDF5::FileIO");
 
-  HDF5::GroupIO groupWriter = newFileIO.createGroup("foo");
+  hdf5::GroupIO groupWriter = newFileIO.createGroup("foo");
   TestH5ImplicitCopy(std::move(groupWriter), "HDF5::GroupIO");
 
-  HDF5::DatasetIO datasetWriter = newFileIO.createDataset("bar");
+  hdf5::DatasetIO datasetWriter = newFileIO.createDataset("bar");
   std::array<int32, 5> data = {1, 2, 3, 4, 5};
-  HDF5::DatasetIO::DimsType dims = {data.size()};
+  hdf5::DatasetIO::DimsType dims = {data.size()};
   Result<> datasetResult = datasetWriter.writeSpan<int32>(dims, nonstd::span<int32>(data));
   SIMPLNX_RESULT_REQUIRE_VALID(datasetResult);
   TestH5ImplicitCopy(std::move(datasetWriter), "HDF5::DatasetIO");
@@ -1130,45 +1130,45 @@ TEST_CASE("HDF5ImplicitCopyWriterTest")
 
 TEST_CASE("HDF5ImplicitCopyIOTest")
 {
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::FileIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::GroupIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<HDF5::DatasetIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::FileIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::GroupIO>);
-  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<HDF5::DatasetIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::FileIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::GroupIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_constructible_v<hdf5::DatasetIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<hdf5::FileIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<hdf5::GroupIO>);
+  STATIC_REQUIRE_FALSE(std::is_copy_assignable_v<hdf5::DatasetIO>);
 
   fs::path filePath = GetDataDir() / "HDF5ImplicitCopyIOTest.dream3d";
   {
     DataStructure dataStructure = GetTestDataStructure();
 
-    Result<> writeFileResult = DREAM3D::WriteFile(filePath, dataStructure);
+    Result<> writeFileResult = dream3d::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeFileResult);
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
-  auto file1 = HDF5::FileIO::ReadFile(filePath);
-  HDF5::FileIO fileIO = std::move(file1);
-  HDF5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileIO), "HDF5::FileIO");
+  auto file1 = hdf5::FileIO::ReadFile(filePath);
+  hdf5::FileIO fileIO = std::move(file1);
+  hdf5::FileIO newFileIO = TestH5ImplicitCopy(std::move(fileIO), "HDF5::FileIO");
 
-  HDF5::GroupIO groupIO = newFileIO.openGroup("DataStructure");
-  HDF5::GroupIO newGroupIO = TestH5ImplicitCopy(std::move(groupIO), "HDF5::GroupIO");
+  hdf5::GroupIO groupIO = newFileIO.openGroup("DataStructure");
+  hdf5::GroupIO newGroupIO = TestH5ImplicitCopy(std::move(groupIO), "HDF5::GroupIO");
 
-  HDF5::GroupIO groupIOIntermediate = newGroupIO.openGroup("Geometry");
+  hdf5::GroupIO groupIOIntermediate = newGroupIO.openGroup("Geometry");
   REQUIRE(groupIOIntermediate.isValid());
 
-  HDF5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
+  hdf5::DatasetIO datasetIO = groupIOIntermediate.openDataset("DataArray");
   REQUIRE(datasetIO.getId() > 0);
   TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
 }
 
 TEST_CASE("DataStructureWriter: WriteOptions round-trip", "[DataStructureWriter][WriteOptions]")
 {
-  nx::core::HDF5::DataStructureWriter writer;
+  nx::core::hdf5::DataStructureWriter writer;
   // Default compression level is 0 (off).
   REQUIRE(writer.getWriteOptions().compressionLevel == 0);
 
-  nx::core::HDF5::DataStructureWriter::WriteOptions options;
+  nx::core::hdf5::DataStructureWriter::WriteOptions options;
   options.compressionLevel = 7;
   writer.setWriteOptions(options);
   REQUIRE(writer.getWriteOptions().compressionLevel == 7);
@@ -1187,7 +1187,7 @@ TEST_CASE("DataStructureAppend")
 
   const auto& originalArray = baseDataStructure.getDataRefAs<Int32Array>(originalArrayPath);
 
-  Result<> writeResult = DREAM3D::WriteFile(outputFilePath, baseDataStructure);
+  Result<> writeResult = dream3d::WriteFile(outputFilePath, baseDataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(inputFilePath);
@@ -1197,7 +1197,7 @@ TEST_CASE("DataStructureAppend")
   {
     REQUIRE(objectPtr != nullptr);
     DataPath path({objectPtr->getName()});
-    auto appendResult = DREAM3D::AppendFile(outputFilePath, exemplarDataStructure, path);
+    auto appendResult = dream3d::AppendFile(outputFilePath, exemplarDataStructure, path);
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
 
     DataStructure appendedDataStructure = UnitTest::LoadDataStructure(outputFilePath);
@@ -1223,15 +1223,15 @@ TEST_CASE("DataStructureAppend")
   // Failure states
 
   // empty path
-  auto appendFailureResult1 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, DataPath());
+  auto appendFailureResult1 = dream3d::AppendFile(outputFilePath, baseDataStructure, DataPath());
   SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult1);
 
   // not top level
-  auto appendFailureResult2 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, DataPath({"foo", "bar"}));
+  auto appendFailureResult2 = dream3d::AppendFile(outputFilePath, baseDataStructure, DataPath({"foo", "bar"}));
   SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult2);
 
   // target already exists
-  auto appendFailureResult3 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, originalArrayPath);
+  auto appendFailureResult3 = dream3d::AppendFile(outputFilePath, baseDataStructure, originalArrayPath);
   SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult3);
 }
 
@@ -1245,7 +1245,7 @@ TEST_CASE("DatasetIO: writeSpan uses chunked+deflate when compression level > 0"
   std::iota(payload.begin(), payload.end(), 0.0f);
 
   {
-    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(outPath);
+    auto fileWriter = nx::core::hdf5::FileIO::WriteFile(outPath);
     REQUIRE(fileWriter.isValid());
     auto group = fileWriter.createGroup("g");
     auto dataset = group.createDataset(datasetName);
@@ -1269,7 +1269,7 @@ TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "
   std::vector<float> payload(1'000'000, 3.14f);
 
   {
-    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(outPath);
+    auto fileWriter = nx::core::hdf5::FileIO::WriteFile(outPath);
     REQUIRE(fileWriter.isValid());
     auto group = fileWriter.createGroup("g");
     auto dataset = group.createDataset("d");
@@ -1293,7 +1293,7 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
   std::vector<float> payload(100, 1.0f);
 
   {
-    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(outPath);
+    auto fileWriter = nx::core::hdf5::FileIO::WriteFile(outPath);
     REQUIRE(fileWriter.isValid());
     auto group = fileWriter.createGroup("g");
     auto dataset = group.createDataset("d");
@@ -1313,7 +1313,7 @@ TEST_CASE("DatasetIO: value getters release temporary datatype handles", "[simpl
   const fs::path path = GetDataDir() / "dataset_type_getter_lifetime.h5";
   fs::create_directories(path.parent_path());
   DatatypeFixtureFile cleanup{path};
-  auto file = HDF5::FileIO::WriteFile(path);
+  auto file = hdf5::FileIO::WriteFile(path);
   REQUIRE(file.isValid());
   auto dataset = file.createDataset("values");
   const std::vector<int32> values{7, 11, 19, 23};
@@ -1346,7 +1346,7 @@ TEST_CASE("DatasetIO: value getters release temporary datatype handles", "[simpl
     REQUIRE(type.getId() >= 0);
     {
       // Getter calls lock themselves. Only direct HDF5 queries belong inside this leaf scope.
-      std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
       CHECK(H5Iis_valid(type.getId()) > 0);
       CHECK(H5Tget_class(type.getId()) == H5T_INTEGER);
       CHECK(H5Tget_size(type.getId()) == sizeof(int32));
@@ -1368,7 +1368,7 @@ TEST_CASE("DatasetIO: move assignment preserves single dataset ownership", "[sim
   REQUIRE(initialDatasetCount >= 0);
 
   {
-    auto file = HDF5::FileIO::WriteFile(path);
+    auto file = hdf5::FileIO::WriteFile(path);
     REQUIRE(file.isValid());
     {
       auto first = file.createDataset("first");
@@ -1400,7 +1400,7 @@ TEST_CASE("DatasetIO: move assignment preserves single dataset ownership", "[sim
     REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
 
     {
-      HDF5::DatasetIO destination;
+      hdf5::DatasetIO destination;
       auto source = file.openDataset("first");
       const hid_t transferredId = source.getId();
       REQUIRE(transferredId > 0);
@@ -1435,8 +1435,8 @@ TEST_CASE("DatasetIO: move assignment preserves single dataset ownership", "[sim
     REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
 
     {
-      HDF5::DatasetIO destination;
-      HDF5::DatasetIO source;
+      hdf5::DatasetIO destination;
+      hdf5::DatasetIO source;
 
       destination = std::move(source);
 
@@ -1474,7 +1474,7 @@ TEST_CASE("DatasetIO: move assignment preserves single dataset ownership", "[sim
   }
 
   REQUIRE(CountHdf5DatasetIds() == initialDatasetCount);
-  auto replacement = HDF5::FileIO::WriteFile(path);
+  auto replacement = hdf5::FileIO::WriteFile(path);
   REQUIRE(replacement.isValid());
 }
 
@@ -1639,7 +1639,7 @@ void RequireLiveConnectivity(const DataStructure& dataStructure, const INodeGeom
 
 std::vector<std::string> TopLevelNamesInFile(const fs::path& filePath, DataObject::IdType& nextId)
 {
-  auto file = HDF5::FileIO::ReadFile(filePath);
+  auto file = hdf5::FileIO::ReadFile(filePath);
   REQUIRE(file.isValid());
   auto group = file.openGroup(nx::core::Constants::k_DataStructureTag);
   REQUIRE(group.isValid());
@@ -1669,12 +1669,12 @@ TEST_CASE("DataStructureWriter: geometry connectivity is omitted and rebuilt aft
   REQUIRE(edgeBefore.incidence == k_EdgeIncidence);
   REQUIRE(edgeBefore.neighbors == k_EdgeNeighbors);
 
-  const auto saveResult = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  const auto saveResult = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(saveResult);
   RequireLiveConnectivity(dataStructure, triangles, triangleBefore);
   RequireLiveConnectivity(dataStructure, edges, edgeBefore);
 
-  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  auto readResult = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   DataStructure& reloaded = readResult.value();
   RequireNoConnectivity(reloaded, DataPath({k_ConnectivityTriangleName}));
@@ -1711,11 +1711,11 @@ TEST_CASE("DataStructureWriter: shared connectivity is omitted at every parent",
   REQUIRE(dataStructure.setAdditionalParent(triangles.getElementNeighborsId().value(), groupPtr->getId()));
   const LiveConnectivity before(dataStructure, triangles);
 
-  const auto saveResult = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  const auto saveResult = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(saveResult);
   RequireLiveConnectivity(dataStructure, triangles, before);
 
-  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  auto readResult = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   RequireNoConnectivity(readResult.value(), DataPath({k_ConnectivityTriangleName}));
   const auto* reloadedGroupPtr = readResult.value().getDataAs<DataGroup>(DataPath({"SharedGroup"}));
@@ -1728,7 +1728,7 @@ TEST_CASE("DataStructureWriter: appended geometry drops its connectivity", "[sim
   const fs::path filePath = GetDataDir() / "ConnectivityAppend.dream3d";
   DataStructure baseDataStructure;
   CreateConnectivityFixtureArray<int32>(baseDataStructure, DataPath({"foo"}), 2, 1, {7, 8});
-  const auto baseSaveResult = HDF5::DataStructureWriter::WriteFile(baseDataStructure, filePath);
+  const auto baseSaveResult = hdf5::DataStructureWriter::WriteFile(baseDataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(baseSaveResult);
 
   DataStructure dataStructure;
@@ -1737,11 +1737,11 @@ TEST_CASE("DataStructureWriter: appended geometry drops its connectivity", "[sim
   SIMPLNX_RESULT_REQUIRE_VALID(triangleSupport);
   const LiveConnectivity before(dataStructure, triangles);
 
-  const auto appendResult = HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({k_ConnectivityTriangleName}));
+  const auto appendResult = hdf5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({k_ConnectivityTriangleName}));
   SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
   RequireLiveConnectivity(dataStructure, triangles, before);
 
-  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  auto readResult = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   const DataStructure& reloaded = readResult.value();
   RequireNoConnectivity(reloaded, DataPath({k_ConnectivityTriangleName}));
@@ -1757,7 +1757,7 @@ TEST_CASE("DataStructureWriter: appended geometry drops an external connectivity
   const fs::path filePath = GetDataDir() / "ConnectivityAppendExternal.dream3d";
   DataStructure baseDataStructure;
   CreateConnectivityFixtureArray<int32>(baseDataStructure, DataPath({"foo"}), 2, 1, {7, 8});
-  const auto baseSaveResult = HDF5::DataStructureWriter::WriteFile(baseDataStructure, filePath);
+  const auto baseSaveResult = hdf5::DataStructureWriter::WriteFile(baseDataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(baseSaveResult);
 
   // The geometry, its two arrays and then the external cache take consecutive IDs. Renumbering the appended
@@ -1778,18 +1778,18 @@ TEST_CASE("DataStructureWriter: appended geometry drops an external connectivity
 
   SECTION("Appending the geometry")
   {
-    const auto appendResult = HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({k_ConnectivityTriangleName}));
+    const auto appendResult = hdf5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({k_ConnectivityTriangleName}));
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
     CHECK(triangles.getElementContainingVertId() == cacheId);
     CHECK(dataStructure.getData(cacheId) == externalCachePtr);
 
-    auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+    auto readResult = hdf5::DataStructureReader::ReadFile(filePath);
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     RequireNoConnectivity(readResult.value(), DataPath({k_ConnectivityTriangleName}));
   }
   SECTION("Appending the cache itself")
   {
-    const auto appendResult = HDF5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({"ExternalIncidence"}));
+    const auto appendResult = hdf5::DataStructureWriter::AppendFile(filePath, dataStructure, DataPath({"ExternalIncidence"}));
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
     DataObject::IdType nextIdAfter = 0;
     CHECK(TopLevelNamesInFile(filePath, nextIdAfter) == namesBefore);
@@ -1836,7 +1836,7 @@ TEST_CASE("DataStructureWriter: stale connectivity attributes are removed", "[si
   }
 
   {
-    auto file = HDF5::FileIO::WriteFile(filePath);
+    auto file = hdf5::FileIO::WriteFile(filePath);
     REQUIRE(file.isValid());
     {
       auto dataStructureGroup = file.createGroup(nx::core::Constants::k_DataStructureTag);
@@ -1846,12 +1846,12 @@ TEST_CASE("DataStructureWriter: stale connectivity attributes are removed", "[si
       const auto staleNeighborsResult = geometryGroup.writeScalarAttribute(IOConstants::k_ElementNeighborsTag, k_StaleId);
       SIMPLNX_RESULT_REQUIRE_VALID(staleNeighborsResult);
     }
-    const auto saveResult = HDF5::DataStructureWriter::WriteFile(dataStructure, file);
+    const auto saveResult = hdf5::DataStructureWriter::WriteFile(dataStructure, file);
     SIMPLNX_RESULT_REQUIRE_VALID(saveResult);
   }
 
   {
-    auto file = HDF5::FileIO::ReadFile(filePath);
+    auto file = hdf5::FileIO::ReadFile(filePath);
     REQUIRE(file.isValid());
     auto geometryGroup = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup(k_ConnectivityTriangleName);
     REQUIRE(geometryGroup.isValid());
@@ -1859,7 +1859,7 @@ TEST_CASE("DataStructureWriter: stale connectivity attributes are removed", "[si
     CHECK(geometryGroup.hasAttribute(IOConstants::k_ElementNeighborsTag) == plainArray);
   }
 
-  auto readResult = HDF5::DataStructureReader::ReadFile(filePath);
+  auto readResult = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   const DataStructure& reloaded = readResult.value();
   const auto& reloadedTriangles = reloaded.getDataRefAs<TriangleGeom>(DataPath({k_ConnectivityTriangleName}));
@@ -1880,7 +1880,7 @@ TEST_CASE("GroupIO: removeAttribute reports every HDF5 failure", "[simplnx][HDF5
 {
   const fs::path filePath = GetDataDir() / "GroupIORemoveAttribute.dream3d";
   {
-    auto file = HDF5::FileIO::WriteFile(filePath);
+    auto file = hdf5::FileIO::WriteFile(filePath);
     REQUIRE(file.isValid());
     auto group = file.createGroup("Group");
     const auto removedWrite = group.writeScalarAttribute("Removed", int32{1});
@@ -1895,7 +1895,7 @@ TEST_CASE("GroupIO: removeAttribute reports every HDF5 failure", "[simplnx][HDF5
     CHECK(group.hasAttribute("Kept"));
   }
   {
-    auto file = HDF5::FileIO::ReadFile(filePath);
+    auto file = hdf5::FileIO::ReadFile(filePath);
     REQUIRE(file.isValid());
     auto group = file.openGroup("Group");
     REQUIRE(group.isValid());
@@ -1907,7 +1907,7 @@ TEST_CASE("GroupIO: removeAttribute reports every HDF5 failure", "[simplnx][HDF5
     CHECK(group.hasAttribute("Kept"));
   }
   {
-    HDF5::GroupIO invalidGroup;
+    hdf5::GroupIO invalidGroup;
     const auto result = invalidGroup.removeAttribute("Kept");
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
@@ -1921,7 +1921,7 @@ TEST_CASE("DataStructureWriter: a dynamic list that is not geometry connectivity
   const fs::path filePath = GetDataDir() / "ConnectivityStandalone.dream3d";
   DataStructure dataStructure;
   REQUIRE(IGeometry::ElementDynamicList::Create(dataStructure, "Standalone", std::nullopt) != nullptr);
-  const auto result = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  const auto result = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -5);
@@ -1935,7 +1935,7 @@ TEST_CASE("DataStructureWriter: an edge geometry reports a failed base write", "
   auto& edges = CreateConnectivityEdges(dataStructure);
   // A child that no geometry association names is not a cache, so writing the geometry's children fails.
   REQUIRE(IGeometry::ElementDynamicList::Create(dataStructure, "Unassociated", edges.getId()) != nullptr);
-  const auto result = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  const auto result = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -5);
@@ -1950,9 +1950,9 @@ TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGe
     const CreateImageGeometryAction action(DataPath({"Stored Image"}), {2, 3, 1}, {0.0f, 0.0f, 0.0f}, {0.5f, 2.0f, 1.0f}, "Cell Data");
     const auto createResult = action.apply(dataStructure, IDataAction::Mode::Execute);
     SIMPLNX_RESULT_REQUIRE_VALID(createResult);
-    auto file = HDF5::FileIO::WriteFile(filePath);
+    auto file = hdf5::FileIO::WriteFile(filePath);
     REQUIRE(file.isValid());
-    const auto writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, file);
+    const auto writeResult = hdf5::DataStructureWriter::WriteFile(dataStructure, file);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
     auto group = file.openGroup(nx::core::Constants::k_DataStructureTag).openGroup("Stored Image");
@@ -1964,7 +1964,7 @@ TEST_CASE("ImageGeomIO rejects stored invalid spacing", "[simplnx][HDF5][ImageGe
   }
 
   const bool metadataOnly = GENERATE(false, true);
-  const auto result = HDF5::DataStructureReader::ReadFile(filePath, metadataOnly);
+  const auto result = hdf5::DataStructureReader::ReadFile(filePath, metadataOnly);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   CHECK(result.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(result.errors().front().message.find("Stored Image") != std::string::npos);
@@ -1989,11 +1989,11 @@ TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective 
     boundsPtr->setValue(1, 1.0f);
     const auto boundResult = geomPtr->setBounds(nullptr, nullptr, boundsPtr);
     SIMPLNX_RESULT_REQUIRE_VALID(boundResult);
-    const auto writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+    const auto writeResult = dream3d::WriteFile(filePath, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
     // Modify the stored dataset directly to model an invalid file from an older producer.
-    auto file = HDF5::FileIO::AppendFile(filePath);
+    auto file = hdf5::FileIO::AppendFile(filePath);
     auto dataGroup = file.openGroup(nx::core::Constants::k_DataStructureTag);
     auto dataset = dataGroup.openDataset(boundsPath.getTargetName());
     REQUIRE(dataset.getId() > 0);
@@ -2002,9 +2002,9 @@ TEST_CASE("RectGridGeomIO rejects invalid external bounds on full and selective 
     SIMPLNX_RESULT_REQUIRE_VALID(editResult);
   }
 
-  const auto metadata = HDF5::DataStructureReader::ReadFile(filePath, true);
+  const auto metadata = hdf5::DataStructureReader::ReadFile(filePath, true);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
-  const auto fullResult = HDF5::DataStructureReader::ReadFile(filePath);
+  const auto fullResult = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_INVALID(fullResult);
   CHECK(fullResult.errors().front().code == -4007);
   CHECK(fullResult.errors().front().message.find("Stored Grid") != std::string::npos);
@@ -2037,7 +2037,7 @@ TEST_CASE("RectGridGeomIO rejects invalid bounds on write across a validation bl
   boundsPtr->setValue(k_Count - 1, static_cast<float32>(k_Count - 2));
 
   const fs::path filePath = GetDataDir() / "RectGridInvalidWrite.dream3d";
-  const auto writeResult = DREAM3D::WriteFile(filePath, dataStructure);
+  const auto writeResult = dream3d::WriteFile(filePath, dataStructure);
   SIMPLNX_RESULT_REQUIRE_INVALID(writeResult);
   CHECK(writeResult.errors().front().code == -4007);
   CHECK(writeResult.errors().front().message.find("Y bounds array is not strictly monotonically increasing at index 4096") != std::string::npos);

@@ -29,9 +29,9 @@ namespace
 {
 fs::path KBaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_vertices_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-constexpr StringLiteral k_CopyTestName = "copy_test";
-constexpr StringLiteral k_DataName = "data";
-constexpr StringLiteral k_VertexListName = "SharedVertexList";
+constexpr StringLiteralType k_CopyTestName = "copy_test";
+constexpr StringLiteralType k_DataName = "data";
+constexpr StringLiteralType k_VertexListName = "SharedVertexList";
 
 const DataPath k_VertexGeomPath({"VertexGeometry"});
 const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath(Constants::k_Mask);
@@ -253,8 +253,8 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/RemoveFlaggedVerticesFilter.dream3d", unit_test::k_BinaryTestOutputDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(filePath);
+  auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

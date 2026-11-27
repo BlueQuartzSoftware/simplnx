@@ -21,7 +21,7 @@
 #endif
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 namespace fs = std::filesystem;
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
@@ -77,7 +77,7 @@ public:
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float64 misResolution, int32 phaseOfInterest, const Matrix3dR& gFixedT, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32Array& faceLabels,
+                    float64 misResolution, int32 phaseOfInterest, const Matrix3dRType& gFixedT, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32Array& faceLabels,
                     const Float64Array& faceNormals, const Float64Array& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
@@ -101,15 +101,15 @@ public:
   {
     Eigen::Vector3d g1ea = {0.0, 0.0, 0.0};
     Eigen::Vector3d g2ea = {0.0, 0.0, 0.0};
-    Matrix3dR g1s;
+    Matrix3dRType g1s;
     g1s.fill(0.0);
-    Matrix3dR g2s;
+    Matrix3dRType g2s;
     g2s.fill(0.0);
-    Matrix3dR dg;
+    Matrix3dRType dg;
     dg.fill(0.0);
-    Matrix3dR dgT;
+    Matrix3dRType dgT;
     dgT.fill(0.0);
-    Matrix3dR diffFromFixed;
+    Matrix3dRType diffFromFixed;
     diffFromFixed.fill(0.0);
 
     Eigen::Vector3d normalLab = {0.0, 0.0, 0.0};
@@ -225,7 +225,7 @@ private:
 #endif
   float64 m_MisResolution;
   int32 m_PhaseOfInterest;
-  const Matrix3dR& m_GFixedT;
+  const Matrix3dRType& m_GFixedT;
 
   LaueOpsContainerType m_OrientationOps;
   uint32 m_Crystal;
@@ -252,7 +252,7 @@ public:
 #else
                     const std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, Matrix3dR gFixedT)
+                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, Matrix3dRType gFixedT)
   : m_DistributionValues(distributionValues)
   , m_ErrorValues(errorValues)
   , m_SamplePtsX(samplePtsX)
@@ -324,7 +324,7 @@ private:
   float64 m_TotalFaceArea;
   int32 m_NumDistinctGBs;
   float64 m_BallVolume;
-  Matrix3dR m_GFixedT;
+  Matrix3dRType m_GFixedT;
 };
 
 } // namespace gbcd_metric_based
@@ -493,7 +493,7 @@ Result<> ComputeGBCDMetricBased::operator()()
   Eigen::Vector3d gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
   gFixedAxis.normalize();
   auto oMatrix = ebsdlib::AxisAngleDType(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle).toOrientationMatrix();
-  const Matrix3dR gFixedT = oMatrix.transpose().toEigenGMatrix();
+  const Matrix3dRType gFixedT = oMatrix.transpose().toEigenGMatrix();
 
   const usize numMeshTriangles = faceAreas.getNumberOfTuples();
 

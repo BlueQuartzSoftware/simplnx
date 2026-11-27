@@ -40,7 +40,7 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& iden
   return nullptr;
 }
 
-IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) const
+IFilter::UniquePointerType FilterList::createFilter(const FilterHandle& handle) const
 {
   // Core filter
   if(handle.getPluginId() == Uuid{})
@@ -62,7 +62,7 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
   return loader->getPlugin()->createFilter(handle.getFilterId());
 }
 
-IFilter::UniquePointer FilterList::createFilter(const Uuid& uuid) const
+IFilter::UniquePointerType FilterList::createFilter(const Uuid& uuid) const
 {
   auto iter = std::find_if(m_PluginMap.cbegin(), m_PluginMap.cend(), [uuid](decltype(*m_PluginMap.cbegin())& item) { return item.second->getPlugin()->containsFilterId(uuid); });
 

@@ -95,7 +95,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
   args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_RectilinearGridPath_Key, std::make_any<DataPath>(k_RectGridGeomPath));
   args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomComputed));
   args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_ImageGeomCellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
-  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{2, 3, 4}));
+  args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{2, 3, 4}));
   args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_SelectedDataArrayPaths_Key,
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{numericPath, stringPath, neighborListPath}));
 
@@ -183,12 +183,12 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
   SECTION("Resample Smaller")
   {
     exemplarImageGeomName = "ImageGeom [Smaller]";
-    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3, 5)));
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>(3, 5)));
   }
   SECTION("Resample Bigger")
   {
     exemplarImageGeomName = "ImageGeom [Bigger]";
-    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3, 20)));
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>(3, 20)));
   }
 
   // Preflight the filter and check result
@@ -222,7 +222,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: InValid Filter Execut
   SECTION("Missing Selected Arrays")
   {
     args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3, 5)));
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>(3, 5)));
   }
   SECTION("Mismatching Selected Array Tuples")
   {
@@ -230,20 +230,20 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: InValid Filter Execut
                         std::make_any<MultiArraySelectionParameter::ValueType>(
                             MultiArraySelectionParameter::ValueType{k_RectGridCellDataPath.createChildPath(k_ConfidenceIndex), k_RectGridCellDataPath.createChildPath(k_EulerAngles),
                                                                     k_RectGridCellDataPath.createChildPath(k_FeatureIds), k_RectGridCellFeatureArrayPath}));
-    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3, 5)));
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>(3, 5)));
   }
   SECTION("Invalid Cell Level Selected Array")
   {
     args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_SelectedDataArrayPaths_Key,
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{k_RectGridCellFeatureArrayPath}));
-    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>(3, 5)));
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>(3, 5)));
   }
   SECTION("Invalid Dimension Value")
   {
     args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_SelectedDataArrayPaths_Key,
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{
                             k_RectGridCellDataPath.createChildPath(k_ConfidenceIndex), k_RectGridCellDataPath.createChildPath(k_EulerAngles), k_RectGridCellDataPath.createChildPath(k_FeatureIds)}));
-    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32Parameter::ValueType>(std::vector<int32>{5, 5, -1}));
+    args.insertOrAssign(ResampleRectGridToImageGeomFilter::k_Dimensions_Key, std::make_any<VectorInt32ParameterType::ValueType>(std::vector<int32>{5, 5, -1}));
   }
 
   // Preflight the filter and check result

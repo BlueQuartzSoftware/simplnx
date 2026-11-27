@@ -7,7 +7,7 @@ namespace nx::core
 {
 class INodeGeometry2D;
 
-namespace HDF5
+namespace hdf5
 {
 class SIMPLNX_EXPORT INodeGeom2dIO : public INodeGeom1dIO
 {
@@ -36,7 +36,7 @@ protected:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  static Result<> ReadNodeGeom2dData(DataStructureReader& dataStructureReader, INodeGeometry2D& geometry, const group_reader_type& parentGroup, const std::string& geomName,
+  static Result<> ReadNodeGeom2dData(DataStructureReader& dataStructureReader, INodeGeometry2D& geometry, const GroupReaderType& parentGroup, const std::string& geomName,
                                      DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
@@ -47,7 +47,7 @@ protected:
    * @param importable
    * @return Result<>
    */
-  static Result<> WriteNodeGeom2dData(DataStructureWriter& dataStructureWriter, const INodeGeometry2D& geometry, group_writer_type& parentGroup, bool importable);
+  static Result<> WriteNodeGeom2dData(DataStructureWriter& dataStructureWriter, const INodeGeometry2D& geometry, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Finishes importing 2D node geometry data after the geometry has been created.
@@ -56,7 +56,7 @@ protected:
    * @param dataStructureGroup The HDF5 group containing the geometry data
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
+  static Result<> FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup);
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

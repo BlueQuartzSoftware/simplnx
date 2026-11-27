@@ -125,123 +125,123 @@ namespace nx::core
  */
 namespace Constants
 {
-inline constexpr StringLiteral k_DataContainer("DataContainer");
-inline constexpr StringLiteral k_CellData("CellData");
-inline constexpr StringLiteral k_CellDataWithSpaces("Cell Data");
-inline constexpr StringLiteral k_GrainData("GrainData");
-inline constexpr StringLiteral k_GrainDataWithSpaces("Grain Data");
-inline constexpr StringLiteral k_FeatureData("FeatureData");
-inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
-inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
-inline constexpr StringLiteral k_CellEnsembleDataWithSpaces("Cell Ensemble Data");
+inline constexpr StringLiteralType k_DataContainer("DataContainer");
+inline constexpr StringLiteralType k_CellData("CellData");
+inline constexpr StringLiteralType k_CellDataWithSpaces("Cell Data");
+inline constexpr StringLiteralType k_GrainData("GrainData");
+inline constexpr StringLiteralType k_GrainDataWithSpaces("Grain Data");
+inline constexpr StringLiteralType k_FeatureData("FeatureData");
+inline constexpr StringLiteralType k_CellFeatureData("CellFeatureData");
+inline constexpr StringLiteralType k_CellEnsembleData("CellEnsembleData");
+inline constexpr StringLiteralType k_CellEnsembleDataWithSpaces("Cell Ensemble Data");
 
-inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
-inline constexpr StringLiteral k_VertexDataContainerName("VertexDataContainer");
-inline constexpr StringLiteral k_PointCloudContainerName("Point Cloud");
-inline constexpr StringLiteral k_FaceData("FaceData");
-inline constexpr StringLiteral k_FaceDataWithSpaces("Face Data");
-inline constexpr StringLiteral k_FaceFeatureData("FaceFeatureData");
-inline constexpr StringLiteral k_VertexData("VertexData");
-inline constexpr StringLiteral k_VertexDataWithSpaces("Vertex Data");
-inline constexpr StringLiteral k_Edge_Data("Edge Data");
-inline constexpr StringLiteral k_GBCD_Name("GBCD");
+inline constexpr StringLiteralType k_TriangleDataContainerName("TriangleDataContainer");
+inline constexpr StringLiteralType k_VertexDataContainerName("VertexDataContainer");
+inline constexpr StringLiteralType k_PointCloudContainerName("Point Cloud");
+inline constexpr StringLiteralType k_FaceData("FaceData");
+inline constexpr StringLiteralType k_FaceDataWithSpaces("Face Data");
+inline constexpr StringLiteralType k_FaceFeatureData("FaceFeatureData");
+inline constexpr StringLiteralType k_VertexData("VertexData");
+inline constexpr StringLiteralType k_VertexDataWithSpaces("Vertex Data");
+inline constexpr StringLiteralType k_EdgeDataWithSpaces("Edge Data");
+inline constexpr StringLiteralType k_GBCD_Name("GBCD");
 
-inline constexpr StringLiteral k_Centroids("Centroids");
-inline constexpr StringLiteral k_EnsembleAttributeMatrix("CellEnsembleData");
-inline constexpr StringLiteral k_ExemplarDataContainer("Exemplar Data");
-inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
-inline constexpr StringLiteral k_Fit("Fit");
-inline constexpr StringLiteral k_SEMSignal("SEM Signal");
+inline constexpr StringLiteralType k_Centroids("Centroids");
+inline constexpr StringLiteralType k_EnsembleAttributeMatrix("CellEnsembleData");
+inline constexpr StringLiteralType k_ExemplarDataContainer("Exemplar Data");
+inline constexpr StringLiteralType k_CrystalStructures("CrystalStructures");
+inline constexpr StringLiteralType k_Fit("Fit");
+inline constexpr StringLiteralType k_SEMSignal("SEM Signal");
 
-inline constexpr StringLiteral k_SmallIN1002("Small IN100 2D");
-inline constexpr StringLiteral k_SmallIN100("Small IN100");
-inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
-inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
-inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
-inline constexpr StringLiteral k_ConfidenceIndexWithSpaces("Confidence Index");
-inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
-inline constexpr StringLiteral k_CalculatedShifts("Calculated Shifts");
-inline constexpr StringLiteral k_FaceLabels("FaceLabels");
-inline constexpr StringLiteral k_FaceNormals("FaceNormals");
-inline constexpr StringLiteral k_FaceAreas("FaceAreas");
+inline constexpr StringLiteralType k_SmallIN1002("Small IN100 2D");
+inline constexpr StringLiteralType k_SmallIN100("Small IN100");
+inline constexpr StringLiteralType k_EbsdScanData("EBSD Scan Data");
+inline constexpr StringLiteralType k_ImageGeometry("Image Geometry");
+inline constexpr StringLiteralType k_VertexGeometry("Vertex Geometry");
+inline constexpr StringLiteralType k_ConfidenceIndexWithSpaces("Confidence Index");
+inline constexpr StringLiteralType k_ConfidenceIndex("ConfidenceIndex");
+inline constexpr StringLiteralType k_CalculatedShifts("Calculated Shifts");
+inline constexpr StringLiteralType k_FaceLabels("FaceLabels");
+inline constexpr StringLiteralType k_FaceNormals("FaceNormals");
+inline constexpr StringLiteralType k_FaceAreas("FaceAreas");
 
-inline constexpr StringLiteral k_EulerAngles("EulerAngles");
-inline constexpr StringLiteral k_AxisAngles("AxisAngles");
-inline constexpr StringLiteral k_AvgQuats("AvgQuats");
-inline constexpr StringLiteral k_Quats("Quats");
-inline constexpr StringLiteral k_Mask("Mask");
-inline constexpr StringLiteral k_FZQuats("FZQuats");
-inline constexpr StringLiteral k_FeatureGroupName("Feature Data");
-inline constexpr StringLiteral k_ActiveName("Active");
-inline constexpr StringLiteral k_NumElements("NumElements");
-inline constexpr StringLiteral k_SlipVector("SlipVector");
-inline constexpr StringLiteral k_AvgEulerAngles("AvgEulerAngles");
-inline constexpr StringLiteral k_SurfaceFeatures("SurfaceFeatures");
-inline constexpr StringLiteral k_RectCoords("RectCoords");
-inline constexpr StringLiteral k_Omega1("Omega1");
-inline constexpr StringLiteral k_Omega2("Omega2");
-inline constexpr StringLiteral k_CentralMoments("CentralMoments");
+inline constexpr StringLiteralType k_EulerAngles("EulerAngles");
+inline constexpr StringLiteralType k_AxisAngles("AxisAngles");
+inline constexpr StringLiteralType k_AvgQuats("AvgQuats");
+inline constexpr StringLiteralType k_Quats("Quats");
+inline constexpr StringLiteralType k_Mask("Mask");
+inline constexpr StringLiteralType k_FZQuats("FZQuats");
+inline constexpr StringLiteralType k_FeatureGroupName("Feature Data");
+inline constexpr StringLiteralType k_ActiveName("Active");
+inline constexpr StringLiteralType k_NumElements("NumElements");
+inline constexpr StringLiteralType k_SlipVector("SlipVector");
+inline constexpr StringLiteralType k_AvgEulerAngles("AvgEulerAngles");
+inline constexpr StringLiteralType k_SurfaceFeatures("SurfaceFeatures");
+inline constexpr StringLiteralType k_RectCoords("RectCoords");
+inline constexpr StringLiteralType k_Omega1("Omega1");
+inline constexpr StringLiteralType k_Omega2("Omega2");
+inline constexpr StringLiteralType k_CentralMoments("CentralMoments");
 
-inline constexpr StringLiteral k_FeatureIds("FeatureIds");
-inline constexpr StringLiteral k_ImageQualityWithSpaces("Image Quality");
-inline constexpr StringLiteral k_ImageQuality("ImageQuality");
-inline constexpr StringLiteral k_Phases("Phases");
-inline constexpr StringLiteral k_Ipf_Colors("IPF Colors");
-inline constexpr StringLiteral k_IPFColors("IPFColors");
-inline constexpr StringLiteral k_PhaseData("Phase Data");
-inline constexpr StringLiteral k_LaueClass("Laue Class");
-inline constexpr StringLiteral k_SmallIn100ImageGeom("[Image Geometry]");
+inline constexpr StringLiteralType k_FeatureIds("FeatureIds");
+inline constexpr StringLiteralType k_ImageQualityWithSpaces("Image Quality");
+inline constexpr StringLiteralType k_ImageQuality("ImageQuality");
+inline constexpr StringLiteralType k_Phases("Phases");
+inline constexpr StringLiteralType k_Ipf_Colors("IPF Colors");
+inline constexpr StringLiteralType k_IPFColors("IPFColors");
+inline constexpr StringLiteralType k_PhaseData("Phase Data");
+inline constexpr StringLiteralType k_LaueClass("Laue Class");
+inline constexpr StringLiteralType k_SmallIn100ImageGeom("[Image Geometry]");
 
-inline constexpr StringLiteral k_TriangleGeometryName("[Triangle Geometry]");
-inline constexpr StringLiteral k_VertexDataGroupName("Vertex Data");
-inline constexpr StringLiteral k_NodeTypeArrayName("Node Type");
-inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
-inline constexpr StringLiteral k_FaceLabelsWithSpaces("Face Labels");
-inline constexpr StringLiteral k_NormalsLabels("Normals");
-inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
-inline constexpr StringLiteral k_VoxelIndices = "VoxelIndices";
-inline constexpr StringLiteral k_NodeType("NodeType");
-inline constexpr StringLiteral k_AlignmentAMName("Alignment Shifts Data");
-inline constexpr StringLiteral k_SlicesArrayName("Slice Indices");
-inline constexpr StringLiteral k_RelativeShiftsArrayName("Relative Shifts");
-inline constexpr StringLiteral k_CumulativeShiftsArrayName("Cumulative Shifts");
+inline constexpr StringLiteralType k_TriangleGeometryName("[Triangle Geometry]");
+inline constexpr StringLiteralType k_VertexDataGroupName("Vertex Data");
+inline constexpr StringLiteralType k_NodeTypeArrayName("Node Type");
+inline constexpr StringLiteralType k_FaceDataGroupName("Face Data");
+inline constexpr StringLiteralType k_FaceLabelsWithSpaces("Face Labels");
+inline constexpr StringLiteralType k_NormalsLabels("Normals");
+inline constexpr StringLiteralType k_TriangleAreas("Triangle Areas");
+inline constexpr StringLiteralType k_VoxelIndices = "VoxelIndices";
+inline constexpr StringLiteralType k_NodeType("NodeType");
+inline constexpr StringLiteralType k_AlignmentAMName("Alignment Shifts Data");
+inline constexpr StringLiteralType k_SlicesArrayName("Slice Indices");
+inline constexpr StringLiteralType k_RelativeShiftsArrayName("Relative Shifts");
+inline constexpr StringLiteralType k_CumulativeShiftsArrayName("Cumulative Shifts");
 
-inline constexpr StringLiteral k_LevelZero("ZERO");
-inline constexpr StringLiteral k_LevelOne("ONE");
-inline constexpr StringLiteral k_LevelTwo("TWO");
+inline constexpr StringLiteralType k_LevelZero("ZERO");
+inline constexpr StringLiteralType k_LevelOne("ONE");
+inline constexpr StringLiteralType k_LevelTwo("TWO");
 
-inline constexpr StringLiteral k_Int8DataSet("int8 DataSet");
-inline constexpr StringLiteral k_Uint8DataSet("uint8 DataSet");
+inline constexpr StringLiteralType k_Int8DataSet("int8 DataSet");
+inline constexpr StringLiteralType k_Uint8DataSet("uint8 DataSet");
 
-inline constexpr StringLiteral k_Int16DataSet("int16 DataSet");
-inline constexpr StringLiteral k_Uint16DataSet("uint16 DataSet");
+inline constexpr StringLiteralType k_Int16DataSet("int16 DataSet");
+inline constexpr StringLiteralType k_Uint16DataSet("uint16 DataSet");
 
-inline constexpr StringLiteral k_Int32DataSet("int32 DataSet");
-inline constexpr StringLiteral k_Uint32DataSet("uint32 DataSet");
+inline constexpr StringLiteralType k_Int32DataSet("int32 DataSet");
+inline constexpr StringLiteralType k_Uint32DataSet("uint32 DataSet");
 
-inline constexpr StringLiteral k_Int64DataSet("int64 DataSet");
-inline constexpr StringLiteral k_Uint64DataSet("uint64 DataSet");
+inline constexpr StringLiteralType k_Int64DataSet("int64 DataSet");
+inline constexpr StringLiteralType k_Uint64DataSet("uint64 DataSet");
 
-inline constexpr StringLiteral k_Float32DataSet("float32 DataSet");
-inline constexpr StringLiteral k_Float64DataSet("float64 DataSet");
+inline constexpr StringLiteralType k_Float32DataSet("float32 DataSet");
+inline constexpr StringLiteralType k_Float64DataSet("float64 DataSet");
 
-inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
-inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
+inline constexpr StringLiteralType k_ConditionalArray("Conditional [bool]");
+inline constexpr StringLiteralType k_ReducedGeometry("Reduced Geometry");
 
-inline constexpr StringLiteral k_GroupAName("A");
-inline constexpr StringLiteral k_GroupBName("B");
-inline constexpr StringLiteral k_GroupCName("C");
-inline constexpr StringLiteral k_GroupDName("D");
-inline constexpr StringLiteral k_GroupEName("E");
-inline constexpr StringLiteral k_GroupFName("F");
-inline constexpr StringLiteral k_GroupGName("G");
-inline constexpr StringLiteral k_GroupHName("H");
-inline constexpr StringLiteral k_ArrayIName("I");
-inline constexpr StringLiteral k_ArrayJName("J");
-inline constexpr StringLiteral k_ArrayKName("K");
-inline constexpr StringLiteral k_ArrayLName("L");
-inline constexpr StringLiteral k_ArrayMName("M");
-inline constexpr StringLiteral k_ArrayNName("N");
+inline constexpr StringLiteralType k_GroupAName("A");
+inline constexpr StringLiteralType k_GroupBName("B");
+inline constexpr StringLiteralType k_GroupCName("C");
+inline constexpr StringLiteralType k_GroupDName("D");
+inline constexpr StringLiteralType k_GroupEName("E");
+inline constexpr StringLiteralType k_GroupFName("F");
+inline constexpr StringLiteralType k_GroupGName("G");
+inline constexpr StringLiteralType k_GroupHName("H");
+inline constexpr StringLiteralType k_ArrayIName("I");
+inline constexpr StringLiteralType k_ArrayJName("J");
+inline constexpr StringLiteralType k_ArrayKName("K");
+inline constexpr StringLiteralType k_ArrayLName("L");
+inline constexpr StringLiteralType k_ArrayMName("M");
+inline constexpr StringLiteralType k_ArrayNName("N");
 
 // These paths select the common test data container and its child objects.
 inline const DataPath k_DataContainerPath({k_DataContainer});
@@ -819,14 +819,14 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
     result.warnings().insert(result.warnings().end(), oldStoreReadResult.warnings().begin(), oldStoreReadResult.warnings().end());
     if(oldStoreReadResult.invalid())
     {
-      result.m_Expected = nonstd::make_unexpected(std::move(oldStoreReadResult.errors()));
+      result.expected = nonstd::make_unexpected(std::move(oldStoreReadResult.errors()));
       return result;
     }
     auto newStoreReadResult = newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
     result.warnings().insert(result.warnings().end(), newStoreReadResult.warnings().begin(), newStoreReadResult.warnings().end());
     if(newStoreReadResult.invalid())
     {
-      result.m_Expected = nonstd::make_unexpected(std::move(newStoreReadResult.errors()));
+      result.expected = nonstd::make_unexpected(std::move(newStoreReadResult.errors()));
       return result;
     }
 

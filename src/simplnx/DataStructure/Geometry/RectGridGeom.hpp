@@ -18,7 +18,7 @@ class SIMPLNX_EXPORT RectGridGeom : public IGridGeometry
 public:
   friend class DataStructure;
 
-  static constexpr StringLiteral k_TypeName = "RectGridGeom";
+  static constexpr StringLiteralType k_TypeName = "RectGridGeom";
 
   /**
    * @brief Creates a new RectGridGeom in the specified DataStructure.

@@ -123,9 +123,9 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: FromSIMPLJson", "[NXI
   const Result<Arguments> result = DiscreteGaussianImageFilter::FromSIMPLJson(json);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   const Arguments& args = result.value();
-  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DgFilterType::k_Variance_Key) == std::vector<float64>{2.0, 3.0, 4.0});
+  REQUIRE(args.value<VectorFloat64ParameterType::ValueType>(DgFilterType::k_Variance_Key) == std::vector<float64>{2.0, 3.0, 4.0});
   REQUIRE(args.value<uint32>(DgFilterType::k_MaximumKernelWidth_Key) == 40u);
-  REQUIRE(args.value<VectorFloat64Parameter::ValueType>(DgFilterType::k_MaximumError_Key) == std::vector<float64>{0.02, 0.03, 0.04});
+  REQUIRE(args.value<VectorFloat64ParameterType::ValueType>(DgFilterType::k_MaximumError_Key) == std::vector<float64>{0.02, 0.03, 0.04});
   REQUIRE(args.value<bool>(DgFilterType::k_UseImageSpacing_Key) == true);
   REQUIRE(args.value<DataPath>(DgFilterType::k_InputImageGeomPath_Key) == DataPath({"ImageDC"}));
   REQUIRE(args.value<DataPath>(DgFilterType::k_InputImageDataPath_Key) == DataPath({"ImageDC", "CellAM", "InArray"}));
@@ -207,7 +207,7 @@ TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden
 TEST_CASE("NXImageProcessing::DiscreteGaussianImageFilter: ITK real-image golden (bigG)", "[NXImageProcessing][ItkGolden][DiscreteGaussianImageFilter]")
 {
   rt::RunReconstructionMd5ItkGolden<DiscreteGaussianImageFilter>("WhiteDots.png", "f2f002ec76313284a4cff24c3e5eb577", [](Arguments& args) {
-    args.insertOrAssign(DiscreteGaussianImageFilter::k_Variance_Key, std::make_any<VectorFloat64Parameter::ValueType>(VectorFloat64Parameter::ValueType{100.0, 100.0, 100.0}));
+    args.insertOrAssign(DiscreteGaussianImageFilter::k_Variance_Key, std::make_any<VectorFloat64ParameterType::ValueType>(VectorFloat64ParameterType::ValueType{100.0, 100.0, 100.0}));
     args.insertOrAssign(DiscreteGaussianImageFilter::k_MaximumKernelWidth_Key, std::make_any<uint32>(64u));
   });
 }

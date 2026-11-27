@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <mutex>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 bool hostIsLittleEndian()
@@ -68,4 +68,4 @@ bool probeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t mem
   return identical && (elementSize == 1 || order == hostOrder);
 }
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

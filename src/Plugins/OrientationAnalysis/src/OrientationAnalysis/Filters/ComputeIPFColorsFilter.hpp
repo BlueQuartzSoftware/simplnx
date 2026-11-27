@@ -24,14 +24,14 @@ public:
   ComputeIPFColorsFilter& operator=(ComputeIPFColorsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ReferenceDir_Key = "reference_dir";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_CellIPFColorsArrayName_Key = "cell_ipf_colors_array_name";
-  static constexpr StringLiteral k_ColorKey_Key = "color_key_index";
+  static constexpr StringLiteralType k_ReferenceDir_Key = "reference_dir";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_CellIPFColorsArrayName_Key = "cell_ipf_colors_array_name";
+  static constexpr StringLiteralType k_ColorKey_Key = "color_key_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

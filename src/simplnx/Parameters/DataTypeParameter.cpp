@@ -93,7 +93,7 @@ nlohmann::json DataTypeParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> DataTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'DataTypeParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'DataTypeParameter' JSON Error: ";
   if(!json.is_number())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
@@ -102,7 +102,7 @@ Result<std::any> DataTypeParameter::fromJsonImpl(const nlohmann::json& json, Ver
   return {{type}};
 }
 
-IParameter::UniquePointer DataTypeParameter::clone() const
+IParameter::UniquePointerType DataTypeParameter::clone() const
 {
   return std::make_unique<DataTypeParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -123,7 +123,7 @@ Result<> DataTypeParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 /*
 enum class Type : int32_t
@@ -165,5 +165,5 @@ Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::Co
 
   return {static_cast<DataType>(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

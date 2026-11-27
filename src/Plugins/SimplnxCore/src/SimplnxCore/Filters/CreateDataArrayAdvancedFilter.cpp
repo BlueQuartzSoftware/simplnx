@@ -143,7 +143,7 @@ IFilter::VersionType CreateDataArrayAdvancedFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateDataArrayAdvancedFilter::clone() const
+IFilter::UniquePointerType CreateDataArrayAdvancedFilter::clone() const
 {
   return std::make_unique<CreateDataArrayAdvancedFilter>();
 }
@@ -335,10 +335,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
-constexpr StringLiteral k_NewArrayKey = "NewArray";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_InitializationValueKey = "InitializationValue";
+constexpr StringLiteralType k_NewArrayKey = "NewArray";
 } // namespace simpl
 } // namespace
 
@@ -350,11 +350,11 @@ Result<Arguments> CreateDataArrayAdvancedFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, simpl::k_ScalarTypeKey, k_NumericType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ScalarTypeParameterToNumericTypeConverter>(args, json, simpl::k_ScalarTypeKey, k_NumericType_Key));
   // The legacy initialization settings do not map directly to these advanced
   // options. The importer keeps the NX defaults and converts only the fill value.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_InitializationValueKey, k_InitValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_NewArrayKey, k_DataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_InitializationValueKey, k_InitValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

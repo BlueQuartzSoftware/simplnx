@@ -114,20 +114,20 @@ Parameters BinaryProjectionImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
+  params.insert(std::make_unique<UInt32ParameterType>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place", "Performs the projection in-place for the given Image Geometry", true));
-  params.insert(std::make_unique<Float64Parameter>(
+  params.insert(std::make_unique<Float64ParameterType>(
       k_ForegroundValue_Key, "Foreground Value",
       "The value a projected column is set to when ANY voxel along the projection axis equals this value. For an integer input image the value must be finite and within the image type's range.",
       1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
+  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
                                                    "The value a projected column is set to when NO voxel along the projection axis equals the Foreground Value. For an integer input image the value "
                                                    "must be finite and within the image type's range.",
                                                    0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -148,7 +148,7 @@ IFilter::VersionType BinaryProjectionImageFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer BinaryProjectionImageFilter::clone() const
+IFilter::UniquePointerType BinaryProjectionImageFilter::clone() const
 {
   return std::make_unique<BinaryProjectionImageFilter>();
 }
@@ -224,11 +224,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ProjectionDimensionKey = "ProjectionDimension";
-constexpr StringLiteral k_ForegroundValueKey = "ForegroundValue";
-constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_ProjectionDimensionKey = "ProjectionDimension";
+constexpr StringLiteralType k_ForegroundValueKey = "ForegroundValue";
+constexpr StringLiteralType k_BackgroundValueKey = "BackgroundValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -238,12 +238,12 @@ Result<Arguments> BinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -24,25 +24,25 @@ public:
   ComputeAvgOrientationsFilter& operator=(ComputeAvgOrientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "cell_feature_ids_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_CellQuatsArrayPath_Key = "cell_quats_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "cell_feature_ids_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_CellQuatsArrayPath_Key = "cell_quats_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
-  static constexpr StringLiteral k_UseRodriguesAverage_Key = "use_rodrigues_average";
-  static constexpr StringLiteral k_RodriguesAvgEulerArrayName_Key = "avg_euler_angles_array_name";
-  static constexpr StringLiteral k_RodriguesQuatsArrayName_Key = "avg_quats_array_name";
+  static constexpr StringLiteralType k_UseRodriguesAverage_Key = "use_rodrigues_average";
+  static constexpr StringLiteralType k_RodriguesAvgEulerArrayName_Key = "avg_euler_angles_array_name";
+  static constexpr StringLiteralType k_RodriguesQuatsArrayName_Key = "avg_quats_array_name";
 
-  static constexpr StringLiteral k_UseVonMisesFisher_Key = "use_vmf_average";
-  static constexpr StringLiteral k_VonMisesFisherAvgQuatsArrayName_Key = "vmf_quat_array_name";
-  static constexpr StringLiteral k_VonMisesFisherAvgEulerArrayName_Key = "vmf_euler_array_name";
-  static constexpr StringLiteral k_VonMisesFisherKappaArrayName_Key = "vmf_kappa_array_name";
+  static constexpr StringLiteralType k_UseVonMisesFisher_Key = "use_vmf_average";
+  static constexpr StringLiteralType k_VonMisesFisherAvgQuatsArrayName_Key = "vmf_quat_array_name";
+  static constexpr StringLiteralType k_VonMisesFisherAvgEulerArrayName_Key = "vmf_euler_array_name";
+  static constexpr StringLiteralType k_VonMisesFisherKappaArrayName_Key = "vmf_kappa_array_name";
 
-  static constexpr StringLiteral k_UseWatson_Key = "use_watson_average";
-  static constexpr StringLiteral k_WatsonAvgQuatsArrayName_Key = "watson_quat_array_name";
-  static constexpr StringLiteral k_WatsonAvgEulerArrayName_Key = "watson_euler_array_name";
-  static constexpr StringLiteral k_WatsonKappaArrayName_Key = "watson_kappa_array_name";
+  static constexpr StringLiteralType k_UseWatson_Key = "use_watson_average";
+  static constexpr StringLiteralType k_WatsonAvgQuatsArrayName_Key = "watson_quat_array_name";
+  static constexpr StringLiteralType k_WatsonAvgEulerArrayName_Key = "watson_euler_array_name";
+  static constexpr StringLiteralType k_WatsonKappaArrayName_Key = "watson_kappa_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -99,7 +99,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

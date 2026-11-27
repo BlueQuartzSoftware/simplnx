@@ -4,7 +4,7 @@
 
 namespace nx::core
 {
-namespace NodeType
+namespace node_type
 {
 inline constexpr int8_t Unused = 0;
 inline constexpr int8_t Default = 2;
@@ -13,15 +13,15 @@ inline constexpr int8_t QuadPoint = 4;
 inline constexpr int8_t SurfaceDefault = 12;
 inline constexpr int8_t SurfaceTriplePoint = 13;
 inline constexpr int8_t SurfaceQuadPoint = 14;
-} // namespace NodeType
+} // namespace node_type
 
 class SIMPLNX_EXPORT INodeGeometry2D : public INodeGeometry1D
 {
 public:
-  static constexpr StringLiteral k_FaceAttributeMatrixName = "Face Data";
-  static constexpr StringLiteral k_FaceFeatureAttributeMatrixName = "Face Feature Data";
-  static constexpr StringLiteral k_SharedFacesListName = "Shared Faces List";
-  static constexpr StringLiteral k_TypeName = "INodeGeometry2D";
+  static constexpr StringLiteralType k_FaceAttributeMatrixName = "Face Data";
+  static constexpr StringLiteralType k_FaceFeatureAttributeMatrixName = "Face Feature Data";
+  static constexpr StringLiteralType k_SharedFacesListName = "Shared Faces List";
+  static constexpr StringLiteralType k_TypeName = "INodeGeometry2D";
 
   INodeGeometry2D() = delete;
   INodeGeometry2D(const INodeGeometry2D&) = default;

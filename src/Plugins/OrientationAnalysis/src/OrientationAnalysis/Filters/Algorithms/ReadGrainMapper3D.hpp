@@ -9,7 +9,7 @@
 
 #include <hdf5.h>
 
-using namespace GrainMapper3DUtilities;
+using namespace grain_mapper_3d_utilities;
 
 namespace nx::core
 {
@@ -34,13 +34,13 @@ struct ORIENTATIONANALYSIS_EXPORT ReadGrainMapper3DInputValues
   std::string AbsorptionCellAttributeMatrixName;
 };
 
-namespace GM3DConstants
+namespace gm_3d_constants
 {
 const std::string k_CrystalStructures("CrystalStructures");
 const std::string k_LatticeConstants("LatticeConstants");
 const std::string k_MaterialName("MaterialName");
 const std::string k_UniversalHermannMauguin("UniversalHermannMauguin");
-} // namespace GM3DConstants
+} // namespace gm_3d_constants
 /**
  * @class ReadGrainMapper3D
  * @brief Imports LabDCT and absorption volumes from a GrainMapper3D HDF5 file.
@@ -98,7 +98,7 @@ protected:
    * @param fileId Open source file identifier.
    * @return HDF5, conversion, shape, or destination transfer errors.
    */
-  Result<> copyDctData(GrainMapper3DUtilities::GrainMapperReader& reader, hid_t fileId) const;
+  Result<> copyDctData(grain_mapper_3d_utilities::GrainMapperReader& reader, hid_t fileId) const;
 
   /**
    * @brief Imports the selected absorption volume.

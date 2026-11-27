@@ -19,11 +19,11 @@ class SIMPLNX_EXPORT AbstractMontage : public BaseGroup
 {
 public:
   using CollectionType = std::vector<IGeometry*>;
-  using Iterator = CollectionType::iterator;
-  using ConstIterator = CollectionType::const_iterator;
+  using iterator = CollectionType::iterator;
+  using const_iterator = CollectionType::const_iterator;
   using BoundsType = void;
 
-  static constexpr StringLiteral k_TypeName = "AbstractMontage";
+  static constexpr StringLiteralType k_TypeName = "AbstractMontage";
 
   /**
    * @brief Creates a copy of the target AbstractMontage but does not add it to
@@ -115,25 +115,25 @@ public:
    * @brief Returns an iterator to the beginning of the montage.
    * @return iterator
    */
-  virtual Iterator begin();
+  virtual iterator begin();
 
   /**
    * @brief Returns an iterator to the end of the montage.
    * @return iterator
    */
-  virtual Iterator end();
+  virtual iterator end();
 
   /**
    * @brief Returns an iterator to the beginning of the montage.
    * @return iterator
    */
-  virtual ConstIterator begin() const;
+  virtual const_iterator begin() const;
 
   /**
    * @brief Returns an iterator to the end of the montage.
    * @return iterator
    */
-  virtual ConstIterator end() const;
+  virtual const_iterator end() const;
 
 protected:
   /**

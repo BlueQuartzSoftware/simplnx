@@ -80,11 +80,11 @@ Parameters FlyingEdges3DFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_IsoVal_Key, "Contour Value", "The value to contour on", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_IsoVal_Key, "Contour Value", "The value to contour on", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{},
                                                           GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -102,7 +102,7 @@ IFilter::VersionType FlyingEdges3DFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FlyingEdges3DFilter::clone() const
+IFilter::UniquePointerType FlyingEdges3DFilter::clone() const
 {
   return std::make_unique<FlyingEdges3DFilter>();
 }

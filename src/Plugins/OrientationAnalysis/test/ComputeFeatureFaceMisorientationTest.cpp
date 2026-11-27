@@ -25,8 +25,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
-constexpr StringLiteral k_NXFaceMisorientationColors("NXFaceMisorientationColors");
-constexpr StringLiteral k_AvgQuats("AvgQuats");
+constexpr StringLiteralType k_NXFaceMisorientationColors("NXFaceMisorientationColors");
+constexpr StringLiteralType k_AvgQuats("AvgQuats");
 
 bool CompareFloats(const float32 generated, const float32 expected)
 {
@@ -43,7 +43,7 @@ constexpr Uuid k_ChangeAngleRepresentationFilterId = *Uuid::FromString("565e06e2
 constexpr Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const FilterHandle k_ChangeAngleRepresentationFilterHandle(k_ChangeAngleRepresentationFilterId, k_SimplnxCorePluginId);
 
-constexpr StringLiteral k_TriGeomName = "triangle_geom";
+constexpr StringLiteralType k_TriGeomName = "triangle_geom";
 const DataPath k_TriGeomPath({k_TriGeomName});
 
 const DataPath k_FaceDataPath = k_TriGeomPath.createChildPath(Constants::k_FaceData);

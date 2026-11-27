@@ -35,10 +35,10 @@ public:
   ConvertOrientationsFilter& operator=(ConvertOrientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputType_Key = "input_representation_index";
-  static constexpr StringLiteral k_OutputType_Key = "output_representation_index";
-  static constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
-  static constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
+  static constexpr StringLiteralType k_InputType_Key = "input_representation_index";
+  static constexpr StringLiteralType k_OutputType_Key = "output_representation_index";
+  static constexpr StringLiteralType k_InputOrientationArrayPath_Key = "input_orientation_array_path";
+  static constexpr StringLiteralType k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -95,7 +95,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

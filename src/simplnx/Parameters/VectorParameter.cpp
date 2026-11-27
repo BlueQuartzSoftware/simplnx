@@ -69,7 +69,7 @@ nlohmann::json VectorParameter<T>::toJsonImpl(const std::any& value) const
 template <class T>
 Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'VectorParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'VectorParameter' JSON Error: ";
 
   if(!json.is_array())
   {
@@ -96,7 +96,7 @@ Result<std::any> VectorParameter<T>::fromJsonImpl(const nlohmann::json& json, Ve
 }
 
 template <class T>
-IParameter::UniquePointer VectorParameter<T>::clone() const
+IParameter::UniquePointerType VectorParameter<T>::clone() const
 {
   return std::make_unique<VectorParameter<T>>(name(), humanName(), helpText(), m_DefaultValue, m_Names);
 }
@@ -161,7 +161,7 @@ template class SIMPLNX_TEMPLATE_EXPORT VectorParameter<uint64>;
 template class SIMPLNX_TEMPLATE_EXPORT VectorParameter<float32>;
 template class SIMPLNX_TEMPLATE_EXPORT VectorParameter<float64>;
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
@@ -385,8 +385,8 @@ Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
 
 Result<RangeFilterParameterConverter::ValueType> RangeFilterParameterConverter::Convert(const nlohmann::json& json)
 {
-  constexpr StringLiteral k_MaxKey = "Max";
-  constexpr StringLiteral k_MinKey = "Min";
+  constexpr StringLiteralType k_MaxKey = "Max";
+  constexpr StringLiteralType k_MinKey = "Min";
 
   std::vector<float64> value(2);
   Result<std::vector<float64>> minConv = KeyValueConversion(json, k_MinKey, 0, value);
@@ -607,5 +607,5 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec3p1FilterParameterConverter<uint64>;
 
 template struct SIMPLNX_TEMPLATE_EXPORT Vec3p1FilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT Vec3p1FilterParameterConverter<float64>;
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

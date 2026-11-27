@@ -1280,12 +1280,12 @@ fs::path ItkJsonFiltersDir()
 }
 
 // ITKImageReaderFilter param-key STRINGS (hard-coded to avoid linking the ITK plugin).
-constexpr StringLiteral k_ItkFileName = "file_name";
-constexpr StringLiteral k_ItkGeometryPath = "output_geometry_path";
-constexpr StringLiteral k_ItkArrayName = "image_data_array_name";
-constexpr StringLiteral k_ItkCellDataName = "cell_attribute_matrix_name";
-constexpr StringLiteral k_ItkChangeOrigin = "change_origin";
-constexpr StringLiteral k_ItkChangeSpacing = "change_spacing";
+constexpr StringLiteralType k_ItkFileName = "file_name";
+constexpr StringLiteralType k_ItkGeometryPath = "output_geometry_path";
+constexpr StringLiteralType k_ItkArrayName = "image_data_array_name";
+constexpr StringLiteralType k_ItkCellDataName = "cell_attribute_matrix_name";
+constexpr StringLiteralType k_ItkChangeOrigin = "change_origin";
+constexpr StringLiteralType k_ItkChangeSpacing = "change_spacing";
 
 template <class T>
 void RequireStoresEqual(const IDataArray& a, const IDataArray& b)

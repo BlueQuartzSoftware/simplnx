@@ -7,7 +7,7 @@ namespace nx::core
 {
 class BaseGroup;
 
-namespace HDF5
+namespace hdf5
 {
 /**
  * @brief The BaseGroupIO class serves as the base IO class for reading and writing BaseGroups to HDF5
@@ -35,7 +35,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  static Result<> WriteDataMap(DataStructureWriter& dataStructureWriter, const DataMap& dataMap, group_writer_type& parentGroup, bool importable);
+  static Result<> WriteDataMap(DataStructureWriter& dataStructureWriter, const DataMap& dataMap, GroupWriterType& parentGroup, bool importable);
 
 protected:
   /**
@@ -50,7 +50,7 @@ protected:
    * @param useEmptyDataStore
    * @return Result<>
    */
-  static Result<> ReadBaseGroupData(DataStructureReader& dataStructureReader, BaseGroup& baseGroup, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  static Result<> ReadBaseGroupData(DataStructureReader& dataStructureReader, BaseGroup& baseGroup, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
@@ -62,7 +62,7 @@ protected:
    * @param importable
    * @return Result<>
    */
-  static Result<> WriteBaseGroupData(DataStructureWriter& dataStructureWriter, const BaseGroup& baseGroup, group_writer_type& parentGroup, bool importable);
+  static Result<> WriteBaseGroupData(DataStructureWriter& dataStructureWriter, const BaseGroup& baseGroup, GroupWriterType& parentGroup, bool importable);
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

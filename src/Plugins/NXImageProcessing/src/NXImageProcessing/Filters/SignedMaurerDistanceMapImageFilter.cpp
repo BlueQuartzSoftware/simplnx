@@ -109,12 +109,12 @@ Parameters SignedMaurerDistanceMapImageFilter::parameters() const
                                                 "Whether the output stores the squared Euclidean distance (On) or the true Euclidean distance (Off). Default is On.", true));
   params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "Use Image Spacing",
                                                 "Whether distances are measured in physical units using the Image Geometry's per-axis spacing (On) or in voxel units (Off). Default is Off.", false));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
+  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
                                                    "The input value that marks the background; every voxel whose value is not equal to this is treated as inside the object.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetIntegerScalarTypes()));
 
@@ -127,7 +127,7 @@ IFilter::VersionType SignedMaurerDistanceMapImageFilter::parametersVersion() con
 {
   return 1;
 }
-IFilter::UniquePointer SignedMaurerDistanceMapImageFilter::clone() const
+IFilter::UniquePointerType SignedMaurerDistanceMapImageFilter::clone() const
 {
   return std::make_unique<SignedMaurerDistanceMapImageFilter>();
 }
@@ -188,12 +188,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InsideIsPositiveKey = "InsideIsPositive";
-constexpr StringLiteral k_SquaredDistanceKey = "SquaredDistance";
-constexpr StringLiteral k_UseImageSpacingKey = "UseImageSpacing";
-constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
+constexpr StringLiteralType k_InsideIsPositiveKey = "InsideIsPositive";
+constexpr StringLiteralType k_SquaredDistanceKey = "SquaredDistance";
+constexpr StringLiteralType k_UseImageSpacingKey = "UseImageSpacing";
+constexpr StringLiteralType k_BackgroundValueKey = "BackgroundValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
 } // namespace simpl
 } // namespace
 
@@ -203,13 +203,13 @@ Result<Arguments> SignedMaurerDistanceMapImageFilter::FromSIMPLJson(const nlohma
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_InsideIsPositiveKey, k_InsideIsPositive_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_SquaredDistanceKey, k_SquaredDistance_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseImageSpacingKey, k_UseImageSpacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_InsideIsPositiveKey, k_InsideIsPositive_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_SquaredDistanceKey, k_SquaredDistance_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseImageSpacingKey, k_UseImageSpacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

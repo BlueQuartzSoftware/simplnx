@@ -31,9 +31,9 @@ namespace
 fs::path KExemplarDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/label_triangle_geometry_test.dream3d", nx::core::unit_test::k_TestFilesDir));
 fs::path KBaseDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/data_to_generate_test/combined_stls.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
-constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
-constexpr StringLiteral k_RegionIdsName = "Region Ids";
+constexpr StringLiteralType k_CreatedAMName = "Cell Feature AM";
+constexpr StringLiteralType k_NumTrianglesName = "NumTriangles";
+constexpr StringLiteralType k_RegionIdsName = "Region Ids";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
 const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
@@ -402,13 +402,13 @@ void CheckLabelSave(DataStructure& dataStructure, const SupportSnapshot& inciden
 {
   SupportSaveFiles files("label");
   // The writer omits supplied connectivity and leaves the caller's objects in place.
-  const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, files.Paths[0]);
+  const auto save = hdf5::DataStructureWriter::WriteFile(dataStructure, files.Paths[0]);
   SIMPLNX_RESULT_REQUIRE_VALID(save);
   RequireSupportSnapshot(dataStructure, false, incidence);
   RequireSupportSnapshot(dataStructure, true, neighbors);
   CheckLabelInputs(dataStructure);
   CheckLabelOutputs(dataStructure);
-  const auto read = HDF5::DataStructureReader::ReadFile(files.Paths[0]);
+  const auto read = hdf5::DataStructureReader::ReadFile(files.Paths[0]);
   SIMPLNX_RESULT_REQUIRE_VALID(read);
   CheckLabelInputs(read.value());
   CheckLabelOutputs(read.value());

@@ -50,7 +50,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-constexpr StringLiteral k_CacheTestFormat = "Task5-Cache-Test-Format";
+constexpr StringLiteralType k_CacheTestFormat = "Task5-Cache-Test-Format";
 
 class CacheRecordingResolver : public IDataStoreFormatResolver
 {
@@ -108,7 +108,7 @@ private:
 
 struct CacheTestContext
 {
-  DREAM3D::Dream3dPreflightCache& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  dream3d::Dream3dPreflightCache& cache = dream3d::Dream3dPreflightCache::Instance();
   std::shared_ptr<CacheRecordingResolver> resolver = std::make_shared<CacheRecordingResolver>();
   std::shared_ptr<usize> factory_calls = std::make_shared<usize>(0);
   std::shared_ptr<InMemoryFormatResolver> in_memory_resolver = std::make_shared<InMemoryFormatResolver>();
@@ -124,7 +124,7 @@ struct CacheTestContext
   ~CacheTestContext()
   {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-    DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(false);
+    dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(false);
 #endif
     cache.clear();
     DataStructure::setDefaultFormatResolver(in_memory_resolver);
@@ -164,7 +164,7 @@ fs::path WriteTestFile(const std::string& fileName, usize numTuples = 10)
 
   fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName;
   fs::remove(filePath);
-  Result<> writeResult = DREAM3D::WriteFile(filePath, dataStructure, Pipeline{}, false);
+  Result<> writeResult = dream3d::WriteFile(filePath, dataStructure, Pipeline{}, false);
   REQUIRE(writeResult.valid());
   // Backdate mtime past the trust window so validation relies on the (size, mtime) token.
   AgeFile(filePath);
@@ -193,7 +193,7 @@ fs::path WriteNumericPolicyFile(const std::string& fileName, DataPath& expectedF
 
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName;
   fs::remove(filePath);
-  REQUIRE(DREAM3D::WriteFile(filePath, dataStructure, Pipeline{}, false).valid());
+  REQUIRE(dream3d::WriteFile(filePath, dataStructure, Pipeline{}, false).valid());
   AgeFile(filePath);
   return filePath;
 }
@@ -203,9 +203,9 @@ fs::path WriteLegacyStatisticsWarningFile(const std::string& fileName)
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName;
   fs::remove(filePath);
   {
-    auto file = HDF5::FileIO::WriteFile(filePath);
+    auto file = hdf5::FileIO::WriteFile(filePath);
     REQUIRE(file.isValid());
-    REQUIRE(file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    REQUIRE(file.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str()).valid());
     auto containers = file.createGroup("DataContainers");
     auto container = containers.createGroup("StatsContainer");
     auto attributeMatrix = container.createGroup("StatsAM");
@@ -244,7 +244,7 @@ const DataArray<T>& RequirePlannedArray(const DataStructure& dataStructure, cons
 
 TEST_CASE("Dream3dPreflightCache: miss then hit with equivalent structure", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -263,8 +263,8 @@ TEST_CASE("Dream3dPreflightCache: miss then hit with equivalent structure", "[Dr
   REQUIRE(cache.hitCount() == 1);
 
   // Hit handout is structurally equivalent to a direct preflight import.
-  auto fileReader = HDF5::FileIO::ReadFile(filePath);
-  Result<DataStructure> direct = DREAM3D::ImportDataStructureFromFile(fileReader, true);
+  auto fileReader = hdf5::FileIO::ReadFile(filePath);
+  Result<DataStructure> direct = dream3d::ImportDataStructureFromFile(fileReader, true);
   REQUIRE(direct.valid());
   auto expectedPaths = direct.value().getAllDataPaths();
   auto actualPaths = second.value().getAllDataPaths();
@@ -282,7 +282,7 @@ TEST_CASE("Dream3dPreflightCache: miss then hit with equivalent structure", "[Dr
 
 TEST_CASE("Dream3dPreflightCache: fetch of a file containing a StringArray succeeds", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -304,7 +304,7 @@ TEST_CASE("Dream3dPreflightCache: fetch of a file containing a StringArray succe
 
 TEST_CASE("Dream3dPreflightCache: missing file returns open error", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -315,7 +315,7 @@ TEST_CASE("Dream3dPreflightCache: missing file returns open error", "[Dream3dPre
 
 TEST_CASE("Dream3dPreflightCache: handouts are isolated from master and each other", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -365,7 +365,7 @@ TEST_CASE("Dream3dPreflightCache: handouts are isolated from master and each oth
 
 TEST_CASE("Dream3dPreflightCache: modified file is detected and re-read", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -389,7 +389,7 @@ TEST_CASE("Dream3dPreflightCache: modified file is detected and re-read", "[Drea
 
 TEST_CASE("Dream3dPreflightCache: files younger than the trust window are never served from cache", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -411,7 +411,7 @@ TEST_CASE("Dream3dPreflightCache: files younger than the trust window are never 
 
 TEST_CASE("Dream3dPreflightCache: invalidate() forces a re-read", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -425,23 +425,23 @@ TEST_CASE("Dream3dPreflightCache: invalidate() forces a re-read", "[Dream3dPrefl
 
 TEST_CASE("Dream3dPreflightCache: least-recently-used entry is evicted past capacity", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
   std::vector<fs::path> files;
-  files.reserve(DREAM3D::Dream3dPreflightCache::k_Capacity + 1);
-  for(usize i = 0; i < DREAM3D::Dream3dPreflightCache::k_Capacity + 1; i++)
+  files.reserve(dream3d::Dream3dPreflightCache::k_Capacity + 1);
+  for(usize i = 0; i < dream3d::Dream3dPreflightCache::k_Capacity + 1; i++)
   {
     files.push_back(WriteTestFile(fmt::format("preflight_cache_lru_{}.dream3d", i)));
   }
   // Fill the cache, then touch file 0 so file 1 becomes the least-recently used entry.
-  for(usize i = 0; i < DREAM3D::Dream3dPreflightCache::k_Capacity; i++)
+  for(usize i = 0; i < dream3d::Dream3dPreflightCache::k_Capacity; i++)
   {
     REQUIRE(cache.fetch(files[i]).valid());
   }
   REQUIRE(cache.fetch(files[0]).valid());                                          // hit; refreshes recency
-  REQUIRE(cache.fetch(files[DREAM3D::Dream3dPreflightCache::k_Capacity]).valid()); // miss; evicts files[1]
+  REQUIRE(cache.fetch(files[dream3d::Dream3dPreflightCache::k_Capacity]).valid()); // miss; evicts files[1]
 
   cache.resetStats();
   REQUIRE(cache.fetch(files[0]).valid());
@@ -452,7 +452,7 @@ TEST_CASE("Dream3dPreflightCache: least-recently-used entry is evicted past capa
 
 TEST_CASE("Dream3dPreflightCache: concurrent fetches are safe and consistent", "[Dream3dPreflightCache]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
 
@@ -494,7 +494,7 @@ TEST_CASE("Dream3dPreflightCache: concurrent fetches are safe and consistent", "
 //   ./simplnx_test "[.benchmark]"
 TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[.benchmark]")
 {
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
 
   // Many small arrays make metadata traversal dominate this fixture.
@@ -507,14 +507,14 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
   }
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "preflight_cache_benchmark.dream3d";
   fs::remove(filePath);
-  REQUIRE(DREAM3D::WriteFile(filePath, dataStructure, Pipeline{}, false).valid());
+  REQUIRE(dream3d::WriteFile(filePath, dataStructure, Pipeline{}, false).valid());
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
   // The delay driver adds 2 ms to each HDF5 open or read.
   const hid_t driverId = DelayVfd::Register();
   REQUIRE(driverId != H5I_INVALID_HID);
   DelayVfd::SetDelayMicroseconds(2000);
-  HDF5::FileIO::SetFaplConfigurator([driverId](hid_t faplId) { H5Pset_driver(faplId, driverId, nullptr); });
+  hdf5::FileIO::SetFaplConfigurator([driverId](hid_t faplId) { H5Pset_driver(faplId, driverId, nullptr); });
 
   using ClockType = std::chrono::steady_clock;
 
@@ -530,7 +530,7 @@ TEST_CASE("Dream3dPreflightCache: benchmark under simulated storage latency", "[
   REQUIRE(cache.fetch(filePath).valid());
   const auto warmUs = std::chrono::duration_cast<std::chrono::microseconds>(ClockType::now() - warmStart).count();
 
-  HDF5::FileIO::SetFaplConfigurator({});
+  hdf5::FileIO::SetFaplConfigurator({});
   DelayVfd::SetDelayMicroseconds(0);
 
   WARN(fmt::format("PreflightCache benchmark @2ms/op: cold (uncached, = old per-edit cost) {} us | warm (cached) {} us", coldUs, warmUs));
@@ -548,7 +548,7 @@ TEST_CASE("StorageFormatPlan: cache isolates numeric list and string handout sto
   auto* stringsPtr = StringArray::CreateWithValues(source, "Strings", ShapeType{2}, {"alpha", "beta"});
   REQUIRE(stringsPtr != nullptr);
   const auto filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "preflight_store_copy_resolution.dream3d";
-  auto fileWriteResult = DREAM3D::WriteFile(filePath, source, Pipeline{}, false);
+  auto fileWriteResult = dream3d::WriteFile(filePath, source, Pipeline{}, false);
   SIMPLNX_RESULT_REQUIRE_VALID(fileWriteResult);
   AgeFile(filePath);
 
@@ -658,14 +658,14 @@ TEST_CASE("StorageFormatPlan: cache replans every fetch route with current polic
   DataPath statFirstPath;
   const fs::path statFile = WriteNumericPolicyFile("preflight_cache_policy_stat.dream3d", statFirstPath);
   context.cache.resetStats();
-  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(true);
-  auto restoreStat = MakeScopeGuard([]() noexcept { DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(false); });
+  dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(true);
+  auto restoreStat = MakeScopeGuard([]() noexcept { dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(false); });
   auto statBypass = context.cache.fetch(statFile);
   SIMPLNX_RESULT_REQUIRE_VALID(statBypass);
   REQUIRE(context.cache.missCount() == 1);
   REQUIRE(context.cache.hitCount() == 0);
   RequirePlannedArray<int32>(statBypass.value(), statFirstPath, k_CacheTestFormat.str(), ShapeType{4}, ShapeType{1});
-  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(false);
+  dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(false);
   auto cachedAfterStat = context.cache.fetch(statFile);
   SIMPLNX_RESULT_REQUIRE_VALID(cachedAfterStat);
   REQUIRE(context.cache.missCount() == 2);
@@ -794,8 +794,8 @@ TEST_CASE("StorageFormatPlan: disk warnings survive cache bypass preparation", "
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
   context.resolver->failure_message.clear();
   const fs::path statFile = WriteLegacyStatisticsWarningFile("preflight_cache_warning_stat.dream3d");
-  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(true);
-  auto restoreStat = MakeScopeGuard([]() noexcept { DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(false); });
+  dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(true);
+  auto restoreStat = MakeScopeGuard([]() noexcept { dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(false); });
   auto stat = context.cache.fetch(statFile);
   SIMPLNX_RESULT_REQUIRE_VALID(stat);
   CHECK(hasLegacyWarning(stat));
@@ -822,7 +822,7 @@ TEST_CASE("C8 neutral metadata bypasses process policy on every cache route", "[
     fs::last_write_time(path, fs::file_time_type::clock::now());
   }
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(route == 2);
+  dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(route == 2);
 #endif
   context.resolver->clearRecords();
   context.resolver->failure_message = "neutral cache must bypass process policy";
@@ -830,7 +830,7 @@ TEST_CASE("C8 neutral metadata bypasses process policy on every cache route", "[
   auto second = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(first);
   SIMPLNX_RESULT_REQUIRE_VALID(second);
-  CHECK(first.value().fileVersion == DREAM3D::k_CurrentFileVersion);
+  CHECK(first.value().fileVersion == dream3d::k_CurrentFileVersion);
   CHECK(second.value().fileVersion == first.value().fileVersion);
   CHECK(context.resolver->paths.empty());
   CHECK(context.cache.missCount() == (route == 0 ? 1 : 2));
@@ -889,12 +889,12 @@ TEST_CASE("C8 neutral legacy metadata replays warnings and isolates eager values
     fs::last_write_time(path, fs::file_time_type::clock::now());
   }
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
-  DREAM3D::Dream3dPreflightCache::SetForceFileMetadataFailure(route == 2);
+  dream3d::Dream3dPreflightCache::SetForceFileMetadataFailure(route == 2);
 #endif
   const DataPath valuesPath({"StatsContainer", "Statistics", "Values_Mean"});
   auto cold = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(cold);
-  REQUIRE(cold.value().fileVersion == DREAM3D::k_LegacyFileVersion);
+  REQUIRE(cold.value().fileVersion == dream3d::k_LegacyFileVersion);
   REQUIRE(cold.warnings().size() == 1);
   CHECK(cold.warnings().front().code == -298012);
   auto* firstPtr = cold.value().dataStructure.getDataAs<Float32Array>(valuesPath);
@@ -907,7 +907,7 @@ TEST_CASE("C8 neutral legacy metadata replays warnings and isolates eager values
   (*firstPtr)[0] = 99.0F;
   auto warm = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(warm);
-  REQUIRE(warm.value().fileVersion == DREAM3D::k_LegacyFileVersion);
+  REQUIRE(warm.value().fileVersion == dream3d::k_LegacyFileVersion);
   REQUIRE(warm.warnings().size() == cold.warnings().size());
   for(usize index = 0; index < cold.warnings().size(); ++index)
   {
@@ -941,7 +941,7 @@ TEST_CASE("C8 neutral cache isolates list and string placeholders", "[C8][Dream3
     std::error_code error;
     fs::remove(path, error);
   });
-  auto write = DREAM3D::WriteFile(path, source);
+  auto write = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
   AgeFile(path);
   context.resolver->clearRecords();
@@ -986,7 +986,7 @@ TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCa
     std::error_code error;
     fs::remove(path, error);
   });
-  auto write = DREAM3D::WriteFile(path, source);
+  auto write = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
   AgeFile(path);
   context.resolver->failure_message = "NX Statistics metadata must not consult process policy";
@@ -996,8 +996,8 @@ TEST_CASE("C8 NX Statistics remains deferred metadata", "[C8][Dream3dPreflightCa
   auto warm = context.cache.fetchNeutralMetadata(path);
   SIMPLNX_RESULT_REQUIRE_VALID(cold);
   SIMPLNX_RESULT_REQUIRE_VALID(warm);
-  REQUIRE(cold.value().fileVersion == DREAM3D::k_CurrentFileVersion);
-  REQUIRE(warm.value().fileVersion == DREAM3D::k_CurrentFileVersion);
+  REQUIRE(cold.value().fileVersion == dream3d::k_CurrentFileVersion);
+  REQUIRE(warm.value().fileVersion == dream3d::k_CurrentFileVersion);
   const auto& first = RequirePlannedArray<float32>(cold.value().dataStructure, valuesPath, "", {3}, {1});
   const auto& second = RequirePlannedArray<float32>(warm.value().dataStructure, valuesPath, "", {3}, {1});
   CHECK(first.getIDataStore() != second.getIDataStore());
@@ -1112,7 +1112,7 @@ TEST_CASE("C8 neutral and ordinary cache masters share one LRU capacity", "[C8][
       fs::remove(path, error);
     }
   });
-  for(usize fileIdx = 0; fileIdx < DREAM3D::Dream3dPreflightCache::k_Capacity; ++fileIdx)
+  for(usize fileIdx = 0; fileIdx < dream3d::Dream3dPreflightCache::k_Capacity; ++fileIdx)
   {
     files.push_back(WriteTestFile(fmt::format("c8_mixed_cache_capacity_{}.dream3d", fileIdx), 4));
   }
@@ -1122,7 +1122,7 @@ TEST_CASE("C8 neutral and ordinary cache masters share one LRU capacity", "[C8][
   {
     REQUIRE(context.cache.fetch(files[fileIdx]).valid());
   }
-  REQUIRE(context.cache.missCount() == DREAM3D::Dream3dPreflightCache::k_Capacity);
+  REQUIRE(context.cache.missCount() == dream3d::Dream3dPreflightCache::k_Capacity);
   REQUIRE(context.cache.fetchNeutralMetadata(files.back()).valid());
   context.cache.resetStats();
   REQUIRE(context.cache.fetch(files.front()).valid());

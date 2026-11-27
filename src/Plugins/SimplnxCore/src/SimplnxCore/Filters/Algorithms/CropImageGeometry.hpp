@@ -25,8 +25,8 @@ struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
   DataGroupCreationParameter::ValueType OutputImageGeometryPath;
   ArraySelectionParameter::ValueType FeatureIdsPath;
-  VectorUInt64Parameter::ValueType MinVoxel;
-  VectorUInt64Parameter::ValueType MaxVoxel;
+  VectorUInt64ParameterType::ValueType MinVoxel;
+  VectorUInt64ParameterType::ValueType MaxVoxel;
   BoolParameter::ValueType ClearFeatureAttributeMatrix{};
   BoolParameter::ValueType RenumberFeatures{};
   AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;

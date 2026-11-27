@@ -27,7 +27,7 @@
  * @namespace nx::core::HDF5
  * @brief Provides locked HDF5 object wrappers and data transfers.
  */
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class GroupIO;
 /**
@@ -756,4 +756,4 @@ extern template nx::core::Result<> DatasetIO::writeChunk<char>(const ChunkedData
 #ifdef _WIN32
 extern template nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, const DimsType&, nonstd::span<const usize>);
 #endif
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

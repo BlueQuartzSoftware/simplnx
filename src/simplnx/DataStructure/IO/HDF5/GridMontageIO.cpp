@@ -5,7 +5,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 GridMontageIO::GridMontageIO() = default;
 GridMontageIO::~GridMontageIO() noexcept = default;
@@ -20,20 +20,20 @@ std::string GridMontageIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> GridMontageIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> GridMontageIO::readData(DataStructureReader& structureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* montagePtr = GridMontage::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return BaseGroupIO::ReadBaseGroupData(structureReader, *montagePtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
-Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable)
+Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, GroupWriterType& parentGroup, bool importable)
 {
   auto groupWriter = parentGroup.createGroup(montage.getName());
   return BaseGroupIO::WriteBaseGroupData(dataStructureWriter, montage, parentGroup, importable);
 }
 
-Result<> GridMontageIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> GridMontageIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

@@ -15,7 +15,7 @@ namespace nx::core
 class DataStructure;
 class DataFactoryManager;
 
-namespace HDF5
+namespace hdf5
 {
 class IDataFactory;
 class DataIOManager;
@@ -44,7 +44,7 @@ class SIMPLNX_EXPORT DataStructureWriter
 {
   friend class nx::core::DataObject;
   friend SIMPLNX_EXPORT Result<> WriteObjectAttributes(DataStructureWriter& /*dataStructureWriter*/, ObjectIO& /*objectWriter*/, const DataObject* /*dataObject*/, bool /*importable*/);
-  friend class HDF5::IDataIO;
+  friend class hdf5::IDataIO;
 
   using DataMapType = std::map<DataObject::IdType, std::string>;
 
@@ -205,5 +205,5 @@ private:
   std::shared_ptr<DataIOManager> m_IOManager;
 };
 
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

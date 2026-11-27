@@ -73,7 +73,7 @@ SIMPLNX_EXPORT SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geo
  * @param geom The input mesh
  * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
  */
-SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
+SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::StoreType& vertexList,
                                                                                   const std::atomic_bool& shouldCancel);
 
 /**
@@ -82,5 +82,5 @@ SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxi
  * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
  * @returns bool false means vertices are unique
  */
-SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const SortedVerticesList& sortedVertices);
+SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexList::StoreType& verts, const SortedVerticesList& sortedVertices);
 } // namespace nx::core::MeshingUtilities

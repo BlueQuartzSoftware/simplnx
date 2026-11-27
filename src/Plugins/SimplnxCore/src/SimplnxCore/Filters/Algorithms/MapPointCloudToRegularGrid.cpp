@@ -9,9 +9,9 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::StringLiteral k_SilentMode = "Silent";
-constexpr nx::core::StringLiteral k_WarningMode = "Warning with Count";
-constexpr nx::core::StringLiteral k_ErrorMode = "Error at First Instance";
+constexpr nx::core::StringLiteralType k_SilentMode = "Silent";
+constexpr nx::core::StringLiteralType k_WarningMode = "Warning with Count";
+constexpr nx::core::StringLiteralType k_ErrorMode = "Error at First Instance";
 const nx::core::ChoicesParameter::ValueType k_SilentModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_WarningModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ErrorModeIndex = 2;

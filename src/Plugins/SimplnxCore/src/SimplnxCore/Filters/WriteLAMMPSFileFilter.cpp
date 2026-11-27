@@ -59,9 +59,9 @@ Parameters WriteLAMMPSFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath, "Input Vertex Geometry", "The vertex geometry holding the arrays to write", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AtomLabelsPath_Key, "Atom Feature Labels", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   return params;
 }
@@ -73,7 +73,7 @@ IFilter::VersionType WriteLAMMPSFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteLAMMPSFileFilter::clone() const
+IFilter::UniquePointerType WriteLAMMPSFileFilter::clone() const
 {
   return std::make_unique<WriteLAMMPSFileFilter>();
 }
@@ -136,8 +136,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_LammpsFileKey = "LammpsFile";
-constexpr StringLiteral k_AtomFeatureLabelsPathKey = "AtomFeatureLabelsPath";
+constexpr StringLiteralType k_LammpsFileKey = "LammpsFile";
+constexpr StringLiteralType k_AtomFeatureLabelsPathKey = "AtomFeatureLabelsPath";
 } // namespace simpl
 } // namespace
 
@@ -147,9 +147,9 @@ Result<Arguments> WriteLAMMPSFileFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_LammpsFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_VertexGeomPath));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_AtomLabelsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_LammpsFileKey, k_OutputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_VertexGeomPath));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_AtomLabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

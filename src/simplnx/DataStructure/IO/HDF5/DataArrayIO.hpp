@@ -13,7 +13,7 @@
 #include <iterator>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -27,7 +27,7 @@ class DataArrayIO : public IDataIO
 public:
   using data_type = DataArray<T>;
 
-  using store_type = AbstractDataStore<T>;
+  using StoreType = AbstractDataStore<T>;
 
   DataArrayIO() = default;
 
@@ -48,12 +48,12 @@ public:
    * a recovery placeholder after preserving its warnings.
    */
   template <typename K>
-  static Result<> importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
+  static Result<> importDataArray(DataStructure& dataStructure, const nx::core::hdf5::DatasetIO& datasetReader, const std::string& dataArrayName, DataObject::IdType importId,
                                   const std::optional<DataObject::IdType>& parentId, bool preflight)
   {
     if(preflight)
     {
-      auto shapesResult = EmptyDataStoreIO::ReadShapes(datasetReader);
+      auto shapesResult = empty_data_store_io::ReadShapes(datasetReader);
       if(shapesResult.invalid())
       {
         for(auto& error : shapesResult.errors())
@@ -69,7 +69,7 @@ public:
       return plannedResult;
     }
 
-    auto storeResult = DataStoreIO::ReadDataStoreIntoMemory<K>(datasetReader);
+    auto storeResult = data_store_io::ReadDataStoreIntoMemory<K>(datasetReader);
     if(storeResult.invalid())
     {
       return ConvertResult(std::move(storeResult));
@@ -104,9 +104,9 @@ public:
    * select the read type.
    */
   template <typename K>
-  static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader)
+  static Result<> ImportDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::hdf5::DatasetIO& datasetReader)
   {
-    auto storeResult = DataStoreIO::ReadDataStoreIntoMemory<T>(datasetReader);
+    auto storeResult = data_store_io::ReadDataStoreIntoMemory<T>(datasetReader);
     if(storeResult.invalid())
     {
       return ConvertResult(std::move(storeResult));
@@ -137,7 +137,7 @@ public:
    * @param parentGroupReader HDF5 group that owns the dataset.
    * @return Read warnings or errors.
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& parentGroupReader) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -168,32 +168,32 @@ public:
     switch(type)
     {
     case DataType::float32:
-      return importDataStore<float32>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<float32>(dataArrayPtr, dataPath, datasetReader);
     case DataType::float64:
-      return importDataStore<float64>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<float64>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int8:
-      return importDataStore<int8>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<int8>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int16:
-      return importDataStore<int16>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<int16>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int32:
-      return importDataStore<int32>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<int32>(dataArrayPtr, dataPath, datasetReader);
     case DataType::int64:
-      return importDataStore<int64>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<int64>(dataArrayPtr, dataPath, datasetReader);
     case DataType::uint8: {
       if(isBoolArray)
       {
-        return importDataStore<bool>(dataArrayPtr, dataPath, datasetReader);
+        return ImportDataStore<bool>(dataArrayPtr, dataPath, datasetReader);
       }
 
-      return importDataStore<uint8>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<uint8>(dataArrayPtr, dataPath, datasetReader);
     }
     break;
     case DataType::uint16:
-      return importDataStore<uint16>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<uint16>(dataArrayPtr, dataPath, datasetReader);
     case DataType::uint32:
-      return importDataStore<uint32>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<uint32>(dataArrayPtr, dataPath, datasetReader);
     case DataType::uint64:
-      return importDataStore<uint64>(dataArrayPtr, dataPath, datasetReader);
+      return ImportDataStore<uint64>(dataArrayPtr, dataPath, datasetReader);
     default:
       return MakeErrorResult(-150209, fmt::format("Undetermined DataArray type: '{}'", dataTypeStr));
     }
@@ -209,7 +209,7 @@ public:
    * @param useEmptyDataStore True for metadata-only import.
    * @return Import warnings or errors.
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataArrayName, DataObject::IdType importId,
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& dataArrayName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(dataArrayName);
@@ -300,11 +300,11 @@ public:
    * @param importable Stored importable state.
    * @return Write warnings or errors.
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, group_writer_type& parentGroup, bool importable) const
+  Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, GroupWriterType& parentGroup, bool importable) const
   {
     auto datasetWriter = parentGroup.createDataset(dataArray.getName());
     datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
-    Result<> storeResult = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
+    Result<> storeResult = data_store_io::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
     if(storeResult.invalid())
     {
       storeResult.errors().push_back({-43255, fmt::format("Error writing data array '{}' to hdf5 file.", dataArray.getName())});
@@ -334,7 +334,7 @@ public:
    * @param parentWriter Destination HDF5 group.
    * @return Type-validation or write errors.
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override
   {
     return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
   }
@@ -358,4 +358,4 @@ using UInt64ArrayIO = DataArrayIO<uint64>;
 using BoolArrayIO = DataArrayIO<bool>;
 using Float32ArrayIO = DataArrayIO<float32>;
 using Float64ArrayIO = DataArrayIO<float64>;
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

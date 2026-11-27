@@ -40,7 +40,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 #if SIMPLNX_BUILD_TESTS
 namespace
@@ -481,9 +481,9 @@ ParallelChunkCodec::ParallelChunkCodec(std::filesystem::path filePath, std::stri
 ParallelChunkCodec::~ParallelChunkCodec()
 {
 #ifndef _WIN32
-  if(detail::isValidFileHandle(m_ReadFileHandle))
+  if(detail::IsValidFileHandle(m_ReadFileHandle))
   {
-    detail::closeFileHandle(m_ReadFileHandle);
+    detail::CloseFileHandle(m_ReadFileHandle);
   }
 #endif
 }
@@ -492,8 +492,8 @@ ParallelChunkCodec::~ParallelChunkCodec()
 detail::FileHandle ParallelChunkCodec::getPositionalReadHandle() const
 {
   std::call_once(m_ReadHandleOpenOnce, [this]() {
-    m_ReadFileHandle = detail::openFileForRead(m_FilePath.string());
-    if(!detail::isValidFileHandle(m_ReadFileHandle))
+    m_ReadFileHandle = detail::OpenFileForRead(m_FilePath.string());
+    if(!detail::IsValidFileHandle(m_ReadFileHandle))
     {
       throw std::runtime_error(fmt::format("ParallelChunkCodec: failed to open '{}'", m_FilePath.string()));
     }
@@ -617,7 +617,7 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunk
 #if SIMPLNX_BUILD_TESTS
     ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, storedSize, 0);
 #endif
-    const auto result = nx::core::detail::positionalRead(rawHandle, stored.data(), static_cast<std::size_t>(storedSize), static_cast<uint64_t>(storedAddress));
+    const auto result = nx::core::detail::PositionalRead(rawHandle, stored.data(), static_cast<std::size_t>(storedSize), static_cast<uint64_t>(storedAddress));
 #if SIMPLNX_BUILD_TESTS
     if(result == static_cast<std::ptrdiff_t>(storedSize))
     {
@@ -1444,7 +1444,7 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
   return true;
 }
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 #if SIMPLNX_BUILD_TESTS
 namespace nx::core::BoundedRead
@@ -1452,7 +1452,7 @@ namespace nx::core::BoundedRead
 WarningCollection MakeSuccessWarningsForTesting(const std::filesystem::path* file, std::string_view dataset)
 {
   const std::filesystem::path residentIdentity;
-  if(HDF5::InjectCodecFaultForTesting(file != nullptr ? *file : residentIdentity, dataset, HDF5::BoundedFaultPointForTesting::SuccessResultConstruction))
+  if(hdf5::InjectCodecFaultForTesting(file != nullptr ? *file : residentIdentity, dataset, hdf5::BoundedFaultPointForTesting::SuccessResultConstruction))
   {
     throw std::bad_alloc{};
   }

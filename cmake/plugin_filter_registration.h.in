@@ -12,9 +12,9 @@
 
 namespace {
 
-std::vector<nx::core::FilterCreationFunc> GetPluginFilterList()
+std::vector<nx::core::FilterCreationFuncType> GetPluginFilterList()
 {
-  std::vector<nx::core::FilterCreationFunc> filters;
+  std::vector<nx::core::FilterCreationFuncType> filters;
 @Public_Filter_Registration_Code@
   return filters;
 }

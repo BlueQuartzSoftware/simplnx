@@ -65,7 +65,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("c09cf01b-014e-5adb-84
 OrientationAnalysisPlugin::OrientationAnalysisPlugin()
 : AbstractPlugin(k_ID, "OrientationAnalysis", "<<--Description was not read-->>", "BlueQuartz Software, LLC")
 {
-  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  std::vector<::FilterCreationFuncType> filterFuncs = ::GetPluginFilterList();
   for(const auto& filterFunc : filterFuncs)
   {
     addFilter(filterFunc);

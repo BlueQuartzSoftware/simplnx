@@ -84,7 +84,7 @@ void CacheMemoryBudgetManager::WorkingMemoryReservation::release() noexcept
 
 uint64 CacheMemoryBudgetManager::TotalSystemRamBytes()
 {
-  return nx::core::Memory::GetTotalMemory();
+  return nx::core::memory_utilities::GetTotalMemory();
 }
 
 CacheMemoryBudgetManager::CacheMemoryBudgetManager()

@@ -58,14 +58,14 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<BoolParameter>(k_UseRunningAverage_Key, "Group C-Axes With Running Average", "Group C-Axes With Running Average", true));
-  params.insert(std::make_unique<Float32Parameter>(k_CAxisTolerance_Key, "C-Axis Alignment Tolerance (Degrees)", "C-Axis Alignment Tolerance (Degrees)", 20.0f));
+  params.insert(std::make_unique<Float32ParameterType>(k_CAxisTolerance_Key, "C-Axis Alignment Tolerance (Degrees)", "C-Axis Alignment Tolerance (Degrees)", 20.0f));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.", DataPath{},
-                                                                 NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
+                                                                 NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Non-Contiguous Neighborhood Option"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNonContiguousNeighbors_Key, "Use Non-Contiguous Neighbors", "Use non-contiguous neighborhoods", false));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NonContiguousNeighborListArrayPath_Key, "Non-Contiguous Neighbor List", "List of non-contiguous neighbors for each Feature.",
-                                                                 DataPath{}, NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
+                                                                 DataPath{}, NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Parent Id Randomization"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
@@ -81,19 +81,19 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VolumesArrayPath_Key, "Volumes", "The Feature Volumes Data Array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellParentIdsArrayName_Key, "Cell Parent Ids Array name", "Output Cell Parent Ids Data Array", "Cell Parent Ids"));
@@ -109,7 +109,7 @@ Parameters GroupMicroTextureRegionsFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer GroupMicroTextureRegionsFilter::clone() const
+IFilter::UniquePointerType GroupMicroTextureRegionsFilter::clone() const
 {
   return std::make_unique<GroupMicroTextureRegionsFilter>();
 }
@@ -197,19 +197,19 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
-constexpr StringLiteral k_CAxisToleranceKey = "CAxisTolerance";
-constexpr StringLiteral k_CellParentIdsArrayNameKey = "CellParentIdsArrayName";
-constexpr StringLiteral k_ContiguousNeighborListArrayPathKey = "ContiguousNeighborListArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FeatureParentIdsArrayNameKey = "FeatureParentIdsArrayName";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_NewCellFeatureAttributeMatrixNameKey = "NewCellFeatureAttributeMatrixName";
-constexpr StringLiteral k_NonContiguousNeighborListArrayPathKey = "NonContiguousNeighborListArrayPath";
-constexpr StringLiteral k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
-constexpr StringLiteral k_UseRunningAverageKey = "UseRunningAverage";
-constexpr StringLiteral k_VolumesArrayPathKey = "VolumesArrayPath";
+constexpr StringLiteralType k_AvgQuatsArrayPathKey = "AvgQuatsArrayPath";
+constexpr StringLiteralType k_CAxisToleranceKey = "CAxisTolerance";
+constexpr StringLiteralType k_CellParentIdsArrayNameKey = "CellParentIdsArrayName";
+constexpr StringLiteralType k_ContiguousNeighborListArrayPathKey = "ContiguousNeighborListArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FeatureParentIdsArrayNameKey = "FeatureParentIdsArrayName";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_NewCellFeatureAttributeMatrixNameKey = "NewCellFeatureAttributeMatrixName";
+constexpr StringLiteralType k_NonContiguousNeighborListArrayPathKey = "NonContiguousNeighborListArrayPath";
+constexpr StringLiteralType k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
+constexpr StringLiteralType k_UseRunningAverageKey = "UseRunningAverage";
+constexpr StringLiteralType k_VolumesArrayPathKey = "VolumesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -219,23 +219,23 @@ Result<Arguments> GroupMicroTextureRegionsFilter::FromSIMPLJson(const nlohmann::
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_CAxisToleranceKey, k_CAxisTolerance_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellParentIdsArrayNameKey, k_CellParentIdsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_AvgQuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_CAxisToleranceKey, k_CAxisTolerance_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellParentIdsArrayNameKey, k_CellParentIdsArrayName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ContiguousNeighborListArrayPathKey, k_ContiguousNeighborListArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ContiguousNeighborListArrayPathKey, k_ContiguousNeighborListArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureParentIdsArrayNameKey, k_FeatureParentIdsArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, simpl::k_NewCellFeatureAttributeMatrixNameKey,
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureParentIdsArrayNameKey, k_FeatureParentIdsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerCreationFilterParameterConverter>(args, json, simpl::k_NewCellFeatureAttributeMatrixNameKey,
                                                                                                                       k_NewCellFeatureAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NonContiguousNeighborListArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NonContiguousNeighborListArrayPathKey,
                                                                                                                    k_NonContiguousNeighborListArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseNonContiguousNeighborsKey, k_UseNonContiguousNeighbors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseRunningAverageKey, k_UseRunningAverage_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VolumesArrayPathKey, k_VolumesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseNonContiguousNeighborsKey, k_UseNonContiguousNeighbors_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseRunningAverageKey, k_UseRunningAverage_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VolumesArrayPathKey, k_VolumesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

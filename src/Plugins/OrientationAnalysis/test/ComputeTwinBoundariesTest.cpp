@@ -32,17 +32,17 @@ const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_GrainDataWith
 const DataPath k_CrystalStructuresPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures});
 
 // Face Level Data
-const StringLiteral k_TriangleContainerName = "TriangleDataContainer";
+const StringLiteralType k_TriangleContainerName = "TriangleDataContainer";
 const DataPath k_FaceDataPath({k_TriangleContainerName, Constants::k_FaceData});
 const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(Constants::k_FaceLabels);
 const DataPath k_FaceNormalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
 
 // Created Data Names/Paths
-const StringLiteral k_ExemplarBoundariesName = "NX Twin Boundaries";
-const StringLiteral k_ExemplarIncoherenceName = "NX Twin Boundaries Incoherence";
+const StringLiteralType k_ExemplarBoundariesName = "NX Twin Boundaries";
+const StringLiteralType k_ExemplarIncoherenceName = "NX Twin Boundaries Incoherence";
 
-const StringLiteral k_GeneratedBoundariesName = "Generated Twin Boundaries";
-const StringLiteral k_GeneratedIncoherenceName = "Generated Twin Boundaries Incoherence";
+const StringLiteralType k_GeneratedBoundariesName = "Generated Twin Boundaries";
+const StringLiteralType k_GeneratedIncoherenceName = "Generated Twin Boundaries Incoherence";
 
 const DataPath k_ExemplarBoundariesPath = k_FaceDataPath.createChildPath(k_ExemplarBoundariesName);
 const DataPath k_ExemplarIncoherencePath = k_FaceDataPath.createChildPath(k_ExemplarIncoherenceName);

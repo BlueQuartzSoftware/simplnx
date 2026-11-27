@@ -31,7 +31,7 @@
 
 namespace fs = std::filesystem;
 
-namespace nx::core::DREAM3D
+namespace nx::core::dream3d
 {
 namespace
 {
@@ -102,7 +102,7 @@ std::string MakeKey(const fs::path& filePath)
  */
 Result<NeutralMetadataHandout> ReadFromDisk(const fs::path& filePath, bool neutral)
 {
-  auto fileReader = nx::core::HDF5::FileIO::ReadFile(filePath);
+  auto fileReader = nx::core::hdf5::FileIO::ReadFile(filePath);
   if(!fileReader.isValid())
   {
     return MakeErrorResult<NeutralMetadataHandout>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", filePath.string()));
@@ -312,7 +312,7 @@ Result<std::optional<NeutralMetadataHandout>> Dream3dPreflightCache::tryServeFro
     if(iter != m_Entries.end() && iter->second.fileSize == fileSize && iter->second.mtime == mtime)
     {
       m_Hits++;
-      iter->second.lastUsedTick = ++m_Tick;
+      iter->second.last_used_tick = ++m_Tick;
       handout = iter->second.master;
       diskWarnings = iter->second.diskWarnings;
     }
@@ -376,7 +376,7 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchNeutralMetadata(const
     return result;
   }
   auto& handout = result.value();
-  auto validation = HDF5::RectGridGeomIO::ValidateImportedBounds(handout.dataStructure, filePath);
+  auto validation = hdf5::RectGridGeomIO::ValidateImportedBounds(handout.dataStructure, filePath);
   if(validation.valid())
   {
     validation = handout.applyImageMetadata(filePath, handout.dataStructure.getAllDataPaths(), false);
@@ -457,10 +457,10 @@ Result<NeutralMetadataHandout> Dream3dPreflightCache::fetchMetadata(const fs::pa
     entry.diskWarnings = neutral ? warnings : std::vector<Warning>{};
     entry.fileSize = metadata->file_size;
     entry.mtime = metadata->mtime;
-    entry.lastUsedTick = ++m_Tick;
+    entry.last_used_tick = ++m_Tick;
     while(m_Entries.size() > k_Capacity)
     {
-      auto victim = std::min_element(m_Entries.begin(), m_Entries.end(), [](const auto& a, const auto& b) { return a.second.lastUsedTick < b.second.lastUsedTick; });
+      auto victim = std::min_element(m_Entries.begin(), m_Entries.end(), [](const auto& a, const auto& b) { return a.second.last_used_tick < b.second.last_used_tick; });
       m_Entries.erase(victim);
     }
     handout = entry.master;
@@ -506,4 +506,4 @@ void Dream3dPreflightCache::resetStats()
   m_Hits.store(0);
   m_Misses.store(0);
 }
-} // namespace nx::core::DREAM3D
+} // namespace nx::core::dream3d

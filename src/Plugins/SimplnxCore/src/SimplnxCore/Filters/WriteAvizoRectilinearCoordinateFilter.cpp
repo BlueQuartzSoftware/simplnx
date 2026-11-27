@@ -62,9 +62,9 @@ Parameters WriteAvizoRectilinearCoordinateFilter::parameters() const
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_WriteBinaryFile_Key, "Write Binary File", "Whether or not to write the output file as binary", false));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Image Geometry", "The path to the input image geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<StringParameter>(k_Units_Key, "Units", "The units of the data", "microns"));
 
   return params;
@@ -77,7 +77,7 @@ IFilter::VersionType WriteAvizoRectilinearCoordinateFilter::parametersVersion() 
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteAvizoRectilinearCoordinateFilter::clone() const
+IFilter::UniquePointerType WriteAvizoRectilinearCoordinateFilter::clone() const
 {
   return std::make_unique<WriteAvizoRectilinearCoordinateFilter>();
 }
@@ -137,10 +137,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_WriteBinaryFileKey = "WriteBinaryFile";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_UnitsKey = "Units";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_WriteBinaryFileKey = "WriteBinaryFile";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_UnitsKey = "Units";
 } // namespace simpl
 } // namespace
 
@@ -150,11 +150,11 @@ Result<Arguments> WriteAvizoRectilinearCoordinateFilter::FromSIMPLJson(const nlo
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteBinaryFileKey, k_WriteBinaryFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_UnitsKey, k_Units_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteBinaryFileKey, k_WriteBinaryFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_UnitsKey, k_Units_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

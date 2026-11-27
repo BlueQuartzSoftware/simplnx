@@ -24,17 +24,17 @@ public:
   ComputeFeatureReferenceMisorientationsFilter& operator=(ComputeFeatureReferenceMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ReferenceOrientation_Key = "reference_orientation_index";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "gb_euclidean_distances_array_path";
-  static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_CellMisorientationsArrayName_Key = "feature_reference_misorientations_array_name";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
-  static constexpr StringLiteral k_FeatureAvgMisorientationsArrayName_Key = "feature_avg_misorientations_array_name";
-  static constexpr StringLiteral k_FeatureEuclideanCenterArrayName_Key = "feature_euclidean_center_array_name";
+  static constexpr StringLiteralType k_ReferenceOrientation_Key = "reference_orientation_index";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteralType k_GBEuclideanDistancesArrayPath_Key = "gb_euclidean_distances_array_path";
+  static constexpr StringLiteralType k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_CellMisorientationsArrayName_Key = "feature_reference_misorientations_array_name";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_FeatureAvgMisorientationsArrayName_Key = "feature_avg_misorientations_array_name";
+  static constexpr StringLiteralType k_FeatureEuclideanCenterArrayName_Key = "feature_euclidean_center_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -91,7 +91,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

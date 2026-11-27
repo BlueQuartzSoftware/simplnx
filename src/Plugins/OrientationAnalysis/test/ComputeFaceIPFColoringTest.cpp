@@ -30,8 +30,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
-constexpr StringLiteral k_FirstNXFaceIPFColors("NXFaceIPFColors 0");
-constexpr StringLiteral k_SecondNXFaceIPFColors("NXFaceIPFColors 1");
+constexpr StringLiteralType k_FirstNXFaceIPFColors("NXFaceIPFColors 0");
+constexpr StringLiteralType k_SecondNXFaceIPFColors("NXFaceIPFColors 1");
 
 DataPath SmallIn100Group({nx::core::Constants::k_SmallIN100});
 DataPath FeatureDataPath = SmallIn100Group.createChildPath(nx::core::Constants::k_GrainDataWithSpaces);

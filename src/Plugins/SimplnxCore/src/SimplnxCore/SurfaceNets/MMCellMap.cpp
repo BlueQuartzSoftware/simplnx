@@ -64,7 +64,7 @@ bool InsideNxVolume(const int32* cellIndex, const std::array<size_t, 3>& nxDims)
 } // namespace
 
 // ----------------------------------------------------------------------------
-MMCellMap::MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3])
+MMCellMap::MMCellMap(TriangleGeom::SharedVertexList::StoreType& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3])
 : m_CellArray(nullptr)
 , m_VerticesStoreRef(verticesStore)
 , m_NxLabelsPtr(labels)

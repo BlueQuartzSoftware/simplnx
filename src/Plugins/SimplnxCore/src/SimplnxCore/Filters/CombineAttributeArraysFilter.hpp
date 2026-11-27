@@ -24,10 +24,10 @@ public:
   CombineAttributeArraysFilter& operator=(CombineAttributeArraysFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_NormalizeData_Key = "normalize_data";
-  static constexpr StringLiteral k_MoveValues_Key = "move_values";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
-  static constexpr StringLiteral k_StackedDataArrayName_Key = "output_data_array_name";
+  static constexpr StringLiteralType k_NormalizeData_Key = "normalize_data";
+  static constexpr StringLiteralType k_MoveValues_Key = "move_values";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_StackedDataArrayName_Key = "output_data_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

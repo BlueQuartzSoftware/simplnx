@@ -358,47 +358,47 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 {
   auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
 
-  if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<float32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Float64Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<float64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int8Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<int8>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt8Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint8>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int16Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<int16>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt16Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint16>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int32Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<int32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt32Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint32>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<Int64Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<int64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<UInt64Array>()(inputDataArrayPtr))
   {
     return ReplaceArray<uint64>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }
-  if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
+  if(template_helpers::CanDynamicCast<BoolArray>()(inputDataArrayPtr))
   {
     return ReplaceArray<bool>(dataStructure, dataPath, tupleShape, mode, *inputDataArrayPtr);
   }

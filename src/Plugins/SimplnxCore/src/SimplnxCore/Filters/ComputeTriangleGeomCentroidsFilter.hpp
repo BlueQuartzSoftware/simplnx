@@ -24,11 +24,11 @@ public:
   ComputeTriangleGeomCentroidsFilter& operator=(ComputeTriangleGeomCentroidsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
-  static constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_IsPeriodic_Key = "is_periodic";
+  static constexpr StringLiteralType k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static constexpr StringLiteralType k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_CentroidsArrayName_Key = "centroids_array_name";
+  static constexpr StringLiteralType k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_IsPeriodic_Key = "is_periodic";
 
   /**
    * @brief Returns the name of the filter.
@@ -78,7 +78,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

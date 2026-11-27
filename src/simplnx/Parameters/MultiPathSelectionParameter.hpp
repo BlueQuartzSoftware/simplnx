@@ -40,7 +40,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -106,7 +106,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT SingleToMultiDataPathSelectionFilterParameterConverter
 {
@@ -123,7 +123,7 @@ struct SIMPLNX_EXPORT DataArraysToRemoveConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::MultiPathSelectionParameter, "b5632f4f-fc13-4234-beb2-8fd8820eb6b6");

@@ -6,12 +6,12 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 INodeGeom1dIO::INodeGeom1dIO() = default;
 INodeGeom1dIO::~INodeGeom1dIO() noexcept = default;
 
-Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureReader, INodeGeometry1D& geometry, const group_reader_type& parentGroup, const std::string& objectName,
+Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureReader, INodeGeometry1D& geometry, const GroupReaderType& parentGroup, const std::string& objectName,
                                            DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   Result<> result = INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
@@ -30,7 +30,7 @@ Result<> INodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureRea
   return {};
 }
 
-Result<> INodeGeom1dIO::FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> INodeGeom1dIO::FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup)
 {
   auto* geomPtr = dataStructure.getDataAs<INodeGeometry1D>(dataPath);
   if(geomPtr == nullptr)
@@ -41,7 +41,7 @@ Result<> INodeGeom1dIO::FinishImportingNodeGeom1dData(DataStructure& dataStructu
   return INodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, group_writer_type& parentGroupWriter, bool importable)
+Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, GroupWriterType& parentGroupWriter, bool importable)
 {
   Result<> result = INodeGeom0dIO::WriteNodeGeom0dData(dataStructureWriter, geometry, parentGroupWriter, importable);
   if(result.invalid())
@@ -83,7 +83,7 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
   return result;
 }
 
-Result<> INodeGeom1dIO::WriteConnectivityId(const DataStructureWriter& dataStructureWriter, group_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag)
+Result<> INodeGeom1dIO::WriteConnectivityId(const DataStructureWriter& dataStructureWriter, GroupWriterType& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag)
 {
   if(objectId.has_value() && !dataStructureWriter.isOmittedConnectivity(objectId.value()))
   {
@@ -91,4 +91,4 @@ Result<> INodeGeom1dIO::WriteConnectivityId(const DataStructureWriter& dataStruc
   }
   return groupWriter.removeAttribute(tag);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

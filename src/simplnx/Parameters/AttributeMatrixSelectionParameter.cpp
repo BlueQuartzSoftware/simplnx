@@ -41,7 +41,7 @@ nlohmann::json AttributeMatrixSelectionParameter::toJsonImpl(const std::any& val
 
 Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
 
   if(!json.is_string())
   {
@@ -57,7 +57,7 @@ Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann:
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer AttributeMatrixSelectionParameter::clone() const
+IParameter::UniquePointerType AttributeMatrixSelectionParameter::clone() const
 {
   return std::make_unique<AttributeMatrixSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -110,7 +110,7 @@ Result<std::any> AttributeMatrixSelectionParameter::resolve(DataStructure& dataS
   return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreationToAMFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -149,5 +149,5 @@ Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMat
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

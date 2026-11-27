@@ -77,7 +77,7 @@ void CheckCellMapEndpoints(MMCellFlag::Edge edge, std::array<usize, 3> dimension
 // per test file.
 SurfaceMeshingTest::MeshResult RunSurfaceNetsForFaceLabels()
 {
-  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_TriangleGeomPath, BoundingBoxSkinMode::k_Off, [](Arguments& args) {
+  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_TriangleGeomPath, bounding_box_skin_mode::k_Off, [](Arguments& args) {
     args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));

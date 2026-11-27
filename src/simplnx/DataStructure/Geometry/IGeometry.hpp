@@ -25,8 +25,8 @@ public:
   using SharedHexList = MeshIndexArrayType;
   using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
 
-  static constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
-  static constexpr StringLiteral k_TypeName = "IGeometry";
+  static constexpr StringLiteralType k_VoxelSizes = "Voxel Sizes";
+  static constexpr StringLiteralType k_TypeName = "IGeometry";
 
   /* We are leveraging the bounded nature of the following enum to expedite processing
    *
@@ -48,7 +48,7 @@ public:
     Hexahedral = 7u
   };
 
-  static constexpr std::array<StringLiteral, 8> k_GeomTypeStrings = {"Image", "RectGrid", "Vertex", "Edge", "Triangle", "Quad", "Tetrahedral", "Hexahedral"};
+  static constexpr std::array<StringLiteralType, 8> k_GeomTypeStrings = {"Image", "RectGrid", "Vertex", "Edge", "Triangle", "Quad", "Tetrahedral", "Hexahedral"};
 
   enum class LengthUnit : EnumType
   {

@@ -65,9 +65,9 @@ Result<> WriteDREAM3D::operator()()
     pipeline = *pipelinePtr;
   }
 
-  nx::core::HDF5::DataStructureWriter::WriteOptions writeOptions;
+  nx::core::hdf5::DataStructureWriter::WriteOptions writeOptions;
   writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
-  auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
+  auto results = dream3d::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
   if(results.invalid())
   {
     return results;

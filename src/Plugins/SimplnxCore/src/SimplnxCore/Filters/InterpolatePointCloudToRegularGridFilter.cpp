@@ -65,20 +65,20 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Destination Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean or uint8 mask array. Values that are true will mark that vertex as usable.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -123,7 +123,7 @@ IFilter::VersionType InterpolatePointCloudToRegularGridFilter::parametersVersion
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InterpolatePointCloudToRegularGridFilter::clone() const
+IFilter::UniquePointerType InterpolatePointCloudToRegularGridFilter::clone() const
 {
   return std::make_unique<InterpolatePointCloudToRegularGridFilter>();
 }
@@ -319,16 +319,16 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_UseMaskKey = "UseMask";
-constexpr StringLiteral k_InterpolationTechniqueKey = "InterpolationTechnique";
-constexpr StringLiteral k_KernelSizeKey = "KernelSize";
-constexpr StringLiteral k_SigmasKey = "Sigmas";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_InterpolatedDataContainerNameKey = "InterpolatedDataContainerName";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_ArraysToInterpolateKey = "ArraysToInterpolate";
-constexpr StringLiteral k_ArraysToCopyKey = "ArraysToCopy";
-constexpr StringLiteral k_InterpolatedAttributeMatrixNameKey = "InterpolatedAttributeMatrixName";
+constexpr StringLiteralType k_UseMaskKey = "UseMask";
+constexpr StringLiteralType k_InterpolationTechniqueKey = "InterpolationTechnique";
+constexpr StringLiteralType k_KernelSizeKey = "KernelSize";
+constexpr StringLiteralType k_SigmasKey = "Sigmas";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_InterpolatedDataContainerNameKey = "InterpolatedDataContainerName";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_ArraysToInterpolateKey = "ArraysToInterpolate";
+constexpr StringLiteralType k_ArraysToCopyKey = "ArraysToCopy";
+constexpr StringLiteralType k_InterpolatedAttributeMatrixNameKey = "InterpolatedAttributeMatrixName";
 } // namespace simpl
 } // namespace
 
@@ -338,16 +338,16 @@ Result<Arguments> InterpolatePointCloudToRegularGridFilter::FromSIMPLJson(const 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_InterpolationTechniqueKey, k_InterpolationTechnique_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_KernelSizeKey, k_KernelSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SigmasKey, k_GaussianSigmas_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_InterpolationTechniqueKey, k_InterpolationTechnique_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_KernelSizeKey, k_KernelSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SigmasKey, k_GaussianSigmas_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_InterpolatedDataContainerNameKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_InputMaskPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_ArraysToInterpolateKey, k_InterpolateArrays_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_ArraysToCopyKey, k_CopyArrays_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_InterpolatedDataContainerNameKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_InputMaskPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_ArraysToInterpolateKey, k_InterpolateArrays_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_ArraysToCopyKey, k_CopyArrays_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

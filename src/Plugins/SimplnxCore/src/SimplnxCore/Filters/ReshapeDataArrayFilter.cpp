@@ -75,7 +75,7 @@ IFilter::VersionType ReshapeDataArrayFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReshapeDataArrayFilter::clone() const
+IFilter::UniquePointerType ReshapeDataArrayFilter::clone() const
 {
   return std::make_unique<ReshapeDataArrayFilter>();
 }

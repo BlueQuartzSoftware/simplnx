@@ -20,15 +20,15 @@ namespace
 {
 using OrderingUnderlyingTType = std::underlying_type_t<GeneratedFileListParameter::Ordering>;
 
-constexpr StringLiteral k_StartIndex = "start_index";
-constexpr StringLiteral k_EndIndex = "end_index";
-constexpr StringLiteral k_PaddingDigits = "padding_digits";
-constexpr StringLiteral k_Ordering = "ordering";
-constexpr StringLiteral k_IncrementIndex = "increment_index";
-constexpr StringLiteral k_InputPath = "input_path";
-constexpr StringLiteral k_FilePrefix = "file_prefix";
-constexpr StringLiteral k_FileSuffix = "file_suffix";
-constexpr StringLiteral k_FileExtension = "file_extension";
+constexpr StringLiteralType k_StartIndex = "start_index";
+constexpr StringLiteralType k_EndIndex = "end_index";
+constexpr StringLiteralType k_PaddingDigits = "padding_digits";
+constexpr StringLiteralType k_Ordering = "ordering";
+constexpr StringLiteralType k_IncrementIndex = "increment_index";
+constexpr StringLiteralType k_InputPath = "input_path";
+constexpr StringLiteralType k_FilePrefix = "file_prefix";
+constexpr StringLiteralType k_FileSuffix = "file_suffix";
+constexpr StringLiteralType k_FileExtension = "file_extension";
 } // namespace
 
 //-----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ nlohmann::json GeneratedFileListParameter::toJsonImpl(const std::any& value) con
 //-----------------------------------------------------------------------------
 Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'GeneratedFileListParameter' Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'GeneratedFileListParameter' Error: ";
 
   if(!json.is_object())
   {
@@ -138,7 +138,7 @@ Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& 
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer GeneratedFileListParameter::clone() const
+IParameter::UniquePointerType GeneratedFileListParameter::clone() const
 {
   return std::make_unique<GeneratedFileListParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -199,19 +199,19 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_EndIndex = "EndIndex";
-constexpr StringLiteral k_FileExtension = "FileExtension";
-constexpr StringLiteral k_FilePrefix = "FilePrefix";
-constexpr StringLiteral k_FileSuffix = "FileSuffix";
-constexpr StringLiteral k_IncrementIndex = "IncrementIndex";
-constexpr StringLiteral k_InputPath = "InputPath";
-constexpr StringLiteral k_Ordering = "Ordering";
-constexpr StringLiteral k_PaddingDigits = "PaddingDigits";
-constexpr StringLiteral k_StartIndex = "StartIndex";
+constexpr StringLiteralType k_EndIndex = "EndIndex";
+constexpr StringLiteralType k_FileExtension = "FileExtension";
+constexpr StringLiteralType k_FilePrefix = "FilePrefix";
+constexpr StringLiteralType k_FileSuffix = "FileSuffix";
+constexpr StringLiteralType k_IncrementIndex = "IncrementIndex";
+constexpr StringLiteralType k_InputPath = "InputPath";
+constexpr StringLiteralType k_Ordering = "Ordering";
+constexpr StringLiteralType k_PaddingDigits = "PaddingDigits";
+constexpr StringLiteralType k_StartIndex = "StartIndex";
 } // namespace
 
 Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParameterConverter::Convert(const nlohmann::json& json)
@@ -343,5 +343,5 @@ Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParame
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

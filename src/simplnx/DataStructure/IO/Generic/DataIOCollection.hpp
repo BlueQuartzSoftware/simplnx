@@ -20,12 +20,12 @@
 #include <string>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class DataStructureWriter;
 class FileIO;
 class GroupIO;
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 namespace nx::core
 {
@@ -64,17 +64,17 @@ public:
   /**
    * @brief Maps format names to shared I/O managers.
    */
-  using map_type = std::map<std::string, std::shared_ptr<IDataIOManager>>;
+  using MapType = std::map<std::string, std::shared_ptr<IDataIOManager>>;
 
   /**
    * @brief Names a mutable manager-map iterator.
    */
-  using iterator = typename map_type::iterator;
+  using iterator = typename MapType::iterator;
 
   /**
    * @brief Names a read-only manager-map iterator.
    */
-  using const_iterator = typename map_type::const_iterator;
+  using const_iterator = typename MapType::const_iterator;
 
   /**
    * @brief Names a callback that eagerly loads one imported DataObject.
@@ -262,7 +262,7 @@ public:
    * eager-loads those remaining placeholders in memory. If invalid configuration
    * provides more than one finalizer, map order selects the first manager.
    */
-  std::optional<Result<>> onImportFinalize(DataStructure& dataStructure, const std::vector<DataPath>& paths, const nx::core::HDF5::FileIO& fileReader);
+  std::optional<Result<>> onImportFinalize(DataStructure& dataStructure, const std::vector<DataPath>& paths, const nx::core::hdf5::FileIO& fileReader);
 
   /**
    * @brief Offers a recovery-write override to registered managers.
@@ -271,7 +271,7 @@ public:
    * @param parentGroup Destination group borrowed for this call.
    * @return First manager result in map order, or std::nullopt for normal serialization.
    */
-  std::optional<Result<>> onRecoveryWrite(nx::core::HDF5::DataStructureWriter& writer, const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup);
+  std::optional<Result<>> onRecoveryWrite(nx::core::hdf5::DataStructureWriter& writer, const DataObject* dataObject, nx::core::hdf5::GroupIO& parentGroup);
 
   /**
    * @brief Propagates a working-file base directory to all managers.
@@ -321,7 +321,7 @@ public:
   std::string generateManagerListString() const;
 
 private:
-  map_type m_ManagerMap;
+  MapType m_ManagerMap;
   std::map<std::string, std::string> m_FormatDisplayNames;
 };
 } // namespace nx::core

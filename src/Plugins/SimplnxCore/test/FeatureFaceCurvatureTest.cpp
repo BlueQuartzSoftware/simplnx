@@ -729,12 +729,12 @@ void CheckCurvatureSave(DataStructure& dataStructure, const SupportSnapshot& inc
   SupportSaveFiles files("curvature");
   const auto outputs = CheckCurvatureOutputs(dataStructure, false);
   // The writer omits supplied connectivity and leaves the caller's objects in place.
-  const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, files.Paths[0]);
+  const auto save = hdf5::DataStructureWriter::WriteFile(dataStructure, files.Paths[0]);
   SIMPLNX_RESULT_REQUIRE_VALID(save);
   RequireSupportSnapshot(dataStructure, false, incidence);
   CheckCurvatureInputs(dataStructure);
   CHECK(CheckCurvatureOutputs(dataStructure, false) == outputs);
-  const auto read = HDF5::DataStructureReader::ReadFile(files.Paths[0]);
+  const auto read = hdf5::DataStructureReader::ReadFile(files.Paths[0]);
   SIMPLNX_RESULT_REQUIRE_VALID(read);
   CheckCurvatureInputs(read.value());
   CHECK(CheckCurvatureOutputs(read.value(), false) == outputs);

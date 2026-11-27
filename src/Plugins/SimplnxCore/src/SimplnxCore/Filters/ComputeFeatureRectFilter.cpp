@@ -52,7 +52,7 @@ Parameters ComputeFeatureRectFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{{"FeatureIds"}},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
                                                                     "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -68,7 +68,7 @@ IFilter::VersionType ComputeFeatureRectFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeatureRectFilter::clone() const
+IFilter::UniquePointerType ComputeFeatureRectFilter::clone() const
 {
   return std::make_unique<ComputeFeatureRectFilter>();
 }
@@ -128,8 +128,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -140,10 +140,10 @@ Result<Arguments> ComputeFeatureRectFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeatureRectArrayPathKey, k_FeatureDataAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeatureRectArrayPathKey, k_FeatureDataAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeatureRectArrayPathKey, k_FeatureRectArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeatureRectArrayPathKey, k_FeatureRectArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

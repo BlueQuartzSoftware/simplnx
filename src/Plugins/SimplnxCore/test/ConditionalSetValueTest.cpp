@@ -109,7 +109,7 @@ template <typename T>
 void RequireLegacyIntegerValue(float64 value, bool hasRemoveValue, T expected)
 {
   const auto args = ConvertLegacyNumericArguments(value, hasRemoveValue);
-  for(const auto key : std::array<StringLiteral, 2>{ConditionalSetValueFilter::k_ReplaceValue_Key, ConditionalSetValueFilter::k_RemoveValue_Key})
+  for(const auto key : std::array<StringLiteralType, 2>{ConditionalSetValueFilter::k_ReplaceValue_Key, ConditionalSetValueFilter::k_RemoveValue_Key})
   {
     if(!hasRemoveValue && key.view() == ConditionalSetValueFilter::k_RemoveValue_Key.view())
     {
@@ -127,7 +127,7 @@ template <typename T>
 void RequireLegacyIntegerError(float64 value, bool hasRemoveValue, int32 expectedCode)
 {
   const auto args = ConvertLegacyNumericArguments(value, hasRemoveValue);
-  for(const auto key : std::array<StringLiteral, 2>{ConditionalSetValueFilter::k_ReplaceValue_Key, ConditionalSetValueFilter::k_RemoveValue_Key})
+  for(const auto key : std::array<StringLiteralType, 2>{ConditionalSetValueFilter::k_ReplaceValue_Key, ConditionalSetValueFilter::k_RemoveValue_Key})
   {
     if(!hasRemoveValue && key.view() == ConditionalSetValueFilter::k_RemoveValue_Key.view())
     {

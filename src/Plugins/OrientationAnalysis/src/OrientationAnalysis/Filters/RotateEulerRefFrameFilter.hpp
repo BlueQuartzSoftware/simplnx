@@ -24,8 +24,8 @@ public:
   RotateEulerRefFrameFilter& operator=(RotateEulerRefFrameFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
-  static constexpr StringLiteral k_EulerAnglesArrayPath_Key = "euler_angles_array_path";
+  static constexpr StringLiteralType k_RotationAxisAngle_Key = "rotation_axis_angle";
+  static constexpr StringLiteralType k_EulerAnglesArrayPath_Key = "euler_angles_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +82,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

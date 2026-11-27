@@ -73,7 +73,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    static constexpr StringLiteral k_Prefix = "CreateGeometry3DAction: ";
+    static constexpr StringLiteralType k_Prefix = "CreateGeometry3DAction: ";
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedCellListType = IGeometry::SharedFaceList;
     const DataPath cellDataPath = getCellDataPath();
@@ -220,7 +220,7 @@ public:
     return {};
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     auto action =
         std::unique_ptr<CreateGeometry3DAction>(new CreateGeometry3DAction(getCreatedPath(), m_NumCells, m_NumVertices, m_VertexDataName, m_CellDataName, m_SharedVerticesName, m_SharedCellsName));

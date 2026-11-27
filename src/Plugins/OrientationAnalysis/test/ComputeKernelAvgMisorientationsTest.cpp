@@ -156,7 +156,7 @@ void SetCellQuat(FixtureData& td, usize cellIdx, const std::array<float32, 4>& q
 Arguments BuildArgs(const std::vector<int32>& kernelRadius, bool useFeatureIds = true)
 {
   Arguments args;
-  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(kernelRadius));
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_KernelSize_Key, std::make_any<VectorInt32ParameterType::ValueType>(kernelRadius));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_UseFeatureIds_Key, std::make_any<bool>(useFeatureIds));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
@@ -304,7 +304,7 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientations: Working Set Inp
 
   SECTION("short kernel is rejected before indexing")
   {
-    const VectorInt32Parameter::ValueType kernelSize = {1, 2};
+    const VectorInt32ParameterType::ValueType kernelSize = {1, 2};
     auto result = CreateComputeKernelAvgMisorientationsWorkingSet(SizeVec3{4, 5, 6}, kernelSize, 4096, 0, geomPath);
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);

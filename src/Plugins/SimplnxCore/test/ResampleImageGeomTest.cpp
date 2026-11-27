@@ -640,7 +640,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   SECTION("Exact Dimensions")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{47, 50, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{47, 50, 1}));
     exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom_ExactDimensions"});
   }
   args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
@@ -776,7 +776,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   SECTION("Exact Dimensions")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{47, 50, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{47, 50, 1}));
     exemplarGeoPath = DataPath({"Resampled_3D_ImageGeom_ExactDimensions"});
   }
   args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(true));
@@ -907,7 +907,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
   SECTION("Exact Dimensions")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{15, 15, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{15, 15, 1}));
     exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom_ExactDimensions"});
   }
   args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));
@@ -1003,7 +1003,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
   SECTION("Exact Dimensions")
   {
     args.insertOrAssign(ResampleImageGeomFilter::k_ResamplingMode_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
-    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{15, 15, 1}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_ExactDimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{15, 15, 1}));
     exemplarGeoPath = DataPath({"Resampled_2D_ImageGeom_ExactDimensions"});
   }
   args.insertOrAssign(ResampleImageGeomFilter::k_ClearFeatureAttributeMatrix_Key, std::make_any<bool>(false));

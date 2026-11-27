@@ -57,18 +57,18 @@ Parameters WriteGBCDTriangleDataFilter::parameters() const
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face",
-                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceLabels"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceNormalsArrayPath_Key, "Face Normals", "Specifies the normal of each Face",
-                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceNormals"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceAreasArrayPath_Key, "Face Areas", "Specifies the area of each Face",
-                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceAreas"}), ArraySelectionParameter::AllowedTypes{DataType::float64},
+                                                          DataPath({"[Triangle Geometry]", "Face Data", "FaceAreas"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "Three angles defining the orientation of the Feature in Bunge convention (Z-X-Z).",
-      DataPath({"[Image Geometry]", "Cell Feature Data", "AvgEulerAngles"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+      DataPath({"[Image Geometry]", "Cell Feature Data", "AvgEulerAngles"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   return params;
 }
@@ -80,7 +80,7 @@ IFilter::VersionType WriteGBCDTriangleDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteGBCDTriangleDataFilter::clone() const
+IFilter::UniquePointerType WriteGBCDTriangleDataFilter::clone() const
 {
   return std::make_unique<WriteGBCDTriangleDataFilter>();
 }
@@ -150,11 +150,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
-constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPathKey = "SurfaceMeshFaceAreasArrayPath";
-constexpr StringLiteral k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesArrayPath";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_SurfaceMeshFaceNormalsArrayPathKey = "SurfaceMeshFaceNormalsArrayPath";
+constexpr StringLiteralType k_SurfaceMeshFaceAreasArrayPathKey = "SurfaceMeshFaceAreasArrayPath";
+constexpr StringLiteralType k_FeatureEulerAnglesArrayPathKey = "FeatureEulerAnglesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -164,15 +164,15 @@ Result<Arguments> WriteGBCDTriangleDataFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceNormalsArrayPathKey, k_SurfaceMeshFaceNormalsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceNormalsArrayPathKey, k_SurfaceMeshFaceNormalsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceAreasArrayPathKey, k_SurfaceMeshFaceAreasArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceAreasArrayPathKey, k_SurfaceMeshFaceAreasArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureEulerAnglesArrayPathKey, k_FeatureEulerAnglesArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureEulerAnglesArrayPathKey, k_FeatureEulerAnglesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

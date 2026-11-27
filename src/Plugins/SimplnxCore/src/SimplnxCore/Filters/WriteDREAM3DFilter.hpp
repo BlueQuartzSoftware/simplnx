@@ -27,10 +27,10 @@ public:
   WriteDREAM3DFilter& operator=(WriteDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ExportFilePath = "export_file_path";
-  static constexpr StringLiteral k_WriteXdmf = "write_xdmf_file";
-  static constexpr StringLiteral k_UseCompression = "use_compression";
-  static constexpr StringLiteral k_CompressionLevel = "compression_level";
+  static constexpr StringLiteralType k_ExportFilePath = "export_file_path";
+  static constexpr StringLiteralType k_WriteXdmf = "write_xdmf_file";
+  static constexpr StringLiteralType k_UseCompression = "use_compression";
+  static constexpr StringLiteralType k_CompressionLevel = "compression_level";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -87,7 +87,7 @@ public:
    * @brief Returns a copy of the filter as a std::unique_ptr.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

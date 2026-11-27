@@ -86,7 +86,7 @@ SilhouetteInputValues MakeParityInputValues(const DataPath& maskPath, int32 metr
 }
 
 template <typename MaskT>
-void AddParityArrays(DataStructure& dataStructure, const StringLiteral& maskName, const std::array<MaskT, 6>& maskValues)
+void AddParityArrays(DataStructure& dataStructure, const StringLiteralType& maskName, const std::array<MaskT, 6>& maskValues)
 {
   const ShapeType kTupleShape = {1, 1, 6};
   auto& attributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(k_ParityMatrixPath);
@@ -118,7 +118,7 @@ void AddParityArrays(DataStructure& dataStructure, const StringLiteral& maskName
 TEST_CASE("SimplnxCore::Silhouette: Direct and Scanline Bool UInt8 metric parity", "[SimplnxCore][Silhouette]")
 {
   const auto [maskName, maskValues] =
-      GENERATE(std::make_tuple(StringLiteral{"BoolMask"}, std::array<uint8, 6>{1, 1, 0, 1, 1, 0}), std::make_tuple(StringLiteral{"UInt8Mask"}, std::array<uint8, 6>{1, 1, 0, 1, 1, 0}));
+      GENERATE(std::make_tuple(StringLiteralType{"BoolMask"}, std::array<uint8, 6>{1, 1, 0, 1, 1, 0}), std::make_tuple(StringLiteralType{"UInt8Mask"}, std::array<uint8, 6>{1, 1, 0, 1, 1, 0}));
   for(const int32 metric : {0, 1, 2, 3, 4, 5})
   {
     DYNAMIC_SECTION(fmt::format("{} metric {}", maskName, metric))

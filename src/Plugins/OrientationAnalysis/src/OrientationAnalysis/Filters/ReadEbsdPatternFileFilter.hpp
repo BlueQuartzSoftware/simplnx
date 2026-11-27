@@ -18,11 +18,11 @@ public:
   ReadEbsdPatternFileFilter& operator=(const ReadEbsdPatternFileFilter&) = delete;
   ReadEbsdPatternFileFilter& operator=(ReadEbsdPatternFileFilter&&) noexcept = delete;
 
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_SetScanDimensions_Key = "set_scan_dimensions";
-  static constexpr StringLiteral k_NumberOfRows_Key = "number_of_rows";
-  static constexpr StringLiteral k_NumberOfColumns_Key = "number_of_columns";
-  static constexpr StringLiteral k_OutputArrayPath_Key = "output_array_path";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_SetScanDimensions_Key = "set_scan_dimensions";
+  static constexpr StringLiteralType k_NumberOfRows_Key = "number_of_rows";
+  static constexpr StringLiteralType k_NumberOfColumns_Key = "number_of_columns";
+  static constexpr StringLiteralType k_OutputArrayPath_Key = "output_array_path";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
@@ -33,7 +33,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

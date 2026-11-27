@@ -10,17 +10,17 @@ namespace nx::core
 {
 namespace
 {
-constexpr StringLiteral k_Type_Key = "type";
-constexpr StringLiteral k_Is2D_Key = "is_2d";
-constexpr StringLiteral k_CropX_Key = "crop_x";
-constexpr StringLiteral k_CropY_Key = "crop_y";
-constexpr StringLiteral k_CropZ_Key = "crop_z";
-constexpr StringLiteral k_XBoundsVoxels_Key = "bounds_x_voxels";
-constexpr StringLiteral k_YBoundsVoxels_Key = "bounds_y_voxels";
-constexpr StringLiteral k_ZBoundsVoxels_Key = "bounds_z_voxels";
-constexpr StringLiteral k_XBoundsPhysical_Key = "bounds_x_physical";
-constexpr StringLiteral k_YBoundsPhysical_Key = "bounds_y_physical";
-constexpr StringLiteral k_ZBoundsPhysical_Key = "bounds_z_physical";
+constexpr StringLiteralType k_Type_Key = "type";
+constexpr StringLiteralType k_Is2D_Key = "is_2d";
+constexpr StringLiteralType k_CropX_Key = "crop_x";
+constexpr StringLiteralType k_CropY_Key = "crop_y";
+constexpr StringLiteralType k_CropZ_Key = "crop_z";
+constexpr StringLiteralType k_XBoundsVoxels_Key = "bounds_x_voxels";
+constexpr StringLiteralType k_YBoundsVoxels_Key = "bounds_y_voxels";
+constexpr StringLiteralType k_ZBoundsVoxels_Key = "bounds_z_voxels";
+constexpr StringLiteralType k_XBoundsPhysical_Key = "bounds_x_physical";
+constexpr StringLiteralType k_YBoundsPhysical_Key = "bounds_y_physical";
+constexpr StringLiteralType k_ZBoundsPhysical_Key = "bounds_z_physical";
 
 constexpr int64 k_InvalidType = -63900;
 constexpr int64 k_InvalidBounds = -63901;
@@ -53,7 +53,7 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
   const auto& cropValues = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   json[k_Type_Key] = static_cast<uint8>(cropValues.type);
-  json[k_Is2D_Key] = cropValues.is2D;
+  json[k_Is2D_Key] = cropValues.is_2d;
   json[k_CropX_Key] = cropValues.cropX;
   json[k_CropY_Key] = cropValues.cropY;
   json[k_CropZ_Key] = cropValues.cropZ;
@@ -68,7 +68,7 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'CropGeometryParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'CropGeometryParameter' JSON Error: ";
   static const std::string nameDiv = name() + "/";
 
   ValueType value;
@@ -92,7 +92,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
     {
       return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", k_Prefix.view(), nameDiv + k_Is2D_Key.str()));
     }
-    value.is2D = is2dJson.get<bool>();
+    value.is_2d = is2dJson.get<bool>();
   }
 
   {
@@ -191,7 +191,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
   return {value};
 }
 
-IParameter::UniquePointer CropGeometryParameter::clone() const
+IParameter::UniquePointerType CropGeometryParameter::clone() const
 {
   return std::make_unique<CropGeometryParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }

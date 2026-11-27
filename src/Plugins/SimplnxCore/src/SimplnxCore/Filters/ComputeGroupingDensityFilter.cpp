@@ -72,21 +72,21 @@ Parameters ComputeGroupingDensityFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Non-Contiguous Neighborhood Option"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNonContiguousNeighbors_Key, "Use Non-Contiguous Neighbors", "Use non-contiguous neighborhoods for computations", false));
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NonContiguousNeighborListArrayPath_Key, "Non-Contiguous Neighborhoods", "List of non-contiguous neighbors for each Feature.",
-                                                                 DataPath{}, NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
+                                                                 DataPath{}, NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_ParentIdsPath_Key, "Feature Parent Ids", "Input Feature level ParentIds", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureVolumesArrayPath_Key, "Feature Volumes", "The Feature Volumes Data Array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_ContiguousNeighborListArrayPath_Key, "Contiguous Neighbor List", "List of contiguous neighbors for each Feature.", DataPath{},
-                                                                 NeighborListSelectionParameter::AllowedTypes{DataType::int32}));
+                                                                 NeighborListSelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Input Parent Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_ParentVolumesPath_Key, "Parent Volumes", "Input Parent feature level volumes data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
 
@@ -104,7 +104,7 @@ Parameters ComputeGroupingDensityFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeGroupingDensityFilter::clone() const
+IFilter::UniquePointerType ComputeGroupingDensityFilter::clone() const
 {
   return std::make_unique<ComputeGroupingDensityFilter>();
 }
@@ -253,15 +253,15 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CheckedFeaturesArrayNameKey = "CheckedFeaturesArrayName";
-constexpr StringLiteral k_ContiguousNeighborListArrayPathKey = "ContiguousNeighborListArrayPath";
-constexpr StringLiteral k_FindCheckedFeaturesKey = "FindCheckedFeatures";
-constexpr StringLiteral k_NonContiguousNeighborListArrayPathKey = "NonContiguousNeighborListArrayPath";
-constexpr StringLiteral k_ParentDensitiesArrayNameKey = "ParentDensitiesArrayName";
-constexpr StringLiteral k_ParentIdsArrayPathKey = "ParentIdsArrayPath";
-constexpr StringLiteral k_ParentVolumesArrayPathKey = "ParentVolumesArrayPath";
-constexpr StringLiteral k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
-constexpr StringLiteral k_VolumesArrayPathKey = "VolumesArrayPath";
+constexpr StringLiteralType k_CheckedFeaturesArrayNameKey = "CheckedFeaturesArrayName";
+constexpr StringLiteralType k_ContiguousNeighborListArrayPathKey = "ContiguousNeighborListArrayPath";
+constexpr StringLiteralType k_FindCheckedFeaturesKey = "FindCheckedFeatures";
+constexpr StringLiteralType k_NonContiguousNeighborListArrayPathKey = "NonContiguousNeighborListArrayPath";
+constexpr StringLiteralType k_ParentDensitiesArrayNameKey = "ParentDensitiesArrayName";
+constexpr StringLiteralType k_ParentIdsArrayPathKey = "ParentIdsArrayPath";
+constexpr StringLiteralType k_ParentVolumesArrayPathKey = "ParentVolumesArrayPath";
+constexpr StringLiteralType k_UseNonContiguousNeighborsKey = "UseNonContiguousNeighbors";
+constexpr StringLiteralType k_VolumesArrayPathKey = "VolumesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -271,17 +271,17 @@ Result<Arguments> ComputeGroupingDensityFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CheckedFeaturesArrayNameKey, k_CheckedFeaturesName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CheckedFeaturesArrayNameKey, k_CheckedFeaturesName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ContiguousNeighborListArrayPathKey, k_ContiguousNeighborListArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindCheckedFeaturesKey, k_FindCheckedFeatures_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NonContiguousNeighborListArrayPathKey,
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ContiguousNeighborListArrayPathKey, k_ContiguousNeighborListArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindCheckedFeaturesKey, k_FindCheckedFeatures_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NonContiguousNeighborListArrayPathKey,
                                                                                                                    k_NonContiguousNeighborListArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ParentDensitiesArrayNameKey, k_GroupingDensitiesName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ParentIdsArrayPathKey, k_ParentIdsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ParentVolumesArrayPathKey, k_ParentVolumesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseNonContiguousNeighborsKey, k_UseNonContiguousNeighbors_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VolumesArrayPathKey, k_FeatureVolumesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ParentDensitiesArrayNameKey, k_GroupingDensitiesName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ParentIdsArrayPathKey, k_ParentIdsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ParentVolumesArrayPathKey, k_ParentVolumesPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseNonContiguousNeighborsKey, k_UseNonContiguousNeighbors_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VolumesArrayPathKey, k_FeatureVolumesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

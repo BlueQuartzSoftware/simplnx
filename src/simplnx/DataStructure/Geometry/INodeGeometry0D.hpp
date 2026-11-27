@@ -14,9 +14,9 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry0D : public IGeometry
 {
 public:
-  static constexpr StringLiteral k_TypeName = "INodeGeometry0D";
-  static constexpr StringLiteral k_SharedVertexListName = "Shared Vertex List";
-  static constexpr StringLiteral k_VertexAttributeMatrixName = "Vertex Data";
+  static constexpr StringLiteralType k_TypeName = "INodeGeometry0D";
+  static constexpr StringLiteralType k_SharedVertexListName = "Shared Vertex List";
+  static constexpr StringLiteralType k_VertexAttributeMatrixName = "Vertex Data";
 
   INodeGeometry0D() = delete;
   INodeGeometry0D(const INodeGeometry0D&) = default;

@@ -63,8 +63,8 @@ struct ImportReferenceFile
   ImportReferenceFile(const DataStructure& dataStructure, const std::string& name)
   : path(fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("SelectiveImportReferences_" + name + ".dream3d"))
   {
-    DREAM3D::Dream3dPreflightCache::Instance().invalidate(path);
-    auto result = DREAM3D::WriteFile(path, dataStructure);
+    dream3d::Dream3dPreflightCache::Instance().invalidate(path);
+    auto result = dream3d::WriteFile(path, dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     // A stable timestamp permits cache-hit assertions without a timed wait.
     fs::last_write_time(path, fs::file_time_type::clock::now() - std::chrono::seconds(10));
@@ -72,7 +72,7 @@ struct ImportReferenceFile
 
   ~ImportReferenceFile()
   {
-    DREAM3D::Dream3dPreflightCache::Instance().invalidate(path);
+    dream3d::Dream3dPreflightCache::Instance().invalidate(path);
     std::error_code error;
     fs::remove(path, error);
   }
@@ -242,7 +242,7 @@ TEST_CASE("Selective import references: geometry aliases use their own child arr
   meshPtr->setFaceList(*facesPtr);
   REQUIRE(source.setAdditionalParent(meshPtr->getId(), secondPtr->getId()));
   const ImportReferenceFile file(source, "GeometryAliases");
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto handout = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(handout);
   const auto* cachedMeshPtr = handout.value().dataStructure.getDataAs<TriangleGeom>(DataPath({"First", "Mesh"}));
@@ -748,7 +748,7 @@ TEST_CASE("Selective import references: loader ancestors are not selected target
     CreateReferenceArray<float32>(source, "SelectedChild", cellsPtr->getId());
     const ImportReferenceFile file(source, "Ancestor");
     const std::vector<DataPath> paths{DataPath({"Image"}), DataPath({"Cells", "SelectedChild"})};
-    auto loaded = DREAM3D::LoadDataStructureArrays(file.path, paths);
+    auto loaded = dream3d::LoadDataStructureArrays(file.path, paths);
     SIMPLNX_RESULT_REQUIRE_VALID(loaded);
     REQUIRE(loaded.value().containsData(DataPath({"Cells"})));
 
@@ -783,7 +783,7 @@ TEST_CASE("Selective import references: cached selections and shared targets sta
   firstPtr->setCellData(cellsPtr->getId());
   secondPtr->setCellData(cellsPtr->getId());
   const ImportReferenceFile file(source, "Cache");
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto cached = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(cached);
   const auto initialHits = cache.hitCount();
@@ -1009,10 +1009,10 @@ void RequireAliasParents(const DataObject& object, std::vector<DataObject::IdTyp
  * @param expected Supplies the literal value oracle.
  */
 template <usize Count>
-void RequireAliasFileValues(const HDF5::FileIO& file, const DataPath& path, const std::array<int32, Count>& expected)
+void RequireAliasFileValues(const hdf5::FileIO& file, const DataPath& path, const std::array<int32, Count>& expected)
 {
   const auto fileId = file.getId();
-  const std::lock_guard lock(HDF5::Support::ApiLock());
+  const std::lock_guard lock(hdf5::Support::ApiLock());
   const auto datasetPath = "/DataStructure/" + path.toString();
   const hid_t dataset = H5Dopen2(fileId, datasetPath.c_str(), H5P_DEFAULT);
   REQUIRE(dataset >= 0);
@@ -1128,16 +1128,16 @@ TEST_CASE("C8 distinct paths to a shared array retain independent destination co
   RequireAliasParents(*sharedPtr, {firstPtr->getId(), secondPtr->getId()});
   const ImportReferenceFile file(source, "SharedArrayAliases");
   {
-    const auto reader = HDF5::FileIO::ReadFile(file.path);
+    const auto reader = hdf5::FileIO::ReadFile(file.path);
     REQUIRE(reader.isValid());
     RequireAliasFileValues(reader, firstArrayPath, k_AliasValues);
     RequireAliasFileValues(reader, secondArrayPath, k_AliasValues);
     RequireAliasFileValues(reader, laterArrayPath, k_LaterAliasValues);
   }
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto metadata = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
-  REQUIRE(metadata.value().fileVersion == DREAM3D::k_CurrentFileVersion);
+  REQUIRE(metadata.value().fileVersion == dream3d::k_CurrentFileVersion);
   const auto& sourceHandout = metadata.value().dataStructure;
   const auto* sourceFirstPtr = sourceHandout.getDataAs<Int32Array>(firstArrayPath);
   const auto* sourceSecondPtr = sourceHandout.getDataAs<Int32Array>(secondArrayPath);
@@ -1155,7 +1155,7 @@ TEST_CASE("C8 distinct paths to a shared array retain independent destination co
   REQUIRE(sourceLaterPtr->getId() == laterPtr->getId());
   REQUIRE(sourceHandout.getData(sourceLaterPtr->getId()) == sourceLaterPtr);
   // Evaluate to bool before Catch2 tries to stream libc++'s 128-bit file-clock duration.
-  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= dream3d::Dream3dPreflightCache::k_MtimeTrustWindow));
   cache.invalidate(file.path);
   cache.resetStats();
   DataStructure warmDestination;
@@ -1251,12 +1251,12 @@ TEST_CASE("C8 shared group paths retain independent destination groups and child
   RequireAliasParents(*childPtr, {sharedGroupPtr->getId()});
   const ImportReferenceFile file(source, "SharedGroupAliases");
   {
-    const auto reader = HDF5::FileIO::ReadFile(file.path);
+    const auto reader = hdf5::FileIO::ReadFile(file.path);
     REQUIRE(reader.isValid());
     RequireAliasFileValues(reader, firstChildPath, k_AliasValues);
     RequireAliasFileValues(reader, secondChildPath, k_AliasValues);
   }
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   auto metadata = cache.fetchNeutralMetadata(file.path);
   SIMPLNX_RESULT_REQUIRE_VALID(metadata);
   const auto& sourceHandout = metadata.value().dataStructure;
@@ -1275,7 +1275,7 @@ TEST_CASE("C8 shared group paths retain independent destination groups and child
   REQUIRE(sourceHandout.getAllDataObjectIds().size() == 4);
   REQUIRE(sourceHandout.getAllDataPaths().size() == 6);
   // Evaluate to bool before Catch2 tries to stream libc++'s 128-bit file-clock duration.
-  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(file.path) >= dream3d::Dream3dPreflightCache::k_MtimeTrustWindow));
   cache.invalidate(file.path);
   cache.resetStats();
   DataStructure warmDestination;
@@ -1367,7 +1367,7 @@ const std::vector<DataPath> k_AliasControlSelection{DataPath({"First"}), DataPat
 
 void RequireAliasControlFile(const ImportReferenceFile& file)
 {
-  const auto reader = HDF5::FileIO::ReadFile(file.path);
+  const auto reader = hdf5::FileIO::ReadFile(file.path);
   REQUIRE(reader.isValid());
   RequireAliasFileValues(reader, DataPath({"First", "Shared"}), k_AliasValues);
   RequireAliasFileValues(reader, DataPath({"Second", "Shared"}), k_AliasValues);

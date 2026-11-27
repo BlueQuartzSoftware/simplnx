@@ -24,8 +24,8 @@ public:
   ComputeTriangleAreasFilter& operator=(ComputeTriangleAreasFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_CalculatedAreasDataName_Key = "triangle_areas_array_name";
+  static constexpr StringLiteralType k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_CalculatedAreasDataName_Key = "triangle_areas_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +82,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

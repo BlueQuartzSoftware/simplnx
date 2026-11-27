@@ -24,20 +24,20 @@ public:
   WriteImageFilter& operator=(WriteImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_Plane_Key = "plane_index";
-  static constexpr StringLiteral k_FileName_Key = "file_name";
-  static constexpr StringLiteral k_IndexOffset_Key = "index_offset";
-  static constexpr StringLiteral k_ImageArrayPath_Key = "image_array_path";
-  static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_TotalIndexDigits_Key = "total_index_digits";
-  static constexpr StringLiteral k_LeadingDigitCharacter_Key = "leading_digit_character";
-  static constexpr StringLiteral k_CreateColorTable_Key = "create_color_table";
-  static constexpr StringLiteral k_SelectedPreset_Key = "selected_preset";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_InvalidColorValue_Key = "invalid_color_value";
-  static constexpr StringLiteral k_FlipMode_Key = "flip_mode_index";
-  static constexpr StringLiteral k_AddScaleBar_Key = "add_scale_bar";
+  static constexpr StringLiteralType k_Plane_Key = "plane_index";
+  static constexpr StringLiteralType k_FileName_Key = "file_name";
+  static constexpr StringLiteralType k_IndexOffset_Key = "index_offset";
+  static constexpr StringLiteralType k_ImageArrayPath_Key = "image_array_path";
+  static constexpr StringLiteralType k_ImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_TotalIndexDigits_Key = "total_index_digits";
+  static constexpr StringLiteralType k_LeadingDigitCharacter_Key = "leading_digit_character";
+  static constexpr StringLiteralType k_CreateColorTable_Key = "create_color_table";
+  static constexpr StringLiteralType k_SelectedPreset_Key = "selected_preset";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_InvalidColorValue_Key = "invalid_color_value";
+  static constexpr StringLiteralType k_FlipMode_Key = "flip_mode_index";
+  static constexpr StringLiteralType k_AddScaleBar_Key = "add_scale_bar";
 
   /**
    * @brief Returns the filter name.
@@ -92,7 +92,7 @@ public:
    * @brief Creates a copy of the filter.
    * @return New filter instance.
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

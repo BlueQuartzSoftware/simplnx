@@ -75,7 +75,7 @@ CreateRectGridGeometryAction::~CreateRectGridGeometryAction() noexcept = default
 
 Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  static constexpr StringLiteral k_Prefix = "CreateRectGridGeometryAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateRectGridGeometryAction: ";
   if(getCreatedPath().empty())
   {
     return MakeErrorResult(-5901, fmt::format("{}CreateRectGridGeometryAction: Geometry Path cannot be empty", k_Prefix));
@@ -255,7 +255,7 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   return {};
 }
 
-IDataAction::UniquePointer CreateRectGridGeometryAction::clone() const
+IDataAction::UniquePointerType CreateRectGridGeometryAction::clone() const
 {
   auto action = std::make_unique<CreateRectGridGeometryAction>(getCreatedPath(), m_NumXBoundTuples, m_NumYBoundTuples, m_NumZBoundTuples, m_CellDataName, m_XBoundsArrayName, m_YBoundsArrayName,
                                                                m_ZBoundsArrayName);

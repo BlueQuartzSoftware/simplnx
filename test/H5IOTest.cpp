@@ -48,12 +48,12 @@ std::filesystem::path BuildFixtureFile(const std::filesystem::path& path, usize 
   std::vector<int32> sourceB(numElems);
   std::iota(sourceB.begin(), sourceB.end(), 1000);
 
-  auto file = HDF5::FileIO::WriteFile(path);
+  auto file = hdf5::FileIO::WriteFile(path);
   REQUIRE(file.isValid());
   auto group = file.createGroup("g");
   REQUIRE(group.isValid());
 
-  HDF5::ObjectIO::DimsType dims{numElems};
+  hdf5::ObjectIO::DimsType dims{numElems};
 
   auto dsA = group.createDataset("a");
   REQUIRE(dsA.writeSpan<int32>(dims, nonstd::span<const int32>(sourceA.data(), sourceA.size())).valid());
@@ -73,7 +73,7 @@ bool BlocksOnApiLock(OperationT&& operation)
   std::future<void> finished = finishedPromise.get_future();
   std::exception_ptr workerException;
 
-  std::unique_lock<std::mutex> apiLock(HDF5::Support::ApiLock());
+  std::unique_lock<std::mutex> apiLock(hdf5::Support::ApiLock());
   std::thread worker([&]() {
     startedPromise.set_value();
     try
@@ -99,10 +99,10 @@ bool BlocksOnApiLock(OperationT&& operation)
   return blocked && completed;
 }
 
-class DatasetIOProbe : public HDF5::DatasetIO
+class DatasetIOProbe : public hdf5::DatasetIO
 {
 public:
-  using HDF5::DatasetIO::CreateH5DatasetChunkProperties;
+  using hdf5::DatasetIO::CreateH5DatasetChunkProperties;
 };
 } // namespace
 
@@ -119,8 +119,8 @@ TEST_CASE("HDF5 group construction failure preserves native ownership", "[simpln
       std::error_code error;
       std::filesystem::remove(path, error);
     });
-    auto resetFault = MakeScopeGuard([]() noexcept { HDF5::ResetGroupConstructionFailureForTesting(); });
-    auto file = HDF5::FileIO::WriteFile(path);
+    auto resetFault = MakeScopeGuard([]() noexcept { hdf5::ResetGroupConstructionFailureForTesting(); });
+    auto file = hdf5::FileIO::WriteFile(path);
     REQUIRE(file.isValid());
     const hid_t fileId = file.getId();
     const bool existsBefore = operation != 2;
@@ -130,17 +130,17 @@ TEST_CASE("HDF5 group construction failure preserves native ownership", "[simpln
       auto child = file.createGroup(groupName);
       REQUIRE(child.isValid());
       const hid_t childId = child.getId();
-      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
       REQUIRE(H5Oget_info3(childId, &originalInfo, H5O_INFO_BASIC) >= 0);
     }
 
     int64 initialHandles = 0;
     {
-      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
       initialHandles = H5Fget_obj_count(fileId, H5F_OBJ_ALL);
       REQUIRE(initialHandles == 1);
     }
-    HDF5::FailNextGroupConstructionForTesting(groupName);
+    hdf5::FailNextGroupConstructionForTesting(groupName);
     if(operation == 0)
     {
       REQUIRE_THROWS_AS(file.openGroup(groupName), std::bad_alloc);
@@ -151,7 +151,7 @@ TEST_CASE("HDF5 group construction failure preserves native ownership", "[simpln
     }
 
     {
-      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
       CHECK(H5Fget_obj_count(fileId, H5F_OBJ_ALL) == initialHandles);
       CHECK(H5Lexists(fileId, groupName.c_str(), H5P_DEFAULT) == (existsBefore ? 1 : 0));
       if(existsBefore)
@@ -167,7 +167,7 @@ TEST_CASE("HDF5 group construction failure preserves native ownership", "[simpln
       auto retry = operation == 0 ? file.openGroup(groupName) : file.createGroup(groupName);
       REQUIRE(retry.isValid());
     }
-    std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
     CHECK(H5Fget_obj_count(fileId, H5F_OBJ_ALL) == initialHandles);
   }
 }
@@ -178,7 +178,7 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
   const std::filesystem::path tmp = std::filesystem::temp_directory_path() / "h5io_helper_locking.h5";
   std::filesystem::remove(tmp);
 
-  auto file = HDF5::FileIO::WriteFile(tmp);
+  auto file = hdf5::FileIO::WriteFile(tmp);
   REQUIRE(file.isValid());
   auto group = file.createGroup("g");
   REQUIRE(group.isValid());
@@ -195,28 +195,28 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
   SECTION("GetPathFromId")
   {
     std::string path;
-    REQUIRE(BlocksOnApiLock([&]() { path = HDF5::GetPathFromId(datasetId); }));
+    REQUIRE(BlocksOnApiLock([&]() { path = hdf5::GetPathFromId(datasetId); }));
     REQUIRE(path == "/g/d");
   }
 
   SECTION("GetNameFromId")
   {
     std::string name;
-    REQUIRE(BlocksOnApiLock([&]() { name = HDF5::GetNameFromId(datasetId); }));
+    REQUIRE(BlocksOnApiLock([&]() { name = hdf5::GetNameFromId(datasetId); }));
     REQUIRE(name == "d");
   }
 
   SECTION("getTypeFromId")
   {
-    HDF5::Type type = HDF5::Type::unknown;
-    REQUIRE(BlocksOnApiLock([&]() { type = HDF5::getTypeFromId(typeId); }));
-    REQUIRE(type == HDF5::Type::int32);
+    hdf5::Type type = hdf5::Type::unknown;
+    REQUIRE(BlocksOnApiLock([&]() { type = hdf5::getTypeFromId(typeId); }));
+    REQUIRE(type == hdf5::Type::int32);
   }
 
   SECTION("FindAttribute")
   {
     herr_t found = -1;
-    REQUIRE(BlocksOnApiLock([&]() { found = HDF5::Support::FindAttribute(datasetId, "answer"); }));
+    REQUIRE(BlocksOnApiLock([&]() { found = hdf5::Support::FindAttribute(datasetId, "answer"); }));
     REQUIRE(found == 1);
   }
 
@@ -224,27 +224,27 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
   {
     bool isGroup = true;
     std::string objectPath;
-    REQUIRE(BlocksOnApiLock([&]() { isGroup = HDF5::Support::IsGroup(group.getId(), "d"); }));
+    REQUIRE(BlocksOnApiLock([&]() { isGroup = hdf5::Support::IsGroup(group.getId(), "d"); }));
     REQUIRE_FALSE(isGroup);
-    REQUIRE(BlocksOnApiLock([&]() { objectPath = HDF5::Support::GetObjectPath(datasetId); }));
+    REQUIRE(BlocksOnApiLock([&]() { objectPath = hdf5::Support::GetObjectPath(datasetId); }));
     REQUIRE(objectPath == "g/d");
   }
 
   SECTION("Support dataset type queries")
   {
     hid_t queriedTypeId = H5I_INVALID_HID;
-    REQUIRE(BlocksOnApiLock([&]() { queriedTypeId = HDF5::Support::GetDatasetType(group.getId(), "d"); }));
+    REQUIRE(BlocksOnApiLock([&]() { queriedTypeId = hdf5::Support::GetDatasetType(group.getId(), "d"); }));
     REQUIRE(queriedTypeId > 0);
     std::string typeName;
-    REQUIRE(BlocksOnApiLock([&]() { typeName = HDF5::Support::StringForHDFType(queriedTypeId); }));
+    REQUIRE(BlocksOnApiLock([&]() { typeName = hdf5::Support::StringForHDFType(queriedTypeId); }));
     REQUIRE(typeName == "H5T_NATIVE_INT32");
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     REQUIRE(H5Tclose(queriedTypeId) >= 0);
   }
 
   SECTION("SetFaplConfigurator")
   {
-    REQUIRE(BlocksOnApiLock([]() { HDF5::FileIO::SetFaplConfigurator({}); }));
+    REQUIRE(BlocksOnApiLock([]() { hdf5::FileIO::SetFaplConfigurator({}); }));
   }
 
   SECTION("ProbeHdf5Dataset")
@@ -255,7 +255,7 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
   }
 
   {
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     H5Tclose(typeId);
   }
 }
@@ -263,7 +263,7 @@ TEST_CASE("HDF5 standalone helpers self-lock their C API calls", "[simplnx][HDF5
 TEST_CASE("HDF5 chunk helpers self-lock their C API calls", "[simplnx][HDF5][concurrency]")
 {
   const std::filesystem::path tmp = BuildFixtureFile(std::filesystem::temp_directory_path() / "h5io_chunk_helper_locking.h5", 4);
-  auto file = HDF5::FileIO::ReadFile(tmp);
+  auto file = hdf5::FileIO::ReadFile(tmp);
   REQUIRE(file.isValid());
   auto group = file.openGroup("g");
   REQUIRE(group.isValid());
@@ -275,15 +275,15 @@ TEST_CASE("HDF5 chunk helpers self-lock their C API calls", "[simplnx][HDF5][con
     hid_t propertiesId = H5I_INVALID_HID;
     REQUIRE(BlocksOnApiLock([&]() { propertiesId = DatasetIOProbe::CreateH5DatasetChunkProperties({4}); }));
     REQUIRE(propertiesId > 0);
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     REQUIRE(H5Pclose(propertiesId) >= 0);
   }
 
   SECTION("closeChunkedDataset")
   {
-    HDF5::ChunkedDataInfo chunkInfo;
+    hdf5::ChunkedDataInfo chunkInfo;
     {
-      std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
       const hsize_t dims = 4;
       chunkInfo.dataspaceId = H5Screate_simple(1, &dims, nullptr);
     }
@@ -295,11 +295,11 @@ TEST_CASE("HDF5 chunk helpers self-lock their C API calls", "[simplnx][HDF5][con
 
   SECTION("readChunk")
   {
-    HDF5::ChunkedDataInfo chunkInfo;
+    hdf5::ChunkedDataInfo chunkInfo;
     chunkInfo.dataType = H5T_NATIVE_INT32;
     chunkInfo.datasetId = dataset.getId();
     {
-      std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
       chunkInfo.dataspaceId = H5Dget_space(chunkInfo.datasetId);
     }
     REQUIRE(chunkInfo.dataspaceId > 0);
@@ -311,7 +311,7 @@ TEST_CASE("HDF5 chunk helpers self-lock their C API calls", "[simplnx][HDF5][con
     REQUIRE(readResult.valid());
     REQUIRE(values == std::vector<int32>{0, 1, 2, 3});
 
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     REQUIRE(H5Sclose(chunkInfo.dataspaceId) >= 0);
   }
 }
@@ -331,7 +331,7 @@ TEST_CASE("HDF5 numeric attribute writers serialize complete HDF5 lifecycles", "
     paths.push_back(std::filesystem::temp_directory_path() / fmt::format("h5io_attribute_writer_locking_{}.h5", threadIndex));
     std::filesystem::remove(paths.back());
     threads.emplace_back([&, threadIndex]() {
-      auto file = HDF5::FileIO::WriteFile(paths[threadIndex]);
+      auto file = hdf5::FileIO::WriteFile(paths[threadIndex]);
       auto group = file.createGroup("g");
       for(int pass = 0; pass < k_Passes; ++pass)
       {
@@ -370,7 +370,7 @@ TEST_CASE("StorageFormatPlan: HDF5 vector attributes convert into the requested 
   std::filesystem::remove(path);
 
   {
-    auto file = HDF5::FileIO::WriteFile(path);
+    auto file = hdf5::FileIO::WriteFile(path);
     REQUIRE(file.isValid());
     auto group = file.createGroup("g");
     REQUIRE(group.isValid());
@@ -412,7 +412,7 @@ TEST_CASE("HDF5 IO layer self-locks: concurrent open+query+read does not race", 
       {
         // Each iteration constructs a fresh FileIO so the open/close (and destructor
         // H5Fclose/H5Gclose/H5Dclose) paths run concurrently across threads.
-        auto file = HDF5::FileIO::ReadFile(tmp);
+        auto file = hdf5::FileIO::ReadFile(tmp);
         if(!file.isValid())
         {
           mismatches.fetch_add(1, std::memory_order_relaxed);
@@ -497,7 +497,7 @@ void WithHyperslabTestFile(BodyT&& body)
 
 void CreateHyperslabSentinelFile(const std::filesystem::path& path)
 {
-  auto file = HDF5::FileIO::WriteFile(path);
+  auto file = hdf5::FileIO::WriteFile(path);
   REQUIRE(file.isValid());
   auto outer = file.createGroup("outer");
   REQUIRE(outer.isValid());
@@ -516,7 +516,7 @@ TEST_CASE("HDF5 hyperslab rejects malformed selections", "[simplnx][HDF5][hypers
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
       CreateHyperslabSentinelFile(path);
-      auto file = HDF5::FileIO::AppendFile(path);
+      auto file = hdf5::FileIO::AppendFile(path);
       REQUIRE(file.isValid());
       auto outer = file.openGroup("outer");
       REQUIRE(outer.isValid());
@@ -542,7 +542,7 @@ TEMPLATE_TEST_CASE("HDF5 hyperslab typed writes preserve unselected values", "[s
   DYNAMIC_SECTION("input values " << inputCount)
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
-      auto file = HDF5::FileIO::WriteFile(path);
+      auto file = hdf5::FileIO::WriteFile(path);
       REQUIRE(file.isValid());
       auto group = file.createGroup("typed");
       REQUIRE(group.isValid());
@@ -586,7 +586,7 @@ void CheckHyperslabErrorContext(const Result<>& result, const std::filesystem::p
 // The caller resolves parentId before this helper takes the nonrecursive HDF5 lock.
 void CreateSpecialHyperslabDataset(hid_t parentId, H5S_class_t spaceType, const std::vector<hsize_t>& dimensions)
 {
-  std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
   const hid_t spaceId = spaceType == H5S_SIMPLE ? H5Screate_simple(static_cast<int>(dimensions.size()), dimensions.data(), nullptr) : H5Screate(spaceType);
   REQUIRE(spaceId >= 0);
   auto spaceGuard = MakeScopeGuard([spaceId]() noexcept { H5Sclose(spaceId); });
@@ -635,7 +635,7 @@ TEST_CASE("HDF5 hyperslab rejects malformed selections after rank and size valid
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
       CreateHyperslabSentinelFile(path);
-      auto file = HDF5::FileIO::AppendFile(path);
+      auto file = hdf5::FileIO::AppendFile(path);
       REQUIRE(file.isValid());
       auto outer = file.openGroup("outer");
       REQUIRE(outer.isValid());
@@ -659,7 +659,7 @@ TEST_CASE("HDF5 hyperslab reports an empty input and a native write failure", "[
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
       CreateHyperslabSentinelFile(path);
-      auto file = readOnly ? HDF5::FileIO::ReadFile(path) : HDF5::FileIO::AppendFile(path);
+      auto file = readOnly ? hdf5::FileIO::ReadFile(path) : hdf5::FileIO::AppendFile(path);
       REQUIRE(file.isValid());
       auto outer = file.openGroup("outer");
       REQUIRE(outer.isValid());
@@ -694,7 +694,7 @@ TEST_CASE("HDF5 hyperslab empty and scalar selection contract", "[simplnx][HDF5]
     {
       WithHyperslabTestFile([&](const std::filesystem::path& path) {
         CreateHyperslabSentinelFile(path);
-        auto file = readOnly ? HDF5::FileIO::ReadFile(path) : HDF5::FileIO::AppendFile(path);
+        auto file = readOnly ? hdf5::FileIO::ReadFile(path) : hdf5::FileIO::AppendFile(path);
         REQUIRE(file.isValid());
         auto outer = file.openGroup("outer");
         REQUIRE(outer.isValid());
@@ -711,7 +711,7 @@ TEST_CASE("HDF5 hyperslab empty and scalar selection contract", "[simplnx][HDF5]
   SECTION("zero extent permits only an in-bounds empty selection")
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
-      auto file = HDF5::FileIO::WriteFile(path);
+      auto file = hdf5::FileIO::WriteFile(path);
       REQUIRE(file.isValid());
       const hid_t fileId = file.getId();
       CreateSpecialHyperslabDataset(fileId, H5S_SIMPLE, {0, 3});
@@ -727,7 +727,7 @@ TEST_CASE("HDF5 hyperslab empty and scalar selection contract", "[simplnx][HDF5]
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
       CreateHyperslabSentinelFile(path);
-      auto file = HDF5::FileIO::AppendFile(path);
+      auto file = hdf5::FileIO::AppendFile(path);
       REQUIRE(file.isValid());
       auto outer = file.openGroup("outer");
       REQUIRE(outer.isValid());
@@ -745,7 +745,7 @@ TEST_CASE("HDF5 hyperslab empty and scalar selection contract", "[simplnx][HDF5]
   SECTION("scalar hyperslabs fail while full scalar writes remain valid")
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
-      auto file = HDF5::FileIO::WriteFile(path);
+      auto file = hdf5::FileIO::WriteFile(path);
       REQUIRE(file.isValid());
       auto dataset = file.createDataset("values");
       const std::array<int32, 1> sentinel{9};
@@ -753,7 +753,7 @@ TEST_CASE("HDF5 hyperslab empty and scalar selection contract", "[simplnx][HDF5]
       const hid_t datasetId = dataset.getId();
       REQUIRE(datasetId > 0);
       {
-        std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+        std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
         const hid_t spaceId = H5Dget_space(datasetId);
         REQUIRE(spaceId >= 0);
         auto spaceGuard = MakeScopeGuard([spaceId]() noexcept { H5Sclose(spaceId); });
@@ -773,7 +773,7 @@ TEST_CASE("HDF5 hyperslab empty and scalar selection contract", "[simplnx][HDF5]
   SECTION("null dataspaces do not become empty simple selections")
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
-      auto file = HDF5::FileIO::WriteFile(path);
+      auto file = hdf5::FileIO::WriteFile(path);
       REQUIRE(file.isValid());
       const hid_t fileId = file.getId();
       CreateSpecialHyperslabDataset(fileId, H5S_NULL, {});
@@ -791,7 +791,7 @@ TEST_CASE("HDF5 hyperslab writes through an unlinked open dataset", "[simplnx][H
 {
   WithHyperslabTestFile([&](const std::filesystem::path& path) {
     CreateHyperslabSentinelFile(path);
-    auto file = HDF5::FileIO::AppendFile(path);
+    auto file = hdf5::FileIO::AppendFile(path);
     REQUIRE(file.isValid());
     auto outer = file.openGroup("outer");
     REQUIRE(outer.isValid());
@@ -805,7 +805,7 @@ TEST_CASE("HDF5 hyperslab writes through an unlinked open dataset", "[simplnx][H
 
     // The open wrapper retains the dataset after its final link is removed.
     {
-      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
       REQUIRE(H5Ldelete(parentId, "values", H5P_DEFAULT) >= 0);
       REQUIRE(H5Lexists(parentId, "values", H5P_DEFAULT) == 0);
       REQUIRE(H5Iis_valid(datasetId) > 0);
@@ -819,7 +819,7 @@ TEST_CASE("HDF5 hyperslab writes through an unlinked open dataset", "[simplnx][H
     REQUIRE(writeResult.valid());
     std::array<int32, 6> actual{};
     {
-      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
       REQUIRE(H5Dread(datasetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, actual.data()) >= 0);
     }
     CHECK(actual == std::array<int32, 6>{9, 9, 9, 9, 4, 5});
@@ -835,7 +835,7 @@ TEST_CASE("HDF5 hyperslab writes through an unlinked open dataset", "[simplnx][H
     CHECK(error.message.find(path.string()) != std::string::npos);
     CHECK(error.message.find("rank") != std::string::npos);
     {
-      std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+      std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
       REQUIRE(H5Dread(datasetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, actual.data()) >= 0);
     }
     CHECK(actual == std::array<int32, 6>{9, 9, 9, 9, 4, 5});
@@ -849,7 +849,7 @@ void CreateSparseHyperslabDataset(hid_t parentId, const std::vector<hsize_t>& di
 {
   const auto rank = static_cast<int>(dimensions.size());
   const std::vector<hsize_t> chunks(dimensions.size(), 1);
-  std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
   const hid_t spaceId = H5Screate_simple(rank, dimensions.data(), nullptr);
   REQUIRE(spaceId >= 0);
   auto spaceGuard = MakeScopeGuard([spaceId]() noexcept { H5Sclose(spaceId); });
@@ -879,7 +879,7 @@ void CreateSparseHyperslabDataset(hid_t parentId, const std::vector<hsize_t>& di
 
 void RequireSparseHyperslabStorage(hid_t datasetId)
 {
-  std::lock_guard<std::mutex> apiLock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> apiLock(hdf5::Support::ApiLock());
   REQUIRE(H5Iis_valid(datasetId) > 0);
   REQUIRE(H5Dget_storage_size(datasetId) == 0);
 }
@@ -892,7 +892,7 @@ TEST_CASE("HDF5 hyperslab sparse overflow fixture candidates", "[simplnx][HDF5][
   {
     WithHyperslabTestFile([&](const std::filesystem::path& path) {
       {
-        auto file = HDF5::FileIO::WriteFile(path);
+        auto file = hdf5::FileIO::WriteFile(path);
         REQUIRE(file.isValid());
         const hid_t fileId = file.getId();
         const std::vector<uint64> byteOverflowDimensions = sizeof(usize) >= 8 ? std::vector<uint64>{2147483648ULL, 2147483648ULL} : std::vector<uint64>{65536, 8192};

@@ -7,7 +7,7 @@
 #include <string_view>
 
 #if SIMPLNX_BUILD_TESTS
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 /**
  * @struct CodecOwnershipCountersForTesting
@@ -77,5 +77,5 @@ struct CodecOwnershipCountersForTesting
     }
   }
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 #endif

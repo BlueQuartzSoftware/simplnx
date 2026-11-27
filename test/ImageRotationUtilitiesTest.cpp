@@ -74,7 +74,7 @@ TEST_CASE("ImageRotationUtilities: Scaled three-cycle takes spacing from the sca
   REQUIRE(imagePtr->setOrigin({1.0F, 2.0F, 3.0F}).valid());
 
   // The matrix maps (x,y,z) to (-4z, 2x, 3y). It is a three-cycle with a reflection and a different scale on each source axis.
-  ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
+  ImageRotationUtilities::Matrix4fRType transform = ImageRotationUtilities::Matrix4fRType::Identity();
   transform.block<3, 3>(0, 0) << 0.0F, 0.0F, -4.0F, 2.0F, 0.0F, 0.0F, 0.0F, 3.0F, 0.0F;
 
   // Hand calculation:
@@ -105,7 +105,7 @@ TEST_CASE("ImageRotationUtilities: Uneven scaling keeps the classified source ax
   REQUIRE(imagePtr->setSpacing({2.0F, 3.0F, 5.0F}).valid());
   REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
-  ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
+  ImageRotationUtilities::Matrix4fRType transform = ImageRotationUtilities::Matrix4fRType::Identity();
   transform(0, 1) = 5.0F;
   transform(1, 1) = 100000.0F;
 
@@ -137,7 +137,7 @@ TEST_CASE("ImageRotationUtilities: Off-axis scaling keeps the column-based spaci
   REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
   const float32 c = std::sqrt(0.5F);
-  ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
+  ImageRotationUtilities::Matrix4fRType transform = ImageRotationUtilities::Matrix4fRType::Identity();
   transform.block<3, 3>(0, 0) << 2 * c, -c, 0, 2 * c, c, 0, 0, 0, 1;
 
   // Each column selects spacing from its largest absolute direction cosine. A 45-degree tie
@@ -168,7 +168,7 @@ TEST_CASE("ImageRotationUtilities: Near-grid three-cycle accepted by Rotate Samp
   // Rotate Sample Reference Frame accepts it as a grid rotation (tolerance 1e-4).
   // The exact map is R(x,y,z) = (z,x,y). Output axes X, Y and Z take source axes Z, X and Y.
   // Spacing (2,3,5) becomes (5,2,3) and dimensions (2,3,4) become (4,2,3).
-  const ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::GenerateRotationTransformationMatrix({1.0F, 1.0F, 1.0F, 119.995F});
+  const ImageRotationUtilities::Matrix4fRType transform = ImageRotationUtilities::GenerateRotationTransformationMatrix({1.0F, 1.0F, 1.0F, 119.995F});
   const auto args = ImageRotationUtilities::CreateRotationArgs(*imagePtr, transform);
   const std::array<float32, 3> expectedSpacing = {5.0F, 2.0F, 3.0F};
   const std::array<usize, 3> expectedDims = {4, 2, 3};
@@ -188,7 +188,7 @@ TEST_CASE("ImageRotationUtilities: Raw grid tolerance accounts for column normal
   REQUIRE(imageGeomPtr->setSpacing({2.0F, 3.0F, 5.0F}).valid());
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
 
-  ImageRotationUtilities::Matrix4fR transform = ImageRotationUtilities::Matrix4fR::Identity();
+  ImageRotationUtilities::Matrix4fRType transform = ImageRotationUtilities::Matrix4fRType::Identity();
   transform.block<3, 3>(0, 0) << 0.000099998F, 0.0F, 1.0F, 0.99995F, 0.0F, 0.0F, 0.0F, 1.00005F, 0.0F;
 
   // Raw entries and determinant pass the filter's grid guard. Normalizing column 0 raises its small entry above 1e-4.
@@ -283,7 +283,7 @@ TEST_CASE("ImageRotationUtilities: Ordinary angle compatibility", "[simplnx][Ima
   const float32 cosine = cos(radians);
   const float32 sine = sin(radians);
   const float32 unit = FloatVec3{1, 1, 1}.normalize()[0];
-  ImageRotationUtilities::Matrix4fR previous = ImageRotationUtilities::Matrix4fR::Identity();
+  ImageRotationUtilities::Matrix4fRType previous = ImageRotationUtilities::Matrix4fRType::Identity();
   for(usize row = 0; row < 3; ++row)
   {
     for(usize col = 0; col < 3; ++col)

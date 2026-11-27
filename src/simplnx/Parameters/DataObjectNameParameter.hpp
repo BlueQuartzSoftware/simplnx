@@ -39,7 +39,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -92,7 +92,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT LinkedPathCreationFilterParameterConverter
 {
@@ -133,7 +133,7 @@ struct SIMPLNX_EXPORT DataArrayNameFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataObjectNameParameter, "fbc89375-3ca4-4eb2-8257-aad9bf8e1c94");

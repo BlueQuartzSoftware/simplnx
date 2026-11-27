@@ -18,7 +18,7 @@ CreateDataGroupAction::~CreateDataGroupAction() noexcept = default;
 
 Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "CreateDataGroupAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateDataGroupAction: ";
   Result<LinkedPath> linkedPath = dataStructure.makePath(getCreatedPath());
   if(!linkedPath.valid())
   {
@@ -28,7 +28,7 @@ Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode /*mode*
   return {};
 }
 
-IDataAction::UniquePointer CreateDataGroupAction::clone() const
+IDataAction::UniquePointerType CreateDataGroupAction::clone() const
 {
   return std::make_unique<CreateDataGroupAction>(getCreatedPath());
 }

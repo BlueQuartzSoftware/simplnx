@@ -34,10 +34,10 @@ public:
   ReadCSVFileFilter& operator=(ReadCSVFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ReadCSVData_Key = "read_csv_data_object";
-  static constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
-  static constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "selected_attribute_matrix_path";
-  static constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group_path";
+  static constexpr StringLiteralType k_ReadCSVData_Key = "read_csv_data_object";
+  static constexpr StringLiteralType k_UseExistingGroup_Key = "use_existing_group";
+  static constexpr StringLiteralType k_SelectedAttributeMatrixPath_Key = "selected_attribute_matrix_path";
+  static constexpr StringLiteralType k_CreatedDataGroup_Key = "created_data_group_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -94,7 +94,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

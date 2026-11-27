@@ -20,9 +20,9 @@ struct SIMPLNXCORE_EXPORT PadImageGeometryInputValues
 {
   DataPath SelectedImageGeometryPath;
   DataPath CreatedOutputPath;
-  VectorInt32Parameter::ValueType XMinMax;
-  VectorInt32Parameter::ValueType YMinMax;
-  VectorInt32Parameter::ValueType ZMinMax;
+  VectorInt32ParameterType::ValueType XMinMax;
+  VectorInt32ParameterType::ValueType YMinMax;
+  VectorInt32ParameterType::ValueType ZMinMax;
   bool PadInX{};
   bool PadInY{};
   bool PadInZ{};

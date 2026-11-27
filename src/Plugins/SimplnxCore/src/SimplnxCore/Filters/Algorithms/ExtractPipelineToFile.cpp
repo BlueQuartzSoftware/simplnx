@@ -30,7 +30,7 @@ Result<> ExtractPipelineToFile::operator()()
   const auto importFile = m_InputValues->InputFilePath;
   auto outputFile = m_InputValues->OutputFilePath;
 
-  Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
+  Result<nlohmann::json> pipelineResult = dream3d::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
   {
     return ConvertResult<nlohmann::json>(std::move(pipelineResult));

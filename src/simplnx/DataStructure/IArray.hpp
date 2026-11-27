@@ -9,7 +9,7 @@ namespace nx::core
 class SIMPLNX_EXPORT IArray : public DataObject
 {
 public:
-  static constexpr StringLiteral k_TypeName = "IArray";
+  static constexpr StringLiteralType k_TypeName = "IArray";
 
   enum class ArrayType : EnumType
   {

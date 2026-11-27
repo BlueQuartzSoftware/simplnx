@@ -97,7 +97,7 @@ fs::path CreateNxInfoInputFile(std::string_view fileName)
   const fs::path inputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName;
   DataStructure dataStructure;
   REQUIRE(DataGroup::Create(dataStructure, "Test Group") != nullptr);
-  const Result<> writeResult = DREAM3D::WriteFile(inputPath, dataStructure);
+  const Result<> writeResult = dream3d::WriteFile(inputPath, dataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   return inputPath;
 }
@@ -567,6 +567,6 @@ TEST_CASE("NXInfo::Run preserves the input when the output identifies the same f
   }
 
   REQUIRE(fs::file_size(inputPath) == originalSize);
-  const Result<DataStructure> readResult = DREAM3D::ImportDataStructureFromFile(inputPath, true);
+  const Result<DataStructure> readResult = dream3d::ImportDataStructureFromFile(inputPath, true);
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
 }

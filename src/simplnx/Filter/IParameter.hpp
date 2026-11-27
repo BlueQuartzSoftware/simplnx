@@ -53,7 +53,7 @@ class SIMPLNX_EXPORT IParameter
 {
 public:
   using AcceptedTypes = std::vector<std::type_index>;
-  using UniquePointer = std::unique_ptr<IParameter>;
+  using UniquePointerType = std::unique_ptr<IParameter>;
   using VersionType = uint64;
 
   enum class Type : uint8
@@ -140,7 +140,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return UniquePointer A unique pointer to the cloned parameter
    */
-  virtual UniquePointer clone() const = 0;
+  virtual UniquePointerType clone() const = 0;
 
   /**
    * @brief Constructs an input value from the given arguments.

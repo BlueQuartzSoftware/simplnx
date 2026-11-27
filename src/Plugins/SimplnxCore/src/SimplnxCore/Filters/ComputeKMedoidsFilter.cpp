@@ -70,8 +70,8 @@ Parameters ComputeKMedoidsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean or uint8 mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<UInt64Parameter>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<UInt64ParameterType>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
   params.insert(std::make_unique<ChoicesParameter>(
       k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(ClusterUtilities::DistanceMetric::Euclidean),
       ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // Choice order matches ClusterUtilities::DistanceMetric values.
@@ -98,7 +98,7 @@ IFilter::VersionType ComputeKMedoidsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeKMedoidsFilter::clone() const
+IFilter::UniquePointerType ComputeKMedoidsFilter::clone() const
 {
   return std::make_unique<ComputeKMedoidsFilter>();
 }
@@ -200,16 +200,16 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InitClustersKey = "InitClusters";
-constexpr StringLiteral k_DistanceMetricKey = "DistanceMetric";
-constexpr StringLiteral k_UseMaskKey = "UseMask";
-constexpr StringLiteral k_UseRandomSeedKey = "UseRandomSeed";
-constexpr StringLiteral k_RandomSeedValueKey = "RandomSeedValue";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
-constexpr StringLiteral k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
-constexpr StringLiteral k_MedoidsArrayNameKey = "MedoidsArrayName";
+constexpr StringLiteralType k_InitClustersKey = "InitClusters";
+constexpr StringLiteralType k_DistanceMetricKey = "DistanceMetric";
+constexpr StringLiteralType k_UseMaskKey = "UseMask";
+constexpr StringLiteralType k_UseRandomSeedKey = "UseRandomSeed";
+constexpr StringLiteralType k_RandomSeedValueKey = "RandomSeedValue";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteralType k_FeatureAttributeMatrixNameKey = "FeatureAttributeMatrixName";
+constexpr StringLiteralType k_MedoidsArrayNameKey = "MedoidsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -219,17 +219,17 @@ Result<Arguments> ComputeKMedoidsFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_InitClustersKey, k_InitClusters_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DistanceMetricKey, k_DistanceMetric_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_UseSeed_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_InitClustersKey, k_InitClusters_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DistanceMetricKey, k_DistanceMetric_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseRandomSeedKey, k_UseSeed_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_RandomSeedValueKey, k_SeedValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
                                                                                                                 k_FeatureAMPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_MedoidsArrayNameKey, k_MedoidsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_MedoidsArrayNameKey, k_MedoidsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

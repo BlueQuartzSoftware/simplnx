@@ -279,13 +279,13 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Preserve winding and pruning war
         dataStructure, DataPath({"QuickMesh"}), mode, [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); }, true, &scope);
   };
   auto fullDataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-  auto fullResult = runMesh(fullDataStructure, BoundingBoxSkinMode::k_Off);
+  auto fullResult = runMesh(fullDataStructure, bounding_box_skin_mode::k_Off);
   SIMPLNX_RESULT_REQUIRE_VALID(fullResult);
   REQUIRE(fullResult.warnings().size() == 1);
   REQUIRE(fullResult.warnings()[0].code == -56730);
 
   auto backgroundBackedDataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-  auto backgroundBackedResult = runMesh(backgroundBackedDataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+  auto backgroundBackedResult = runMesh(backgroundBackedDataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
   SIMPLNX_RESULT_REQUIRE_VALID(backgroundBackedResult);
   REQUIRE(backgroundBackedResult.warnings().size() == 2);
   REQUIRE(backgroundBackedResult.warnings()[0].code == -56730);
@@ -920,7 +920,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem voxel correction handles
   args.insertOrAssign(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(DataPath({"Mesh"})));
   args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(true));
   args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
-  args.insertOrAssign(QuickSurfaceMeshFilter::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(BoundingBoxSkinMode::k_Off));
+  args.insertOrAssign(QuickSurfaceMeshFilter::k_BoundingBoxSkinMode_Key, std::make_any<ChoicesParameter::ValueType>(bounding_box_skin_mode::k_Off));
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   std::array<int32, 8> actual{};

@@ -21,14 +21,14 @@ class SIMPLNX_EXPORT StringArray : public IArray
 {
 public:
   using value_type = std::string;
-  using collection_type = std::vector<value_type>;
+  using CollectionType = std::vector<value_type>;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using store_type = AbstractStringStore;
-  using iterator = typename store_type::iterator;
-  using const_iterator = typename store_type::const_iterator;
+  using StoreType = AbstractStringStore;
+  using iterator = typename StoreType::iterator;
+  using const_iterator = typename StoreType::const_iterator;
 
-  static constexpr StringLiteral k_TypeName = "StringArray";
+  static constexpr StringLiteralType k_TypeName = "StringArray";
 
   /**
    * @brief Creates an empty array.
@@ -51,7 +51,7 @@ public:
    * When tupleShape represents nonzero tuples, an empty initial value set must
    * replace its store before value access. A zero-tuple array is valid.
    */
-  static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, const collection_type& strings,
+  static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, const CollectionType& strings,
                                        const std::optional<IdType>& parentId = {});
 
   /**
@@ -67,7 +67,7 @@ public:
    * When tupleShape represents nonzero tuples, an empty imported value set must
    * replace its initial store before value access. A zero-tuple array is valid.
    */
-  static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, collection_type strings,
+  static StringArray* Import(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, IdType importId, CollectionType strings,
                              const std::optional<IdType>& parentId = {});
 
   /**
@@ -112,7 +112,7 @@ public:
    * @throws std::runtime_error if the store is a placeholder.
    * @pre The array has a non-null store.
    */
-  collection_type values() const;
+  CollectionType values() const;
 
   /**
    * @brief Returns a mutable string.
@@ -233,9 +233,9 @@ public:
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
-  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, const collection_type& strings);
-  StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store);
-  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, const collection_type& strings);
+  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, const CollectionType& strings);
+  StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<StoreType>& store);
+  StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, const CollectionType& strings);
 
 private:
   std::shared_ptr<AbstractStringStore> m_Strings = nullptr;

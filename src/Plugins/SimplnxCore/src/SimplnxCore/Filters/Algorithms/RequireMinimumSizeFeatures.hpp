@@ -23,9 +23,9 @@ struct SIMPLNXCORE_EXPORT RequireMinimumSizeFeaturesInputValues
   ArraySelectionParameter::ValueType FeatureIdsPath;
   ArraySelectionParameter::ValueType FeaturePhasesPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  Int64Parameter::ValueType MinAllowedFeaturesSize{};
+  Int64ParameterType::ValueType MinAllowedFeaturesSize{};
   ArraySelectionParameter::ValueType FeatureNumCellsPath;
-  Int32Parameter::ValueType PhaseNumber{};
+  Int32ParameterType::ValueType PhaseNumber{};
 };
 
 /**

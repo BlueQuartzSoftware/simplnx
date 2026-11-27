@@ -73,7 +73,7 @@ Parameters ComputeCoordinateThresholdFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(
       k_SelectedGeometryPath_Key, "Selected Geometry", "The DataPath to the Geometry that contains the points/edges/faces for the geometry", DataPath{},
-      GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Image, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
+      GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Image, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedMaskPath_Key, "Created Mask Path/Name", "The path/name of the created mask", DataPath({"Geometric Coordinate Mask"})));
@@ -93,7 +93,7 @@ IFilter::VersionType ComputeCoordinateThresholdFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeCoordinateThresholdFilter::clone() const
+IFilter::UniquePointerType ComputeCoordinateThresholdFilter::clone() const
 {
   return std::make_unique<ComputeCoordinateThresholdFilter>();
 }
@@ -175,7 +175,7 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
       const FloatVec3& minBound = bounds.getMinPoint();
       const FloatVec3& maxBound = bounds.getMaxPoint();
 
-      bool doesIntersect = IntersectionUtilities::SphereIntersectsRectangularPrism({pSphereInfo[0], pSphereInfo[1], pSphereInfo[2]}, pSphereInfo[3], minBound.toArray(), maxBound.toArray());
+      bool doesIntersect = intersection_utilities::SphereIntersectsRectangularPrism({pSphereInfo[0], pSphereInfo[1], pSphereInfo[2]}, pSphereInfo[3], minBound.toArray(), maxBound.toArray());
 
       if(!doesIntersect)
       {

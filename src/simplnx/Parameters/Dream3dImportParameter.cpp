@@ -16,9 +16,9 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_FilePathKey = "file_path";
-constexpr StringLiteral k_DataPathsKey = "data_paths";
-constexpr StringLiteral k_PathImportPolicyKey = "path_import_policy";
+constexpr StringLiteralType k_FilePathKey = "file_path";
+constexpr StringLiteralType k_DataPathsKey = "data_paths";
+constexpr StringLiteralType k_PathImportPolicyKey = "path_import_policy";
 } // namespace
 
 namespace nx::core
@@ -93,7 +93,7 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
   if(!json.is_object())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix, name()));
@@ -163,7 +163,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer Dream3dImportParameter::clone() const
+IParameter::UniquePointerType Dream3dImportParameter::clone() const
 {
   return std::make_unique<Dream3dImportParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -211,16 +211,16 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData)
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
-constexpr StringLiteral k_DataContainerProxyKey = "Data Containers";
-constexpr StringLiteral k_AttributeMatrixProxyKey = "Attribute Matricies";
-constexpr StringLiteral k_DataArrayProxyKey = "Data Arrays";
-constexpr StringLiteral k_DataObjectNameKey = "Name";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
+constexpr StringLiteralType k_DataContainerProxyKey = "Data Containers";
+constexpr StringLiteralType k_AttributeMatrixProxyKey = "Attribute Matricies";
+constexpr StringLiteralType k_DataArrayProxyKey = "Data Arrays";
+constexpr StringLiteralType k_DataObjectNameKey = "Name";
 } // namespace
 
 Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::Convert(const nlohmann::json& json)
@@ -270,5 +270,5 @@ Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerRead
   ParameterType::ValueType value(filePath, pathImportPolicy, dataPaths);
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

@@ -54,9 +54,9 @@ Parameters SharedFeatureFaceFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureFaceIdsArrayName_Key, "Feature Face Ids", "The name of the calculated Feature Face Ids DataArray", "SharedFeatureFaceId"));
@@ -79,7 +79,7 @@ IFilter::VersionType SharedFeatureFaceFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SharedFeatureFaceFilter::clone() const
+IFilter::UniquePointerType SharedFeatureFaceFilter::clone() const
 {
   return std::make_unique<SharedFeatureFaceFilter>();
 }

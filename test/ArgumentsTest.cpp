@@ -9,7 +9,7 @@ using namespace nx::core;
 
 TEST_CASE("ArgumentsTest")
 {
-  static constexpr StringLiteral k_FooKey = "foo";
+  static constexpr StringLiteralType k_FooKey = "foo";
   Arguments args;
 
   SECTION("insert and retrieve primitive")

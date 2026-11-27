@@ -45,7 +45,7 @@ nlohmann::json MultiPathSelectionParameter::toJsonImpl(const std::any& value) co
 
 Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
@@ -79,7 +79,7 @@ Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json&
   return {{std::move(paths)}};
 }
 
-IParameter::UniquePointer MultiPathSelectionParameter::clone() const
+IParameter::UniquePointerType MultiPathSelectionParameter::clone() const
 {
   return std::make_unique<MultiPathSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -143,12 +143,12 @@ Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructu
   return {{objects}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> SingleToMultiDataPathSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
-  static constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
-  static constexpr StringLiteral k_DataArrayNameKey = "Data Array Name";
+  static constexpr StringLiteralType k_AttributeMatrixNameKey = "Attribute Matrix Name";
+  static constexpr StringLiteralType k_DataArrayNameKey = "Data Array Name";
 
   if(!json.is_object())
   {
@@ -200,11 +200,11 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
 
 namespace
 {
-constexpr StringLiteral k_DataContainersKey = "Data Containers";
-constexpr StringLiteral k_AttributeMatricesKey = "Attribute Matricies";
-constexpr StringLiteral k_DataArraysKey = "Data Arrays";
-constexpr StringLiteral k_NameKey = "Name";
-constexpr StringLiteral k_FlagKey = "Flag";
+constexpr StringLiteralType k_DataContainersKey = "Data Containers";
+constexpr StringLiteralType k_AttributeMatricesKey = "Attribute Matricies";
+constexpr StringLiteralType k_DataArraysKey = "Data Arrays";
+constexpr StringLiteralType k_NameKey = "Name";
+constexpr StringLiteralType k_FlagKey = "Flag";
 
 Result<std::string> FindName(const nlohmann::json& json)
 {
@@ -342,5 +342,5 @@ Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::Conv
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

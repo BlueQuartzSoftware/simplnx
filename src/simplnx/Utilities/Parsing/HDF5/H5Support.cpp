@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
+bool nx::core::hdf5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -33,7 +33,7 @@ bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectNam
   return isGroup;
 }
 
-std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
+std::string nx::core::hdf5::Support::GetObjectPath(hid_t locationId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -50,7 +50,7 @@ std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
   return objectPath;
 }
 
-hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
+hid_t nx::core::hdf5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -71,7 +71,7 @@ hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::strin
   return typeId;
 }
 
-herr_t nx::core::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* opData)
+herr_t nx::core::hdf5::Support::FindAttr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* opData)
 {
   /* Define a default zero value for return. This will cause the iterator to
    * continue if the palette attribute is not found yet.
@@ -92,7 +92,7 @@ herr_t nx::core::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name,
   return returnError;
 }
 
-herr_t nx::core::HDF5::Support::FindAttribute(hid_t locationId, const std::string& attributeName)
+herr_t nx::core::hdf5::Support::FindAttribute(hid_t locationId, const std::string& attributeName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -105,7 +105,7 @@ herr_t nx::core::HDF5::Support::FindAttribute(hid_t locationId, const std::strin
   return returnError;
 }
 
-std::string nx::core::HDF5::Support::HdfClassTypeAsStr(hid_t classType)
+std::string nx::core::hdf5::Support::HdfClassTypeAsStr(hid_t classType)
 {
   switch(classType)
   {
@@ -147,7 +147,7 @@ std::string nx::core::HDF5::Support::HdfClassTypeAsStr(hid_t classType)
   }
 }
 
-std::string nx::core::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
+std::string nx::core::hdf5::Support::StringForHDFType(hid_t dataTypeIdentifier)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -205,7 +205,7 @@ std::string nx::core::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
   return "Unknown";
 }
 
-std::string nx::core::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
+std::string nx::core::hdf5::Support::GetNameFromFilterType(H5Z_filter_t id)
 {
   switch(id)
   {
@@ -229,7 +229,7 @@ std::string nx::core::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
   }
 }
 
-std::mutex& nx::core::HDF5::Support::ApiLock()
+std::mutex& nx::core::hdf5::Support::ApiLock()
 {
   // Keep the process lock alive while static HDF5 handles can still close.
   // Intentional heap lifetime avoids locking a destroyed function-local mutex during shutdown.

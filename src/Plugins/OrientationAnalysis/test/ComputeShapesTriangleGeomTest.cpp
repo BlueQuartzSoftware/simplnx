@@ -21,7 +21,7 @@ using namespace nx::core;
 
 namespace
 {
-using FrameType = OrientationUtilities::Matrix3dR;
+using FrameType = orientation_utilities::Matrix3dRType;
 using PointType = Eigen::Vector3d;
 using FaceType = std::array<IGeometry::MeshIndexType, 3>;
 
@@ -259,7 +259,7 @@ TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom: Principal Euler frame
     frame << 29, -20, 28, -28, -35, 4, -20, 20, 35;
     frame /= 45.0;
   }
-  const auto euler = OrientationUtilities::PrincipalAxisFrameToEuler(frame);
+  const auto euler = orientation_utilities::PrincipalAxisFrameToEuler(frame);
   CheckOrderedAxes(euler, frame);
 }
 

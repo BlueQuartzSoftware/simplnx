@@ -19,7 +19,7 @@
 #include <string_view>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 #if SIMPLNX_BUILD_TESTS
 /**
@@ -877,11 +877,11 @@ private:
   // Serializes short-read recovery only. Successful positional reads remain lock free.
   mutable std::mutex m_PositionalReadRecoveryMutex;
   mutable std::once_flag m_ReadHandleOpenOnce;
-  mutable detail::FileHandle m_ReadFileHandle = detail::invalidFileHandle();
+  mutable detail::FileHandle m_ReadFileHandle = detail::InvalidFileHandle();
 #endif
 };
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 /**
  * @def SIMPLNX_OBSERVE_METADATA_CALL
@@ -890,7 +890,7 @@ private:
  * @param expression Supplies the native expression, evaluated exactly once.
  */
 #if SIMPLNX_BUILD_TESTS
-#define SIMPLNX_OBSERVE_METADATA_CALL(event, expression) nx::core::HDF5::InvokeMetadataForTesting(nx::core::HDF5::CodecIoEventForTesting::event, [&]() { return (expression); })
+#define SIMPLNX_OBSERVE_METADATA_CALL(event, expression) nx::core::hdf5::InvokeMetadataForTesting(nx::core::hdf5::CodecIoEventForTesting::event, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_METADATA_CALL(event, expression) (expression)
 #endif
@@ -904,7 +904,7 @@ private:
  * @param expression Supplies H5Dread, evaluated exactly once.
  */
 #if SIMPLNX_BUILD_TESTS
-#define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedReadForTesting(file, dataset, bytes, [&]() { return (expression); })
+#define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) nx::core::hdf5::InvokeTypedReadForTesting(file, dataset, bytes, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) (expression)
 #endif
@@ -918,7 +918,7 @@ private:
  * @param expression Supplies H5Dwrite, evaluated exactly once.
  */
 #if SIMPLNX_BUILD_TESTS
-#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedWriteForTesting(file, dataset, bytes, [&]() { return (expression); })
+#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) nx::core::hdf5::InvokeTypedWriteForTesting(file, dataset, bytes, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) (expression)
 #endif

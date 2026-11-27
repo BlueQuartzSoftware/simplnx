@@ -70,25 +70,25 @@ Parameters SurfaceNetsFilter::parameters() const
                                                    bounding_box_skin_mode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
-  params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
-  params.insert(std::make_unique<Float32Parameter>(
+  params.insert(std::make_unique<Int32ParameterType>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));
+  params.insert(std::make_unique<Float32ParameterType>(
       k_MaxDistanceFromVoxelCenter_Key, "Max Distance from Voxel Center",
       "The maximum distance in voxel units that a node may move along each axis from its originating voxel center before conversion to physical coordinates using the Image Geometry spacing.", 1.0F));
-  params.insert(std::make_unique<Float32Parameter>(k_RelaxationFactor_Key, "Relaxation Factor", "The factor used to determine how far a node can move in each smoothing iteration", 0.5F));
+  params.insert(std::make_unique<Float32ParameterType>(k_RelaxationFactor_Key, "Relaxation Factor", "The factor used to determine how far a node can move in each smoothing iteration", 0.5F));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Cell Attribute Arrays to Transfer", "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
-      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedFeatureDataArrayPaths_Key, "Feature Attribute Arrays to Transfer", "The paths to the Arrays specifying which feature Attribute Arrays to transfer to the created Triangle Geometry",
-      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Triangle Geometry"});
   params.insert(
@@ -127,7 +127,7 @@ IFilter::VersionType SurfaceNetsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SurfaceNetsFilter::clone() const
+IFilter::UniquePointerType SurfaceNetsFilter::clone() const
 {
   return std::make_unique<SurfaceNetsFilter>();
 }

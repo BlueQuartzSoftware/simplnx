@@ -51,7 +51,7 @@ Parameters IdentifyDuplicateVerticesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_InputGeomPath_Key, "Input Geometry", "The path to the target geometry, must have a SharedVertexList", DataPath{},
-                                                   GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
+                                                   GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DuplicateMaskPath_Key, "Duplicate Vertices Mask Name", "The location and name of the new duplicate vertices mask array",
@@ -67,7 +67,7 @@ IFilter::VersionType IdentifyDuplicateVerticesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer IdentifyDuplicateVerticesFilter::clone() const
+IFilter::UniquePointerType IdentifyDuplicateVerticesFilter::clone() const
 {
   return std::make_unique<IdentifyDuplicateVerticesFilter>();
 }

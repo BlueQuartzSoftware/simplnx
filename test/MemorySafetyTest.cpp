@@ -189,7 +189,7 @@ public:
   {
     return 1;
   }
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<MockOomFilter>();
   }

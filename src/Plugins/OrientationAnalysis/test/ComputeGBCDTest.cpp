@@ -30,7 +30,7 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteralType k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
 constexpr usize k_GbcdChunkBoundaryFaceCount = 100003;
 // These placements cross two full 50,000-face chunks and the partial final chunk.
@@ -241,7 +241,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCD", "[OrientationAnalysis][ComputeGBCD
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32Parameter::ValueType>(9.0F));
+    args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32ParameterType::ValueType>(9.0F));
 
     args.insertOrAssign(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(triangleDataContainerPath));
 
@@ -377,7 +377,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Phase and Laue Index Bounds",
 
   ComputeGBCDFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32Parameter::ValueType>(9.0F));
+  args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32ParameterType::ValueType>(9.0F));
   args.insertOrAssign(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
   args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceLabels)));
   args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceNormals)));

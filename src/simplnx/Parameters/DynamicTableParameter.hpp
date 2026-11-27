@@ -45,7 +45,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -101,7 +101,7 @@ private:
   DynamicTableInfo m_TableInfo;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DynamicTableFilterParameterConverter
 {
@@ -118,7 +118,7 @@ struct SIMPLNX_EXPORT ArrayToDynamicTableFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DynamicTableParameter, "eea76f1a-fab9-4704-8da5-4c21057cf44e");

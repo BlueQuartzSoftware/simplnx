@@ -8,7 +8,7 @@
 
 #include <H5Apublic.h>
 
-std::optional<nx::core::DataType> nx::core::HDF5::toCommonType(Type typeEnum)
+std::optional<nx::core::DataType> nx::core::hdf5::toCommonType(Type typeEnum)
 {
   switch(typeEnum)
   {
@@ -41,7 +41,7 @@ std::optional<nx::core::DataType> nx::core::HDF5::toCommonType(Type typeEnum)
   }
 }
 
-nx::core::HDF5::Type nx::core::HDF5::getTypeFromId(IdType typeId)
+nx::core::hdf5::Type nx::core::hdf5::getTypeFromId(IdType typeId)
 {
   if(typeId < 0)
   {
@@ -92,7 +92,7 @@ nx::core::HDF5::Type nx::core::HDF5::getTypeFromId(IdType typeId)
   return Type::unknown;
 }
 
-nx::core::HDF5::IdType nx::core::HDF5::getIdForType(Type type)
+nx::core::hdf5::IdType nx::core::hdf5::getIdForType(Type type)
 {
   switch(type)
   {
@@ -121,7 +121,7 @@ nx::core::HDF5::IdType nx::core::HDF5::getIdForType(Type type)
   }
 }
 
-std::string nx::core::HDF5::GetNameFromBuffer(std::string_view buffer)
+std::string nx::core::hdf5::GetNameFromBuffer(std::string_view buffer)
 {
   if(buffer.empty())
   {
@@ -144,7 +144,7 @@ std::string nx::core::HDF5::GetNameFromBuffer(std::string_view buffer)
   return std::string(buffer.substr(++substrIndex));
 }
 
-std::string nx::core::HDF5::GetPathFromId(IdType id)
+std::string nx::core::hdf5::GetPathFromId(IdType id)
 {
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   ssize_t nameLength = H5Iget_name(id, nullptr, 0);
@@ -161,12 +161,12 @@ std::string nx::core::HDF5::GetPathFromId(IdType id)
   return buffer;
 }
 
-std::string nx::core::HDF5::GetNameFromId(IdType id)
+std::string nx::core::hdf5::GetNameFromId(IdType id)
 {
   return GetNameFromBuffer(GetPathFromId(id));
 }
 
-std::string nx::core::HDF5::GetParentPath(const std::string& objectPath)
+std::string nx::core::hdf5::GetParentPath(const std::string& objectPath)
 {
   if(objectPath.empty())
   {

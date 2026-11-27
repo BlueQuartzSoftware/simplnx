@@ -63,13 +63,13 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Sampling Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SamplingGeometryPath_Key, "Sampling Image Geometry",
                                                              "This is the geometry that will be copied into the reference geometry at the overlap", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_SamplingCellAttributeMatrixPath_Key, "Sampling Cell Attribute Matrix", "The attribute matrix for the sampling geometry", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Input Reference Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ReferenceGeometryPath_Key, "Reference Image Geometry", "This is the geometry that will store the values from the overlap", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_ReferenceCellAttributeMatrixPath_Key, "Reference Cell Attribute Matrix", "The attribute matrix for the reference geometry", DataPath{}));
 
@@ -85,7 +85,7 @@ IFilter::VersionType NearestPointFuseRegularGridsFilter::parametersVersion() con
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer NearestPointFuseRegularGridsFilter::clone() const
+IFilter::UniquePointerType NearestPointFuseRegularGridsFilter::clone() const
 {
   return std::make_unique<NearestPointFuseRegularGridsFilter>();
 }
@@ -181,8 +181,8 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
-constexpr StringLiteral k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
+constexpr StringLiteralType k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
+constexpr StringLiteralType k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
 } // namespace simpl
 } // namespace
 
@@ -193,12 +193,12 @@ Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohma
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey,
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey,
                                                                                                                          k_ReferenceCellAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey,
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey,
                                                                                                                          k_SamplingCellAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

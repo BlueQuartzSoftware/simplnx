@@ -62,7 +62,7 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Vertex Data"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_CriterionMode_Key, "Internal Surface Criterion",
@@ -70,13 +70,13 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
       "internal surface meets the bounding box. 'Face Labels' removes only the bounding box wall backed by the background (Feature Id 0), which leaves Features flush with the box closed.",
       0, ChoicesParameter::Choices{"Node Type Range", "Face Labels"}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::int8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<VectorInt8Parameter>(k_NodeTypeRange_Key, "Internal Surface Node Type Min & Max",
+  params.insert(std::make_unique<VectorInt8ParameterType>(k_NodeTypeRange_Key, "Internal Surface Node Type Min & Max",
                                                       "The min and max (inclusive) Node Type values that distinguish an internal surface from an external surface", std::vector<int8>{0, 8},
                                                       std::vector<std::string>{"Min", "Max"}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels Array", "Path to the Face Labels array", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
@@ -87,9 +87,9 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Face Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   params.linkParameters(k_CriterionMode_Key, k_NodeTypesPath_Key, static_cast<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_CriterionMode_Key, k_NodeTypeRange_Key, static_cast<ChoicesParameter::ValueType>(0));
@@ -113,7 +113,7 @@ IFilter::VersionType ExtractInternalSurfacesFromTriangleGeometryFilter::paramete
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometryFilter::clone() const
+IFilter::UniquePointerType ExtractInternalSurfacesFromTriangleGeometryFilter::clone() const
 {
   return std::make_unique<ExtractInternalSurfacesFromTriangleGeometryFilter>();
 }
@@ -252,7 +252,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometryFilter::executeImpl(DataStru
   inputValues.CopyVertexArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
   inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedTriangleGeometryPath_Key);
   inputValues.CriterionMode = filterArgs.value<ChoicesParameter::ValueType>(k_CriterionMode_Key);
-  inputValues.NodeTypeRange = filterArgs.value<VectorInt8Parameter::ValueType>(k_NodeTypeRange_Key);
+  inputValues.NodeTypeRange = filterArgs.value<VectorInt8ParameterType::ValueType>(k_NodeTypeRange_Key);
   inputValues.NodeTypesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_NodeTypesPath_Key);
   inputValues.FaceLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FaceLabelsPath_Key);
   inputValues.OutputTriangleGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedTriangleGeometryPath_Key);
@@ -265,9 +265,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
-constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
-constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
+constexpr StringLiteralType k_TriangleDataContainerNameKey = "TriangleDataContainerName";
+constexpr StringLiteralType k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
+constexpr StringLiteralType k_InternalTrianglesNameKey = "InternalTrianglesName";
 } // namespace simpl
 } // namespace
 
@@ -278,9 +278,9 @@ Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJs
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

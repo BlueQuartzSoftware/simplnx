@@ -56,10 +56,10 @@ const fs::path k_DataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_DataDi
 const fs::path k_SmallExemplarFile = k_DataDir / "ebsd_small.dream3d";
 const fs::path k_LargeExemplarFile = k_DataDir / "ebsd_large.dream3d";
 
-constexpr StringLiteral k_GeomName = "DataContainer";
-constexpr StringLiteral k_CellDataName = "CellData";
-constexpr StringLiteral k_FeatureDataName = "CellFeatureData";
-constexpr StringLiteral k_EnsembleName = "CellEnsembleData";
+constexpr StringLiteralType k_GeomName = "DataContainer";
+constexpr StringLiteralType k_CellDataName = "CellData";
+constexpr StringLiteralType k_FeatureDataName = "CellFeatureData";
+constexpr StringLiteralType k_EnsembleName = "CellEnsembleData";
 
 const DataPath k_GeomPath({k_GeomName});
 const DataPath k_FeatureIdsPath({k_GeomName, k_CellDataName, "FeatureIds"});
@@ -568,10 +568,10 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[Orie
 
 namespace ebsd_segment_features_constants
 {
-inline constexpr StringLiteral k_InputGeometryName = "DataContainer";
+inline constexpr StringLiteralType k_InputGeometryName = "DataContainer";
 inline const DataPath k_InputGeometryPath({k_InputGeometryName});
-inline constexpr StringLiteral k_CellDataName = "CellData";
-inline constexpr StringLiteral k_EnsembleName = "CellEnsembleData";
+inline constexpr StringLiteralType k_CellDataName = "CellData";
+inline constexpr StringLiteralType k_EnsembleName = "CellEnsembleData";
 inline const DataPath k_QuatsArrayPath = k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath("Quats");
 inline const DataPath k_PhasesArrayPath = k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath("Phases");
 inline const DataPath k_MaskArrayPath = k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath("Mask (Y Pos)");

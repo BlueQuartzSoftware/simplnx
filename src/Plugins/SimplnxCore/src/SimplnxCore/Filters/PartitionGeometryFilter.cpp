@@ -189,7 +189,7 @@ template <typename Geom>
 Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom& geometry, const DataStructure& dataStructure, const Arguments& filterArgs)
 {
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(PartitionGeometryFilter::k_PartitioningMode_Key);
-  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key);
+  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key);
 
   const SizeVec3 numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
                                                 static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
@@ -331,10 +331,10 @@ Parameters PartitionGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Partition Grid Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PartitioningMode_Key, "Select the partitioning mode",
                                                                     "Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partition Grid (3)'", 0, ::k_Choices));
-  params.insert(std::make_unique<Int32Parameter>(k_StartingFeatureID_Key, "Starting Feature ID", "The value to start the partition grid's feature ids at.", 1));
-  params.insert(std::make_unique<Int32Parameter>(k_OutOfBoundsFeatureID_Key, "Out-Of-Bounds Feature ID",
+  params.insert(std::make_unique<Int32ParameterType>(k_StartingFeatureID_Key, "Starting Feature ID", "The value to start the partition grid's feature ids at.", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_OutOfBoundsFeatureID_Key, "Out-Of-Bounds Feature ID",
                                                  "The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid.", 0));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_NumberOfCellsPerAxis_Key, "Number Of Cells Per Axis", "The number of cells along each axis of the partition grid",
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_NumberOfCellsPerAxis_Key, "Number Of Cells Per Axis", "The number of cells along each axis of the partition grid",
                                                        std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry", std::vector<float32>({0.0F, 0.0F, 0.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
@@ -347,12 +347,12 @@ Parameters PartitionGeometryFilter::parameters() const
                                                          std::vector<float32>({10.0F, 10.0F, 10.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingPartitionGridPath_Key, "Existing Partition Grid",
                                                              "This is an existing Image Geometry that defines the partition grid that will be used.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseVertexMask_Key, "Use Vertex Mask (Node Geometries Only)",
                                       "Feature ID values will only be placed on vertices that have a 'true' mask value. All others will have the Out-Of-Bounds Feature ID value used instead", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry Data Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAttrMatrixName_Key, "Partition Attribute Matrix",
@@ -405,7 +405,7 @@ IFilter::VersionType PartitionGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer PartitionGeometryFilter::clone() const
+IFilter::UniquePointerType PartitionGeometryFilter::clone() const
 {
   return std::make_unique<PartitionGeometryFilter>();
 }
@@ -415,7 +415,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
-  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_NumberOfCellsPerAxis_Key);
+  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
   auto pPartitionGridOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_PartitionGridOrigin_Key);
   auto pCellLengthValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_CellLength_Key);
   auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
@@ -670,7 +670,7 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
   auto partitioningMode = static_cast<PartitioningMode>(pPartitioningModeValue);
 
-  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_NumberOfCellsPerAxis_Key);
+  auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
   SizeVec3 numOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
   auto pMinGridCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);
@@ -823,7 +823,7 @@ Result<> PartitionGeometryFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.PartitioningMode = filterArgs.value<ChoicesParameter::ValueType>(k_PartitioningMode_Key);
   inputValues.StartingFeatureID = filterArgs.value<int32>(k_StartingFeatureID_Key);
   inputValues.OutOfBoundsFeatureID = filterArgs.value<int32>(k_OutOfBoundsFeatureID_Key);
-  inputValues.NumberOfCellsPerAxis = filterArgs.value<VectorInt32Parameter::ValueType>(k_NumberOfCellsPerAxis_Key);
+  inputValues.NumberOfCellsPerAxis = filterArgs.value<VectorInt32ParameterType::ValueType>(k_NumberOfCellsPerAxis_Key);
   inputValues.PartitionGridOrigin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_PartitionGridOrigin_Key);
   inputValues.CellLength = filterArgs.value<VectorFloat32Parameter::ValueType>(k_CellLength_Key);
   inputValues.MinGridCoord = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinGridCoord_Key);

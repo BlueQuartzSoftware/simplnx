@@ -121,7 +121,7 @@ Parameters ReadZeissTxmFileFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadZeissTxmFileFilter::clone() const
+IFilter::UniquePointerType ReadZeissTxmFileFilter::clone() const
 {
   return std::make_unique<ReadZeissTxmFileFilter>();
 }

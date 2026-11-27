@@ -33,15 +33,15 @@ public:
   NeighborOrientationCorrelationFilter& operator=(const NeighborOrientationCorrelationFilter&) = delete;
   NeighborOrientationCorrelationFilter& operator=(NeighborOrientationCorrelationFilter&&) noexcept = delete;
 
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
-  static constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
-  static constexpr StringLiteral k_Level_Key = "level";
-  static constexpr StringLiteral k_CorrelationArrayPath_Key = "correlation_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_MinConfidence_Key = "min_confidence";
+  static constexpr StringLiteralType k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static constexpr StringLiteralType k_Level_Key = "level";
+  static constexpr StringLiteralType k_CorrelationArrayPath_Key = "correlation_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Converts a legacy SIMPL parameter object.
@@ -57,7 +57,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

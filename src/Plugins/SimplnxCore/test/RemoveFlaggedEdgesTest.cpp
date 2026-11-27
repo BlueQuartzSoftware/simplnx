@@ -12,15 +12,15 @@ namespace
 {
 fs::path KBaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_edges_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-constexpr StringLiteral k_RegionIdsName = "Region Ids";
-constexpr StringLiteral k_SliceIdsName = "Slice Ids";
-constexpr StringLiteral k_VertexListName = "SharedVertexList";
-constexpr StringLiteral k_EdgeListName = "SharedEdgeList";
+constexpr StringLiteralType k_RegionIdsName = "Region Ids";
+constexpr StringLiteralType k_SliceIdsName = "Slice Ids";
+constexpr StringLiteralType k_VertexListName = "SharedVertexList";
+constexpr StringLiteralType k_EdgeListName = "SharedEdgeList";
 
 const DataPath k_EdgeGeomPath({"Edge Geometry"});
-const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(Constants::k_Mask);
-const DataPath k_RegionIdsPath = k_EdgeGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(k_RegionIdsName);
-const DataPath k_SliceIdsPath = k_EdgeGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(k_SliceIdsName);
+const DataPath k_MaskPath = k_EdgeGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(Constants::k_Mask);
+const DataPath k_RegionIdsPath = k_EdgeGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(k_RegionIdsName);
+const DataPath k_SliceIdsPath = k_EdgeGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(k_SliceIdsName);
 const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
 } // namespace
@@ -57,15 +57,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_RegionIdsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_RegionIdsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_RegionIdsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_RegionIdsName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_SliceIdsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_SliceIdsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_SliceIdsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_EdgeDataWithSpaces).createChildPath(::k_SliceIdsName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }

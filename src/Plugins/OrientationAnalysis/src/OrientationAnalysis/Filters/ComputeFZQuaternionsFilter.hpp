@@ -24,12 +24,12 @@ public:
   ComputeFZQuaternionsFilter& operator=(ComputeFZQuaternionsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "input_quats_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_FZQuatsArrayName_Key = "output_fz_quats_array_name";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "input_quats_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_FZQuatsArrayName_Key = "output_fz_quats_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -86,7 +86,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

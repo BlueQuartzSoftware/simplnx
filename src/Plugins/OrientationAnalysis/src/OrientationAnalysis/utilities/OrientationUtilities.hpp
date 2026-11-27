@@ -12,7 +12,7 @@
 #include <array>
 #include <string>
 
-namespace nx::core::OrientationUtilities
+namespace nx::core::orientation_utilities
 {
 /**
  *
@@ -22,7 +22,7 @@ namespace nx::core::OrientationUtilities
 std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
 
 using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
-using Matrix3dR = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
+using Matrix3dRType = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
 
 /**
  * @brief Converts ordered principal-axis rows to Euler angles in radians.
@@ -30,7 +30,7 @@ using Matrix3dR = Eigen::Matrix<double, 3, 3, Eigen::RowMajor>;
  * @return Euler angles of a proper rotation with the same ordered axis lines.
  * @details If the determinant is negative, the conversion negates the third row.
  */
-ORIENTATIONANALYSIS_EXPORT std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dR frame);
+ORIENTATIONANALYSIS_EXPORT std::array<float64, 3> PrincipalAxisFrameToEuler(Matrix3dRType frame);
 
 using Matrix1dR = Eigen::Matrix<double, 3, 1, Eigen::RowMajor>;
 using Matrix1fR = Eigen::Matrix<float, 3, 1, Eigen::RowMajor>;
@@ -126,4 +126,4 @@ Eigen::Matrix<T, 3, 3, Eigen::RowMajor> GMatrixToEigenMatrixTranspose(const T oM
 }
 #endif
 
-} // namespace nx::core::OrientationUtilities
+} // namespace nx::core::orientation_utilities

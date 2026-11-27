@@ -15,11 +15,11 @@
  * `uint64`) so this header does not need to pull in ChoicesParameter.hpp; every use site compares or
  * assigns against a `ChoicesParameter::ValueType`, so the two types are interchangeable here.
  */
-namespace nx::core::BoundingBoxSkinMode
+namespace nx::core::bounding_box_skin_mode
 {
 inline constexpr uint64 k_Off = 0;
 inline constexpr uint64 k_BackgroundBackedWallsOnly = 1;
-} // namespace nx::core::BoundingBoxSkinMode
+} // namespace nx::core::bounding_box_skin_mode
 
 namespace nx::core::MeshingUtilities
 {
@@ -111,7 +111,7 @@ inline static constexpr usize k_22 = 8;
  * @param vertices Provides flat XYZ coordinates.
  * @return Signed volume contribution.
  */
-SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
+SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::StoreType& vertices);
 
 using TriangleNormalCalculator = std::array<float64, 3> (*)(const float32* vertA, const float32* vertB, const float32* vertC);
 
@@ -131,7 +131,7 @@ using TriangleNormalCalculator = std::array<float64, 3> (*)(const float32* vertA
  * invalid vertex index, and error -65818 the write. Error -65819 reports a grant lost to another consumer while
  * the admission was released; triangle 0 then holds its new normal and later triangles keep their old values.
  */
-SIMPLNX_EXPORT Result<> CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+SIMPLNX_EXPORT Result<> CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::StoreType& triangles, const INodeGeometry2D::SharedVertexList::StoreType& verts,
                                                  Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal);
 } // namespace detail
 
@@ -145,7 +145,7 @@ SIMPLNX_EXPORT Result<> CalculateNormalsInBlocks(const INodeGeometry2D::SharedFa
  * @return Error, warning for unrepaired triangles, or success after cancellation.
  * @pre The mesh has no duplicate vertices.
  */
-SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::StoreType& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
                                               const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
 /**
@@ -166,7 +166,7 @@ SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::s
  * @note Connectivity scratch creation, staging, and copy-back retain the first 64 distinct warnings.
  * Repeated and additional warnings are summarized. The limit does not bound individual messages or provider allocations.
  */
-SIMPLNX_EXPORT Result<> RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+SIMPLNX_EXPORT Result<> RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::StoreType& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
                                                       const IFilter::MessageHandler& mesgHandler);
 
 /**
@@ -183,7 +183,7 @@ public:
    * @param normals Receives three values per triangle.
    * @param shouldCancel Stops before later triangles when true.
    */
-  CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
+  CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::StoreType& triangles, const INodeGeometry2D::SharedVertexList::StoreType& verts, Float64AbstractDataStore& normals,
                        const std::atomic_bool& shouldCancel);
   /**
    * @brief Destroys the borrowed worker.
@@ -204,8 +204,8 @@ public:
   void operator()(const Range& range) const;
 
 private:
-  const INodeGeometry2D::SharedFaceList::store_type& m_Triangles;
-  const INodeGeometry2D::SharedVertexList::store_type& m_Vertices;
+  const INodeGeometry2D::SharedFaceList::StoreType& m_Triangles;
+  const INodeGeometry2D::SharedVertexList::StoreType& m_Vertices;
   Float64AbstractDataStore& m_Normals;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -235,7 +235,7 @@ SIMPLNX_EXPORT Result<> CalculateNormals(const INodeGeometry2D::SharedFaceList& 
  * The method uses direct per-value DataStore access and does not report I/O errors.
  */
 template <class ContainerT>
-Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& idsStore,
+Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::StoreType& triangles, const INodeGeometry2D::SharedVertexList::StoreType& verts, const Int32AbstractDataStore& idsStore,
                                  ContainerT& volumes, const std::atomic_bool& shouldCancel)
 {
   usize volumeSize = volumes.size();

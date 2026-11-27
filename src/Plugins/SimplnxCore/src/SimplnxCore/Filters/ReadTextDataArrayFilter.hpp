@@ -19,15 +19,15 @@ public:
   ReadTextDataArrayFilter& operator=(const ReadTextDataArrayFilter&) = delete;
   ReadTextDataArrayFilter& operator=(ReadTextDataArrayFilter&&) noexcept = delete;
 
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-  static constexpr StringLiteral k_NTuples_Key = "number_tuples";
-  static constexpr StringLiteral k_NComp_Key = "number_comp";
-  static constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-  static constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_index";
-  static constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-  static constexpr StringLiteral k_DataFormat_Key = "data_format";
-  static constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteralType k_NTuples_Key = "number_tuples";
+  static constexpr StringLiteralType k_NComp_Key = "number_comp";
+  static constexpr StringLiteralType k_NSkipLines_Key = "skip_line_count";
+  static constexpr StringLiteralType k_DelimiterChoice_Key = "delimiter_index";
+  static constexpr StringLiteralType k_DataArrayPath_Key = "output_data_array_path";
+  static constexpr StringLiteralType k_DataFormat_Key = "data_format";
+  static constexpr StringLiteralType k_AdvancedOptions_Key = "set_tuple_dimensions";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -58,7 +58,7 @@ Parameters ComputeCoordinatesImageGeomFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Selected Image Geometry",
                                                              "The DataPath to the Image Geometry that produced coordinates or indices will map to", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array(s)"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CoordsArrayPath_Key, "Created Physical Coordinate Array Path",
@@ -85,7 +85,7 @@ IFilter::VersionType ComputeCoordinatesImageGeomFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeCoordinatesImageGeomFilter::clone() const
+IFilter::UniquePointerType ComputeCoordinatesImageGeomFilter::clone() const
 {
   return std::make_unique<ComputeCoordinatesImageGeomFilter>();
 }

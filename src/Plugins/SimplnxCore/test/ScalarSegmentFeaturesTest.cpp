@@ -36,9 +36,9 @@ const fs::path k_SmallExemplarFile = k_DataDir / "scalar_small.dream3d";
 const fs::path k_LargeExemplarFile = k_DataDir / "scalar_large.dream3d";
 
 // These names define the generated geometry hierarchy.
-constexpr StringLiteral k_GeomName = "DataContainer";
-constexpr StringLiteral k_CellDataName = "CellData";
-constexpr StringLiteral k_FeatureDataName = "CellFeatureData";
+constexpr StringLiteralType k_GeomName = "DataContainer";
+constexpr StringLiteralType k_CellDataName = "CellData";
+constexpr StringLiteralType k_FeatureDataName = "CellFeatureData";
 
 // These paths select generated segmentation arrays.
 const DataPath k_GeomPath({k_GeomName});
@@ -300,9 +300,9 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeat
     // This output supports manual inspection of the segmented arrays.
     std::string filePath = fmt::format("{}/ScalarSegmentFeatures.dream3d", unit_test::k_BinaryTestOutputDir);
     // std::cout << "Writing file to: " << filePath << std::endl;
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(filePath);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(filePath);
 
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
   }
 

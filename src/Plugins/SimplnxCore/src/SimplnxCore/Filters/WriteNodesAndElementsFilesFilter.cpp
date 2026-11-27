@@ -53,7 +53,7 @@ Parameters WriteNodesAndElementsFilesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedGeometry, "Geometry To Write", "The Geometry that will be written to the output file(s).", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
                                                                                                       IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteNodeFile, "Write Node File", "Whether or not to write the node information out to a file.", true));
   params.insert(std::make_unique<BoolParameter>(k_NumberNodes, "Number Nodes", "Whether or not to number each node in the node information output file.", true));
@@ -86,7 +86,7 @@ IFilter::VersionType WriteNodesAndElementsFilesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteNodesAndElementsFilesFilter::clone() const
+IFilter::UniquePointerType WriteNodesAndElementsFilesFilter::clone() const
 {
   return std::make_unique<WriteNodesAndElementsFilesFilter>();
 }

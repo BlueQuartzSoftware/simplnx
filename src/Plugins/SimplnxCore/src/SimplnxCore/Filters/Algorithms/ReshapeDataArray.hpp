@@ -12,22 +12,22 @@
 namespace nx::core
 {
 template <typename T>
-struct is_allowed_array_type : std::false_type
+struct IsAllowedArrayType : std::false_type
 {
 };
 
 template <typename T>
-struct is_allowed_array_type<DataArray<T>> : std::true_type
+struct IsAllowedArrayType<DataArray<T>> : std::true_type
 {
 };
 
 template <>
-struct is_allowed_array_type<StringArray> : std::true_type
+struct IsAllowedArrayType<StringArray> : std::true_type
 {
 };
 
 template <class Class>
-concept AllowedType = is_allowed_array_type<Class>::value;
+concept AllowedType = IsAllowedArrayType<Class>::value;
 
 template <AllowedType ArrayType>
 Result<> ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)

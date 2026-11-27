@@ -13,7 +13,7 @@ namespace nx::core
 
 namespace DynamicListArrayConstants
 {
-inline constexpr StringLiteral k_TypeName = "DynamicListArray";
+inline constexpr StringLiteralType k_TypeName = "DynamicListArray";
 }
 
 template <typename T, typename K>

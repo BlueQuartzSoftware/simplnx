@@ -72,7 +72,7 @@ RenameDataAction::~RenameDataAction() noexcept = default;
 
 Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  static constexpr StringLiteral k_Prefix = "RenameDataAction: ";
+  static constexpr StringLiteralType k_Prefix = "RenameDataAction: ";
   if(!DataObject::IsValidName(m_NewName))
   {
     return MakeErrorResult(k_InvalidNewName, fmt::format("{}New Name '{}' is invalid for source '{}'. Enter a non-empty name without '/'.", k_Prefix, m_NewName, m_Path.toString()));
@@ -180,7 +180,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
   return result;
 }
 
-IDataAction::UniquePointer RenameDataAction::clone() const
+IDataAction::UniquePointerType RenameDataAction::clone() const
 {
   return std::make_unique<RenameDataAction>(m_Path, m_NewName, m_Overwrite);
 }

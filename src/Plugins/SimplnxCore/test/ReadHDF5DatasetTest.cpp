@@ -32,9 +32,9 @@ std::string MFilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.h
 //  Uses Raw Pointers to save data to the data file
 
 template <typename T, uint8 Dims = 1>
-void WritePointerArrayDataset(nx::core::HDF5::GroupIO& ptrGroupWriter)
+void WritePointerArrayDataset(nx::core::hdf5::GroupIO& ptrGroupWriter)
 {
-  std::string dsetName = nx::core::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string dsetName = nx::core::hdf5::Support::HdfTypeForPrimitiveAsStr<T>();
   std::vector<usize> dims = {};
 
   if constexpr(Dims == 1)
@@ -92,7 +92,7 @@ void WriteHdF5File()
     }
   }
 
-  nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(MFilePath);
+  nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(MFilePath);
   REQUIRE(fileWriter.isValid());
 
   // Create the Pointer group
@@ -206,7 +206,7 @@ void TestFilterPreflight(ReadHDF5DatasetFilter& filter)
 
   // Fill in Dataset Path with a valid path so that we can continue our error checks
   importInfoList.clear();
-  std::string typeStr = nx::core::HDF5::Support::HdfTypeForPrimitiveAsStr<int8>();
+  std::string typeStr = nx::core::hdf5::Support::HdfTypeForPrimitiveAsStr<int8>();
   importInfo.dataSetPath = "Pointer/Pointer1DArrayDataset<" + typeStr + ">";
   importInfoList.push_back(importInfo);
   val = {.parent = levelZeroPath, .inputFile = MFilePath, .datasets = importInfoList};
@@ -286,7 +286,7 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
     return;
   }
 
-  std::string typeStr = nx::core::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string typeStr = nx::core::hdf5::Support::HdfTypeForPrimitiveAsStr<T>();
 
   DataStructure dataStructure;
   DataGroup* levelZeroGroupPtr = DataGroup::Create(dataStructure, Constants::k_LevelZero);
@@ -676,7 +676,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension RED tokens", "[SimplnxCore][R
   auto args = filter.getDefaultArguments();
   ReadHDF5DatasetParameter::DatasetImportInfo info;
   // Query the established fixture name instead of depending on the HDF5 spelling for int32.
-  info.dataSetPath = "/Pointer/Pointer1DArrayDataset<" + HDF5::Support::HdfTypeForPrimitiveAsStr<int32>() + ">";
+  info.dataSetPath = "/Pointer/Pointer1DArrayDataset<" + hdf5::Support::HdfTypeForPrimitiveAsStr<int32>() + ">";
   info.componentDimensions = components ? (negative ? "-1" : "72abc") : "72";
   info.tupleDimensions = components ? "40" : (negative ? "-1" : "40x");
   ReadHDF5DatasetParameter::ValueType value = {.parent = std::nullopt, .inputFile = MFilePath, .datasets = {info}};
@@ -690,7 +690,7 @@ TEST_CASE("SimplnxCore::ReadHDF5Dataset: Dimension grammar, products and inherit
 {
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "Hdf5DimensionBoundaries.h5";
   {
-    auto file = HDF5::FileIO::WriteFile(input);
+    auto file = hdf5::FileIO::WriteFile(input);
     REQUIRE(file.isValid());
     auto dataset = file.createDataset("Values");
     const std::vector<int32> values = {1, 2, 3, 4, 5, 6};

@@ -45,7 +45,7 @@ nlohmann::json NumberParameter<T>::toJsonImpl(const std::any& value) const
 template <class T>
 Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'NumberParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'NumberParameter' JSON Error: ";
   if(!json.is_number())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
@@ -55,7 +55,7 @@ Result<std::any> NumberParameter<T>::fromJsonImpl(const nlohmann::json& json, Ve
 }
 
 template <class T>
-IParameter::UniquePointer NumberParameter<T>::clone() const
+IParameter::UniquePointerType NumberParameter<T>::clone() const
 {
   return std::make_unique<NumberParameter<T>>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -100,7 +100,7 @@ template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<uint64>;
 template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<float32>;
 template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<float64>;
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 template <typename T>
 Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterConverter<T>::Convert(const nlohmann::json& json)
@@ -211,5 +211,5 @@ Result<typename FloatFilterParameterConverter<T>::ValueType> FloatFilterParamete
 
 template struct SIMPLNX_TEMPLATE_EXPORT FloatFilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT FloatFilterParameterConverter<float64>;
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

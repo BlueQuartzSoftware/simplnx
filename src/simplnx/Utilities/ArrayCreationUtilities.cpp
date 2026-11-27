@@ -19,7 +19,7 @@ std::string ArrayCreationUtilities::ResolveStorageFormat(const DataStructure& da
 
 bool ArrayCreationUtilities::CheckMemoryRequirement(const DataStructure& dataStructure, uint64 requiredMemory)
 {
-  static const uint64 kAvailableMemory = Memory::GetTotalMemory();
+  static const uint64 kAvailableMemory = memory_utilities::GetTotalMemory();
   const uint64 memoryUsage = dataStructure.memoryUsage() + requiredMemory;
   return memoryUsage < kAvailableMemory;
 }

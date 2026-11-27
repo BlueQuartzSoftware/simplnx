@@ -283,7 +283,7 @@ inline ObjectParamSetter DilateParamSetter(float64 objectValue)
 {
   return [objectValue](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(NewFilterT::k_ObjectValue_Key, std::make_any<float64>(objectValue));
   };
 }
@@ -297,7 +297,7 @@ inline ObjectParamSetter ErodeParamSetter(float64 objectValue, float64 backgroun
 {
   return [objectValue, backgroundValue](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(NewFilterT::k_ObjectValue_Key, std::make_any<float64>(objectValue));
     args.insertOrAssign(NewFilterT::k_BackgroundValue_Key, std::make_any<float64>(backgroundValue));
   };

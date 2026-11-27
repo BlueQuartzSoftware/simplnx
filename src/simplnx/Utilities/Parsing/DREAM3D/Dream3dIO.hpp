@@ -11,10 +11,10 @@
 #include <string>
 #include <utility>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class FileIO;
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 namespace nx::core
 {
@@ -25,7 +25,7 @@ class IDataStoreFormatResolver;
  * @namespace DREAM3D
  * @brief Reads, writes, and incrementally materializes DREAM3D files.
  */
-namespace DREAM3D
+namespace dream3d
 {
 /**
  * @typedef FileData
@@ -58,11 +58,11 @@ inline constexpr int32 k_PipelineGroupUnavailable = -406;
 /**
  * @brief Specifies the current DREAM3D file version.
  */
-inline constexpr StringLiteral k_CurrentFileVersion = "8.0";
+inline constexpr StringLiteralType k_CurrentFileVersion = "8.0";
 /**
  * @brief Specifies the supported legacy DREAM3D file version.
  */
-inline constexpr StringLiteral k_LegacyFileVersion = "7.0";
+inline constexpr StringLiteralType k_LegacyFileVersion = "7.0";
 
 /**
  * @brief Returns the DREAM3D file version.
@@ -76,14 +76,14 @@ SIMPLNX_EXPORT FileVersionType GetFileVersion(const std::filesystem::path& path)
  * @param fileReader Provides an open file.
  * @return Stored file version or first read-error message.
  */
-SIMPLNX_EXPORT FileVersionType GetFileVersion(const nx::core::HDF5::FileIO& fileReader);
+SIMPLNX_EXPORT FileVersionType GetFileVersion(const nx::core::hdf5::FileIO& fileReader);
 
 /**
  * @brief Returns the DREAM3D pipeline version.
  * @param fileReader Provides an open file.
  * @return Stored pipeline version, or k_InvalidPipelineVersion on failure.
  */
-SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::HDF5::FileIO& fileReader);
+SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::hdf5::FileIO& fileReader);
 
 /**
  * @brief Imports a Pipeline and DataStructure from an open DREAM3D file.
@@ -93,7 +93,7 @@ SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::HDF5::File
  * @param preflight Creates placeholder array stores when true.
  * @return Imported pair or read error.
  */
-SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool preflight = false);
+SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::hdf5::FileIO& fileReader, bool preflight = false);
 
 /**
  * @brief Imports a Pipeline and DataStructure from a DREAM3D path.
@@ -179,7 +179,7 @@ SIMPLNX_EXPORT Result<DataStructure> LoadDataStructureArraysMetadata(const std::
  * @param fileData Provides Pipeline and DataStructure data.
  * @return First HDF5 write error, or success.
  */
-SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const FileData& fileData);
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::hdf5::FileIO& fileWriter, const FileData& fileData);
 
 /**
  * @brief Writes a Pipeline and DataStructure to an open DREAM3D file.
@@ -188,7 +188,7 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const File
  * @param dataStructure Provides hierarchy and arrays.
  * @return First HDF5 write error, or success.
  */
-SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::hdf5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
 
 /**
  * @brief Writes a Pipeline and DataStructure with explicit options.
@@ -198,7 +198,7 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipe
  * @param options Specifies write-time compression and related policies.
  * @return First HDF5 write error, or success.
  */
-SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure, const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::hdf5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure, const nx::core::hdf5::DataStructureWriter::WriteOptions& options);
 
 /**
  * @brief Writes a DataStructure and optional Pipeline to a DREAM3D path.
@@ -220,7 +220,7 @@ SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  * @return File or HDF5 write error, or success.
  */
 SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
-                                  const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
+                                  const nx::core::hdf5::DataStructureWriter::WriteOptions& options);
 
 /**
  * @brief Writes a full recovery snapshot or a redirect file.
@@ -265,7 +265,7 @@ SIMPLNX_EXPORT Result<> AppendFile(const std::filesystem::path& path, const Data
  * @param preflight Creates placeholder stores when true.
  * @return Imported DataStructure or read error.
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileIO& fileReader, bool preflight);
+SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::hdf5::FileIO& fileReader, bool preflight);
 
 /**
  * @brief Imports one DataObject and its stored data from an open file.
@@ -273,7 +273,7 @@ SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core:
  * @param dataPath Identifies the object.
  * @return Imported object or read error.
  */
-SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(const nx::core::hdf5::FileIO& fileReader, const DataPath& dataPath);
 
 /**
  * @brief Imports selected DataObjects from an open file.
@@ -281,7 +281,7 @@ SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(cons
  * @param dataPaths Identifies requested objects.
  * @return Imported objects or first read error.
  */
-SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
+SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::hdf5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
 
 /**
  * @brief Inserts one metadata-only object without reopening its source file.
@@ -304,7 +304,7 @@ SIMPLNX_EXPORT Result<> FinishImportingObjectPreflight(DataStructure& importStru
  * @param preflight Inserts only metadata when true.
  * @return Lookup, insertion, or HDF5 read error, or success.
  */
-SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight);
+SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::hdf5::FileIO& fileReader, bool preflight);
 
 /**
  * @brief Imports a current or legacy DataStructure from a file path.
@@ -321,7 +321,7 @@ SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::file
  * @param fileReader Provides an open file.
  * @return Imported Pipeline or read error.
  */
-SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::HDF5::FileIO& fileReader);
+SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::hdf5::FileIO& fileReader);
 
 /**
  * @brief Imports Pipeline JSON from an open DREAM3D file.
@@ -330,7 +330,7 @@ SIMPLNX_EXPORT Result<Pipeline> ImportPipelineFromFile(const nx::core::HDF5::Fil
  * @param fileReader Provides an open file.
  * @return Imported JSON or read error.
  */
-SIMPLNX_EXPORT Result<nlohmann::json> ImportPipelineJsonFromFile(const nx::core::HDF5::FileIO& fileReader);
+SIMPLNX_EXPORT Result<nlohmann::json> ImportPipelineJsonFromFile(const nx::core::hdf5::FileIO& fileReader);
 
 /**
  * @brief Imports Pipeline JSON from a DREAM3D path.
@@ -373,5 +373,5 @@ SIMPLNX_EXPORT std::vector<nx::core::DataPath> ExpandSelectedPathsToAncestors(co
  */
 SIMPLNX_EXPORT std::vector<nx::core::DataPath> ExpandSelectedPathsToDescendants(const std::vector<nx::core::DataPath>& selectedPaths, const std::vector<nx::core::DataPath>& allPaths);
 
-} // namespace DREAM3D
+} // namespace dream3d
 } // namespace nx::core

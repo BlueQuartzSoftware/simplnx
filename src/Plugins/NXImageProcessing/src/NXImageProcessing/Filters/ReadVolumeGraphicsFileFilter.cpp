@@ -24,29 +24,29 @@ constexpr int32 k_FileDoesNotExist = -91501;
 constexpr int32 k_IncorrectTokenCount = -91502;
 constexpr int32 k_VgiParseError = -91503;
 constexpr int32 k_UnsupportedDataType = -91505;
-constexpr StringLiteral k_Millimeter = "mm";
+constexpr StringLiteralType k_Millimeter = "mm";
 
 // File Block
-constexpr StringLiteral k_File1Block = "[file1]";
-constexpr StringLiteral k_GeometryBlock = "[geometry]";
+constexpr StringLiteralType k_File1Block = "[file1]";
+constexpr StringLiteralType k_GeometryBlock = "[geometry]";
 
-constexpr StringLiteral k_RegionOfInterestStart = "RegionOfInterestStart";
-constexpr StringLiteral k_RegionOfInterestEnd = "RegionOfInterestEnd";
+constexpr StringLiteralType k_RegionOfInterestStart = "RegionOfInterestStart";
+constexpr StringLiteralType k_RegionOfInterestEnd = "RegionOfInterestEnd";
 
-constexpr StringLiteral k_FileFormat = "FileFormat";
-constexpr StringLiteral k_Size = "Size";
-constexpr StringLiteral k_Name = "Name";
-constexpr StringLiteral k_DataType = "Datatype";
-constexpr StringLiteral k_DataRange = "datarange";
-constexpr StringLiteral k_BitsPerElement = "BitsPerElement";
-constexpr StringLiteral k_Status = "status";
-constexpr StringLiteral k_RelativePosition = "relativeposition";
-constexpr StringLiteral k_Position = "position";
-constexpr StringLiteral k_Resolution = "resolution";
-constexpr StringLiteral k_Scale = "scale";
-constexpr StringLiteral k_Center = "center";
-constexpr StringLiteral k_Rotate = "rotate";
-constexpr StringLiteral k_Unit = "unit";
+constexpr StringLiteralType k_FileFormat = "FileFormat";
+constexpr StringLiteralType k_Size = "Size";
+constexpr StringLiteralType k_Name = "Name";
+constexpr StringLiteralType k_DataType = "Datatype";
+constexpr StringLiteralType k_DataRange = "datarange";
+constexpr StringLiteralType k_BitsPerElement = "BitsPerElement";
+constexpr StringLiteralType k_Status = "status";
+constexpr StringLiteralType k_RelativePosition = "relativeposition";
+constexpr StringLiteralType k_Position = "position";
+constexpr StringLiteralType k_Resolution = "resolution";
+constexpr StringLiteralType k_Scale = "scale";
+constexpr StringLiteralType k_Center = "center";
+constexpr StringLiteralType k_Rotate = "rotate";
+constexpr StringLiteralType k_Unit = "unit";
 
 struct FileBlock
 {
@@ -429,7 +429,7 @@ IFilter::VersionType ReadVolumeGraphicsFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadVolumeGraphicsFileFilter::clone() const
+IFilter::UniquePointerType ReadVolumeGraphicsFileFilter::clone() const
 {
   return std::make_unique<ReadVolumeGraphicsFileFilter>();
 }
@@ -499,10 +499,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_VGHeaderFileKey = "VGHeaderFile";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_DensityArrayNameKey = "DensityArrayName";
+constexpr StringLiteralType k_VGHeaderFileKey = "VGHeaderFile";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_DensityArrayNameKey = "DensityArrayName";
 } // namespace simpl
 } // namespace
 
@@ -512,10 +512,10 @@ Result<Arguments> ReadVolumeGraphicsFileFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_VGHeaderFileKey, k_VGHeaderFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DensityArrayNameKey, k_DensityArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_VGHeaderFileKey, k_VGHeaderFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_DensityArrayNameKey, k_DensityArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

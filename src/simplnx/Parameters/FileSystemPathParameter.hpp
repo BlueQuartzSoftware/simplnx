@@ -77,7 +77,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -179,7 +179,7 @@ private:
   bool m_AcceptAllExtensions = false;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT InputFileFilterParameterConverter
 {
@@ -196,7 +196,7 @@ struct SIMPLNX_EXPORT OutputFileFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909");

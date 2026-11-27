@@ -7,7 +7,7 @@ namespace nx::core
 {
 class IGridGeometry;
 
-namespace HDF5
+namespace hdf5
 {
 class SIMPLNX_EXPORT IGridGeometryIO : public IGeometryIO
 {
@@ -36,7 +36,7 @@ protected:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  static Result<> ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const group_reader_type& parentGroup, const std::string& geometryName,
+  static Result<> ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const GroupReaderType& parentGroup, const std::string& geometryName,
                                        DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
@@ -47,7 +47,7 @@ protected:
    * @param importable
    * @return Result<>
    */
-  static Result<> WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, group_writer_type& parentGroup, bool importable);
+  static Result<> WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Finishes importing grid geometry data after the geometry has been created.
@@ -56,7 +56,7 @@ protected:
    * @param dataStructureGroup The HDF5 group containing the geometry data
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
+  static Result<> FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup);
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

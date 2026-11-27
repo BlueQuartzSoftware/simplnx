@@ -14,12 +14,12 @@ namespace nx::core
 class DataStructure;
 class IDataStoreFormatResolver;
 
-namespace HDF5
+namespace hdf5
 {
 class FileIO;
 }
 
-namespace DREAM3D::detail
+namespace dream3d::detail
 {
 /**
  * @brief Imports metadata using one local policy throughout NX or legacy traversal.
@@ -28,7 +28,7 @@ namespace DREAM3D::detail
  * metadata factory runs.
  * @return Metadata and original disk-import diagnostics.
  */
-SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const HDF5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadata& deferredImageMetadata);
+SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadata& deferredImageMetadata);
 
 /**
  * @brief Materializes exact imported leaf paths from one open DREAM3D file.
@@ -37,6 +37,6 @@ SIMPLNX_EXPORT Result<DataStructure> ImportMetadata(const HDF5::FileIO& fileRead
  * @param importedLeafPaths Identifies only the imported leaves from this file.
  * @return Finalizer and eager-load warnings or the first contextual error.
  */
-SIMPLNX_EXPORT Result<> MaterializeImportedPaths(DataStructure& preparedStructure, const HDF5::FileIO& fileReader, const std::vector<DataPath>& importedLeafPaths);
-} // namespace DREAM3D::detail
+SIMPLNX_EXPORT Result<> MaterializeImportedPaths(DataStructure& preparedStructure, const hdf5::FileIO& fileReader, const std::vector<DataPath>& importedLeafPaths);
+} // namespace dream3d::detail
 } // namespace nx::core

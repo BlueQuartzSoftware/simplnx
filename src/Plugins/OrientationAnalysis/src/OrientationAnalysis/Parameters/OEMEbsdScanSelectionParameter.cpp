@@ -15,9 +15,9 @@ namespace nx::core
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePath = "input_file_path";
-constexpr StringLiteral k_StackingOrder = "stacking_order";
-constexpr StringLiteral k_ScanNames = "scan_names";
+constexpr StringLiteralType k_InputFilePath = "input_file_path";
+constexpr StringLiteralType k_StackingOrder = "stacking_order";
+constexpr StringLiteralType k_ScanNames = "scan_names";
 } // namespace
 
 //-----------------------------------------------------------------------------
@@ -86,7 +86,7 @@ nlohmann::json OEMEbsdScanSelectionParameter::toJsonImpl(const std::any& value) 
 //-----------------------------------------------------------------------------
 Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'OEMEbsdScanSelectionParameter' Error: ";
 
   if(!json.is_object())
   {
@@ -168,7 +168,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJsonImpl(const nlohmann::jso
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer OEMEbsdScanSelectionParameter::clone() const
+IParameter::UniquePointerType OEMEbsdScanSelectionParameter::clone() const
 {
   return std::make_unique<OEMEbsdScanSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_ReaderType, m_AvailableExtensions);
 }

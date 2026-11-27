@@ -54,7 +54,7 @@ struct ComputeKernelAvgMisorientationsWorkingSet
  * policy cap when one tuple does not fit.
  */
 ORIENTATIONANALYSIS_EXPORT Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3& dimensions,
-                                                                                                                             const VectorInt32Parameter::ValueType& kernelSize, uint64 cacheBudgetBytes,
+                                                                                                                             const VectorInt32ParameterType::ValueType& kernelSize, uint64 cacheBudgetBytes,
                                                                                                                              uint64 cacheUsedBytes, const DataPath& imageGeometryPath);
 
 /**

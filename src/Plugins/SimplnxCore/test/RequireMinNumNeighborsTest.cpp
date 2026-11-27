@@ -756,7 +756,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array 
   const usize inputIndex = GENERATE(usize{0}, usize{1}, usize{2});
   const bool useStringArray = GENERATE(false, true);
   CAPTURE(inputIndex, useStringArray);
-  const std::array<StringLiteral, 3> inputKeys = {RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key,
+  const std::array<StringLiteralType, 3> inputKeys = {RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key,
                                                   RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key};
   constexpr std::array<int32, 3> k_ExpectedCodes = {-59574, -59575, -59576};
   DataStructure dataStructure;

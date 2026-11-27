@@ -71,7 +71,7 @@ void TestElementArray(const DataPath& cellDataPath)
 
 namespace analytical_fixtures
 {
-constexpr StringLiteral k_ParentDGName = "ParentGroup";
+constexpr StringLiteralType k_ParentDGName = "ParentGroup";
 const DataPath k_ParentDGPath({k_ParentDGName});
 
 const DataPath k_CellAMPath = k_ParentDGPath.createChildPath(Constants::k_CellData);

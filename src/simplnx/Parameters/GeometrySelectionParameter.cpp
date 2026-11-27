@@ -12,7 +12,7 @@
 
 namespace nx::core
 {
-GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes)
+GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(std::move(allowedTypes))
@@ -44,7 +44,7 @@ nlohmann::json GeometrySelectionParameter::toJsonImpl(const std::any& value) con
 
 Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
@@ -58,7 +58,7 @@ Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& 
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer GeometrySelectionParameter::clone() const
+IParameter::UniquePointerType GeometrySelectionParameter::clone() const
 {
   return std::make_unique<GeometrySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
@@ -68,7 +68,7 @@ std::any GeometrySelectionParameter::defaultValue() const
   return defaultPath();
 }
 
-const GeometrySelectionParameter::AllowedTypes& GeometrySelectionParameter::allowedTypes() const
+const GeometrySelectionParameter::AllowedTypeSetType& GeometrySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
@@ -124,7 +124,7 @@ Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructur
   return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -144,5 +144,5 @@ Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType>
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

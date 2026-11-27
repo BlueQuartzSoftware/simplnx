@@ -50,17 +50,17 @@ Parameters ComputeShapesTriangleGeomFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                                     "The DataPath to the AttributeMatrix that holds feature data for the faces",
                                                                     DataPath({"TriangleDataContainer", "Face Feature Data"})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Face Feature Centroids", "Input DataPath to the **Feature Centroids** for the face data",
-                                                          DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          DataPath({"Face Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Feature Data"});
@@ -88,7 +88,7 @@ IFilter::VersionType ComputeShapesTriangleGeomFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeShapesTriangleGeomFilter::clone() const
+IFilter::UniquePointerType ComputeShapesTriangleGeomFilter::clone() const
 {
   return std::make_unique<ComputeShapesTriangleGeomFilter>();
 }

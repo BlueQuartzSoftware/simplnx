@@ -20,15 +20,15 @@ namespace fs = std::filesystem;
 
 namespace
 {
-constexpr StringLiteral k_Group1Name = "Group1";
-constexpr StringLiteral k_Group2Name = "Group2";
-constexpr StringLiteral k_Group3Name = "Group3";
-constexpr StringLiteral k_Group4Name = "Group4";
+constexpr StringLiteralType k_Group1Name = "Group1";
+constexpr StringLiteralType k_Group2Name = "Group2";
+constexpr StringLiteralType k_Group3Name = "Group3";
+constexpr StringLiteralType k_Group4Name = "Group4";
 
 const int32 k_TupleDimMismatchWarningCode = -69250;
 
-constexpr StringLiteral k_AM1Name = "Matrix1";
-constexpr StringLiteral k_DataArray1Name = "Array1";
+constexpr StringLiteralType k_AM1Name = "Matrix1";
+constexpr StringLiteralType k_DataArray1Name = "Array1";
 
 DataStructure CreateDataStructure()
 {

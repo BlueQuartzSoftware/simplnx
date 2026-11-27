@@ -355,7 +355,7 @@ Parameters SplitDataArrayByTupleFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupPath, "New Data Group", "The path to the newly created data group where the output split arrays will be stored.",
                                                              DataPath({"Split Arrays"})));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_ExistingDataGroupPath, "Existing Data Group", "The path to the existing data group where the output split arrays will be stored.",
-                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
+                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypeSetType{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewAttributeMatrixPath, "New Attribute Matrix",
                                                              "The path to the newly created attribute matrix where the output split arrays will be stored.", DataPath({"Split Arrays"})));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_ExistingAttributeMatrixPath, "Existing Attribute Matrix",
@@ -385,7 +385,7 @@ IFilter::VersionType SplitDataArrayByTupleFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SplitDataArrayByTupleFilter::clone() const
+IFilter::UniquePointerType SplitDataArrayByTupleFilter::clone() const
 {
   return std::make_unique<SplitDataArrayByTupleFilter>();
 }

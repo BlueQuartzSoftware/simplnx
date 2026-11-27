@@ -13,10 +13,10 @@
 #include <string>
 #include <vector>
 
-namespace GrainMapper3DUtilities
+namespace grain_mapper_3d_utilities
 {
 
-namespace Constants
+namespace constants
 {
 const std::string k_LabDCTGroupName("LabDCT");
 const std::string k_AbsorptionCTName("AbsorptionCT");
@@ -50,7 +50,7 @@ const std::string k_SpaceGroupName("SpaceGroup");
 const std::string k_UnitCellName("UnitCell");
 const std::string k_UniversalHermannMauguinName("UniversalHermannMauguin");
 
-} // namespace Constants
+} // namespace constants
 
 /**
  * @brief Checks if a LabDCT dataset name identifies an IPF color dataset.
@@ -59,7 +59,7 @@ const std::string k_UniversalHermannMauguinName("UniversalHermannMauguin");
  */
 inline bool IsIpfColorDataset(const std::string& dataSetName)
 {
-  return dataSetName == Constants::k_IPF001Name || dataSetName == Constants::k_IPF010Name || dataSetName == Constants::k_IPF100Name;
+  return dataSetName == constants::k_IPF001Name || dataSetName == constants::k_IPF010Name || dataSetName == constants::k_IPF100Name;
 }
 
 int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);

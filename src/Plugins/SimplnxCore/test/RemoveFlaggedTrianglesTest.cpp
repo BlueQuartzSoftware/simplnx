@@ -17,10 +17,10 @@ namespace
 {
 fs::path KBaseDataFilePath = fs::path(fmt::format("{}/remove_flagged_elements_data/remove_flagged_triangles_data.dream3d", nx::core::unit_test::k_TestFilesDir));
 
-constexpr StringLiteral k_RegionIdsName = "Region Ids";
-constexpr StringLiteral k_FaceNormalsName = "Face Normals";
-constexpr StringLiteral k_VertexListName = "SharedVertexList";
-constexpr StringLiteral k_TriangleListName = "SharedTriList";
+constexpr StringLiteralType k_RegionIdsName = "Region Ids";
+constexpr StringLiteralType k_FaceNormalsName = "Face Normals";
+constexpr StringLiteralType k_VertexListName = "SharedVertexList";
+constexpr StringLiteralType k_TriangleListName = "SharedTriList";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
 const DataPath k_MaskPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(Constants::k_Mask);

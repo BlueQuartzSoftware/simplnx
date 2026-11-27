@@ -92,20 +92,20 @@ Parameters ComputeArrayHistogramFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins", "Specifies number of histogram bins (greater than zero)", 10));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumberOfBins_Key, "Number of Bins", "Specifies number of histogram bins (greater than zero)", 10));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UserDefinedRange_Key, "Use Custom Min & Max Range", "Whether the user can set the min and max values to consider for the histogram", false));
-  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Min Value", "Specifies the inclusive lower bound of the histogram.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "Specifies the exclusive upper bound of the histogram.", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_MinRange_Key, "Min Value", "Specifies the inclusive lower bound of the histogram.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_MaxRange_Key, "Max Value", "Specifies the exclusive upper bound of the histogram.", 1.0));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -113,7 +113,7 @@ Parameters ComputeArrayHistogramFilter::parameters() const
       std::make_unique<BoolParameter>(k_CreateNewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupPath_Key, "New DataGroup Path", "The path to the new DataGroup in which to store the calculated histogram(s)", DataPath{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupPath_Key, "Output DataGroup Path", "The complete path to the DataGroup in which to store the calculated histogram(s)",
-                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
+                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypeSetType{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<StringParameter>(k_HistoBinCountName_Key, "Histogram Bin Counts Array Name", "Name of the created \"Bin Counts\" array for each input array.", "Bin Counts"));
   params.insert(std::make_unique<StringParameter>(k_HistoBinRangeName_Key, "Histogram Bin Ranges Array Name", "Name of the created \"Bin Ranges\" array for each input array.", "Bin Ranges"));
   params.insert(std::make_unique<StringParameter>(k_HistoMostPopulatedBinName_Key, "Most Populated Bin Array Name", "Name of the created \"Most Populated Bin\" array for each input array.",
@@ -139,7 +139,7 @@ IFilter::VersionType ComputeArrayHistogramFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeArrayHistogramFilter::clone() const
+IFilter::UniquePointerType ComputeArrayHistogramFilter::clone() const
 {
   return std::make_unique<ComputeArrayHistogramFilter>();
 }
@@ -293,15 +293,15 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_NumberOfBinsKey = "NumberOfBins";
-constexpr StringLiteral k_UserDefinedRangeKey = "UserDefinedRange";
-constexpr StringLiteral k_MinRangeKey = "MinRange";
-constexpr StringLiteral k_MaxRangeKey = "MaxRange";
-constexpr StringLiteral k_NewDataContainerKey = "NewDataContainer";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_NewDataContainerNameKey = "NewDataContainerName";
-constexpr StringLiteral k_NewAttributeMatrixNameKey = "NewAttributeMatrixName";
-constexpr StringLiteral k_NewDataArrayNameKey = "NewDataArrayName";
+constexpr StringLiteralType k_NumberOfBinsKey = "NumberOfBins";
+constexpr StringLiteralType k_UserDefinedRangeKey = "UserDefinedRange";
+constexpr StringLiteralType k_MinRangeKey = "MinRange";
+constexpr StringLiteralType k_MaxRangeKey = "MaxRange";
+constexpr StringLiteralType k_NewDataContainerKey = "NewDataContainer";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_NewDataContainerNameKey = "NewDataContainerName";
+constexpr StringLiteralType k_NewAttributeMatrixNameKey = "NewAttributeMatrixName";
+constexpr StringLiteralType k_NewDataArrayNameKey = "NewDataArrayName";
 } // namespace simpl
 } // namespace
 
@@ -311,14 +311,14 @@ Result<Arguments> ComputeArrayHistogramFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfBinsKey, k_NumberOfBins_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UserDefinedRangeKey, k_UserDefinedRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_MinRangeKey, k_MinRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, simpl::k_MaxRangeKey, k_MaxRange_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_NewDataContainerKey, k_CreateNewDataGroup_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_NewDataContainerNameKey, k_NewDataGroupPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewDataArrayNameKey, k_HistoBinCountName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumberOfBinsKey, k_NumberOfBins_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UserDefinedRangeKey, k_UserDefinedRange_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_MinRangeKey, k_MinRange_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverter>(args, json, simpl::k_MaxRangeKey, k_MaxRange_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_NewDataContainerKey, k_CreateNewDataGroup_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_NewDataContainerNameKey, k_NewDataGroupPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewDataArrayNameKey, k_HistoBinCountName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

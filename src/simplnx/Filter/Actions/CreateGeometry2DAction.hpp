@@ -73,7 +73,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    static constexpr StringLiteral k_Prefix = "CreateGeometry2DAction: ";
+    static constexpr StringLiteralType k_Prefix = "CreateGeometry2DAction: ";
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedTriListType = IGeometry::SharedTriList;
     const DataPath faceDataPath = getFaceDataPath();
@@ -220,7 +220,7 @@ public:
     return {};
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     auto action =
         std::unique_ptr<CreateGeometry2DAction>(new CreateGeometry2DAction(getCreatedPath(), m_NumFaces, m_NumVertices, m_VertexDataName, m_FaceDataName, m_SharedVerticesName, m_SharedFacesName));

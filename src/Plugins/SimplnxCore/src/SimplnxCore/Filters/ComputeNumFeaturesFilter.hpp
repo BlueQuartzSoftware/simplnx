@@ -24,9 +24,9 @@ public:
   ComputeNumFeaturesFilter& operator=(ComputeNumFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static constexpr StringLiteral k_EnsembleAttributeMatrixPath_Key = "ensemble_attribute_matrix_path";
-  static constexpr StringLiteral k_NumFeaturesArrayName_Key = "num_features_array_name";
+  static constexpr StringLiteralType k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteralType k_EnsembleAttributeMatrixPath_Key = "ensemble_attribute_matrix_path";
+  static constexpr StringLiteralType k_NumFeaturesArrayName_Key = "num_features_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -83,7 +83,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

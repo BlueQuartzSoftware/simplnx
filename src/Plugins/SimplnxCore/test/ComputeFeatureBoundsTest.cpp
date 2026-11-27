@@ -31,7 +31,7 @@ namespace
 const DataPath k_FeatureIdsPath({"feature_ids"});
 
 constexpr uint64 k_TupleCount = 8;
-constexpr StringLiteral k_VertexAttributeMatrixName = "VertexData";
+constexpr StringLiteralType k_VertexAttributeMatrixName = "VertexData";
 const DataPath k_VertexGeomPath{std::vector<std::string>{"VertexGeom"}};
 const DataPath k_VertexDataPath = k_VertexGeomPath.createChildPath(k_VertexAttributeMatrixName);
 const DataPath k_CroppedGeomPath{std::vector<std::string>{"Cropped VertexGeom"}};

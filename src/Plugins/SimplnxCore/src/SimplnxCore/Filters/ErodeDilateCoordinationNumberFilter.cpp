@@ -55,18 +55,18 @@ Parameters ErodeDilateCoordinationNumberFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<Int32Parameter>(k_CoordinationNumber_Key, "Coordination Number to Consider",
+  params.insert(std::make_unique<Int32ParameterType>(k_CoordinationNumber_Key, "Coordination Number to Consider",
                                                  " Number of neighboring **Cells** that can be of opposite classification before a **Cell** will be removed", 6));
   params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "Keep looping until all criteria is met", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{}));
 
   return params;
@@ -79,7 +79,7 @@ IFilter::VersionType ErodeDilateCoordinationNumberFilter::parametersVersion() co
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ErodeDilateCoordinationNumberFilter::clone() const
+IFilter::UniquePointerType ErodeDilateCoordinationNumberFilter::clone() const
 {
   return std::make_unique<ErodeDilateCoordinationNumberFilter>();
 }
@@ -149,10 +149,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_CoordinationNumberKey = "CoordinationNumber";
-constexpr StringLiteral k_LoopKey = "Loop";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
+constexpr StringLiteralType k_CoordinationNumberKey = "CoordinationNumber";
+constexpr StringLiteralType k_LoopKey = "Loop";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
 } // namespace simpl
 } // namespace
 
@@ -162,11 +162,11 @@ Result<Arguments> ErodeDilateCoordinationNumberFilter::FromSIMPLJson(const nlohm
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_CoordinationNumberKey, k_CoordinationNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_LoopKey, k_Loop_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_CoordinationNumberKey, k_CoordinationNumber_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_LoopKey, k_Loop_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

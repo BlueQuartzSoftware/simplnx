@@ -23,7 +23,7 @@
  * @brief Locks the process HDF5 mutex for the current scope when mutex support is enabled.
  */
 #ifdef H5Support_USE_MUTEX
-#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
+#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::hdf5::Support::ApiLock());
 #else
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
@@ -58,7 +58,7 @@
  * @namespace nx::core::HDF5::Support
  * @brief Contains low-level HDF5 support functions.
  */
-namespace nx::core::HDF5::Support
+namespace nx::core::hdf5::Support
 {
 /**
  * @brief Tests whether a named child is an HDF5 group.
@@ -306,4 +306,4 @@ std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
  */
 SIMPLNX_EXPORT std::mutex& ApiLock();
 
-} // namespace nx::core::HDF5::Support
+} // namespace nx::core::hdf5::Support

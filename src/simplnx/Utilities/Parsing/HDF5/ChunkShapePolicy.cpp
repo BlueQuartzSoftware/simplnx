@@ -35,7 +35,7 @@ nx::core::usize ComputeRowsForByteTarget(nonstd::span<const nx::core::usize> dim
 }
 } // namespace
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts, nonstd::span<usize> chunk,
@@ -106,4 +106,4 @@ ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize el
   return chunk;
 }
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

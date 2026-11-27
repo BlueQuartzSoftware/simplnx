@@ -17,7 +17,7 @@ class BaseGroup;
 class DataMap;
 class DataObject;
 
-namespace HDF5
+namespace hdf5
 {
 class DataStructureReader;
 class DataStructureWriter;
@@ -49,7 +49,7 @@ inline void AppendWriteResult(Result<>& accumulated, Result<> next)
   {
     // Both vector moves transfer their buffers; no diagnostic elements are allocated here.
     auto earlierWarnings = std::move(accumulated.warnings());
-    accumulated.m_Expected = nonstd::make_unexpected(std::move(next.errors()));
+    accumulated.expected = nonstd::make_unexpected(std::move(next.errors()));
     accumulated.warnings() = std::move(next.warnings());
     if(!earlierWarnings.empty())
     {
@@ -179,5 +179,5 @@ Result<> SIMPLNX_EXPORT WriteBaseGroup(DataStructureWriter& dataStructureWriter,
  * @return Result<>
  */
 Result<> SIMPLNX_EXPORT WriteDataMap(DataStructureWriter& dataStructureWriter, GroupIO& groupWriter, const DataMap& dataMap);
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

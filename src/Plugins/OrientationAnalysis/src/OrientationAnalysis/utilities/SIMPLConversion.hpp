@@ -8,7 +8,7 @@
 
 #include <string_view>
 
-namespace nx::core::SIMPLConversion
+namespace nx::core::simpl_conversion
 {
 struct OEMEbsdScanSelectionFilterParameterConverter
 {
@@ -37,4 +37,4 @@ struct OEMEbsdScanSelectionFilterParameterConverter
     return {std::move(value)};
   }
 };
-} // namespace nx::core::SIMPLConversion
+} // namespace nx::core::simpl_conversion

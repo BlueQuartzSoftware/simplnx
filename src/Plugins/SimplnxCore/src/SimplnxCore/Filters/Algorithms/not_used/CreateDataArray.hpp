@@ -32,7 +32,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CreateDataArrayInputValues
 {
-  UInt64Parameter::ValueType ComponentCount;
+  UInt64ParameterType::ValueType ComponentCount;
   DataStoreFormatParameter::ValueType DataFormat;
   StringParameter::ValueType InitializationValueStr;
   NumericTypeParameter::ValueType NumericTypeIndex;

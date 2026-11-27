@@ -63,9 +63,9 @@ protected:
 public:
   using SignalType = nod::signal<void(DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&)>;
 
-  using Iterator = DataMap::Iterator;
+  using iterator = DataMap::iterator;
 
-  using ConstIterator = DataMap::ConstIterator;
+  using const_iterator = DataMap::const_iterator;
 
   friend class DataMap;
   friend class DataObject;
@@ -590,13 +590,13 @@ public:
    */
   bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
 
-  Iterator begin();
+  iterator begin();
 
-  Iterator end();
+  iterator end();
 
-  ConstIterator begin() const;
+  const_iterator begin() const;
 
-  ConstIterator end() const;
+  const_iterator end() const;
 
   SignalType& getSignal();
 

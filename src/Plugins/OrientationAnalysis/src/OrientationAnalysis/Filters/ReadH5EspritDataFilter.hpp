@@ -24,14 +24,14 @@ public:
   ReadH5EspritDataFilter& operator=(ReadH5EspritDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
-  static constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_DegreesToRadians_Key = "degrees_to_radians";
-  static constexpr StringLiteral k_ReadPatternData_Key = "read_pattern_data";
-  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static constexpr StringLiteralType k_SelectedScanNames_Key = "selected_scan_names";
+  static constexpr StringLiteralType k_ZSpacing_Key = "z_spacing";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_DegreesToRadians_Key = "degrees_to_radians";
+  static constexpr StringLiteralType k_ReadPatternData_Key = "read_pattern_data";
+  static constexpr StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

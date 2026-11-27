@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/StringLiteral.hpp"
 
-#define SIMPLNX_DEF_STRING_CONSTANT(name) StringLiteral k_##name = #name
+#define SIMPLNX_DEF_STRING_CONSTANT(name) StringLiteralType k_##name = #name
 
 namespace nx::core::Constants
 {

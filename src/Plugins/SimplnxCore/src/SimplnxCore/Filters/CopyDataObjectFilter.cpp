@@ -70,7 +70,7 @@ IFilter::VersionType CopyDataObjectFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CopyDataObjectFilter::clone() const
+IFilter::UniquePointerType CopyDataObjectFilter::clone() const
 {
   return std::make_unique<CopyDataObjectFilter>();
 }
@@ -152,11 +152,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_ObjectToCopyKey = "ObjectToCopy";
-constexpr StringLiteral k_DataContainerToCopyKey = "DataContainerToCopy";
-constexpr StringLiteral k_AttributeMatrixToCopyKey = "AttributeMatrixToCopy";
-constexpr StringLiteral k_AttributeArrayToCopyKey = "AttributeArrayToCopy";
-constexpr StringLiteral k_CopiedObjectNameKey = "CopiedObjectName";
+constexpr StringLiteralType k_ObjectToCopyKey = "ObjectToCopy";
+constexpr StringLiteralType k_DataContainerToCopyKey = "DataContainerToCopy";
+constexpr StringLiteralType k_AttributeMatrixToCopyKey = "AttributeMatrixToCopy";
+constexpr StringLiteralType k_AttributeArrayToCopyKey = "AttributeArrayToCopy";
+constexpr StringLiteralType k_CopiedObjectNameKey = "CopiedObjectName";
 } // namespace simpl
 } // namespace
 
@@ -169,19 +169,19 @@ Result<Arguments> CopyDataObjectFilter::FromSIMPLJson(const nlohmann::json& json
   switch(json[simpl::k_ObjectToCopyKey].get<int32>())
   {
   case 0:
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerToCopyKey, k_DataPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerToCopyKey, k_DataPath_Key));
     break;
   case 1:
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixToCopyKey, k_DataPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixToCopyKey, k_DataPath_Key));
     break;
   case 2:
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeArrayToCopyKey, k_DataPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeArrayToCopyKey, k_DataPath_Key));
     break;
   default:
     return MakeErrorResult<Arguments>(-2456, "Invalid DataObject type to copy");
   }
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, simpl::k_CopiedObjectNameKey, k_NewPathSuffix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_CopiedObjectNameKey, k_NewPathSuffix_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

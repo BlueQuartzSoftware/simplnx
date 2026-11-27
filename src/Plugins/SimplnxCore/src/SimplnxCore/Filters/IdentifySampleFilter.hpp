@@ -21,11 +21,11 @@ public:
   IdentifySampleFilter& operator=(IdentifySampleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FillHoles_Key = "fill_holes";
-  static constexpr StringLiteral k_SliceBySlice_Key = "slice_by_slice";
-  static constexpr StringLiteral k_SliceBySlicePlane_Key = "slice_by_slice_plane_index";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_FillHoles_Key = "fill_holes";
+  static constexpr StringLiteralType k_SliceBySlice_Key = "slice_by_slice";
+  static constexpr StringLiteralType k_SliceBySlicePlane_Key = "slice_by_slice_plane_index";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -82,7 +82,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

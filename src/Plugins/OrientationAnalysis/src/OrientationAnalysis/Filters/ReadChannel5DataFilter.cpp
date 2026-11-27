@@ -100,7 +100,7 @@ IFilter::VersionType ReadChannel5DataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadChannel5DataFilter::clone() const
+IFilter::UniquePointerType ReadChannel5DataFilter::clone() const
 {
   return std::make_unique<ReadChannel5DataFilter>();
 }

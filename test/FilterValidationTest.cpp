@@ -117,7 +117,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter
     for(const auto& filterHandle : pluginFilterHandles)
     {
       const std::string filterClassName = filterHandle.getClassName();
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
       const auto& parameters = filter->parameters();
 
       if(nx::core::StringUtilities::starts_with(filterClassName, "Calculate") || nx::core::StringUtilities::starts_with(filterClassName, "Find") ||
@@ -203,7 +203,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Parameter Help Text", "[simplnx][F
     for(const auto& filterHandle : pluginFilterHandles)
     {
       const std::string filterClassName = filterHandle.getClassName();
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
 
       const auto& parameters = filter->parameters();
       // Loop over each Parameter
@@ -250,7 +250,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Name", "[simplnx][Filter]")
     for(const auto& filterHandle : pluginFilterHandles)
     {
       const std::string filterClassName = filterHandle.getClassName();
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
       if(!nx::core::StringUtilities::ends_with(filterClassName, "Filter"))
       {
         output << "- [ ] " << plugName << "->" << filter->name() << ". Filter class names should end with 'Filter'.\n";
@@ -285,7 +285,7 @@ TEST_CASE("nx::core::FilterValidation::Filter Version", "[simplnx][Filter]")
     // Loop on each Filter
     for(const auto& filterHandle : pluginFilterHandles)
     {
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
       const int filterVersion = filter->parametersVersion();
 
       REQUIRE(filterVersion >= 1);
@@ -313,8 +313,8 @@ TEST_CASE("nx::core::FilterValidation::Test Filter Clone", "[simplnx][Filter]")
     // Loop on each Filter
     for(const auto& filterHandle : pluginFilterHandles)
     {
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
-      IFilter::UniquePointer clone = filter->clone();
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType clone = filter->clone();
 
       REQUIRE(filter->uuid() == clone->uuid());
     }

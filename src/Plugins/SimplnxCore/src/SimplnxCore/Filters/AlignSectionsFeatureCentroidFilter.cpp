@@ -71,15 +71,15 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReferenceSlice_Key, "Use Reference Slice",
                                                                  "Whether the centroids of each section should be compared to a reference slice instead of their neighboring section", false));
-  params.insert(std::make_unique<Int32Parameter>(k_ReferenceSlice_Key, "Reference Slice", "Slice number to use as reference", 0));
+  params.insert(std::make_unique<Int32ParameterType>(k_ReferenceSlice_Key, "Reference Slice", "Slice number to use as reference", 0));
   params.linkParameters(k_UseReferenceSlice_Key, k_ReferenceSlice_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
-                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Specifies if the Cell is to be counted in the algorithm.", DataPath({"Mask"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Alignment Output"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAlignmentShifts_Key, "Store Alignment Shifts",
@@ -127,7 +127,7 @@ IFilter::VersionType AlignSectionsFeatureCentroidFilter::parametersVersion() con
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AlignSectionsFeatureCentroidFilter::clone() const
+IFilter::UniquePointerType AlignSectionsFeatureCentroidFilter::clone() const
 {
   return std::make_unique<AlignSectionsFeatureCentroidFilter>();
 }
@@ -226,10 +226,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_WriteAlignmentShiftsKey = "WriteAlignmentShifts";
-constexpr StringLiteral k_UseReferenceSliceKey = "UseReferenceSlice";
-constexpr StringLiteral k_ReferenceSliceKey = "ReferenceSlice";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_WriteAlignmentShiftsKey = "WriteAlignmentShifts";
+constexpr StringLiteralType k_UseReferenceSliceKey = "UseReferenceSlice";
+constexpr StringLiteralType k_ReferenceSliceKey = "ReferenceSlice";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -239,12 +239,12 @@ Result<Arguments> AlignSectionsFeatureCentroidFilter::FromSIMPLJson(const nlohma
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_WriteAlignmentShiftsKey, k_StoreAlignmentShifts_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ReferenceSliceKey, k_ReferenceSlice_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_WriteAlignmentShiftsKey, k_StoreAlignmentShifts_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseReferenceSliceKey, k_UseReferenceSlice_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_ReferenceSliceKey, k_ReferenceSlice_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

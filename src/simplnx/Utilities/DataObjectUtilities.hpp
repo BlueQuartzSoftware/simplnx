@@ -60,7 +60,7 @@ constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<D
  * @param dataType
  * @return
  */
-constexpr StringLiteral GeometryTypeToString(IGeometry::Type geomType)
+constexpr StringLiteralType GeometryTypeToString(IGeometry::Type geomType)
 {
   switch(geomType)
   {
@@ -151,7 +151,7 @@ constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
   }
 }
 
-constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
+constexpr StringLiteralType DataObjectTypeToString(DataObject::Type dataObjType)
 {
   switch(dataObjType)
   {

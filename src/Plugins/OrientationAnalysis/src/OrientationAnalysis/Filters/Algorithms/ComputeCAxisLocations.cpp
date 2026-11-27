@@ -11,7 +11,7 @@
 #include <cmath>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 
 ComputeCAxisLocations::ComputeCAxisLocations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              ComputeCAxisLocationsInputValues* inputValues)

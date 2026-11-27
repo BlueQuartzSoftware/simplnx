@@ -294,7 +294,7 @@ public:
  * its managers in name order, and "HDF5" sorts before the out-of-core manager
  * "HDF5-OOC", so these providers answer in both in-core and out-of-core builds.
  */
-class DBSCANShapeGuardHDF5Manager : public HDF5::DataIOManager
+class DBSCANShapeGuardHDF5Manager : public hdf5::DataIOManager
 {
 public:
   static constexpr int32 k_ProviderReachedCode = -54199;

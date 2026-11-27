@@ -26,7 +26,7 @@ constexpr usize k_VertexTupleCount = 11;
 constexpr usize k_VertexCompCount = 3;
 constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
-constexpr StringLiteral k_CentroidsName = "Centroids";
+constexpr StringLiteralType k_CentroidsName = "Centroids";
 
 const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {

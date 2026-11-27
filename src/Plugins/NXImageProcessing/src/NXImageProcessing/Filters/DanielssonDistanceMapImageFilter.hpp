@@ -32,12 +32,12 @@ public:
   DanielssonDistanceMapImageFilter& operator=(DanielssonDistanceMapImageFilter&&) noexcept = delete;
 
   // Parameter Keys (reuse the legacy ITK filter's key strings so a shared param-setter drives both).
-  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static constexpr StringLiteral k_InputIsBinary_Key = "input_is_binary";
-  static constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
-  static constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
+  static constexpr StringLiteralType k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteralType k_InputIsBinary_Key = "input_is_binary";
+  static constexpr StringLiteralType k_SquaredDistance_Key = "squared_distance";
+  static constexpr StringLiteralType k_UseImageSpacing_Key = "use_image_spacing";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
@@ -48,7 +48,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

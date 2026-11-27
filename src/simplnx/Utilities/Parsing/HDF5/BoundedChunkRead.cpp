@@ -36,7 +36,7 @@
 #include <memory>
 #include <new>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 namespace
 {
@@ -927,14 +927,14 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
   }
 #ifndef _WIN32
   // Borrow the POSIX native string; opening this independent descriptor allocates no C++ path carrier.
-  auto readHandle = metadata.maximum_stored == 0 ? detail::invalidFileHandle() : detail::openFileForRead(m_FilePath.native());
+  auto readHandle = metadata.maximum_stored == 0 ? detail::InvalidFileHandle() : detail::OpenFileForRead(m_FilePath.native());
   auto closeReadHandle = MakeScopeGuard([&readHandle]() noexcept {
-    if(detail::isValidFileHandle(readHandle))
+    if(detail::IsValidFileHandle(readHandle))
     {
-      detail::closeFileHandle(readHandle);
+      detail::CloseFileHandle(readHandle);
     }
   });
-  if(metadata.maximum_stored != 0 && !detail::isValidFileHandle(readHandle))
+  if(metadata.maximum_stored != 0 && !detail::IsValidFileHandle(readHandle))
   {
     diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded positional source could not open."));
     return Status::Failed;
@@ -1029,7 +1029,7 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
 #if SIMPLNX_BUILD_TESTS
       injectedFailure = InjectCodecFaultForTesting(m_FilePath, m_DatasetPath, BoundedFaultPointForTesting::RawRead);
 #endif
-      const auto got = injectedFailure ? std::ptrdiff_t{-1} : detail::positionalRead(readHandle, stored.data.get(), static_cast<usize>(metadata.Record.storedSize), metadata.Record.storedAddress);
+      const auto got = injectedFailure ? std::ptrdiff_t{-1} : detail::PositionalRead(readHandle, stored.data.get(), static_cast<usize>(metadata.Record.storedSize), metadata.Record.storedAddress);
 #if SIMPLNX_BUILD_TESTS
       ObserveCodecIoForTesting(m_FilePath, m_DatasetPath,
                                got == static_cast<std::ptrdiff_t>(metadata.Record.storedSize) ? CodecIoEventForTesting::StoredRead :
@@ -1157,10 +1157,10 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
     }
   }
 #ifndef _WIN32
-  if(detail::isValidFileHandle(readHandle))
+  if(detail::IsValidFileHandle(readHandle))
   {
     const int status = ::close(readHandle);
-    readHandle = detail::invalidFileHandle();
+    readHandle = detail::InvalidFileHandle();
     if(status != 0)
     {
       diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded positional source cleanup failed."));
@@ -1175,4 +1175,4 @@ BoundedRead::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Ex
   }
   return Status::Complete;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

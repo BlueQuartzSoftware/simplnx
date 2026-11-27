@@ -38,9 +38,9 @@
 using namespace nx::core;
 namespace
 {
-constexpr StringLiteral k_DataPathsKey = "data_paths";
-constexpr StringLiteral k_InputFileKey = "input_file";
-constexpr StringLiteral k_ParentGroupKey = "parent_group";
+constexpr StringLiteralType k_DataPathsKey = "data_paths";
+constexpr StringLiteralType k_InputFileKey = "input_file";
+constexpr StringLiteralType k_ParentGroupKey = "parent_group";
 } // namespace
 
 namespace nx::core
@@ -150,7 +150,7 @@ nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
 // -----------------------------------------------------------------------------
 Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
   if(!json.is_object())
   {
     return MakeErrorResult<std::any>(-780, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix, name()));
@@ -195,7 +195,7 @@ Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& js
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ReadHDF5DatasetParameter::clone() const
+IParameter::UniquePointerType ReadHDF5DatasetParameter::clone() const
 {
   return std::make_unique<ReadHDF5DatasetParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -213,13 +213,13 @@ Result<> ReadHDF5DatasetParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_DatasetPathKey = "dataset_path";
-constexpr StringLiteral k_ComponentDimensionsKey = "component_dimensions";
-constexpr StringLiteral k_TupleDimensionsKey = "tuple_dimensions";
+constexpr StringLiteralType k_DatasetPathKey = "dataset_path";
+constexpr StringLiteralType k_ComponentDimensionsKey = "component_dimensions";
+constexpr StringLiteralType k_TupleDimensionsKey = "tuple_dimensions";
 } // namespace
 
 Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
@@ -265,5 +265,5 @@ Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFi
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

@@ -12,7 +12,7 @@
 
 namespace nx::core
 {
-MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes,
+MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes,
                                                            AllowedDataTypes allowedDataTypes, AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
@@ -51,7 +51,7 @@ nlohmann::json MultiArraySelectionParameter::toJsonImpl(const std::any& value) c
 
 Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
@@ -85,7 +85,7 @@ Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json
   return {{std::move(paths)}};
 }
 
-IParameter::UniquePointer MultiArraySelectionParameter::clone() const
+IParameter::UniquePointerType MultiArraySelectionParameter::clone() const
 {
   return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowedDataTypes, m_RequiredComponentShapes);
 }
@@ -100,7 +100,7 @@ typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::d
   return m_DefaultValue;
 }
 
-MultiArraySelectionParameter::AllowedTypes MultiArraySelectionParameter::allowedTypes() const
+MultiArraySelectionParameter::AllowedTypeSetType MultiArraySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
@@ -202,7 +202,7 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
   return {{objects}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArraySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -239,5 +239,5 @@ Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArra
 
   return {std::move(dataPaths)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

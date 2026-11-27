@@ -48,7 +48,7 @@ nlohmann::json StringParameter::toJsonImpl(const std::any& value) const
 
 Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'StringParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'StringParameter' JSON Error: ";
   if(!json.is_string())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
@@ -57,7 +57,7 @@ Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, Versi
   return {{string}};
 }
 
-IParameter::UniquePointer StringParameter::clone() const
+IParameter::UniquePointerType StringParameter::clone() const
 {
   return std::make_unique<StringParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -78,7 +78,7 @@ Result<> StringParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
@@ -174,5 +174,5 @@ Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

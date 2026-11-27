@@ -14,7 +14,7 @@
 #include <algorithm>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 
 namespace
 {

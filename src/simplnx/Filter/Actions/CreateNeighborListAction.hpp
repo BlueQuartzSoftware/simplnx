@@ -40,7 +40,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   DataType type() const;
 

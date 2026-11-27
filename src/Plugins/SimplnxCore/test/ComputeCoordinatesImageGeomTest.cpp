@@ -20,9 +20,9 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_ImageGeomName = "DataContainer";
-constexpr StringLiteral k_PhysicalArrayName = "Image Physical Coordinates";
-constexpr StringLiteral k_IndexArrayName = "Image Indices";
+constexpr StringLiteralType k_ImageGeomName = "DataContainer";
+constexpr StringLiteralType k_PhysicalArrayName = "Image Physical Coordinates";
+constexpr StringLiteralType k_IndexArrayName = "Image Indices";
 
 const DataPath k_ImageGeomPath({k_ImageGeomName});
 const DataPath k_PhysicalArrayPath({k_PhysicalArrayName});

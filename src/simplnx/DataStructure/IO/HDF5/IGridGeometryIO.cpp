@@ -5,12 +5,12 @@
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 IGridGeometryIO::IGridGeometryIO() = default;
 IGridGeometryIO::~IGridGeometryIO() noexcept = default;
 
-Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const group_reader_type& parentGroup, const std::string& objectName,
+Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const GroupReaderType& parentGroup, const std::string& objectName,
                                                DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   Result<> result = IGeometryIO::ReadGeometryData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
@@ -27,7 +27,7 @@ Result<> IGridGeometryIO::ReadGridGeometryData(DataStructureReader& dataStructur
   return result;
 }
 
-Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& /*dataStructureGroup*/)
+Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& /*dataStructureGroup*/)
 {
   auto* geomPtr = dataStructure.getDataAs<IGridGeometry>(dataPath);
   if(geomPtr == nullptr)
@@ -38,7 +38,7 @@ Result<> IGridGeometryIO::FinishImportingGridGeometryData(DataStructure& dataStr
   return {};
 }
 
-Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, group_writer_type& parentGroup, bool importable)
+Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, GroupWriterType& parentGroup, bool importable)
 {
   auto result = IGeometryIO::WriteGeometryData(dataStructureWriter, geometry, parentGroup, importable);
   if(result.invalid())
@@ -50,4 +50,4 @@ Result<> IGridGeometryIO::WriteGridGeometryData(DataStructureWriter& dataStructu
   AppendWriteResult(result, WriteDataId(groupWriter, geometry.getCellDataId(), IOConstants::k_CellDataTag));
   return result;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

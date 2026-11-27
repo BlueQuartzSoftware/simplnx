@@ -66,7 +66,7 @@ Parameters ReadRawBinaryFilter::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data type of the binary data", NumericType::int8));
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "The endianness of the data", 0, ChoicesParameter::Choices{"Little", "Big"}));
-  params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
+  params.insert(std::make_unique<UInt64ParameterType>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
   params.insert(std::make_unique<BoolParameter>(k_AllowPartialFilling_Key, "Allow Partial Filling of Array",
                                                 "When enabled, the filter will read as much data as available and leave the remaining array elements default-initialized to 0", false));
 
@@ -116,7 +116,7 @@ IFilter::VersionType ReadRawBinaryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadRawBinaryFilter::clone() const
+IFilter::UniquePointerType ReadRawBinaryFilter::clone() const
 {
   return std::make_unique<ReadRawBinaryFilter>();
 }
@@ -320,12 +320,12 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_EndianKey = "Endian";
-constexpr StringLiteral k_SkipHeaderBytesKey = "SkipHeaderBytes";
-constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_EndianKey = "Endian";
+constexpr StringLiteralType k_SkipHeaderBytesKey = "SkipHeaderBytes";
+constexpr StringLiteralType k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -335,8 +335,8 @@ Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
 
   // Convert old integer NumberOfComponents to DynamicTable component_dimensions
   if(json.contains(simpl::k_NumberOfComponentsKey))
@@ -351,9 +351,9 @@ Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
     }
   }
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_EndianKey, k_Endian_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_SkipHeaderBytesKey, k_SkipHeaderBytes_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_EndianKey, k_Endian_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_SkipHeaderBytesKey, k_SkipHeaderBytes_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

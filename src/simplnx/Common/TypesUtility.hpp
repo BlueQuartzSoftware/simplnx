@@ -241,7 +241,7 @@ constexpr usize GetDataTypeSize(DataType dataType)
  * @param numericType
  * @return
  */
-constexpr StringLiteral NumericTypeToString(NumericType numericType)
+constexpr StringLiteralType NumericTypeToString(NumericType numericType)
 {
   switch(numericType)
   {
@@ -285,7 +285,7 @@ constexpr StringLiteral NumericTypeToString(NumericType numericType)
  * @param dataType
  * @return
  */
-constexpr StringLiteral DataTypeToString(DataType dataType)
+constexpr StringLiteralType DataTypeToString(DataType dataType)
 {
   switch(dataType)
   {
@@ -340,7 +340,7 @@ inline const std::vector<std::string>& GetAllDataTypesAsStrings()
   return dataTypes;
 }
 
-constexpr StringLiteral DataTypeToHumanString(DataType dataType)
+constexpr StringLiteralType DataTypeToHumanString(DataType dataType)
 {
   switch(dataType)
   {

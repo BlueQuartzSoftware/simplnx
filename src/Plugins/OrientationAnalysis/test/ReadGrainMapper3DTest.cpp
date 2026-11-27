@@ -31,8 +31,8 @@ const std::string k_LabDCTGeometryName("LabDCT");
 const std::string k_AbsorptionCTGeometryName("AbsorptionCT");
 const std::string k_CellAttributeMatrixName("Cell Data");
 const std::string k_CellEnsembleAttributeMatrixName("Cell Ensemble Data");
-const std::array<std::string, 3> k_IpfDatasetNames = {GrainMapper3DUtilities::constants::k_IPF001Name, GrainMapper3DUtilities::constants::k_IPF010Name,
-                                                      GrainMapper3DUtilities::constants::k_IPF100Name};
+const std::array<std::string, 3> k_IpfDatasetNames = {grain_mapper_3d_utilities::constants::k_IPF001Name, grain_mapper_3d_utilities::constants::k_IPF010Name,
+                                                      grain_mapper_3d_utilities::constants::k_IPF100Name};
 
 enum class IpfStorage
 {

@@ -190,9 +190,9 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     }
     std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, kOutputFile);
     // std::cout << "Writing Output file to " << outputFilePath << std::endl;
-    nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(outputFilePath);
+    nx::core::hdf5::FileIO fileWriter = nx::core::hdf5::FileIO::WriteFile(outputFilePath);
 
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    auto resultH5 = hdf5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
     SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
     //    for(size_t i = 0; i < 6; i++)
     //    {

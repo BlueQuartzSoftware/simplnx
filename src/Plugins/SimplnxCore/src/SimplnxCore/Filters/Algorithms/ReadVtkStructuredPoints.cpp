@@ -27,15 +27,15 @@ constexpr usize k_MaxChunkBytes = 1048576;
 constexpr usize k_AsciiInputBufferSize = 16384;
 constexpr usize k_MaxAsciiTokenLength = 1024;
 
-constexpr StringLiteral k_DatasetKeyword = "DATASET";
-constexpr StringLiteral k_StructuredPointsKeyword = "STRUCTURED_POINTS";
-constexpr StringLiteral k_DimensionsKeyword = "DIMENSIONS";
-constexpr StringLiteral k_SpacingKeyword = "SPACING";
-constexpr StringLiteral k_OriginKeyword = "ORIGIN";
-constexpr StringLiteral k_PointDataKeyword = "POINT_DATA";
-constexpr StringLiteral k_CellDataKeyword = "CELL_DATA";
-constexpr StringLiteral k_ScalarsKeyword = "SCALARS";
-constexpr StringLiteral k_VectorsKeyword = "VECTORS";
+constexpr StringLiteralType k_DatasetKeyword = "DATASET";
+constexpr StringLiteralType k_StructuredPointsKeyword = "STRUCTURED_POINTS";
+constexpr StringLiteralType k_DimensionsKeyword = "DIMENSIONS";
+constexpr StringLiteralType k_SpacingKeyword = "SPACING";
+constexpr StringLiteralType k_OriginKeyword = "ORIGIN";
+constexpr StringLiteralType k_PointDataKeyword = "POINT_DATA";
+constexpr StringLiteralType k_CellDataKeyword = "CELL_DATA";
+constexpr StringLiteralType k_ScalarsKeyword = "SCALARS";
+constexpr StringLiteralType k_VectorsKeyword = "VECTORS";
 
 /**
  * @brief Parses a declared count of ASCII tokens through a fixed input buffer.

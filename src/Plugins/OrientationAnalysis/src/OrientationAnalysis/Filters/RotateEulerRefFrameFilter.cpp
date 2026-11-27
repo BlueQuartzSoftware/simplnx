@@ -58,7 +58,7 @@ Parameters RotateEulerRefFrameFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_EulerAnglesArrayPath_Key, "Input Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   return params;
 }
@@ -70,7 +70,7 @@ IFilter::VersionType RotateEulerRefFrameFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RotateEulerRefFrameFilter::clone() const
+IFilter::UniquePointerType RotateEulerRefFrameFilter::clone() const
 {
   return std::make_unique<RotateEulerRefFrameFilter>();
 }
@@ -120,9 +120,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
-constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
-constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+constexpr StringLiteralType k_RotationAngleKey = "RotationAngle";
+constexpr StringLiteralType k_RotationAxisKey = "RotationAxis";
+constexpr StringLiteralType k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -133,8 +133,8 @@ Result<Arguments> RotateEulerRefFrameFilter::FromSIMPLJson(const nlohmann::json&
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_EulerAnglesArrayPath_Key));
+      simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_RotationAxisAngle_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_EulerAnglesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

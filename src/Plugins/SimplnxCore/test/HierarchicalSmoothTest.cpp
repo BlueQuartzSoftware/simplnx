@@ -112,7 +112,7 @@ F64Vec3Type QuadPoint(const F64Vec3Type& p, const F64Vec3Type& q, const F64Vec3T
 bool IsQuadNode(int8 type)
 {
   // Quad junctions: 4 (interior) or 14 (on the sample surface). The filter holds these fixed.
-  return type == NodeType::QuadPoint || type == NodeType::SurfaceQuadPoint;
+  return type == node_type::QuadPoint || type == node_type::SurfaceQuadPoint;
 }
 
 // Distinct grain ids touching a vertex (exterior label 0 excluded), capped at 4: a Voronoi vertex
@@ -328,17 +328,17 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Quad junction", "[SimplnxCore]
   for(usize v = 0; v < numVertices; v++)
   {
     const F64Vec3Type x = VertexCoord(smoothed, v);
-    if(nodeType[v] == NodeType::Default && incident[v].count == 2)
+    if(nodeType[v] == node_type::Default && incident[v].count == 2)
     {
       REQUIRE(DistanceToPlane(x, BisectorPlane(k_QuadSeeds[incident[v].ids[0] - 1], k_QuadSeeds[incident[v].ids[1] - 1])) < k_TolPlane);
       interiorNodes++;
     }
-    else if(nodeType[v] == NodeType::TriplePoint && incident[v].count == 3)
+    else if(nodeType[v] == node_type::TriplePoint && incident[v].count == 3)
     {
       REQUIRE(DistanceToLine(x, TripleLine(k_QuadSeeds[incident[v].ids[0] - 1], k_QuadSeeds[incident[v].ids[1] - 1], k_QuadSeeds[incident[v].ids[2] - 1])) < k_TolLine);
       tripleNodes++;
     }
-    else if(nodeType[v] == NodeType::QuadPoint && incident[v].count == 4)
+    else if(nodeType[v] == node_type::QuadPoint && incident[v].count == 4)
     {
       // Interior quad points are held fixed by the filter and must sit at the analytic point where all four cells meet.
       const F64Vec3Type q = QuadPoint(k_QuadSeeds[incident[v].ids[0] - 1], k_QuadSeeds[incident[v].ids[1] - 1], k_QuadSeeds[incident[v].ids[2] - 1], k_QuadSeeds[incident[v].ids[3] - 1]);
@@ -383,7 +383,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Bicrystal planar boundary", "[
     {
       sawQuad = true;
     }
-    if(nodeType[v] == NodeType::Default && incident[v].count == 2)
+    if(nodeType[v] == node_type::Default && incident[v].count == 2)
     {
       const Plane plane = BisectorPlane(k_BicrystalSeeds[incident[v].ids[0] - 1], k_BicrystalSeeds[incident[v].ids[1] - 1]);
       sumBefore += DistanceToPlane(VertexCoord(vertices, v), plane);
@@ -399,7 +399,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Bicrystal planar boundary", "[
   usize n = 0;
   for(usize v = 0; v < numVertices; v++)
   {
-    if(nodeType[v] != NodeType::Default || incident[v].count != 2)
+    if(nodeType[v] != node_type::Default || incident[v].count != 2)
     {
       continue;
     }
@@ -442,7 +442,7 @@ TEST_CASE("SimplnxCore::HierarchicalSmoothFilter: Displacement rejection", "[Sim
   float64 worstDist = -1.0;
   for(usize v = 0; v < numVertices; v++)
   {
-    if(controlNodeType[v] != NodeType::Default || incident[v].count != 2)
+    if(controlNodeType[v] != node_type::Default || incident[v].count != 2)
     {
       continue;
     }

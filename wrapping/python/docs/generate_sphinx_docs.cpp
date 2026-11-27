@@ -641,7 +641,7 @@ static void GenerateMarkdownFilterParameterTable()
     {
       std::string filterClassName = filterHandleIter.first;
       FilterHandle const filterHandle(filterHandleIter.second.first, filterHandleIter.second.second);
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
 
       std::stringstream pTableStream;
 
@@ -788,7 +788,7 @@ static void GeneratePythonRstFiles()
     {
       std::string filterClassName = filterHandleIter.first;
       FilterHandle const filterHandle(filterHandleIter.second.first, filterHandleIter.second.second);
-      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointerType filter = filterListPtr->createFilter(filterHandle);
       // auto plugin = filterListPtr->getPlugin(filterHandle);
 
       rstStream << filter->humanName() << "\n";

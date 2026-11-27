@@ -42,7 +42,7 @@
  * @namespace nx::core::HDF5
  * @brief Provides process-locked HDF5 object wrappers.
  */
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class FileIO;
 class GroupIO;
@@ -636,4 +636,4 @@ private:
   mutable hid_t m_Id = -1;
   hid_t m_ParentId = 0;
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

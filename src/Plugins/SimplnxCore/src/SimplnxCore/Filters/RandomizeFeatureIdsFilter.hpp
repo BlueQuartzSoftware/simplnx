@@ -21,8 +21,8 @@ public:
   RandomizeFeatureIdsFilter& operator=(RandomizeFeatureIdsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_FeatureAMPath_Key = "feature_am_path";
+  static constexpr StringLiteralType k_FeatureIdsPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_FeatureAMPath_Key = "feature_am_path";
 
   /**
    * @brief Returns the filter's name.
@@ -72,7 +72,7 @@ public:
    * @brief Creates and returns a copy of the filter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

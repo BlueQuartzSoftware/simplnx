@@ -74,7 +74,7 @@ struct NXIMAGEPROCESSING_EXPORT ReadImageStackInputValues
   VectorFloat32Parameter::ValueType colorWeights;
   usize resampleImagesChoice = 0;
   float32 scaling = 100.0f;
-  VectorUInt64Parameter::ValueType exactXYDimensions;
+  VectorUInt64ParameterType::ValueType exactXYDimensions;
   bool changeDataType = false;
   DataType imageDataType = DataType::uint8;
   CropGeometryParameter::ValueType croppingOptions;

@@ -21,7 +21,7 @@ namespace nx::core
 class SIMPLNX_EXPORT IDataAction
 {
 public:
-  using UniquePointer = std::unique_ptr<IDataAction>;
+  using UniquePointerType = std::unique_ptr<IDataAction>;
 
   enum class Mode : uint8
   {
@@ -49,7 +49,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  virtual UniquePointer clone() const = 0;
+  virtual UniquePointerType clone() const = 0;
 
 protected:
   /**

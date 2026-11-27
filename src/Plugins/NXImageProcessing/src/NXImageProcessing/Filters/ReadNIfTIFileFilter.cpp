@@ -156,7 +156,7 @@ IFilter::VersionType ReadNIfTIFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadNIfTIFileFilter::clone() const
+IFilter::UniquePointerType ReadNIfTIFileFilter::clone() const
 {
   return std::make_unique<ReadNIfTIFileFilter>();
 }

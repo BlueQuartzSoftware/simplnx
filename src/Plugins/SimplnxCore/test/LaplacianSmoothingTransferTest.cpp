@@ -44,7 +44,7 @@ constexpr CoordinatesType k_TaubinCoordinates{1.0F / 18.0F, 1.0F / 18.0F, 1.0F /
 /** @brief Supplies every edge once; each vertex has degree three. */
 constexpr std::array<IGeometry::MeshIndexType, 12> k_Edges{0, 1, 0, 2, 0, 3, 1, 2, 1, 3, 2, 3};
 /** @brief Makes every vertex use the default lambda. */
-constexpr std::array<int8, 4> k_NodeTypes{NodeType::Default, NodeType::Default, NodeType::Default, NodeType::Default};
+constexpr std::array<int8, 4> k_NodeTypes{node_type::Default, node_type::Default, node_type::Default, node_type::Default};
 /** @brief Distinguishes the injected store failure from the algorithm's contextual error. */
 constexpr int32 k_InjectedError = -95241;
 /** @brief Supplies the exact backend diagnostic that the filter must preserve. */

@@ -35,9 +35,9 @@ namespace
 {
 const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip about X axis", "Flip about Y axis"};
 
-constexpr nx::core::StringLiteral k_NoResamplingMode = "Do Not Resample (0)";
-constexpr nx::core::StringLiteral k_ScalingMode = "Scaling (1)";
-constexpr nx::core::StringLiteral k_ExactDimensions = "Exact X/Y Dimensions (2)";
+constexpr nx::core::StringLiteralType k_NoResamplingMode = "Do Not Resample (0)";
+constexpr nx::core::StringLiteralType k_ScalingMode = "Scaling (1)";
+constexpr nx::core::StringLiteralType k_ExactDimensions = "Exact X/Y Dimensions (2)";
 const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoResamplingMode, k_ScalingMode, k_ExactDimensions};
 const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
@@ -122,12 +122,12 @@ Parameters ReadImageStackFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResampleImagesChoice_Key, "Resample Images",
                                                                     "Mode can be [0] Do Not Rescale, [1] Scaling as Percent, [2] Exact X/Y Dimensions For Resampling Along Z Axis",
                                                                     ::k_NoResampleModeIndex, ::k_ResamplingChoices));
-  params.insert(std::make_unique<Float32Parameter>(
+  params.insert(std::make_unique<Float32ParameterType>(
       k_Scaling_Key, "Scaling (%)",
       "The scaling of the 3D volume, in percentages. Percentage must be greater than or equal to 1.0f. Larger percentages will cause more voxels, smaller percentages "
       "will cause less voxels. For example, 10.0 is one-tenth the original number of pixels.  200.0 is double the number of pixels.",
       100.0f));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
                                                         "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
                                                         std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
 
@@ -167,7 +167,7 @@ IFilter::VersionType ReadImageStackFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadImageStackFilter::clone() const
+IFilter::UniquePointerType ReadImageStackFilter::clone() const
 {
   return std::make_unique<ReadImageStackFilter>();
 }
@@ -188,8 +188,8 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
   auto convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto colorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   auto resampleImagesChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);
-  auto scalingValue = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
-  auto exactXYDims = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
+  auto scalingValue = filterArgs.value<Float32ParameterType::ValueType>(k_Scaling_Key);
+  auto exactXYDims = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactXYDimensions_Key);
 
   auto changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto imageDataTypeChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
@@ -435,8 +435,8 @@ Result<> ReadImageStackFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   inputValues.colorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   inputValues.resampleImagesChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);
-  inputValues.scaling = filterArgs.value<Float32Parameter::ValueType>(k_Scaling_Key);
-  inputValues.exactXYDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactXYDimensions_Key);
+  inputValues.scaling = filterArgs.value<Float32ParameterType::ValueType>(k_Scaling_Key);
+  inputValues.exactXYDimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_ExactXYDimensions_Key);
   inputValues.changeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   inputValues.imageDataType = ChoiceToImageDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
   inputValues.croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
@@ -448,14 +448,14 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_InputFileListInfoKey = "InputFileListInfo";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_ResolutionKey = "Resolution";
-constexpr StringLiteral k_ImageTransformChoiceKey = "ImageTransformChoice";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_ImageDataArrayNameKey = "ImageDataArrayName";
+constexpr StringLiteralType k_InputFileListInfoKey = "InputFileListInfo";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_ResolutionKey = "Resolution";
+constexpr StringLiteralType k_ImageTransformChoiceKey = "ImageTransformChoice";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_ImageDataArrayNameKey = "ImageDataArrayName";
 } // namespace simpl
 } // namespace
 
@@ -465,27 +465,27 @@ Result<Arguments> ReadImageStackFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FileListInfoFilterParameterConverter>(args, json, simpl::k_InputFileListInfoKey, k_InputFileListInfo_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
-  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FileListInfoFilterParameterConverter>(args, json, simpl::k_InputFileListInfoKey, k_InputFileListInfo_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  Result<> spacingResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
   {
     // The 6.5 key for spacing was named resolution.
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {
     results.push_back(std::move(spacingResult));
   }
-  Result<> transformResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ImageTransformChoiceKey, k_ImageTransformChoice_Key);
+  Result<> transformResult = simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ImageTransformChoiceKey, k_ImageTransformChoice_Key);
   if(transformResult.valid())
   {
     // This parameter does not appear in 6.5, so include it only when conversion succeeds.
     results.push_back(std::move(transformResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellDataName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellDataName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

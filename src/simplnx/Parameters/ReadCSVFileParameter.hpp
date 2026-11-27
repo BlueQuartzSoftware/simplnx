@@ -68,7 +68,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -121,7 +121,7 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT ReadASCIIWizardDataFilterParameterConverter
 {
@@ -130,7 +130,7 @@ struct SIMPLNX_EXPORT ReadASCIIWizardDataFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ReadCSVFileParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");

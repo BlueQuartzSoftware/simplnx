@@ -24,19 +24,19 @@ public:
   ComputeSchmidsFilter& operator=(ComputeSchmidsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_LoadingDirection_Key = "loading_direction";
-  static constexpr StringLiteral k_StoreAngleComponents_Key = "store_angle_components";
-  static constexpr StringLiteral k_OverrideSystem_Key = "override_system";
-  static constexpr StringLiteral k_SlipPlane_Key = "slip_plane";
-  static constexpr StringLiteral k_SlipDirection_Key = "slip_direction";
-  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_SchmidsArrayName_Key = "schmids_array_name";
-  static constexpr StringLiteral k_SlipSystemsArrayName_Key = "slip_systems_array_name";
-  static constexpr StringLiteral k_PolesArrayName_Key = "poles_array_name";
-  static constexpr StringLiteral k_PhisArrayName_Key = "phis_array_name";
-  static constexpr StringLiteral k_LambdasArrayName_Key = "lambdas_array_name";
+  static constexpr StringLiteralType k_LoadingDirection_Key = "loading_direction";
+  static constexpr StringLiteralType k_StoreAngleComponents_Key = "store_angle_components";
+  static constexpr StringLiteralType k_OverrideSystem_Key = "override_system";
+  static constexpr StringLiteralType k_SlipPlane_Key = "slip_plane";
+  static constexpr StringLiteralType k_SlipDirection_Key = "slip_direction";
+  static constexpr StringLiteralType k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteralType k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_SchmidsArrayName_Key = "schmids_array_name";
+  static constexpr StringLiteralType k_SlipSystemsArrayName_Key = "slip_systems_array_name";
+  static constexpr StringLiteralType k_PolesArrayName_Key = "poles_array_name";
+  static constexpr StringLiteralType k_PhisArrayName_Key = "phis_array_name";
+  static constexpr StringLiteralType k_LambdasArrayName_Key = "lambdas_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -93,7 +93,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

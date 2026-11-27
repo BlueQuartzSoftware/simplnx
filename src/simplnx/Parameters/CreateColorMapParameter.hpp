@@ -43,7 +43,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -89,7 +89,7 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT CreateColorMapFilterParameterConverter
 {
@@ -98,7 +98,7 @@ struct SIMPLNX_EXPORT CreateColorMapFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::CreateColorMapParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0");

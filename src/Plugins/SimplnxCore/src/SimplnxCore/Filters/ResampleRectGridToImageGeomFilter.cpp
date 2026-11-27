@@ -59,12 +59,12 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Geometry Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_RectilinearGridPath_Key, "Input Rectilinear Grid", "Path to the RectGrid Geometry to be re-sampled", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::RectGrid}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Attribute Arrays to Copy", "Rectilinear Grid Cell Data to possibly copy", MultiArraySelectionParameter::ValueType{},
-      MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
+      MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
-  params.insert(std::make_unique<VectorInt32Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
                                                        std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "Path to the created Image Geometry", DataPath({"Image Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageGeomCellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data Attribute Matrix created with the Image Geometry",
@@ -80,7 +80,7 @@ IFilter::VersionType ResampleRectGridToImageGeomFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ResampleRectGridToImageGeomFilter::clone() const
+IFilter::UniquePointerType ResampleRectGridToImageGeomFilter::clone() const
 {
   return std::make_unique<ResampleRectGridToImageGeomFilter>();
 }
@@ -91,7 +91,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
 {
   auto pRectilinearGridPathValue = filterArgs.value<DataPath>(k_RectilinearGridPath_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  auto pDimensionsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_Dimensions_Key);
+  auto pDimensionsValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_Dimensions_Key);
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pImageGeomCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_ImageGeomCellAttributeMatrixName_Key);
 
@@ -208,7 +208,7 @@ Result<> ResampleRectGridToImageGeomFilter::executeImpl(DataStructure& dataStruc
 
   inputValues.RectilinearGridPath = filterArgs.value<DataPath>(k_RectilinearGridPath_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  inputValues.Dimensions = filterArgs.value<VectorInt32Parameter::ValueType>(k_Dimensions_Key);
+  inputValues.Dimensions = filterArgs.value<VectorInt32ParameterType::ValueType>(k_Dimensions_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   inputValues.ImageGeomCellAttributeMatrixName = filterArgs.value<std::string>(k_ImageGeomCellAttributeMatrixName_Key);
 
@@ -219,11 +219,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_RectilinearGridPathKey = "RectilinearGridPath";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-constexpr StringLiteral k_DimensionsKey = "Dimensions";
-constexpr StringLiteral k_ImageGeometryPathKey = "ImageGeometryPath";
-constexpr StringLiteral k_ImageGeomCellAttributeMatrixKey = "ImageGeomCellAttributeMatrix";
+constexpr StringLiteralType k_RectilinearGridPathKey = "RectilinearGridPath";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_DimensionsKey = "Dimensions";
+constexpr StringLiteralType k_ImageGeometryPathKey = "ImageGeometryPath";
+constexpr StringLiteralType k_ImageGeomCellAttributeMatrixKey = "ImageGeomCellAttributeMatrix";
 } // namespace simpl
 } // namespace
 
@@ -233,14 +233,14 @@ Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
   // Rect Grid Geometry description parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverter>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
   // Created Geometry description is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

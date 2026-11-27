@@ -21,7 +21,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Instantiate)", "[SimplnxCore][RenameDat
 {
   UnitTest::LoadPlugins();
 
-  static constexpr StringLiteral k_NewName = "Bar";
+  static constexpr StringLiteralType k_NewName = "Bar";
   const DataPath kDataPath({Constants::k_SmallIN100});
 
   RenameDataObjectFilter filter;
@@ -41,7 +41,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Invalid Parameters)", "[SimplnxCore][Re
 {
   UnitTest::LoadPlugins();
 
-  static constexpr StringLiteral k_NewName = Constants::k_ConfidenceIndex;
+  static constexpr StringLiteralType k_NewName = Constants::k_ConfidenceIndex;
   static const DataPath kDataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
   RenameDataObjectFilter filter;
@@ -64,7 +64,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Parameters)", "[SimplnxCore][Rena
 {
   UnitTest::LoadPlugins();
 
-  static constexpr StringLiteral k_NewName = "Foo";
+  static constexpr StringLiteralType k_NewName = "Foo";
   static const DataPath kDataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
   RenameDataObjectFilter filter;
@@ -93,7 +93,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(Valid Overwrite)", "[SimplnxCore][Renam
 {
   UnitTest::LoadPlugins();
 
-  static constexpr StringLiteral k_NewName = Constants::k_GroupHName;
+  static constexpr StringLiteralType k_NewName = Constants::k_GroupHName;
   static const DataPath kDataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 
   RenameDataObjectFilter filter;
@@ -165,7 +165,7 @@ TEST_CASE("SimplnxCore::RenameDataAction(InValid Overwrite)", "[SimplnxCore][Ren
 {
   UnitTest::LoadPlugins();
 
-  static constexpr StringLiteral k_NewName = Constants::k_GroupDName;
+  static constexpr StringLiteralType k_NewName = Constants::k_GroupDName;
   static const DataPath kDataPath({Constants::k_GroupAName, Constants::k_GroupCName, Constants::k_GroupDName, Constants::k_ArrayIName});
 
   RenameDataObjectFilter filter;

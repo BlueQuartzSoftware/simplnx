@@ -57,7 +57,7 @@ Parameters WriteGBCDGMTFileFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Axis-Angle", "Axis-Angle pair values for drawing GBCD", std::vector<float32>(4, 0),
                                                          std::vector<std::string>{"Angle", "h", "k", "l"}));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output GMT File", "The output .dat file path", FileSystemPathParameter::ValueType{},
@@ -65,9 +65,9 @@ Parameters WriteGBCDGMTFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBCDArrayPath_Key, "GBCD",
                                                           "5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere",
-                                                          DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypes{DataType::float64}));
+                                                          DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   return params;
@@ -80,7 +80,7 @@ IFilter::VersionType WriteGBCDGMTFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteGBCDGMTFileFilter::clone() const
+IFilter::UniquePointerType WriteGBCDGMTFileFilter::clone() const
 {
   return std::make_unique<WriteGBCDGMTFileFilter>();
 }
@@ -166,11 +166,11 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_PhaseOfInterestKey = "PhaseOfInterest";
-constexpr StringLiteral k_MisorientationRotationKey = "MisorientationRotation";
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_GBCDArrayPathKey = "GBCDArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_PhaseOfInterestKey = "PhaseOfInterest";
+constexpr StringLiteralType k_MisorientationRotationKey = "MisorientationRotation";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_GBCDArrayPathKey = "GBCDArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -180,12 +180,12 @@ Result<Arguments> WriteGBCDGMTFileFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AxisAngleFilterParameterConverter<float32>>(args, json, simpl::k_MisorientationRotationKey, k_MisorientationRotation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AxisAngleFilterParameterConverter<float32>>(args, json, simpl::k_MisorientationRotationKey, k_MisorientationRotation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFileKey, k_OutputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

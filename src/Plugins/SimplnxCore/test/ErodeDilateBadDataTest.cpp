@@ -36,7 +36,7 @@ const std::string k_EbsdScanDataName("EBSD Scan Data");
 const DataPath k_InputData({"Input Data"});
 const DataPath k_EbsdScanDataDataPath = k_InputData.createChildPath(k_EbsdScanDataName);
 const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("FeatureIds");
-const StringLiteral k_MiscData = "Misc";
+const StringLiteralType k_MiscData = "Misc";
 
 constexpr usize k_NumTuples = 32;
 // ImageGeom dimensions are ordered X, Y, Z. AttributeMatrix and DataArray tuple shapes are ordered

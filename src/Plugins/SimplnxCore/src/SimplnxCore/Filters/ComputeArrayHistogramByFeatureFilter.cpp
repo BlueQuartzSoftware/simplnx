@@ -58,30 +58,30 @@ Parameters ComputeArrayHistogramByFeatureFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins", "Specifies number of histogram bins (greater than zero)", 10));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumberOfBins_Key, "Number of Bins", "Specifies number of histogram bins (greater than zero)", 10));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UserDefinedRange_Key, "Use Custom Min & Max Range", "Whether the user can set the min and max values to consider for the histogram", false));
-  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Min Value", "Specifies the inclusive lower bound of the histogram.", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "Specifies the exclusive upper bound of the histogram.", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_MinRange_Key, "Min Value", "Specifies the inclusive lower bound of the histogram.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_MaxRange_Key, "Max Value", "Specifies the exclusive upper bound of the histogram.", 1.0));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_CreateNewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupPath_Key, "New DataGroup Path", "The path to the new DataGroup in which to store the calculated histogram(s)", DataPath{}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupPath_Key, "Output DataGroup Path", "The complete path to the DataGroup in which to store the calculated histogram(s)",
-                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
+                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypeSetType{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<StringParameter>(k_HistoBinCountName_Key, "Histogram Bin Counts Array Name", "Name of the created \"Bin Counts\" array for each input array.", "Bin Counts"));
   params.insert(std::make_unique<StringParameter>(k_HistoBinRangeName_Key, "Histogram Bin Ranges Array Name", "Name of the created \"Bin Ranges\" array for each input array.", "Bin Ranges"));
   params.insert(std::make_unique<StringParameter>(k_HistoMostPopulatedBinName_Key, "Most Populated Bin Array Name", "Name of the created \"Most Populated Bin\" array for each input array.",
@@ -106,7 +106,7 @@ IFilter::VersionType ComputeArrayHistogramByFeatureFilter::parametersVersion() c
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeArrayHistogramByFeatureFilter::clone() const
+IFilter::UniquePointerType ComputeArrayHistogramByFeatureFilter::clone() const
 {
   return std::make_unique<ComputeArrayHistogramByFeatureFilter>();
 }

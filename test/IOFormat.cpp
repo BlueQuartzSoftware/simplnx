@@ -28,8 +28,8 @@ TEST_CASE("Contains HDF5 IO Support", "IOTest")
 
 TEST_CASE("Memory Check", "IOTest")
 {
-  REQUIRE(Memory::GetTotalMemory() > 0);
-  const auto storage = Memory::GetAvailableStorage();
+  REQUIRE(memory_utilities::GetTotalMemory() > 0);
+  const auto storage = memory_utilities::GetAvailableStorage();
   REQUIRE(storage.total > 0);
   REQUIRE(storage.free > 0);
 }

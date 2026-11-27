@@ -346,7 +346,7 @@ int main(int argc, char** argv)
   ip_bench::SweepOptions sweep;
   sweep.targetVoxels = opts.target_voxels;
   sweep.minZSlices = opts.z_slices;
-  sweep.force2D = opts.force_2d;
+  sweep.force_2d = opts.force_2d;
   sweep.projectionAxis = opts.projection_axis;
   sweep.warmup = opts.warmup;
   sweep.repeats = opts.repeats;

@@ -12,7 +12,7 @@
 
 namespace nx::core
 {
-DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypes allowedTypes)
+DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(std::move(allowedTypes))
@@ -44,7 +44,7 @@ nlohmann::json DataGroupSelectionParameter::toJsonImpl(const std::any& value) co
 
 Result<std::any> DataGroupSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral k_Prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'DataGroupSelectionParameter' JSON Error: ";
 
   if(!json.is_string())
   {
@@ -60,7 +60,7 @@ Result<std::any> DataGroupSelectionParameter::fromJsonImpl(const nlohmann::json&
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer DataGroupSelectionParameter::clone() const
+IParameter::UniquePointerType DataGroupSelectionParameter::clone() const
 {
   return std::make_unique<DataGroupSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
@@ -70,7 +70,7 @@ std::any DataGroupSelectionParameter::defaultValue() const
   return defaultPath();
 }
 
-const DataGroupSelectionParameter::AllowedTypes& DataGroupSelectionParameter::allowedTypes() const
+const DataGroupSelectionParameter::AllowedTypeSetType& DataGroupSelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
@@ -125,7 +125,7 @@ Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructu
   return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 Result<DataContainerSelectionFilterParameterConverter::ValueType> DataContainerSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
@@ -167,5 +167,5 @@ Result<DataContainerFromMultiSelectionFilterParameterConverter::ValueType> DataC
 
   return {DataPath()};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

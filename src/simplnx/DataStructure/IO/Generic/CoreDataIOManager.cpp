@@ -4,7 +4,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
 
-namespace nx::core::Generic
+namespace nx::core::generic
 {
 CoreDataIOManager::CoreDataIOManager()
 
@@ -120,4 +120,4 @@ void CoreDataIOManager::addListStoreFnc()
   };
   addListStoreCreationFnc(formatName(), listStoreFnc);
 }
-} // namespace nx::core::Generic
+} // namespace nx::core::generic

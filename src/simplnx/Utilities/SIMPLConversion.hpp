@@ -12,7 +12,7 @@
 
 #include <string_view>
 
-namespace nx::core::SIMPLConversion
+namespace nx::core::simpl_conversion
 {
 //------------------------------------------------------------------------------
 template <class ConverterT>
@@ -101,4 +101,4 @@ SIMPLNX_EXPORT Result<std::string> ConvertDataTypeString(const std::string& simp
 
 //------------------------------------------------------------------------------
 SIMPLNX_EXPORT Result<std::vector<std::string>> ConvertDataTypeStrings(const std::vector<std::string>& simplDataTypeStrings);
-} // namespace nx::core::SIMPLConversion
+} // namespace nx::core::simpl_conversion

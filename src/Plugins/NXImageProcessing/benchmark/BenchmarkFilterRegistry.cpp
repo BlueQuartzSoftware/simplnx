@@ -223,7 +223,7 @@ Result<DataPath> BuildPrimaryInput(DataStructure& dataStructure, const ip_bench:
 {
   DataPath inputPath;
   Result<> buildResult = ip_bench::BuildTiledInput(dataStructure, context.realInputPath, context.geometryPath, context.cellAttributeMatrixName, context.inputArrayName, context.targetVoxels,
-                                                   context.minZSlices, context.storeMode, inputPath, context.force2D, sourceValidator);
+                                                   context.minZSlices, context.storeMode, inputPath, context.force_2d, sourceValidator);
   return ConvertResultTo<DataPath>(std::move(buildResult), std::move(inputPath));
 }
 
@@ -270,7 +270,7 @@ Result<DataPath> PrepareAdaptiveHistogramInput(DataStructure& dataStructure, con
   Arguments args;
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ConversionAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0ULL));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorChannel_Key, std::make_any<Int32Parameter::ValueType>(0));
+  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorChannel_Key, std::make_any<Int32ParameterType::ValueType>(0));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayPath_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{rgbPath}));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>("GrayScale_"));
 
@@ -353,7 +353,7 @@ template <class FilterT>
 void SetKernel(Arguments& args, uint64 kernelTypeChoice, const std::vector<uint32>& radius)
 {
   args.insertOrAssign(FilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelTypeChoice)));
-  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+  args.insertOrAssign(FilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
 }
 
 // Sets the six keys shared by every axis-projection filter (mirrors the already-wired MaximumProjection): project
@@ -388,7 +388,7 @@ const std::vector<BenchmarkFilterSpec>& GetBenchmarkFilterRegistry()
     // Median: radius {1,1,1} (the ITK golden "defaults" case).
     specs.push_back({"Median", FilterTraits<MedianImageFilter>::uuid, "RA-Short.nrrd", [](Arguments& args, const DataPath& geom, const DataPath& in, const std::string& out) {
                        SetStandardKeys<MedianImageFilter>(args, geom, in, out);
-                       args.insertOrAssign(MedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
+                       args.insertOrAssign(MedianImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
                      }});
 
     // GrayscaleMorphologicalOpening: moderate Ball kernel r{2,2,2}, Safe Border = true (the filter default). This is a
@@ -398,7 +398,7 @@ const std::vector<BenchmarkFilterSpec>& GetBenchmarkFilterRegistry()
                      [](Arguments& args, const DataPath& geom, const DataPath& in, const std::string& out) {
                        SetStandardKeys<GrayscaleMorphologicalOpeningImageFilter>(args, geom, in, out);
                        args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(ChoicesParameter::ValueType{1})); // Ball
-                       args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{2, 2, 2}));
+                       args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{2, 2, 2}));
                        args.insertOrAssign(GrayscaleMorphologicalOpeningImageFilter::k_SafeBorder_Key, std::make_any<bool>(true)); // filter default
                      }});
 
@@ -444,7 +444,7 @@ const std::vector<BenchmarkFilterSpec>& GetBenchmarkFilterRegistry()
                      [](Arguments& args, const DataPath& geom, const DataPath& in, const std::string& out) {
                        SetStandardKeys<BinaryMorphologicalClosingImageFilter>(args, geom, in, out);
                        args.insertOrAssign(BinaryMorphologicalClosingImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(ChoicesParameter::ValueType{1})); // Ball
-                       args.insertOrAssign(BinaryMorphologicalClosingImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{2, 2, 2}));
+                       args.insertOrAssign(BinaryMorphologicalClosingImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{2, 2, 2}));
                        args.insertOrAssign(BinaryMorphologicalClosingImageFilter::k_ForegroundValue_Key, std::make_any<float64>(255.0));
                        args.insertOrAssign(BinaryMorphologicalClosingImageFilter::k_SafeBorder_Key, std::make_any<bool>(false));
                      }});
@@ -483,7 +483,7 @@ const std::vector<BenchmarkFilterSpec>& GetBenchmarkFilterRegistry()
         {"DilateObjectMorphology", FilterTraits<DilateObjectMorphologyImageFilter>::uuid, "RA-Slice-Short.nrrd", [](Arguments& args, const DataPath& geom, const DataPath& in, const std::string& out) {
            SetStandardKeys<DilateObjectMorphologyImageFilter>(args, geom, in, out);
            args.insertOrAssign(DilateObjectMorphologyImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(ChoicesParameter::ValueType{1})); // Ball
-           args.insertOrAssign(DilateObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{2, 2, 2}));
+           args.insertOrAssign(DilateObjectMorphologyImageFilter::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{2, 2, 2}));
            args.insertOrAssign(DilateObjectMorphologyImageFilter::k_ObjectValue_Key, std::make_any<float64>(1.0));
          }});
 
@@ -889,7 +889,7 @@ const std::vector<BenchmarkFilterSpec>& GetBenchmarkFilterRegistry()
     specs.push_back({"AdaptiveHistogramEqualization", FilterTraits<AdaptiveHistogramEqualizationImageFilter>::uuid, "sf4.png",
                      [](Arguments& args, const DataPath& geom, const DataPath& in, const std::string& out) {
                        SetStandardKeys<AdaptiveHistogramEqualizationImageFilter>(args, geom, in, out);
-                       args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{10, 10, 10}));
+                       args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{10, 10, 10}));
                        args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<float32>(1.0f));
                        args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<float32>(0.25f));
                      },

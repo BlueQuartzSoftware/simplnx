@@ -60,9 +60,9 @@ Parameters ComputeBoundaryCellsFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_IncludeVolumeBoundary_Key, "Include Volume Boundary", "Include the Cell boundaries", false));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Image Geometry", "The selected geometry to which the cells belong", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_BoundaryCellsArrayName_Key, "Boundary Cells",
                                                           "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6",
@@ -78,7 +78,7 @@ IFilter::VersionType ComputeBoundaryCellsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeBoundaryCellsFilter::clone() const
+IFilter::UniquePointerType ComputeBoundaryCellsFilter::clone() const
 {
   return std::make_unique<ComputeBoundaryCellsFilter>();
 }
@@ -134,10 +134,10 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_IgnoreFeatureZeroKey = "IgnoreFeatureZero";
-constexpr StringLiteral k_IncludeVolumeBoundaryKey = "IncludeVolumeBoundary";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
+constexpr StringLiteralType k_IgnoreFeatureZeroKey = "IgnoreFeatureZero";
+constexpr StringLiteralType k_IncludeVolumeBoundaryKey = "IncludeVolumeBoundary";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
 } // namespace simpl
 } // namespace
 
@@ -147,11 +147,11 @@ Result<Arguments> ComputeBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_IgnoreFeatureZeroKey, k_IgnoreFeatureZero_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_IncludeVolumeBoundaryKey, k_IncludeVolumeBoundary_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayNameKey, k_BoundaryCellsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_IgnoreFeatureZeroKey, k_IgnoreFeatureZero_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_IncludeVolumeBoundaryKey, k_IncludeVolumeBoundary_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayNameKey, k_BoundaryCellsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

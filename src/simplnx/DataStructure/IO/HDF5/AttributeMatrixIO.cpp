@@ -6,7 +6,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 AttributeMatrixIO::AttributeMatrixIO() = default;
 AttributeMatrixIO::~AttributeMatrixIO() noexcept = default;
@@ -21,7 +21,7 @@ std::string AttributeMatrixIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                      const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
 
@@ -50,7 +50,7 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
   return result;
 }
 
-Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& attributeMatrix, group_writer_type& parentGroup, bool importable)
+Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& attributeMatrix, GroupWriterType& parentGroup, bool importable)
 {
   auto groupWriter = parentGroup.createGroup(attributeMatrix.getName());
   const auto& tupleShape = attributeMatrix.getShape();
@@ -59,8 +59,8 @@ Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, 
   return WriteBaseGroupData(dataStructureWriter, attributeMatrix, parentGroup, importable);
 }
 
-Result<> AttributeMatrixIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> AttributeMatrixIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

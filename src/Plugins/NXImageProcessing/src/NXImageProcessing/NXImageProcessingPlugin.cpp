@@ -12,7 +12,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("6f2d9b14-8e3a-4c7f-a1
 NXImageProcessingPlugin::NXImageProcessingPlugin()
 : AbstractPlugin(k_ID, "NXImageProcessing", "ITK-free image processing filters", "BlueQuartz Software")
 {
-  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  std::vector<::FilterCreationFuncType> filterFuncs = ::GetPluginFilterList();
   for(const auto& filterFunc : filterFuncs)
   {
     addFilter(filterFunc);

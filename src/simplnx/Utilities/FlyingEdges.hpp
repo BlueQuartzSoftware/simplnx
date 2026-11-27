@@ -749,39 +749,39 @@ public:
 
           const uint8* isCutPtr = util::isCut[caseId]; // size 12
 
-          ge0.xstart += isCutPtr[0];
-          ge0.ystart += isCutPtr[3];
-          ge0.zstart += isCutPtr[8];
+          ge0.x_start += isCutPtr[0];
+          ge0.y_start += isCutPtr[3];
+          ge0.z_start += isCutPtr[8];
 
           // Only boundary cubes update edges owned by adjacent rows. Other updates
           // would race with the row that owns each GridEdge.
           if(isXEnd)
           {
-            ge0.ystart += isCutPtr[1];
-            ge0.zstart += isCutPtr[9];
+            ge0.y_start += isCutPtr[1];
+            ge0.z_start += isCutPtr[9];
           }
           if(isYEnd)
           {
-            ge1.xstart += isCutPtr[2];
-            ge1.zstart += isCutPtr[10];
+            ge1.x_start += isCutPtr[2];
+            ge1.z_start += isCutPtr[10];
           }
           if(isZEnd)
           {
-            ge2.xstart += isCutPtr[4];
-            ge2.ystart += isCutPtr[7];
+            ge2.x_start += isCutPtr[4];
+            ge2.y_start += isCutPtr[7];
           }
 
           if(isXEnd and isYEnd)
           {
-            ge1.zstart += isCutPtr[11];
+            ge1.z_start += isCutPtr[11];
           }
           if(isXEnd and isZEnd)
           {
-            ge2.ystart += isCutPtr[5];
+            ge2.y_start += isCutPtr[5];
           }
           if(isYEnd and isZEnd)
           {
-            ge3.xstart += isCutPtr[6];
+            ge3.x_start += isCutPtr[6];
           }
         }
       }
@@ -817,16 +817,16 @@ public:
       {
         GridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
 
-        tmp = curGridEdge.xstart;
-        curGridEdge.xstart = pointAccum;
+        tmp = curGridEdge.x_start;
+        curGridEdge.x_start = pointAccum;
         pointAccum += tmp;
 
-        tmp = curGridEdge.ystart;
-        curGridEdge.ystart = pointAccum;
+        tmp = curGridEdge.y_start;
+        curGridEdge.y_start = pointAccum;
         pointAccum += tmp;
 
-        tmp = curGridEdge.zstart;
-        curGridEdge.zstart = pointAccum;
+        tmp = curGridEdge.z_start;
+        curGridEdge.z_start = pointAccum;
         pointAccum += tmp;
       }
     }
@@ -956,7 +956,7 @@ public:
 
           if(isCutPtr[0] != 0u)
           {
-            usize idx = ge0.xstart + x0counter;
+            usize idx = ge0.x_start + x0counter;
             interpolateIntoArrays(pointCube, gradCube, isoValCube, 0, idx * 3);
             globalIdxs[0] = idx;
             ++x0counter;
@@ -964,7 +964,7 @@ public:
 
           if(isCutPtr[3] != 0u)
           {
-            usize idx = ge0.ystart + y0counter;
+            usize idx = ge0.y_start + y0counter;
             interpolateIntoArrays(pointCube, gradCube, isoValCube, 3, idx * 3);
             globalIdxs[3] = idx;
             ++y0counter;
@@ -972,7 +972,7 @@ public:
 
           if(isCutPtr[8] != 0u)
           {
-            usize idx = ge0.zstart + z0counter;
+            usize idx = ge0.z_start + z0counter;
             interpolateIntoArrays(pointCube, gradCube, isoValCube, 8, idx * 3);
             globalIdxs[8] = idx;
             ++z0counter;
@@ -982,7 +982,7 @@ public:
           // Boundary versions have no later owner and need no counter increment.
           if(isCutPtr[1] != 0u)
           {
-            usize idx = ge0.ystart + y0counter;
+            usize idx = ge0.y_start + y0counter;
             if(isXEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 1, idx * 3);
@@ -993,7 +993,7 @@ public:
 
           if(isCutPtr[9] != 0u)
           {
-            usize idx = ge0.zstart + z0counter;
+            usize idx = ge0.z_start + z0counter;
             if(isXEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 9, idx * 3);
@@ -1004,7 +1004,7 @@ public:
 
           if(isCutPtr[2] != 0u)
           {
-            usize idx = ge1.xstart + x1counter;
+            usize idx = ge1.x_start + x1counter;
             if(isYEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 2, idx * 3);
@@ -1015,7 +1015,7 @@ public:
 
           if(isCutPtr[10] != 0u)
           {
-            usize idx = ge1.zstart + z1counter;
+            usize idx = ge1.z_start + z1counter;
             if(isYEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 10, idx * 3);
@@ -1026,7 +1026,7 @@ public:
 
           if(isCutPtr[4] != 0u)
           {
-            usize idx = ge2.xstart + x2counter;
+            usize idx = ge2.x_start + x2counter;
             if(isZEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 4, idx * 3);
@@ -1037,7 +1037,7 @@ public:
 
           if(isCutPtr[7] != 0u)
           {
-            usize idx = ge2.ystart + y2counter;
+            usize idx = ge2.y_start + y2counter;
             if(isZEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 7, idx * 3);
@@ -1048,7 +1048,7 @@ public:
 
           if(isCutPtr[11] != 0u)
           {
-            usize idx = ge1.zstart + z1counter;
+            usize idx = ge1.z_start + z1counter;
             if(isXEnd and isYEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 11, idx * 3);
@@ -1059,7 +1059,7 @@ public:
 
           if(isCutPtr[5] != 0u)
           {
-            usize idx = ge2.ystart + y2counter;
+            usize idx = ge2.y_start + y2counter;
             if(isXEnd and isZEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 5, idx * 3);
@@ -1070,7 +1070,7 @@ public:
 
           if(isCutPtr[6] != 0u)
           {
-            usize idx = ge3.xstart + x3counter;
+            usize idx = ge3.x_start + x3counter;
             if(isYEnd and isZEnd)
             {
               interpolateIntoArrays(pointCube, gradCube, isoValCube, 6, idx * 3);
@@ -1104,9 +1104,9 @@ private:
     GridEdge()
     : x_left(0)
     , x_right(0)
-    , xstart(0)
-    , ystart(0)
-    , zstart(0)
+    , x_start(0)
+    , y_start(0)
+    , z_start(0)
     {
     }
 
@@ -1115,9 +1115,9 @@ private:
     usize x_right;
 
     // Pass 2 counts cuts. Pass 3 converts counts to offsets.
-    usize xstart;
-    usize ystart;
-    usize zstart;
+    usize x_start;
+    usize y_start;
+    usize z_start;
   };
 
   const ImageGeom& m_Image;

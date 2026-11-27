@@ -71,7 +71,7 @@ Parameters ComputeTriangleAreasFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CalculatedAreasDataName_Key, "Created Face Areas", "The complete path to the array storing the calculated face areas", "Face Areas"));
 
@@ -85,7 +85,7 @@ IFilter::VersionType ComputeTriangleAreasFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeTriangleAreasFilter::clone() const
+IFilter::UniquePointerType ComputeTriangleAreasFilter::clone() const
 {
   return std::make_unique<ComputeTriangleAreasFilter>();
 }
@@ -271,7 +271,7 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshTriangleAreasArrayPathKey = "SurfaceMeshTriangleAreasArrayPath";
+constexpr StringLiteralType k_SurfaceMeshTriangleAreasArrayPathKey = "SurfaceMeshTriangleAreasArrayPath";
 } // namespace simpl
 } // namespace
 
@@ -281,9 +281,9 @@ Result<Arguments> ComputeTriangleAreasFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
                                                                                                                                       k_TriangleGeometryDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
                                                                                                                                   k_CalculatedAreasDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

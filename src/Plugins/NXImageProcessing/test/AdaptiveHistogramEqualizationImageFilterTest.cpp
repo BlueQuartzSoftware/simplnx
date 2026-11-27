@@ -74,7 +74,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Prefligh
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{5, 5, 5}));
+    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{5, 5, 5}));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<float32>(0.3f));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<float32>(0.3f));
     return args;
@@ -161,13 +161,13 @@ void ReportDivergence(const std::string& tag, const std::vector<uint8>& a, const
 DataPath RunColorToGrayScale(DataStructure& dataStructure, const DataPath& inputDataPath)
 {
   const Uuid kColorToGrayScaleUuid = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-  IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(kColorToGrayScaleUuid);
+  IFilter::UniquePointerType filter = Application::Instance()->getFilterList()->createFilter(kColorToGrayScaleUuid);
   REQUIRE(filter != nullptr);
 
   Arguments args;
   args.insertOrAssign("conversion_algorithm_index", std::make_any<ChoicesParameter::ValueType>(0ULL));
   args.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
-  args.insertOrAssign("color_channel", std::make_any<Int32Parameter::ValueType>(0));
+  args.insertOrAssign("color_channel", std::make_any<Int32ParameterType::ValueType>(0));
   args.insertOrAssign("input_data_array_paths", std::make_any<MultiArraySelectionParameter::ValueType>({inputDataPath}));
   args.insertOrAssign("output_array_prefix", std::make_any<StringParameter::ValueType>("GrayScale_"));
 
@@ -206,7 +206,7 @@ void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 bet
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geom));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(grayInput));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<float32>(alpha));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<float32>(beta));
     return args;

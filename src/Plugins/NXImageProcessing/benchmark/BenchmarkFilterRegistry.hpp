@@ -28,7 +28,7 @@ struct BenchmarkInputContext
   std::string inputArrayName;
   usize targetVoxels = 0;
   usize minZSlices = 0;
-  bool force2D = false;
+  bool force_2d = false;
   DataStorageMode storeMode = DataStorageMode::Adaptive;
 };
 

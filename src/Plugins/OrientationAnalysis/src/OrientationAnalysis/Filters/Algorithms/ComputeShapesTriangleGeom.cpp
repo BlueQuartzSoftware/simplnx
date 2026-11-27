@@ -82,7 +82,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
   // Each row is one unit principal axis; reversing it swaps the two distances.
   const std::array<PointTType, 3> directions = {orientationMatrix.row(0), orientationMatrix.row(1), orientationMatrix.row(2)};
 
-  IntersectionUtilities::MTPointsCache<T> cache;
+  intersection_utilities::MTPointsCache<T> cache;
 
   // Feature Centroid
   cache.origin = PointTType{centroidsStore[3 * featureId], centroidsStore[(3 * featureId) + 1], centroidsStore[(3 * featureId) + 2]};
@@ -115,13 +115,13 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
 
     for(usize axis = 0; axis < directions.size(); axis++)
     {
-      const auto positiveHit = IntersectionUtilities::MTIntersection(directions[axis], cache);
+      const auto positiveHit = intersection_utilities::MTIntersection(directions[axis], cache);
       if(positiveHit.has_value())
       {
         positive[axis] = std::max(positive[axis], (positiveHit.value() - cache.origin).norm());
       }
       const PointTType oppositeDirection = -directions[axis];
-      const auto negativeHit = IntersectionUtilities::MTIntersection(oppositeDirection, cache);
+      const auto negativeHit = intersection_utilities::MTIntersection(oppositeDirection, cache);
       if(negativeHit.has_value())
       {
         negative[axis] = std::max(negative[axis], (negativeHit.value() - cache.origin).norm());
@@ -390,7 +390,7 @@ public:
       orientationMatrix.row(1) = col2.real();
       orientationMatrix.row(2) = col3.real();
 
-      const auto euler = OrientationUtilities::PrincipalAxisFrameToEuler(orientationMatrix);
+      const auto euler = orientation_utilities::PrincipalAxisFrameToEuler(orientationMatrix);
 
       currentResult.axisEulerAngles[0] = static_cast<float32>(euler[0]);
       currentResult.axisEulerAngles[1] = static_cast<float32>(euler[1]);

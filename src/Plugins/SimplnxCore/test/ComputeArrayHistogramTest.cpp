@@ -33,11 +33,11 @@ namespace fs = std::filesystem;
 namespace
 {
 constexpr float64 k_MaxDifference = 0.0001;
-constexpr StringLiteral k_BinRangesName = "Ranges";
-constexpr StringLiteral k_BinCountsName = "Counts";
-constexpr StringLiteral k_Array0Name = "array0";
-constexpr StringLiteral k_Array1Name = "array1";
-constexpr StringLiteral k_Array2Name = "array2";
+constexpr StringLiteralType k_BinRangesName = "Ranges";
+constexpr StringLiteralType k_BinCountsName = "Counts";
+constexpr StringLiteralType k_Array0Name = "array0";
+constexpr StringLiteralType k_Array1Name = "array1";
+constexpr StringLiteralType k_Array2Name = "array2";
 
 template <typename T, usize N>
 void CompareHistograms(const AbstractDataStore<T>& calculated, const std::array<T, N>& actual)

@@ -24,10 +24,10 @@ namespace
 {
 constexpr uint64 k_TupleCount = 8;
 
-constexpr StringLiteral k_GeomName = "TestGeom";
+constexpr StringLiteralType k_GeomName = "TestGeom";
 const DataPath k_GeomPath({k_GeomName});
 
-constexpr StringLiteral k_MaskName = "mask_array";
+constexpr StringLiteralType k_MaskName = "mask_array";
 const DataPath k_MaskPath({k_MaskName});
 
 void SphereExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32Parameter::ValueType& sphereInfo)

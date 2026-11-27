@@ -84,7 +84,7 @@ bool CheckedAdd(ValueT lhs, ValueT rhs, ValueT& sum)
  * @param overflowedQuantity Identifies the quantity that overflowed.
  * @return A working-set overflow error with the affected input context.
  */
-Result<ComputeKernelAvgMisorientationsWorkingSet> MakeWorkingSetOverflowResult(const SizeVec3& dimensions, const VectorInt32Parameter::ValueType& kernelSize, uint64 cacheBudgetBytes,
+Result<ComputeKernelAvgMisorientationsWorkingSet> MakeWorkingSetOverflowResult(const SizeVec3& dimensions, const VectorInt32ParameterType::ValueType& kernelSize, uint64 cacheBudgetBytes,
                                                                                const DataPath& imageGeometryPath, std::string_view overflowedQuantity)
 {
   return MakeErrorResult<ComputeKernelAvgMisorientationsWorkingSet>(
@@ -95,7 +95,7 @@ Result<ComputeKernelAvgMisorientationsWorkingSet> MakeWorkingSetOverflowResult(c
 }
 } // namespace
 
-Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3& dimensions, const VectorInt32Parameter::ValueType& kernelSize,
+Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3& dimensions, const VectorInt32ParameterType::ValueType& kernelSize,
                                                                                                   uint64 cacheBudgetBytes, uint64 cacheUsedBytes, const DataPath& imageGeometryPath)
 {
   if(kernelSize.size() != 3)
@@ -640,7 +640,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     return {};
   }
 
-  const VectorInt32Parameter::ValueType kernelSize = inputValues.KernelSize;
+  const VectorInt32ParameterType::ValueType kernelSize = inputValues.KernelSize;
   const usize kZ = static_cast<usize>(kernelSize[2]);
 
   const auto& cellPhasesStore = dataStructure.getDataRefAs<Int32Array>(inputValues.CellPhasesArrayPath).getDataStoreRef();
@@ -758,7 +758,7 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
     return {};
   }
 
-  const VectorInt32Parameter::ValueType kernelSize = inputValues.KernelSize;
+  const VectorInt32ParameterType::ValueType kernelSize = inputValues.KernelSize;
   const usize kZ = static_cast<usize>(kernelSize[2]);
   const usize kY = static_cast<usize>(kernelSize[1]);
   const usize kX = static_cast<usize>(kernelSize[0]);

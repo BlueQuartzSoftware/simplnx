@@ -8,12 +8,12 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 INodeGeom0dIO::INodeGeom0dIO() = default;
 INodeGeom0dIO::~INodeGeom0dIO() noexcept = default;
 
-Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureReader, INodeGeometry0D& geometry, const group_reader_type& parentGroup, const std::string& objectName,
+Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureReader, INodeGeometry0D& geometry, const GroupReaderType& parentGroup, const std::string& objectName,
                                            DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   Result<> result = IGeometryIO::ReadGeometryData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
@@ -36,7 +36,7 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
   return {};
 }
 
-Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup)
 {
   auto* geomPtr = dataStructure.getDataAs<INodeGeometry0D>(dataPath);
   if(geomPtr == nullptr)
@@ -62,7 +62,7 @@ Result<> INodeGeom0dIO::FinishImportingNodeGeom0dData(DataStructure& dataStructu
   return IGeometryIO::FinishImportingGeomData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWriter, const INodeGeometry0D& geometry, group_writer_type& parentGroupWriter, bool importable)
+Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWriter, const INodeGeometry0D& geometry, GroupWriterType& parentGroupWriter, bool importable)
 {
   Result<> result = IGeometryIO::WriteGeometryData(dataStructureWriter, geometry, parentGroupWriter, importable);
   if(result.invalid())
@@ -90,7 +90,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     {
       indices[i] = i;
     }
-    AppendWriteResult(result, datasetWriter.writeSpan(nx::core::HDF5::DatasetIO::DimsType{numVerts, 1}, nonstd::span<const int64>{indices}));
+    AppendWriteResult(result, datasetWriter.writeSpan(nx::core::hdf5::DatasetIO::DimsType{numVerts, 1}, nonstd::span<const int64>{indices}));
     if(result.invalid())
     {
       auto errorResult = MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex indices for geometry '{}'", geometry.getName()));
@@ -117,4 +117,4 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
 
   return result;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

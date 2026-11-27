@@ -22,7 +22,7 @@ class SIMPLNX_EXPORT ImageGeom : public IGridGeometry
 public:
   friend class DataStructure;
 
-  static constexpr StringLiteral k_TypeName = "ImageGeom";
+  static constexpr StringLiteralType k_TypeName = "ImageGeom";
 
   static constexpr int32 k_InvalidSpacing = -1556;
   static constexpr int32 k_InvalidOrigin = -1557;

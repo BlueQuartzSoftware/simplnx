@@ -66,7 +66,7 @@ Result<> MakeInvalidMaskTypeError(const IDataArray& maskArray, const DataPath& m
   return MakeErrorResult(-9405, fmt::format("Mask array '{}' has data type '{}'. Select a Bool or UInt8 mask array.", maskPath.toString(), DataTypeToString(maskArray.getDataType())));
 }
 
-constexpr StringLiteral k_InvalidMaskCompareMessage = "Mask comparator must be a BoolMaskCompare or UInt8MaskCompare.";
+constexpr StringLiteralType k_InvalidMaskCompareMessage = "Mask comparator must be a BoolMaskCompare or UInt8MaskCompare.";
 
 template <typename MaskT>
 Result<int32> DetermineOutputLineCount(const Int32AbstractDataStore& phasesStore, const AbstractDataStore<MaskT>* maskStore, usize totalPoints, int32 phase)

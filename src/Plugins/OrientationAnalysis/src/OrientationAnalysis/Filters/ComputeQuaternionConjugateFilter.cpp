@@ -56,7 +56,7 @@ Parameters ComputeQuaternionConjugateFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Quaternions", "Specifies the quaternions to convert", DataPath({"Cell Data", "Quats"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Created Quaternion Conjugate", "The name of the generated quaternion conjugate array", "Quaternions [Conjugate]"));
@@ -71,7 +71,7 @@ IFilter::VersionType ComputeQuaternionConjugateFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeQuaternionConjugateFilter::clone() const
+IFilter::UniquePointerType ComputeQuaternionConjugateFilter::clone() const
 {
   return std::make_unique<ComputeQuaternionConjugateFilter>();
 }
@@ -121,9 +121,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_QuaternionDataArrayPathKey = "QuaternionDataArrayPath";
-constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
-constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
+constexpr StringLiteralType k_QuaternionDataArrayPathKey = "QuaternionDataArrayPath";
+constexpr StringLiteralType k_OutputDataArrayPathKey = "OutputDataArrayPath";
+constexpr StringLiteralType k_DeleteOriginalDataKey = "DeleteOriginalData";
 } // namespace simpl
 } // namespace
 
@@ -133,10 +133,10 @@ Result<Arguments> ComputeQuaternionConjugateFilter::FromSIMPLJson(const nlohmann
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuaternionDataArrayPathKey, k_CellQuatsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuaternionDataArrayPathKey, k_CellQuatsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

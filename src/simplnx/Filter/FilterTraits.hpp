@@ -23,8 +23,8 @@ struct FilterTraits
   template <>                                                                                                                                                                                          \
   struct nx::core::FilterTraits<ns::filter_name>                                                                                                                                                       \
   {                                                                                                                                                                                                    \
-    static inline constexpr nx::core::StringLiteral className = #filter_name;                                                                                                                          \
-    static inline constexpr nx::core::StringLiteral name = SIMPLNX_DEF(ns::filter_name);                                                                                                               \
+    static inline constexpr nx::core::StringLiteralType className = #filter_name;                                                                                                                          \
+    static inline constexpr nx::core::StringLiteralType name = SIMPLNX_DEF(ns::filter_name);                                                                                                               \
     static inline constexpr nx::core::Uuid uuid = *nx::core::Uuid::FromString(uuidString);                                                                                                             \
   }
 

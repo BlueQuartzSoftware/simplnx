@@ -99,7 +99,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                          std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Precomputed Transformation Matrix Path", "A precomputed 4x4 transformation matrix", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
 
   params.insert(std::make_unique<BoolParameter>(k_TranslateGeometryToGlobalOrigin_Key, "Translate Geometry To Global Origin Before Transformation",
                                                 "Specifies whether to translate the geometry to (0, 0, 0), apply the transformation, and then translate the geometry back to its original origin.",
@@ -127,7 +127,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after transformation", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "Specifies to which feature each element belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Output Transform Matrix"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveTransformMatrix_Key, "Save Transformation Matrix", "Save the generated transform matrix as a Data Array", false));
@@ -159,7 +159,7 @@ IFilter::VersionType ApplyTransformationToGeometryFilter::parametersVersion() co
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ApplyTransformationToGeometryFilter::clone() const
+IFilter::UniquePointerType ApplyTransformationToGeometryFilter::clone() const
 {
   return std::make_unique<ApplyTransformationToGeometryFilter>();
 }
@@ -182,17 +182,17 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_TransformationMatrixTypeKey = "TransformationMatrixType";
-constexpr StringLiteral k_InterpolationTypeKey = "InterpolationType";
-constexpr StringLiteral k_UseDataArraySelectionKey = "UseDataArraySelection";
-constexpr StringLiteral k_ManualTransformationMatrixKey = "ManualTransformationMatrix";
-constexpr StringLiteral k_RotationAngleKey = "RotationAngle";
-constexpr StringLiteral k_RotationAxisKey = "RotationAxis";
-constexpr StringLiteral k_TranslationKey = "Translation";
-constexpr StringLiteral k_ScaleKey = "Scale";
-constexpr StringLiteral k_ComputedTransformationMatrixKey = "ComputedTransformationMatrix";
-constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
-constexpr StringLiteral k_DataArraySelectionKey = "DataArraySelection";
+constexpr StringLiteralType k_TransformationMatrixTypeKey = "TransformationMatrixType";
+constexpr StringLiteralType k_InterpolationTypeKey = "InterpolationType";
+constexpr StringLiteralType k_UseDataArraySelectionKey = "UseDataArraySelection";
+constexpr StringLiteralType k_ManualTransformationMatrixKey = "ManualTransformationMatrix";
+constexpr StringLiteralType k_RotationAngleKey = "RotationAngle";
+constexpr StringLiteralType k_RotationAxisKey = "RotationAxis";
+constexpr StringLiteralType k_TranslationKey = "Translation";
+constexpr StringLiteralType k_ScaleKey = "Scale";
+constexpr StringLiteralType k_ComputedTransformationMatrixKey = "ComputedTransformationMatrix";
+constexpr StringLiteralType k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+constexpr StringLiteralType k_DataArraySelectionKey = "DataArraySelection";
 } // namespace simpl
 } // namespace
 
@@ -205,20 +205,20 @@ Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohm
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_TransformationMatrixTypeKey, k_TransformationType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InterpolationTypeKey, k_InterpolationType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseDataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_ManualTransformationMatrixKey, k_ManualTransformationMatrix_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_Rotation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_TranslationKey, k_Translation_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ScaleKey, k_Scale_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_TransformationMatrixTypeKey, k_TransformationType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InterpolationTypeKey, k_InterpolationType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseDataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_ManualTransformationMatrixKey, k_ManualTransformationMatrix_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::FloatVec3p1FilterParameterConverter>(args, json, simpl::k_RotationAxisKey, simpl::k_RotationAngleKey, k_Rotation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_TranslationKey, k_Translation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverter>(args, json, simpl::k_ScaleKey, k_Scale_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ComputedTransformationMatrixKey, k_ComputedTransformationMatrix_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ComputedTransformationMatrixKey, k_ComputedTransformationMatrix_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_CellAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_DataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey, k_CellAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_DataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -44,10 +44,10 @@ const fs::path k_DataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_DataDi
 const fs::path k_SmallExemplarFile = k_DataDir / "caxis_small.dream3d";
 const fs::path k_LargeExemplarFile = k_DataDir / "caxis_large.dream3d";
 
-constexpr StringLiteral k_ExemplarGeomName = "DataContainer";
-constexpr StringLiteral k_ExemplarCellDataName = "CellData";
-constexpr StringLiteral k_ExemplarFeatureDataName = "CellFeatureData";
-constexpr StringLiteral k_ExemplarEnsembleName = "CellEnsembleData";
+constexpr StringLiteralType k_ExemplarGeomName = "DataContainer";
+constexpr StringLiteralType k_ExemplarCellDataName = "CellData";
+constexpr StringLiteralType k_ExemplarFeatureDataName = "CellFeatureData";
+constexpr StringLiteralType k_ExemplarEnsembleName = "CellEnsembleData";
 
 const DataPath k_ExemplarGeomPath({k_ExemplarGeomName});
 const DataPath k_ExemplarFeatureIdsPath({k_ExemplarGeomName, k_ExemplarCellDataName, "FeatureIds"});
@@ -81,10 +81,10 @@ void BuildExemplarArgs(Arguments& args, bool useMask, float32 tolerance = 5.0f, 
 
 namespace caxis_segment_features_constants
 {
-inline constexpr StringLiteral k_InputGeometryName = "DataContainer";
+inline constexpr StringLiteralType k_InputGeometryName = "DataContainer";
 inline const DataPath k_InputGeometryPath({k_InputGeometryName});
-inline constexpr StringLiteral k_CellDataName = "CellData";
-inline constexpr StringLiteral k_EnsembleName = "CellEnsembleData";
+inline constexpr StringLiteralType k_CellDataName = "CellData";
+inline constexpr StringLiteralType k_EnsembleName = "CellEnsembleData";
 inline const DataPath k_QuatsArrayPath = k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath("Quats");
 inline const DataPath k_PhasesArrayPath = k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath("Phases");
 inline const DataPath k_MaskArrayPath = k_InputGeometryPath.createChildPath(k_CellDataName).createChildPath("Mask (Y Pos)");

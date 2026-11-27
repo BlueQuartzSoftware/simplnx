@@ -16,7 +16,7 @@ struct SIMPLNXCORE_EXPORT ResampleRectGridToImageGeomInputValues
 {
   DataPath RectilinearGridPath;
   MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
-  VectorInt32Parameter::ValueType Dimensions;
+  VectorInt32ParameterType::ValueType Dimensions;
   DataPath ImageGeometryPath;
   std::string ImageGeomCellAttributeMatrixName;
 };

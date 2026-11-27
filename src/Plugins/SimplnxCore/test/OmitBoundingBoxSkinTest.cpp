@@ -37,7 +37,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCor
 
   SECTION("Option off leaves the box skin over background in place")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(true, BoundingBoxSkinMode::k_Off);
+    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_Off);
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 1);
     UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
@@ -45,7 +45,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCor
 
   SECTION("Option on removes only the background skin and keeps the cylinder closed")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
 
     // The artificial background skin is gone.
@@ -67,7 +67,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCor
   {
     // Inset cylinder: the whole box wall is background, so ALL skin is dropped and only
     // the cylinder surface remains -- which is closed on its own.
-    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(false, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMesh(false, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 0);
     REQUIRE(labelPairs.count({-1, 1}) == 0);
@@ -82,8 +82,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Bounding Box Skin", "[SimplnxCor
 
   SECTION("Node Types of surviving nodes match the full mesh")
   {
-    SurfaceMeshingTest::MeshResult fullMesh = RunQuickSurfaceMesh(true, BoundingBoxSkinMode::k_Off);
-    SurfaceMeshingTest::MeshResult prunedMesh = RunQuickSurfaceMesh(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult fullMesh = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_Off);
+    SurfaceMeshingTest::MeshResult prunedMesh = RunQuickSurfaceMesh(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     const DataPath nodeTypesPath = k_TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
     REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
@@ -135,14 +135,14 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Bounding Box Skin", "[SimplnxCore][Su
 
   SECTION("Option off leaves the box skin over background in place")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, BoundingBoxSkinMode::k_Off);
+    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_Off);
     REQUIRE(SurfaceMeshingTest::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
     UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
   }
 
   SECTION("Option on removes only the background skin and keeps the cylinder closed")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 0);
     REQUIRE(labelPairs.count({-1, 1}) == 1);
@@ -157,7 +157,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Bounding Box Skin", "[SimplnxCore][Su
 
   SECTION("Option on leaves no orphan vertices")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNets(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath));
     const auto& triangleGeom = meshResult.Structure.getDataRefAs<TriangleGeom>(meshResult.TriangleGeomPath);
     const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
@@ -194,14 +194,14 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
 
   SECTION("Option off leaves the box skin over background in place")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, BoundingBoxSkinMode::k_Off);
+    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, bounding_box_skin_mode::k_Off);
     REQUIRE(SurfaceMeshingTest::CollectLabelPairs(meshResult).count({-1, 0}) == 1);
     UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
   }
 
   SECTION("Option on removes only the background skin and keeps the cylinder closed")
   {
-    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult meshResult = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
     REQUIRE(labelPairs.count({-1, 0}) == 0);
     REQUIRE(labelPairs.count({-1, 1}) == 1);
@@ -220,8 +220,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin", "[SimplnxCo
   // at all (issue #1706 was resolved by the single ghost sentinel), no vertex is unreferenced in either.
   SECTION("Option on leaves no vertex newly orphaned by the prune")
   {
-    SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, BoundingBoxSkinMode::k_Off);
-    SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, bounding_box_skin_mode::k_Off);
+    SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     const auto isReferencedByCoord = [](const TriangleGeom& triangleGeom) {
       const auto& vertsRef = triangleGeom.getVertices()->getDataStoreRef();
@@ -278,8 +278,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Node Types after omitting skin"
 {
   UnitTest::LoadPlugins();
 
-  SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, BoundingBoxSkinMode::k_Off);
-  SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+  SurfaceMeshingTest::MeshResult fullMesh = RunM3C(true, bounding_box_skin_mode::k_Off);
+  SurfaceMeshingTest::MeshResult prunedMesh = RunM3C(true, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
   const DataPath nodeTypesPath = k_M3CTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
   REQUIRE_NOTHROW(fullMesh.Structure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
@@ -359,9 +359,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
     // Store each Result<> before handing it to SIMPLNX_RESULT_REQUIRE_VALID: that macro expands
     // its argument multiple times (once per accessor), so passing the RunXRaw(...) call directly
     // would run the filter more than once against the same DataStructure.
-    const Result<> offResult = RunQuickSurfaceMeshRaw(offStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> offResult = RunQuickSurfaceMeshRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-    const Result<> onResult = RunQuickSurfaceMeshRaw(onStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> onResult = RunQuickSurfaceMeshRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
 
     REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
@@ -393,9 +393,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
   {
     DataStructure offStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
     DataStructure onStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    const Result<> offResult = RunSurfaceNetsRaw(offStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> offResult = RunSurfaceNetsRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-    const Result<> onResult = RunSurfaceNetsRaw(onStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> onResult = RunSurfaceNetsRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
 
     REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
@@ -425,9 +425,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin is a no-op without background", "[Simp
   {
     DataStructure offStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
     DataStructure onStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    const Result<> offResult = RunM3CRaw(offStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> offResult = RunM3CRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-    const Result<> onResult = RunM3CRaw(onStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> onResult = RunM3CRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
 
     REQUIRE_NOTHROW(offStructure.getDataRefAs<TriangleGeom>(k_M3CTriangleGeomPath));
@@ -468,7 +468,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when nothing is pruned", "[Simpl
   SECTION("QuickSurfaceMesh")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -478,7 +478,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when nothing is pruned", "[Simpl
   SECTION("SurfaceNets")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -488,7 +488,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when nothing is pruned", "[Simpl
   SECTION("M3CSurfaceMeshing")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateFullyIndexedPolycrystal();
-    const Result<> executeResult = RunM3CRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -510,9 +510,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
   {
     DataStructure offStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
     DataStructure onStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
-    const Result<> offResult = RunQuickSurfaceMeshRaw(offStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> offResult = RunQuickSurfaceMeshRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-    const Result<> onResult = RunQuickSurfaceMeshRaw(onStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> onResult = RunQuickSurfaceMeshRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
     REQUIRE(onResult.warnings().size() == 1);
     REQUIRE(onResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
@@ -539,9 +539,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
   {
     DataStructure offStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
     DataStructure onStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
-    const Result<> offResult = RunSurfaceNetsRaw(offStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> offResult = RunSurfaceNetsRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-    const Result<> onResult = RunSurfaceNetsRaw(onStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> onResult = RunSurfaceNetsRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
     REQUIRE(onResult.warnings().size() == 1);
     REQUIRE(onResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
@@ -568,9 +568,9 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns when background is fully enclose
   {
     DataStructure offStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
     DataStructure onStructure = SurfaceMeshingTest::CreateEnclosedPorosity();
-    const Result<> offResult = RunM3CRaw(offStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> offResult = RunM3CRaw(offStructure, bounding_box_skin_mode::k_Off);
     SIMPLNX_RESULT_REQUIRE_VALID(offResult);
-    const Result<> onResult = RunM3CRaw(onStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> onResult = RunM3CRaw(onStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
     SIMPLNX_RESULT_REQUIRE_VALID(onResult);
     REQUIRE(onResult.warnings().size() == 1);
     REQUIRE(onResult.warnings()[0].code == MeshingUtilities::k_NoFacesPrunedWarning);
@@ -601,7 +601,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume", "[
   SECTION("Repair Triangle Winding off")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     // Success with a warning, not an error: the data is legal, just entirely background.
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
@@ -624,7 +624,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume", "[
   SECTION("Repair Triangle Winding on (shipped default)")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -646,7 +646,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (Sur
   SECTION("Repair Triangle Winding off")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -666,7 +666,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (Sur
   SECTION("Repair Triangle Winding on (shipped default)")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -692,7 +692,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
   SECTION("Repair Triangle Winding off")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-    const Result<> executeResult = RunM3CRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -712,7 +712,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin warns on an all-background volume (M3C
   SECTION("Repair Triangle Winding on (shipped default)")
   {
     DataStructure dataStructure = SurfaceMeshingTest::CreateAllBackground();
-    const Result<> executeResult = RunM3CRaw(dataStructure, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
+    const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, /*repairWinding*/ true);
 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
     REQUIRE(executeResult.warnings().size() == 1);
@@ -741,7 +741,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentin
     auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = -7;
 
-    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> executeResult = RunQuickSurfaceMeshRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
     REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
@@ -757,7 +757,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentin
     auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = -7;
 
-    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
     REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
@@ -773,7 +773,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentin
     auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = std::numeric_limits<int32>::max();
 
-    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> executeResult = RunSurfaceNetsRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
     REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
@@ -789,7 +789,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentin
     auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = -7;
 
-    const Result<> executeResult = RunM3CRaw(dataStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
     REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
@@ -805,7 +805,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin mesher inputs reject Feature Id sentin
     auto& featureIdsRef = dataStructure.getDataRefAs<Int32Array>(SurfaceMeshingTest::k_FeatureIdsPath).getDataStoreRef();
     featureIdsRef[0] = std::numeric_limits<int32>::max();
 
-    const Result<> executeResult = RunM3CRaw(dataStructure, BoundingBoxSkinMode::k_Off);
+    const Result<> executeResult = RunM3CRaw(dataStructure, bounding_box_skin_mode::k_Off);
     REQUIRE(executeResult.invalid());
     REQUIRE(executeResult.errors().size() == 1);
     REQUIRE(executeResult.errors()[0].code == MeshingUtilities::k_InvalidFeatureIdError);
@@ -856,7 +856,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label
     // The cylinder's bottom cap ({-1, 1}) is the closure this option exists to preserve; it must
     // survive regardless of mode.
     CHECK(qsmLabelPairs.count({-1, 1}) == 1);
-    if(boundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+    if(boundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
     {
       // The background-backed box skin must be gone.
       CHECK(qsmLabelPairs.count({-1, 0}) == 0);
@@ -870,7 +870,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label
     REQUIRE_NOTHROW(qsmResult.Structure.getDataRefAs<TriangleGeom>(qsmResult.TriangleGeomPath));
     REQUIRE_NOTHROW(snResult.Structure.getDataRefAs<TriangleGeom>(snResult.TriangleGeomPath));
     REQUIRE_NOTHROW(m3cResult.Structure.getDataRefAs<TriangleGeom>(m3cResult.TriangleGeomPath));
-    if(boundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+    if(boundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
     {
       CHECK(SurfaceMeshingTest::IsWatertight(qsmResult.Structure.getDataRefAs<TriangleGeom>(qsmResult.TriangleGeomPath)));
       CHECK(SurfaceMeshingTest::IsWatertight(snResult.Structure.getDataRefAs<TriangleGeom>(snResult.TriangleGeomPath)));
@@ -884,12 +884,12 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: all three meshers agree on Face Label
 
   SECTION("Bounding Box Skin mode off")
   {
-    checkAgreement(BoundingBoxSkinMode::k_Off);
+    checkAgreement(bounding_box_skin_mode::k_Off);
   }
 
   SECTION("Bounding Box Skin mode on (Background-Backed Walls Only)")
   {
-    checkAgreement(BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
+    checkAgreement(bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
   }
 }
 
@@ -942,7 +942,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[S
   SECTION("QuickSurfaceMesh")
   {
     SurfaceMeshingTest::MeshResult meshResult =
-        SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(CreateCornerFeatureInBox(), k_TriangleGeomPath, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly,
+        SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(CreateCornerFeatureInBox(), k_TriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
                                                               [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
     CHECK(labelPairs.count({-1, 1}) == 1);
@@ -962,7 +962,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[S
   SECTION("SurfaceNets")
   {
     SurfaceMeshingTest::MeshResult meshResult =
-        SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(CreateCornerFeatureInBox(), k_SurfaceNetsTriangleGeomPath, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly, [](Arguments& args) {
+        SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(CreateCornerFeatureInBox(), k_SurfaceNetsTriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, [](Arguments& args) {
           args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
           args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
           args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
@@ -986,7 +986,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[S
   SECTION("M3CSurfaceMeshing")
   {
     SurfaceMeshingTest::MeshResult meshResult =
-        SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(CreateCornerFeatureInBox(), k_M3CTriangleGeomPath, BoundingBoxSkinMode::k_BackgroundBackedWallsOnly, [](Arguments&) {});
+        SurfaceMeshingTest::RunMesher<M3CSurfaceMeshingFilter>(CreateCornerFeatureInBox(), k_M3CTriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly, [](Arguments&) {});
     const auto labelPairs = SurfaceMeshingTest::CollectLabelPairs(meshResult);
     CHECK(labelPairs.count({-1, 1}) == 1);
     CHECK(labelPairs.count({0, 1}) == 1);

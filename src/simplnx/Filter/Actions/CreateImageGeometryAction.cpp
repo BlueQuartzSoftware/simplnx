@@ -23,7 +23,7 @@ CreateImageGeometryAction::~CreateImageGeometryAction() noexcept = default;
 
 Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral k_Prefix = "CreateImageGeometryAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateImageGeometryAction: ";
   // Check for empty Geometry DataPath
   if(getCreatedPath().empty())
   {
@@ -103,7 +103,7 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode /*m
   return {};
 }
 
-IDataAction::UniquePointer CreateImageGeometryAction::clone() const
+IDataAction::UniquePointerType CreateImageGeometryAction::clone() const
 {
   return std::make_unique<CreateImageGeometryAction>(getCreatedPath(), m_Dims, m_Origin, m_Spacing, m_CellDataName, m_Units);
 }

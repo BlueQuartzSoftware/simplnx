@@ -3,7 +3,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/ChunkIndex.hpp"
 
 using namespace nx::core;
-using namespace nx::core::HDF5;
+using namespace nx::core::hdf5;
 
 TEST_CASE("flatToNd and ndToFlat round-trip", "[ChunkIndex]")
 {

@@ -578,7 +578,7 @@ private:
  * @return Scratch flush/read or destination-write error, or success.
  * @pre buffer contains at least k_WindingBatchRecords * 3 elements.
  */
-Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::store_type& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFaceType>& faceCache,
+Result<> WriteWindingFaces(INodeGeometry2D::SharedFaceList::StoreType& triangles, ITemporaryRecordStore& faceStore, BoundedRecordPageCache<WindingFaceType>& faceCache,
                            nonstd::span<IGeometry::MeshIndexType> buffer, bool facesModified, WindingTransferWarnings& transferWarnings)
 {
   if(!facesModified)
@@ -933,7 +933,7 @@ Result<> ProcessWindingsWithRegions(IGeometry::MeshIndexType* triangles, usize n
 }
 } // namespace
 
-INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices)
+INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::StoreType& vertices)
 {
   const usize vertAIndex = vertIndices[0] * 3;
   const usize vertBIndex = vertIndices[1] * 3;
@@ -955,7 +955,7 @@ INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTria
   return determinant / 6.0f;
 }
 
-Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::StoreType& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
                                                  const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 {
   usize numComp = idsStore.getNumberOfComponents();
@@ -1022,7 +1022,7 @@ namespace
  * @param transferWarnings Receives bounded warnings from scratch creation and transfers.
  * @return The repair result, including copy-back warnings.
  */
-Result<> RepairTriangleWindingExternalImpl(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+Result<> RepairTriangleWindingExternalImpl(INodeGeometry2D::SharedFaceList::StoreType& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
                                            const IFilter::MessageHandler& mesgHandler, WindingTransferWarnings& transferWarnings)
 {
   const usize componentCount = idsStore.getNumberOfComponents();
@@ -1648,7 +1648,7 @@ Result<> RepairTriangleWindingExternalImpl(INodeGeometry2D::SharedFaceList::stor
 }
 } // namespace
 
-Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::store_type& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
+Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::SharedFaceList::StoreType& triangles, const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel,
                                                          const IFilter::MessageHandler& mesgHandler)
 {
   WindingTransferWarnings transferWarnings;
@@ -1664,7 +1664,7 @@ Result<> MeshingUtilities::RepairTriangleWindingExternal(INodeGeometry2D::Shared
   return result;
 }
 
-MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::StoreType& triangles, const INodeGeometry2D::SharedVertexList::StoreType& verts,
                                                              nx::core::Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
 : m_Triangles(triangles)
 , m_Vertices(verts)
@@ -1784,7 +1784,7 @@ Result<> MakeNormalAdmissionError(int32 code, uint64 requestedBytes, usize grant
  * with the compute buffers. The stored normals are never read, so an imported output chunk is never decoded here.
  * The function reads only the inputs that the block loop reads again; that loop later writes the same value again.
  */
-Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
+Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::StoreType& triangles, const INodeGeometry2D::SharedVertexList::StoreType& verts, Float64AbstractDataStore& normals,
                             MeshingUtilities::detail::TriangleNormalCalculator calculateNormal)
 {
   const usize numVertices = verts.getNumberOfTuples();
@@ -1825,7 +1825,7 @@ Result<> PublishFirstNormal(const INodeGeometry2D::SharedFaceList::store_type& t
 }
 } // namespace
 
-Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+Result<> MeshingUtilities::detail::CalculateNormalsInBlocks(const INodeGeometry2D::SharedFaceList::StoreType& triangles, const INodeGeometry2D::SharedVertexList::StoreType& verts,
                                                             Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel, TriangleNormalCalculator calculateNormal)
 {
   const usize numTriangles = triangles.getNumberOfTuples();

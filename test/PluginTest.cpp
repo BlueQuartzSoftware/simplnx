@@ -49,7 +49,7 @@ TEST_CASE("Test Loading Plugins")
   DataStructure dataStructure;
   {
 
-    IFilter::UniquePointer filter = filterListPtr->createFilter(k_TestFilterHandle);
+    IFilter::UniquePointerType filter = filterListPtr->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
     // Test Filter declares a generated file list whose default input path is empty, so
@@ -58,7 +58,7 @@ TEST_CASE("Test Loading Plugins")
     SIMPLNX_RESULT_REQUIRE_INVALID(filterExecutionResult.result);
   }
   {
-    IFilter::UniquePointer filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
+    IFilter::UniquePointerType filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
     // Test Filter 2 accepts every default argument, so executing it from the loaded plugin
@@ -99,7 +99,7 @@ TEST_CASE("Test Singleton")
   // Create and execute filters
   DataStructure dataStructure;
   {
-    IFilter::UniquePointer filter = filterListPtr->createFilter(k_TestFilterHandle);
+    IFilter::UniquePointerType filter = filterListPtr->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
     // Test Filter declares a generated file list whose default input path is empty, so
@@ -108,7 +108,7 @@ TEST_CASE("Test Singleton")
     SIMPLNX_RESULT_REQUIRE_INVALID(filterExecutionResult.result);
   }
   {
-    IFilter::UniquePointer filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
+    IFilter::UniquePointerType filter2 = filterListPtr->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
     // Test Filter 2 accepts every default argument, so executing it from the loaded plugin

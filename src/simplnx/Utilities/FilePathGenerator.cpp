@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-namespace nx::core::FilePathGenerator
+namespace nx::core::file_path_generator
 {
 // -----------------------------------------------------------------------------
 std::pair<std::vector<std::string>, bool> GenerateAndValidateFileList(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix,
@@ -79,4 +79,4 @@ std::string GenerateExampleFile(int32 start, int32 end, int32 /*increment*/, Ord
   std::string filePath = fmt::format(fmt::runtime(formatString), filePrefix, index, fileSuffix, fileExtension);
   return filePath;
 }
-} // namespace nx::core::FilePathGenerator
+} // namespace nx::core::file_path_generator

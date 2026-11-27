@@ -30,16 +30,16 @@ public:
   DoubleThresholdImageFilter& operator=(DoubleThresholdImageFilter&&) noexcept = delete;
 
   // Parameter Keys (reuse the legacy ITK filter's key strings so a shared param-setter drives both).
-  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static constexpr StringLiteral k_Threshold1_Key = "threshold1";
-  static constexpr StringLiteral k_Threshold2_Key = "threshold2";
-  static constexpr StringLiteral k_Threshold3_Key = "threshold3";
-  static constexpr StringLiteral k_Threshold4_Key = "threshold4";
-  static constexpr StringLiteral k_InsideValue_Key = "inside_value";
-  static constexpr StringLiteral k_OutsideValue_Key = "outside_value";
-  static constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
+  static constexpr StringLiteralType k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteralType k_Threshold1_Key = "threshold1";
+  static constexpr StringLiteralType k_Threshold2_Key = "threshold2";
+  static constexpr StringLiteralType k_Threshold3_Key = "threshold3";
+  static constexpr StringLiteralType k_Threshold4_Key = "threshold4";
+  static constexpr StringLiteralType k_InsideValue_Key = "inside_value";
+  static constexpr StringLiteralType k_OutsideValue_Key = "outside_value";
+  static constexpr StringLiteralType k_FullyConnected_Key = "fully_connected";
 
   std::string name() const override;
   std::string className() const override;
@@ -48,7 +48,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

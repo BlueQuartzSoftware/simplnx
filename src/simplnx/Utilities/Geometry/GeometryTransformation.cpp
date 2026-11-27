@@ -108,7 +108,7 @@ public:
     ClearFeatureAttributeMatrix(dataStructure, m_Path);
     return {};
   }
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<ClearFeatureAttributeMatrixAction>(m_Path);
   }
@@ -209,7 +209,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   const ShapeType cDims = {4, 4};
 
   // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  ImageRotationUtilities::Matrix4fRType transformationMatrix;
   std::string transformationMatrixDesc;
   transformationMatrix.setIdentity();
 
@@ -355,8 +355,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   if(imageGeomPtr != nullptr)
   {
     auto origin = imageGeomPtr->getOrigin();
-    const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
-    const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
+    const ImageRotationUtilities::Matrix4fRType translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
+    const ImageRotationUtilities::Matrix4fRType translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
 
     switch(pTransformationMatrixTypeValue)
     {
@@ -881,8 +881,8 @@ Result<> ApplyTransformationToGeometry::operator()()
   {
     auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0DPtr->getBoundingBox();
     FloatVec3 minPoint = boundingBox.getMinPoint();
-    const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
-    const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
+    const ImageRotationUtilities::Matrix4fRType translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
+    const ImageRotationUtilities::Matrix4fRType translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
     m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
   }
 

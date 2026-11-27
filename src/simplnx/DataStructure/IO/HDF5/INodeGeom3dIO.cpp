@@ -6,12 +6,12 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 INodeGeom3dIO::INodeGeom3dIO() = default;
 INodeGeom3dIO::~INodeGeom3dIO() noexcept = default;
 
-Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureReader, INodeGeometry3D& geom, const group_reader_type& parentGroup, const std::string& objectName,
+Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureReader, INodeGeometry3D& geom, const GroupReaderType& parentGroup, const std::string& objectName,
                                            DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   Result<> result = INodeGeom2dIO::ReadNodeGeom2dData(dataStructureReader, geom, parentGroup, objectName, importId, parentId, useEmptyDataStore);
@@ -29,7 +29,7 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
   return {};
 }
 
-Result<> INodeGeom3dIO::FinishImportingNodeGeom3dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> INodeGeom3dIO::FinishImportingNodeGeom3dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup)
 {
   auto* geomPtr = dataStructure.getDataAs<INodeGeometry3D>(dataPath);
   if(geomPtr == nullptr)
@@ -40,7 +40,7 @@ Result<> INodeGeom3dIO::FinishImportingNodeGeom3dData(DataStructure& dataStructu
   return INodeGeom2dIO::FinishImportingNodeGeom2dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWriter, const INodeGeometry3D& geom, group_writer_type& parentGroup, bool importable)
+Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWriter, const INodeGeometry3D& geom, GroupWriterType& parentGroup, bool importable)
 {
   Result<> result = INodeGeom2dIO::WriteNodeGeom2dData(dataStructureWriter, geom, parentGroup, importable);
   if(result.invalid())
@@ -70,4 +70,4 @@ Result<> INodeGeom3dIO::WriteNodeGeom3dData(DataStructureWriter& dataStructureWr
 
   return result;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

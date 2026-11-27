@@ -57,7 +57,7 @@ Parameters RodriguesConvertorFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_RodriguesDataArrayPath_Key, "Input Rodrigues Vectors", "Specifies the Rodrigues data to convert", DataPath({"Cell Data", "rodrigues"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Converted Rodrigues Data Array", "The DataArray name of the converted Rodrigues vectors", "rodrigues [Converted]"));
@@ -72,7 +72,7 @@ IFilter::VersionType RodriguesConvertorFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RodriguesConvertorFilter::clone() const
+IFilter::UniquePointerType RodriguesConvertorFilter::clone() const
 {
   return std::make_unique<RodriguesConvertorFilter>();
 }
@@ -122,9 +122,9 @@ namespace
 {
 namespace simpl
 {
-constexpr StringLiteral k_RodriguesDataArrayPathKey = "RodriguesDataArrayPath";
-constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
-constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
+constexpr StringLiteralType k_RodriguesDataArrayPathKey = "RodriguesDataArrayPath";
+constexpr StringLiteralType k_OutputDataArrayPathKey = "OutputDataArrayPath";
+constexpr StringLiteralType k_DeleteOriginalDataKey = "DeleteOriginalData";
 } // namespace simpl
 } // namespace
 
@@ -134,10 +134,10 @@ Result<Arguments> RodriguesConvertorFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_RodriguesDataArrayPathKey, k_RodriguesDataArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_RodriguesDataArrayPathKey, k_RodriguesDataArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, simpl::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

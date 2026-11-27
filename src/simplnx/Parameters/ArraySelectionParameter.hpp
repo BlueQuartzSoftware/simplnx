@@ -19,7 +19,7 @@ class SIMPLNX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypes = nx::core::DataTypeSetType;
+  using AllowedTypeSetType = nx::core::DataTypeSetType;
   using AllowedComponentShapes = std::vector<ShapeType>;
 
   enum class DataLocation : uint8
@@ -30,7 +30,7 @@ public:
   };
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypes& allowedTypes,
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
                           AllowedComponentShapes requiredComps = {}, DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 
@@ -56,7 +56,7 @@ public:
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -82,7 +82,7 @@ public:
    * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
    * @return
    */
-  AllowedTypes allowedTypes() const;
+  AllowedTypeSetType allowedTypes() const;
 
   /**
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
@@ -150,12 +150,12 @@ protected:
 
 private:
   ValueType m_DefaultValue;
-  AllowedTypes m_AllowedTypes;
+  AllowedTypeSetType m_AllowedTypes;
   AllowedComponentShapes m_RequiredComponentShapes;
   DataLocation m_Location = DataLocation::Any;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArraySelectionFilterParameterConverter
 {
@@ -164,7 +164,7 @@ struct SIMPLNX_EXPORT DataArraySelectionFilterParameterConverter
 
   static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArraySelectionParameter, "ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b");

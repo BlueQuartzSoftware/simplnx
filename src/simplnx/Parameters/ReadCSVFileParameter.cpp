@@ -77,7 +77,7 @@ Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, 
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ReadCSVFileParameter::clone() const
+IParameter::UniquePointerType ReadCSVFileParameter::clone() const
 {
   return std::make_unique<ReadCSVFileParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -104,20 +104,20 @@ Result<> ReadCSVFileParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePathKey = "Wizard_InputFilePath";
-constexpr StringLiteral k_DataHeadersKey = "Wizard_DataHeaders";
-constexpr StringLiteral k_BeginIndexKey = "Wizard_BeginIndex";
-constexpr StringLiteral k_NumberOfLinesKey = "Wizard_NumberOfLines";
-constexpr StringLiteral k_DataTypesKey = "Wizard_DataTypes";
-constexpr StringLiteral k_DelimitersKey = "Wizard_Delimiters";
-constexpr StringLiteral k_HeaderLineKey = "Wizard_HeaderLine";
-constexpr StringLiteral k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
-constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
-constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
+constexpr StringLiteralType k_InputFilePathKey = "Wizard_InputFilePath";
+constexpr StringLiteralType k_DataHeadersKey = "Wizard_DataHeaders";
+constexpr StringLiteralType k_BeginIndexKey = "Wizard_BeginIndex";
+constexpr StringLiteralType k_NumberOfLinesKey = "Wizard_NumberOfLines";
+constexpr StringLiteralType k_DataTypesKey = "Wizard_DataTypes";
+constexpr StringLiteralType k_DelimitersKey = "Wizard_Delimiters";
+constexpr StringLiteralType k_HeaderLineKey = "Wizard_HeaderLine";
+constexpr StringLiteralType k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
+constexpr StringLiteralType k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
+constexpr StringLiteralType k_TupleDimsKey = "Wizard_TupleDims";
 
 std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataTypes)
 {
@@ -146,7 +146,7 @@ std::vector<char> ConvertToChars(const std::string& string)
 Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDataFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   std::vector<std::string> dataTypeStrings = json[k_DataTypesKey].get<std::vector<std::string>>();
-  auto result = SIMPLConversion::ConvertDataTypeStrings(dataTypeStrings);
+  auto result = simpl_conversion::ConvertDataTypeStrings(dataTypeStrings);
   if(result.invalid())
   {
     return ConvertResultTo<ReadASCIIWizardDataFilterParameterConverter::ValueType>(ConvertResult(std::move(result)), {});
@@ -193,5 +193,5 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
